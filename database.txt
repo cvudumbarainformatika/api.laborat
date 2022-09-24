@@ -1,0 +1,34 @@
+NAMA DATABASE: rs0
+
+TABEL PASIEN: RS15
+    FIELD:
+    -rs1
+    -rs2(nama)
+    -rs3
+    -rs4(alamat)
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs5
+    -rs17(kelamin)
+
+
+
+TABEL TRANSAKSI LABORAT: RS15
+    FIELD
+    -rs1
+    -rs2(nota)
+
+
+TABEL KUNJUNGAN POLI: RS17
+    FIELD
+    -rs1(noreg)
+    -rs2(norm)
