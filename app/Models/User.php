@@ -53,16 +53,16 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    public function log($message)
-    {
-        $message = ucwords($message);
-        $data = [
-            'user_id'=>$this->id,
-            'name'=>$this->name,
-            'date'=>Carbon::parse(now())->toString(),
-            'activity'=> $message
-            // 'activity'=>"{$this->name} $message"
-        ];
-       AuditLog::query()->create($data);
-    }
+    // public function log($message)
+    // {
+    //     $message = ucwords($message);
+    //     $data = [
+    //         'user_id'=>$this->id,
+    //         'name'=>$this->name,
+    //         'date'=>Carbon::parse(now())->toString(),
+    //         'activity'=> $message
+    //         // 'activity'=>"{$this->name} $message"
+    //     ];
+    //    AuditLog::query()->create($data);
+    // }
 }

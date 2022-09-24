@@ -26,23 +26,6 @@ class DatabaseSeeder extends Seeder
         //     'password'=> bcrypt('password'),
         // ]);
 
-<<<<<<< HEAD
-=======
-        Category::create(['nama'=>'Warta RSUD', 'url'=>'warta-rsud']);
-        Category::create(['nama'=>'Informasi', 'url'=>'informasi' ]);
-
-        Berita::factory(100)->create();
-        $category = Category::all();
-
-        // Populate the pivot table
-        Berita::all()->each(function ($berita) use ($category) {
-            $berita->categories()->attach(
-                $category->random(rand(1, 2))->pluck('id')->toArray()
-            );
-        });
-
-        BeritaView::factory(10)->create();
->>>>>>> 5a5865f34e9a0866bee773204e2d5343edd57e01
 
     }
 }

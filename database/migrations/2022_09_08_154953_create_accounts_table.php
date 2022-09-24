@@ -15,15 +15,10 @@ class CreateAccountsTable extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
-<<<<<<< HEAD:database/migrations/2022_09_08_154953_create_accounts_table.php
             $table->string('username')->nullbale();
             $table->string('nama')->nullbale();
             $table->string('password')->nullbale();
             // $table->string('username')->nullbale();
-=======
-            $table->string('nama')->nullable();
-            $table->string('url')->nullable();
->>>>>>> 5a5865f34e9a0866bee773204e2d5343edd57e01:database/migrations/2022_09_07_220742_create_categories_table.php
             $table->timestamps();
         });
     }
