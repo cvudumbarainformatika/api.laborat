@@ -47,7 +47,6 @@ class AutogenController extends Controller
         // $upDir = 'uploads' . DIRECTORY_SEPARATOR . Carbon::now()->toDateString() . DIRECTORY_SEPARATOR;
         // Storage::makeDirectory($upDir);
         // echo $upDir;
-<<<<<<< HEAD
         // echo hash_hmac('sha256', '4444&1663225969','lisTest');
         $xid = "4444";
         $secret_key = 'l15Test';
@@ -143,24 +142,5 @@ class AutogenController extends Controller
         $response = Http::withHeaders($headers)->get($apiURL)->json();
         dd($response);
 
-=======
-        // echo url('/')."/storage";
-        // $now = date('Y-m-d');
-        $now = Carbon::today()->toDateString();
-        $kunjungan = Kunjungan::selectRaw('id')->get()->count();
-        $view_hr_ini = Kunjungan::whereDate('created_at','>=', $now)->get()->count();
-        $berita = Berita::selectRaw('id')->get()->count();
-        $user = User::selectRaw('id')->get()->count();
-
-        return response()->json(
-            [
-                'kunjungan'=>$kunjungan,
-                'view_hr_ini'=>$view_hr_ini,
-                'berita'=>$berita,
-                'user'=>$user,
-                'now'=>$now
-            ]
-        );
->>>>>>> 5a5865f34e9a0866bee773204e2d5343edd57e01
     }
 }
