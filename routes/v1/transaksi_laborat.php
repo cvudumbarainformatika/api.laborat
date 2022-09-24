@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\api\penunjang\TransaksiLaboratController;
+use App\Http\Controllers\Api\penunjang\TransaksiLaboratController;
 use Illuminate\Support\Facades\Route;
 
 
