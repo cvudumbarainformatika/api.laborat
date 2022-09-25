@@ -1,0 +1,98 @@
+$sizes:2, 3, 5, 10, 15, 20, 25;
+$text-sizes:10, 12, 14, 16, 18, 20, 21, 24;
+
+body {
+    width: 210mm;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+    color: #000;
+
+    font-size: 12px !important;
+}
+
+* {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+.page {
+    padding: 10px;
+}
+
+.text-left {
+    text-align: left !important;
+}
+.text-right {
+    text-align: right !important;
+}
+.text-center {
+    text-align: center !important;
+}
+
+.mb-10 {
+    margin-bottom:10px;
+}
+.mt-10 {
+    margin-top:10px;
+}
+.ml-10 {
+    margin-left:10px;
+}
+    .title {
+        font-size: 18px;
+    }
+
+  .bold {
+      font-weight: bold;
+  }
+
+  .row {
+      display: flex;
+      flex-direction: row;
+  }
+  .row-reverse {
+      display: flex;
+      flex-direction: row-reverse;
+  }
+  .flex-right {
+    justify-content: flex-end
+  }
+  .justify-between {
+    justify-content: space-between;
+  }
+  .column {
+      display: flex;
+      flex-direction: column;
+  }
+  img.logo {
+      width: 70px !important;
+  }
+
+  .w-x {
+    width: 100px;
+  }
+  .w-r {
+    width: 200px;
+  }
+
+table.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th {
+    border: solid 1px rgb(190, 190, 190);
+    padding: 10px;
+    // border-left: solid 1px rgb(190, 190, 190);
+    // border-left: solid 1px rgb(190, 190, 190);
+}
+td {
+    padding: 5px 10px;
+    border-right: solid 1px rgb(190, 190, 190);
+    border-left: solid 1px rgb(190, 190, 190);
+}
+tr:last-child {
+    border-bottom: solid 1px rgb(190, 190, 190);
+}
+
