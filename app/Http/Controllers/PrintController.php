@@ -30,8 +30,16 @@ class PrintController extends Controller
             'sub'=> 'Jl. Mayjend Panjaitan No. 65 Probolinggo Jawa Timur',
             'sub2'=> 'Telp. (0335) 433478,433119,421118 Fax. (0335) 432702',
         );
-        $details = LaboratLuar::where('nota', $q)
-        ->with(['perusahaan', 'pemeriksaan_laborat'])->get();
+        $details = LaboratLuar::query()
+        ->selectRaw('
+            nama, kelamin, alamat,
+            nota,tgl,pengirim,hasil,hl,kd_lab,jml,hasil,tarif_sarana,tarif_pelayanan,
+            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
+        ->where('nota', $q)
+        ->with(['perusahaan', 'pemeriksaan_laborat'])
+        ->get();
+
+        // return response()->json($details);
        $data = array(
         'header'=> $header,
         'details'=> $details

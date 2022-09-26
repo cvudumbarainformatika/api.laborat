@@ -30,8 +30,10 @@ class TransaksiLaboratLuarController extends Controller
 
     public function get_details()
     {
-        $data = LaboratLuar::where('nota', request('nota'))
-                ->with(['perusahaan', 'pemeriksaan_laborat'])->get();
+        $data = LaboratLuar::query()
+                ->where('nota', request('nota'))
+                ->with(['perusahaan', 'pemeriksaan_laborat'])
+                ->get();
 
         return new JsonResponse($data);
     }

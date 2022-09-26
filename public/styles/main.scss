@@ -95,4 +95,7 @@ td {
 tr:last-child {
     border-bottom: solid 1px rgb(190, 190, 190);
 }
+.sub td:nth-child(2) {
+    border-top: solid 1px rgb(190, 190, 190);
+}
 
