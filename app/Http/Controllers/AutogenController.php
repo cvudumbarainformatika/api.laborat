@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 
 class AutogenController extends Controller
 {
@@ -48,17 +49,31 @@ class AutogenController extends Controller
         // Storage::makeDirectory($upDir);
         // echo $upDir;
         // echo hash_hmac('sha256', '4444&1663225969','lisTest');
+
+        return URL::signedRoute('unsubscribe', ['user' => 1]);
+        // return URL::temporarySignedRoute(
+        //     'unsubscribe', now()->addMinutes(30), ['user' => 4334]
+        // );
+
         $xid = "4444";
         $secret_key = 'l15Test';
         date_default_timezone_set('UTC');
         $xtimestamp = strtotime('2022-09-16 14:12:49');
         $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
+        dd($sign);
         $xsignature = base64_encode($sign);
+
+        $decodeb64 = base64_decode ( $xsignature ,false ) ;
         echo '<pre>';
-        echo $xtimestamp;
+        echo $sign;
         echo '</pre>';
         echo $xsignature;
         echo '</pre>';
+        echo '<pre>';
+        echo $decodeb64;
+        echo '</pre>';
+
+
 
     }
 
@@ -143,4 +158,6 @@ class AutogenController extends Controller
         dd($response);
 
     }
+
+
 }

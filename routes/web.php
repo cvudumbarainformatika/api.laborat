@@ -1,8 +1,10 @@
 <?php
 
+use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\PrintController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,8 +22,22 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::get('/autogen', [AutogenController::class, 'index']);
-Route::get('/autogen/coba', [AutogenController::class, 'getDetOrderList']);
+Route::get('/autogen/coba', [AutogenController::class, 'coba']);
 
 
 
 Route::get('/print/page', [PrintController::class, 'index']);
+
+Route::get('/unsubscribe/{user}', function (Request $request, $user) {
+    if (! $request->hasValidSignature()) {
+        abort(401);
+    }
+
+    return $user;
+})->name('unsubscribe')->middleware('signed');
+
+Route::get('/playground', function (Request $request) {
+   event(New PlaygroundEvent());
+
+   return null;
+});
