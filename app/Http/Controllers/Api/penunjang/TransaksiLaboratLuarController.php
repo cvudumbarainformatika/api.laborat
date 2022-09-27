@@ -16,8 +16,9 @@ class TransaksiLaboratLuarController extends Controller
         $now = date('Y-m-d');
         $to = date('2018-05-02');
         $query = LaboratLuar::query()
-                ->selectRaw('nota,tgl,nama,kelamin,alamat,tgl_lahir,pengirim,perusahaan_id,lunas,akhir,akhirx')
-                ->with(['perusahaan'])
+                ->selectRaw('nota,tgl,nama,kelamin,alamat,tgl_lahir,pengirim,perusahaan_id,lunas,akhir,akhirx, kd_lab')
+                ->filter(request(['q']))
+                ->with(['perusahaan', 'pemeriksaan_laborat'])
                 ->groupBy('nota')
                 ->latest('id');
                 // ->whereDate('rs3', '=', $now);

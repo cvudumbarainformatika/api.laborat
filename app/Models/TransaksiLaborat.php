@@ -43,7 +43,16 @@ class TransaksiLaborat extends Model
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
             return $search->where('rs2', $query)
-                            ->orWhere('rs23', $query);
+                    ->orWhere('rs23', $query)
+                    ->orWhereHas('kunjungan_poli.pasien', function($where) use ($query) {
+                        return $where->where('rs2', 'LIKE', '%' . $query . '%')
+                        ->orWhere('rs1', $query);
+                    })
+                    ->orWhereHas('kunjungan_rawat_inap.pasien', function($where) use ($query) {
+                        return $where->where('rs2', 'LIKE', '%' . $query . '%')
+                        ->orWhere('rs1', $query);
+                    });
+
             // return $search->where('rs2', 'LIKE', '%' . $query . '%');
                 // ->orWhere('nip', 'LIKE', '%' . $query . '%')
                 // ->orWhere('judul', 'LIKE', '%' . $query . '%');
