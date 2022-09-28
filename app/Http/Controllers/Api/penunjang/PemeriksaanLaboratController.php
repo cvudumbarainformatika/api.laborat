@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\api\penunjang;
+namespace App\Http\Controllers\Api\penunjang;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
