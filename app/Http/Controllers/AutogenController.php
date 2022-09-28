@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Berita;
 use App\Models\Kunjungan;
+use App\Models\PemeriksaanLaborat;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -50,10 +51,21 @@ class AutogenController extends Controller
         // echo $upDir;
         // echo hash_hmac('sha256', '4444&1663225969','lisTest');
 
-        return URL::signedRoute('unsubscribe', ['user' => 1]);
+        // return URL::signedRoute('unsubscribe', ['user' => 1]);
         // return URL::temporarySignedRoute(
         //     'unsubscribe', now()->addMinutes(30), ['user' => 4334]
         // );
+        // $groupped = PemeriksaanLaborat::selectRaw('rs21')->groupBy('rs21')->get()->pluck('rs21');
+        $query = collect(PemeriksaanLaborat::all());
+        $data= $query->groupBy('rs21');
+        // $data = $gr->intersect($groupped);
+        // $grouped = $query->mapToGroups(function ($item, $key) {
+        //     return [
+        //         $item['rs21'] => $item['rs2'],
+        //     ];
+        // });
+
+        return response()->json($data);
 
         $xid = "4444";
         $secret_key = 'l15Test';
