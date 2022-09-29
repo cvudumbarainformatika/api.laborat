@@ -11,6 +11,7 @@ Route::middleware('auth:api')
 ->group(function () {
     Route::get('/transaksi_laborat_luar', [TransaksiLaboratLuarController::class, 'index']);
     Route::get('/transaksi_laborats_luar_details', [TransaksiLaboratLuarController::class, 'get_details']);
+    Route::post('/transaksi_laborat_luar/store', [TransaksiLaboratLuarController::class, 'store']);
 });
 
 

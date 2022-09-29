@@ -37,6 +37,7 @@ class LaboratLuar extends Model
         'kode_pekerjaan',
         'nama_pekerjaan'
     ];
+    public $timestamps = false;
 
     public function perusahaan()
     {

@@ -16,6 +16,10 @@ class PemeriksaanLaborat extends Model
     {
         return $this->hasMany(TransaksiLaborat::class, 'rs1');
     }
+    public function transaksi_laborat_luar()
+    {
+        return $this->hasMany(LaboratLuar::class, 'kd_lab', 'rs1');
+    }
 
     // public function paket_laborats(){
     //     return $this->hasMany(self::class, 'rs21');
