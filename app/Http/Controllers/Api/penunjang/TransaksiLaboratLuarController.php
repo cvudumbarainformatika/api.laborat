@@ -49,34 +49,38 @@ class TransaksiLaboratLuarController extends Controller
 
         //     DB::beginTransaction();
 
-            $temp = collect($request->details)->pluck('rs1');
-            $data = PemeriksaanLaborat::whereIn('rs1',$temp)->get();
+            $temp = collect($request->details);
+            // $data = PemeriksaanLaborat::whereIn('rs1',$temp)->get();
 
             $n = Carbon::now();
             $tgl = $n->toDateTimeString();
 
             $containers = [];
 
-            foreach ($data as $key) {
+            foreach ($temp as $key) {
                 LaboratLuar::create([
-                    'kd_lab' => $key->rs1,
+                    'kd_lab' => $key['rs1'],
+                    'tarif_sarana'=>$key['rs3'],
+                    'tarif_pelayanan'=>$key['rs4'],
                     'nama'=>$request->nama,
                     'kelamin'=>$request->kelamin,
                     'pengirim'=>$request->pengirim,
                     'tgl_lahir'=>$request->tgl_lahir,
+                    'temp_lahir'=>$request->temp_lahir,
                     'nota'=>$request->nota,
                     'alamat'=>$request->alamat,
                     'jenispembayaran'=>$request->jenispembayaran,
-                    'nosurat'=>$request->nosurat,
+                    'nosurat'=>$request->nosurat ? $request->nosurat:'',
                     'noktp'=>$request->noktp,
                     'agama'=>$request->agama,
                     'nohp'=>$request->nohp,
                     'kode_pekerjaan'=>$request->kode_pekerjaan,
-                    'nama_pekerjaan'=>$request->nama_pekerjaan,
+                    'nama_pekerjaan'=>$request->kode_pekerjaan,
                     'sampel_diambil'=>$request->sampel_diambil,
                     'jam_sampel_diambil'=>$request->jam_sampel_diambil,
                     'tgl'=>$tgl,
                     'jml'=>1,
+                    'akhir'=>1,
                 ]);
             }
 
@@ -112,5 +116,23 @@ class TransaksiLaboratLuarController extends Controller
         //     DB::rollBack();
         //     return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         // }
+    }
+
+    public function destroy(Request $request)
+    {
+        $nota = $request->nota;
+        $data = LaboratLuar::where('nota', $nota);
+        $del = $data->delete();
+
+        if (!$del) {
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
+
+            // $user->log("Menghapus Data Jabatan {$data->nama}");
+        return response()->json([
+            'message' => 'Data sukses terhapus'
+        ], 200);
     }
 }

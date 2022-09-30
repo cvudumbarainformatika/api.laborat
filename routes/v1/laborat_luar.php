@@ -12,6 +12,7 @@ Route::middleware('auth:api')
     Route::get('/transaksi_laborat_luar', [TransaksiLaboratLuarController::class, 'index']);
     Route::get('/transaksi_laborats_luar_details', [TransaksiLaboratLuarController::class, 'get_details']);
     Route::post('/transaksi_laborat_luar/store', [TransaksiLaboratLuarController::class, 'store']);
+    Route::post('/transaksi_laborat_luar/destroy', [TransaksiLaboratLuarController::class, 'destroy']);
 });
 
 
