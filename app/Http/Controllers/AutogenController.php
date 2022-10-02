@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Berita;
 use App\Models\Kunjungan;
+use App\Models\LaboratLuar;
 use App\Models\PemeriksaanLaborat;
 use App\Models\User;
 use Carbon\Carbon;
@@ -56,8 +57,8 @@ class AutogenController extends Controller
         //     'unsubscribe', now()->addMinutes(30), ['user' => 4334]
         // );
         // $groupped = PemeriksaanLaborat::selectRaw('rs21')->groupBy('rs21')->get()->pluck('rs21');
-        $query = collect(PemeriksaanLaborat::all());
-        $data= $query->groupBy('rs21');
+        // $query = collect(PemeriksaanLaborat::all());
+        // $data= $query->groupBy('rs21');
         // $data = $gr->intersect($groupped);
         // $grouped = $query->mapToGroups(function ($item, $key) {
         //     return [
@@ -65,25 +66,63 @@ class AutogenController extends Controller
         //     ];
         // });
 
-        return response()->json($data);
+        $details = LaboratLuar::query()
+        ->selectRaw('
+            nama, kelamin, alamat,
+            nota,tgl,pengirim,hasil,hl,kd_lab,jml,hasil,tarif_sarana,tarif_pelayanan,
+            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
+        ->where('nota', '221001/81z6hyc-L')
+        ->with(['perusahaan', 'pemeriksaan_laborat'])->get();
+        $data= collect($details)->groupBy('pemeriksaan_laborat.rs21')
+        ->map(function ($item, $key) {
+            return ['name'=>$key, 'child' => $item];
+        })->toArray();
 
-        $xid = "4444";
-        $secret_key = 'l15Test';
-        date_default_timezone_set('UTC');
-        $xtimestamp = strtotime('2022-09-16 14:12:49');
-        $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
-        dd($sign);
-        $xsignature = base64_encode($sign);
+        // for ($i=0; $i < count($data) ; $i++) {
+        //     echo $data[$i];
+        // }
 
-        $decodeb64 = base64_decode ( $xsignature ,false ) ;
-        echo '<pre>';
-        echo $sign;
-        echo '</pre>';
-        echo $xsignature;
-        echo '</pre>';
-        echo '<pre>';
-        echo $decodeb64;
-        echo '</pre>';
+        // $totNonPaket = $data['']->sum('subtotal');
+        // $tot = $data->map(function($a){
+        //     $sum = 0;
+        //     if ($a->pemeriksaan_laborat->rs21 ==='') {
+        //         $sum = $a->subtotal;
+        //     }
+        //     return $sum;
+        // });
+        // $total = 0;
+        // foreach ($data as $key => $value) {
+        //     // if ($value['name'] === '') {
+        //     //     for ($i=0; $i < count($value) ; $i++) {
+        //     //         $total = $value[$i]->subtotal;
+        //     //     }
+        //     //     // echo count($value);
+        //     // }
+        //     echo count($key['name']);
+        // }
+
+        // echo $total;
+
+
+        // return response()->json($data);
+
+        // $xid = "4444";
+        // $secret_key = 'l15Test';
+        // date_default_timezone_set('UTC');
+        // $xtimestamp = strtotime('2022-09-16 14:12:49');
+        // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
+        // dd($sign);
+        // $xsignature = base64_encode($sign);
+
+        // $decodeb64 = base64_decode ( $xsignature ,false ) ;
+        // echo '<pre>';
+        // echo $sign;
+        // echo '</pre>';
+        // echo $xsignature;
+        // echo '</pre>';
+        // echo '<pre>';
+        // echo $decodeb64;
+        // echo '</pre>';
 
 
 

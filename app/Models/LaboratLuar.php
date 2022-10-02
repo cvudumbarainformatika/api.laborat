@@ -47,6 +47,10 @@ class LaboratLuar extends Model
     {
         return $this->belongsTo(PemeriksaanLaborat::class,'kd_lab','rs1');
     }
+    public function catatan() // data master
+    {
+        return $this->belongsTo(Interpretasi::class,'nota','rs5');
+    }
 
     public function scopeFilter($search, array $reqs)
     {

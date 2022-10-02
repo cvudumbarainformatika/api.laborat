@@ -18,12 +18,15 @@ class PrintController extends Controller
         $page = request('data');
         $params = request('q');
         if ($page === 'permintaan-laborat-luar') {
-            return $this->print_permintaan_luar($params);
+            return $this->print_permintaan_luar($params,'pengantar');
+        }
+        if ($page === 'hasil-permintaan-laborat-luar') {
+            return $this->print_permintaan_luar($params,'hasil');
         }
 
     }
 
-    public function print_permintaan_luar($q)
+    public function print_permintaan_luar($q, $jns)
     {
         $header = (object) array(
             'title'=> 'UOBK RSUD dr. MOHAMAD SALEH',
@@ -33,19 +36,19 @@ class PrintController extends Controller
         $details = LaboratLuar::query()
         ->selectRaw('
             nama, kelamin, alamat,
-            nota,tgl,pengirim,hasil,hl,kd_lab,jml,hasil,tarif_sarana,tarif_pelayanan,
+            nota,tgl,pengirim,hasil,hl,kd_lab,jml,tarif_sarana,tarif_pelayanan,
+            sampel_diambil,jam_sampel_diambil,sampel_selesai,jam_sampel_selesai,ket,
             (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
         ->where('nota', $q)
-        ->with(['perusahaan', 'pemeriksaan_laborat'])
+        ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
         ->get();
 
-        // return response()->json($details);
        $data = array(
+        'jenis'=>$jns,
         'header'=> $header,
         'details'=> $details
        );
 
-    //    return response()->json($data);
        return view('print.permintaan_laborat_luar',$data);
     }
 

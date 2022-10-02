@@ -21,7 +21,7 @@ class TransaksiLaboratLuarController extends Controller
         $query = LaboratLuar::query()
                 ->selectRaw('nota,tgl,nama,kelamin,alamat,tgl_lahir,pengirim,perusahaan_id,lunas,akhir,akhirx, kd_lab')
                 ->filter(request(['q']))
-                ->with(['perusahaan', 'pemeriksaan_laborat'])
+                ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
                 ->groupBy('nota')
                 ->latest('id');
                 // ->whereDate('rs3', '=', $now);
@@ -36,7 +36,7 @@ class TransaksiLaboratLuarController extends Controller
     {
         $data = LaboratLuar::query()
                 ->where('nota', request('nota'))
-                ->with(['perusahaan', 'pemeriksaan_laborat'])
+                ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
                 ->get();
 
         return new JsonResponse($data);

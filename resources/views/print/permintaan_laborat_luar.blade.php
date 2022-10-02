@@ -21,8 +21,14 @@
             </div>
         </div>
         <hr />
-        <div class="title bold mb-10 text-center">PERMINTAAN LABORAT</div>
+        <?php if ($jenis === 'pengantar') { ?>
+        <div class="title bold underline mb-10 text-center">PERMINTAAN LABORAT</div>
+        <?php } else { ?>
+        <div class="title bold underline text-center">HASIL PERMINTAAN LABORAT</div>
+        <div class="title mb-10 italic text-center">LABORATORY EXAMINATION RESULTS </div>
 
+        <?php } ?>
+        <?php if ($jenis === 'pengantar') { ?>
         <div class="row justify-between">
             <div class="column">
                 <div class="row">
@@ -53,7 +59,34 @@
                 </div>
             </div>
         </div>
+        <?php } else { ?>
+        <div class="column">
+            <div class="row">
+                <div class="w-xx">Nama / <span class="italic"> Name</span></div>
+                <div>: {{ $details[0]->nama }}</div>
+            </div>
+            <div class="row">
+                <div class="w-xx">Alamat / <span class="italic"> Address</span></div>
+                <div>: {{ $details[0]->alamat }}</div>
+            </div>
+            <div class="row">
+                <div class="w-xx">Dokter Pengirim / <span class="italic"> Sending Doctor</span></div>
+                <div>: {{ $details[0]->pengirim }}</div>
+            </div>
+            <div class="row">
+                <div class="w-xx">Sampel diambil / <span class="italic"> Sample Taken </span></div>
+                <div>: {{ $details[0]->sampel_diambil }}, Jam/Clock: {{ $details[0]->jam_sampel_diambil }}</div>
+            </div>
+            <div class="row">
+                <div class="w-xx">Sampel Selesai Diperiksa /  <span class="italic"> Sample Has Been Checked </span></div>
+                <div>: {{ $details[0]->sampel_selesai }}, Jam/Clock: {{ $details[0]->jam_sampel_selesai }}</div>
+            </div>
+        </div>
+        <?php } ?>
 
+        <?php $gg = collect($details)->groupBy('pemeriksaan_laborat.rs21')->toArray();?>
+
+        <?php if ($jenis === 'pengantar') { ?>
         <table class="table mt-10">
             <thead>
                 <tr>
@@ -79,45 +112,54 @@
                 </tr>
             </thead>
             <tbody>
-            <?php $total = 0; ?>
-            @foreach($details as $i => $item)
-                @if( $item->pemeriksaan_laborat->rs21 == '' )
-                <tr>
-                    <td> {{ $i+1 }} </td>
-                    <td> {{ $item->pemeriksaan_laborat->rs2 }} </td>
-                    <td class="text-right"> {{ $item->jml }} </td>
-                    <td class="text-right"> {{ number_format($item->biaya, 0, ',', '.') }} </td>
-                    <td class="text-right"> {{ number_format(($item->tarif_sarana + $item->tarif_pelayanan) * $item->jml, 0, ',', '.') }} </td>
-                </tr>
-                @else
 
-                <tr>
-                    <td> {{ $i+1 }} </td>
-                    <td> {{ $item->pemeriksaan_laborat->rs21 }} </td>
-                    <td class="text-right"> {{ $item->jml }} </td>
-                    <!-- <td class="text-right"> {{ number_format($item->tarif_sarana + $item->tarif_pelayanan, 0, ',', '.') }} </td> -->
-                    <td class="text-right"> {{ number_format($item->biaya, 0, ',', '.') }} </td>
-                    <td class="text-right"> {{ number_format($item->subtotal, 0, ',', '.') }} </td>
-                    <!-- <td class="text-right"> {{ number_format(($item->tarif_sarana + $item->tarif_pelayanan) * $item->jml, 0, ',', '.') }} </td> -->
-                </tr>
-                    <?php
-                        $total += $item->subtotal;
-                        $subs= App\Models\PemeriksaanLaborat::where('rs21', '=', $item->pemeriksaan_laborat->rs21)->get();
+            <?php $i=1;
+                    $total = 0;
+                    $x = 1; $no=1;
+            foreach($gg as $key => $values) { ?>
+                <?php
+                    for ($n=0; $n < count($values) ; $n++) {
                     ?>
-                    @foreach($subs as $n => $sub)
+                    <?php if( $values[$n]['pemeriksaan_laborat']['rs21'] === '' ) {
+                        $total +=  $values[$n]['subtotal'];
+                        $x = $n;
+                        $no = $i+$n;
+
+                    ?>
+                    <tr>
+                        <td> {{$no}} </td>
+                        <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
+                        <td class="text-right"> {{ $values[$n]['jml'] }} </td>
+                        <td class="text-right"> {{ number_format($values[$n]['biaya'], 0, ',', '.') }} </td>
+                        <td class="text-right"> {{ number_format($values[$n]['subtotal'], 0, ',', '.') }} </td>
+                    </tr>
+                    <?php } elseif($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
+                        $total +=  $values[0]['subtotal'];
+                    ?>
+                    <tr>
+                            <td> {{ $i>1?$no+1:$no}} </td>
+                            <td> {{ $values[0]['pemeriksaan_laborat']['rs21'] }} </td>
+                            <td class="text-right"> {{ $values[0]['jml'] }} </td>
+                            <td class="text-right"> {{ number_format($values[0]['biaya'], 0, ',', '.') }} </td>
+                            <td class="text-right"> {{ number_format(($values[0]['tarif_sarana'] + $values[0]['tarif_pelayanan']) * $values[0]['jml'], 0, ',', '.') }} </td>
+                    </tr>
                     <tr class="sub">
                         <td></td>
-                        <td colspan="4"> -  {{ $sub->rs2 }} </td>
-                        <!-- <td class="text-right"> {{ number_format($item->tarif_sarana + $item->tarif_pelayanan, 0, ',', '.') }} </td>
-                        <td class="text-right"> {{ number_format(($item->tarif_sarana + $item->tarif_pelayanan) * $item->jml, 0, ',', '.') }} </td> -->
+                        <td colspan="4"> -  {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
                     </tr>
-                    @endforeach
-                @endif
-            @endforeach
-            <tr style="border-top: solid 1px rgb(190, 190, 190);">
+                    <?php } else {
+                    ?>
+                        <tr class="sub">
+                            <td></td>
+                            <td colspan="4"> -  {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
+                        </tr>
+                    <?php } ?>
+                <?php } ?>
+            <?php $i++; } ?>
+            <tr style="border-top: solid 1px rgb(190, 190, 190); border-bottom: solid 1px rgb(190, 190, 190);">
                 <td colspan="2" class=" bold">JUMLAH PEMERIKSAAN: {{ $details->count('nota') }} </td>
                 <td colspan="2" class="text-right bold">TOTAL </td>
-                <td class="text-right bold"> {{ number_format($details->sum('subtotal'), 0, ',', '.') }} </td>
+                <td class="text-right bold"> {{ number_format($total, 0, ',', '.') }} </td>
             </tr>
             </tbody>
         </table>
@@ -130,6 +172,83 @@
             <div></div>
             <div class="flex-right"> Petugas, </div>
         </div>
+        <?php } else { ?>
+            <table width="100%" class="table" cellpadding="0" cellspacing="0" border="1" bordercolor="#006699" bordercolordark="#666666" bordercolorlight="#003399">
+            <thead>
+            <tr valign="middle" align="center">
+                <td>&nbsp;<b><u>Pemeriksaan</u></b><br><i>Checking Type</i>&nbsp;</td>
+                <td>&nbsp;<b><u>Hasil</u></b><br><i>Result</i>&nbsp;</td>
+                <td>&nbsp;<b><u>Nilai Normal</u></b><br><i>Normal Value</i>&nbsp;</td>
+                <td>&nbsp;<b><u>Keterangan</u></b><br><i>Note</i>&nbsp;</td>
+            </tr>
+            </thead>
+            <tbody>
+            <?php $i=1;
+                    $total = 0;
+                    $x = 1; $no=1;
+            foreach($gg as $key => $values) { ?>
+                <?php
+                    for ($n=0; $n < count($values) ; $n++) {
+                    ?>
+                    <?php if( $values[$n]['pemeriksaan_laborat']['rs21'] === '' ) {
+                        $total +=  $values[$n]['subtotal'];
+                        $x = $n;
+                        $no = $i+$n;
+
+                    ?>
+                    <tr>
+                        <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
+                        <td > {{ $values[0]['hasil']}} </td>
+                        <td > {{ $values[0]['pemeriksaan_laborat']['rs22'] }} </td>
+                        <td> {{ $values[$n]['ket'] }} </td>
+                    </tr>
+                    <?php } elseif($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
+                        $total +=  $values[0]['subtotal'];
+                    ?>
+                    <tr>
+                            <td colspan="4"> {{ $values[0]['pemeriksaan_laborat']['rs21'] }} </td>
+
+                    </tr>
+                    <tr class="list">
+                        <td > -  {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
+                        <td > {{ $values[0]['hasil']}} </td>
+                        <td > {{ $values[0]['pemeriksaan_laborat']['rs22'] }} </td>
+                        <td > {{ $values[0]['ket'] }} </td>
+                    </tr>
+                    <?php } else {
+                    ?>
+                        <tr class="list">
+                            <td > -  {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
+                            <td > {{ $values[$n]['hasil'] }} </td>
+                            <td > {{ $values[$n]['pemeriksaan_laborat']['rs22']}} </td>
+                            <td > {{ $values[$n]['ket'] }} </td>
+                        </tr>
+                    <?php } ?>
+                <?php } ?>
+            <?php $i++; } ?>
+
+            </tbody>
+        </table>
+
+
+        <br>
+        <div class="row justify-between">
+            <div style="padding-left:10%" class="column">
+                <div>Probolinggo, <?php echo $details[0]->sampel_selesai." BULAN "."TAHUN"; ?>&nbsp;</div>
+                <div>Pemeriksa&nbsp;</div>
+                <div style="height:60px;"></div>
+                <div>(..................................)&nbsp;</div>
+            </div>
+            <div style="padding-right:10%" class="column">
+                <div>Probolinggo, <?php echo $details[0]->sampel_selesai." BULAN "."TAHUN"; ?>&nbsp;</div>
+                <div>Penanggung Jawab&nbsp;</div>
+                <div style="height:60px;"></div>
+                <div>(..................................)&nbsp;</div>
+            </div>
+        </div>
+        <br>
+        Scan disini untuk verifikasi :<br>
+        <?php } ?>
     </div>
 </body>
 
