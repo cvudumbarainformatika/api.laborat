@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
@@ -123,10 +124,23 @@ class AutogenController extends Controller
         // echo '<pre>';
         // echo $decodeb64;
         // echo '</pre>';
-        date_default_timezone_set('UTC');
-        $now = Carbon::now()->toDateTimeString();
-        echo strtotime($now);
+        // date_default_timezone_set('UTC');
+        // $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+        // echo date('d M Y H:i:s',$xtimestamp);
+        // $string = '4444';
 
+        // DIPAKE DI MIDDLEWARE
+        // date_default_timezone_set('Asia/Jakarta');
+        // $xid = "4444";
+        $xtimestamp = time();
+        // $secret_key = 'l15Test';
+        // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
+        // $xsignature = base64_encode($sign);
+
+        $signature = hash_hmac('sha256', '4444', 'l15Test');
+        // $signature2 = hash_hmac('sha256', '1664810802', 'l15Test');
+        echo $signature;
+        // return hash_equals($signature, (string) $signature2);
 
     }
 
@@ -213,6 +227,8 @@ class AutogenController extends Controller
         return response()->json($response);
 
     }
+
+
 
 
 }

@@ -12,4 +12,9 @@ Route::middleware('auth:api')
     Route::post('/list_post', [LisController::class, 'order_lis']);
 });
 
+Route::middleware('lis.verify')
+->group(function () {
+    Route::post('/post_from_lis', [LisController::class, 'store']);
+});
+
 
