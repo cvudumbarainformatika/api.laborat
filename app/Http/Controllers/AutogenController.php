@@ -66,17 +66,17 @@ class AutogenController extends Controller
         //     ];
         // });
 
-        $details = LaboratLuar::query()
-        ->selectRaw('
-            nama, kelamin, alamat,
-            nota,tgl,pengirim,hasil,hl,kd_lab,jml,hasil,tarif_sarana,tarif_pelayanan,
-            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
-        ->where('nota', '221001/81z6hyc-L')
-        ->with(['perusahaan', 'pemeriksaan_laborat'])->get();
-        $data= collect($details)->groupBy('pemeriksaan_laborat.rs21')
-        ->map(function ($item, $key) {
-            return ['name'=>$key, 'child' => $item];
-        })->toArray();
+        // $details = LaboratLuar::query()
+        // ->selectRaw('
+        //     nama, kelamin, alamat,
+        //     nota,tgl,pengirim,hasil,hl,kd_lab,jml,hasil,tarif_sarana,tarif_pelayanan,
+        //     (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
+        // ->where('nota', '221001/81z6hyc-L')
+        // ->with(['perusahaan', 'pemeriksaan_laborat'])->get();
+        // $data= collect($details)->groupBy('pemeriksaan_laborat.rs21')
+        // ->map(function ($item, $key) {
+        //     return ['name'=>$key, 'child' => $item];
+        // })->toArray();
 
         // for ($i=0; $i < count($data) ; $i++) {
         //     echo $data[$i];
@@ -123,23 +123,24 @@ class AutogenController extends Controller
         // echo '<pre>';
         // echo $decodeb64;
         // echo '</pre>';
-
+        date_default_timezone_set('UTC');
+        $now = Carbon::now()->toDateTimeString();
+        echo strtotime($now);
 
 
     }
 
     public function coba_api()
     {
+
         $xid = "4444";
         $secret_key = 'l15Test';
         date_default_timezone_set('UTC');
-        // $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-        $xtimestamp = strtotime('2022-09-16 14:12:49');
+        $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00'));
         $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         $xsignature = base64_encode($sign);
-        // echo $xsignature;
 
-        $apiURL = 'http://45.77.35.181:83/prolims/api/lis/postOrder';
+        $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
         $postInput = [
             "ADDRESS"=> "JL BANTARAN RT5/10 NO.07 SUMBERKEDAWUNG LECES - KOTA PROBOLINGGO",
             "BOD"=>"19981127",
@@ -186,8 +187,10 @@ class AutogenController extends Controller
         $xid = "4444";
         $secret_key = 'l15Test';
         date_default_timezone_set('UTC');
-        // $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-        $xtimestamp = strtotime('2022-09-16 14:12:49');
+        $now = Carbon::now()->toDateTimeString();
+        $xtimestamp = strval($now - strtotime('1970-01-01 00:00:00'));
+        // $xtimestamp = strval(time() - strtotime($now));
+        // $xtimestamp = strtotime($now);
         $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         $xsignature = base64_encode($sign);
 
@@ -206,7 +209,8 @@ class AutogenController extends Controller
         // $responseBody = json_decode($response->getBody(), true);
 
         $response = Http::withHeaders($headers)->get($apiURL)->json();
-        dd($response);
+        // dd($response);
+        return response()->json($response);
 
     }
 
