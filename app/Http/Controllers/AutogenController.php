@@ -132,7 +132,7 @@ class AutogenController extends Controller
         // DIPAKE DI MIDDLEWARE
         // date_default_timezone_set('Asia/Jakarta');
         // $xid = "4444";
-        $xtimestamp = time();
+        // $xtimestamp = time();
         // $secret_key = 'l15Test';
         // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         // $xsignature = base64_encode($sign);
