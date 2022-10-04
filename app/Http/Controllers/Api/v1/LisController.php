@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\v1;
 
+use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,8 +37,9 @@ class LisController extends Controller
             'KODE_PRODUCT'=> 'required',
             'HASIL'=> 'required',
             'IS_CITO'=> 'required',
-            // 'password'=> 'required',
         ]);
+
+        event(New PlaygroundEvent());
        return response()->json(['message'=>'success'], 201);
     }
 }

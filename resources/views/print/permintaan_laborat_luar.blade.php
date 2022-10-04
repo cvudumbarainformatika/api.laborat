@@ -12,7 +12,7 @@
     <div class="page">
         <div class="row">
             <div class="">
-                <img class="logo" src="{{ URL::asset('images') }}/logo-kota-grayscale.jpg" alt="logo-kota-grayscale"/>
+                <img class="logo" src="{{ URL::asset('images') }}/logo-rsud.png" alt="logo-kota-grayscale" style="width:70px;"/>
             </div>
             <div class="mt-10 ml-10">
                 <div class="title bold">{{ $header->title }}</div>
@@ -256,11 +256,11 @@
 </html>
 
 <script language="javascript">
-    window.print();
-    window.onafterprint = function () {
-        window.close();
-    }
-    setTimeout(function(){
-             window.close();
-    }, 1000);
+    // window.print();
+    // window.onafterprint = function () {
+    //     window.close();
+    // }
+    // setTimeout(function(){
+    //          window.close();
+    // }, 1000);
 </script>

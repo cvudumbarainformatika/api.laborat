@@ -132,14 +132,14 @@ class AutogenController extends Controller
         // DIPAKE DI MIDDLEWARE
         // date_default_timezone_set('Asia/Jakarta');
         // $xid = "4444";
-        // $xtimestamp = time();
+        $xtimestamp = time();
         // $secret_key = 'l15Test';
         // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         // $xsignature = base64_encode($sign);
 
         $signature = hash_hmac('sha256', '4444', 'l15Test');
         // $signature2 = hash_hmac('sha256', '1664810802', 'l15Test');
-        echo $signature;
+        echo $xtimestamp;
         // return hash_equals($signature, (string) $signature2);
 
     }
@@ -225,6 +225,14 @@ class AutogenController extends Controller
         $response = Http::withHeaders($headers)->get($apiURL)->json();
         // dd($response);
         return response()->json($response);
+
+
+        $xid = '4444';
+        $xtimestamp = time();
+        $secret_key = 'l15Test';
+        $signature = hash_hmac('sha256', $xid, $secret_key);
+
+
 
     }
 
