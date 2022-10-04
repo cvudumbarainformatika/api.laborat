@@ -6,6 +6,7 @@ use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\PemeriksaanLaborat;
+use App\Models\TransaksiLaborat;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -132,15 +133,25 @@ class AutogenController extends Controller
         // DIPAKE DI MIDDLEWARE
         // date_default_timezone_set('Asia/Jakarta');
         // $xid = "4444";
-        $xtimestamp = time();
+        // $xtimestamp = time();
         // $secret_key = 'l15Test';
         // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         // $xsignature = base64_encode($sign);
 
-        $signature = hash_hmac('sha256', '4444', 'l15Test');
+        // $signature = hash_hmac('sha256', '4444', 'l15Test');
         // $signature2 = hash_hmac('sha256', '1664810802', 'l15Test');
-        echo $xtimestamp;
+        // echo $xtimestamp;
         // return hash_equals($signature, (string) $signature2);
+
+
+        $from = '01'.'-'.date('m').'-'.date('Y');
+        $to = '31'.'-'.date('m').'-'.date('Y');
+        $lab = TransaksiLaborat::selectRaw('rs2')
+        ->whereMonth('rs3', '=', '09')
+        ->whereYear('rs3', '=', date('Y'))
+        ->groupBy('rs2')
+        ->orderBy('rs2', 'desc')->get()->count();
+        echo $lab;
 
     }
 
