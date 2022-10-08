@@ -11,6 +11,9 @@ Route::middleware('auth:api')
     Route::get('/transaksi_laborats', [TransaksiLaboratController::class, 'index']);
     Route::get('/transaksi_laborats/total', [TransaksiLaboratController::class, 'totalData']);
     Route::get('/transaksi_laborats_details', [TransaksiLaboratController::class, 'get_details']);
+
+     // tto lis
+     Route::post('/transaksi_laborats_kunci_dan_kirim_ke_lis', [TransaksiLaboratController::class, 'kirim_ke_lis']);
 });
 
 

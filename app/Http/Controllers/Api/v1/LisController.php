@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Controller;
+use App\Models\LaboratLuar;
+use App\Models\TransaksiLaborat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -24,20 +26,32 @@ class LisController extends Controller
 
     public function store(Request $request)
     {
-        // $validator = Validator::make($request->all(), [
-        //     'KODE_PRODUCT' => 'required',
-        //     'IS_CITO' => 'required',
-        //     'HASIL' => 'required',
-        // ]);
-        // if ($validator->fails()) {
-        //     return response()->json($validator->errors(), 422);
-        // }
+        // return response()->json($request->all(), 201);
 
         $request->validate([
-            'KODE_PRODUCT'=> 'required',
-            'HASIL'=> 'required',
-            'IS_CITO'=> 'required',
+            'ONO'=>'required',
+            'GLOBAL_COMMENT'=> 'required',
+            'RESULT_LIST' => 'required',
         ]);
+
+        if ($request->GLOBAL_COMMENT === 'laborat-luar') {
+            # simpan laborat luar
+            // L : 13-18, P : 12-16 g/dl
+            $temp = collect($request->RESULT_LIST);
+            foreach ($temp as $key) {
+                LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['KODE_PRODUCT']])->update([
+                    'hasil'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                ]);
+            }
+        }else {
+            $temp = collect($request->RESULT_LIST);
+            foreach ($temp as $key) {
+                TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['KODE_PRODUCT']])->update([
+                    'rs21'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT'],
+                    'rs28'=> '1' // complete
+                ]);
+            }
+        }
 
         event(New PlaygroundEvent());
        return response()->json(['message'=>'success'], 201);

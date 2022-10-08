@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,8 @@ class TransaksiLaborat extends Model
     protected $table = 'rs51';
 
     protected $guarded = ['id'];
+
+    public $timestamps = false;
 
     public function kunjungan_poli()
     {
@@ -41,6 +44,7 @@ class TransaksiLaborat extends Model
 
     public function scopeFilter($search, array $reqs)
     {
+
         $search->when($reqs['q'] ?? false, function ($search, $query) {
             return $search->where('rs2', $query)
                     ->orWhere('rs23', $query)
@@ -52,25 +56,27 @@ class TransaksiLaborat extends Model
                         return $where->where('rs2', 'LIKE', '%' . $query . '%')
                         ->orWhere('rs1', $query);
                     });
-
-            // return $search->where('rs2', 'LIKE', '%' . $query . '%');
-                // ->orWhere('nip', 'LIKE', '%' . $query . '%')
-                // ->orWhere('judul', 'LIKE', '%' . $query . '%');
         });
         $search->when($reqs['periode'] ?? false, function ($search, $query) {
+            $y = Carbon::now()->subYears(2);
             if ($query == 2) {
-                return $search->where('rs20', '<>', '');
+                return $search
+                ->whereDate('rs3', '=', date('Y-m-d'))
+                ->where('rs20', '<>', '');
             }
             elseif ($query == 3) {
-                return $search->whereDate('rs3', '<', date('Y-m-d'))
+                return $search->whereYear('rs3', $y)
+                ->whereDate('rs3', '<', date('Y-m-d'))
                                 ->where('rs20', '=', '');
             }
             elseif ($query == 4) {
-                return $search->whereDate('rs3', '<', date('Y-m-d'))
+                return $search->whereYear('rs3', $y)
+                ->whereDate('rs3', '<', date('Y-m-d'))
                             ->where('rs20', '<>', '');
             }
             else {
-                return $search->where('rs20', '=', '');
+                return $search->whereDate('rs3', '=', date('Y-m-d'))
+                ->where('rs20', '=', '');
             }
         });
 

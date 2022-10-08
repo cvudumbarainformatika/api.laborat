@@ -13,6 +13,9 @@ Route::middleware('auth:api')
     Route::get('/transaksi_laborats_luar_details', [TransaksiLaboratLuarController::class, 'get_details']);
     Route::post('/transaksi_laborat_luar/store', [TransaksiLaboratLuarController::class, 'store']);
     Route::post('/transaksi_laborat_luar/destroy', [TransaksiLaboratLuarController::class, 'destroy']);
+
+    // tto lis
+    Route::get('/transaksi_laborats_luar_kunci_dan_kiri_ke_lis', [TransaksiLaboratLuarController::class, 'kunci_dan_kirim_ke_lis']);
 });
 
 

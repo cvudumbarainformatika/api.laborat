@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PlaygroundEvent;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
@@ -245,6 +246,38 @@ class AutogenController extends Controller
 
 
 
+    }
+
+
+
+    public function coba_post_hasil(Request $request)
+    {
+        $request->validate([
+            'ONO'=>'required',
+            'GLOBAL_COMMENT'=> 'required',
+            'RESULT_LIST' => 'required',
+        ]);
+
+        if ($request->GLOBAL_COMMENT === 'laborat-luar') {
+            # simpan laborat luar
+            // L : 13-18, P : 12-16 g/dl
+            $temp = collect($request->RESULT_LIST);
+            foreach ($temp as $key) {
+                LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['KODE_PRODUCT']])->update([
+                    'hasil'=>$key['FLAGE']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                ]);
+            }
+        }else {
+            $temp = collect($request->RESULT_LIST);
+            foreach ($temp as $key) {
+                TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['KODE_PRODUCT']])->update([
+                    'rs21'=>$key['FLAGE']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                ]);
+            }
+        }
+
+        event(New PlaygroundEvent());
+       return response()->json(['message'=>'success'], 201);
     }
 
 

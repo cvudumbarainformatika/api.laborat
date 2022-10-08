@@ -15,14 +15,14 @@ class DashboardLaboratController extends Controller
 
         $lab = TransaksiLaborat::selectRaw('COUNT(rs2) as y, DATE(rs3) as x')
         ->groupBy('x')
-        ->whereMonth('rs3', '=', '10')
-        ->whereYear('rs3', '=', '2020')
+        ->whereMonth('rs3', '=', date('m'))
+        ->whereYear('rs3', '=', date('Y'))
         ->orderBy('rs3', 'desc')->get();
 
         $lab_luar = LaboratLuar::selectRaw('COUNT(nota) as y, DATE(tgl) as x')
         ->groupBy('x')
-        ->whereMonth('tgl', '=', '10')
-        ->whereYear('tgl', '=', '2020')
+        ->whereMonth('tgl', '=', date('m'))
+        ->whereYear('tgl', '=', date('Y'))
         ->orderBy('tgl', 'desc')->get();
 
         $data = array(

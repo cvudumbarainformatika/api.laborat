@@ -17,4 +17,6 @@ Route::middleware('lis.verify')
     Route::post('/post_from_lis', [LisController::class, 'store']);
 });
 
+// Route::post('/post_from_lis', [LisController::class, 'store']);
+
 
