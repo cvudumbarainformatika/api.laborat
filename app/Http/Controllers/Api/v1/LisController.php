@@ -54,7 +54,7 @@ class LisController extends Controller
                 }
             }
 
-            // event(New PlaygroundEvent());
+            event(New PlaygroundEvent());
             return response()->json(['message'=>'success'], 201);
         } catch (\Throwable $th) {
             return response()->json(['message'=>'failed', $th]);
