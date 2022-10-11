@@ -11,10 +11,12 @@ class InterpretasiController extends Controller
 {
     public function store(Request $request)
     {
-        $saved = Interpretasi::updateOrCreate(['rs5'=>$request->nota],[
-            'rs1'=> $request->nota,
-            'ket'=> $request->catatan
-        ]);
+        $saved = Interpretasi::updateOrCreate(['rs5'=>$request->nota],
+            [
+                'rs1'=> $request->nota,
+                'ket'=> $request->catatan
+            ]
+    );
 
         if (!$saved) {
             return new JsonResponse(['message'=>'Ada Kesalahan'], 500);

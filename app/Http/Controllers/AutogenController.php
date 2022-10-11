@@ -145,14 +145,17 @@ class AutogenController extends Controller
         // return hash_equals($signature, (string) $signature2);
 
 
-        $from = '01'.'-'.date('m').'-'.date('Y');
-        $to = '31'.'-'.date('m').'-'.date('Y');
-        $lab = TransaksiLaborat::selectRaw('rs2')
-        ->whereMonth('rs3', '=', '09')
-        ->whereYear('rs3', '=', date('Y'))
-        ->groupBy('rs2')
-        ->orderBy('rs2', 'desc')->get()->count();
-        echo $lab;
+        // $from = '01'.'-'.date('m').'-'.date('Y');
+        // $to = '31'.'-'.date('m').'-'.date('Y');
+        // $lab = TransaksiLaborat::selectRaw('rs2')
+        // ->whereMonth('rs3', '=', '09')
+        // ->whereYear('rs3', '=', date('Y'))
+        // ->groupBy('rs2')
+        // ->orderBy('rs2', 'desc')->get()->count();
+
+        $timestamp = strtotime('2017-09-19 09:40:30');
+        // echo $timestamp;
+        echo date('Y-m-d', 1665488987);
 
     }
 

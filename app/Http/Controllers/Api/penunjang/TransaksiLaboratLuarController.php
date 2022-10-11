@@ -135,27 +135,28 @@ class TransaksiLaboratLuarController extends Controller
         $postInput = [
             "ADDRESS"=> $data[0]->alamat,
             "BOD"=>"19981127",
-            "CLASS"=>"-",
+            "CLASS"=>"",
             "CLASS_NAME"=>"-",
             "COMPANY"=>"-",
             "COMPANY_NAME"=>"RSUD MOCH SALEH",
-            "DATE_ORDER"=> strtotime($data[0]->tgl),
+            "DATE_ORDER"=> date('Ymdhis',strtotime($data[0]->tgl)),
+            // "DATE_ORDER"=> time(),
             "DIAGNOSA"=>"-",
             "DOCTOR"=>"17",
             "DOCTOR_NAME"=>$data[0]->pengirim,
             "GLOBAL_COMMENT"=>"laborat-luar",
             "IDENTITY_N"=>"-",
-            "IS_CITO"=>"-",
+            "IS_CITO"=>"0",
             "KODE_PRODUCT"=>$kode_lab,
             "ONO"=>$data[0]->nota,
             "PATIENT_NAME"=>$data[0]->nama,
             "EMAIL"=>"rsudmochsaleh@app.com",
             "PATIENT_NO"=>time(),
-            "ROOM"=>"LL",
-            "ROOM_NAME"=>"Laborat Luar",
+            "ROOM"=>"",
+            "ROOM_NAME"=>"",
             "SEX"=>$data[0]->kelamin === "Laki-laki"?"1":"2",
             "STATUS"=>"N",
-            "TYPE_PATIENT"=>"-"
+            "TYPE_PATIENT"=>"1"
         ];
 
         $headers = [
@@ -176,6 +177,8 @@ class TransaksiLaboratLuarController extends Controller
 
         LaboratLuar::where('nota', $data[0]->nota)->update(['akhir'=> "1"]);
 
-        return response()->json($responseBody);
+        return response()->json(['responseNya'=>$responseBody, 'dataku_mbalik'=> $postInput ]);
+
+        // return response()->json($postInput);
     }
 }

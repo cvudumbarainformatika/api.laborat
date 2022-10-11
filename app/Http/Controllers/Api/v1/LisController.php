@@ -28,32 +28,38 @@ class LisController extends Controller
     {
         // return response()->json($request->all(), 201);
 
-        $request->validate([
-            'ONO'=>'required',
-            'GLOBAL_COMMENT'=> 'required',
-            'RESULT_LIST' => 'required',
-        ]);
+        try {
+            $request->validate([
+                'ONO'=>'required',
+                'GLOBAL_COMMENT'=> 'required',
+                'RESULT_LIST' => 'required',
+            ]);
 
-        if ($request->GLOBAL_COMMENT === 'laborat-luar') {
-            # simpan laborat luar
-            // L : 13-18, P : 12-16 g/dl
-            $temp = collect($request->RESULT_LIST);
-            foreach ($temp as $key) {
-                LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['KODE_PRODUCT']])->update([
-                    'hasil'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT']
-                ]);
+            if ($request->GLOBAL_COMMENT === 'laborat-luar') {
+                # simpan laborat luar
+                // L : 13-18, P : 12-16 g/dl
+                $temp = collect($request->RESULT_LIST);
+                foreach ($temp as $key) {
+                    LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['ORDER_TESTID']])->update([
+                        'hasil'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                    ]);
+                }
+            }else {
+                $temp = collect($request->RESULT_LIST);
+                foreach ($temp as $key) {
+                    TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['ORDER_TESTID']])->update([
+                        'rs21'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT'],
+                        'rs28'=> '1' // complete
+                    ]);
+                }
             }
-        }else {
-            $temp = collect($request->RESULT_LIST);
-            foreach ($temp as $key) {
-                TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['KODE_PRODUCT']])->update([
-                    'rs21'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT'],
-                    'rs28'=> '1' // complete
-                ]);
-            }
+
+            // event(New PlaygroundEvent());
+            return response()->json(['message'=>'success'], 201);
+        } catch (\Throwable $th) {
+            return response()->json(['message'=>'failed', $th]);
         }
 
-        event(New PlaygroundEvent());
-       return response()->json(['message'=>'success'], 201);
+
     }
 }
