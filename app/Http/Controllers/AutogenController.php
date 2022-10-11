@@ -152,10 +152,11 @@ class AutogenController extends Controller
         // ->whereYear('rs3', '=', date('Y'))
         // ->groupBy('rs2')
         // ->orderBy('rs2', 'desc')->get()->count();
-
-        $timestamp = strtotime('2017-09-19 09:40:30');
-        // echo $timestamp;
-        echo date('Y-m-d', 1665488987);
+        $xid = env('LIS_X_ID');
+        $secret_key = env('LIS_X_SECRET');
+        $signature = hash_hmac('sha256', $xid, $secret_key);
+        echo $signature;
+        // echo date('Y-m-d', 1665488987);
 
     }
 
@@ -279,7 +280,7 @@ class AutogenController extends Controller
             }
         }
 
-        event(New PlaygroundEvent());
+        event(New PlaygroundEvent('coba'));
        return response()->json(['message'=>'success'], 201);
     }
 

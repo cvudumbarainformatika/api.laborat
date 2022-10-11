@@ -37,15 +37,23 @@ class LisController extends Controller
 
             if ($request->GLOBAL_COMMENT === 'laborat-luar') {
                 # simpan laborat luar
-                // L : 13-18, P : 12-16 g/dl
-                $temp = collect($request->RESULT_LIST);
+
+                $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
+                    // L : 13-18, P : 12-16 g/dl
+                    $flag = $key['FLAG']? $key['FLAG']." : ": "";
+                    $xtimestamp = strtotime($key['VALIDATE_BY']);
+                    $sampel_selesai = date('Y-m-d', $xtimestamp);
+                    $jam_sampel_selesai = date('H:i:s', $xtimestamp);
                     LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['ORDER_TESTID']])->update([
-                        'hasil'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                        'hasil'=>$flag." ".$key['REF_RANGE']." ".$key['UNIT'],
+                        'sampel_selesai' => $sampel_selesai,
+                        'jam_sampel_selesai' => $jam_sampel_selesai,
+                        'akhirx' => '1' // complete
                     ]);
                 }
             }else {
-                $temp = collect($request->RESULT_LIST);
+                $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
                     TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['ORDER_TESTID']])->update([
                         'rs21'=>$key['FLAG']." : ".$key['REF_RANGE']." ".$key['UNIT'],
@@ -54,7 +62,11 @@ class LisController extends Controller
                 }
             }
 
-            event(New PlaygroundEvent());
+            $message =array(
+                'SSO'=> $request->GLOBAL_COMMENT,
+                'data'=> 'Hasil Selesai'
+            );
+            event(New PlaygroundEvent($message));
             return response()->json(['message'=>'success'], 201);
         } catch (\Throwable $th) {
             return response()->json(['message'=>'failed', $th]);

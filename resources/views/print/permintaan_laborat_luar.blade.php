@@ -234,13 +234,21 @@
         <br>
         <div class="row justify-between">
             <div style="padding-left:10%" class="column">
-                <div>Probolinggo, <?php echo $details[0]->sampel_selesai." BULAN "."TAHUN"; ?>&nbsp;</div>
+                <div>&nbsp </div>
                 <div>Pemeriksa&nbsp;</div>
                 <div style="height:60px;"></div>
                 <div>(..................................)&nbsp;</div>
             </div>
             <div style="padding-right:10%" class="column">
-                <div>Probolinggo, <?php echo $details[0]->sampel_selesai." BULAN "."TAHUN"; ?>&nbsp;</div>
+                <div>Probolinggo, <?php
+                    $timestamp = time();
+                    $tgl = date('d F Y', $timestamp);
+                    // if ($details[0]->sampel_selesai) {
+                    //     $xtimestamp = time()
+
+                    // }
+                    echo $tgl;
+                ?>&nbsp;</div>
                 <div>Penanggung Jawab&nbsp;</div>
                 <div style="height:60px;"></div>
                 <div>(..................................)&nbsp;</div>

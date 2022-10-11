@@ -19,9 +19,10 @@ class PlaygroundEvent implements ShouldBroadcast
      *
      * @return void
      */
-    public function __construct()
+    public $message;
+    public function __construct($message)
     {
-        //
+        $this->message = $message;
     }
 
     /**
@@ -42,7 +43,7 @@ class PlaygroundEvent implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'for'=>'laborat'
+            'message'=> $this->message
         ];
     }
 }
