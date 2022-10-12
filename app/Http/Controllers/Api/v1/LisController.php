@@ -63,10 +63,16 @@ class LisController extends Controller
             }
 
             $message =array(
-                'SSO'=> $request->GLOBAL_COMMENT,
+                'SSO'=> 'LABORAT',
+                'menu'=> $request->GLOBAL_COMMENT,
+                '__key'=> $request->ONO,
                 'data'=> 'Hasil Selesai'
             );
-            event(New PlaygroundEvent($message));
+
+            if (event(New PlaygroundEvent($message))) {
+                return response()->json(['message'=>'success'], 201);
+            }
+
             return response()->json(['message'=>'success'], 201);
         } catch (\Throwable $th) {
             return response()->json(['message'=>'failed', $th]);
