@@ -15,7 +15,7 @@ class TransaksiLaboratController extends Controller
     public function index()
     {
         $query = TransaksiLaborat::query()
-                ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18')
+                ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21')
                 ->filter(request(['q','periode']))
                 ->with([
                     'kunjungan_poli',
