@@ -19,6 +19,7 @@ class TransaksiLaboratController extends Controller
         $query = TransaksiLaborat::query()
                 ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21')
                 ->whereYear('rs3', '<' ,$y)
+                ->filter(request(['q','periode']))
                 ->with([
                     'kunjungan_poli',
                     'kunjungan_rawat_inap',
@@ -29,7 +30,6 @@ class TransaksiLaboratController extends Controller
                     'kunjungan_rawat_inap.sistem_bayar',
                     'poli', 'dokter'
                     ])
-                ->filter(request(['q','periode']))
                 ->groupBy('rs2')
                 ->orderBy('rs3', 'desc');
                 // ->whereDate('rs3', '=', $now);
