@@ -43,12 +43,14 @@ class TransaksiLaboratController extends Controller
 
     public function totalData()
     {
-       $data = TransaksiLaborat::query()
-        ->selectRaw('rs2')
-        ->filter(request(['q','periode']))
-        ->groupBy('rs2')
-        ->get()->count();
-        return new JsonResponse($data);
+        $y = Carbon::now()->subYears(2);
+        $data = TransaksiLaborat::query()
+            ->selectRaw('rs2')
+            ->whereYear('rs3', '<' ,$y)
+            ->filter(request(['q','periode']))
+            ->groupBy('rs2')
+            ->get()->count();
+            return new JsonResponse($data);
     }
 
     public function get_details()
