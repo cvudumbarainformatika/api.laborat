@@ -264,11 +264,11 @@
 </html>
 
 <script language="javascript">
-    // window.print();
-    // window.onafterprint = function () {
-    //     window.close();
-    // }
-    // setTimeout(function(){
-    //          window.close();
-    // }, 1000);
+    window.print();
+    window.onafterprint = function () {
+        window.close();
+    }
+    setTimeout(function(){
+             window.close();
+    }, 1000);
 </script>
