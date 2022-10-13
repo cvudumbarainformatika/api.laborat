@@ -1,14 +1,14 @@
 <!DOCTYPE >
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
     <link rel="stylesheet" type="text/css" media="print" href="{{ URL::asset('print') }}/mystyles.scss">
     <link rel="stylesheet" type="text/css" href="{{ URL::asset('styles') }}/main.scss">
     <title></title>
 </head>
 
-<body >
+<body topmargin="0" leftmargin="0" rightmargin="0">
     <div class="page">
         <div class="row">
             <div class="">
