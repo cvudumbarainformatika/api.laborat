@@ -8,7 +8,7 @@
     <title></title>
 </head>
 
-<body topmargin="0" leftmargin="0" rightmargin="0" >
+<body >
     <div class="page">
         <div class="row">
             <div class="">
