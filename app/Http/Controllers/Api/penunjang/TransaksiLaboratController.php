@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\penunjang;
 use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\TransaksiLaborat;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +15,10 @@ class TransaksiLaboratController extends Controller
 {
     public function index()
     {
+        $y = Carbon::now()->subYears(2);
         $query = TransaksiLaborat::query()
                 ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21')
+                ->whereYear('rs3', '<' ,$y)
                 ->with([
                     'kunjungan_poli',
                     'kunjungan_rawat_inap',
@@ -27,7 +30,6 @@ class TransaksiLaboratController extends Controller
                     'poli', 'dokter'
                     ])
                 ->filter(request(['q','periode']))
-
                 ->groupBy('rs2')
                 ->orderBy('rs3', 'desc');
                 // ->whereDate('rs3', '=', $now);

@@ -58,24 +58,25 @@ class TransaksiLaborat extends Model
                     });
         });
         $search->when($reqs['periode'] ?? false, function ($search, $query) {
-            $y = Carbon::now()->subYears(2);
+            // $y = Carbon::now()->subYears(2);
             if ($query == 2) {
                 return $search
-                ->whereDate('rs3', '=', date('Y-m-d'))
+                ->whereDate('rs3', '=', now())
                 ->where('rs20', '<>', '');
             }
             elseif ($query == 3) {
-                return $search->whereYear('rs3', $y)
-                ->whereDate('rs3', '<', date('Y-m-d'))
+                return
+                // $search->whereYear('rs3', $y)
+                $search->whereDate('rs3', '<', now())
                                 ->where('rs20', '=', '');
             }
             elseif ($query == 4) {
-                return $search->whereYear('rs3', $y)
-                ->whereDate('rs3', '<', date('Y-m-d'))
+                // return $search->whereYear('rs3', $y)
+                return $search->whereDate('rs3', '<', now())
                             ->where('rs20', '<>', '');
             }
             else {
-                return $search->whereDate('rs3', '=', date('Y-m-d'))
+                return $search->whereDate('rs3', '=', now())
                 ->where('rs20', '=', '');
             }
         });
