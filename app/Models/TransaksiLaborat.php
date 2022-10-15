@@ -106,14 +106,14 @@ class TransaksiLaborat extends Model
                             'pasien',
                             fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%')
                         );
-                    }
-                );
-                $search->hasByNonDependentSubquery(
+                    },
+
+                ) || $search->hasByNonDependentSubquery(
                     'kunjungan_rawat_inap',
-                    function ($a) use ($query) {
-                        $a->hasByNonDependentSubquery(
+                    function ($b) use ($query) {
+                        $b->hasByNonDependentSubquery(
                             'pasien',
-                            fn (BelongsTo $q) => $q->orWhere('rs2', 'LIKE', '%' . $query . '%')
+                            fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%')
                         );
                     }
                 );
@@ -124,14 +124,13 @@ class TransaksiLaborat extends Model
                     function ($a) use ($query) {
                         $a->hasByNonDependentSubquery(
                             'pasien',
-                            fn (BelongsTo $q) => $q->where('rs1', 'LIKE', '%' . $query . '%')
+                            fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%')
                         );
                     }
-                );
-                $search->hasByNonDependentSubquery(
+                ) || $search->hasByNonDependentSubquery(
                     'kunjungan_rawat_inap',
-                    function ($a) use ($query) {
-                        $a->hasByNonDependentSubquery(
+                    function ($b) use ($query) {
+                        $b->hasByNonDependentSubquery(
                             'pasien',
                             fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%')
                         );
@@ -143,22 +142,23 @@ class TransaksiLaborat extends Model
             }
         });
         $search->when($reqs['periode'] ?? false, function ($search, $query) {
-            // $y = Carbon::now()->subYears(2);
+            // pasien hari ini sudah
             if ($query == 2) {
                 return $search
-                    ->whereDate('rs3', '=', now())
-                    ->where('rs20', '<>', '');
+                    ->whereDate('rs3', '=', date('Y-m-d'))
+                    ->where('rs20', '><', '');
             } elseif ($query == 3) {
+                // pasien lalu
                 return
-                    // $search->whereYear('rs3', $y)
-                    $search->whereDate('rs3', '<', now())
+                    $search->whereDate('rs3', '<', date('Y-m-d'))
                     ->where('rs20', '=', '');
             } elseif ($query == 4) {
-                // return $search->whereYear('rs3', $y)
-                return $search->whereDate('rs3', '<', now())
+                // pasien lalu sudah
+                return $search->whereDate('rs3', '<', date('Y-m-d'))
                     ->where('rs20', '<>', '');
             } else {
-                return $search->whereDate('rs3', '=', now())
+                // pasien hari ini
+                return $search->whereDate('rs3', '=', date('Y-m-d'))
                     ->where('rs20', '=', '');
             }
         });
