@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\TransaksiLaborat;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,48 +16,50 @@ class TransaksiLaboratController extends Controller
 {
     public function index()
     {
-        $y = Carbon::now()->subYears(2);
-        $query = TransaksiLaborat::query()
-                ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21')
-                ->whereYear('rs3', '<' ,$y)
-                ->filter(request(['q','periode']))
-                ->with([
-                    'kunjungan_poli',
-                    'kunjungan_rawat_inap',
-                    'kunjungan_poli.pasien',
-                    'kunjungan_poli.sistem_bayar',
-                    'kunjungan_rawat_inap.pasien',
-                    'kunjungan_rawat_inap.ruangan',
-                    'kunjungan_rawat_inap.sistem_bayar',
-                    'poli', 'dokter'
-                    ])
-                ->groupBy('rs2')
-                ->orderBy('rs3', 'desc');
-                // ->whereDate('rs3', '=', $now);
+        $query = $this->query_table();
         $data = $query->simplePaginate(request('per_page'));
-        // $count = TransaksiLaborat::query()->selectRaw('rs2')
-        // ->filter(request(['q','periode']))
-        // ->groupBy('rs2')->get()->count();
 
-       return new JsonResponse($data);
+        return new JsonResponse($data);
     }
 
     public function totalData()
     {
-        $y = Carbon::now()->subYears(2);
-        $data = TransaksiLaborat::query()
-            ->selectRaw('rs2')
-            ->whereYear('rs3', '<' ,$y)
-            ->filter(request(['q','periode']))
+        $data = $this->query_table()->get()->count();
+        return new JsonResponse($data);
+    }
+
+    public function query_table()
+    {
+        $y = Carbon::now()->subYears(5);
+        $query = TransaksiLaborat::query()
+            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21')
             ->groupBy('rs2')
-            ->get()->count();
-            return new JsonResponse($data);
+            ->whereYear('rs3', '>', $y)
+            ->with([
+                'kunjungan_poli',
+                // 'kunjungan_poli.pasien',
+                'kunjungan_rawat_inap',
+                // 'kunjungan_rawat_inap.pasien',
+                // 'kunjungan_poli.sistem_bayar',
+                // 'kunjungan_rawat_inap.sistem_bayar',
+                'sb_kunjungan_poli',
+                'sb_kunjungan_rawat_inap',
+                'kunjungan_rawat_inap.ruangan',
+                'poli',
+                'dokter',
+                'pasien_kunjungan_poli',
+                'pasien_kunjungan_rawat_inap'
+            ])
+            ->filter(request(['q', 'periode', 'filter_by']))
+            ->orderBy('rs3', 'desc');
+
+        return $query;
     }
 
     public function get_details()
     {
         $data = TransaksiLaborat::where('rs2', request('nota'))
-        ->with('pemeriksaan_laborat')->get();
+            ->with('pemeriksaan_laborat')->get();
 
         return new JsonResponse($data);
     }
@@ -89,7 +92,7 @@ class TransaksiLaboratController extends Controller
         $statusCode = $response->status();
         $responseBody = json_decode($response->getBody(), true);
 
-        TransaksiLaborat::where('rs2', $request->ONO)->update(['rs18'=> "1"]);
+        TransaksiLaborat::where('rs2', $request->ONO)->update(['rs18' => "1"]);
 
         return response()->json($responseBody);
     }

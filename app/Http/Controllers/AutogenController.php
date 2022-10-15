@@ -10,6 +10,7 @@ use App\Models\PemeriksaanLaborat;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -152,12 +153,38 @@ class AutogenController extends Controller
         // ->whereYear('rs3', '=', date('Y'))
         // ->groupBy('rs2')
         // ->orderBy('rs2', 'desc')->get()->count();
-        $xid = env('LIS_X_ID');
-        $secret_key = env('LIS_X_SECRET');
-        $signature = hash_hmac('sha256', $xid, $secret_key);
-        echo $signature;
+        // $xid = env('LIS_X_ID');
+        // $secret_key = env('LIS_X_SECRET');
+        // $signature = hash_hmac('sha256', $xid, $secret_key);
+        // echo $signature;
         // echo date('Y-m-d', 1665488987);
+        $query = collect($this->query_table());
+        $data = $query->take(10);
 
+        return new JsonResponse($data);
+    }
+
+    public function query_table()
+    {
+        $y = Carbon::now()->subYears(2);
+        $query = TransaksiLaborat::query()
+            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21')
+            ->groupBy('rs2')
+            ->whereYear('rs3', '<', $y)
+            ->filter(request(['q', 'periode', 'filter_by']))
+            ->with([
+                'kunjungan_poli',
+                'kunjungan_rawat_inap',
+                'kunjungan_poli.pasien',
+                'kunjungan_poli.sistem_bayar',
+                'kunjungan_rawat_inap.pasien',
+                'kunjungan_rawat_inap.ruangan',
+                'kunjungan_rawat_inap.sistem_bayar',
+                'poli', 'dokter'
+            ])
+            ->orderBy('rs3', 'desc');
+
+        return $query->get();
     }
 
     public function coba_api()
@@ -172,29 +199,29 @@ class AutogenController extends Controller
 
         $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
         $postInput = [
-            "ADDRESS"=> "JL BANTARAN RT5/10 NO.07 SUMBERKEDAWUNG LECES - KOTA PROBOLINGGO",
-            "BOD"=>"19981127",
-            "CLASS"=>"-",
-            "CLASS_NAME"=>"-",
-            "COMPANY"=>"-",
-            "COMPANY_NAME"=>"RSUD MOCH SALEH",
-            "DATE_ORDER"=>"20220916141249",
-            "DIAGNOSA"=>"-",
-            "DOCTOR"=>"17",
-            "DOCTOR_NAME"=>"Abdul Muis, dr. Sp.THT",
-            "GLOBAL_COMMENT"=>"-",
-            "IDENTITY_N"=>"-",
-            "IS_CITO"=>"-",
-            "KODE_PRODUCT"=>"LAB183",
-            "ONO"=>"220915/37334L",
-            "PATIENT_NAME"=>"RAHMAD ARDIANSYAH",
-            "EMAIL"=>"aabb@aaa.com",
-            "PATIENT_NO"=>"120038",
-            "ROOM"=>"POL014",
-            "ROOM_NAME"=>"IRD",
-            "SEX"=>"1",
-            "STATUS"=>"N",
-            "TYPE_PATIENT"=>"-"
+            "ADDRESS" => "JL BANTARAN RT5/10 NO.07 SUMBERKEDAWUNG LECES - KOTA PROBOLINGGO",
+            "BOD" => "19981127",
+            "CLASS" => "-",
+            "CLASS_NAME" => "-",
+            "COMPANY" => "-",
+            "COMPANY_NAME" => "RSUD MOCH SALEH",
+            "DATE_ORDER" => "20220916141249",
+            "DIAGNOSA" => "-",
+            "DOCTOR" => "17",
+            "DOCTOR_NAME" => "Abdul Muis, dr. Sp.THT",
+            "GLOBAL_COMMENT" => "-",
+            "IDENTITY_N" => "-",
+            "IS_CITO" => "-",
+            "KODE_PRODUCT" => "LAB183",
+            "ONO" => "220915/37334L",
+            "PATIENT_NAME" => "RAHMAD ARDIANSYAH",
+            "EMAIL" => "aabb@aaa.com",
+            "PATIENT_NO" => "120038",
+            "ROOM" => "POL014",
+            "ROOM_NAME" => "IRD",
+            "SEX" => "1",
+            "STATUS" => "N",
+            "TYPE_PATIENT" => "-"
         ];
 
         $headers = [
@@ -247,9 +274,6 @@ class AutogenController extends Controller
         $xtimestamp = time();
         $secret_key = 'l15Test';
         $signature = hash_hmac('sha256', $xid, $secret_key);
-
-
-
     }
 
 
@@ -257,8 +281,8 @@ class AutogenController extends Controller
     public function coba_post_hasil(Request $request)
     {
         $request->validate([
-            'ONO'=>'required',
-            'GLOBAL_COMMENT'=> 'required',
+            'ONO' => 'required',
+            'GLOBAL_COMMENT' => 'required',
             'RESULT_LIST' => 'required',
         ]);
 
@@ -267,24 +291,20 @@ class AutogenController extends Controller
             // L : 13-18, P : 12-16 g/dl
             $temp = collect($request->RESULT_LIST);
             foreach ($temp as $key) {
-                LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['KODE_PRODUCT']])->update([
-                    'hasil'=>$key['FLAGE']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['KODE_PRODUCT']])->update([
+                    'hasil' => $key['FLAGE'] . " : " . $key['REF_RANGE'] . " " . $key['UNIT']
                 ]);
             }
-        }else {
+        } else {
             $temp = collect($request->RESULT_LIST);
             foreach ($temp as $key) {
-                TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['KODE_PRODUCT']])->update([
-                    'rs21'=>$key['FLAGE']." : ".$key['REF_RANGE']." ".$key['UNIT']
+                TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['KODE_PRODUCT']])->update([
+                    'rs21' => $key['FLAGE'] . " : " . $key['REF_RANGE'] . " " . $key['UNIT']
                 ]);
             }
         }
 
-        event(New PlaygroundEvent('coba'));
-       return response()->json(['message'=>'success'], 201);
+        event(new PlaygroundEvent('coba'));
+        return response()->json(['message' => 'success'], 201);
     }
-
-
-
-
 }

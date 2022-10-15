@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Mpyw\EloquentHasByJoin\EloquentHasByJoinServiceProvider;
 
 class TransaksiLaborat extends Model
 {
@@ -42,42 +45,121 @@ class TransaksiLaborat extends Model
         return $this->belongsTo(Dokter::class, 'rs8', 'rs1');
     }
 
+    public function pasien_kunjungan_poli()
+    {
+        return $this->hasOneThrough(
+            Pasien::class,
+            KunjunganPoli::class,
+            'rs1', // Foreign key on the kunjungan poli table...
+            'rs1', // Foreign key on the pasien table...
+            'rs1', // Local key on the transaksi laborat table...
+            'rs2' // Local key on the pasien table...
+        );
+    }
+    public function pasien_kunjungan_rawat_inap()
+    {
+        return $this->hasOneThrough(
+            Pasien::class,
+            KunjunganRawatInap::class,
+            'rs1', // Foreign key on the kunjungan rawat inap table...
+            'rs1', // Foreign key on the pasien table...
+            'rs1', // Local key on the transaksi laborat table...
+            'rs2' // Local key on the pasien table...
+        );
+    }
+
+    // sistembayar
+    public function sb_kunjungan_poli()
+    {
+        return $this->hasOneThrough(
+            SistemBayar::class,
+            KunjunganPoli::class,
+            'rs1', // Foreign key on the kunjungan poli table...
+            'rs1', // Foreign key on the pasien table...
+            'rs1', // Local key on the transaksi laborat table...
+            'rs14' // Local key on the pasien table...
+        );
+    }
+    public function sb_kunjungan_rawat_inap()
+    {
+        return $this->hasOneThrough(
+            SistemBayar::class,
+            KunjunganRawatInap::class,
+            'rs1', // Foreign key on the kunjungan poli table...
+            'rs1', // Foreign key on the pasien table...
+            'rs1', // Local key on the transaksi laborat table...
+            'rs19' // Local key on the sistembayar table...
+        );
+    }
+
     public function scopeFilter($search, array $reqs)
     {
 
-        $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->where('rs2', 'LIKE', '%' . $query . '%')
-                    ->orWhere('rs23', 'LIKE', '%' . $query . '%')
-                    ->orWhereHas('kunjungan_poli.pasien', function($where) use ($query) {
-                        return $where->where('rs2', 'LIKE', '%' . $query . '%')
-                                ->orWhere('rs1', 'LIKE', '%' . $query . '%');
-                    })
-                    ->orWhereHas('kunjungan_rawat_inap.pasien', function($where) use ($query) {
-                        return $where->where('rs2', 'LIKE', '%' . $query . '%')
-                        ->orWhere('rs1', 'LIKE', '%' . $query . '%');
-                    });
+        $search->when($reqs['q'] ?? false, function ($search, $query) use ($reqs) {
+            $filterBy = $reqs['filter_by'];
+            //search by nama pasien
+            if ($filterBy == 1) {
+                $search->hasByNonDependentSubquery(
+                    'kunjungan_poli',
+                    function ($a) use ($query) {
+                        $a->hasByNonDependentSubquery(
+                            'pasien',
+                            fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%')
+                        );
+                    }
+                );
+                $search->hasByNonDependentSubquery(
+                    'kunjungan_rawat_inap',
+                    function ($a) use ($query) {
+                        $a->hasByNonDependentSubquery(
+                            'pasien',
+                            fn (BelongsTo $q) => $q->orWhere('rs2', 'LIKE', '%' . $query . '%')
+                        );
+                    }
+                );
+                //search by norm
+            } elseif ($filterBy == 2) {
+                $search->hasByNonDependentSubquery(
+                    'kunjungan_poli',
+                    function ($a) use ($query) {
+                        $a->hasByNonDependentSubquery(
+                            'pasien',
+                            fn (BelongsTo $q) => $q->where('rs1', 'LIKE', '%' . $query . '%')
+                        );
+                    }
+                );
+                $search->hasByNonDependentSubquery(
+                    'kunjungan_rawat_inap',
+                    function ($a) use ($query) {
+                        $a->hasByNonDependentSubquery(
+                            'pasien',
+                            fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%')
+                        );
+                    }
+                );
+                //search by nota
+            } else {
+                return $search->where('rs2', 'LIKE', '%' . $query . '%');
+            }
         });
         $search->when($reqs['periode'] ?? false, function ($search, $query) {
             // $y = Carbon::now()->subYears(2);
             if ($query == 2) {
                 return $search
-                ->whereDate('rs3', '=', now())
-                ->where('rs20', '<>', '');
-            }
-            elseif ($query == 3) {
+                    ->whereDate('rs3', '=', now())
+                    ->where('rs20', '<>', '');
+            } elseif ($query == 3) {
                 return
-                // $search->whereYear('rs3', $y)
-                $search->whereDate('rs3', '<', now())
-                                ->where('rs20', '=', '');
-            }
-            elseif ($query == 4) {
+                    // $search->whereYear('rs3', $y)
+                    $search->whereDate('rs3', '<', now())
+                    ->where('rs20', '=', '');
+            } elseif ($query == 4) {
                 // return $search->whereYear('rs3', $y)
                 return $search->whereDate('rs3', '<', now())
-                            ->where('rs20', '<>', '');
-            }
-            else {
+                    ->where('rs20', '<>', '');
+            } else {
                 return $search->whereDate('rs3', '=', now())
-                ->where('rs20', '=', '');
+                    ->where('rs20', '=', '');
             }
         });
 

@@ -13,7 +13,7 @@ class KunjunganPoli extends Model
 
     public function transaksi_laborat()
     {
-        return $this->hasMany(TransaksiLaborat::class, 'rs1', 'rs1');
+        return $this->hasOne(TransaksiLaborat::class, 'rs1', 'rs1');
     }
     public function sistem_bayar()
     {
