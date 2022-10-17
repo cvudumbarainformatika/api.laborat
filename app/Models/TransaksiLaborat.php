@@ -146,7 +146,7 @@ class TransaksiLaborat extends Model
             if ($query == 2) {
                 return $search
                     ->whereDate('rs3', '=', date('Y-m-d'))
-                    ->where('rs20', '><', '');
+                    ->where('rs20', '<>', '');
             } elseif ($query == 3) {
                 // pasien lalu
                 return
