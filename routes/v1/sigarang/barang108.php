@@ -1,0 +1,16 @@
+<?php
+
+use App\Http\Controllers\Api\v1\Barang108Controller;
+use Illuminate\Support\Facades\Route;
+
+
+Route::group([
+    'middleware' => 'auth:api',
+    // 'middleware' => 'jwt.verify',
+    'prefix' => 'barang108'
+], function () {
+    Route::get('/index', [Barang108Controller::class, 'index']);
+    Route::get('/barang108', [Barang108Controller::class, 'barang108']);
+    Route::post('/store', [Barang108Controller::class, 'store']);
+    Route::post('/destroy', [Barang108Controller::class, 'destroy']);
+});
