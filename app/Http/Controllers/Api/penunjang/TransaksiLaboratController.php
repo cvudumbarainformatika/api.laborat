@@ -84,7 +84,7 @@ class TransaksiLaboratController extends Controller
             'X-id' => $xid,
             'X-timestamp' => $xtimestamp,
             'X-signature' => $xsignature,
-            'Accept' => 'application/json'
+            // 'Accept' => 'application/json'
         ];
 
         $response = Http::withHeaders($headers)->post($apiURL, $request->all());
