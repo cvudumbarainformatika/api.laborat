@@ -30,8 +30,8 @@ class LisController extends Controller
 
         try {
             $request->validate([
-                'ONO'=>'required',
-                'GLOBAL_COMMENT'=> 'required',
+                'ONO' => 'required',
+                'GLOBAL_COMMENT' => 'required',
                 'RESULT_LIST' => 'required',
             ]);
 
@@ -41,48 +41,46 @@ class LisController extends Controller
                 $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
                     // L : 13-18, P : 12-16 g/dl
-                    $flag = $key['FLAG']? $key['FLAG']." : ": "";
+                    $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
                     $xtimestamp = strtotime($key['VALIDATE_BY']);
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
-                    LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['ORDER_TESTID']])->update([
-                        'hasil'=>$flag." ".$key['REF_RANGE']." ".$key['UNIT'],
+                    LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['ORDER_TESTID']])->update([
+                        'hasil' => $flag . " " . $key['REF_RANGE'] . " " . $key['UNIT'],
                         'sampel_selesai' => $sampel_selesai,
                         'jam_sampel_selesai' => $jam_sampel_selesai,
                         'akhirx' => '1' // complete
                     ]);
                 }
-            }else {
+            } else {
                 $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
-                    $flag = $key['FLAG']? $key['FLAG']." : ": "";
+                    $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
                     $xtimestamp = strtotime($key['VALIDATE_BY']);
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
 
-                    TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['ORDER_TESTID']])->update([
-                        'rs21'=>$flag." ".$key['REF_RANGE']." ".$key['UNIT'],
-                        'rs28'=> '1' // complete
+                    TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['ORDER_TESTID']])->update([
+                        'rs21' => $flag . " " . $key['REF_RANGE'] . " " . $key['UNIT'],
+                        'rs28' => '1' // complete
                     ]);
                 }
             }
 
-            $message =array(
-                'SSO'=> 'LABORAT',
-                'menu'=> $request->GLOBAL_COMMENT,
-                '__key'=> $request->ONO,
-                'data'=> 'Hasil Selesai'
+            $message = array(
+                'SSO' => 'LABORAT',
+                'menu' => $request->GLOBAL_COMMENT,
+                '__key' => $request->ONO,
+                'data' => 'Hasil Selesai'
             );
 
-            if (event(New PlaygroundEvent($message))) {
-                return response()->json(['message'=>'success'], 201);
+            if (event(new PlaygroundEvent($message))) {
+                return response()->json(['message' => 'success'], 201);
             }
 
-            return response()->json(['message'=>'success'], 201);
+            return response()->json(['message' => 'success'], 201);
         } catch (\Throwable $th) {
-            return response()->json(['message'=>'failed', $th]);
+            return response()->json(['message' => 'failed', $th]);
         }
-
-
     }
 }

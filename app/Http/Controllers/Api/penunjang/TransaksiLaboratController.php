@@ -84,6 +84,7 @@ class TransaksiLaboratController extends Controller
             'X-id' => $xid,
             'X-timestamp' => $xtimestamp,
             'X-signature' => $xsignature,
+            'Accept' => 'application/json'
         ];
 
         $response = Http::withHeaders($headers)->post($apiURL, $request->all());
@@ -98,6 +99,6 @@ class TransaksiLaboratController extends Controller
 
         TransaksiLaborat::where('rs2', $request->ONO)->update(['rs18' => "1"]);
 
-        return response()->json($responseBody);
+        return $responseBody;
     }
 }
