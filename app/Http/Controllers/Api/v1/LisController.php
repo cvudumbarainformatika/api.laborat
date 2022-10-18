@@ -27,15 +27,15 @@ class LisController extends Controller
     public function store(Request $request)
     {
         // return response()->json($request->all(), 201);
-        $message = array(
-            'SSO' => 'LABORAT',
-            'menu' => $request->GLOBAL_COMMENT,
-            '__key' => $request->ONO,
-            'data' => $request->RESULT_LIST
-        );
+        // $message = array(
+        //     'SSO' => 'LABORAT',
+        //     'menu' => $request->GLOBAL_COMMENT,
+        //     '__key' => $request->ONO,
+        //     'data' => $request->RESULT_LIST
+        // );
 
-        event(new PlaygroundEvent($message));
-        return response()->json(['message' => 'success'], 201);
+        // event(new PlaygroundEvent($message));
+        // return response()->json(['message' => 'success'], 201);
 
         try {
             $request->validate([
