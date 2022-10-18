@@ -34,11 +34,11 @@ class LisController extends Controller
                 'GLOBAL_COMMENT' => 'required',
                 'RESULT_LIST' => 'required',
             ]);
+            $temp = collect($request->RESULT_LIST)->toArray();
 
-            if ($request->GLOBAL_COMMENT === 'laborat-luar') {
+            if ($request->GLOBAL_COMMENT == 'laborat-luar') {
                 # simpan laborat luar
 
-                $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
                     // L : 13-18, P : 12-16 g/dl
                     $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
@@ -53,7 +53,7 @@ class LisController extends Controller
                     ]);
                 }
             } else {
-                $temp = collect($request->RESULT_LIST)->toArray();
+                // $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
                     $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
                     $xtimestamp = strtotime($key['VALIDATE_BY']);
@@ -74,11 +74,11 @@ class LisController extends Controller
                 'data' => 'Hasil Selesai'
             );
 
-            if (event(new PlaygroundEvent($message))) {
-                return response()->json(['message' => 'success'], 201);
-            }
-
+            event(new PlaygroundEvent($message));
             return response()->json(['message' => 'success'], 201);
+
+
+            // return response()->json(['message' => 'success'], 201);
         } catch (\Throwable $th) {
             return response()->json(['message' => 'failed', $th]);
         }
