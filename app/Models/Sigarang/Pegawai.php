@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pegawai extends Model
 {
     use HasFactory;
-    protected $connection = 'mysql3';
+    protected $connection = 'kepex';
     protected $table = 'pegawai';
     protected $fillable = [];
     public function scopeFilter($search, array $reqs)

@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi\Gudang;
 
+use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Sigarang\Supplier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

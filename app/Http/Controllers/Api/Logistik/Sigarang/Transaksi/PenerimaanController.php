@@ -17,6 +17,7 @@ class PenerimaanController extends Controller
     {
         $data = Pemesanan::filter(request(['q']))
             ->where('status', '>=', 2)
+            ->where('status', '<', 4)
             ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
         return new JsonResponse($data);
     }

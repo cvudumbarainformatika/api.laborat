@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\KontrakPengerjaanController;
+use App\Http\Controllers\Api\Logistik\Sigarang\KontrakPengerjaanController;
 use Illuminate\Support\Facades\Route;
 
 

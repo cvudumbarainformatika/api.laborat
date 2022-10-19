@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\BarangRSController;
-use App\Http\Controllers\Api\v1\TransactionController;
+use App\Http\Controllers\Api\Logistik\Sigarang\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 

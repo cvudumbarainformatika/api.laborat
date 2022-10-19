@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\Transaksi\PenerimaanController;
+use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\PenerimaanController;
 use Illuminate\Support\Facades\Route;
 
 

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\PegawaiController;
+use App\Http\Controllers\Api\Logistik\Sigarang\PegawaiController;
 use Illuminate\Support\Facades\Route;
 
 

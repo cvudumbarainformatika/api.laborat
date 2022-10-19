@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\MappingBarangController;
+use App\Http\Controllers\Api\Logistik\Sigarang\MappingBarangController;
 use Illuminate\Support\Facades\Route;
 
 

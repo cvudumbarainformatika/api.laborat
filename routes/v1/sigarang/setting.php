@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\SettingController;
+use App\Http\Controllers\Api\Logistik\Sigarang\SettingController;
 use Illuminate\Support\Facades\Route;
 
 

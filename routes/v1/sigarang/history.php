@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\v1\HistoryController;
+use App\Http\Controllers\Api\Logistik\Sigarang\HistoryController;
 use Illuminate\Support\Facades\Route;
 
 

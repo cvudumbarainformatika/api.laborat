@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class KontrakPengerjaan extends Model
 {
     use HasFactory;
-    protected $connection = 'mysql2';
+    protected $connection = 'siasik';
     protected $table = 'kontrakpengerjaan_header';
     protected $fillable = [];
 
