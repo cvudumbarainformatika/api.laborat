@@ -11,6 +11,7 @@ Route::group([
 ], function () {
     Route::get('/index', [PenggunaController::class, 'index']);
     Route::get('/pengguna', [PenggunaController::class, 'pengguna']);
+    Route::get('/penanggungjawab', [PenggunaController::class, 'penanggungjawab']);
     Route::post('/store', [PenggunaController::class, 'store']);
     Route::post('/destroy', [PenggunaController::class, 'destroy']);
 });

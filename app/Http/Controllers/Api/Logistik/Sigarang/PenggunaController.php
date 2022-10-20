@@ -24,6 +24,15 @@ class PenggunaController extends Controller
         $data = Pengguna::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return PenggunaResource::collection($data);
     }
+    public function penanggungjawab()
+    {
+        $data = Pengguna::where('level_3', '<>', null)
+            ->where('level_4', '=', null)
+            ->latest('id')
+            ->filter(request(['q']))
+            ->get(); //paginate(request('per_page'));
+        return PenggunaResource::collection($data);
+    }
     public function store(Request $request)
     {
         // $auth = $request->user();

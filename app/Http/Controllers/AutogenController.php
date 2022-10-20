@@ -7,6 +7,7 @@ use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\PemeriksaanLaborat;
+use App\Models\Sigarang\Pengguna;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
 use Carbon\Carbon;
@@ -306,5 +307,17 @@ class AutogenController extends Controller
 
         event(new PlaygroundEvent('coba'));
         return response()->json(['message' => 'success'], 201);
+    }
+
+    public function wawan()
+    {
+        $data = Pengguna::where('level_3', '<>', null)
+            ->where('level_4', '=', null)
+            ->get();
+        $koleksi = collect($data);
+        return new JsonResponse([
+            'jumlah' => $koleksi->count(),
+            'data' => $data
+        ]);
     }
 }

@@ -24,21 +24,22 @@ Route::get('/', function () {
 Route::get('/autogen', [AutogenController::class, 'index']);
 Route::get('/autogen/coba', [AutogenController::class, 'coba']);
 Route::get('/autogen/coba-api', [AutogenController::class, 'coba_api']);
+Route::get('/autogen/wawan', [AutogenController::class, 'wawan']);
 
 
 
 Route::get('/print/page', [PrintController::class, 'index']);
 
 Route::get('/unsubscribe/{user}', function (Request $request, $user) {
-    if (! $request->hasValidSignature()) {
+    if (!$request->hasValidSignature()) {
         abort(401);
     }
 
     return $user;
 })->name('unsubscribe')->middleware('signed');
 
-Route::get('/playground', function (Request $request) {
-   event(New PlaygroundEvent());
+// Route::get('/playground', function (Request $request) {
+//    event(New PlaygroundEvent());
 
-   return null;
-});
+//    return null;
+// });
