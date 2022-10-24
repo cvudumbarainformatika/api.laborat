@@ -18,6 +18,7 @@ class CreateSubmenusTable extends Migration
             $table->string('nama');
             $table->string('redirect');
             $table->string('menu_id');
+            $table->string('icon');
             $table->timestamps();
         });
     }
