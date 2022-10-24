@@ -31,7 +31,8 @@ class TransaksiLaboratController extends Controller
                 'poli',
                 'dokter',
                 'pasien_kunjungan_poli',
-                'pasien_kunjungan_rawat_inap'
+                'pasien_kunjungan_rawat_inap',
+                'pemeriksaan_laborat'
             ]);
         $data = $query->simplePaginate(request('per_page'));
 
@@ -51,7 +52,7 @@ class TransaksiLaboratController extends Controller
         if ($val === 'total') {
             $select = $query->selectRaw('rs2');
         } else {
-            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21');
+            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs4');
         }
         $q = $select
             ->whereYear('rs3', '>=', $y)

@@ -66,12 +66,13 @@ class LisController extends Controller
                 foreach ($temp as $key) {
                     $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
                     $xtimestamp = strtotime($key['VALIDATE_BY']);
-                    $sampel_selesai = date('Y-m-d', $xtimestamp);
-                    $jam_sampel_selesai = date('H:i:s', $xtimestamp);
+                    $sampel_selesai = date('Y-m-d H:i:s', $xtimestamp);
+                    // $jam_sampel_selesai = date('H:i:s', $xtimestamp);
 
                     TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['ORDER_TESTID']])->update([
                         'rs21' => $flag . " " . $key['REF_RANGE'] . " " . $key['UNIT'],
-                        'rs28' => '1' // complete
+                        'rs29' => $sampel_selesai,
+                        // 'rs28' => '1' // complete
                     ]);
                 }
             }
