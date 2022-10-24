@@ -52,24 +52,18 @@ class PenerimaanController extends Controller
         );
         return new JsonResponse($draft);
     }
+    public function suratBelumLengkap()
+    {
+        $data = Penerimaan::where('faktur', null)
+            ->orWhere('surat_jalan', null)
+            ->latest('id')
+            ->get();
+        return new JsonResponse($data);
+    }
 
     public function simpanPenerimaan(Request $request)
     {
-        // first array nya tidak masuk
         $second = $request->all();
-
-        // $rule = [
-        //     'faktur' => 'required',
-        //     'surat_jalan' => 'required',
-        // ];
-        // if ($request->has('faktur')) {
-        //     $rule['surat_jalan'] = 'exclude_if:faktur,true';
-        //     $first = array('faktur' => $request->faktur);
-        // }
-        // if ($request->has('surat_jalan')) {
-        //     $rule['faktur'] = 'exclude_if:surat_jalan,true';
-        //     $first = array('surat_jalan' => $request->faktur);
-        // }
 
         try {
             DB::beginTransaction();
@@ -90,6 +84,44 @@ class PenerimaanController extends Controller
             }
 
             PemesananController::updateStatus($request->nomor, $request->statuspemesanan);
+
+
+            DB::commit();
+
+            return new JsonResponse([
+                'message' => 'success',
+                'data' => $data,
+                // 'gudang' => $gudang,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'ada kesalahan',
+                'error' => $e
+            ], 500);
+        }
+    }
+
+    public function lengkapiSurat(Request $request)
+    {
+        $second = $request->all();
+
+        try {
+            DB::beginTransaction();
+
+            $valid = Validator::make($request->all(), [
+                'reff' => 'required',
+                'faktur' => 'required',
+                'surat_jalan' => 'required',
+                'tanggal_surat' => 'required',
+                'tanggal_faktur' => 'required',
+                'tempo' => 'required',
+            ]);
+            if ($valid->fails()) {
+                return new JsonResponse($valid->errors(), 422);
+            }
+
+            $data = Penerimaan::updateOrCreate(['reff' => $request->reff], $second);
 
 
             DB::commit();

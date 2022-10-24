@@ -26,6 +26,12 @@ class PemesananController extends Controller
         }
         return PemesananResource::collection($draft);
     }
+    public function adaPenerimaan()
+    {
+        $data = Pemesanan::where('status', '>=', 3)
+            ->latest('id')->get();
+        return new JsonResponse($data);
+    }
 
     public function store(Request $request)
     {
