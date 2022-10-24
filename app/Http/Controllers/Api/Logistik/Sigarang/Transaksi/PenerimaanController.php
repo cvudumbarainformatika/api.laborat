@@ -55,31 +55,31 @@ class PenerimaanController extends Controller
 
     public function simpanPenerimaan(Request $request)
     {
+        // first array nya tidak masuk
         $second = $request->all();
-        unset($second['faktur']);
-        unset($second['surat_jalan']);
 
-        $rule = [
-            'faktur' => 'required',
-            'surat_jalan' => 'required',
-        ];
-        if ($request->has('faktur')) {
-            $rule['surat_jalan'] = 'exclude_if:faktur,true';
-            $first = array('faktur' => $request->faktur);
-        }
-        if ($request->has('surat_jalan')) {
-            $rule['faktur'] = 'exclude_if:surat_jalan,true';
-            $first = array('surat_jalan' => $request->faktur);
-        }
+        // $rule = [
+        //     'faktur' => 'required',
+        //     'surat_jalan' => 'required',
+        // ];
+        // if ($request->has('faktur')) {
+        //     $rule['surat_jalan'] = 'exclude_if:faktur,true';
+        //     $first = array('faktur' => $request->faktur);
+        // }
+        // if ($request->has('surat_jalan')) {
+        //     $rule['faktur'] = 'exclude_if:surat_jalan,true';
+        //     $first = array('surat_jalan' => $request->faktur);
+        // }
+
         try {
             DB::beginTransaction();
 
-            $valid = Validator::make($request->all(), $rule);
+            $valid = Validator::make($request->all(), ['reff' => 'required']);
             if ($valid->fails()) {
                 return new JsonResponse($valid->errors(), 422);
             }
 
-            $data = Penerimaan::updateOrCreate($first, $second);
+            $data = Penerimaan::updateOrCreate(['reff' => $request->reff], $second);
 
             if ($request->has('kode_rs') && $request->has('kode_108') && $request->kode_rs !== null) {
                 $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);

@@ -19,6 +19,7 @@ class HistoryController extends Controller
         $gudang = TransaksiGudang::query();
         $nama = request('nama');
         if ($nama === 'Pemesanan') {
+            // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
             $data = $pemesanan->filter(request(['q']))->with('perusahaan',  'details.barangrs', 'details.barang108', 'details.satuan')->paginate(request('per_page'));
         } else if ($nama === 'Penerimaan') {
             $data = $penerimaan->filter(request(['q']))->with('perusahaan',  'details.barangrs', 'details.barang108', 'details.satuan')->paginate(request('per_page'));
