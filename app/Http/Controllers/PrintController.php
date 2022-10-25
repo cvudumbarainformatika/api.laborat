@@ -64,7 +64,7 @@ class PrintController extends Controller
     {
         $header = $this->print_header();
         $details = TransaksiLaborat::query()
-            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs29,rs4')
+            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs29,rs4, (rs6 + rs7) as biaya, rs5 as jumlah,((rs6 + rs7)* rs5) as subtotal ')
             ->where('rs2', $q)
             ->with([
                 'kunjungan_poli',
@@ -75,7 +75,8 @@ class PrintController extends Controller
                 'poli',
                 'dokter',
                 'pasien_kunjungan_poli',
-                'pasien_kunjungan_rawat_inap'
+                'pasien_kunjungan_rawat_inap',
+                'pemeriksaan_laborat'
             ])
             ->get();
 

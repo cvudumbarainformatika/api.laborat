@@ -25,7 +25,7 @@ class PemeriksaanLaboratController extends Controller
             //             ->orWhere('rs21', 'LIKE', '%' . 'DARA' . '%');
 
             // })
-            ->groupBy('rs21')
+            // ->groupBy('rs21')
             ->where('hidden', '=', '')->get();
         return new JsonResponse($data);
     }

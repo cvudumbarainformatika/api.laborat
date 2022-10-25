@@ -47,7 +47,9 @@ class TransaksiLaboratController extends Controller
 
     public function query_table($val)
     {
-        $y = Carbon::now()->subYears(3);
+        $y = Carbon::now()->subYears(1);
+        $from = now();
+        $to = $y;
         $query = TransaksiLaborat::query();
         if ($val === 'total') {
             $select = $query->selectRaw('rs2');
@@ -55,7 +57,8 @@ class TransaksiLaboratController extends Controller
             $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs4');
         }
         $q = $select
-            ->whereYear('rs3', '>=', $y)
+            // ->whereYear('rs3', '>=', $y)
+            ->whereBetween('rs3', [$to, $from])
             ->filter(request(['q', 'periode', 'filter_by']))
             ->orderBy('rs3', 'desc')->groupBy('rs2');
         return $q;
