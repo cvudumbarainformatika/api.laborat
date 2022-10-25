@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\GudangResource;
 use App\Models\Sigarang\Gudang;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -24,6 +25,13 @@ class GudangController extends Controller
         $data = Gudang::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return GudangResource::collection($data);
         // return new JsonResponse($data);
+    }
+    public function depo()
+    {
+        $data = Gudang::where('depo', '<>', null)
+            ->where('ruang', '=', null)
+            ->get();
+        return new JsonResponse($data);
     }
     public function store(Request $request)
     {

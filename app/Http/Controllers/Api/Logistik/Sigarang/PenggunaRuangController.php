@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\PenggunaRuangResource;
 use App\Models\Sigarang\PenggunaRuang;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +20,12 @@ class PenggunaRuangController extends Controller
             ->with('ruang.namagedung', 'pengguna', 'penanggungjawab')
             ->paginate(request('per_page'));
         return PenggunaRuangResource::collection($data);
+    }
+    public function penggunaRuang()
+    {
+        $data = PenggunaRuang::with('ruang.namagedung', 'pengguna', 'penanggungjawab')
+            ->get();
+        return new JsonResponse($data);
     }
     public function store(Request $request)
     {

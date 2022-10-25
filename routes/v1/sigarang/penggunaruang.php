@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'penggunaruang'
 ], function () {
     Route::get('/index', [PenggunaRuangController::class, 'index']);
+    Route::get('/pengguna-ruang', [PenggunaRuangController::class, 'penggunaRuang']);
     Route::post('/store', [PenggunaRuangController::class, 'store']);
     Route::post('/destroy', [PenggunaRuangController::class, 'destroy']);
 });

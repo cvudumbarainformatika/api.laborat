@@ -19,9 +19,15 @@ class PenggunaController extends Controller
             ->paginate(request('per_page'));
         return PenggunaResource::collection($data);
     }
-    public function pengguna()
+    public function cariPengguna()
     {
         $data = Pengguna::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
+        return PenggunaResource::collection($data);
+    }
+    public function pengguna()
+    {
+        $data = Pengguna::latest('id')->where('level_4', '<>', null)
+            ->get();
         return PenggunaResource::collection($data);
     }
     public function penanggungjawab()

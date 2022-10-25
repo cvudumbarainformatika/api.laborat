@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\RuangResource;
 use App\Models\Sigarang\Ruang;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -27,6 +28,13 @@ class RuangController extends Controller
             ->filter(request(['q']))
             ->get();
         return RuangResource::collection($data);
+    }
+    public function allRuang()
+    {
+        // $data = Ruang::paginate();
+        $data = Ruang::where('ruang', '>', 0)
+            ->get();
+        return new JsonResponse($data);
     }
     public function store(Request $request)
     {
