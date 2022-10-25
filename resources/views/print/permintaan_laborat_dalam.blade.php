@@ -45,22 +45,6 @@
         ?>
         <!-- Detail Pasien -->
         <div class="column">
-            <!-- <div class="row">
-                <div class="w-xx">Nama / <span class="italic"> Name</span></div>
-                <div>: {{ $pasien->rs2 }}</div>
-            </div>
-            <div class="row">
-                <div class="w-xx">Alamat / <span class="italic"> Address</span></div>
-                <div>: {{ $pasien->rs4 }} {{ $pasien->rs11 }}</div>
-            </div>
-            <div class="row">
-                <div class="w-xx">Dokter Pengirim / <span class="italic"> Sending Doctor</span></div>
-                <div>: {{ $details[0]->dokter->rs2 }}</div>
-            </div>
-            <div class="row">
-                <div class="w-xx">Sampel Selesai Diperiksa / <span class="italic"> Sample Has Been Checked </span></div>
-                <div>: {{ $tgl_selesai }}, Jam/Clock: {{ $jam_selesai }}</div>
-            </div> -->
             <div class="row justify-between">
                 <div class="left">
                     <div class="row">
