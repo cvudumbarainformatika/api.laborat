@@ -55,6 +55,7 @@ class LisController extends Controller
                     $xtimestamp = strtotime($key['VALIDATE_ON']);
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
+
                     LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['ORDER_TESTID']])->update([
                         'hl' => $key['FLAG'],
                         'hasil' => $key['RESULT_VALUE'],
@@ -99,7 +100,7 @@ class LisController extends Controller
                 'menu' => $request->GLOBAL_COMMENT,
                 '__key' => $request->ONO,
                 'data' => 'Hasil Selesai',
-                'LIS' => $request->all()
+                'LIS' => $temp
             );
 
             event(new PlaygroundEvent($message));
