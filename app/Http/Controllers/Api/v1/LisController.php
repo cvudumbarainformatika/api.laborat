@@ -51,7 +51,7 @@ class LisController extends Controller
 
                 foreach ($temp as $key) {
                     // L : 13-18, P : 12-16 g/dl
-                    $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
+                    $flag = $key['FLAG'];
                     $xtimestamp = strtotime($key['VALIDATE_ON']);
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
@@ -73,7 +73,7 @@ class LisController extends Controller
             } else {
                 // $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
-                    $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
+                    $flag = $key['FLAG'];
                     $xtimestamp = strtotime($key['VALIDATE_ON']);
                     $sampel_selesai = date('Y-m-d H:i:s', $xtimestamp);
                     // $jam_sampel_selesai = date('H:i:s', $xtimestamp);
@@ -99,7 +99,7 @@ class LisController extends Controller
                 'menu' => $request->GLOBAL_COMMENT,
                 '__key' => $request->ONO,
                 'data' => 'Hasil Selesai',
-                'LIS' => $request->all()
+                // 'LIS' => $request->all()
             );
 
             event(new PlaygroundEvent($message));
