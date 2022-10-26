@@ -51,7 +51,7 @@ class LisController extends Controller
                 foreach ($temp as $key) {
                     // L : 13-18, P : 12-16 g/dl
                     $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
-                    $xtimestamp = strtotime($key['VALIDATE_BY']);
+                    $xtimestamp = strtotime($key['VALIDATE_ON']);
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
                     LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['ORDER_TESTID']])->update([
@@ -65,7 +65,7 @@ class LisController extends Controller
                 // $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
                     $flag = $key['FLAG'] ? $key['FLAG'] . " : " : "";
-                    $xtimestamp = strtotime($key['VALIDATE_BY']);
+                    $xtimestamp = strtotime($key['VALIDATE_ON']);
                     $sampel_selesai = date('Y-m-d H:i:s', $xtimestamp);
                     // $jam_sampel_selesai = date('H:i:s', $xtimestamp);
 
