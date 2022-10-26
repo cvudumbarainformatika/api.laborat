@@ -35,7 +35,8 @@ class LaboratLuar extends Model
         'agama',
         'nohp',
         'kode_pekerjaan',
-        'nama_pekerjaan'
+        'nama_pekerjaan',
+        'metode'
     ];
     public $timestamps = false;
 
@@ -45,23 +46,23 @@ class LaboratLuar extends Model
     }
     public function pemeriksaan_laborat() // data master
     {
-        return $this->belongsTo(PemeriksaanLaborat::class,'kd_lab','rs1');
+        return $this->belongsTo(PemeriksaanLaborat::class, 'kd_lab', 'rs1');
     }
     public function catatan() // data master
     {
-        return $this->belongsTo(Interpretasi::class,'nota','rs5');
+        return $this->belongsTo(Interpretasi::class, 'nota', 'rs5');
     }
 
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
             return $search->where('nota', $query)
-                            ->orWhere('nama', $query)
-                            ->orWhere('pengirim', $query)
-                            ->orWhere('alamat', $query);
+                ->orWhere('nama', $query)
+                ->orWhere('pengirim', $query)
+                ->orWhere('alamat', $query);
             // return $search->where('rs2', 'LIKE', '%' . $query . '%');
-                // ->orWhere('nip', 'LIKE', '%' . $query . '%')
-                // ->orWhere('judul', 'LIKE', '%' . $query . '%');
+            // ->orWhere('nip', 'LIKE', '%' . $query . '%')
+            // ->orWhere('judul', 'LIKE', '%' . $query . '%');
         });
         // $search->when($reqs['periode'] ?? false, function ($search, $query) {
         //     if ($query == 2) {

@@ -9,8 +9,9 @@ class PemeriksaanLaborat extends Model
 {
     use HasFactory;
 
-    protected $table='rs49';
+    protected $table = 'rs49';
     protected $guarded = ['id'];
+    public $timestamps = false;
 
     public function transaksi_laborat()
     {
