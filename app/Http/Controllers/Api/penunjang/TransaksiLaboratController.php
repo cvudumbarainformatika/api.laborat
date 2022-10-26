@@ -55,7 +55,7 @@ class TransaksiLaboratController extends Controller
         if ($val === 'total') {
             $select = $query->selectRaw('rs2,rs3');
         } else {
-            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs4,rs26');
+            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs4,rs26,rs27');
         }
         $q = $select
             // ->whereYear('rs3', '>=', $y)
