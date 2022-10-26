@@ -81,7 +81,8 @@ class LisController extends Controller
                 'SSO' => 'LABORAT',
                 'menu' => $request->GLOBAL_COMMENT,
                 '__key' => $request->ONO,
-                'data' => 'Hasil Selesai'
+                'data' => 'Hasil Selesai',
+                'LIS' => $request->all()
             );
 
             event(new PlaygroundEvent($message));
