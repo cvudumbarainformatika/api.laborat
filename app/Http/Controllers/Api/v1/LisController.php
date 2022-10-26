@@ -99,7 +99,7 @@ class LisController extends Controller
                 'menu' => $request->GLOBAL_COMMENT,
                 '__key' => $request->ONO,
                 'data' => 'Hasil Selesai',
-                // 'LIS' => $request->all()
+                'LIS' => $request->all()
             );
 
             event(new PlaygroundEvent($message));
