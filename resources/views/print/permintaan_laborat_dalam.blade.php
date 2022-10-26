@@ -25,7 +25,7 @@
 
         <!-- header -->
         <div class="title bold underline text-center">HASIL PERMINTAAN LABORAT</div>
-        <div class="title mb-10 italic text-center">LABORATORY EXAMINATION RESULTS </div>
+        <!-- <div class="title mb-10 italic text-center">LABORATORY EXAMINATION RESULTS </div> -->
         <?php
         $pasien = $details[0]->poli ? $details[0]->pasien_kunjungan_poli : $details[0]->pasien_kunjungan_rawat_inap;
         $tgl_selesai = date('Y-m-d', strtotime($details[0]->rs29));
@@ -108,7 +108,7 @@
                     <td>&nbsp;<b><u>Jam</u></b><br><i>Clock</i>&nbsp;</td>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="f-12">
                 <?php $i = 1;
                 $total = 0;
                 $x = 1;
@@ -125,10 +125,10 @@
                         ?>
                             <tr>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[0]['rs21']}} </td>
-                                <td> {{ $values[0]['pemeriksaan_laborat']['rs22'] }} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[0]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[0]['tanggal'])) }} </td>
+                                <td> {{ $values[$n]['rs21']}} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['rs22'] }} </td>
+                                <td> {{ date('Y-m-d', strtotime($values[$n]['tanggal'])) }} </td>
+                                <td> {{ date('H:i:s', strtotime($values[$n]['tanggal'])) }} </td>
                             </tr>
                         <?php } elseif ($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
                             $total +=  $values[0]['subtotal'];
