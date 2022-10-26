@@ -64,7 +64,7 @@ class LisController extends Controller
                         'akhirx' => '1' // complete
                     ]);
 
-                    PemeriksaanLaborat::where('rs1', $key['ORDER_TESTID'])
+                    PemeriksaanLaborat::where(['rs1' => $key['ORDER_TESTID']])
                         ->update([
                             'nilainormal' => $key['REF_RANGE'],
                             'satuan' => $key['UNIT'],
@@ -86,7 +86,7 @@ class LisController extends Controller
                         'rs26' => '1' // complete
                     ]);
 
-                    PemeriksaanLaborat::where('rs1', $key['ORDER_TESTID'])
+                    PemeriksaanLaborat::where(['rs1' => $key['ORDER_TESTID']])
                         ->update([
                             'nilainormal' => $key['REF_RANGE'],
                             'satuan' => $key['UNIT'],
