@@ -56,7 +56,7 @@ class LisController extends Controller
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
                     LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['ORDER_TESTID']])->update([
-                        'hl' => $flag,
+                        'hl' => $key['FLAG'],
                         'hasil' => $key['RESULT_VALUE'],
                         'metode' => $key['METODE'],
                         'sampel_selesai' => $sampel_selesai,
@@ -79,7 +79,7 @@ class LisController extends Controller
                     // $jam_sampel_selesai = date('H:i:s', $xtimestamp);
 
                     TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['ORDER_TESTID']])->update([
-                        'rs27' => $flag,
+                        'rs27' => $key['FLAG'],
                         'rs21' => $key['RESULT_VALUE'],
                         'metode' => $key['METODE'],
                         'rs29' => $sampel_selesai,
