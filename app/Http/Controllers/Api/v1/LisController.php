@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Controller;
 use App\Models\LaboratLuar;
+use App\Models\PemeriksaanLaborat;
 use App\Models\TransaksiLaborat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,11 +56,19 @@ class LisController extends Controller
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
                     LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['ORDER_TESTID']])->update([
-                        'hasil' => $flag . " " . $key['REF_RANGE'] . " " . $key['UNIT'],
+                        'hl' => $flag,
+                        'hasil' => $key['RESULT_VALUE'],
+                        'metode' => $key['METODE'],
                         'sampel_selesai' => $sampel_selesai,
                         'jam_sampel_selesai' => $jam_sampel_selesai,
                         'akhirx' => '1' // complete
                     ]);
+
+                    PemeriksaanLaborat::where('rs1', $key['ORDER_TESTID'])
+                        ->update([
+                            'nilainormal' => $key['REF_RANGE'],
+                            'satuan' => $key['UNIT'],
+                        ]);
                 }
             } else {
                 // $temp = collect($request->RESULT_LIST)->toArray();
@@ -70,10 +79,18 @@ class LisController extends Controller
                     // $jam_sampel_selesai = date('H:i:s', $xtimestamp);
 
                     TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['ORDER_TESTID']])->update([
-                        'rs21' => $flag . " " . $key['REF_RANGE'] . " " . $key['UNIT'],
+                        'rs27' => $flag,
+                        'rs21' => $key['RESULT_VALUE'],
+                        'metode' => $key['METODE'],
                         'rs29' => $sampel_selesai,
                         'rs26' => '1' // complete
                     ]);
+
+                    PemeriksaanLaborat::where('rs1', $key['ORDER_TESTID'])
+                        ->update([
+                            'nilainormal' => $key['REF_RANGE'],
+                            'satuan' => $key['UNIT'],
+                        ]);
                 }
             }
 
