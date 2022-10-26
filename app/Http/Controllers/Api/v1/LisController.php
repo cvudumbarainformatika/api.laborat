@@ -72,7 +72,7 @@ class LisController extends Controller
                     TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['ORDER_TESTID']])->update([
                         'rs21' => $flag . " " . $key['REF_RANGE'] . " " . $key['UNIT'],
                         'rs29' => $sampel_selesai,
-                        // 'rs28' => '1' // complete
+                        'rs26' => '1' // complete
                     ]);
                 }
             }
