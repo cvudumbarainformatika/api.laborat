@@ -36,7 +36,8 @@ class PemesananController extends Controller
     public function store(Request $request)
     {
         $second = $request->all();
-        unset($second['reff']);
+        $second['tanggal'] = date('Y-m-d H:i:s');
+        // unset($second['reff']);
         try {
             DB::beginTransaction();
 

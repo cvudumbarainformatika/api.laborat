@@ -18,6 +18,7 @@ class TransaksiGudangController extends Controller
         $terima = Penerimaan::where('id', $data)->with('details')->get();
         $first = $terima[0]->reff;
         $second = $terima[0];
+        $second['tanggal'] = date('Y-m-d H:i:s');
         $second->asal = 'Gud-0000001';
         $second->tujuan = 'Gud-01000';
         $second->nama = 'PENERIMAAN GUDANG';

@@ -8,6 +8,7 @@ use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
 use Carbon\Carbon;
@@ -311,13 +312,23 @@ class AutogenController extends Controller
 
     public function wawan()
     {
-        $data = Pengguna::where('level_3', '<>', null)
-            ->where('level_4', '=', null)
-            ->get();
-        $koleksi = collect($data);
+        // $data = Pengguna::where('level_3', '<>', null)
+        //     ->where('level_4', '=', null)
+        //     ->get();
+        // $koleksi = collect($data);
+        $draft = Permintaanruangan::where('reff', '=', 'TPN-l9pa1meah1nyu')
+            ->where('status', '=', 1)
+            // ->latest('id')->with(['details.barangrs', 'details.satuan', 'details.ruang', 'details.gudang'])->get();
+            ->latest('id')->with(['details'])->get();
+        $kolek = collect($draft[0]->details)->groupBy('dari');
+        $apem = $draft[0];
+        $apem->details[0] = $kolek;
+        $draft[0]->gedung = $kolek;
+
         return new JsonResponse([
-            'jumlah' => $koleksi->count(),
-            'data' => $data
+            'draft' => $draft,
+            'kolek' => $kolek,
+
         ]);
     }
 }

@@ -5,15 +5,15 @@ namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pemintaanruangan extends Model
+class Permintaanruangan extends Model
 {
     use HasFactory;
+    protected $connection = 'sigarang';
     protected $guarded = ['id'];
 
-    protected $connection = 'sigarang';
 
     public function details()
     {
-        return $this->hasMany(DetailPemintaanruangan::class);
+        return $this->hasMany(DetailPermintaanruangan::class);
     }
 }
