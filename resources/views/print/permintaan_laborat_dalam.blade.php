@@ -144,9 +144,9 @@
                             <tr>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
                                 <td> {{ $values[$n]['rs21']}} </td>
-                                <td> {{ $values[$n]['pemeriksaan_laborat']['rs22'] }} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[$n]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[$n]['tanggal'])) }} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
+                                <td> {{ $values[$n]['metode']}} </td>
                             </tr>
                         <?php } elseif ($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
                             $total +=  $values[0]['subtotal'];
@@ -162,18 +162,18 @@
                             <tr class="list">
                                 <td> - {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
                                 <td> {{ $values[0]['flag'] }} &nbsp; {{ $values[0]['rs21']}} </td>
-                                <td> {{ $values[0]['pemeriksaan_laborat']['rs22'] }} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[0]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[0]['tanggal'])) }} </td>
+                                <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
+                                <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
+                                <td> {{ $values[0]['metode']}} }} </td>
                             </tr>
                         <?php } else {
                         ?>
                             <tr class="list">
                                 <td> - {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
                                 <td> {{ $values[$n]['flag'] }} &nbsp; {{ $values[$n]['rs21'] }} </td>
-                                <td> {{ $values[$n]['pemeriksaan_laborat']['rs22']}} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[$n]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[$n]['tanggal'])) }} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
+                                <td> {{ $values[$n]['metode']}} </td>
                             </tr>
                         <?php } ?>
                     <?php } ?>
