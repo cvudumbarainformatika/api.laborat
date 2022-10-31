@@ -56,7 +56,6 @@
                 <div class="left">
                     <div class="row">
                         <div style="width:100px">Nama</div>
-                        <!-- <div>: {{ date('d F Y', strtotime($details[0]->tanggal)) }}</div> -->
                         <div>: {{$pasien->rs2}}</div>
                     </div>
                     <div class="row">

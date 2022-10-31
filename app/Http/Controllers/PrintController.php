@@ -44,10 +44,10 @@ class PrintController extends Controller
         $header = $this->print_header();
         $details = LaboratLuar::query()
             ->selectRaw('
-            nama, kelamin, alamat,
+            nama, kelamin, alamat,tgl_lahir,
             nota,tgl,pengirim,hasil,hl,kd_lab,jml,tarif_sarana,tarif_pelayanan,
             sampel_diambil,jam_sampel_diambil,sampel_selesai,jam_sampel_selesai,ket,
-            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
+            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal, metode')
             ->where('nota', $q)
             ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
             ->get();
