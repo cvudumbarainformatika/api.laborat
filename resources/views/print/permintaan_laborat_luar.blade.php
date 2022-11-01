@@ -112,7 +112,10 @@
                             <div style="width:100px">Tgl Validasi </div>
                             <div>: {{ $details[0]->sampel_selesai }} {{ $details[0]->jam_sampel_selesai }}</div>
                         </div>
-
+                        <div class="row">
+                            <div style="width:100px">TAT </div>
+                            <div>: {{$details[0]->tat}}</div>
+                        </div>
                     </div>
                 </div>
                 <!-- <div class="row">

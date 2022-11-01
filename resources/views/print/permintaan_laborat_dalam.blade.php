@@ -93,12 +93,10 @@
                         <div style="width:100px">Tgl Validasi </div>
                         <div>: {{ $tanggal_validasi }}</div>
                     </div>
-                    <!-- <div class="row">
-                        <div style="width:100px">Tgl Selesai </div>
-                        <div>: {{$details[0]->poli? hitung_umur($details[0]->pasien_kunjungan_poli->rs16):
-                            hitung_umur($details[0]->pasien_kunjungan_rawat_inap->rs16)
-                        }}</div>
-                    </div> -->
+                    <div class="row">
+                        <div style="width:100px">TAT </div>
+                        <div>: {{$details[0]->tat}}</div>
+                    </div>
                     <!-- <div class="row">
                         <div>TAT Permintaan </div>
                         <div>: {{$details[0]->poli? $details[0]->sb_kunjungan_poli->rs2:$details[0]->sb_kunjungan_rawat_inap->rs2}}</div>

@@ -47,7 +47,7 @@ class PrintController extends Controller
             nama, kelamin, alamat,tgl_lahir,
             nota,tgl,pengirim,hasil,hl,kd_lab,jml,tarif_sarana,tarif_pelayanan,
             sampel_diambil,jam_sampel_diambil,sampel_selesai,jam_sampel_selesai,ket,
-            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal, metode')
+            (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal, metode,tat')
             ->where('nota', $q)
             ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
             ->get();
@@ -64,7 +64,7 @@ class PrintController extends Controller
     {
         $header = $this->print_header();
         $details = TransaksiLaborat::query()
-            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs29,rs4, (rs6 + rs7) as biaya, rs5 as jumlah,((rs6 + rs7)* rs5) as subtotal,rs27 as flag, metode')
+            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs29,rs4, (rs6 + rs7) as biaya, rs5 as jumlah,((rs6 + rs7)* rs5) as subtotal,rs27 as flag, metode,tat')
             ->where('rs2', $q)
             ->with([
                 'kunjungan_poli',
