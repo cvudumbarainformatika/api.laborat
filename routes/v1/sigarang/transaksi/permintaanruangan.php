@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'transaksi/permintaanruangan'
 ], function () {
     Route::get('/draft', [PermintaanruanganController::class, 'draft']);
+    Route::get('/get-perrmintaan', [PermintaanruanganController::class, 'getPerrmintaan']);
     Route::post('/store', [PermintaanruanganController::class, 'store']);
     Route::post('/selesai-input', [PermintaanruanganController::class, 'selesaiInput']);
 });

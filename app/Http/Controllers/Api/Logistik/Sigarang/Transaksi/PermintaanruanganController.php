@@ -29,6 +29,13 @@ class PermintaanruanganController extends Controller
         return new JsonResponse($draft);
     }
 
+    // ambil semua permintaan yang sudah selesai di input
+    public function getPerrmintaan()
+    {
+        $data = Permintaanruangan::where('status', '=', 2)->get();
+        return new JsonResponse($data);
+    }
+
     public function store(Request $request)
     {
         $second = $request->all();
