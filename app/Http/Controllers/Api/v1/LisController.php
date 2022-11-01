@@ -62,6 +62,7 @@ class LisController extends Controller
                         'metode' => $key['METODE'],
                         'sampel_selesai' => $sampel_selesai,
                         'jam_sampel_selesai' => $jam_sampel_selesai,
+                        'tat' => $request->TAT,
                         'akhirx' => '1' // complete
                     ]);
 
@@ -84,6 +85,7 @@ class LisController extends Controller
                         'rs21' => $key['RESULT_VALUE'],
                         'metode' => $key['METODE'],
                         'rs29' => $sampel_selesai,
+                        'tat' => $request->TAT,
                         'rs26' => '1' // complete
                     ]);
 

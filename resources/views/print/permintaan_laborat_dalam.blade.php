@@ -9,7 +9,7 @@
     <title></title>
 </head>
 
-<body topmargin="0" leftmargin="0" rightmargin="0">
+<body topmargin="0" leftmargin="0" rightmargin="0" class="f-12">
     <div class="page">
         <div class="row">
             <div class="">
@@ -24,7 +24,8 @@
         <hr />
 
         <!-- header -->
-        <div class="title bold underline text-center">HASIL PERMINTAAN LABORAT</div>
+        <div class="title bold text-center" style="margin-bottom:10px">HASIL PERMINTAAN LABORATORIUM</div>
+        <hr />
         <!-- <div class="title mb-10 italic text-center">LABORATORY EXAMINATION RESULTS </div> -->
         <?php
         $pasien = $details[0]->poli ? $details[0]->pasien_kunjungan_poli : $details[0]->pasien_kunjungan_rawat_inap;
@@ -40,72 +41,86 @@
             $y = $today->diff($birthDate)->y;
             $m = $today->diff($birthDate)->m;
             $d = $today->diff($birthDate)->d;
-            return $y . " Tahun";
+            return $y . " Thn " . $m . " Bln " . $d . " Hr";
         }
+
+        $ruangan = $details[0]->poli ? $details[0]->poli->rs2 : $details[0]->kunjungan_rawat_inap->ruangan->rs2;
+        $sistemBayar = $details[0]->poli ? $details[0]->sb_kunjungan_poli->rs2 : $details[0]->sb_kunjungan_rawat_inap->rs2;
+        $dokter = $details[0]->dokter ? $details[0]->dokter->rs2 : '-';
+        $tanggal_permintaan = $details[0]->tanggal;
+        $tanggal_validasi = $details[0]->rs29;
         ?>
         <!-- Detail Pasien -->
-        <div class="column">
+        <div class="column" style="margin-top:10px; margin-bottom:10px;">
             <div class="row justify-between">
                 <div class="left">
                     <div class="row">
-                        <div style="width:100px">TANGGAL</div>
-                        <div>: {{ date('d F Y', strtotime($details[0]->tanggal)) }}</div>
+                        <div style="width:100px">Nama</div>
+                        <div>: {{$pasien->rs2}}</div>
                     </div>
                     <div class="row">
-                        <div style="width:100px">NOREG</div>
-                        <div>: {{$details[0]->rs1}}</div>
+                        <div style="width:100px">tgl Lahir / Umur</div>
+                        <div>: {{ date('d-m-Y', strtotime($pasien->rs16)) }} / {{hitung_umur($pasien->rs16)}}</div>
                     </div>
                     <div class="row">
-                        <div style="width:100px">NORM</div>
-                        <div>: {{$details[0]->poli? $details[0]->pasien_kunjungan_poli->rs1:$details[0]->pasien_kunjungan_rawat_inap->rs1}}</div>
+                        <div style="width:100px">No Reg</div>
+                        <div>: {{ $details[0]->rs1 }}</div>
                     </div>
                     <div class="row">
-                        <div style="width:100px">PENGIRIM</div>
-                        <div>: {{$details[0]->dokter->rs2}}</div>
+                        <div style="width:100px">No RM</div>
+                        <div>: {{ $pasien->rs1 }}</div>
                     </div>
                     <div class="row">
-                        <div style="width:100px">POLI/RUANG</div>
-                        <div>: {{$details[0]->poli? $details[0]->poli->rs2:$details[0]->kunjungan_rawat_inap->rs6}}</div>
+                        <div style="width:100px">Alamat</div>
+                        <div>: {{ $pasien->rs4 }}</div>
                     </div>
+                    <div class="row">
+                        <div style="width:100px">Ruangan / Poli</div>
+                        <div>: {{ $ruangan }}</div>
+                    </div>
+
                 </div>
                 <div class="right">
                     <div class="row">
-                        <div>JAM PERMINTAAN </div>
-                        <div>: {{ date('H:i:s', strtotime($details[0]->tanggal)) }}</div>
+                        <div style="width:100px">Atas Permintaan </div>
+                        <div style="width:150px">: {{ $dokter }}</div>
                     </div>
                     <div class="row">
-                        <div>NAMA </div>
-                        <div>: {{$details[0]->poli? $details[0]->pasien_kunjungan_poli->rs2:$details[0]->pasien_kunjungan_rawat_inap->rs2}}</div>
+                        <div style="width:100px">Tgl Permintaan </div>
+                        <div>: {{$tanggal_permintaan}}</div>
                     </div>
                     <div class="row">
-                        <div>UMUR </div>
-                        <div>: {{$details[0]->poli? hitung_umur($details[0]->pasien_kunjungan_poli->rs16):
-                            hitung_umur($details[0]->pasien_kunjungan_rawat_inap->rs16)
-                        }}</div>
+                        <div style="width:100px">Tgl Validasi </div>
+                        <div>: {{ $tanggal_validasi }}</div>
                     </div>
                     <div class="row">
-                        <div>SISTEM BAYAR </div>
-                        <div>: {{$details[0]->poli? $details[0]->sb_kunjungan_poli->rs2:$details[0]->sb_kunjungan_rawat_inap->rs2}}</div>
+                        <div style="width:100px">TAT </div>
+                        <div>: {{$details[0]->tat}}</div>
                     </div>
                     <!-- <div class="row">
-                        <div>ALAMAT </div>
-                        <div>: {{$details[0]->poli? $details[0]->pasien_kunjungan_poli->rs4:$details[0]->pasien_kunjungan_rawat_inap->rs4}}</div>
+                        <div>TAT Permintaan </div>
+                        <div>: {{$details[0]->poli? $details[0]->sb_kunjungan_poli->rs2:$details[0]->sb_kunjungan_rawat_inap->rs2}}</div>
                     </div> -->
+                    <div class="row">
+                        <div style="width:100px">Metode Bayar </div>
+                        <div>: {{$sistemBayar}}</div>
+                    </div>
                 </div>
             </div>
         </div>
+        <hr />
 
         <?php $gg = collect($details)->groupBy('pemeriksaan_laborat.rs21')->toArray(); ?>
 
 
         <table width="100%" class="table" cellpadding="0" cellspacing="0" border="1" bordercolor="#006699" bordercolordark="#666666" bordercolorlight="#003399">
             <thead>
-                <tr valign="middle" align="center">
-                    <td>&nbsp;<b><u>Pemeriksaan</u></b><br><i>Checking Type</i>&nbsp;</td>
-                    <td>&nbsp;<b><u>Hasil</u></b><br><i>Result</i>&nbsp;</td>
-                    <td>&nbsp;<b><u>Nilai Normal</u></b><br><i>Normal Value</i>&nbsp;</td>
-                    <td>&nbsp;<b><u>Tanggal</u></b><br><i>Date</i>&nbsp;</td>
-                    <td>&nbsp;<b><u>Jam</u></b><br><i>Clock</i>&nbsp;</td>
+                <tr valign="middle" style="border-bottom: solid 1px rgb(190, 190, 190);">
+                    <td><b>PEMERIKSAAN</b></td>
+                    <td><b>HASIL</b></td>
+                    <td><b>NILAI NORMAL</b></td>
+                    <td><b>SATUAN</b></td>
+                    <td><b>METODE</b></td>
                 </tr>
             </thead>
             <tbody class="f-12">
@@ -126,32 +141,36 @@
                             <tr>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
                                 <td> {{ $values[$n]['rs21']}} </td>
-                                <td> {{ $values[$n]['pemeriksaan_laborat']['rs22'] }} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[$n]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[$n]['tanggal'])) }} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
+                                <td> {{ $values[$n]['metode']}} </td>
                             </tr>
                         <?php } elseif ($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
                             $total +=  $values[0]['subtotal'];
                         ?>
                             <tr>
-                                <td colspan="5"> {{ $values[0]['pemeriksaan_laborat']['rs21'] }} </td>
+                                <td> {{ $values[0]['pemeriksaan_laborat']['rs21'] }} </td>
+                                <td> </td>
+                                <td> </td>
+                                <td> </td>
+                                <td> </td>
 
                             </tr>
                             <tr class="list">
                                 <td> - {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[0]['rs21']}} </td>
-                                <td> {{ $values[0]['pemeriksaan_laborat']['rs22'] }} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[0]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[0]['tanggal'])) }} </td>
+                                <td> {{ $values[0]['flag'] }} &nbsp; {{ $values[0]['rs21']}} </td>
+                                <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
+                                <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
+                                <td> {{ $values[0]['metode']}} }} </td>
                             </tr>
                         <?php } else {
                         ?>
                             <tr class="list">
                                 <td> - {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[$n]['rs21'] }} </td>
-                                <td> {{ $values[$n]['pemeriksaan_laborat']['rs22']}} </td>
-                                <td> {{ date('Y-m-d', strtotime($values[$n]['tanggal'])) }} </td>
-                                <td> {{ date('H:i:s', strtotime($values[$n]['tanggal'])) }} </td>
+                                <td> {{ $values[$n]['flag'] }} &nbsp; {{ $values[$n]['rs21'] }} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
+                                <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
+                                <td> {{ $values[$n]['metode']}} </td>
                             </tr>
                         <?php } ?>
                     <?php } ?>
@@ -162,6 +181,9 @@
         </table>
 
 
+        <br>
+        <p>Saran : </p>
+        <p>interpretasi : </p>
         <br>
         <div class="row justify-between">
             <div style="padding-left:10%" class="column">
@@ -174,10 +196,6 @@
                 <div>Probolinggo, <?php
                                     $timestamp = time();
                                     $tgl = date('d F Y', $timestamp);
-                                    // if ($details[0]->sampel_selesai) {
-                                    //     $xtimestamp = time()
-
-                                    // }
                                     echo $tgl;
                                     ?>&nbsp;</div>
                 <div>Penanggung Jawab&nbsp;</div>
@@ -186,7 +204,7 @@
             </div>
         </div>
         <br>
-        Scan disini untuk verifikasi :<br>
+        <!-- Scan disini untuk verifikasi :<br> -->
     </div>
 </body>
 
