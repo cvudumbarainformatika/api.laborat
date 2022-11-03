@@ -11,22 +11,22 @@ class PemeriksaanLaboratController extends Controller
 {
     public function groupped()
     {
-        // $query = collect(PemeriksaanLaborat::all());
-        // $data= $query->groupBy('rs21');
 
         $data = PemeriksaanLaborat::query()
-        // ->where('rs2', 'LIKE', '%' . request('q') . '%')
-        //             ->orWhere('rs21', 'LIKE', '%' . request('q') . '%')
-        //     ->when(request()->q, function ($search){
-        //         // if (request('p') == 'non') {
-        //         //     return $search->orWhere('rs21','=','')
-        //         //     ->orWhere('rs2', 'LIKE', '%' . $q . '%');
-        //         // }
-        //             return $search->where('rs2', 'LIKE', '%' . 'DARA' . '%')
-        //             ->orWhere('rs21', 'LIKE', '%' . 'DARA' . '%');
+            // ->selectRaw('rs1,rs2,rs3,rs4,rs5,rs6,rs21,DISTINCT(rs21) as group,rs22,rs23,rs24,rs25,hidden')
+            // ->where('rs2', 'LIKE', '%' . request('q') . '%')
+            //             ->orWhere('rs21', 'LIKE', '%' . request('q') . '%')
+            //     ->when(request()->q, function ($search){
+            //         // if (request('p') == 'non') {
+            //         //     return $search->orWhere('rs21','=','')
+            //         //     ->orWhere('rs2', 'LIKE', '%' . $q . '%');
+            //         // }
+            //             return $search->where('rs2', 'LIKE', '%' . 'DARA' . '%')
+            //             ->orWhere('rs21', 'LIKE', '%' . 'DARA' . '%');
 
-        // })
-        ->where('hidden','=','')->get();
+            // })
+            // ->groupBy('rs21')
+            ->where('hidden', '=', '')->get();
         return new JsonResponse($data);
     }
 }

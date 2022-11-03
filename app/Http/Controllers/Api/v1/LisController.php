@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Controller;
 use App\Models\LaboratLuar;
+use App\Models\PemeriksaanLaborat;
 use App\Models\TransaksiLaborat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,62 +28,90 @@ class LisController extends Controller
     public function store(Request $request)
     {
         // return response()->json($request->all(), 201);
+        // $message = array(
+        //     'SSO' => 'LABORAT',
+        //     'menu' => $request->GLOBAL_COMMENT,
+        //     '__key' => $request->ONO,
+        //     'data' => $request->RESULT_LIST
+        // );
+
+        // event(new PlaygroundEvent($message));
+        // return response()->json(['message' => 'success'], 201);
 
         try {
             $request->validate([
-                'ONO'=>'required',
-                'GLOBAL_COMMENT'=> 'required',
+                'ONO' => 'required',
+                'GLOBAL_COMMENT' => 'required',
                 'RESULT_LIST' => 'required',
             ]);
+            $temp = collect($request->RESULT_LIST)->toArray();
 
-            if ($request->GLOBAL_COMMENT === 'laborat-luar') {
+            if ($request->GLOBAL_COMMENT == 'laborat-luar') {
                 # simpan laborat luar
 
-                $temp = collect($request->RESULT_LIST)->toArray();
                 foreach ($temp as $key) {
                     // L : 13-18, P : 12-16 g/dl
-                    $flag = $key['FLAG']? $key['FLAG']." : ": "";
-                    $xtimestamp = strtotime($key['VALIDATE_BY']);
+                    $flag = $key['FLAG'];
+                    $xtimestamp = strtotime($key['VALIDATE_ON']);
                     $sampel_selesai = date('Y-m-d', $xtimestamp);
                     $jam_sampel_selesai = date('H:i:s', $xtimestamp);
-                    LaboratLuar::where(['nota'=> $request->ONO, 'kd_lab'=> $key['ORDER_TESTID']])->update([
-                        'hasil'=>$flag." ".$key['REF_RANGE']." ".$key['UNIT'],
+
+                    LaboratLuar::where(['nota' => $request->ONO, 'kd_lab' => $key['ORDER_TESTID']])->update([
+                        'hl' => $key['FLAG'],
+                        'hasil' => $key['RESULT_VALUE'],
+                        'metode' => $key['METODE'],
                         'sampel_selesai' => $sampel_selesai,
                         'jam_sampel_selesai' => $jam_sampel_selesai,
+                        'tat' => $request->TAT,
                         'akhirx' => '1' // complete
                     ]);
-                }
-            }else {
-                $temp = collect($request->RESULT_LIST)->toArray();
-                foreach ($temp as $key) {
-                    $flag = $key['FLAG']? $key['FLAG']." : ": "";
-                    $xtimestamp = strtotime($key['VALIDATE_BY']);
-                    $sampel_selesai = date('Y-m-d', $xtimestamp);
-                    $jam_sampel_selesai = date('H:i:s', $xtimestamp);
 
-                    TransaksiLaborat::where(['rs2'=> $request->ONO, 'rs4'=> $key['ORDER_TESTID']])->update([
-                        'rs21'=>$flag." ".$key['REF_RANGE']." ".$key['UNIT'],
-                        'rs28'=> '1' // complete
+                    PemeriksaanLaborat::where(['rs1' => $key['ORDER_TESTID']])
+                        ->update([
+                            'nilainormal' => $key['REF_RANGE'],
+                            'satuan' => $key['UNIT'],
+                        ]);
+                }
+            } else {
+                // $temp = collect($request->RESULT_LIST)->toArray();
+                foreach ($temp as $key) {
+                    $flag = $key['FLAG'];
+                    $xtimestamp = strtotime($key['VALIDATE_ON']);
+                    $sampel_selesai = date('Y-m-d H:i:s', $xtimestamp);
+                    // $jam_sampel_selesai = date('H:i:s', $xtimestamp);
+
+                    TransaksiLaborat::where(['rs2' => $request->ONO, 'rs4' => $key['ORDER_TESTID']])->update([
+                        'rs27' => $key['FLAG'],
+                        'rs21' => $key['RESULT_VALUE'],
+                        'metode' => $key['METODE'],
+                        'rs29' => $sampel_selesai,
+                        'tat' => $request->TAT,
+                        'rs26' => '1' // complete
                     ]);
+
+                    PemeriksaanLaborat::where(['rs1' => $key['ORDER_TESTID']])
+                        ->update([
+                            'nilainormal' => $key['REF_RANGE'],
+                            'satuan' => $key['UNIT'],
+                        ]);
                 }
             }
 
-            $message =array(
-                'SSO'=> 'LABORAT',
-                'menu'=> $request->GLOBAL_COMMENT,
-                '__key'=> $request->ONO,
-                'data'=> 'Hasil Selesai'
+            $message = array(
+                'SSO' => 'LABORAT',
+                'menu' => $request->GLOBAL_COMMENT,
+                '__key' => $request->ONO,
+                'data' => 'Hasil Selesai',
+                'LIS' => $temp
             );
 
-            if (event(New PlaygroundEvent($message))) {
-                return response()->json(['message'=>'success'], 201);
-            }
+            event(new PlaygroundEvent($message));
+            return response()->json(['message' => 'success'], 201);
 
-            return response()->json(['message'=>'success'], 201);
+
+            // return response()->json(['message' => 'success'], 201);
         } catch (\Throwable $th) {
-            return response()->json(['message'=>'failed', $th]);
+            return response()->json(['message' => 'failed', $th]);
         }
-
-
     }
 }

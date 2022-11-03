@@ -31,7 +31,8 @@ class TransaksiLaboratController extends Controller
                 'poli',
                 'dokter',
                 'pasien_kunjungan_poli',
-                'pasien_kunjungan_rawat_inap'
+                'pasien_kunjungan_rawat_inap',
+                'pemeriksaan_laborat'
             ]);
         $data = $query->simplePaginate(request('per_page'));
 
@@ -46,17 +47,21 @@ class TransaksiLaboratController extends Controller
 
     public function query_table($val)
     {
-        $y = Carbon::now()->subYears(3);
+        $y = Carbon::now()->subYears(1);
+        $m = Carbon::now()->subMonth(3);
+        $from = now();
+        $to = $m;
         $query = TransaksiLaborat::query();
         if ($val === 'total') {
-            $select = $query->selectRaw('rs2');
+            $select = $query->selectRaw('rs2,rs3');
         } else {
-            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21');
+            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs4,rs26,rs27');
         }
         $q = $select
-            ->whereYear('rs3', '>=', $y)
+            // ->whereYear('rs3', '>=', $y)
+            ->whereBetween('rs3', [$to, $from])
             ->filter(request(['q', 'periode', 'filter_by']))
-            ->orderBy('rs3', 'desc')->groupBy('rs2');
+            ->orderBy('rs3', 'asc')->groupBy('rs2');
         return $q;
     }
 
@@ -84,6 +89,7 @@ class TransaksiLaboratController extends Controller
             'X-id' => $xid,
             'X-timestamp' => $xtimestamp,
             'X-signature' => $xsignature,
+            // 'Accept' => 'application/json'
         ];
 
         $response = Http::withHeaders($headers)->post($apiURL, $request->all());
@@ -98,6 +104,6 @@ class TransaksiLaboratController extends Controller
 
         TransaksiLaborat::where('rs2', $request->ONO)->update(['rs18' => "1"]);
 
-        return response()->json($responseBody);
+        return $responseBody;
     }
 }

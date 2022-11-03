@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAccountsTable extends Migration
+class CreateSubmenusTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,12 @@ class CreateAccountsTable extends Migration
      */
     public function up()
     {
-        Schema::create('accounts', function (Blueprint $table) {
+        Schema::create('submenus', function (Blueprint $table) {
             $table->id();
-            $table->string('username')->nullable();
-            $table->string('nama')->nullable();
-            $table->string('email')->nullable();
-            $table->string('password')->nullable();
-            // $table->string('username')->nullbale();
+            $table->string('nama');
+            $table->string('redirect');
+            $table->string('menu_id');
+            $table->string('icon');
             $table->timestamps();
         });
     }
@@ -31,6 +30,6 @@ class CreateAccountsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('accounts');
+        Schema::dropIfExists('submenus');
     }
 }
