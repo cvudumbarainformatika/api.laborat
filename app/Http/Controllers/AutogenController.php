@@ -316,18 +316,25 @@ class AutogenController extends Controller
         //     ->where('level_4', '=', null)
         //     ->get();
         // $koleksi = collect($data);
-        $draft = Permintaanruangan::where('reff', '=', 'TPN-l9pa1meah1nyu')
-            ->where('status', '=', 1)
-            // ->latest('id')->with(['details.barangrs', 'details.satuan', 'details.ruang', 'details.gudang'])->get();
-            ->latest('id')->with(['details'])->get();
-        $kolek = collect($draft[0]->details)->groupBy('dari');
-        $apem = $draft[0];
-        $apem->details[0] = $kolek;
-        $draft[0]->gedung = $kolek;
+        // $draft = Permintaanruangan::where('reff', '=', 'TPN-l9pa1meah1nyu')
+        //     ->where('status', '=', 1)
+        //     // ->latest('id')->with(['details.barangrs', 'details.satuan', 'details.ruang', 'details.gudang'])->get();
+        //     ->latest('id')->with(['details'])->get();
+        // $kolek = collect($draft[0]->details)->groupBy('dari');
+        // $apem = $draft[0];
+        // $apem->details[0] = $kolek;
+        // $draft[0]->gedung = $kolek;
+        $data = Permintaanruangan::where('status', '=', 1)
+            ->with('details', 'pj', 'pengguna')->get();
+        if (count($data)) {
+            foreach ($data as $key) {
+                $key->gudang = collect($key->details)->groupBy('dari');
+            }
+        }
 
         return new JsonResponse([
-            'draft' => $draft,
-            'kolek' => $kolek,
+            'data' => $data,
+            // 'kolek' => $kolek,
 
         ]);
     }

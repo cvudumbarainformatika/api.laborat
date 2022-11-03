@@ -18,10 +18,17 @@ class PermintaanruanganController extends Controller
             ->where('status', '=', 2)->get();
         $draft = Permintaanruangan::where('reff', '=', request()->reff)
             ->where('status', '=', 1)
-            ->latest('id')->with(['details.barangrs', 'details.satuan', 'details.ruang', 'details.gudang'])->get();
+            ->latest('id')->with([
+                'details.barangrs',
+                'details.satuan',
+                'details.ruang',
+                'details.gudang'
+            ])->get();
         if (count($draft)) {
-            $kolek = collect($draft[0]->details)->groupBy('dari');
-            $draft[0]->gudang = $kolek;
+            foreach ($draft as $key) {
+                $kolek = collect($key->details)->groupBy('dari');
+                $key->gudang = $kolek;
+            }
         }
         if (count($complete)) {
             return new JsonResponse(['message' => 'completed']);
@@ -29,12 +36,6 @@ class PermintaanruanganController extends Controller
         return new JsonResponse($draft);
     }
 
-    // ambil semua permintaan yang sudah selesai di input
-    public function getPerrmintaan()
-    {
-        $data = Permintaanruangan::where('status', '=', 2)->get();
-        return new JsonResponse($data);
-    }
 
     public function store(Request $request)
     {
@@ -49,7 +50,7 @@ class PermintaanruanganController extends Controller
                 return new JsonResponse($valid->errors(), 422);
             }
 
-            $data = Permintaanruangan::updateOrCreate(['reff' => $request->reff], $second);
+            $data = Permintaanruangan::updateOrCreate(['reff' => $request->reff, 'no_permintaan' => $request->no_permintaan], $second);
 
             if ($request->has('kode_rs') && $request->kode_rs !== null) {
                 $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);
@@ -72,11 +73,15 @@ class PermintaanruanganController extends Controller
     }
     public function selesaiInput(Request $req)
     {
-        $data = Permintaanruangan::where('reff', $req->reff)->first();
-        $data->status = 2;
-        if (!$data->save()) {
-            return new JsonResponse(['message' => 'Gagal Update Status']);
+        $data = Permintaanruangan::where('reff', $req->reff)->get();
+        if (count($data)) {
+            foreach ($data as $key) {
+                $key->update(['status' => 2]);
+                // if (!$data->save()) {
+                //     return new JsonResponse(['message' => 'Gagal Update Status']);
+                // }
+            }
         }
-        return new JsonResponse(['message' => 'Input telah dinyatakan Selesai']);
+        return new JsonResponse(['message' => 'Input telah dinyatakan Selesai', $data]);
     }
 }
