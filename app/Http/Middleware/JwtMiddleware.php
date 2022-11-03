@@ -31,7 +31,7 @@ class JwtMiddleware extends BaseMiddleware
                     'status' => 'Token is Expired',
                     'message' => ' get new Token',
                     'token' => $newToken
-                ], 200);
+                ], 402);
             } else {
                 return response()->json(['status' => 'Authorization Token not found', 'message' => 'Unauthenticated.'], 401);
             }
