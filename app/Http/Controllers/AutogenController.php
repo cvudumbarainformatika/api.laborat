@@ -6,6 +6,8 @@ use App\Events\PlaygroundEvent;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
+use App\Models\Pegawai\Hari;
+use App\Models\Pegawai\Kategory;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
@@ -324,13 +326,15 @@ class AutogenController extends Controller
         // $apem = $draft[0];
         // $apem->details[0] = $kolek;
         // $draft[0]->gedung = $kolek;
-        $data = Permintaanruangan::where('status', '=', 1)
-            ->with('details', 'pj', 'pengguna')->get();
-        if (count($data)) {
-            foreach ($data as $key) {
-                $key->gudang = collect($key->details)->groupBy('dari');
-            }
-        }
+        // $data = Permintaanruangan::where('status', '=', 1)
+        //     ->with('details', 'pj', 'pengguna')->get();
+        // if (count($data)) {
+        //     foreach ($data as $key) {
+        //         $key->gudang = collect($key->details)->groupBy('dari');
+        //     }
+        // }
+        $data = Kategory::with('pertama')->get();
+
 
         return new JsonResponse([
             'data' => $data,
