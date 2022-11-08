@@ -25,8 +25,10 @@
         <?php if ($jenis === 'pengantar') { ?>
             <div class="title bold underline mb-10 text-center">PERMINTAAN LABORAT</div>
         <?php } else { ?>
+
             <div class="title bold underline text-center">HASIL PERMINTAAN LABORAT</div>
-            <div class="title mb-10 italic text-center">LABORATORY EXAMINATION RESULTS </div>
+            <hr />
+            <!-- <div class="title mb-10 italic text-center">LABORATORY EXAMINATION RESULTS </div> -->
 
         <?php } ?>
         <?php if ($jenis === 'pengantar') { ?>
