@@ -23,7 +23,7 @@
         </div>
         <hr />
         <?php if ($jenis === 'pengantar') { ?>
-            <div class="title bold underline mb-10 text-center">PERMINTAAN LABORAT</div>
+            <div class="title bold mb-10 text-center">PERMINTAAN LABORAT</div>
         <?php } else { ?>
 
             <div class="title bold underline text-center">HASIL PERMINTAAN LABORAT</div>
