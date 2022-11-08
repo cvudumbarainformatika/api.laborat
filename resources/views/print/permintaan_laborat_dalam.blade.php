@@ -145,7 +145,7 @@
                                 <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[$n]['metode']}} </td>
+                                <td> {{ $values[$n]['metode'] }} </td>
                             </tr>
                         <?php } elseif ($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
                             $total +=  $values[0]['subtotal'];
@@ -164,7 +164,7 @@
                                 <td class="<?= $values[0]['flag'] ? 'redColor' : ''; ?>"> {{ $values[0]['rs21']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[0]['metode']}} }} </td>
+                                <td> {{ $values[0]['metode'] }} }} </td>
                             </tr>
                         <?php } else {
                         ?>
@@ -174,7 +174,7 @@
                                 <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21'] }} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[$n]['metode']}} </td>
+                                <td> {{ $values[$n]['metode'] }} </td>
                             </tr>
                         <?php } ?>
                     <?php } ?>
