@@ -141,8 +141,8 @@
                         ?>
                             <tr>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td class="<?= $values[$n]['flag'] !== '' ? 'redColor' : ''; ?>"> {{ $values[$n]['flag']}} </td>
-                                <td class="<?= $values[$n]['flag'] !== '' ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21']}} </td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['flag']}} </td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
                                 <td> {{ $values[$n]['metode']}} </td>
@@ -160,8 +160,8 @@
                             </tr>
                             <tr class="list">
                                 <td> - {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td class="<?= $values[0]['flag'] !== '' ? 'redColor' : ''; ?>"> {{ $values[0]['flag'] }} </td>
-                                <td class="<?= $values[0]['flag'] !== '' ? 'redColor' : ''; ?>"> {{ $values[0]['rs21']}} </td>
+                                <td class="<?= $values[0]['flag'] ? 'redColor' : ''; ?>"> {{ $values[0]['flag'] }} </td>
+                                <td class="<?= $values[0]['flag'] ? 'redColor' : ''; ?>"> {{ $values[0]['rs21']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
                                 <td> {{ $values[0]['metode']}} }} </td>
@@ -170,8 +170,8 @@
                         ?>
                             <tr class="list">
                                 <td> - {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td class="<?= $values[$n]['flag'] !== '' ? 'redColor' : ''; ?>"> {{ $values[$n]['flag'] }}</td>
-                                <td class="<?= $values[$n]['flag'] !== '' ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21'] }} </td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['flag'] }}</td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21'] }} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
                                 <td> {{ $values[$n]['metode']}} </td>
