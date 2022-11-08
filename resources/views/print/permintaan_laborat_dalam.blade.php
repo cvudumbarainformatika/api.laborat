@@ -117,6 +117,7 @@
             <thead>
                 <tr valign="middle" style="border-bottom: solid 1px rgb(190, 190, 190);">
                     <td><b>PEMERIKSAAN</b></td>
+                    <td width="5%"></td>
                     <td><b>HASIL</b></td>
                     <td><b>NILAI NORMAL</b></td>
                     <td><b>SATUAN</b></td>
@@ -140,6 +141,7 @@
                         ?>
                             <tr>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
+                                <td> {{ $values[$n]['flag']}} </td>
                                 <td> {{ $values[$n]['rs21']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
@@ -158,7 +160,8 @@
                             </tr>
                             <tr class="list">
                                 <td> - {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[0]['flag'] }} &nbsp; {{ $values[0]['rs21']}} </td>
+                                <td> {{ $values[0]['flag'] }} </td>
+                                <td> {{ $values[0]['rs21']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
                                 <td> {{ $values[0]['metode']}} }} </td>
@@ -167,7 +170,8 @@
                         ?>
                             <tr class="list">
                                 <td> - {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[$n]['flag'] }} &nbsp; {{ $values[$n]['rs21'] }} </td>
+                                <td> {{ $values[$n]['flag'] }} </td>
+                                <td> {{ $values[$n]['rs21'] }} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
                                 <td> {{ $values[$n]['metode']}} </td>
