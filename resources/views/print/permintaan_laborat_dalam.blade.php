@@ -164,7 +164,7 @@
                                 <td class="<?= $values[0]['flag'] ? 'redColor' : ''; ?>"> {{ $values[0]['rs21']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[0]['metode'] }} }} </td>
+                                <td> {{ $values[0]['metode'] }} </td>
                             </tr>
                         <?php } else {
                         ?>
