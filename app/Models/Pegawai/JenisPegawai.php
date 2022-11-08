@@ -9,5 +9,8 @@ class JenisPegawai extends Model
 {
     use HasFactory;
     protected $connection = 'kepex';
+
+    protected $table = 'm_jenispegawai';
+
     protected $guarded = ['id'];
 }

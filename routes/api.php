@@ -1,6 +1,7 @@
 <?php
 
 use App\Helpers\Routes\RouteHelper;
+use App\Http\Controllers\AutogenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     RouteHelper::includeRouteFiles(__DIR__ . '/v1');
 });
+Route::prefix('v2')->group(function () {
+    RouteHelper::includeRouteFiles(__DIR__ . '/v2');
+});
+
+Route::get('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);

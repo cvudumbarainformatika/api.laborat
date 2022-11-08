@@ -15,4 +15,12 @@ class MasterCuti extends Model
     {
         return $this->belongsTo(JenisPegawai::class);
     }
+
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->where('jenispegawai', 'LIKE', '%' . $query . '%');
+            // ->orWhere('nama', 'LIKE', '%' . $query . '%');
+        });
+    }
 }

@@ -25,6 +25,7 @@ class ProtaController extends Controller
 
         return new JsonResponse($data);
     }
+
     public function tahunProta()
     {
         $data = Prota::get();
@@ -37,6 +38,7 @@ class ProtaController extends Controller
         $collect = collect($temp)->sort()->values()->all();
         return new JsonResponse($collect, 200);
     }
+
     public function store(Request $request)
     {
         try {
@@ -52,7 +54,14 @@ class ProtaController extends Controller
             );
 
             DB::commit();
-            return new JsonResponse(['message' => 'success'], 201);
+            if (!$data->wasRecentlyCreated) {
+                $status = 200;
+                $pesan = 'Data telah di perbarui';
+            } else {
+                $status = 201;
+                $pesan = 'Data telah di tambakan';
+            }
+            return new JsonResponse(['message' => $pesan], $status);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([

@@ -344,10 +344,17 @@ class AutogenController extends Controller
 
 
         return new JsonResponse([
+            // 'ip' => $ip,
             'tahun' => array_unique($tahun),
             'data' => $data,
             // 'kolek' => $kolek,
 
         ]);
+    }
+    public function wawanpost(Request $request)
+    {
+
+        $ip = $request->ip();
+        return new JsonResponse($ip);
     }
 }
