@@ -83,7 +83,7 @@
                 <div class="right">
                     <div class="row">
                         <div style="width:100px">Atas Permintaan </div>
-                        <div style="width:150px">: {{ $dokter }}</div>
+                        <div style="width:180px">: {{ $dokter }}</div>
                     </div>
                     <div class="row">
                         <div style="width:100px">Tgl Permintaan </div>
@@ -141,11 +141,11 @@
                         ?>
                             <tr>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[$n]['flag']}} </td>
-                                <td> {{ $values[$n]['rs21']}} </td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['flag']}} </td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[$n]['metode']}} </td>
+                                <td> {{ $values[$n]['metode'] }} </td>
                             </tr>
                         <?php } elseif ($values[0]['pemeriksaan_laborat']['rs21'] !== '' && $n === 0) {
                             $total +=  $values[0]['subtotal'];
@@ -160,21 +160,21 @@
                             </tr>
                             <tr class="list">
                                 <td> - {{ $values[0]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[0]['flag'] }} </td>
-                                <td> {{ $values[0]['rs21']}} </td>
+                                <td class="<?= $values[0]['flag'] ? 'redColor' : ''; ?>"> {{ $values[0]['flag'] }} </td>
+                                <td class="<?= $values[0]['flag'] ? 'redColor' : ''; ?>"> {{ $values[0]['rs21']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[0]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[0]['metode']}} }} </td>
+                                <td> {{ $values[0]['metode'] }} </td>
                             </tr>
                         <?php } else {
                         ?>
                             <tr class="list">
                                 <td> - {{ $values[$n]['pemeriksaan_laborat']['rs2'] }} </td>
-                                <td> {{ $values[$n]['flag'] }} </td>
-                                <td> {{ $values[$n]['rs21'] }} </td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['flag'] }}</td>
+                                <td class="<?= $values[$n]['flag'] ? 'redColor' : ''; ?>"> {{ $values[$n]['rs21'] }} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['nilainormal']}} </td>
                                 <td> {{ $values[$n]['pemeriksaan_laborat']['satuan']}} </td>
-                                <td> {{ $values[$n]['metode']}} </td>
+                                <td> {{ $values[$n]['metode'] }} </td>
                             </tr>
                         <?php } ?>
                     <?php } ?>
