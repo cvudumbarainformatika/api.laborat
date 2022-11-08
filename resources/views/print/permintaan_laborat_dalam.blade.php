@@ -83,7 +83,7 @@
                 <div class="right">
                     <div class="row">
                         <div style="width:100px">Atas Permintaan </div>
-                        <div style="width:150px">: {{ $dokter }}</div>
+                        <div style="width:180px">: {{ $dokter }}</div>
                     </div>
                     <div class="row">
                         <div style="width:100px">Tgl Permintaan </div>
