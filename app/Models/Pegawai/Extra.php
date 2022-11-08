@@ -20,4 +20,12 @@ class Extra extends Model
     {
         return $this->belongsTo(Pegawai::class);
     }
+
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->where('tanggal', 'LIKE', '%' . $query . '%');
+            // ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
+    }
 }

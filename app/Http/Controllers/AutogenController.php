@@ -8,6 +8,7 @@ use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Kategory;
+use App\Models\Pegawai\Prota;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
@@ -333,10 +334,17 @@ class AutogenController extends Controller
         //         $key->gudang = collect($key->details)->groupBy('dari');
         //     }
         // }
-        $data = Kategory::with('pertama')->get();
+        // $data = Kategory::with('pertama')->get();
+        $data = Prota::get();
+        $tahun = [];
+        foreach ($data as $key) {
+            $temp = date('Y', strtotime($key->tgl_libur));
+            array_push($tahun, $temp);
+        }
 
 
         return new JsonResponse([
+            'tahun' => array_unique($tahun),
             'data' => $data,
             // 'kolek' => $kolek,
 
