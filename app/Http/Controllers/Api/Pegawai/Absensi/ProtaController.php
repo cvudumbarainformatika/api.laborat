@@ -47,7 +47,7 @@ class ProtaController extends Controller
             }
 
             $data = Prota::updateOrCreate(
-                ['id' => $request->id],
+                ['id' => $request->id, 'tgl_libur' => $request->tgl_libur],
                 $request->all()
             );
 
