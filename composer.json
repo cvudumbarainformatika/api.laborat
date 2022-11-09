@@ -18,6 +18,7 @@
         "mpyw/eloquent-has-by-non-dependent-subquery": "^2.0",
         "phpoffice/phpword": "^0.18.3",
         "pusher/pusher-php-server": "^7.0",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "tymon/jwt-auth": "^1.0",
         "weidner/goutte": "^2.2"
     },

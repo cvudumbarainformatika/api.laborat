@@ -335,18 +335,18 @@ class AutogenController extends Controller
         //     }
         // }
         // $data = Kategory::with('pertama')->get();
-        $data = Prota::get();
-        $tahun = [];
-        foreach ($data as $key) {
-            $temp = date('Y', strtotime($key->tgl_libur));
-            array_push($tahun, $temp);
-        }
-
+        // $data = Prota::get();
+        // $tahun = [];
+        // foreach ($data as $key) {
+        //     $temp = date('Y', strtotime($key->tgl_libur));
+        //     array_push($tahun, $temp);
+        // }
+        $ip = request()->ip();
 
         return new JsonResponse([
-            // 'ip' => $ip,
-            'tahun' => array_unique($tahun),
-            'data' => $data,
+            'ip' => $ip,
+            // 'tahun' => array_unique($tahun),
+            // 'data' => $data,
             // 'kolek' => $kolek,
 
         ]);
