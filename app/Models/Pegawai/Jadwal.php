@@ -13,9 +13,13 @@ class Jadwal extends Model
     protected $connection = 'kepex';
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'jadwal' => 'array'
+    ];
+
     public function pegawai()
     {
-        return $this->belongsTo(Pegawai::class);
+        return $this->belongsTo(Pegawai::class, 'user_id');
     }
     public function kategory()
     {
@@ -24,5 +28,17 @@ class Jadwal extends Model
     public function ruang()
     {
         return $this->belongsTo(Ruang::class);
+    }
+
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->whereHas('user_id', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%');
+                // ->orWhere('kode', 'LIKE', '%' . $query . '%');
+                // return $search->where('jenispegawai', 'LIKE', '%' . $query . '%');
+                // ->orWhere('nama', 'LIKE', '%' . $query . '%');
+            });
+        });
     }
 }

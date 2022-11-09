@@ -341,12 +341,17 @@ class AutogenController extends Controller
         //     $temp = date('Y', strtotime($key->tgl_libur));
         //     array_push($tahun, $temp);
         // }
-        $ip2 = request()->ip();
-        $ip = $_SERVER['REMOTE_ADDR'];
+        // $ip2 = request()->ip();
+        // $ip = $_SERVER['REMOTE_ADDR'];
+        $sekarang = date('W');
+        $tgl = '2022-11-17';
+        $mingguDepan = date('W', strtotime($tgl));
 
         return new JsonResponse([
-            'ip' => $ip,
-            'ip2' => $ip2,
+            'sekarang' => $sekarang,
+            'next' => $mingguDepan
+            // 'ip' => $ip,
+            // 'ip2' => $ip2,
             // 'tahun' => array_unique($tahun),
             // 'data' => $data,
             // 'kolek' => $kolek,
