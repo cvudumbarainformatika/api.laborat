@@ -20,7 +20,7 @@ class PegawaiController extends Controller
     }
     public function find()
     {
-        $data = Pegawai::latest('id')->filter(request(['q']))->get();
+        $data = Pegawai::latest('id')->filter(request(['q']))->limit(request('limit'))->get();
 
         return PegawaiResource::collection($data);
         // return response()->json([

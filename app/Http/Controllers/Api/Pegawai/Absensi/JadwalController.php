@@ -24,7 +24,16 @@ class JadwalController extends Controller
 
     public function getKategories()
     {
-        $data = Kategory::get();
+        $data = Kategory::with(
+            'jam_reguler',
+            'jam_jumat',
+            'pertama',
+            'kedua',
+            'ketiga',
+            'keempat',
+            'kelima',
+            'keenam',
+        )->get();
         return new JsonResponse($data);
     }
 
