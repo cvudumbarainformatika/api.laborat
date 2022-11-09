@@ -10,5 +10,5 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'data'
 ], function () {
-    Route::get('/pegawai', [PegawaiController::class, 'find']);
+    Route::get('/pegawai', [PegawaiController::class, 'cari']);
 });
