@@ -28,6 +28,20 @@ class PegawaiController extends Controller
         //     'data' => $data
         // ]);
     }
+    //----route public start -----
+    public function cariPegawai(Request $request)
+    {
+        $data = Pegawai::where('nip',  $request->nip)
+            ->orWhere('nip_baru',  $request->nip)
+            ->orWhere('tgllahir', '=', $request->tgllahir)
+            ->first();
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data Tidak ditemukan'], 200);
+        }
+
+        return new JsonResponse($data, 200);
+    }
+
     public function cari()
     {
         $data = Pegawai::latest('id')->filter(request(['q']))->limit(request('limit'))->get();
@@ -37,4 +51,5 @@ class PegawaiController extends Controller
         //     'data' => $data
         // ]);
     }
+    //------route public end -----
 }

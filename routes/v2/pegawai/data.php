@@ -11,4 +11,5 @@ Route::group([
     'prefix' => 'data'
 ], function () {
     Route::get('/pegawai', [PegawaiController::class, 'cari']);
+    Route::post('/cari-pegawai', [PegawaiController::class, 'cariPegawai']);
 });

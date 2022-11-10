@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Jadwal;
 use App\Models\Pegawai\Kategory;
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class JadwalController extends Controller
 {
-    //
+
     public function index()
     {
         // return new JsonResponse(['to' => $to, 'from' => $from]);
