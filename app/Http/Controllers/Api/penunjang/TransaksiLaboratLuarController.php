@@ -146,7 +146,7 @@ class TransaksiLaboratLuarController extends Controller
             "DOCTOR_NAME" => $data[0]->pengirim,
             "GLOBAL_COMMENT" => "laborat-luar",
             "IDENTITY_N" => "-",
-            "IS_CITO" => '0',
+            "IS_CITO" => "0",
             "KODE_PRODUCT" => $kode_lab,
             "ONO" => $data[0]->nota,
             "PATIENT_NAME" => $data[0]->nama,
