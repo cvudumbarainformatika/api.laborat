@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
+use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Kategory;
 use App\Models\Pegawai\Prota;
+use App\Models\Pegawai\Qrcode;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
@@ -343,20 +346,35 @@ class AutogenController extends Controller
         // }
         // $ip2 = request()->ip();
         // $ip = $_SERVER['REMOTE_ADDR'];
-        $sekarang = date('W');
-        $tgl = '2022-11-17';
-        $mingguDepan = date('W', strtotime($tgl));
+        // $sekarang = date('W');
+        // $tgl = '2022-11-17';
+        // $mingguDepan = date('W', strtotime($tgl));
 
-        return new JsonResponse([
-            'sekarang' => $sekarang,
-            'next' => $mingguDepan
-            // 'ip' => $ip,
-            // 'ip2' => $ip2,
-            // 'tahun' => array_unique($tahun),
-            // 'data' => $data,
-            // 'kolek' => $kolek,
+        // return new JsonResponse([
+        //     'sekarang' => $sekarang,
+        //     'next' => $mingguDepan
+        //     // 'ip' => $ip,
+        //     // 'ip2' => $ip2,
+        //     // 'tahun' => array_unique($tahun),
+        //     // 'data' => $data,
+        //     // 'kolek' => $kolek,
 
-        ]);
+        // ]);
+
+
+        // bikin qr
+        // $ip = request()->ip();
+        // $date = date('Y-m-d H:i:s');
+        // $nama = $ip . ' ' . $date;
+
+        // $data = Qrcode::create([
+        //     'ip' => $ip,
+        //     'code' => $nama,
+        //     // 'path' => 'qr/' . $nama . '.svg'
+        // ]);
+        $data = Qrcode::latest()->first();
+        event(new newQrEvent($data));
+        return new JsonResponse($data, 201);
     }
     public function wawanpost()
     {

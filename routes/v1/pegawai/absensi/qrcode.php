@@ -9,6 +9,6 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'pegawai/absensi/qr'
 ], function () {
-    Route::get('/tahun', [QrcodeController::class, 'getQr']);
+    Route::get('/get-qr', [QrcodeController::class, 'getQr']);
     Route::post('/store', [QrcodeController::class, 'createQr']);
 });

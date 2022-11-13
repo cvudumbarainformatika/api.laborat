@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\Pegawai\Master;
 
+use App\Events\newQrEvent;
 use App\Http\Controllers\Controller;
-use App\Models\Pegawai\Qrcode as PegawaiQrcode;
+use App\Models\Pegawai\Qrcode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class QrcodeController extends Controller
 {
@@ -15,23 +15,21 @@ class QrcodeController extends Controller
 
     public function getQr(Request $request)
     {
+        $data = Qrcode::latest()->first();
+        return new JsonResponse($data, 200);
     }
     public function createQr(Request $request)
     {
         $ip = $request->ip();
-        $nama = $ip . 'apem pasundan';
-        $path = QrCode::format('svg')
-            // ->generate($nama)->store('image', 'public');
-            ->generate($nama, public_path('qr/' . $nama . '.svg'));
-        // ->generate($nama, '.svg');
-        if ($path) {
-            return new JsonResponse(['message' => 'Qr Code Gagal Disimpan', 'path' => $path], 500);
-        }
-        $data = PegawaiQrcode::create([
+        $date = date('Y-m-d H:i:s');
+        $nama = $ip . ' ' . $date;
+
+        $data = Qrcode::create([
             'ip' => $ip,
             'code' => $nama,
-            'path' => 'qr/' . $nama . '.svg'
+            // 'path' => 'qr/' . $nama . '.svg'
         ]);
-        return new JsonResponse($data, 200);
+        event(new newQrEvent($data));
+        return new JsonResponse($data, 201);
     }
 }
