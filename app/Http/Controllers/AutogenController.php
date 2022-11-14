@@ -373,8 +373,9 @@ class AutogenController extends Controller
         //     // 'path' => 'qr/' . $nama . '.svg'
         // ]);
         $data = Qrcode::latest()->first();
-        event(new newQrEvent($data));
-        return new JsonResponse($data, 201);
+        event(new PlaygroundEvent($data));
+        // broadcast(new newQrEvent($data));
+        return new JsonResponse($data, 200);
     }
     public function wawanpost()
     {

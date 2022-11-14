@@ -10,8 +10,8 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-// class newQrEvent implements ShouldBroadcast
-class newQrEvent
+class newQrEvent implements ShouldBroadcast
+// class newQrEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -38,7 +38,7 @@ class newQrEvent
 
     public function broadcastAs()
     {
-        return 'newQr';
+        return 'qr-baru';
     }
 
     public function broadcastWith()
