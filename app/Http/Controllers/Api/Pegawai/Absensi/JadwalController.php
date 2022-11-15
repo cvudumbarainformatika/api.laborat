@@ -46,16 +46,7 @@ class JadwalController extends Controller
 
     public function getKategories()
     {
-        $data = Kategory::with(
-            'jam_reguler',
-            'jam_jumat',
-            'pertama',
-            'kedua',
-            'ketiga',
-            'keempat',
-            'kelima',
-            'keenam',
-        )->get();
+        $data = Kategory::get();
         return new JsonResponse($data);
     }
 
@@ -111,7 +102,11 @@ class JadwalController extends Controller
 
             // update atau buat baru jika tidak ada masalah
             $data = JadwalAbsen::updateOrCreate(
-                ['user_id' => $request->user_id],
+                [
+                    'user_id' => $request->user_id,
+                    'day' => $request->day,
+                    'id' => $request->id
+                ],
                 $request->all()
             );
 
