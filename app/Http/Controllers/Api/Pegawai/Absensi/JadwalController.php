@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Hari;
-use App\Models\Pegawai\Jadwal;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Kategory;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
@@ -18,9 +18,27 @@ class JadwalController extends Controller
     public function index()
     {
         // return new JsonResponse(['to' => $to, 'from' => $from]);
-        $data = Jadwal::orderBy(request('order_by'), request('sort'))
+        $data = JadwalAbsen::orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))
-            ->with('pegawai', 'ruang', 'kategory')
+            ->with(
+                'pegawai',
+                'ruang',
+                'kategory',
+                'pertama',
+                'kedua',
+                'ketiga',
+                'keempat',
+                'kelima',
+                'keenam',
+                'ketujuh',
+                'jam01',
+                'jam02',
+                'jam03',
+                'jam04',
+                'jam05',
+                'jam06',
+                'jam07',
+            )
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
@@ -50,7 +68,7 @@ class JadwalController extends Controller
     public function getByUser()
     {
         // return new JsonResponse(['to' => $to, 'from' => $from]);
-        $data = Jadwal::where('user_id', request('user_id'))
+        $data = JadwalAbsen::where('user_id', request('user_id'))
             ->orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))
             ->paginate(request('per_page'));
@@ -68,7 +86,31 @@ class JadwalController extends Controller
                 return new JsonResponse([$valid->errors(), 422]);
             }
             // when valid
-            $data = Jadwal::updateOrCreate(
+            // kembalikan data jika masih ada jadwal di hari itu
+            // $jadwal = JadwalAbsen::where('user_id', $request->user_id)->first();
+            // if ($jadwal) {
+            //     $today = date('l');
+            //     $adaJadwal = [];
+
+            //     foreach ($jadwal->jadwal as $key) {
+            //         if ($key['name'] === $today) {
+            //             array_push($adaJadwal, $key);
+            //         }
+            //     }
+            //     if (count($adaJadwal)) {
+            //         return new JsonResponse(['message' => 'JadwalAbsen Shift hanya bisa di update di hari libur pegawai'], 409);
+            //     }
+
+            //     // return new JsonResponse([
+            //     //     'today' => $today,
+            //     //     'ada' => $adaJadwal,
+            //     //     'request' => $request->all(),
+            //     //     'existing' => $jadwal
+            //     // ], 200);
+            // }
+
+            // update atau buat baru jika tidak ada masalah
+            $data = JadwalAbsen::updateOrCreate(
                 ['user_id' => $request->user_id],
                 $request->all()
             );
