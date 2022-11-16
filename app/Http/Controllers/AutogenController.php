@@ -372,7 +372,7 @@ class AutogenController extends Controller
         //     'code' => $nama,
         //     // 'path' => 'qr/' . $nama . '.svg'
         // ]);
-        $data = Qrcode::latest()->first();
+        $data = Kategory::latest()->first();
         event(new PlaygroundEvent($data));
         // broadcast(new newQrEvent($data));
         return new JsonResponse($data, 200);
