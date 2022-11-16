@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/reset-device', [AuthController::class, 'resetDevice']);
+
 Route::group([
     // 'middleware' => 'auth:api',
     'middleware' => 'jwt.verify',

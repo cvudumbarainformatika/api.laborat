@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class JadwalController extends Controller
 {
@@ -59,7 +60,8 @@ class JadwalController extends Controller
     public function getByUser()
     {
         // return new JsonResponse(['to' => $to, 'from' => $from]);
-        $data = JadwalAbsen::where('user_id', request('user_id'))
+        $user = JWTAuth::user();
+        $data = JadwalAbsen::where('user_id', $user->id)
             ->orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))
             ->paginate(request('per_page'));
