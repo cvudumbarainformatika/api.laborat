@@ -36,9 +36,10 @@ class AuthController extends Controller
             }
         }
         JWTAuth::factory()->setTTL(60);
-        $token = JWTAuth::attempt($validator->validated());
+        $data = $request->only('email', 'password');
+        $token = JWTAuth::attempt($data);
         if (!$token) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json(['error' => 'Unauthorized', 'validator' => $data], 401);
         }
         return $this->createNewToken($token);
     }
