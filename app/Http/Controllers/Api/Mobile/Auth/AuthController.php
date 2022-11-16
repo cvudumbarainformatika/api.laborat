@@ -35,7 +35,7 @@ class AuthController extends Controller
                 return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 500);
             }
         }
-        JWTAuth::factory()->setTTL(60);
+        JWTAuth::factory()->setTTL(1);
         $data = $request->only('email', 'password');
         $token = JWTAuth::attempt($data);
         if (!$token) {
@@ -60,5 +60,35 @@ class AuthController extends Controller
         ]);
 
         return new JsonResponse(['message' => 'Update Device Berhasil'], 200);
+    }
+    public function me()
+    {
+        $me = auth()->user();
+
+        return new JsonResponse(['result' => $me]);
+    }
+
+    public function register(Request $request)
+    {
+        //username -> $req->nip
+        $validator = Validator::make($request->all(), [
+            'nip' => $request->nip,
+            'password' => $request->password,
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $data = new User();
+        $data->username = $request->nip;
+        $data->email = $request->nip . '@app.com';
+        $data->password = bcrypt($request->password);
+
+        $saved = $data->save();
+
+        if (!$saved) {
+            return new JsonResponse(['status' => 'failed', 'message' => 'Ada Kesalahan'], 500);
+        }
+        return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan'], 201);
     }
 }
