@@ -23,6 +23,10 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
         if ($request->email !== 'sa@app.com') {
+            $user = User::where('status', '=', '2')->first();
+
+            return new JsonResponse(['message' => 'Device Reset Approved'], 205);
+
             $user = User::where('email', '=', $request->email)
                 ->where('device', '=', $request->device)
                 ->first();
@@ -45,5 +49,15 @@ class AuthController extends Controller
             'token' => $token,
             'user' => auth()->user()
         ]);
+    }
+
+    public function resetDevice(Request $request)
+    {
+        $user = User::find($request->id);
+        $user->update([
+            'device' => $request->device
+        ]);
+
+        return new JsonResponse(['message' => 'Update Device Berhasil'], 200);
     }
 }
