@@ -50,4 +50,11 @@ class Kategory extends Model
     {
         return $this->belongsTo(Jam::class, 'jam_02');
     }
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->where('nama', 'LIKE', '%' . $query . '%');
+            // ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
+    }
 }
