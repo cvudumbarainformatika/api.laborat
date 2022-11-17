@@ -13,7 +13,9 @@ class Pegawai extends Model
     use HasFactory;
     protected $connection = 'kepex';
     protected $table = 'pegawai';
-    protected $fillable = [];
+    protected $guarded = ['id'];
+
+    public $timestamps = false;
 
     public function jabatan()
     {

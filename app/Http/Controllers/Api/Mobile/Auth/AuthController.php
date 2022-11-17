@@ -88,6 +88,7 @@ class AuthController extends Controller
         $data->password = bcrypt($request->password);
         $data->pegawai_id = $request->pegawai_id;
         $data->device = $request->device;
+        $data->nama = $request->nama;
 
         $saved = $data->save();
 
