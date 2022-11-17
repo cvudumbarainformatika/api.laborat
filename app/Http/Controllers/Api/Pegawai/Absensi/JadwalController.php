@@ -56,11 +56,23 @@ class JadwalController extends Controller
         $data = Hari::get();
         return new JsonResponse($data);
     }
-
+    // mobile auth jwt
     public function getByUser()
     {
         // return new JsonResponse(['to' => $to, 'from' => $from]);
         $user = JWTAuth::user();
+        $data = JadwalAbsen::where('user_id', $user->id)
+            ->orderBy(request('order_by'), request('sort'))
+            ->filter(request(['q']))
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
+    // desktop auth api
+    public function getByUserDesk()
+    {
+        // return new JsonResponse(['to' => $to, 'from' => $from]);
+        $user = auth()->user();
         $data = JadwalAbsen::where('user_id', $user->id)
             ->orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))

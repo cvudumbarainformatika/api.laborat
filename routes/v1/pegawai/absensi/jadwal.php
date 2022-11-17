@@ -10,7 +10,7 @@ Route::group([
     'prefix' => 'pegawai/absensi/jadwal'
 ], function () {
     Route::get('/index', [JadwalController::class, 'index']);
-    Route::get('/by-user', [JadwalController::class, 'getByUser']);
+    Route::get('/by-user', [JadwalController::class, 'getByUserDesk']);
     Route::get('/kategori', [JadwalController::class, 'getKategories']);
     Route::get('/hari', [JadwalController::class, 'getDays']);
     Route::post('/store', [JadwalController::class, 'store']);
