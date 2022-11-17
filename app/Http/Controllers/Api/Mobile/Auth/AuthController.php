@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Mobile\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -74,8 +75,8 @@ class AuthController extends Controller
     {
         //username -> $req->nip
         $validator = Validator::make($request->all(), [
-            'nip' => $request->nip,
-            'password' => $request->password,
+            'nip' => 'required',
+            'password' => 'required',
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
@@ -86,12 +87,17 @@ class AuthController extends Controller
         $data->email = $request->nip . '@app.com';
         $data->password = bcrypt($request->password);
         $data->pegawai_id = $request->pegawai_id;
+        $data->device = $request->device;
 
         $saved = $data->save();
 
         if (!$saved) {
             return new JsonResponse(['status' => 'failed', 'message' => 'Ada Kesalahan'], 500);
         }
+        $pegawai = Pegawai::find($request->pegawai_id);
+        $pegawai->update([
+            'pass' => $request->password
+        ]);
         $data->load('pegawai');
         return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan', 'user' => $data], 201);
     }
