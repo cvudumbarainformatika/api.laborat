@@ -75,7 +75,7 @@ class AuthController extends Controller
     {
         //username -> $req->nip
         $validator = Validator::make($request->all(), [
-            'nip' => 'required',
+            'username' => 'required',
             'password' => 'required',
         ]);
         if ($validator->fails()) {
@@ -83,8 +83,8 @@ class AuthController extends Controller
         }
 
         $data = new User();
-        $data->username = $request->nip;
-        $data->email = $request->nip . '@app.com';
+        $data->username = $request->username;
+        $data->email = $request->username . '@app.com';
         $data->password = bcrypt($request->password);
         $data->pegawai_id = $request->pegawai_id;
         $data->device = $request->device;
