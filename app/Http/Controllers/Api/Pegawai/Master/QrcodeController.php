@@ -18,18 +18,25 @@ class QrcodeController extends Controller
         $data = Qrcode::latest()->first();
         return new JsonResponse($data, 200);
     }
+
     public function createQr(Request $request)
     {
-        $ip = $request->ip();
+        $ip = $request->id;
         $date = date('Y-m-d H:i:s');
-        $nama = $ip . ' ' . $date;
+        $nama = $ip . '#' . $date;
 
-        $data = Qrcode::create([
+        $data = Qrcode::updateOrCreate([
             'ip' => $ip,
+        ], [
             'code' => $nama,
-            // 'path' => 'qr/' . $nama . '.svg'
+            'path' => $date
         ]);
-        event(new newQrEvent($data));
         return new JsonResponse($data, 201);
+    }
+
+    public function qrScanned(Request $requst)
+    {
+        # code...
+        // event(new newQrEvent($data));
     }
 }

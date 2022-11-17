@@ -38,6 +38,13 @@ class AuthController extends Controller
         return new JsonResponse(['result' => $me]);
     }
 
+    public function user()
+    {
+        $data = User::filter(request(['q']))->get();
+
+        return new JsonResponse($data);
+    }
+
     public function logout(Request $request)
     {
         auth()->logout();

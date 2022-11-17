@@ -34,6 +34,7 @@ class PegawaiController extends Controller
         $data = Pegawai::where('nip',  $request->nip)
             ->orWhere('nip_baru',  $request->nip)
             ->orWhere('tgllahir', '=', $request->tgllahir)
+            ->with('jabatan', 'jabatanTambahan')
             ->first();
         if (!$data) {
             return new JsonResponse(['message' => 'Data Tidak ditemukan'], 200);
@@ -44,7 +45,7 @@ class PegawaiController extends Controller
 
     public function cari()
     {
-        $data = Pegawai::latest('id')->filter(request(['q']))->limit(request('limit'))->get();
+        $data = Pegawai::latest('id')->filter(request(['q']))->with('jabatan', 'jabatanTambahan')->limit(request('limit'))->get();
 
         return new JsonResponse($data);
         // return response()->json([

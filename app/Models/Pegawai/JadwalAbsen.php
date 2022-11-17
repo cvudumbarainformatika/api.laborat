@@ -4,6 +4,7 @@ namespace App\Models\Pegawai;
 
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Ruang;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +19,12 @@ class JadwalAbsen extends Model
     {
         return $this->belongsTo(Pegawai::class, 'user_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function kategory()
     {
         return $this->belongsTo(Kategory::class);
@@ -90,12 +97,12 @@ class JadwalAbsen extends Model
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->whereHas('user_id', function ($q) use ($query) {
-                $q->pegawai()->where('nama', 'like', '%' . $query . '%');
-                // ->orWhere('kode', 'LIKE', '%' . $query . '%');
-                // return $search->where('jenispegawai', 'LIKE', '%' . $query . '%');
-                // ->orWhere('nama', 'LIKE', '%' . $query . '%');
-            });
+            // return $search->whereHas('user_id', function ($q) use ($query) {
+            //     $q->where('nama', 'like', '%' . $query . '%');
+            // ->orWhere('kode', 'LIKE', '%' . $query . '%');
+            // return $search->where('jenispegawai', 'LIKE', '%' . $query . '%');
+            // ->orWhere('nama', 'LIKE', '%' . $query . '%');
+            // });
         });
     }
 }

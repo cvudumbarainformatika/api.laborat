@@ -141,4 +141,21 @@ class JadwalController extends Controller
             ], 500);
         }
     }
+    public function destroy(Request $request)
+    {
+        // $auth = auth()->user()->id;
+        $data = JadwalAbsen::find($request->id);
+        $del = $data->delete();
+
+        if (!$del) {
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
+
+        // $user->log("Menghapus Data Jadwal Absen {$data->nama}");
+        return new JsonResponse([
+            'message' => 'Data sukses terhapus'
+        ], 200);
+    }
 }

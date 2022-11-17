@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/get-qr', [QrcodeController::class, 'getQr']);
     Route::post('/store', [QrcodeController::class, 'createQr']);
+    Route::post('/scan', [QrcodeController::class, 'qrScanned']);
 });

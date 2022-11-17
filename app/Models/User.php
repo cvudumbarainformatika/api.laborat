@@ -19,8 +19,8 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $table ='accounts';
-    protected $guarded =['id'];
+    protected $table = 'accounts';
+    protected $guarded = ['id'];
     // protected $fillable = [
     //     'name',
     //     'email',
@@ -46,10 +46,12 @@ class User extends Authenticatable implements JWTSubject
     //     'email_verified_at' => 'datetime',
     // ];
 
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier()
+    {
         return $this->getKey();
     }
-    public function getJWTCustomClaims() {
+    public function getJWTCustomClaims()
+    {
         return [];
     }
 
@@ -65,4 +67,11 @@ class User extends Authenticatable implements JWTSubject
     //     ];
     //    AuditLog::query()->create($data);
     // }
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->where('nama', 'LIKE', '%' . $query . '%');
+            // ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
+    }
 }
