@@ -4,6 +4,7 @@ namespace App\Models\Sigarang;
 
 use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +22,11 @@ class Pegawai extends Model
     public function jabatanTambahan()
     {
         return $this->belongsTo(JabatanTambahan::class, 'jabatan_tmb', 'kode_jabatan');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class);
     }
 
 

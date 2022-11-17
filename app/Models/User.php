@@ -20,6 +20,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
+    protected $connection = 'mysql';
     protected $table = 'accounts';
     protected $guarded = ['id'];
     // protected $fillable = [

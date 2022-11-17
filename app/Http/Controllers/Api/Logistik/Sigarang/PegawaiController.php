@@ -34,7 +34,7 @@ class PegawaiController extends Controller
         $data = Pegawai::where('nip',  $request->nip)
             ->orWhere('nip_baru',  $request->nip)
             ->orWhere('tgllahir', '=', $request->tgllahir)
-            ->with('jabatan', 'jabatanTambahan')
+            ->with('jabatan', 'jabatanTambahan', 'user')
             ->first();
         if (!$data) {
             return new JsonResponse(['message' => 'Data Tidak ditemukan'], 200);
