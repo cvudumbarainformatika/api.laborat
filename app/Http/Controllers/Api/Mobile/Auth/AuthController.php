@@ -68,8 +68,9 @@ class AuthController extends Controller
     {
         // $me = auth()->user();
         $user = JWTAuth::user();
+        $pegawai = Pegawai::with('user', 'jadwal')->find($user->pegawai_id);
 
-        return new JsonResponse(['result' => $user]);
+        return new JsonResponse(['result' => $pegawai]);
     }
 
     public function register(Request $request)

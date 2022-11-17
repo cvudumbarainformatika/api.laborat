@@ -17,7 +17,7 @@ class JadwalAbsen extends Model
 
     public function pegawai()
     {
-        return $this->belongsTo(Pegawai::class, 'user_id');
+        return $this->belongsTo(Pegawai::class);
     }
 
     public function user()

@@ -4,6 +4,7 @@ namespace App\Models\Sigarang;
 
 use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,10 @@ class Pegawai extends Model
     public function user()
     {
         return $this->hasOne(User::class);
+    }
+    public function jadwal()
+    {
+        return $this->hasMany(JadwalAbsen::class);
     }
 
 
