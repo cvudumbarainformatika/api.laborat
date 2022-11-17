@@ -86,6 +86,7 @@ class JadwalController extends Controller
     {
         // isinya match jadwal dengan user ybs
         $data = User::find($id);
+        $jadwal = JadwalAbsen::where('user_id', $id)->get();
         return $data;
     }
     public function store(Request $request)
