@@ -85,13 +85,15 @@ class AuthController extends Controller
         $data->username = $request->nip;
         $data->email = $request->nip . '@app.com';
         $data->password = bcrypt($request->password);
+        $data->pegawai_id = $request->pegawai_id;
 
         $saved = $data->save();
 
         if (!$saved) {
             return new JsonResponse(['status' => 'failed', 'message' => 'Ada Kesalahan'], 500);
         }
-        return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan'], 201);
+        $data->load('pegawai');
+        return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan', 'user' => $data], 201);
     }
 
     public function logout()

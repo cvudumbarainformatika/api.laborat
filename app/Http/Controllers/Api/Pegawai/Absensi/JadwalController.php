@@ -7,6 +7,7 @@ use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Kategory;
 use App\Models\Sigarang\Pegawai;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,12 @@ class JadwalController extends Controller
         return new JsonResponse($data);
     }
 
+    public static function toMatch($id)
+    {
+        // isinya match jadwal dengan user ybs
+        $data = User::find($id);
+        return $data;
+    }
     public function store(Request $request)
     {
         try {

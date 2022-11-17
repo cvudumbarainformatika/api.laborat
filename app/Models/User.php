@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -67,6 +68,12 @@ class User extends Authenticatable implements JWTSubject
     //     ];
     //    AuditLog::query()->create($data);
     // }
+
+    public function pegawai()
+    {
+        return $this->belongsTo(Pegawai::class);
+    }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
