@@ -63,9 +63,10 @@ class AuthController extends Controller
     }
     public function me()
     {
-        $me = auth()->user();
+        // $me = auth()->user();
+        $user = JWTAuth::user();
 
-        return new JsonResponse(['result' => $me]);
+        return new JsonResponse(['result' => $user]);
     }
 
     public function register(Request $request)
@@ -90,5 +91,12 @@ class AuthController extends Controller
             return new JsonResponse(['status' => 'failed', 'message' => 'Ada Kesalahan'], 500);
         }
         return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan'], 201);
+    }
+
+    public function logout(Request $request)
+    {
+        // auth()->logout();
+        JWTAuth::logout();
+        return response()->json(['message' => 'User sukses logout dari aplikasi']);
     }
 }
