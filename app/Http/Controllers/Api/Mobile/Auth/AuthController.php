@@ -36,6 +36,7 @@ class AuthController extends Controller
             }
         }
         JWTAuth::factory()->setTTL(1);
+        // JWTAuth::factory()->setTTL(60);
         $data = $request->only('email', 'password');
         $token = JWTAuth::attempt($data);
         if (!$token) {
@@ -93,10 +94,10 @@ class AuthController extends Controller
         return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan'], 201);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        // auth()->logout();
-        JWTAuth::logout();
+        auth()->logout();
+        // JWTAuth::logout();
         return response()->json(['message' => 'User sukses logout dari aplikasi']);
     }
 }
