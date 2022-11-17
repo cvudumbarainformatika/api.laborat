@@ -24,13 +24,14 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
         if ($request->email !== 'sa@app.com') {
-            $user = User::where('status', '=', '2')->first();
-
-            return new JsonResponse(['message' => 'Device Reset Approved'], 205);
 
             $user = User::where('email', '=', $request->email)
                 ->where('device', '=', $request->device)
                 ->first();
+
+            if ($user->status === 2) {
+                return new JsonResponse(['message' => 'Device Reset Approved'], 205);
+            }
 
             if (!$user) {
                 return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 500);
