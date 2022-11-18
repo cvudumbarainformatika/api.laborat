@@ -12,5 +12,6 @@ Route::group([
     Route::get('/kategori', [JadwalController::class, 'getKategories']);
     Route::get('/hari', [JadwalController::class, 'getDays']);
     Route::get('/by-user', [JadwalController::class, 'getByUser']);
-    Route::post('/simpan', [JadwalController::class, 'store']);
+    Route::post('/simpan', [JadwalController::class, 'create']);
+    Route::post('/update', [JadwalController::class, 'update']);
 });

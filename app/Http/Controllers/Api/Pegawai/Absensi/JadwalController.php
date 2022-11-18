@@ -125,7 +125,7 @@ class JadwalController extends Controller
                         'hari' => $key['hari']
                     ]
                 );
-                if ($key['status'] === '1') {
+                if ($key['status'] === '2') {
                     $data->update([
                         'status' => $key['status'],
                         'masuk' => $key['masuk'],
@@ -143,14 +143,14 @@ class JadwalController extends Controller
                     ]);
                 }
             }
-            return new JsonResponse(['message' => 'Jadwal telah dibuat'], 201);
+            return new JsonResponse(['message' => 'Jadwal telah dibuat'], 406);
         }
         // $data = User::with('jadwal')->find($request[0]['user_id']);
         // return new JsonResponse($data->jadwal);
         foreach ($request->all() as $key) {
 
             $data = JadwalAbsen::where('day', '=', $key['day'])->first();
-            if ($key['status'] === '1') {
+            if ($key['status'] === '2') {
                 $data->update([
                     'status' => $key['status'],
                     'masuk' => $key['masuk'],
@@ -185,6 +185,159 @@ class JadwalController extends Controller
         //         'error' => $e
         //     ], 500);
         // }
+    }
+
+
+    public function create(Request $request)
+    {
+        $user = JWTAuth::user();
+        $jadwal = JadwalAbsen::where('user_id', $user->id)->first();
+        if ($jadwal) {
+            return new JsonResponse(['message' => 'Jadwal Absen Sudah ada'], 406);
+        }
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $hari = Hari::get();
+        // return new JsonResponse([$request->all()]);
+        foreach ($hari as $key) {
+            // return new JsonResponse([$key]);
+            if ($request->kategory_id === '1') {
+
+                if ($key->nama === 'Minggu' || $key->nama === 'Sabtu') {
+                    $data = JadwalAbsen::create(
+                        [
+                            'day' => $key->name,
+                            'hari' => $key->nama,
+                            'user_id' => $user->id,
+                            'pegawai_id' => $user->pegawai_id,
+                            'ruang_id' => $pegawai->ruang,
+                            // 'status' => 1,
+                            'kategory_id' => 1,
+                            'masuk' => null,
+                            'pulang' => null,
+                            'jam' => 0,
+                            'menit' => 0,
+                        ]
+                    );
+                } else if ($key->nama === 'Jumat') {
+                    $data = JadwalAbsen::create(
+                        [
+                            'day' => $key->name,
+                            'hari' => $key->nama,
+                            'user_id' => $user->id,
+                            'pegawai_id' => $user->pegawai_id,
+                            'ruang_id' => $pegawai->ruang,
+                            'status' => 2,
+                            'masuk' => '07:30',
+                            'pulang' => '13:00',
+                            'jam' => 5,
+                            'menit' => 30,
+                            'kategory_id' => 1,
+                        ]
+                    );
+                } else {
+                    $data = JadwalAbsen::create(
+                        [
+                            'day' => $key->name,
+                            'hari' => $key->nama,
+                            'user_id' => $user->id,
+                            'pegawai_id' => $user->pegawai_id,
+                            'ruang_id' => $pegawai->ruang,
+                            'status' => 2,
+                            'masuk' => '07:30',
+                            'pulang' => '16:00',
+                            'jam' => 8,
+                            'menit' => 30,
+                            'kategory_id' => 1,
+                        ]
+                    );
+                }
+            } else if ($request->kategory_id === '2') {
+                $data = JadwalAbsen::create(
+                    [
+                        'kategory_id' => 2,
+                        'day' => $key->name,
+                        'hari' => $key->nama,
+                        'user_id' => $user->id,
+                        'pegawai_id' => $user->pegawai_id,
+                        'ruang_id' => $pegawai->ruang,
+                        'status' => 2,
+                        'masuk' => '07:00',
+                        'pulang' => '14:00',
+                        'jam' => 7,
+                        'menit' => 0,
+                    ]
+                );
+                if ($key->nama === 'Minggu') {
+                    $data = JadwalAbsen::create(
+                        [
+                            'kategory_id' => 2,
+                            'day' => $key->name,
+                            'hari' => $key->nama,
+                            'user_id' => $user->id,
+                            'pegawai_id' => $user->pegawai_id,
+                            'ruang_id' => $pegawai->ruang,
+                            'status' => 1,
+                            'masuk' => null,
+                            'pulang' => null,
+                            'jam' => 0,
+                            'menit' => 0,
+                        ]
+                    );
+                }
+            } else {
+                $data = JadwalAbsen::create(
+                    [
+                        'day' => $key->name,
+                        'hari' => $key->nama,
+                        'user_id' => $user->id,
+                        'pegawai_id' => $user->pegawai_id,
+                        'ruang_id' => $pegawai->ruang,
+                        'status' => 1,
+                    ]
+                );
+            }
+            // return new JsonResponse($key);
+        }
+        if ($data->wasRecentlyCreated) {
+            $status = 201;
+            $pesan = 'Jadwal telah dibuat';
+        } else {
+            $status = 500;
+            $pesan = 'Jadwal gagal dibuat';
+        }
+        return new JsonResponse(['message' => $pesan], $status);
+    }
+    public function update(Request $request)
+    {
+        $jadwal = JadwalAbsen::find($request->id);
+        $kategori = Kategory::find($request->kategory_id);
+        if ($request->status === '2') {
+            $jadwal->update([
+                'masuk' => $kategori->masuk,
+                'pulang' => $kategori->pulang,
+                'jam' => 8,
+                'menit' => 0,
+                'status' => 2,
+            ]);
+        } else if ($request->status === '1') {
+            $jadwal->update([
+                'masuk' => null,
+                'pulang' => null,
+                'jam' => 0,
+                'menit' => 0,
+                'status' => 1,
+            ]);
+        } else {
+            return new JsonResponse(['message' => 'Tidak ada data status'], 406);
+        }
+        if ($jadwal->wasChanged()) {
+            $status = 200;
+            $pesan = 'Jadwal telah diupdate';
+        } else {
+            $status = 500;
+            $pesan = 'Jadwal gagal diupdate';
+        }
+        return new JsonResponse(['message' => $pesan], $status);
     }
     public function destroy(Request $request)
     {
