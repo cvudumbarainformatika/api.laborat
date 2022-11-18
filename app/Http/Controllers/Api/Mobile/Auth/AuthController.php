@@ -28,8 +28,11 @@ class AuthController extends Controller
             $user = User::where('email', '=', $request->email)
                 ->where('device', '=', $request->device)
                 ->first();
+            $temp = User::where('email', '=', $request->email)
+                ->first();
 
-            if ($user->status === 2) {
+            // return new JsonResponse(['message' => $user], 205);
+            if ($temp->status === '2') {
                 return new JsonResponse(['message' => 'Device Reset Approved'], 205);
             }
 
