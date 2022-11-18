@@ -82,12 +82,18 @@ class JadwalController extends Controller
         return new JsonResponse($data);
     }
 
-    public static function toMatch($id)
+    public static function toMatch($id, $absen)
     {
         // isinya match jadwal dengan user ybs
         $data = User::find($id);
         $jadwal = JadwalAbsen::where('user_id', $id)->get();
-        return $data;
+        $today = date('Y-m-d H:i:s');
+        $result = [
+            'data' => $data,
+            'jadwal' => $jadwal,
+            'today' => $today,
+        ];
+        return $result;
     }
     public function store(Request $request)
     {
