@@ -33,7 +33,7 @@ class AuthController extends Controller
 
             // return new JsonResponse(['message' => $user], 205);
             if ($temp->status === '2') {
-                return new JsonResponse(['message' => 'Device Reset Approved'], 205);
+                return new JsonResponse(['message' => 'Device Reset Approved'], 410);
             }
 
             if (!$user) {
