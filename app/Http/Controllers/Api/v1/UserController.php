@@ -25,6 +25,18 @@ class UserController extends Controller
         return new JsonResponse($data);
     }
 
+    public function updateStatus(Request $request)
+    {
+        $user = User::find($request->id);
+        $user->update([
+            'status' => '2'
+        ]);
+        if ($user->wasChanged()) {
+            return new JsonResponse(['message' => 'Request Update device apporved'], 200);
+        }
+        return new JsonResponse(['message' => 'Update device failed, please notify team programmer'], 406);
+    }
+
     public function store(Request $request)
     {
 

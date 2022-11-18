@@ -11,4 +11,5 @@ Route::group([
     'prefix' => 'user'
 ], function () {
     Route::get('/user', [UserController::class, 'user']);
+    Route::post('/status', [UserController::class, 'updateStatus']);
 });
