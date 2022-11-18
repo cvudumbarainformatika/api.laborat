@@ -37,7 +37,7 @@ class AuthController extends Controller
             }
 
             if (!$user) {
-                return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 500);
+                return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 406);
             }
         }
         JWTAuth::factory()->setTTL(1);
