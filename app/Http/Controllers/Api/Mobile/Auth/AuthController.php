@@ -62,7 +62,8 @@ class AuthController extends Controller
     {
         $user = User::find($request->id);
         $user->update([
-            'device' => $request->device
+            'device' => $request->device,
+            'status' => '',
         ]);
 
         return new JsonResponse(['message' => 'Update Device Berhasil'], 200);
