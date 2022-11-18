@@ -87,11 +87,12 @@ class JadwalController extends Controller
         // isinya match jadwal dengan user ybs
         $data = User::find($id);
         $jadwal = JadwalAbsen::where('user_id', $id)->get();
-        $today = date('Y-m-d H:i:s');
+        $today = date('D');
         $result = [
             'data' => $data,
             'jadwal' => $jadwal,
             'today' => $today,
+            'absen' => $absen,
         ];
         return $result;
     }
