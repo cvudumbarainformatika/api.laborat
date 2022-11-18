@@ -40,8 +40,8 @@ class AuthController extends Controller
                 return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 406);
             }
         }
-        JWTAuth::factory()->setTTL(1);
-        // JWTAuth::factory()->setTTL(60);
+        // JWTAuth::factory()->setTTL(1);
+        JWTAuth::factory()->setTTL(43200);
         $data = $request->only('email', 'password');
         $token = JWTAuth::attempt($data);
         if (!$token) {
