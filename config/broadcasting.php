@@ -38,16 +38,16 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 // 'host' => env('PUSHER_HOST'),
-                'host' => 'https://xenter.my.id',
+                'host' => 'xenter.my.id',
                 'port' => env('LARAVEL_WEBSOCKETS_PORT', 6001),
                 'useTLS' => true,
                 'encrypted' => true,
                 'debug' => true,
                 'scheme' => 'https',
-                'curl_options' => [
-                    CURLOPT_SSL_VERIFYHOST => 0,
-                    CURLOPT_SSL_VERIFYPEER => 0,
-                ],
+                // 'curl_options' => [
+                //     CURLOPT_SSL_VERIFYHOST => 0,
+                //     CURLOPT_SSL_VERIFYPEER => 0,
+                // ],
             ],
         ],
 
