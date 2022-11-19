@@ -18,5 +18,6 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'qrcode'
 ], function () {
+    Route::post('/store', [QrcodeController::class, 'createQr']);
     Route::get('/get-qr', [QrcodeController::class, 'getQr']);
 });
