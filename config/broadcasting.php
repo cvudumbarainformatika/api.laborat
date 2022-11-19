@@ -37,7 +37,7 @@ return [
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
-                'useTLS' => false,
+                // 'useTLS' => false,
                 'encrypted' => false,
                 'host' => env('PUSHER_HOST'),
                 'port' => env('LARAVEL_WEBSOCKETS_PORT', 6001),
