@@ -29,7 +29,7 @@ return [
             'secret' => env('PUSHER_APP_SECRET'),
             'path' => env('PUSHER_APP_PATH'),
             'capacity' => null,
-            'enable_client_messages' => false,
+            'enable_client_messages' => true,
             'enable_statistics' => true,
         ],
     ],
@@ -130,8 +130,8 @@ return [
         'passphrase' => env('LARAVEL_WEBSOCKETS_SSL_PASSPHRASE', null),
 
         // for self signing cert
-        // 'verify_peer'=>false,
-        // 'verify_peer_name'=>false,
+        'verify_peer'=>false,
+        'verify_peer_name'=>false,
     ],
 
     /*

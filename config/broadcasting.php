@@ -44,10 +44,10 @@ return [
                 'encrypted' => true,
                 'debug' => true,
                 'scheme' => 'https',
-                // 'curl_options' => [
-                //     CURLOPT_SSL_VERIFYHOST => 0,
-                //     CURLOPT_SSL_VERIFYPEER => 0,
-                // ],
+                'curl_options' => [
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                    CURLOPT_SSL_VERIFYPEER => 0,
+                ],
             ],
         ],
 
