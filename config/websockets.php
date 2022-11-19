@@ -130,8 +130,8 @@ return [
         'passphrase' => env('LARAVEL_WEBSOCKETS_SSL_PASSPHRASE', null),
 
         // for self signing cert
-        // 'verify_peer'=>false,
-        // 'verify_peer_name'=>false,
+        'verify_peer'=>false,
+        'verify_peer_name'=>false,
     ],
 
     /*
