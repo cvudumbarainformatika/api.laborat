@@ -37,6 +37,7 @@ class QrcodeController extends Controller
     public function updateQr($ip)
     {
         // $ip = $ip;
+        $user = JWTAuth::user();
         $date = date('Y-m-d H:i:s');
         $nama = $ip . '#' . $date;
 
@@ -44,7 +45,8 @@ class QrcodeController extends Controller
             'ip' => $ip,
         ], [
             'code' => $nama,
-            'path' => $date
+            'path' => $date,
+            'user' => $user
         ]);
         event(new newQrEvent($data));
         // return new JsonResponse($data, 201);
