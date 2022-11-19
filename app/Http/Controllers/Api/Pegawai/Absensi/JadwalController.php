@@ -313,6 +313,7 @@ class JadwalController extends Controller
         $kategori = Kategory::find($request->kategory_id);
         if ($request->status === '2') {
             $jadwal->update([
+                'kategory_id' => $request->kategory_id,
                 'masuk' => $kategori->masuk,
                 'pulang' => $kategori->pulang,
                 'jam' => 8,
@@ -326,6 +327,7 @@ class JadwalController extends Controller
                 'jam' => 0,
                 'menit' => 0,
                 'status' => 1,
+                'kategory_id' => null
             ]);
         } else {
             return new JsonResponse(['message' => 'Tidak ada data status'], 406);
