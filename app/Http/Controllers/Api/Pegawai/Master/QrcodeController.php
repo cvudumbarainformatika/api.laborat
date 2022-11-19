@@ -46,9 +46,12 @@ class QrcodeController extends Controller
         ], [
             'code' => $nama,
             'path' => $date,
-            'user' => $user
         ]);
-        event(new newQrEvent($data));
+        $message=[
+            'data'=>$data,
+            'user'=>$user
+        ];
+        event(new newQrEvent($message));
         // return new JsonResponse($data, 201);
     }
 
