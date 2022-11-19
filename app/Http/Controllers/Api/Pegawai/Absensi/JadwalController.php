@@ -63,9 +63,7 @@ class JadwalController extends Controller
         // return new JsonResponse(['to' => $to, 'from' => $from]);
         $user = JWTAuth::user();
         $data = JadwalAbsen::where('user_id', $user->id)
-            ->orderBy(request('order_by'), request('sort'))
-            ->filter(request(['q']))
-            ->paginate(request('per_page'));
+            ->get();
 
         return new JsonResponse($data);
     }
