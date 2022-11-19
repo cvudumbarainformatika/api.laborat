@@ -6,6 +6,7 @@ use App\Events\newQrEvent;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Qrcode;
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -38,6 +39,7 @@ class QrcodeController extends Controller
     {
         // $ip = $ip;
         $user = JWTAuth::user();
+        $pegawai=Pegawai::find($user->pegawai_id);
         $date = date('Y-m-d H:i:s');
         $nama = $ip . '#' . $date;
 
@@ -49,7 +51,7 @@ class QrcodeController extends Controller
         ]);
         $message=[
             'data'=>$data,
-            'user'=>$user
+            'user'=>$pegawai
         ];
         event(new newQrEvent($message));
         // return new JsonResponse($data, 201);
