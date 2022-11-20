@@ -64,7 +64,7 @@ class QrcodeController extends Controller
         if ($data->path === $temp[1]) {
             $this->updateQr($temp[0]);
             $user = JWTAuth::user();
-            $jadwal = JadwalController::toMatch($user->id, $request->absen, 0);
+            $jadwal = JadwalController::toMatch($user->id, $request);
 
             if ($jadwal) {
                 return new JsonResponse([
@@ -75,7 +75,7 @@ class QrcodeController extends Controller
             }
             return new JsonResponse([
                 'message' => 'Tidak ada jadwal',
-
+                'req' => $request->all()
             ], 406);
         } else {
             return new JsonResponse(['message' => 'qr Code Expired'], 422);

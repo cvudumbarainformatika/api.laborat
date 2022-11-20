@@ -82,7 +82,7 @@ class JadwalController extends Controller
         return new JsonResponse($data);
     }
 
-    public static function toMatch($id, $absen, $idTrans)
+    public static function toMatch($id, $request)
     {
         // isinya match jadwal dengan user ybs
         $user = User::find($id);
@@ -97,7 +97,7 @@ class JadwalController extends Controller
         //     'yesterday' => $yesterday,
         // ];
         if ($jadwal->status === '2') {
-            if ($absen === 'masuk') {
+            if (!$request->has('id')) {
                 $data = TransaksiAbsen::create([
                     'pegawai_id' => $user->pegawai_id,
                     'user_id' => $user->id,
@@ -106,22 +106,39 @@ class JadwalController extends Controller
                     'masuk' => $time,
                 ]);
                 $result = ['absen' => 'masuk', 'data' => $data];
-            } else if ($absen === 'pulang') {
-                $data = TransaksiAbsen::where('user_id', $id)->where('tanggal', $now)->first();
+            } else {
+                $data = TransaksiAbsen::find($request->id);
                 $data->update([
                     'pulang' => $time,
                 ]);
-                $result = ['absen' => 'pulang'];
-            } else {
-                $data = TransaksiAbsen::create([
-                    'pegawai_id' => $user->pegawai_id,
-                    'user_id' => $user->id,
-                    'kategory_id' => $jadwal->kategory_id,
-                    'tanggal' => $now,
-                ]);
-
-                $result = ['absen' => 'tidak terdeteksi apakah masuk atau pulang'];
+                $result = ['absen' => 'pulang', 'data' => $data];
             }
+            // if ($request->absen === 'masuk') {
+            //     $data = TransaksiAbsen::create([
+            //         'pegawai_id' => $user->pegawai_id,
+            //         'user_id' => $user->id,
+            //         'kategory_id' => $jadwal->kategory_id,
+            //         'tanggal' => $now,
+            //         'masuk' => $time,
+            //     ]);
+            //     $result = ['absen' => 'masuk', 'data' => $data];
+            // } else if ($request->absen === 'pulang') {
+            //     // $data = TransaksiAbsen::where('user_id', $id)->where('tanggal', $now)->first();
+            //     $data = TransaksiAbsen::find($request->id);
+            //     $data->update([
+            //         'pulang' => $time,
+            //     ]);
+            //     $result = ['absen' => 'pulang', 'data' => $data];
+            // } else {
+            //     $data = TransaksiAbsen::create([
+            //         'pegawai_id' => $user->pegawai_id,
+            //         'user_id' => $user->id,
+            //         'kategory_id' => $jadwal->kategory_id,
+            //         'tanggal' => $now,
+            //     ]);
+
+            //     $result = ['absen' => 'tidak terdeteksi apakah masuk atau pulang', 'data' => $data];
+            // }
             // } else if ($jadwalKemarin->status === '2') {
             //     $masuk =  explode(':', $jadwalKemarin->kategory->masuk);
             //     $pulang =  explode(':', $jadwalKemarin->kategory->pulang);
@@ -143,7 +160,16 @@ class JadwalController extends Controller
             //     }
             //     // $result = false;
             // } else {
-            $result = false;
+        } else {
+            if ($request->has('id')) {
+                $data = TransaksiAbsen::find($request->id);
+                $data->update([
+                    'pulang' => $time,
+                ]);
+                $result = ['absen' => 'pulang', 'data' => $data];
+            } else {
+                $result = false;
+            }
         }
         return $result;
     }
