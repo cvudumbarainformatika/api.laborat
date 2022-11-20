@@ -67,12 +67,20 @@ class QrcodeController extends Controller
             $jadwal = JadwalController::toMatch($user->id, $request);
 
             if ($jadwal) {
+                $message = [
+                    'jadwal' => $jadwal,
+                ];
+                event(new newQrEvent($message));
                 return new JsonResponse([
                     'message' => 'Absen diterima',
                     'user' => $user,
                     'jadwal' => $jadwal,
                 ], 200);
             }
+            $message = [
+                'message' => 'tidak ada jadwal',
+            ];
+            event(new newQrEvent($message));
             return new JsonResponse([
                 'message' => 'Tidak ada jadwal',
                 'req' => $request->all()
