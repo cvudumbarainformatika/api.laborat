@@ -64,7 +64,7 @@ class QrcodeController extends Controller
         if ($data->path === $temp[1]) {
             $this->updateQr($temp[0]);
             $user = JWTAuth::user();
-            $jadwal = JadwalController::toMatch($user->id, $request->absen);
+            $jadwal = JadwalController::toMatch($user->id, $request->absen, 0);
 
             if ($jadwal) {
                 return new JsonResponse([
