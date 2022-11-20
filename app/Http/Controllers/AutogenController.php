@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
+use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
 use App\Models\Kunjungan;
@@ -372,8 +373,9 @@ class AutogenController extends Controller
         //     'code' => $nama,
         //     // 'path' => 'qr/' . $nama . '.svg'
         // ]);
-        $data = Kategory::latest()->first();
-        event(new PlaygroundEvent($data));
+        $data = JadwalController::toMatch(6, 'pulang');
+        // $data = Kategory::latest()->first();
+        // event(new PlaygroundEvent($data));
         // broadcast(new newQrEvent($data));
         return new JsonResponse($data, 200);
     }

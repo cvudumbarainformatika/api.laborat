@@ -39,7 +39,7 @@ class QrcodeController extends Controller
     {
         // $ip = $ip;
         $user = JWTAuth::user();
-        $pegawai=Pegawai::find($user->pegawai_id);
+        $pegawai = Pegawai::find($user->pegawai_id);
         $date = date('Y-m-d H:i:s');
         $nama = $ip . '#' . $date;
 
@@ -49,9 +49,9 @@ class QrcodeController extends Controller
             'code' => $nama,
             'path' => $date,
         ]);
-        $message=[
-            'data'=>$data,
-            'user'=>$pegawai
+        $message = [
+            'data' => $data,
+            'user' => $pegawai
         ];
         event(new newQrEvent($message));
         // return new JsonResponse($data, 201);
@@ -66,11 +66,17 @@ class QrcodeController extends Controller
             $user = JWTAuth::user();
             $jadwal = JadwalController::toMatch($user->id, $request->absen);
 
+            if ($jadwal) {
+                return new JsonResponse([
+                    'message' => 'Absen diterima',
+                    'user' => $user,
+                    'jadwal' => $jadwal,
+                ], 200);
+            }
             return new JsonResponse([
-                'message' => 'cari jadwal',
-                'user' => $user,
-                'jadwal' => $jadwal,
-            ], 200);
+                'message' => 'Tidak ada jadwal',
+
+            ], 406);
         } else {
             return new JsonResponse(['message' => 'qr Code Expired'], 422);
         }

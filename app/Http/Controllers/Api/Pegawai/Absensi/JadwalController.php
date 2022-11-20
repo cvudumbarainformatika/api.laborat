@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Kategory;
+use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -83,15 +84,66 @@ class JadwalController extends Controller
     public static function toMatch($id, $absen)
     {
         // isinya match jadwal dengan user ybs
-        $data = User::find($id);
-        $jadwal = JadwalAbsen::where('user_id', $id)->get();
-        $today = date('D');
-        $result = [
-            'data' => $data,
-            'jadwal' => $jadwal,
-            'today' => $today,
-            'absen' => $absen,
-        ];
+        $user = User::find($id);
+        $day = date('l');
+        $yesterday = date('l', strtotime('-1 days'));
+        $now = date('Y-m-d');
+        $time = date('H:i:s');
+        $jadwal = JadwalAbsen::where('user_id', $id)->where('day', $day)->with('kategory')->first();
+        $jadwalKemarin = JadwalAbsen::where('user_id', $id)->where('day', $yesterday)->with('kategory')->first();
+        // return [
+        //     'day' => $day,
+        //     'yesterday' => $yesterday,
+        // ];
+        if ($jadwal->status === '2') {
+            if ($absen === 'masuk') {
+                $data = TransaksiAbsen::create([
+                    'pegawai_id' => $user->pegawai_id,
+                    'user_id' => $user->id,
+                    'kategory_id' => $jadwal->kategory_id,
+                    'tanggal' => $now,
+                    'masuk' => $time,
+                ]);
+                $result = ['absen' => 'masuk'];
+            } else if ($absen === 'pulang') {
+                $data = TransaksiAbsen::where('user_id', $id)->where('tanggal', $now)->first();
+                $data->update([
+                    'pulang' => $time,
+                ]);
+                $result = ['absen' => 'pulang'];
+            } else {
+                $data = TransaksiAbsen::create([
+                    'pegawai_id' => $user->pegawai_id,
+                    'user_id' => $user->id,
+                    'kategory_id' => $jadwal->kategory_id,
+                    'tanggal' => $now,
+                ]);
+
+                $result = ['absen' => 'tidak terdeteksi apakah masuk atau pulang'];
+            }
+        } else if ($jadwalKemarin->status === '2') {
+            $masuk =  explode(':', $jadwalKemarin->kategory->masuk);
+            $pulang =  explode(':', $jadwalKemarin->kategory->pulang);
+            if ($absen === 'pulang') {
+                if ((int)$masuk[0] > (int)$pulang[0]) {
+                    $kem = date('Y-m-d', strtotime('-1 days'));
+                    $data = TransaksiAbsen::where('user_id', $id)->where('tanggal', $kem)->first();
+                    $data->update([
+                        'pulang' => $time,
+                    ]);
+
+                    $result = ['absen' => 'Pulang shift malam'];
+                }
+            } else {
+                $result = [
+                    'absen' => 'gagal absen shift malam',
+                    'hint' => 'pastikan flag "pulang" ada',
+                ];
+            }
+            // $result = false;
+        } else {
+            $result = false;
+        }
         return $result;
     }
     public function store(Request $request)
