@@ -10,4 +10,9 @@ class TransaksiAbsen extends Model
     use HasFactory;
     protected $connection = 'kepex';
     protected $guarded = ['id'];
+
+    public function kategory()
+    {
+        return $this->belongsTo(Kategory::class);
+    }
 }

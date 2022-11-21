@@ -13,6 +13,7 @@ use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Kategory;
 use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\Qrcode;
+use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
@@ -373,7 +374,8 @@ class AutogenController extends Controller
         //     'code' => $nama,
         //     // 'path' => 'qr/' . $nama . '.svg'
         // ]);
-        $data = JadwalController::toMatch(6, 'pulang');
+        // $data = JadwalController::toMatch(6, 'pulang');
+        $data = TransaksiAbsen::with('kategory')->find(2);
         // $data = Kategory::latest()->first();
         // event(new PlaygroundEvent($data));
         // broadcast(new newQrEvent($data));

@@ -105,9 +105,10 @@ class JadwalController extends Controller
                     'tanggal' => $now,
                     'masuk' => $time,
                 ]);
+                $data->load('kategory');
                 $result = ['absen' => 'masuk', 'data' => $data];
             } else {
-                $data = TransaksiAbsen::find($request->id);
+                $data = TransaksiAbsen::with('kategory')->find($request->id);
                 $data->update([
                     'pulang' => $time,
                 ]);
