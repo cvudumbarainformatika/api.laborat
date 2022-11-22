@@ -114,6 +114,8 @@ return [
             'database' => env('DB_DATABASE_FOURTH', 'forge'),
             'username' => env('DB_USERNAME', 'forge'),
             'password' => env('DB_PASSWORD', ''),
+            // 'username' => env('DB_USERNAME_100', 'forge'),
+            // 'password' => env('DB_PASSWORD_100', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',

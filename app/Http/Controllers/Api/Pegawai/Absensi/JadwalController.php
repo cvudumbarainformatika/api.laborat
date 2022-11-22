@@ -73,11 +73,11 @@ class JadwalController extends Controller
     public function getByUserDesk()
     {
         // return new JsonResponse(['to' => $to, 'from' => $from]);
-        $user = auth()->user();
-        $data = JadwalAbsen::where('user_id', $user->id)
-            ->orderBy(request('order_by'), request('sort'))
-            ->filter(request(['q']))
-            ->paginate(request('per_page'));
+        // $user = auth()->user();
+        $data = JadwalAbsen::where('user_id', request('id'))->with('kategory')->get();
+        // ->orderBy(request('order_by'), request('sort'))
+        // ->filter(request(['q']))
+        // ->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
