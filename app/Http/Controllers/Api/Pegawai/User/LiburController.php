@@ -14,6 +14,7 @@ class LiburController extends Controller
     public function index()
     {
         $data = Libur::orderBy(request('order_by'), request('sort'))
+            ->with('user')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
@@ -28,15 +29,16 @@ class LiburController extends Controller
             return new JsonResponse(['message' => 'isi data yang belum terisi'], 422);
         }
         $path = '';
-        if ($request->has('gambar')) {
-            $path = $request->file('gambar')->store('image', 'public');
-            array_merge($request, ['image' => $path]);
-        }
         $data = Libur::create($request->all());
-
         if (!$data) {
             return new JsonResponse(['message' => 'Gagal menyimpan data', 'request' => $request->all()], 500);
         }
+        if ($request->has('gambar')) {
+            $path = $request->file('gambar')->store('image', 'public');
+            // array_merge($request, ['image' => $path]);
+            $data->update(['image' => $path]);
+        }
+
         return new JsonResponse(['message' => 'Berhasil menyimpan data', 'request' => $request->all()], 201);
     }
 }
