@@ -12,6 +12,20 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class TransaksiAbsenController extends Controller
 {
     //
+
+    public function index()
+    {
+        $thisYear = date('Y');
+        $thisMonth = request('month') ? request('month') : date('m');
+        $per_page = request('per_page') ? request('per_page') : 10;
+        $data = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
+            ->with('user')
+            ->get();
+
+        return new JsonResponse($data);
+    }
+
     public function getRekapByUser()
     {
         $user = JWTAuth::user();
