@@ -389,11 +389,14 @@ class JadwalController extends Controller
     {
         $jadwal = JadwalAbsen::find($request->id);
         $kategori = Kategory::find($request->kategory_id);
-        $toIn = explode(':', $kategori->masuk);
-        $act = explode(':', $kategori->pulang);
-        $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
-        $menit = (int)$act[1] > (int)$toIn[1] ? (int)$act[1] - (int)$toIn[1] : (int)$toIn[1] - (int)$act[1];
+
         if ($request->status === '2') {
+
+            $toIn = explode(':', $kategori->masuk);
+            $act = explode(':', $kategori->pulang);
+            $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
+            $menit = (int)$act[1] > (int)$toIn[1] ? (int)$act[1] - (int)$toIn[1] : (int)$toIn[1] - (int)$act[1];
+
             $jadwal->update([
                 'kategory_id' => $request->kategory_id,
                 'masuk' => $kategori->masuk,
@@ -402,6 +405,8 @@ class JadwalController extends Controller
                 'menit' => $menit,
                 'status' => 2,
             ]);
+
+            $jadwal->kategory = $kategori;
         } else if ($request->status === '1') {
             $jadwal->update([
                 'masuk' => null,
@@ -414,7 +419,6 @@ class JadwalController extends Controller
         } else {
             return new JsonResponse(['message' => 'Tidak ada data status'], 406);
         }
-        $jadwal->kategory = $kategori;
         if ($jadwal->wasChanged()) {
             $status = 200;
             $pesan = 'Jadwal telah diupdate';
