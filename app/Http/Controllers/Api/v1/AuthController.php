@@ -26,13 +26,13 @@ class AuthController extends Controller
         if (!$temp) {
             return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
         }
-        // if ($temp) {
+        if ($temp) {
 
-        // $pass = Hash::check($request->password, $temp->password);
-        // if (!$pass) {
-        //     return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 407);
-        // }
-        // }
+            $pass = Hash::check($request->password, $temp->password);
+            if (!$pass) {
+                return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
+            }
+        }
         if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
