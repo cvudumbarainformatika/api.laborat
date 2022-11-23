@@ -15,14 +15,34 @@ class ProtaController extends Controller
     public function index()
     {
         $tahun = request('tahun') ? request('tahun') : date('Y');
-        $from = request('tahun') . '-01-01';
-        $to = request('tahun') . '-12-31';
+        $from = $tahun . '-01-01';
+        $to = $tahun . '-12-31';
         // return new JsonResponse(['to' => $to, 'from' => $from]);
         $data = Prota::where('tgl_libur', '>=', $from)
             ->where('tgl_libur', '<=', $to)
             ->orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))
             ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
+    public function all()
+    {
+        $tahun = request('tahun') ? request('tahun') : date('Y');
+        $bulan = request('bulan') ? request('bulan') : date('m');
+        $from = $tahun . '-' . $bulan . '-01';
+        $to = $tahun . '-' . $bulan . '-31';
+        // return new JsonResponse(['to' => $to, 'from' => $from]);
+        $data = Prota::where('tgl_libur', '>=', $from)
+            ->where('tgl_libur', '<=', $to)
+            // ->orderBy(request('order_by'), request('sort'))
+            // ->filter(request(['q']))
+            ->get();
+        foreach ($data as $key) {
+            $temp = explode('-', $key['tgl_libur']);
+            $day = $temp[2];
+            $key['day'] = $day;
+        }
 
         return new JsonResponse($data);
     }

@@ -18,6 +18,19 @@ class LiburController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
+
+    public function month()
+    {
+        $tahun = request('tahun') ? request('tahun') : date('Y');
+        $bulan = request('bulan') ? request('bulan') : date('m');
+        $from = $tahun . '-' . $bulan . '-01';
+        $to = $tahun . '-' . $bulan . '-31';
+        $data = Libur::where('tanggal', '>=', $from)
+            ->where('tanggal', '<=', $to)
+            ->with('user')
+            ->get();
+        return new JsonResponse($data);
+    }
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

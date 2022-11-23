@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'pegawai/absensi/prota'
 ], function () {
     Route::get('/index', [ProtaController::class, 'index']);
+    Route::get('/all', [ProtaController::class, 'all']);
     Route::get('/tahun', [ProtaController::class, 'tahunProta']);
     Route::post('/store', [ProtaController::class, 'store']);
     Route::post('/destroy', [ProtaController::class, 'destroy']);

@@ -73,8 +73,8 @@ class TransaksiAbsenController extends Controller
     public function getRekapByUser()
     {
         $user = JWTAuth::user();
-        $thisYear = date('Y');
-        $month = request('month');
+        $thisYear = request('tahun') ? request('tahun') : date('Y');
+        $month = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
         $data = TransaksiAbsen::where('user_id', $user->id)
             ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
@@ -120,8 +120,8 @@ class TransaksiAbsenController extends Controller
     public function getRekapPerUser()
     {
         $user = User::find(request('id'));
-        $thisYear = date('Y');
-        $month = request('month');
+        $thisYear = request('tahun') ? request('tahun') : date('Y');
+        $month = request('bulan') ? request('bulan') : date('m');
         // $per_page = request('per_page') ? request('per_page') : 10;
         $data = TransaksiAbsen::where('user_id', $user->id)
             ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
