@@ -23,8 +23,14 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
+
         if ($request->email !== 'sa@app.com') {
 
+
+            $found = User::where(['email' => $request->email, 'password' => $request->passwoard]);
+            if (!$found) {
+                return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 407);
+            }
             $user = User::where('email', '=', $request->email)
                 ->where('device', '=', $request->device)
                 ->first();

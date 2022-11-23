@@ -51,8 +51,9 @@ class TransaksiAbsenController extends Controller
         $apem = [];
         foreach ($userGroup as $key => $value) {
             $telat = $value->where('terlambat', 'yes')->count();
+            $total = $value->where('terlambat')->count();
             // $key['value'] = $key;
-            array_push($apem, ['telat' => $telat, 'user_id' => $value[0]->user_id]);
+            array_push($apem, ['total' => $total, 'telat' => $telat, 'user_id' => $value[0]->user_id]);
         }
         $userGroup['apem'] = $apem;
         // foreach ($apem as &$key) {
