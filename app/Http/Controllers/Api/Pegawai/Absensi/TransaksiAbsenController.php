@@ -35,7 +35,7 @@ class TransaksiAbsenController extends Controller
             $menit =  (int)$act[1] - (int)$toIn[1];
             $detik =  (int)$act[2] - (int)$toIn[2];
 
-            if ($jam > 0 || $menit > 10) {
+            if ($jam > 0 || $menit > 40) {
                 $key['terlambat'] = 'yes';
             } else {
                 $key['terlambat'] = 'no';
@@ -48,7 +48,20 @@ class TransaksiAbsenController extends Controller
 
         $collects = collect($data);
         $userGroup = $collects->groupBy('user_id');
-        $userGroup['telat'] = $collects->groupBy('user_id')->where('terlambat', 'yes')->count();
+        $apem = [];
+        foreach ($userGroup as $key => $value) {
+            $telat = $value->where('terlambat', 'yes')->count();
+            // $key['value'] = $key;
+            array_push($apem, ['telat' => $telat, 'user_id' => $value[0]->user_id]);
+        }
+        $userGroup['apem'] = $apem;
+        // foreach ($apem as &$key) {
+        //     array_push($userGroup[$key['user_id']], $key);
+        // }
+
+
+
+
         return new JsonResponse($userGroup, 200);
         // return new JsonResponse([
         //     'data' => $userGroup,
