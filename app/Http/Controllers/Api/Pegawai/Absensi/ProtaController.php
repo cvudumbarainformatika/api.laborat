@@ -14,6 +14,7 @@ class ProtaController extends Controller
     //
     public function index()
     {
+        $tahun = request('tahun') ? request('tahun') : date('Y');
         $from = request('tahun') . '-01-01';
         $to = request('tahun') . '-12-31';
         // return new JsonResponse(['to' => $to, 'from' => $from]);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -20,6 +21,18 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
+        $temp = User::where('email', '=', $request->email)
+            ->first();
+        if (!$temp) {
+            return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
+        }
+        // if ($temp) {
+
+        // $pass = Hash::check($request->password, $temp->password);
+        // if (!$pass) {
+        //     return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 407);
+        // }
+        // }
         if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
