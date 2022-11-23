@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -27,21 +28,27 @@ class AuthController extends Controller
         if ($request->email !== 'sa@app.com') {
 
 
-            $found = User::where(['email' => $request->email, 'password' => $request->passwoard]);
-            if (!$found) {
+            // $found = User::where(['email' => $request->email, 'password' => $request->password])->first();
+            $temp = User::where('email', '=', $request->email)
+                ->first();
+            if (!$temp) {
                 return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 407);
+            }
+            if ($temp) {
+                if ($temp->status === '2') {
+                    return new JsonResponse(['message' => 'Device Reset Approved', 'id' => $temp->id], 410);
+                }
+
+                $pass = Hash::check($request->password, $temp->password);
+                if (!$pass) {
+                    return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 407);
+                }
             }
             $user = User::where('email', '=', $request->email)
                 ->where('device', '=', $request->device)
                 ->first();
-            $temp = User::where('email', '=', $request->email)
-                ->first();
 
             // return new JsonResponse(['message' => $user], 205);
-            if ($temp->status === '2') {
-                return new JsonResponse(['message' => 'Device Reset Approved', 'id' => $temp->id], 410);
-            }
-
             if (!$user) {
                 return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 406);
             }
