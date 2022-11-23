@@ -24,6 +24,14 @@ class UserController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
+    public function userAll()
+    {
+        $data = User::where('id', '>', 3)
+            ->orderBy(request('order_by'), request('sort'))
+            ->filter(request(['q']))
+            ->get();
+        return new JsonResponse($data);
+    }
 
     public function updateStatus(Request $request)
     {

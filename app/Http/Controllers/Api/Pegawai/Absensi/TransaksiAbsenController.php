@@ -20,10 +20,40 @@ class TransaksiAbsenController extends Controller
         $per_page = request('per_page') ? request('per_page') : 10;
         $data = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
             ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
-            ->with('user')
+            ->with('user', 'kategory')
             ->get();
+        $tanggals = [];
+        foreach ($data as $key) {
+            $temp = explode('-', $key['tanggal']);
+            $day = $temp[2];
+            // $day = $this->getDayName($temp[2]);
+            $key['day'] = $day;
 
-        return new JsonResponse($data);
+            $toIn = explode(':', $key['kategory']->masuk);
+            $act = explode(':', $key['masuk']);
+            $jam = (int)$act[0] - (int)$toIn[0];
+            $menit =  (int)$act[1] - (int)$toIn[1];
+            $detik =  (int)$act[2] - (int)$toIn[2];
+
+            if ($jam > 0 || $menit > 10) {
+                $key['terlambat'] = 'yes';
+            } else {
+                $key['terlambat'] = 'no';
+            }
+            $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+            $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+            $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+            $key['diff'] = $diff;
+        }
+
+        $collects = collect($data);
+        $userGroup = $collects->groupBy('user_id');
+        $userGroup['telat'] = $collects->groupBy('user_id')->where('terlambat', 'yes')->count();
+        return new JsonResponse($userGroup, 200);
+        // return new JsonResponse([
+        //     'data' => $userGroup,
+        //     'telat' => $telat,
+        // ], 200);
     }
 
     public function getRekapByUser()
@@ -60,9 +90,6 @@ class TransaksiAbsenController extends Controller
             $menit =  (int)$act[1] - (int)$toIn[1];
             $detik =  (int)$act[2] - (int)$toIn[2];
 
-            // $key['jam'] = $jam;
-            // $key['menit'] = $menit;
-            // $key['detik'] = $detik;
             if ($jam > 0 || $menit > 10) {
                 $key['terlambat'] = 'yes';
             } else {
@@ -84,5 +111,110 @@ class TransaksiAbsenController extends Controller
             'tanggals' => $tanggals,
             'data' => $data,
         ], 200);
+    }
+
+    public function getDayName($day)
+    {
+        $temp = '';
+        switch ($day) {
+            case '01':
+                $temp = 'satu';
+                break;
+            case '02':
+                $temp = 'dua';
+                break;
+            case '03':
+                $temp = 'tiga';
+                break;
+            case '04':
+                $temp = 'empat';
+                break;
+            case '05':
+                $temp = 'lima';
+                break;
+            case '06':
+                $temp = 'enam';
+                break;
+            case '07':
+                $temp = 'tujuh';
+                break;
+            case '08':
+                $temp = 'delapan';
+                break;
+            case '09':
+                $temp = 'sembilan';
+                break;
+            case '10':
+                $temp = 'sepuluh';
+                break;
+            case '11':
+                $temp = 'sebelas';
+                break;
+            case '12':
+                $temp = 'duabelas';
+                break;
+            case '13':
+                $temp = 'tigabelas';
+                break;
+            case '14':
+                $temp = 'empatbelas';
+                break;
+            case '15':
+                $temp = 'limabelas';
+                break;
+            case '16':
+                $temp = 'enambelas';
+                break;
+            case '17':
+                $temp = 'tujuhbelas';
+                break;
+            case '18':
+                $temp = 'delapanbelas';
+                break;
+            case '19':
+                $temp = 'sembilanbelas';
+                break;
+            case '20':
+                $temp = 'duapuluh';
+                break;
+            case '21':
+                $temp = 'duapuluhsatu';
+                break;
+            case '22':
+                $temp = 'duapuluhdua';
+                break;
+            case '23':
+                $temp = 'duapuluhtiga';
+                break;
+            case '24':
+                $temp = 'duapuluhempat';
+                break;
+            case '25':
+                $temp = 'duapuluhlima';
+                break;
+            case '26':
+                $temp = 'duapuluhenam';
+                break;
+            case '27':
+                $temp = 'duapuluhtujuh';
+                break;
+            case '28':
+                $temp = 'duapuluhdelapan';
+                break;
+            case '29':
+                $temp = 'duapuluhsembilan';
+                break;
+            case '30':
+                $temp = 'tigapuluh';
+                break;
+            case '31':
+                $temp = 'tigapuluhsatu';
+                break;
+
+            default:
+                'enol';
+                break;
+        }
+        return $temp;
     }
 }

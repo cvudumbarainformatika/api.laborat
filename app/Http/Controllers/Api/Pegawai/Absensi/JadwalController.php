@@ -389,13 +389,17 @@ class JadwalController extends Controller
     {
         $jadwal = JadwalAbsen::find($request->id);
         $kategori = Kategory::find($request->kategory_id);
+        $toIn = explode(':', $kategori->masuk);
+        $act = explode(':', $kategori->pulang);
+        $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
+        $menit = (int)$act[1] > (int)$toIn[1] ? (int)$act[1] - (int)$toIn[1] : (int)$toIn[1] - (int)$act[1];
         if ($request->status === '2') {
             $jadwal->update([
                 'kategory_id' => $request->kategory_id,
                 'masuk' => $kategori->masuk,
                 'pulang' => $kategori->pulang,
-                'jam' => 8,
-                'menit' => 0,
+                'jam' => $jam,
+                'menit' => $menit,
                 'status' => 2,
             ]);
         } else if ($request->status === '1') {
