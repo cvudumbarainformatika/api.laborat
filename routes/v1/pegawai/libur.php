@@ -11,5 +11,6 @@ Route::group([
     'prefix' => 'libur'
 ], function () {
     Route::get('/index', [LiburController::class, 'index']);
+    Route::get('/month', [LiburController::class, 'month']);
     Route::post('/store', [LiburController::class, 'store']);
 });

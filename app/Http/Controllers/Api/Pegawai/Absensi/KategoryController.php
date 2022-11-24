@@ -18,6 +18,12 @@ class KategoryController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
+    public function all()
+    {
+        $data = Kategory::oldest('id')
+            ->get();
+        return new JsonResponse($data);
+    }
     public function store(Request $request)
     {
         try {

@@ -21,7 +21,9 @@ class TransaksiAbsenController extends Controller
         $data = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
             ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
             ->with('user', 'kategory')
-            ->get();
+            // ->get();
+            ->simplePaginate($per_page);
+        return new JsonResponse($data);
         $tanggals = [];
         foreach ($data as $key) {
             $temp = explode('-', $key['tanggal']);

@@ -29,6 +29,12 @@ class LiburController extends Controller
             ->where('tanggal', '<=', $to)
             ->with('user')
             ->get();
+
+        foreach ($data as $key) {
+            $temp = explode('-', $key['tanggal']);
+            $day = $temp[2];
+            $key['day'] = $day;
+        }
         return new JsonResponse($data);
     }
     public function store(Request $request)

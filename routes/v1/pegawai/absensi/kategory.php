@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'pegawai/absensi/kategori'
 ], function () {
     Route::get('/index', [KategoryController::class, 'index']);
+    Route::get('/all', [KategoryController::class, 'all']);
     Route::post('/store', [KategoryController::class, 'store']);
     Route::post('/destroy', [KategoryController::class, 'destroy']);
 });
