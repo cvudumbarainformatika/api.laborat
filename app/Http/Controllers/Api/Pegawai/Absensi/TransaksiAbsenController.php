@@ -32,41 +32,42 @@ class TransaksiAbsenController extends Controller
         $data = [];
         foreach ($users['data'] as $key) {
             // return new JsonResponse($key);
-            $temp = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+            $absen = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
                 ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
                 ->where('user_id', $key['id'])
                 ->with('user', 'kategory')
                 ->get();
+            // return new JsonResponse($absen);
             $tanggals = [];
-            foreach ($temp as $key) {
-                // return new JsonResponse($key);
-                $temp = explode('-', $key['tanggal']);
-                // $temp = explode('-', $key->tanggal);
+            foreach ($absen as $value) {
+                // return new JsonResponse($value);
+                $temp = explode('-', $value['tanggal']);
+                // $temp = explode('-', $value->tanggal);
                 $day = $temp[2];
                 // $day = $this->getDayName($temp[2]);
-                $key['day'] = $day;
+                $value['day'] = $day;
 
-                $toIn = explode(':', $key['kategory']->masuk);
-                $act = explode(':', $key['masuk']);
+                $toIn = explode(':', $value['kategory']->masuk);
+                $act = explode(':', $value['masuk']);
                 $jam = (int)$act[0] - (int)$toIn[0];
                 $menit =  (int)$act[1] - (int)$toIn[1];
                 $detik =  (int)$act[2] - (int)$toIn[2];
 
                 if ($jam > 0 || $menit > 40) {
-                    $key['terlambat'] = 'yes';
+                    $value['terlambat'] = 'yes';
                 } else {
-                    $key['terlambat'] = 'no';
+                    $value['terlambat'] = 'no';
                 }
                 $dMenit = $menit >= 10 ? $menit : '0' . $menit;
                 $dDetik = $detik >= 10 ? $detik : '0' . $detik;
                 $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-                $key['diff'] = $diff;
+                $value['diff'] = $diff;
             }
 
-            // $data[$key['id']] = $temp;
-            array_push($data, [$key['id'] => $temp]);
+            $data[$key['id']] = $absen;
+            // array_push($data, [$key['id'] => $temp]);
         }
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
         // $tanggals = [];
         // foreach ($data as $key) {
         //     return new JsonResponse($key);
@@ -93,24 +94,31 @@ class TransaksiAbsenController extends Controller
         //     $key['diff'] = $diff;
         // }
 
-        $collects = collect($data);
-        $userGroup = $collects->groupBy('user_id');
+        // $collects = collect($data);
+        // $userGroup = $collects->groupBy('user_id');
         $apem = [];
-        foreach ($userGroup as $key => $value) {
+        foreach ($data as $key => $value) {
+            // return new JsonResponse($value);
             $telat = $value->where('terlambat', 'yes')->count();
             $total = $value->where('terlambat')->count();
+            $userapem = null;
+            foreach ($value as $ni) {
+                $userapem = $ni->user_id;
+            }
+            // $userapem->all();
+            // $userapem->only('user_id');
             // $key['value'] = $key;
-            array_push($apem, ['total' => $total, 'telat' => $telat, 'user_id' => $value[0]->user_id]);
+            array_push($apem, ['total' => $total, 'telat' => $telat, 'user_id' => $userapem]);
         }
-        $userGroup['apem'] = $apem;
+        $data['apem'] = $apem;
         // foreach ($apem as &$key) {
-        //     array_push($userGroup[$key['user_id']], $key);
+        //     array_push($data[$key['user_id']], $key);
         // }
 
 
 
 
-        return new JsonResponse($userGroup, 200);
+        return new JsonResponse($data, 200);
         // return new JsonResponse([
         //     'data' => $userGroup,
         //     'telat' => $telat,
