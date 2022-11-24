@@ -102,7 +102,8 @@ class JadwalController extends Controller
                 $data->update([
                     'pulang' => $time,
                 ]);
-                $result = ['absen' => 'pulang', 'data' => $data];
+                $apem = ['id' => 0, 'jam' => 0];
+                $result = ['absen' => 'pulang', 'data' => $apem];
                 return $result;
             }
             $data = TransaksiAbsen::create([
