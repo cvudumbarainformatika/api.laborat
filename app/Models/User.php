@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -78,6 +79,10 @@ class User extends Authenticatable implements JWTSubject
     public function jadwal()
     {
         return $this->hasMany(JadwalAbsen::class);
+    }
+    public function absens()
+    {
+        return $this->hasMany(TransaksiAbsen::class);
     }
 
     public function scopeFilter($search, array $reqs)

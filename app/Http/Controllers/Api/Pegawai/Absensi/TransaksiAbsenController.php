@@ -13,6 +13,9 @@ class TransaksiAbsenController extends Controller
 {
     //
 
+    public function reakap()
+    {
+    }
     public function index()
     {
         $thisYear = date('Y');
