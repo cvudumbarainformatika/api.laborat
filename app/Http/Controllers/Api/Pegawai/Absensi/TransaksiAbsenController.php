@@ -18,15 +18,34 @@ class TransaksiAbsenController extends Controller
         $thisYear = date('Y');
         $thisMonth = request('month') ? request('month') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
-        $data = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
-            ->with('user', 'kategory')
-            // ->get();
-            ->simplePaginate($per_page);
-        return new JsonResponse($data);
+        $user = User::where('id', '>', 3)->oldest('id')->filter(request(['q']))->paginate($per_page);
+        $userCollections = collect($user);
+        $users = $userCollections->only('data');
+        $users->all();
+        $meta = $userCollections->except('data');
+        $meta->all();
+        // $temp = [
+        //     'data' => $users,
+        //     'meta' => $meta,
+        // ];
+        // return new JsonResponse($temp);
+        $data = [];
+        foreach ($users['data'] as $key) {
+            // return new JsonResponse($key);
+            $temp = TransaksiAbsen::whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+                ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
+                ->where('user_id', $key['id'])
+                ->with('user', 'kategory')
+                ->get();
+
+            array_push($data, $temp);
+        }
+        // return new JsonResponse($data);
         $tanggals = [];
         foreach ($data as $key) {
+            return new JsonResponse($key);
             $temp = explode('-', $key['tanggal']);
+            // $temp = explode('-', $key->tanggal);
             $day = $temp[2];
             // $day = $this->getDayName($temp[2]);
             $key['day'] = $day;

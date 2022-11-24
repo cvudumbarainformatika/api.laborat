@@ -278,7 +278,7 @@ class JadwalController extends Controller
         // return new JsonResponse([$request->all()]);
         foreach ($hari as $key) {
             // return new JsonResponse([$key]);
-            if ($request->kategory_id === '1') {
+            if ($request->kategory_id === 1) {
 
                 if ($key->nama === 'Minggu' || $key->nama === 'Sabtu') {
                     $data = JadwalAbsen::create(
@@ -329,7 +329,7 @@ class JadwalController extends Controller
                         ]
                     );
                 }
-            } else if ($request->kategory_id === '2') {
+            } else if ($request->kategory_id === 2) {
                 $data = JadwalAbsen::create(
                     [
                         'kategory_id' => 2,
