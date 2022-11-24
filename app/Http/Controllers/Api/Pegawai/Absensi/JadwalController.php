@@ -103,6 +103,7 @@ class JadwalController extends Controller
                     'pulang' => $time,
                 ]);
                 $result = ['absen' => 'pulang', 'data' => $data];
+                return $result;
             }
             $data = TransaksiAbsen::create([
                 'pegawai_id' => $user->pegawai_id,
