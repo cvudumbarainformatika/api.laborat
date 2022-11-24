@@ -86,7 +86,7 @@ class QrcodeController extends Controller
                 'req' => $request->all()
             ], 406);
         } else {
-            return new JsonResponse(['message' => 'qr Code Expired'], 422);
+            return new JsonResponse(['message' => 'qr Code Expired'], 410);
         }
         return new JsonResponse($data, 200);
     }
