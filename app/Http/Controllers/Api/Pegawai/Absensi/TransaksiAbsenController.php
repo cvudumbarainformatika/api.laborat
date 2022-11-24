@@ -15,6 +15,11 @@ class TransaksiAbsenController extends Controller
 
     public function reakap()
     {
+        $thisYear = date('Y');
+        $thisMonth = request('month') ? request('month') : date('m');
+        $per_page = request('per_page') ? request('per_page') : 10;
+        $user = User::where('id', '>', 3)->oldest('id')
+            ->paginate($per_page);
     }
     public function index()
     {
