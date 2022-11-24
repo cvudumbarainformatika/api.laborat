@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'pegawai/absensi'
 ], function () {
     Route::get('/index', [TransaksiAbsenController::class, 'index']);
+    Route::get('/rekap', [TransaksiAbsenController::class, 'rekap']);
 });

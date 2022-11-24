@@ -13,18 +13,24 @@ class TransaksiAbsenController extends Controller
 {
     //
 
-    public function reakap()
+    public function rekap()
     {
-        $thisYear = date('Y');
-        $thisMonth = request('month') ? request('month') : date('m');
+        $thisYear = request('tahun') ? request('tahun') : date('Y');
+        $thisMonth = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
         $user = User::where('id', '>', 3)->oldest('id')
-            ->paginate($per_page);
+            ->with(['absens' => function ($query) use ($thisMonth, $thisYear) {
+                $query->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+                    ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31');
+            }])
+            ->simplePaginate($per_page);
+
+        return new JsonResponse($user);
     }
     public function index()
     {
-        $thisYear = date('Y');
-        $thisMonth = request('month') ? request('month') : date('m');
+        $thisYear = request('tahun') ? request('tahun') : date('Y');
+        $thisMonth = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
         $user = User::where('id', '>', 3)->oldest('id')->filter(request(['q']))->paginate($per_page);
         $userCollections = collect($user);
