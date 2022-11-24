@@ -199,6 +199,7 @@ class TransaksiAbsenController extends Controller
             // ->paginate($per_page);
             ->with('kategory')
             ->get();
+        return new JsonResponse($data);
         $tanggals = [];
         foreach ($data as $key) {
             $temp = date('Y/m/d', strtotime($key['tanggal']));
