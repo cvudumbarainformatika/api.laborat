@@ -37,35 +37,61 @@ class TransaksiAbsenController extends Controller
                 ->where('user_id', $key['id'])
                 ->with('user', 'kategory')
                 ->get();
+            $tanggals = [];
+            foreach ($temp as $key) {
+                // return new JsonResponse($key);
+                $temp = explode('-', $key['tanggal']);
+                // $temp = explode('-', $key->tanggal);
+                $day = $temp[2];
+                // $day = $this->getDayName($temp[2]);
+                $key['day'] = $day;
 
-            array_push($data, $temp);
-        }
-        // return new JsonResponse($data);
-        $tanggals = [];
-        foreach ($data as $key) {
-            return new JsonResponse($key);
-            $temp = explode('-', $key['tanggal']);
-            // $temp = explode('-', $key->tanggal);
-            $day = $temp[2];
-            // $day = $this->getDayName($temp[2]);
-            $key['day'] = $day;
+                $toIn = explode(':', $key['kategory']->masuk);
+                $act = explode(':', $key['masuk']);
+                $jam = (int)$act[0] - (int)$toIn[0];
+                $menit =  (int)$act[1] - (int)$toIn[1];
+                $detik =  (int)$act[2] - (int)$toIn[2];
 
-            $toIn = explode(':', $key['kategory']->masuk);
-            $act = explode(':', $key['masuk']);
-            $jam = (int)$act[0] - (int)$toIn[0];
-            $menit =  (int)$act[1] - (int)$toIn[1];
-            $detik =  (int)$act[2] - (int)$toIn[2];
-
-            if ($jam > 0 || $menit > 40) {
-                $key['terlambat'] = 'yes';
-            } else {
-                $key['terlambat'] = 'no';
+                if ($jam > 0 || $menit > 40) {
+                    $key['terlambat'] = 'yes';
+                } else {
+                    $key['terlambat'] = 'no';
+                }
+                $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+                $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+                $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+                $key['diff'] = $diff;
             }
-            $dMenit = $menit >= 10 ? $menit : '0' . $menit;
-            $dDetik = $detik >= 10 ? $detik : '0' . $detik;
-            $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-            $key['diff'] = $diff;
+
+            // $data[$key['id']] = $temp;
+            array_push($data, [$key['id'] => $temp]);
         }
+        return new JsonResponse($data);
+        // $tanggals = [];
+        // foreach ($data as $key) {
+        //     return new JsonResponse($key);
+        //     $temp = explode('-', $key['tanggal']);
+        //     // $temp = explode('-', $key->tanggal);
+        //     $day = $temp[2];
+        //     // $day = $this->getDayName($temp[2]);
+        //     $key['day'] = $day;
+
+        //     $toIn = explode(':', $key['kategory']->masuk);
+        //     $act = explode(':', $key['masuk']);
+        //     $jam = (int)$act[0] - (int)$toIn[0];
+        //     $menit =  (int)$act[1] - (int)$toIn[1];
+        //     $detik =  (int)$act[2] - (int)$toIn[2];
+
+        //     if ($jam > 0 || $menit > 40) {
+        //         $key['terlambat'] = 'yes';
+        //     } else {
+        //         $key['terlambat'] = 'no';
+        //     }
+        //     $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+        //     $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+        //     $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+        //     $key['diff'] = $diff;
+        // }
 
         $collects = collect($data);
         $userGroup = $collects->groupBy('user_id');

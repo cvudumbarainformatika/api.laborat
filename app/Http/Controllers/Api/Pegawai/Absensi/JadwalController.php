@@ -289,7 +289,7 @@ class JadwalController extends Controller
                             'pegawai_id' => $user->pegawai_id,
                             'ruang_id' => $pegawai->ruang,
                             'status' => '1',
-                            'kategory_id' => 1,
+                            'kategory_id' => null,
                             'masuk' => null,
                             'pulang' => null,
                             'jam' => 0,
@@ -348,7 +348,7 @@ class JadwalController extends Controller
                 if ($key->nama === 'Minggu') {
                     $data = JadwalAbsen::create(
                         [
-                            'kategory_id' => 2,
+                            'kategory_id' => null,
                             'day' => $key->name,
                             'hari' => $key->nama,
                             'user_id' => $user->id,
