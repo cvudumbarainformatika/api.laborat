@@ -24,8 +24,56 @@ class TransaksiAbsenController extends Controller
                     ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31');
             }])
             ->simplePaginate($per_page);
+        $userCollections = collect($user);
+        $meta = $userCollections->except('data');
+        $meta->all();
+        $data = [];
+        foreach ($user as $key) {
+            $absen = $key->absens;
+            foreach ($absen as $value) {
+                // return new JsonResponse($value);
+                $temp = explode('-', $value['tanggal']);
+                // $temp = explode('-', $value->tanggal);
+                $day = $temp[2];
+                // $day = $this->getDayName($temp[2]);
+                $value['day'] = $day;
 
-        return new JsonResponse($user);
+                $toIn = explode(':', $value['kategory']->masuk);
+                $act = explode(':', $value['masuk']);
+                $jam = (int)$act[0] - (int)$toIn[0];
+                $menit =  (int)$act[1] - (int)$toIn[1];
+                $detik =  (int)$act[2] - (int)$toIn[2];
+
+                if ($jam > 0 || $menit > 00) {
+                    $value['terlambat'] = 'yes';
+                } else {
+                    $value['terlambat'] = 'no';
+                }
+                $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+                $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+                $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+                $value['diff'] = $diff;
+            }
+
+            $data[$key['id']] = $absen;
+        }
+        $apem = [];
+        foreach ($data as $key => $value) {
+            // return new JsonResponse($value);
+            $telat = $value->where('terlambat', 'yes')->count();
+            $total = $value->where('terlambat')->count();
+            $userapem = null;
+            foreach ($value as $ni) {
+                $userapem = $ni->user_id;
+            }
+            // $userapem->all();
+            // $userapem->only('user_id');
+            // $key['value'] = $key;
+            array_push($apem, ['total' => $total, 'telat' => $telat, 'user_id' => $userapem]);
+        }
+        $data['apem'] = $apem;
+        $data['meta'] = $meta;
+        return new JsonResponse($data);
     }
     public function index()
     {
@@ -34,10 +82,10 @@ class TransaksiAbsenController extends Controller
         $per_page = request('per_page') ? request('per_page') : 10;
         $user = User::where('id', '>', 3)->oldest('id')->filter(request(['q']))->paginate($per_page);
         $userCollections = collect($user);
-        $users = $userCollections->only('data');
-        $users->all();
         $meta = $userCollections->except('data');
         $meta->all();
+        $users = $userCollections->only('data');
+        $users->all();
         // $temp = [
         //     'data' => $users,
         //     'meta' => $meta,

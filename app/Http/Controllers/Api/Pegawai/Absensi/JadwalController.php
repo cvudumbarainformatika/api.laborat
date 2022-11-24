@@ -115,7 +115,7 @@ class JadwalController extends Controller
             ]);
             $data->load('kategory');
             $result = ['absen' => 'masuk', 'data' => $data];
-
+            return $result;
             // } else {
             //     $data = TransaksiAbsen::with('kategory')->find($request->id);
             //     $data->update([
@@ -171,12 +171,13 @@ class JadwalController extends Controller
             //     // $result = false;
             // } else {
         } else {
-            if ($request->has('id')) {
+            if ($request->has('id') && $request->id > 0) {
                 $data = TransaksiAbsen::find($request->id);
                 $data->update([
                     'pulang' => $time,
                 ]);
                 $result = ['absen' => 'pulang', 'data' => $data];
+                return $result;
             } else {
                 $result = false;
             }
