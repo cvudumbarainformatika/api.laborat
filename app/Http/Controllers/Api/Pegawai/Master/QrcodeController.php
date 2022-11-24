@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Pegawai\Master;
 use App\Events\newQrEvent;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Controller;
-use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Qrcode;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
@@ -65,19 +64,16 @@ class QrcodeController extends Controller
         if ($data->path === $temp[1]) {
             $this->updateQr($temp[0]);
             $user = JWTAuth::user();
-            $transaksi = JadwalController::toMatch($user->id, $request);
-            $day = date('l');
-            $jadwal = JadwalAbsen::where('user_id', $user->id)->where('day', $day)->with('kategory')->first();
+            $jadwal = JadwalController::toMatch($user->id, $request);
 
-            if ($transaksi) {
+            if ($jadwal) {
                 $message = [
-                    'jadwal' => $transaksi,
+                    'jadwal' => $jadwal,
                 ];
                 event(new newQrEvent($message));
                 return new JsonResponse([
                     'message' => 'Absen diterima',
                     'user' => $user,
-                    'transaksi' => $transaksi,
                     'jadwal' => $jadwal,
                 ], 200);
             }
