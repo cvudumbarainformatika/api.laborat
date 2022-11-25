@@ -69,7 +69,8 @@ class QrcodeController extends Controller
             if ($jadwal) {
                 $message = [
                     'jadwal' => $jadwal,
-                    'ip' => $temp[0]
+                    'ip' => $temp[0],
+                    'user' => $user,
                 ];
                 event(new newQrEvent($message));
                 return new JsonResponse([
@@ -80,7 +81,8 @@ class QrcodeController extends Controller
             }
             $message = [
                 'message' => 'tidak ada jadwal',
-                'ip' => $temp[0]
+                'ip' => $temp[0],
+                'user' => $user,
             ];
             event(new newQrEvent($message));
             return new JsonResponse([
