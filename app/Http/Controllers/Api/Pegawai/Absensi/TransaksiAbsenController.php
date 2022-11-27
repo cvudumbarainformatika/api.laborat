@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\User;
@@ -262,6 +263,11 @@ class TransaksiAbsenController extends Controller
         $prota = Prota::where('tgl_libur', '>=', $from)
             ->where('tgl_libur', '<=', $to)
             ->get();
+        $libur = Libur::where('tanggal', '>=', $from)
+            ->where('tanggal', '<=', $to)
+            ->where('user_id', $user->id)
+            ->with('user')
+            ->get();
         $data = TransaksiAbsen::where('user_id', $user->id)
             ->whereDate('tanggal', '>=', $from)
             ->whereDate('tanggal', '<=', $to)
@@ -294,6 +300,8 @@ class TransaksiAbsenController extends Controller
         $grouped = $collects->groupBy('week');
         $telat = $collects->where('terlambat', 'yes')->count();
         return new JsonResponse([
+            'libur' => $libur,
+            'prota' => $prota,
             'telat' => $telat,
             'weeks' => $grouped,
             'tanggals' => $tanggals,

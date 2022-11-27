@@ -116,7 +116,7 @@ class AuthController extends Controller
         }
         $pegawai = Pegawai::find($request->pegawai_id);
         $pegawai->update([
-            'pass' => $request->password
+            'account_pass' => $request->password
         ]);
         $data->load('pegawai');
         return new JsonResponse(['status' => 'success', 'message' => 'Data tersimpan', 'user' => $data], 201);
