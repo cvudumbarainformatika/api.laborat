@@ -200,40 +200,41 @@ class TransaksiAbsenController extends Controller
             ->with('kategory')
             ->get();
         return new JsonResponse($data);
-        $tanggals = [];
-        foreach ($data as $key) {
-            $temp = date('Y/m/d', strtotime($key['tanggal']));
-            $week = date('W', strtotime($key['tanggal']));
-            $toIn = explode(':', $key['kategory']->masuk);
-            $act = explode(':', $key['masuk']);
-            $jam = (int)$act[0] - (int)$toIn[0];
-            $menit =  (int)$act[1] - (int)$toIn[1];
-            $detik =  (int)$act[2] - (int)$toIn[2];
 
-            if ($jam > 0 || $menit > 10) {
-                $key['terlambat'] = 'yes';
-            } else {
-                $key['terlambat'] = 'no';
-            }
-            $dMenit = $menit >= 10 ? $menit : '0' . $menit;
-            $dDetik = $detik >= 10 ? $detik : '0' . $detik;
-            $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-            $key['diff'] = $diff;
-            $key['week'] = $week;
-            array_push($tanggals, $temp);
-        };
-        $collects = collect($data);
-        $grouped = $collects->groupBy('week');
-        $telat = $collects->where('terlambat', 'yes')->count();
-        return new JsonResponse([
-            'telat' => $telat,
-            'weeks' => $grouped,
-            'tanggals' => $tanggals,
-            'data' => $data,
-            'user' => $user,
-        ], 200);
+        // $tanggals = [];
+        // foreach ($data as $key) {
+        //     $temp = date('Y/m/d', strtotime($key['tanggal']));
+        //     $week = date('W', strtotime($key['tanggal']));
+        //     $toIn = explode(':', $key['kategory']->masuk);
+        //     $act = explode(':', $key['masuk']);
+        //     $jam = (int)$act[0] - (int)$toIn[0];
+        //     $menit =  (int)$act[1] - (int)$toIn[1];
+        //     $detik =  (int)$act[2] - (int)$toIn[2];
 
-        return new JsonResponse($data);
+        //     if ($jam > 0 || $menit > 10) {
+        //         $key['terlambat'] = 'yes';
+        //     } else {
+        //         $key['terlambat'] = 'no';
+        //     }
+        //     $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+        //     $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+        //     $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+        //     $key['diff'] = $diff;
+        //     $key['week'] = $week;
+        //     array_push($tanggals, $temp);
+        // };
+        // $collects = collect($data);
+        // $grouped = $collects->groupBy('week');
+        // $telat = $collects->where('terlambat', 'yes')->count();
+        // return new JsonResponse([
+        //     'telat' => $telat,
+        //     'weeks' => $grouped,
+        //     'tanggals' => $tanggals,
+        //     'data' => $data,
+        //     'user' => $user,
+        // ], 200);
+
+        // return new JsonResponse($data);
     }
     public function getRekapPerUser()
     {
