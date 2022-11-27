@@ -14,6 +14,7 @@ Route::group([
     Route::get('/hari', [JadwalController::class, 'getDays']);
     Route::get('/by-user', [JadwalController::class, 'getByUser']);
     Route::get('/rekap-by-user', [TransaksiAbsenController::class, 'getRekapByUser']);
+    Route::get('/absen-today', [TransaksiAbsenController::class, 'getAbsenToday']);
     Route::post('/simpan', [JadwalController::class, 'create']);
     Route::post('/update', [JadwalController::class, 'update']);
 });

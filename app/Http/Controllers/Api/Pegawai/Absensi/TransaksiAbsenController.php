@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -187,6 +188,20 @@ class TransaksiAbsenController extends Controller
         // ], 200);
     }
 
+    public function getAbsenToday()
+    {
+        $user = JWTAuth::user();
+        $data = TransaksiAbsen::where('user_id', $user->id)
+            ->whereDate('tanggal', '>=', date('Y-m-d'))
+            ->first();
+        if (!$data) {
+
+            return new JsonResponse(['message' => 'tidak ada data'], 410);
+        }
+
+        return new JsonResponse($data, 200);
+    }
+
     public function getRekapByUser()
     {
         $user = JWTAuth::user();
@@ -241,10 +256,15 @@ class TransaksiAbsenController extends Controller
         $user = User::find(request('id'));
         $thisYear = request('tahun') ? request('tahun') : date('Y');
         $month = request('bulan') ? request('bulan') : date('m');
+        $from = $thisYear . '-' . $month . '-01';
+        $to = $thisYear . '-' . $month . '-31';
         // $per_page = request('per_page') ? request('per_page') : 10;
+        $prota = Prota::where('tgl_libur', '>=', $from)
+            ->where('tgl_libur', '<=', $to)
+            ->get();
         $data = TransaksiAbsen::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->whereDate('tanggal', '>=', $from)
+            ->whereDate('tanggal', '<=', $to)
             ->orderBy(request('order_by'), request('sort'))
             ->with('kategory')
             ->get();

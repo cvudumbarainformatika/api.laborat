@@ -26,6 +26,10 @@ class ProtaController extends Controller
 
         return new JsonResponse($data);
     }
+    public static function getAll()
+    {
+        return ProtaController::class;
+    }
     public function all()
     {
         $tahun = request('tahun') ? request('tahun') : date('Y');
