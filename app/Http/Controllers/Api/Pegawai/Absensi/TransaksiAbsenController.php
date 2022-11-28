@@ -193,11 +193,11 @@ class TransaksiAbsenController extends Controller
     {
         $user = JWTAuth::user();
         $data = TransaksiAbsen::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', date('Y-m-d'))
+            ->whereDate('tanggal', '=', date('Y-m-d'))
             ->first();
         if (!$data) {
 
-            return new JsonResponse(['message' => 'tidak ada data'], 410);
+            return new JsonResponse(['message' => 'tidak ada data'], 500);
         }
 
         return new JsonResponse($data, 200);
