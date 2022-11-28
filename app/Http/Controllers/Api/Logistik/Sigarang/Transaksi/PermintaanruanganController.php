@@ -76,7 +76,7 @@ class PermintaanruanganController extends Controller
         $data = Permintaanruangan::where('reff', $req->reff)->get();
         if (count($data)) {
             foreach ($data as $key) {
-                $key->update(['status' => 2]);
+                $key->update(['status' => 5]);
                 // if (!$data->save()) {
                 //     return new JsonResponse(['message' => 'Gagal Update Status']);
                 // }

@@ -11,7 +11,9 @@ Route::group([
     'prefix' => 'transaksi/permintaanruangan'
 ], function () {
     Route::get('/draft', [PermintaanruanganController::class, 'draft']);
-    Route::get('/get-permintaan', [VerifPermintaanruanganController::class, 'getPerrmintaan']);
     Route::post('/store', [PermintaanruanganController::class, 'store']);
     Route::post('/selesai-input', [PermintaanruanganController::class, 'selesaiInput']);
+    // verif permintaan
+    Route::get('/get-permintaan', [VerifPermintaanruanganController::class, 'getPerrmintaan']);
+    Route::post('/update-permintaan', [VerifPermintaanruanganController::class, 'updatePermintaan']);
 });
