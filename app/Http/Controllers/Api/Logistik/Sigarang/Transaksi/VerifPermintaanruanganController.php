@@ -13,7 +13,7 @@ class VerifPermintaanruanganController extends Controller
     public function getPerrmintaan()
     {
         $data = Permintaanruangan::where('status', '=', 2)
-            ->with('details', 'pj', 'pengguna')->get();
+            ->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->get();
         if (count($data)) {
             foreach ($data as $key) {
                 $key->gudang = collect($key->details)->groupBy('dari');

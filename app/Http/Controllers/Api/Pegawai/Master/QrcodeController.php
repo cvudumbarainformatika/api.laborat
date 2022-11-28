@@ -65,12 +65,13 @@ class QrcodeController extends Controller
             $this->updateQr($temp[0]);
             $user = JWTAuth::user();
             $jadwal = JadwalController::toMatch($user->id, $request);
+            $pegawai = Pegawai::find($user->pegawai_id);
 
             if ($jadwal) {
                 $message = [
                     'jadwal' => $jadwal,
                     'ip' => $temp[0],
-                    'user' => $user,
+                    'user' => $pegawai,
                 ];
                 event(new newQrEvent($message));
                 return new JsonResponse([
@@ -82,7 +83,7 @@ class QrcodeController extends Controller
             $message = [
                 'message' => 'tidak ada jadwal',
                 'ip' => $temp[0],
-                'user' => $user,
+                'user' => $pegawai,
             ];
             event(new newQrEvent($message));
             return new JsonResponse([
