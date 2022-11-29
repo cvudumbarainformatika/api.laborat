@@ -14,7 +14,7 @@ class DistribusiController extends Controller
     {
         $data = Permintaanruangan::where('status', '>=', 6)
             ->orderBy(request('order_by'), request('sort'))
-            ->with('details.barangrs', 'details.barang108', 'details.satuan', 'pj', 'pengguna')
+            ->with('details.barangrs.mapingbarang.barang108',  'details.satuan', 'pj', 'pengguna')
             ->filter(request(['q']))
             ->paginate(request('per-page'));
         // if (count($data)) {
@@ -27,5 +27,25 @@ class DistribusiController extends Controller
             'data' => $collection->only('data'),
             'meta' => $collection->except('data'),
         ], 200);
+    }
+    public function updateDistribusi(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+            'no_distribusi' => 'required',
+        ]);
+        $tanggal_distribusi = date('Y-m-d H:i:s');
+        $status = 7;
+        $data = Permintaanruangan::find($request->id);
+        $data->update([
+            'no_distribusi' => $request->no_distribusi,
+            'tanggal_distribusi' => $tanggal_distribusi,
+            'status' => $status,
+        ]);
+
+        if (!$data->wasChanged()) {
+            return new JsonResponse(['message' => 'data gagal di update'], 501);
+        }
+        return new JsonResponse(['message' => 'data berhasi di update'], 200);
     }
 }

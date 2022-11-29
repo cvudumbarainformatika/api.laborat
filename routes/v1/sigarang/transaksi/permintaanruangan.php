@@ -19,4 +19,5 @@ Route::group([
     Route::post('/update-permintaan', [VerifPermintaanruanganController::class, 'updatePermintaan']);
     // distribusi
     Route::get('/get-permintaan-verified', [DistribusiController::class, 'getPermintaanVerified']);
+    Route::post('/update-distribusi', [DistribusiController::class, 'updateDistribusi']);
 });
