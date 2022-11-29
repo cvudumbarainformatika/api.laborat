@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 class VerifPermintaanruanganController extends Controller
 {
     // ambil semua permintaan yang sudah selesai di input
-    public function getPerrmintaan()
+    public function getPermintaan()
     {
         $data = Permintaanruangan::where('status', '=', 5)
             ->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->get();
@@ -21,6 +21,7 @@ class VerifPermintaanruanganController extends Controller
         // }
         return new JsonResponse($data);
     }
+
     public function updatePermintaan(Request $request)
     {
         $request->validate([

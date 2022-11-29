@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 
+use App\Models\Sigarang\Barang108;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Ruang;
@@ -35,6 +36,11 @@ class DetailPermintaanruangan extends Model
     public function barangrs()
     {
         return  $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        // return $this->belongsTo(BarangRS::class, 'kode', 'kode_rs');
+    }
+    public function barang108()
+    {
+        return  $this->belongsTo(Barang108::class, 'kode_rs', 'kode');
         // return $this->belongsTo(BarangRS::class, 'kode', 'kode_rs');
     }
 

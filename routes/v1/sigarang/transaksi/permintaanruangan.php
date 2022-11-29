@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\DistribusiController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\PermintaanruanganController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\VerifPermintaanruanganController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,8 @@ Route::group([
     Route::post('/store', [PermintaanruanganController::class, 'store']);
     Route::post('/selesai-input', [PermintaanruanganController::class, 'selesaiInput']);
     // verif permintaan
-    Route::get('/get-permintaan', [VerifPermintaanruanganController::class, 'getPerrmintaan']);
+    Route::get('/get-permintaan', [VerifPermintaanruanganController::class, 'getPermintaan']);
     Route::post('/update-permintaan', [VerifPermintaanruanganController::class, 'updatePermintaan']);
+    // distribusi
+    Route::get('/get-permintaan-verified', [DistribusiController::class, 'getPermintaanVerified']);
 });
