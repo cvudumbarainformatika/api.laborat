@@ -37,6 +37,6 @@ class VerifPermintaanruanganController extends Controller
         if (!$permintaan->wasChanged()) {
             return new JsonResponse(['message' => 'data gagal di update'], 501);
         }
-        return new JsonResponse($permintaan, 200);
+        return new JsonResponse(['data' => $permintaan, 'message' => 'data berhasil di simpan'], 200);
     }
 }

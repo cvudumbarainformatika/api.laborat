@@ -9,7 +9,7 @@ class KontrakPengerjaan extends Model
 {
     use HasFactory;
     protected $connection = 'siasik';
-    protected $table = 'kontrakpengerjaan_header';
+    protected $table = 'kontrakPengerjaan_header';
     protected $fillable = [];
 
     public function scopeFilter($search, array $reqs)
