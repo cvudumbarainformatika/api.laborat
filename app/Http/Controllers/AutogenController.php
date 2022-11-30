@@ -16,6 +16,9 @@ use App\Models\Pegawai\Qrcode;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
@@ -375,10 +378,33 @@ class AutogenController extends Controller
         //     // 'path' => 'qr/' . $nama . '.svg'
         // ]);
         // $data = JadwalController::toMatch(6, 'pulang');
-        $data = TransaksiAbsen::with('kategory')->find(2);
+        // $data = TransaksiAbsen::with('kategory')->find(2);
         // $data = Kategory::latest()->first();
         // event(new PlaygroundEvent($data));
         // broadcast(new newQrEvent($data));
+        // return new JsonResponse($data, 200);
+        // $data = DetailsPenerimaanruangan::distinct()->get(['kode_rs']);
+        // "P-01020600"
+        // $data = Penerimaanruangan::with('details')->get();
+        // $collection = collect($data);
+        // // $grouped = collect($data)->groupBy('kode_penanggungjawab');
+        // $grouped = $collection->mapToGroups(function ($item, $key) {
+        //     $clDet = collect($item['details']);
+        //     $details = $clDet->groupBy('kode_rs');
+        //     $details->sum('jumlah');
+        //     return [
+        //         $item['kode_penanggungjawab'] => [
+        //             'all' => $clDet,
+        //             'kode_rs' => $details,
+        //         ]
+        //     ];
+        // });
+        // $grouped->all();
+        $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
+            ->whereHas('penerimaanruangan', function ($wew) {
+                $wew->where('kode_penanggungjawab', '=', 'P-01020600')
+                    ->where('status', '=', 1);
+            })->groupBy('kode_rs')->get();
         return new JsonResponse($data, 200);
     }
     public function wawanpost()

@@ -10,4 +10,7 @@ Route::group([
     'prefix' => 'transaksi/penerimaanruangan'
 ], function () {
     Route::get('/index', [PenerimaanruanganController::class, 'index']);
+    Route::get('/koders', [PenerimaanruanganController::class, 'getItems']);
+    Route::get('/pj', [PenerimaanruanganController::class, 'getPj']);
+    Route::post('/store', [PenerimaanruanganController::class, 'store']);
 });
