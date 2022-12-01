@@ -35,10 +35,10 @@ class PenerimaanruanganController extends Controller
                 $permintaan = $this->updatePermintaan($permintaan_id);
                 unset($request['permintaan_id']);
             }
-            $penerimaan = Penerimaanruangan::updateOrCreate($request->all());
+            $penerimaan = Penerimaanruangan::updateOrCreate(['id' => $request->id], $request->all());
             if ($detail) {
                 foreach ($detail as $key) {
-                    $penerimaan->details()->updateOrCreate($key);
+                    $penerimaan->details()->updateOrCreate(['id' => $key['id']], $key);
                 }
             }
             if ($penerimaan->wasRecentlyCreated) {
@@ -74,8 +74,13 @@ class PenerimaanruanganController extends Controller
     }
     public function getItems()
     {
-        $data = DetailsPenerimaanruangan::distinct()->get(['kode_rs']);
-
+        $kode = request('kode_penanggungjawab');
+        // $data = DetailsPenerimaanruangan::distinct()->get(['kode_rs']);
+        $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
+            ->whereHas('penerimaanruangan', function ($wew) use ($kode) {
+                $wew->where('kode_penanggungjawab', '=', $kode)
+                    ->where('status', '=', 1);
+            })->groupBy('kode_rs')->get();
         return new JsonResponse($data, 200);
     }
     public function getPj()
