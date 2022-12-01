@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi\Penerimaanruangan;
 
+use App\Models\Sigarang\Pengguna;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

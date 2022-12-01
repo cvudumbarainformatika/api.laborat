@@ -388,6 +388,7 @@ class AutogenController extends Controller
         // $data = Penerimaanruangan::with('details')->get();
         // $collection = collect($data);
         // // $grouped = collect($data)->groupBy('kode_penanggungjawab');
+
         // $grouped = $collection->mapToGroups(function ($item, $key) {
         //     $clDet = collect($item['details']);
         //     $details = $clDet->groupBy('kode_rs');
@@ -400,12 +401,43 @@ class AutogenController extends Controller
         //     ];
         // });
         // $grouped->all();
-        $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
-            ->whereHas('penerimaanruangan', function ($wew) {
-                $wew->where('kode_penanggungjawab', '=', 'P-01020600')
-                    ->where('status', '=', 1);
-            })->groupBy('kode_rs')->get();
-        return new JsonResponse($data, 200);
+        // $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
+        //     ->whereHas('penerimaanruangan', function ($wew) {
+        //         $wew->where('kode_penanggungjawab', '=', 'P-01020600')
+        //             ->where('status', '=', 1);
+        //     })->groupBy('kode_rs')->get();
+
+        $data = Penerimaanruangan::select('kode_penanggungjawab')->with('pj')->distinct()->get();
+        $collection = collect($data);
+        $maping = $collection->map(function ($item, $key) {
+            $decode = json_decode($item);
+            $a = '';
+            $b = '';
+            foreach ($decode as $satu => $dua) {
+                $a = $satu;
+                $b = $dua;
+            }
+            $temp = strval($item);
+            $temp1 = explode('{', $temp);
+            $temp2 = explode('}', $temp1[1]);
+            $temp3 = explode(':', $temp2[0]);
+            return [
+                'a' => $a,
+                'b' => $b,
+                'nama' => $temp3[0],
+                'value' => $temp3[1],
+                'item' => $item['pj']
+            ];
+        });
+
+
+        return new JsonResponse(
+            [
+                'data' => $data,
+                'maping' => $maping,
+            ],
+            200
+        );
     }
     public function wawanpost()
     {

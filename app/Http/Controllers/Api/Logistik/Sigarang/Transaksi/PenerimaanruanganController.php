@@ -74,19 +74,23 @@ class PenerimaanruanganController extends Controller
     }
     public function getItems()
     {
-        $kode = request('kode_penanggungjawab');
+        $kode = request('kode_pengguna');
         // $data = DetailsPenerimaanruangan::distinct()->get(['kode_rs']);
         $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
             ->whereHas('penerimaanruangan', function ($wew) use ($kode) {
-                $wew->where('kode_penanggungjawab', '=', $kode)
+                $wew->where('kode_pengguna', '=', $kode)
                     ->where('status', '=', 1);
             })->groupBy('kode_rs')->get();
         return new JsonResponse($data, 200);
     }
     public function getPj()
     {
-        $data = Penerimaanruangan::distinct()->get(['kode_penanggungjawab']);
+        $data = Penerimaanruangan::select('kode_penanggungjawab')->with('pj')->distinct()->get();
+        $collection = collect($data);
+        $maping = $collection->map(function ($item, $key) {
+            return $item['pj'];
+        });
 
-        return new JsonResponse($data, 200);
+        return new JsonResponse($maping, 200);
     }
 }

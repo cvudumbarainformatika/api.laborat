@@ -26,6 +26,14 @@ class MappingBarangController extends Controller
         $data = MapingBarang::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return MappingBarangResource::collection($data);
     }
+    public function mapingwith()
+    {
+        $data = MapingBarang::latest('id')
+            ->filter(request(['q']))
+            ->with('barangrs', 'barang108', 'satuan')
+            ->get(); //paginate(request('per_page'));
+        return MappingBarangResource::collection($data);
+    }
     public function store(Request $request)
     {
         // $auth = $request->user();
