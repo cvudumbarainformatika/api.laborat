@@ -12,9 +12,37 @@ class UserController extends Controller
 {
     public function index()
     {
-        $data= User::where('id','>',1)
-                ->latest()->paginate(12);
+        $data = User::where('id', '>', 1)
+            ->latest()->paginate(12);
         return new JsonResponse($data);
+    }
+    public function user()
+    {
+        $data = User::where('id', '>', 3)
+            ->orderBy(request('order_by'), request('sort'))
+            ->filter(request(['q']))
+            ->paginate(request('per_page'));
+        return new JsonResponse($data);
+    }
+    public function userAll()
+    {
+        $data = User::where('id', '>', 3)
+            ->orderBy(request('order_by'), request('sort'))
+            ->filter(request(['q']))
+            ->get();
+        return new JsonResponse($data);
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $user = User::find($request->id);
+        $user->update([
+            'status' => '2'
+        ]);
+        if ($user->wasChanged()) {
+            return new JsonResponse(['message' => 'Request Update device apporved'], 200);
+        }
+        return new JsonResponse(['message' => 'Update device failed, please notify team programmer'], 406);
     }
 
     public function store(Request $request)
@@ -38,9 +66,9 @@ class UserController extends Controller
             return $saved;
         });
         if (!$saved) {
-            return new JsonResponse(['message'=>'Ada Kesalahan'], 500);
+            return new JsonResponse(['message' => 'Ada Kesalahan'], 500);
         }
-        return new JsonResponse(['message'=>'Success, Data tersimpan'], 201);
+        return new JsonResponse(['message' => 'Success, Data tersimpan'], 201);
     }
 
     public function destroy(Request $request)
@@ -52,9 +80,8 @@ class UserController extends Controller
         $user = $request->user();
         $user->log("Menghapus Data User {$data->name}");
         if (!$deleted) {
-            return new JsonResponse(['message'=>'Ada Kesalahan'], 500);
+            return new JsonResponse(['message' => 'Ada Kesalahan'], 500);
         }
-        return new JsonResponse(['message'=>'success terhapus'], 201);
-
+        return new JsonResponse(['message' => 'success terhapus'], 201);
     }
 }

@@ -2,11 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
+use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
+use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
+use App\Models\Pegawai\Hari;
+use App\Models\Pegawai\Kategory;
+use App\Models\Pegawai\Prota;
+use App\Models\Pegawai\Qrcode;
+use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\PemeriksaanLaborat;
+use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
 use Carbon\Carbon;
@@ -306,5 +319,134 @@ class AutogenController extends Controller
 
         event(new PlaygroundEvent('coba'));
         return response()->json(['message' => 'success'], 201);
+    }
+
+    public function wawan()
+    {
+        // $data = Pengguna::where('level_3', '<>', null)
+        //     ->where('level_4', '=', null)
+        //     ->get();
+        // $koleksi = collect($data);
+        // $draft = Permintaanruangan::where('reff', '=', 'TPN-l9pa1meah1nyu')
+        //     ->where('status', '=', 1)
+        //     // ->latest('id')->with(['details.barangrs', 'details.satuan', 'details.ruang', 'details.gudang'])->get();
+        //     ->latest('id')->with(['details'])->get();
+        // $kolek = collect($draft[0]->details)->groupBy('dari');
+        // $apem = $draft[0];
+        // $apem->details[0] = $kolek;
+        // $draft[0]->gedung = $kolek;
+        // $data = Permintaanruangan::where('status', '=', 1)
+        //     ->with('details', 'pj', 'pengguna')->get();
+        // if (count($data)) {
+        //     foreach ($data as $key) {
+        //         $key->gudang = collect($key->details)->groupBy('dari');
+        //     }
+        // }
+        // $data = Kategory::with('pertama')->get();
+        // $data = Prota::get();
+        // $tahun = [];
+        // foreach ($data as $key) {
+        //     $temp = date('Y', strtotime($key->tgl_libur));
+        //     array_push($tahun, $temp);
+        // }
+        // $ip2 = request()->ip();
+        // $ip = $_SERVER['REMOTE_ADDR'];
+        // $sekarang = date('W');
+        // $tgl = '2022-11-17';
+        // $mingguDepan = date('W', strtotime($tgl));
+
+        // return new JsonResponse([
+        //     'sekarang' => $sekarang,
+        //     'next' => $mingguDepan
+        //     // 'ip' => $ip,
+        //     // 'ip2' => $ip2,
+        //     // 'tahun' => array_unique($tahun),
+        //     // 'data' => $data,
+        //     // 'kolek' => $kolek,
+
+        // ]);
+
+
+        // bikin qr
+        // $ip = request()->ip();
+        // $date = date('Y-m-d H:i:s');
+        // $nama = $ip . ' ' . $date;
+
+        // $data = Qrcode::create([
+        //     'ip' => $ip,
+        //     'code' => $nama,
+        //     // 'path' => 'qr/' . $nama . '.svg'
+        // ]);
+        // $data = JadwalController::toMatch(6, 'pulang');
+        // $data = TransaksiAbsen::with('kategory')->find(2);
+        // $data = Kategory::latest()->first();
+        // event(new PlaygroundEvent($data));
+        // broadcast(new newQrEvent($data));
+        // return new JsonResponse($data, 200);
+        // $data = DetailsPenerimaanruangan::distinct()->get(['kode_rs']);
+        // "P-01020600"
+        // $data = Penerimaanruangan::with('details')->get();
+        // $collection = collect($data);
+        // // $grouped = collect($data)->groupBy('kode_penanggungjawab');
+
+        // $grouped = $collection->mapToGroups(function ($item, $key) {
+        //     $clDet = collect($item['details']);
+        //     $details = $clDet->groupBy('kode_rs');
+        //     $details->sum('jumlah');
+        //     return [
+        //         $item['kode_penanggungjawab'] => [
+        //             'all' => $clDet,
+        //             'kode_rs' => $details,
+        //         ]
+        //     ];
+        // });
+        // $grouped->all();
+        // $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
+        //     ->whereHas('penerimaanruangan', function ($wew) {
+        //         $wew->where('kode_penanggungjawab', '=', 'P-01020600')
+        //             ->where('status', '=', 1);
+        //     })->groupBy('kode_rs')->get();
+
+        $data = Penerimaanruangan::select('kode_penanggungjawab')->with('pj')->distinct()->get();
+        $collection = collect($data);
+        $maping = $collection->map(function ($item, $key) {
+            $decode = json_decode($item);
+            $a = '';
+            $b = '';
+            foreach ($decode as $satu => $dua) {
+                $a = $satu;
+                $b = $dua;
+            }
+            $temp = strval($item);
+            $temp1 = explode('{', $temp);
+            $temp2 = explode('}', $temp1[1]);
+            $temp3 = explode(':', $temp2[0]);
+            return [
+                'a' => $a,
+                'b' => $b,
+                'nama' => $temp3[0],
+                'value' => $temp3[1],
+                'item' => $item['pj']
+            ];
+        });
+
+
+        return new JsonResponse(
+            [
+                'data' => $data,
+                'maping' => $maping,
+            ],
+            200
+        );
+    }
+    public function wawanpost()
+    {
+
+        $ip2 = $_SERVER['REMOTE_ADDR'];
+        $ip = request()->ip();
+        return new JsonResponse([
+            'ip' => $ip,
+            'ip2' => $ip2,
+        ]);
     }
 }

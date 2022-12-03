@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,8 +22,9 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $table ='accounts';
-    protected $guarded =['id'];
+    protected $connection = 'mysql';
+    protected $table = 'accounts';
+    protected $guarded = ['id'];
     // protected $fillable = [
     //     'name',
     //     'email',
@@ -46,10 +50,12 @@ class User extends Authenticatable implements JWTSubject
     //     'email_verified_at' => 'datetime',
     // ];
 
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier()
+    {
         return $this->getKey();
     }
-    public function getJWTCustomClaims() {
+    public function getJWTCustomClaims()
+    {
         return [];
     }
 
@@ -65,4 +71,25 @@ class User extends Authenticatable implements JWTSubject
     //     ];
     //    AuditLog::query()->create($data);
     // }
+
+    public function pegawai()
+    {
+        return $this->belongsTo(Pegawai::class);
+    }
+    public function jadwal()
+    {
+        return $this->hasMany(JadwalAbsen::class);
+    }
+    public function absens()
+    {
+        return $this->hasMany(TransaksiAbsen::class);
+    }
+
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->where('nama', 'LIKE', '%' . $query . '%');
+            // ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
+    }
 }
