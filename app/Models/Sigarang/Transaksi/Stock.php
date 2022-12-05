@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi;
 
+use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Pengguna;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,11 @@ class Stock extends Model
     use HasFactory;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
+
+    public function barang()
+    {
+        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+    }
 
     public function gudang()
     {
