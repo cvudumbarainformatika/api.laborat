@@ -351,7 +351,7 @@ class JadwalController extends Controller
             $toIn = explode(':', $kategori->masuk);
             $act = explode(':', $kategori->pulang);
             // $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
-            $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] + 24 - (int)$act[0];
+            $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (24 - (int)$toIn[0]) + (int)$act[0];
             $menit = (int)$act[1] > (int)$toIn[1] ? (int)$act[1] - (int)$toIn[1] : (int)$toIn[1] - (int)$act[1];
 
             $jadwal->update([
