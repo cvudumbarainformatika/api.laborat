@@ -116,60 +116,6 @@ class JadwalController extends Controller
             $data->load('kategory');
             $result = ['absen' => 'masuk', 'data' => $data];
             return $result;
-            // } else {
-            //     $data = TransaksiAbsen::with('kategory')->find($request->id);
-            //     $data->update([
-            //         'pulang' => $time,
-            //     ]);
-            //     $result = ['absen' => 'pulang', 'data' => $data];
-            // }
-            // if ($request->absen === 'masuk') {
-            //     $data = TransaksiAbsen::create([
-            //         'pegawai_id' => $user->pegawai_id,
-            //         'user_id' => $user->id,
-            //         'kategory_id' => $jadwal->kategory_id,
-            //         'tanggal' => $now,
-            //         'masuk' => $time,
-            //     ]);
-            //     $result = ['absen' => 'masuk', 'data' => $data];
-            // } else if ($request->absen === 'pulang') {
-            //     // $data = TransaksiAbsen::where('user_id', $id)->where('tanggal', $now)->first();
-            //     $data = TransaksiAbsen::find($request->id);
-            //     $data->update([
-            //         'pulang' => $time,
-            //     ]);
-            //     $result = ['absen' => 'pulang', 'data' => $data];
-            // } else {
-            //     $data = TransaksiAbsen::create([
-            //         'pegawai_id' => $user->pegawai_id,
-            //         'user_id' => $user->id,
-            //         'kategory_id' => $jadwal->kategory_id,
-            //         'tanggal' => $now,
-            //     ]);
-
-            //     $result = ['absen' => 'tidak terdeteksi apakah masuk atau pulang', 'data' => $data];
-            // }
-            // } else if ($jadwalKemarin->status === '2') {
-            //     $masuk =  explode(':', $jadwalKemarin->kategory->masuk);
-            //     $pulang =  explode(':', $jadwalKemarin->kategory->pulang);
-            //     if ($absen === 'pulang') {
-            //         if ((int)$masuk[0] > (int)$pulang[0]) {
-            //             $kem = date('Y-m-d', strtotime('-1 days'));
-            //             $data = TransaksiAbsen::where('user_id', $id)->where('tanggal', $kem)->first();
-            //             $data->update([
-            //                 'pulang' => $time,
-            //             ]);
-
-            //             $result = ['absen' => 'Pulang shift malam'];
-            //         }
-            //     } else {
-            //         $result = [
-            //             'absen' => 'gagal absen shift malam',
-            //             'hint' => 'pastikan flag "pulang" ada',
-            //         ];
-            //     }
-            //     // $result = false;
-            // } else {
         } else {
             if ($request->has('id') && $request->id > 0) {
                 $data = TransaksiAbsen::find($request->id);
@@ -404,7 +350,8 @@ class JadwalController extends Controller
 
             $toIn = explode(':', $kategori->masuk);
             $act = explode(':', $kategori->pulang);
-            $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
+            // $jam = (int)$act[0] > (int)$toIn[0] ? (int)$act[0] - (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
+            $jam = (int)$act[0] > (int)$toIn[0] ? (24 - (int)$act[0]) + (int)$toIn[0] : (int)$toIn[0] - (int)$act[0];
             $menit = (int)$act[1] > (int)$toIn[1] ? (int)$act[1] - (int)$toIn[1] : (int)$toIn[1] - (int)$act[1];
 
             $jadwal->update([
