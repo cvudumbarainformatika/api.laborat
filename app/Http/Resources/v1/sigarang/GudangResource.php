@@ -16,9 +16,10 @@ class GudangResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'utama' => $this->utama,
+            'gedung' => $this->gedung,
+            'gudang' => $this->gudang,
             'depo' => $this->depo,
-            'ruang' => $this->ruang,
+            'lantai' => $this->lantai,
             'kode' => $this->kode,
             'nama' => $this->nama,
             'created_at' => $this->created_at,

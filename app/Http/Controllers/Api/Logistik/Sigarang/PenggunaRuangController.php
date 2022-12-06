@@ -19,7 +19,12 @@ class PenggunaRuangController extends Controller
             ->filter(request(['q']))
             ->with('ruang.namagedung', 'pengguna', 'penanggungjawab')
             ->paginate(request('per_page'));
-        return PenggunaRuangResource::collection($data);
+        // return PenggunaRuangResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function penggunaRuang()
     {
