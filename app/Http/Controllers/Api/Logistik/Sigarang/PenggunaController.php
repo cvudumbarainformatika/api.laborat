@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\PenggunaResource;
 use App\Models\Sigarang\Pengguna;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +18,12 @@ class PenggunaController extends Controller
         $data = Pengguna::latest()
             ->filter(request(['q']))
             ->paginate(request('per_page'));
-        return PenggunaResource::collection($data);
+        // return PenggunaResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function cariPengguna()
     {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\SatuanResource;
 use App\Models\Sigarang\Satuan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +18,12 @@ class SatuanController extends Controller
             ->filter(request(['q']))
             ->paginate(request('per_page'));
 
-        return SatuanResource::collection($data);
+        // return SatuanResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function satuan()
     {

@@ -15,11 +15,16 @@ class RuangController extends Controller
     public function index()
     {
         // $data = Ruang::paginate();
-        $data = Ruang::latest('id')
+        $data = Ruang::oldest('id')
             ->filter(request(['q']))
             ->with('namagedung')
             ->paginate(request('per_page'));
-        return RuangResource::collection($data);
+        // return RuangResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function ruang()
     {

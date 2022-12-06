@@ -19,7 +19,12 @@ class MappingBarangController extends Controller
             ->filter(request(['q']))
             ->with('barang108', 'barangrs', 'satuan')
             ->paginate(request('per_page'));
-        return MappingBarangResource::collection($data);
+        // return MappingBarangResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function maping()
     {

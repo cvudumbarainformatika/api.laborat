@@ -19,7 +19,12 @@ class BarangRSController extends Controller
             ->filter(request(['q']))
             ->with('satuan')
             ->paginate(request('per_page'));
-        return BarangRSResource::collection($data);
+        // return BarangRSResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function barangrs()
     {

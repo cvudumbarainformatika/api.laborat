@@ -15,10 +15,15 @@ class GedungController extends Controller
     public function index()
     {
         // $data = Gedung::paginate();
-        $data = Gedung::latest()
+        $data = Gedung::oldest()
             ->filter(request(['q']))
             ->paginate(request('per_page'));
-        return GedungResource::collection($data);
+        // return GedungResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function gedung()
     {
