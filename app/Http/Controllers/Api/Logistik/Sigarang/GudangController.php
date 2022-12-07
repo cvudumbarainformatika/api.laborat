@@ -34,7 +34,8 @@ class GudangController extends Controller
     public function depo()
     {
         $data = Gudang::where('depo', '<>', null)
-            ->where('gudang', '=', null)
+            ->where('depo', '<>', '')
+            ->where('gedung', '=', 2)
             ->get();
         return new JsonResponse($data);
     }

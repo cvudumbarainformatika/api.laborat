@@ -16,6 +16,7 @@ class MinMaxStokController extends Controller
         // $data = Stock::paginate();
         $data = Stock::latest('id')
             ->filter(request(['q']))
+            ->with('barang', 'gudang', 'pengguna')
             ->paginate(request('per_page'));
         // return Barang108Resource::collection($data);
         $collect = collect($data);
