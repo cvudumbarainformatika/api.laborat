@@ -14,12 +14,12 @@ class MinMaxDepo extends Model
 
     public function depo()
     {
-        return $this->belongsTo(Gudang::class, 'kode_gudang', 'kode');
+        return $this->belongsTo(Gudang::class, 'kode_depo', 'kode');
     }
 
-    public function pengguna()
+    public function barang()
     {
-        return $this->belongsTo(Pengguna::class, 'kode_pengguna', 'kode');
+        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
     }
 
     public function scopeFilter($search, array $reqs)
