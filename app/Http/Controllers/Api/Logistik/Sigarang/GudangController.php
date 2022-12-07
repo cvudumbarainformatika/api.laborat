@@ -25,7 +25,7 @@ class GudangController extends Controller
 
         return new JsonResponse($balik);
     }
-    public function gedung()
+    public function gudang()
     {
         $data = Gudang::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return GudangResource::collection($data);

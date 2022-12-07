@@ -28,4 +28,19 @@ class Stock extends Model
     {
         return $this->belongsTo(Pengguna::class, 'kode_pengguna', 'kode');
     }
+
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->whereHas('barang', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%');
+            })->OrWhereHas('gudang', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%');
+            })->OrWhereHas('pengguna', function ($q) use ($query) {
+                $q->where('jabatan', 'like', '%' . $query . '%');
+            });
+            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
+    }
 }
