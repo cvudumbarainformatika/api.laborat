@@ -411,37 +411,55 @@ class AutogenController extends Controller
         //             ->where('status', '=', 1);
         //     })->groupBy('kode_rs')->get();
 
-        $data = Penerimaanruangan::select('kode_penanggungjawab')->with('pj')->distinct()->get();
-        $collection = collect($data);
-        $maping = $collection->map(function ($item, $key) {
-            $decode = json_decode($item);
-            $a = '';
-            $b = '';
-            foreach ($decode as $satu => $dua) {
-                $a = $satu;
-                $b = $dua;
-            }
-            $temp = strval($item);
-            $temp1 = explode('{', $temp);
-            $temp2 = explode('}', $temp1[1]);
-            $temp3 = explode(':', $temp2[0]);
-            return [
-                'a' => $a,
-                'b' => $b,
-                'nama' => $temp3[0],
-                'value' => $temp3[1],
-                'item' => $item['pj']
-            ];
-        });
+        // $data = Penerimaanruangan::select('kode_penanggungjawab')->with('pj')->distinct()->get();
+        // $collection = collect($data);
+        // $maping = $collection->map(function ($item, $key) {
+        //     $decode = json_decode($item);
+        //     $a = '';
+        //     $b = '';
+        //     foreach ($decode as $satu => $dua) {
+        //         $a = $satu;
+        //         $b = $dua;
+        //     }
+        //     $temp = strval($item);
+        //     $temp1 = explode('{', $temp);
+        //     $temp2 = explode('}', $temp1[1]);
+        //     $temp3 = explode(':', $temp2[0]);
+        //     return [
+        //         'a' => $a,
+        //         'b' => $b,
+        //         'nama' => $temp3[0],
+        //         'value' => $temp3[1],
+        //         'item' => $item['pj']
+        //     ];
+        // });
 
 
-        return new JsonResponse(
-            [
-                'data' => $data,
-                'maping' => $maping,
-            ],
-            200
-        );
+        // return new JsonResponse(
+        //     [
+        //         'data' => $data,
+        //         'maping' => $maping,
+        //     ],
+        //     200
+        // );
+        $barangUser = MinMaxPengguna::distinct()->get('kode_rs');
+        $barangDepo = MinMaxDepo::distinct()->get('kode_rs');
+        $data = BarangRS::get('kode');
+        $barang = [];
+
+
+        $coll = collect($data);
+
+        $filteredUser = $coll->diffAssoc($barangUser);
+        // $filteredDepo = $coll->diff($barangDepo);
+        return new JsonResponse([
+            'filtered user' => $filteredUser,
+            // $coll,
+            // 'filtrered depo' => $filteredDepo,
+            'user' => $barangUser,
+            'depo' => $barangDepo,
+            'Rs' => $barang,
+        ]);
     }
     public function wawanpost()
     {
@@ -457,26 +475,26 @@ class AutogenController extends Controller
     // sigarang set min max stok depo dan pengguna
     public function setMinMax()
     {
-        $barang = BarangRS::get();
+        $barang = BarangRS::latest('id')->get();
         $pengguna = Pengguna::get();
         $depo = Gudang::where('depo', '<>', null)
             ->where('depo', '<>', '')
             ->where('gedung', '=', 2)
             ->get();
-        foreach ($barang as $goods) {
-            foreach ($pengguna as $user) {
-                MinMaxPengguna::firstOrCreate(
-                    [
-                        'kode_rs' => $goods['kode'],
-                        'kode_pengguna' => $user['kode'],
-                    ],
-                    [
-                        'min_stok' => 1,
-                        'max_stok' => 4,
-                    ]
-                );
-            }
-        }
+        // foreach ($barang as $goods) {
+        //     foreach ($pengguna as $user) {
+        //         MinMaxPengguna::firstOrCreate(
+        //             [
+        //                 'kode_rs' => $goods['kode'],
+        //                 'kode_pengguna' => $user['kode'],
+        //             ],
+        //             [
+        //                 'min_stok' => 1,
+        //                 'max_stok' => 4,
+        //             ]
+        //         );
+        //     }
+        // }
 
         foreach ($barang as $goods) {
             foreach ($depo as $apem) {

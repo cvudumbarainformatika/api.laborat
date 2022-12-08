@@ -24,29 +24,38 @@ class MinMaxPengguna extends Model
 
     public function scopeFilter($search, array $reqs)
     {
-        $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->whereHas('barang', function ($q) use ($query) {
-                $q->where('nama', 'like', '%' . $query . '%');
-            })->OrWhereHas('pengguna', function ($q) use ($query) {
-                $q->where('jabatan', 'like', '%' . $query . '%');
+        $search->when($reqs['barang'] || $reqs['pengguna'] ?? false, function ($search, $query) use ($reqs) {
+            $barang = $reqs['barang'] ? $reqs['barang'] : '';
+            $pengguna = $reqs['pengguna'] ? $reqs['pengguna'] : '';
+            return $search->whereHas('barang', function ($q) use ($barang) {
+                $q->where('nama', 'like', '%' . $barang . '%');
+            })->whereHas('pengguna', function ($q) use ($pengguna) {
+                $q->where('jabatan', 'like', '%' . $pengguna . '%');
             });
-            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
-            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
         });
+        // $search->when($reqs['q'] ?? false, function ($search, $query) {
+        //     return $search->whereHas('barang', function ($q) use ($query) {
+        //         $q->where('nama', 'like', '%' . $query . '%');
+        //     })->OrWhereHas('pengguna', function ($q) use ($query) {
+        //         $q->where('jabatan', 'like', '%' . $query . '%');
+        //     });
+        //     // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+        //     //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        // });
 
-        $search->when($reqs['barang'] ?? false, function ($search, $query) {
-            return $search->whereHas('barang', function ($q) use ($query) {
-                $q->where('nama', 'like', '%' . $query . '%');
-            });
-            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
-            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
-        });
-        $search->when($reqs['pengguna'] ?? false, function ($search, $query) {
-            return $search->whereHas('pengguna', function ($q) use ($query) {
-                $q->where('jabatan', 'like', '%' . $query . '%');
-            });
-            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
-            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
-        });
+        // $search->when($reqs['barang'] ?? false, function ($search, $query) {
+        //     return $search->whereHas('barang', function ($q) use ($query) {
+        //         $q->where('nama', 'like', '%' . $query . '%');
+        //     });
+        //     // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+        //     //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        // });
+        // $search->when($reqs['pengguna'] ?? false, function ($search, $query) {
+        //     return $search->whereHas('pengguna', function ($q) use ($query) {
+        //         $q->where('jabatan', 'like', '%' . $query . '%');
+        //     });
+        //     // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+        //     //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        // });
     }
 }

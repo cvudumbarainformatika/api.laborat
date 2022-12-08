@@ -24,28 +24,37 @@ class MinMaxDepo extends Model
 
     public function scopeFilter($search, array $reqs)
     {
-        $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->whereHas('barang', function ($q) use ($query) {
-                $q->where('nama', 'like', '%' . $query . '%');
-            })->OrWhereHas('depo', function ($q) use ($query) {
-                $q->where('nama', 'like', '%' . $query . '%');
+        $search->when($reqs['barang'] || $reqs['depo'] ?? false, function ($search, $query) use ($reqs) {
+            $barang = $reqs['barang'] ? $reqs['barang'] : '';
+            $depo = $reqs['depo'] ? $reqs['depo'] : '';
+            return $search->whereHas('barang', function ($q) use ($barang) {
+                $q->where('nama', 'like', '%' . $barang . '%');
+            })->whereHas('depo', function ($q) use ($depo) {
+                $q->where('nama', 'like', '%' . $depo . '%');
             });
-            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
-            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
         });
-        $search->when($reqs['barang'] ?? false, function ($search, $query) {
-            return $search->whereHas('barang', function ($q) use ($query) {
-                $q->where('nama', 'like', '%' . $query . '%');
-            });
-            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
-            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
-        });
-        $search->when($reqs['depo'] ?? false, function ($search, $query) {
-            return $search->whereHas('depo', function ($q) use ($query) {
-                $q->where('nama', 'like', '%' . $query . '%');
-            });
-            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
-            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
-        });
+        // $search->when($reqs['q'] ?? false, function ($search, $query) {
+        //     return $search->whereHas('barang', function ($q) use ($query) {
+        //         $q->where('nama', 'like', '%' . $query . '%');
+        //     })->OrWhereHas('depo', function ($q) use ($query) {
+        //         $q->where('nama', 'like', '%' . $query . '%');
+        //     });
+        //     // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+        //     //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        // });
+        // $search->when($reqs['barang'] ?? false, function ($search, $query) {
+        //     return $search->whereHas('barang', function ($q) use ($query) {
+        //         $q->where('nama', 'like', '%' . $query . '%');
+        //     });
+        //     // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+        //     //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        // });
+        // $search->when($reqs['depo'] ?? false, function ($search, $query) {
+        //     return $search->whereHas('depo', function ($q) use ($query) {
+        //         $q->where('nama', 'like', '%' . $query . '%');
+        //     });
+        //     // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+        //     //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        // });
     }
 }
