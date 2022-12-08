@@ -15,6 +15,10 @@ use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\Qrcode;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\PemeriksaanLaborat;
+use App\Models\Sigarang\BarangRS;
+use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\MinMaxDepo;
+use App\Models\Sigarang\MinMaxPengguna;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
@@ -448,5 +452,48 @@ class AutogenController extends Controller
             'ip' => $ip,
             'ip2' => $ip2,
         ]);
+    }
+
+    // sigarang set min max stok depo dan pengguna
+    public function setMinMax()
+    {
+        $barang = BarangRS::get();
+        $pengguna = Pengguna::get();
+        $depo = Gudang::where('depo', '<>', null)
+            ->where('depo', '<>', '')
+            ->where('gedung', '=', 2)
+            ->get();
+        foreach ($barang as $goods) {
+            foreach ($pengguna as $user) {
+                MinMaxPengguna::firstOrCreate(
+                    [
+                        'kode_rs' => $goods['kode'],
+                        'kode_pengguna' => $user['kode'],
+                    ],
+                    [
+                        'min_stok' => 1,
+                        'max_stok' => 4,
+                    ]
+                );
+            }
+        }
+
+        foreach ($barang as $goods) {
+            foreach ($depo as $apem) {
+                MinMaxDepo::firstOrCreate(
+                    [
+                        'kode_rs' => $goods['kode'],
+                        'kode_depo' => $apem['kode'],
+                    ],
+                    [
+                        'min_stok' => 5,
+                        'max_stok' => 10,
+                    ]
+                );
+            }
+        }
+
+
+        return new JsonResponse('ok');
     }
 }

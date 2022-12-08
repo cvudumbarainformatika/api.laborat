@@ -26,6 +26,7 @@ Route::get('/autogen/coba', [AutogenController::class, 'coba']);
 Route::get('/autogen/coba-api', [AutogenController::class, 'coba_api']);
 Route::get('/autogen/wawan', [AutogenController::class, 'wawan']);
 Route::get('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
+Route::get('/autogen/set-min-max', [AutogenController::class, 'setMinMax']);
 
 
 
