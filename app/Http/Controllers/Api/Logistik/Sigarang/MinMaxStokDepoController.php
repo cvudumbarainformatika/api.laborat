@@ -15,7 +15,7 @@ class MinMaxStokDepoController extends Controller
     {
         // $data = MinMaxDepo::paginate();
         $data = MinMaxDepo::latest('id')
-            ->filter(request(['q']))
+            ->filter(request(['q', 'depo', 'barang']))
             ->with('barang', 'depo')
             ->paginate(request('per_page'));
         // return Barang108Resource::collection($data);

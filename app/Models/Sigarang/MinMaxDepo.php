@@ -33,5 +33,19 @@ class MinMaxDepo extends Model
             // return $search->where('uraian', 'LIKE', '%' . $query . '%')
             //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
         });
+        $search->when($reqs['barang'] ?? false, function ($search, $query) {
+            return $search->whereHas('barang', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%');
+            });
+            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
+        $search->when($reqs['depo'] ?? false, function ($search, $query) {
+            return $search->whereHas('depo', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%');
+            });
+            // return $search->where('uraian', 'LIKE', '%' . $query . '%')
+            //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+        });
     }
 }
