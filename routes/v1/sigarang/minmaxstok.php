@@ -23,6 +23,7 @@ Route::group([
     'prefix' => 'minmaxdepostok'
 ], function () {
     Route::get('/index', [MinMaxStokDepoController::class, 'index']);
+    Route::get('/all', [MinMaxStokDepoController::class, 'all']);
     Route::post('/store', [MinMaxStokDepoController::class, 'store']);
     Route::post('/destroy', [MinMaxStokDepoController::class, 'destroy']);
 });

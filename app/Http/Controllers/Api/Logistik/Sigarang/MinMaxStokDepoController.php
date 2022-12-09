@@ -25,10 +25,9 @@ class MinMaxStokDepoController extends Controller
 
         return new JsonResponse($balik);
     }
-    public function minmaxstok()
+    public function all()
     {
-        $data = MinMaxDepo::latest('id')
-            ->filter(request(['q']))
+        $data = MinMaxDepo::oldest('id')
             ->with('barang', 'depo')
             ->get(); //paginate(request('per_page'));
         return new JsonResponse($data);
