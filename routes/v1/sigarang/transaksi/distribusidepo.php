@@ -10,6 +10,7 @@ Route::group([
   'prefix' => 'transaksi/distribusidepo'
 ], function () {
   Route::get('/index', [DistribusiDepoController::class, 'index']);
+  Route::get('/distribusi', [DistribusiDepoController::class, 'getDistribusi']);
   Route::post('/store', [DistribusiDepoController::class, 'store']);
   Route::get('/destroy', [DistribusiDepoController::class, 'destroy']);
 });

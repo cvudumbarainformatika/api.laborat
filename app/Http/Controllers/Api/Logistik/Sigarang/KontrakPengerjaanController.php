@@ -28,10 +28,10 @@ class KontrakPengerjaanController extends Controller
             ->where('kunci', '=', 1)
             ->filter(request(['q']))->get();
         // return KontrakPengerjaanResource::collection($data);
-        $collect = collect($data);
-        $balik = $collect->only('data');
-        $balik['meta'] = $collect->except('data');
+        // $collect = collect($data);
+        // $balik['data'] = $collect->only('data');
+        // $balik['meta'] = $collect->except('data');
 
-        return new JsonResponse($balik);
+        return new JsonResponse($data);
     }
 }

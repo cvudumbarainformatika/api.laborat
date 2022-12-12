@@ -20,4 +20,12 @@ class DistribusiDepoController extends Controller
 
         return new JsonResponse($balik);
     }
+
+    public function getDistribusi()
+    {
+        $data = DistribusiDepo::where('status', '=', 1)
+            ->with('details')
+            ->get();
+        return new JsonResponse($data);
+    }
 }
