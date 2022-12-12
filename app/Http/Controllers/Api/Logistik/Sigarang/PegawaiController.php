@@ -31,13 +31,13 @@ class PegawaiController extends Controller
     //----route public start -----
     public function cariPegawai(Request $request)
     {
-        $data = Pegawai::where('nip',  $request->nip)
-            ->orWhere('nip_baru',  $request->nip)
+        $data = Pegawai::where('nik',  $request->nik)
+            // ->orWhere('nip_baru',  $request->nip)
             ->orWhere('tgllahir', '=', $request->tgllahir)
             ->with('jabatan', 'jabatanTambahan', 'user')
             ->first();
         if (!$data) {
-            return new JsonResponse(['message' => 'Data Tidak ditemukan'], 200);
+            return new JsonResponse(['message' => 'NIK Anda tidak ditemukan, Silahkan hubungi SDM untuk melengkapi Data'], 200);
         }
 
         return new JsonResponse($data, 200);
