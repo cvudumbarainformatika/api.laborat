@@ -13,7 +13,7 @@ class DistribusiDepo extends Model
 
     public function details()
     {
-        return $this->hasMany(DetailDistribusiDepo::class);
+        return $this->hasMany(DetailDistribusiDepo::class, 'distribusi_depo_id');
     }
 
     public function scopeFilter($search, array $reqs)

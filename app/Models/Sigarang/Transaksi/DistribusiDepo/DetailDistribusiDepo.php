@@ -30,6 +30,6 @@ class DetailDistribusiDepo extends Model
 
     public function distribusi()
     {
-        return $this->belongsTo(DistribusiDepo::class);
+        return $this->belongsTo(DistribusiDepo::class, 'distribusi_depo_id');
     }
 }
