@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,15 @@ class DistribusiDepoController extends Controller
         $balik['meta'] = $collect->except('data');
 
         return new JsonResponse($balik);
+    }
+    public function toDistribute()
+    {
+        $data = DistribusiDepo::where('status', '=', 1)
+            ->latest('id')
+            ->with('details.barangrs', 'details.barang108', 'depo')
+            ->get();
+
+        return new JsonResponse($data);
     }
 
     public function getDistribusi()
@@ -47,7 +57,84 @@ class DistribusiDepoController extends Controller
                 $data->details()->create($key);
             }
         }
-
+        if (!$data->wasRecentlyCreated) {
+            return new JsonResponse(['message' => 'data gagal dibuat'], 500);
+        }
         return new JsonResponse(['message' => 'data telah dibuat'], 201);
+    }
+
+    public function diterimaDepo(Request $request)
+    {
+        $tanggal = date('Y-m-d H:i:s');
+        $data = DistribusiDepo::with('details')->find($request->id);
+        $data->update([
+            'tanggal' => $tanggal,
+            'status' => 2,
+        ]);
+
+        foreach ($data->details as $key) {
+            $jumlah = $key->jumlah;
+            $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+                ->where('kode_rs', $key->kode_rs)
+                ->where('sisa_stok', '>', 0)
+                ->oldest()
+                ->get();
+            $index = 0;
+
+
+            // $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+            //     ->where('kode_rs', $key->kode_rs)
+            //     ->where('no_penerimaan', $data->no_penerimaan)
+            //     ->first();
+            // $diStok = $stok->sisa_stok;
+            // $jumlah = $key->jumlah;
+            // if ($diStok > $jumlah) {
+            //     $sisa = $diStok - $jumlah;
+            //     $stok->update([
+            //         'sisa_stok' => $sisa
+            //     ]);
+            //     RecentStokUpdate::create([
+            //         'kode_rs' => $key->kode_rs,
+            //         'sisa_stok' => $key->jumlah,
+            //         'harga' => $stok->harga,
+            //         'no_penerimaan' => $data->no_penerimaan,
+            //     ]);
+            // } else {
+            //     // cari sisa pengurangan
+            //     $sisaKurang = $jumlah - $diStok;
+            //     //kurangi stok lama
+            //     $stok->update([
+            //         'sisa_stok' => 0
+            //     ]);
+            //     // buat update dengan nomor terkait
+            //     RecentStokUpdate::create([
+            //         'kode_rs' => $key->kode_rs,
+            //         'sisa_stok' => $key->$diStok,
+            //         'harga' => $stok->harga,
+            //         'no_penerimaan' => $data->no_penerimaan,
+            //     ]);
+            //     // ambil stok baru
+            //     $stok2 = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+            //         ->where('kode_rs', $key->kode_rs)
+            //         ->where('sisa_stok', '>', 0)
+            //         ->first();
+            //     // hitung dengan stok yang baru
+            //     $diStok2 = $stok2->sisa_stok;
+            //     $sisa2 = $diStok2 - $sisaKurang;
+            //     $stok2->update([
+            //         'sisa_stok' => $sisa2
+            //     ]);
+            //     RecentStokUpdate::create([
+            //         'kode_rs' => $key->kode_rs,
+            //         'sisa_stok' => $key->$diStok2,
+            //         'harga' => $stok2->harga,
+            //         'no_penerimaan' => $stok2->no_penerimaan,
+            //     ]);
+            // }
+        }
+        if (!$data->wasChanged()) {
+            return new JsonResponse(['message' => 'data gagal diterima'], 500);
+        }
+        return new JsonResponse(['message' => 'data telah diterima'], 200);
     }
 }

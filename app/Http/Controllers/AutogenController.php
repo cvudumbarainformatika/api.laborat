@@ -20,6 +20,8 @@ use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\MinMaxDepo;
 use App\Models\Sigarang\MinMaxPengguna;
 use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\RecentStokUpdate;
+use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
@@ -442,24 +444,41 @@ class AutogenController extends Controller
         //     ],
         //     200
         // );
-        $barangUser = MinMaxPengguna::distinct()->get('kode_rs');
-        $barangDepo = MinMaxDepo::distinct()->get('kode_rs');
-        $data = BarangRS::get('kode');
-        $barang = [];
+        // $barangUser = MinMaxPengguna::distinct()->get('kode_rs');
+        // $barangDepo = MinMaxDepo::distinct()->get('kode_rs');
+        // $data = BarangRS::get('kode');
+        // $barang = [];
 
 
-        $coll = collect($data);
+        // $coll = collect($data);
 
-        $filteredUser = $coll->diffAssoc($barangUser);
-        // $filteredDepo = $coll->diff($barangDepo);
-        return new JsonResponse([
-            'filtered user' => $filteredUser,
-            // $coll,
-            // 'filtrered depo' => $filteredDepo,
-            'user' => $barangUser,
-            'depo' => $barangDepo,
-            'Rs' => $barang,
-        ]);
+        // $filteredUser = $coll->diffAssoc($barangUser);
+        // // $filteredDepo = $coll->diff($barangDepo);
+        // return new JsonResponse([
+        //     'filtered user' => $filteredUser,
+        //     // $coll,
+        //     // 'filtrered depo' => $filteredDepo,
+        //     'user' => $barangUser,
+        //     'depo' => $barangDepo,
+        //     'Rs' => $barang,
+        // ]);
+        $data = DistribusiDepo::with('details')->find(1);
+        foreach ($data->details as $key) {
+            $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+                // ->where('kode_rs', $key->kode_rs)
+                ->where('kode_rs', 'RS-00896')
+                ->where('sisa_stok', '>', 0)
+                // ->where('no_penerimaan', '4LH1E/12/12/2022')
+                ->oldest()
+                ->get();
+
+            // $diStok = $stok->sisa_stok;
+            // $jumlah = $key->jumlah;
+            // $sisa = $diStok - $jumlah;
+
+            // return new JsonResponse([$sisa, $jumlah, $diStok, $stok, $key, $data]);
+            return new JsonResponse($stok);
+        }
     }
     public function wawanpost()
     {

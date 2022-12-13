@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi\DistribusiDepo;
 
+use App\Models\Sigarang\Gudang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,6 +16,12 @@ class DistribusiDepo extends Model
     {
         return $this->hasMany(DetailDistribusiDepo::class, 'distribusi_depo_id');
     }
+    public function depo()
+    {
+        return $this->belongsTo(Gudang::class, 'kode_depo', 'kode');
+    }
+
+
 
     public function scopeFilter($search, array $reqs)
     {
