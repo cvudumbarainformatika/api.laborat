@@ -67,10 +67,7 @@ class DistribusiDepoController extends Controller
     {
         $tanggal = date('Y-m-d H:i:s');
         $data = DistribusiDepo::with('details')->find($request->id);
-        $data->update([
-            'tanggal' => $tanggal,
-            'status' => 2,
-        ]);
+
 
         foreach ($data->details as $key) {
             $jumlah = $key->jumlah;
@@ -80,6 +77,46 @@ class DistribusiDepoController extends Controller
                 ->oldest()
                 ->get();
             $index = 0;
+            $sisaStok = collect($stok)->sum('sisa_stok');
+
+            if ($jumlah > $sisaStok) {
+                return new JsonResponse(['message' => 'Stok tidak mencukupi permintaan', $jumlah, $sisaStok], 413);
+            }
+            $masuk = $jumlah;
+            // pengecekan stok FIFO
+            do {
+                $ada = $stok[$index]->sisa_stok;
+                // return new JsonResponse(['message' => 'Stok tidak mencukupi permintaan'], 413);
+                if ($ada <= $masuk) {
+                    $sisa = $masuk - $ada;
+                    RecentStokUpdate::create([
+                        'kode_rs' => $key->kode_rs,
+                        'kode_ruang' => $data->kode_depo,
+                        'sisa_stok' => $key->jumlah,
+                        'harga' => $stok[$index]->harga,
+                        'no_penerimaan' => $stok[$index]->no_penerimaan,
+                    ]);
+                    $stok[$index]->update([
+                        'sisa_stok' => 0
+                    ]);
+                    $index = $index + 1;
+                    $loop = true;
+                }
+                $sisa = $ada - $masuk;
+
+                RecentStokUpdate::create([
+                    'kode_rs' => $key->kode_rs,
+                    'kode_ruang' => $data->kode_depo,
+                    'sisa_stok' => $key->jumlah,
+                    'harga' => $stok[$index]->harga,
+                    'no_penerimaan' => $stok[$index]->no_penerimaan,
+                ]);
+
+                $stok[$index]->update([
+                    'sisa_stok' => $sisa
+                ]);
+                $loop = false;
+            } while ($loop);
 
 
             // $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
@@ -132,6 +169,11 @@ class DistribusiDepoController extends Controller
             //     ]);
             // }
         }
+
+        $data->update([
+            'tanggal' => $tanggal,
+            'status' => 2,
+        ]);
         if (!$data->wasChanged()) {
             return new JsonResponse(['message' => 'data gagal diterima'], 500);
         }

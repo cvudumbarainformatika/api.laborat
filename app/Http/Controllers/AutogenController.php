@@ -471,13 +471,15 @@ class AutogenController extends Controller
                 // ->where('no_penerimaan', '4LH1E/12/12/2022')
                 ->oldest()
                 ->get();
-
+            $collection = collect($stok)->sum('sisa_stok');
+            // $collection->sum('sisa_stok');
+            // $collection->only('sisa_stok');
             // $diStok = $stok->sisa_stok;
             // $jumlah = $key->jumlah;
             // $sisa = $diStok - $jumlah;
 
             // return new JsonResponse([$sisa, $jumlah, $diStok, $stok, $key, $data]);
-            return new JsonResponse($stok);
+            return new JsonResponse([$data, $collection, $stok]);
         }
     }
     public function wawanpost()
