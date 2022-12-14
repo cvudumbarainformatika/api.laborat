@@ -55,4 +55,10 @@ class StockController extends Controller
             ->get();
         return new JsonResponse($data);
     }
+    public function currentStokByGudang()
+    {
+        $data = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+            ->get();
+        return new JsonResponse($data);
+    }
 }

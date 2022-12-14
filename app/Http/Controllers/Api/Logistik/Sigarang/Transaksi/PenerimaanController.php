@@ -54,8 +54,8 @@ class PenerimaanController extends Controller
     }
     public function suratBelumLengkap()
     {
-        $data = Penerimaan::where('faktur', null)
-            ->orWhere('surat_jalan', null)
+        $data = Penerimaan::where('faktur', '=', null)
+            ->orWhere('surat_jalan', '=', null)
             ->latest('id')
             ->get();
         return new JsonResponse($data);
