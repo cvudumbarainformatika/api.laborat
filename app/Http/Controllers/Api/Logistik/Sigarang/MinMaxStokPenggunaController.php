@@ -25,12 +25,23 @@ class MinMaxStokPenggunaController extends Controller
 
         return new JsonResponse($balik);
     }
-    public function minmaxstok()
+
+    public function all()
     {
         $data = MinMaxPengguna::latest('id')
-            ->filter(request(['q']))
-            ->with('barang', 'depo')
+            // ->filter(request(['q']))
+            ->with('barang', 'pengguna')
             ->get(); //paginate(request('per_page'));
+        return new JsonResponse($data);
+    }
+    public function spesifik(Request $request)
+    {
+        $data = MinMaxPengguna::where('kode_pengguna', '=', $request->kode_pengguna)
+            ->where('kode_rs', '=', $request->kode_rs)
+            ->latest('id')
+            ->with('barang', 'pengguna')
+            ->first();
+        // ->get();
         return new JsonResponse($data);
     }
 
