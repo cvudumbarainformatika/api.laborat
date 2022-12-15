@@ -48,10 +48,11 @@ class DistribusiDepoController extends Controller
     {
         $request->validate([
             'details' => 'required',
-            'no_penerimaan' => 'required'
+            // 'no_penerimaan' => 'required'
         ]);
+        //
         $details = $request->details;
-        $data = DistribusiDepo::create($request->only('reff', 'no_distribusi', 'no_penerimaan', 'kode_depo'));
+        $data = DistribusiDepo::create($request->only('reff', 'no_distribusi',  'kode_depo'));
         if ($data) {
             foreach ($details as $key) {
                 $data->details()->create($key);
@@ -99,6 +100,7 @@ class DistribusiDepoController extends Controller
                     $stok[$index]->update([
                         'sisa_stok' => 0
                     ]);
+                    $data->details()->update(['no_penerimaan' => $stok[$index]->no_penerimaan]);
                     $index = $index + 1;
                     $loop = true;
                 }
@@ -115,6 +117,8 @@ class DistribusiDepoController extends Controller
                 $stok[$index]->update([
                     'sisa_stok' => $sisa
                 ]);
+
+                $data->details()->update(['no_penerimaan' => $stok[$index]->no_penerimaan]);
                 $loop = false;
             } while ($loop);
 

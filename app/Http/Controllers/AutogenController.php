@@ -462,26 +462,33 @@ class AutogenController extends Controller
         //     'depo' => $barangDepo,
         //     'Rs' => $barang,
         // ]);
-        $data = DistribusiDepo::with('details')->find(1);
-        foreach ($data->details as $key) {
-            $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
-                // ->where('kode_rs', $key->kode_rs)
-                ->where('kode_rs', 'RS-00896')
-                ->where('sisa_stok', '>', 0)
-                // ->where('no_penerimaan', '4LH1E/12/12/2022')
-                ->oldest()
-                ->get();
-            $collection = collect($stok)->sum('sisa_stok');
-            // $collection->sum('sisa_stok');
-            // $collection->only('sisa_stok');
-            // $diStok = $stok->sisa_stok;
-            // $jumlah = $key->jumlah;
-            // $sisa = $diStok - $jumlah;
+        // $data = DistribusiDepo::with('details')->find(1);
+        // foreach ($data->details as $key) {
+        //     $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+        //         // ->where('kode_rs', $key->kode_rs)
+        //         ->where('kode_rs', 'RS-00896')
+        //         ->where('sisa_stok', '>', 0)
+        //         // ->where('no_penerimaan', '4LH1E/12/12/2022')
+        //         ->oldest()
+        //         ->get();
+        //     $collection = collect($stok)->sum('sisa_stok');
+        // $collection->sum('sisa_stok');
+        // $collection->only('sisa_stok');
+        // $diStok = $stok->sisa_stok;
+        // $jumlah = $key->jumlah;
+        // $sisa = $diStok - $jumlah;
 
-            // return new JsonResponse([$sisa, $jumlah, $diStok, $stok, $key, $data]);
-            return new JsonResponse([$data, $collection, $stok]);
-        }
+        // return new JsonResponse([$sisa, $jumlah, $diStok, $stok, $key, $data]);
+        // return new JsonResponse([$data, $collection, $stok]);
+        // $data = RecentStokUpdate::get();
+        $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->get();
+        $collection = collect($data)->unique('kode_rs');
+        $collection->values()->all();
+        return new JsonResponse([$data, $collection[0]]);
     }
+
     public function wawanpost()
     {
 
