@@ -28,8 +28,15 @@ class StockController extends Controller
 
     public function currentStok()
     {
-        $data = RecentStokUpdate::get();
-        return new JsonResponse($data);
+        // $data = RecentStokUpdate::get();
+        $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->get();
+        $collection = collect($data)->unique('kode_rs');
+        $collection->values()->all();
+
+        // return new JsonResponse($data);
+        return new JsonResponse($collection);
     }
 
     public function currentStokByRuangan(Request $request)
