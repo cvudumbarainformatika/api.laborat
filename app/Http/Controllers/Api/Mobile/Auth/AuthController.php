@@ -25,7 +25,7 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        if ($request->email !== 'sa@app.com') {
+        if ($request->email !== 'sa@app.com' || $request->email !== '3574041305820002@app.com') {
 
 
             // $found = User::where(['email' => $request->email, 'password' => $request->password])->first();
