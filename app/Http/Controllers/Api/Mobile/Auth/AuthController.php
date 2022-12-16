@@ -25,34 +25,40 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        if ($request->email !== 'sa@app.com' || $request->email !== '3574041305820002@app.com') {
+        if ($request->email === 'sa@app.com' || $request->email === '3574041305820002@app.com') {
+            JWTAuth::factory()->setTTL(43200);
+            $data = $request->only('email', 'password');
+            $token = JWTAuth::attempt($data);
+            if (!$token) {
+                return response()->json(['error' => 'Unauthorized', 'validator' => $data], 401);
+            }
+            return $this->createNewToken($token);
+        }
+        // $found = User::where(['email' => $request->email, 'password' => $request->password])->first();
+        $temp = User::where('email', '=', $request->email)
+            ->first();
+        if (!$temp) {
+            return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
+        }
+        if ($temp) {
+            if ($temp->status === '2') {
+                return new JsonResponse(['message' => 'Device Reset Approved', 'id' => $temp->id], 410);
+            }
 
-
-            // $found = User::where(['email' => $request->email, 'password' => $request->password])->first();
-            $temp = User::where('email', '=', $request->email)
-                ->first();
-            if (!$temp) {
+            $pass = Hash::check($request->password, $temp->password);
+            if (!$pass) {
                 return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
             }
-            if ($temp) {
-                if ($temp->status === '2') {
-                    return new JsonResponse(['message' => 'Device Reset Approved', 'id' => $temp->id], 410);
-                }
-
-                $pass = Hash::check($request->password, $temp->password);
-                if (!$pass) {
-                    return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
-                }
-            }
-            $user = User::where('email', '=', $request->email)
-                ->where('device', '=', $request->device)
-                ->first();
-
-            // return new JsonResponse(['message' => $user], 205);
-            if (!$user) {
-                return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 406);
-            }
         }
+        $user = User::where('email', '=', $request->email)
+            ->where('device', '=', $request->device)
+            ->first();
+
+        // return new JsonResponse(['message' => $user], 205);
+        if (!$user) {
+            return new JsonResponse(['message' => 'Maaf User ini belum terdaftar atau user ini sudah didaftarkan pada device yang lain'], 406);
+        }
+        // }
         // JWTAuth::factory()->setTTL(1);
         JWTAuth::factory()->setTTL(43200);
         $data = $request->only('email', 'password');
