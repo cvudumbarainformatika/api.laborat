@@ -18,9 +18,10 @@ class UserController extends Controller
     }
     public function user()
     {
-        $data = User::where('id', '>', 3)
+        $data = User::where('id', '>', 1)
             ->orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))
+            ->with('pegawai')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
