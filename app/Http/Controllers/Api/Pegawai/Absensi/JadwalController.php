@@ -410,7 +410,7 @@ class JadwalController extends Controller
     public function destroy(Request $request)
     {
         // $auth = auth()->user()->id;
-        $data = JadwalAbsen::where('id', $request->id)->get();
+        $data = JadwalAbsen::where('user_id', $request->id)->get();
         if (!count($data)) {
             return new JsonResponse(['message' => 'Jadwal tidak ditemukan', $data], 410);
         }
