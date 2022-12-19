@@ -167,7 +167,7 @@ class JadwalController extends Controller
             $result = ['absen' => 'masuk', 'data' => $data];
             return $result;
         } else {
-            $data = TransaksiAbsen::updateOrCreate(
+            $data = JadwalAbsen::updateOrCreate(
                 [
                     'user_id' => $user->id,
                     'tanggal' => $request->tanggal,
