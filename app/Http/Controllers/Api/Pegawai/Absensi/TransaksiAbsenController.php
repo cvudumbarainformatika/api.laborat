@@ -214,6 +214,7 @@ class TransaksiAbsenController extends Controller
             ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
             // ->paginate($per_page);
             ->with('kategory')
+            ->latest()
             ->get();
         return new JsonResponse($data);
 
