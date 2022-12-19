@@ -20,4 +20,4 @@ Route::prefix('v2')->group(function () {
     RouteHelper::includeRouteFiles(__DIR__ . '/v2');
 });
 
-Route::get('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
+Route::post('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);

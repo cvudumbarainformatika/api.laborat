@@ -489,15 +489,17 @@ class AutogenController extends Controller
         return new JsonResponse([$data, $collection[0]]);
     }
 
-    public function wawanpost()
+    public function wawanpost(Request $request)
     {
+        $data = JadwalController::toMatch2($request->id, $request);
 
-        $ip2 = $_SERVER['REMOTE_ADDR'];
-        $ip = request()->ip();
-        return new JsonResponse([
-            'ip' => $ip,
-            'ip2' => $ip2,
-        ]);
+        return new JsonResponse($data);
+        // $ip2 = $_SERVER['REMOTE_ADDR'];
+        // $ip = request()->ip();
+        // return new JsonResponse([
+        //     'ip' => $ip,
+        //     'ip2' => $ip2,
+        // ]);
     }
 
     // sigarang set min max stok depo dan pengguna
