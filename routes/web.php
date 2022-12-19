@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\PlaygroundEvent;
+use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\PrintController;
@@ -27,6 +28,7 @@ Route::get('/autogen/coba-api', [AutogenController::class, 'coba_api']);
 Route::get('/autogen/wawan', [AutogenController::class, 'wawan']);
 Route::get('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
 Route::get('/autogen/set-min-max', [AutogenController::class, 'setMinMax']);
+Route::get('/autogen/synct', [JadwalController::class, 'sycncroneJadwal']);
 
 
 

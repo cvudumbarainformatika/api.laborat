@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Hari;
+use App\Models\Pegawai\Jadwal;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Kategory;
 use App\Models\Pegawai\TransaksiAbsen;
@@ -224,6 +225,7 @@ class JadwalController extends Controller
 
     public function create(Request $request)
     {
+        // return new JsonResponse($request->all());
         $user = JWTAuth::user();
         $jadwal = JadwalAbsen::where('user_id', $user->id)->first();
         if ($jadwal) {
@@ -234,7 +236,7 @@ class JadwalController extends Controller
         // return new JsonResponse([$request->all()]);
         foreach ($hari as $key) {
             // return new JsonResponse([$key]);
-            if ($request->kategory_id === 1) {
+            if ($request->kategory_id === 1 || $request->kategory_id === '1') {
 
                 if ($key->nama === 'Minggu' || $key->nama === 'Sabtu') {
                     $data = JadwalAbsen::create(
@@ -285,7 +287,7 @@ class JadwalController extends Controller
                         ]
                     );
                 }
-            } else if ($request->kategory_id === 2) {
+            } else if ($request->kategory_id === 2 || $request->kategory_id === '2') {
                 $data = JadwalAbsen::create(
                     [
                         'kategory_id' => 2,
@@ -302,18 +304,37 @@ class JadwalController extends Controller
                     ]
                 );
                 if ($key->nama === 'Minggu') {
-                    $data = JadwalAbsen::create(
+                    $data->update(
                         [
-                            'kategory_id' => null,
-                            'day' => $key->name,
-                            'hari' => $key->nama,
-                            'user_id' => $user->id,
-                            'pegawai_id' => $user->pegawai_id,
-                            'ruang_id' => $pegawai->ruang,
+                            'kategory_id' => 2,
                             'status' => '1',
                             'masuk' => null,
                             'pulang' => null,
                             'jam' => 0,
+                            'menit' => 0,
+                        ]
+                    );
+                }
+                if ($key->nama === 'Jumat') {
+                    $data->update(
+                        [
+                            'kategory_id' => 2,
+                            'status' => '2',
+                            'masuk' => '07:00',
+                            'pulang' => '11:30',
+                            'jam' => 4,
+                            'menit' => 30,
+                        ]
+                    );
+                }
+                if ($key->nama === 'Sabtu') {
+                    $data->update(
+                        [
+                            'kategory_id' => 2,
+                            'status' => '2',
+                            'masuk' => '07:00',
+                            'pulang' => '12:00',
+                            'jam' => 5,
                             'menit' => 0,
                         ]
                     );
@@ -385,11 +406,18 @@ class JadwalController extends Controller
         }
         return new JsonResponse(['message' => $pesan, 'data' => $jadwal], $status);
     }
+
     public function destroy(Request $request)
     {
         // $auth = auth()->user()->id;
-        $data = JadwalAbsen::find($request->id);
-        $del = $data->delete();
+        $data = JadwalAbsen::where('id', $request->id)->get();
+        if (!count($data)) {
+            return new JsonResponse(['message' => 'Jadwal tidak ditemukan', $data], 410);
+        }
+
+        foreach ($data as $key) {
+            $del = $key->delete();
+        }
 
         if (!$del) {
             return response()->json([
@@ -399,7 +427,74 @@ class JadwalController extends Controller
 
         // $user->log("Menghapus Data Jadwal Absen {$data->nama}");
         return new JsonResponse([
-            'message' => 'Data sukses terhapus'
+            'message' => 'Data sukses terhapus',
+            'data' => $data
         ], 200);
+    }
+
+    public function sycncroneJadwal()
+    {
+        $data = JadwalAbsen::selectRaw('user_id, kategory_id')->where('kategory_id', 2)->groupBy('user_id')->get();
+        foreach ($data as $key) {
+            $jadwal = JadwalAbsen::where('user_id', $key->user_id)->get();
+            // return new JsonResponse(count($jadwal));
+            if (count($jadwal) > 7) {
+                foreach ($jadwal as $val) {
+
+                    if ($val->hari === 'Minggu' && $val->kategory_id === 2 && $val->kategory_id !== null) {
+                        // delete disini
+                        $val->update(
+                            [
+                                'kategory_id' => 2,
+                                'status' => '1',
+                                'masuk' => null,
+                                'pulang' => null,
+                                'jam' => 0,
+                                'menit' => 0,
+                            ]
+                        );
+                        // return new JsonResponse(['update', $val]);
+                    }
+
+                    if ($val->hari === 'Minggu' && $val->kategory_id === null && $val->kategory_id !== 2) {
+                        // delete disini
+                        $val->delete();
+
+                        // return new JsonResponse(['delete', $val]);
+                        // return new JsonResponse($val);
+                    }
+                    if ($val->hari === 'Jumat') {
+                        // ganti jam disini
+                        $val->update(
+                            [
+                                'kategory_id' => 2,
+                                'status' => '2',
+                                'masuk' => '07:00',
+                                'pulang' => '11:30',
+                                'jam' => 4,
+                                'menit' => 30,
+                            ]
+                        );
+                        // return new JsonResponse($val);
+                    }
+                    if ($val->hari === 'Sabtu') {
+                        // ganti jam disini
+                        $val->update(
+                            [
+                                'kategory_id' => 2,
+                                'status' => '2',
+                                'masuk' => '07:00',
+                                'pulang' => '12:00',
+                                'jam' => 5,
+                                'menit' => 0,
+                            ]
+                        );
+                        // return new JsonResponse($val);
+                    }
+                }
+            }
+        }
+
+        return new JsonResponse($data);
     }
 }
