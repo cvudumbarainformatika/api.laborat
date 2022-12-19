@@ -14,6 +14,7 @@ Route::group([
     'middleware' => 'jwt.verify',
     'prefix' => 'user'
 ], function () {
+    Route::post('/reset-device', [AuthController::class, 'resetDevice']);
     Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/logout', [AuthController::class, 'logout']);
+    Route::get('/new-password', [AuthController::class, 'newPassword']);
 });
