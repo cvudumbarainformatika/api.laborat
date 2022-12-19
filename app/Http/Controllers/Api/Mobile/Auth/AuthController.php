@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -14,6 +15,32 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
     //
+
+    // ganti password
+    public function newPassword(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $auth = JWTAuth::user();
+            $user = User::find($auth->id);
+            $pegawai = Pegawai::find($auth->pegawai_id);
+            $user->update([
+                'password' => bcrypt($request->password)
+            ]);
+            $pegawai->update([
+                'account_pass' => $request->password
+            ]);
+
+            DB::commit();
+
+            return new JsonResponse(['message' => 'berhasil ganti password'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Gagal update password', 'error' => $e], 500);
+        }
+    }
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
