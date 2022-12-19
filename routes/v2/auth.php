@@ -16,5 +16,5 @@ Route::group([
 ], function () {
     Route::post('/reset-device', [AuthController::class, 'resetDevice']);
     Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/new-password', [AuthController::class, 'newPassword']);
+    Route::post('/new-password', [AuthController::class, 'newPassword']);
 });
