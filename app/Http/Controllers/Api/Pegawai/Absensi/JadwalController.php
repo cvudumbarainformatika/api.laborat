@@ -169,7 +169,7 @@ class JadwalController extends Controller
         } else {
             $data = JadwalAbsen::updateOrCreate(
                 [
-                    'user_id' => $id,
+                    'user_id' => $user->id,
                     'tanggal' => $request->tanggal,
                     'kategory_id' => $request->kategory_id
                 ],
