@@ -156,13 +156,18 @@ class JadwalController extends Controller
         $user = User::find($id);
 
         if ($request->status === 'masuk') {
-            $data = TransaksiAbsen::create([
-                'user_id' => $user->id,
-                'kategory_id' => $request->kategory_id,
-                'tanggal' => $request->tanggal,
-                'pegawai_id' => $user->pegawai_id,
-                'masuk' => $request->jam,
-            ]);
+            $data = TransaksiAbsen::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'tanggal' => $request->tanggal,
+                    'kategory_id' => $request->kategory_id
+                ],
+
+                [
+                    'pegawai_id' => $user->pegawai_id,
+                    'masuk' => $request->jam,
+                ]
+            );
             $data->load('kategory');
             $result = ['absen' => 'masuk', 'data' => $data];
             return $result;
