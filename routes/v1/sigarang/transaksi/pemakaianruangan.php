@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'transaksi/pemakaianruangan'
 ], function () {
     Route::post('/store', [PemakaianruanganController::class, 'store']);
+    Route::post('/rusak', [PemakaianruanganController::class, 'simpanRusak']);
 });
