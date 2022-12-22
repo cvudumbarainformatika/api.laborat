@@ -87,7 +87,8 @@ class AuthController extends Controller
         }
         // }
         // JWTAuth::factory()->setTTL(1);
-        JWTAuth::factory()->setTTL(43200);
+        // JWTAuth::factory()->setTTL(43200);
+        JWTAuth::factory()->setTTL(518400);
         $data = $request->only('email', 'password');
         $token = JWTAuth::attempt($data);
         if (!$token) {
