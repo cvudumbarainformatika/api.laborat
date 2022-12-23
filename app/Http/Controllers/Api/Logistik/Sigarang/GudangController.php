@@ -25,12 +25,15 @@ class GudangController extends Controller
 
         return new JsonResponse($balik);
     }
+
     public function gudang()
     {
         $data = Gudang::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return GudangResource::collection($data);
         // return new JsonResponse($data);
     }
+
+
     public function depo()
     {
         $data = Gudang::where('depo', '<>', null)

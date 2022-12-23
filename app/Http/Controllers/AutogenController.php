@@ -481,12 +481,25 @@ class AutogenController extends Controller
         // return new JsonResponse([$sisa, $jumlah, $diStok, $stok, $key, $data]);
         // return new JsonResponse([$data, $collection, $stok]);
         // $data = RecentStokUpdate::get();
-        $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
-            ->groupBy('kode_rs', 'kode_ruang')
+        // $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+        //     ->groupBy('kode_rs', 'kode_ruang')
+        //     ->get();
+        // $collection = collect($data)->unique('kode_rs');
+        // $collection->values()->all();
+        // return new JsonResponse([$data, $collection[0]]);
+        $umum = Gudang::where('gedung', 0)
+            ->first();
+        $data = Gudang::where('gedung', 2)
+            ->where('depo', '>', 0)
             ->get();
-        $collection = collect($data)->unique('kode_rs');
-        $collection->values()->all();
-        return new JsonResponse([$data, $collection[0]]);
+        $data[count($data)] = $umum;
+        // array_push($data, $umum);
+        return new JsonResponse([
+            $umum,
+            count($data),
+            $data,
+
+        ]);
     }
 
     public function wawanpost(Request $request)
