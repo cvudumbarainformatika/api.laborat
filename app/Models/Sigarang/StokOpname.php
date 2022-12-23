@@ -10,4 +10,22 @@ class StokOpname extends Model
     use HasFactory;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
+
+    public function satuan()
+    {
+        return  $this->belongsTo(Satuan::class, 'kode_satuan', 'kode');
+    }
+
+    public function barangrs()
+    {
+        return  $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+    }
+    public function barang108()
+    {
+        return  $this->belongsTo(Barang108::class, 'kode_rs', 'kode');
+    }
+    public function gudang()
+    {
+        return  $this->belongsTo(Gudang::class, 'kode_tempat', 'kode');
+    }
 }
