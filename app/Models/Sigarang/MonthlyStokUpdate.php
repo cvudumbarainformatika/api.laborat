@@ -11,6 +11,11 @@ class MonthlyStokUpdate extends Model
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
 
+    public function penyesuaian()
+    {
+        return $this->hasOne(StokOpname::class);
+    }
+
     public function barang()
     {
         return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');

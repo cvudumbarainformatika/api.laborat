@@ -10,5 +10,7 @@ Route::group([
     'prefix' => 'transaksi/opname'
 ], function () {
     Route::get('/gudangdepo', [StokOpnameController::class, 'getDataGudangDepo']);
-    Route::post('/ambil', [ReturController::class, 'index']);
+    Route::post('/ambil', [StokOpnameController::class, 'index']);
+    Route::get('/monthly-stok', [StokOpnameController::class, 'getDataStokOpname']);
+    Route::get('/store-opname', [StokOpnameController::class, 'storeMonthly']);
 });

@@ -7,9 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class StokOpname extends Model
 {
+    // digunakan sebagai table penyesuaian stok
     use HasFactory;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
+
+    public function opname()
+    {
+        return $this->belongsTo(MonthlyStokUpdate::class);
+    }
 
     public function satuan()
     {
