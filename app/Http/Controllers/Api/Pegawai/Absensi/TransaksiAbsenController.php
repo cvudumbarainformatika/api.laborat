@@ -21,7 +21,7 @@ class TransaksiAbsenController extends Controller
         $thisYear = request('tahun') ? request('tahun') : date('Y');
         $thisMonth = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
-        $user = User::where('id', '>', 2)->oldest('id')
+        $user = User::where('id', '>', 1)->oldest('id')
             ->with(['absens' => function ($query) use ($thisMonth, $thisYear) {
                 $query->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
                     ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31');
