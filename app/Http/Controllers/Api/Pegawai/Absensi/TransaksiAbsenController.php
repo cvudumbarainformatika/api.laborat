@@ -41,7 +41,7 @@ class TransaksiAbsenController extends Controller
                 $day = $temp[2];
                 // $day = $this->getDayName($temp[2]);
                 $value['day'] = $day;
-                if ($value['kategory']->masuk) {
+                if ($value['kategory']->masuk !== null) {
                     $toIn = explode(':', $value['kategory']->masuk);
                     $act = explode(':', $value['masuk']);
                     $jam = (int)$act[0] - (int)$toIn[0];
@@ -62,7 +62,7 @@ class TransaksiAbsenController extends Controller
 
             $data[$key['id']] = $absen;
         }
-        // return new JsonResponse($data);
+        return new JsonResponse($data);
 
         $apem = [];
         foreach ($data as $key => $value) {
