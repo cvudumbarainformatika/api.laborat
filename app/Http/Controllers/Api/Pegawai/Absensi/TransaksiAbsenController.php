@@ -66,7 +66,7 @@ class TransaksiAbsenController extends Controller
 
             $data[$key['id']] = $absen;
         }
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
 
         $apem = [];
         foreach ($data as $key => $value) {
