@@ -37,9 +37,9 @@ class TransaksiAbsenController extends Controller
             $absen = $key->absens;
             foreach ($absen as $value) {
                 // return new JsonResponse($value);
-                if ($value['masuk'] === null || $value['masuk'] === '') {
-                    return new JsonResponse($value);
-                }
+                // if ($value['masuk'] === null || $value['masuk'] === '') {
+                //     return new JsonResponse($value);
+                // }
                 if ($value['masuk'] !== null) {
                     $temp = explode('-', $value['tanggal']);
                     // $temp = explode('-', $value->tanggal);
