@@ -26,7 +26,8 @@ class TransaksiAbsenController extends Controller
                 $query->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
                     ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31');
             }])
-            ->simplePaginate($per_page);
+            // ->simplePaginate($per_page);
+            ->paginate($per_page);
         $userCollections = collect($user);
 
         $dataUser = $userCollections->only('data');
