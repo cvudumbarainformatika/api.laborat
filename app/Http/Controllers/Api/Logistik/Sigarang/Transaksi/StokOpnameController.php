@@ -22,6 +22,7 @@ class StokOpnameController extends Controller
         return new JsonResponse($data);
     }
     // ambil data stok current ->
+    // masukkan ke tabel stok opname bulanan ->
     // tampilkan ->
     // jika ada perbedaan tulis jumlah dan sisanya di tabel stok opname
     public function index(Request $request)
