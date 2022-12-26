@@ -59,8 +59,8 @@ class TransaksiAbsenController extends Controller
                 $value['diff'] = $diff;
             }
 
-            return new JsonResponse($absen);
             $data[$key['id']] = $absen;
+            return new JsonResponse($data);
         }
 
         $apem = [];
