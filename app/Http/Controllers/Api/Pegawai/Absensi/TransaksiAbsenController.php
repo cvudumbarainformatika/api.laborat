@@ -29,7 +29,7 @@ class TransaksiAbsenController extends Controller
             ->simplePaginate($per_page);
         $userCollections = collect($user);
 
-
+        $dataUser = $userCollections->only('data');
         $meta = $userCollections->except('data');
         $meta->all();
         $data = [];
@@ -84,7 +84,7 @@ class TransaksiAbsenController extends Controller
         }
         $data['apem'] = $apem;
         $data['meta'] = $meta;
-        $data['user'] = $user['data'];
+        $data['user'] = $dataUser;
         return new JsonResponse($data);
     }
     public function index()
