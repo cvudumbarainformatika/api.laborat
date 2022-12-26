@@ -33,9 +33,9 @@ class TransaksiAbsenController extends Controller
         $meta->all();
         $data = [];
         foreach ($user as $key) {
-            return new JsonResponse($key);
             $absen = $key->absens;
             foreach ($absen as $value) {
+                return new JsonResponse($value);
                 // return new JsonResponse($value);
                 $temp = explode('-', $value['tanggal']);
                 // $temp = explode('-', $value->tanggal);
