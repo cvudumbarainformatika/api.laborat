@@ -33,7 +33,7 @@ class TransaksiAbsenController extends Controller
         $meta->all();
         $data = [];
         foreach ($user as $key) {
-            return new JsonResponse($user);
+            return new JsonResponse($key);
             $absen = $key->absens;
             foreach ($absen as $value) {
                 // return new JsonResponse($value);
