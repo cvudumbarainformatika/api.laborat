@@ -36,12 +36,12 @@ class TransaksiAbsenController extends Controller
             $absen = $key->absens;
             foreach ($absen as $value) {
                 // return new JsonResponse($value);
-                $temp = explode('-', $value['tanggal']);
-                // $temp = explode('-', $value->tanggal);
-                $day = $temp[2];
-                // $day = $this->getDayName($temp[2]);
-                $value['day'] = $day;
                 if ($value['kategory']->masuk !== null) {
+                    $temp = explode('-', $value['tanggal']);
+                    // $temp = explode('-', $value->tanggal);
+                    $day = $temp[2];
+                    // $day = $this->getDayName($temp[2]);
+                    $value['day'] = $day;
                     $toIn = explode(':', $value['kategory']->masuk);
                     $act = explode(':', $value['masuk']);
                     $jam = (int)$act[0] - (int)$toIn[0];
