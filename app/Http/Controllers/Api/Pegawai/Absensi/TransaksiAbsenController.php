@@ -41,27 +41,28 @@ class TransaksiAbsenController extends Controller
                 $day = $temp[2];
                 // $day = $this->getDayName($temp[2]);
                 $value['day'] = $day;
+                if ($value['kategory']->masuk) {
+                    $toIn = explode(':', $value['kategory']->masuk);
+                    $act = explode(':', $value['masuk']);
+                    $jam = (int)$act[0] - (int)$toIn[0];
+                    $menit =  (int)$act[1] - (int)$toIn[1];
+                    $detik =  (int)$act[2] - (int)$toIn[2];
 
-                $toIn = explode(':', $value['kategory']->masuk);
-                $act = explode(':', $value['masuk']);
-                $jam = (int)$act[0] - (int)$toIn[0];
-                $menit =  (int)$act[1] - (int)$toIn[1];
-                $detik =  (int)$act[2] - (int)$toIn[2];
-
-                if ($jam > 0 || $menit > 00) {
-                    $value['terlambat'] = 'yes';
-                } else {
-                    $value['terlambat'] = 'no';
+                    if ($jam > 0 || $menit > 00) {
+                        $value['terlambat'] = 'yes';
+                    } else {
+                        $value['terlambat'] = 'no';
+                    }
+                    $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+                    $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+                    $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+                    $value['diff'] = $diff;
                 }
-                $dMenit = $menit >= 10 ? $menit : '0' . $menit;
-                $dDetik = $detik >= 10 ? $detik : '0' . $detik;
-                $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-                $value['diff'] = $diff;
             }
 
             $data[$key['id']] = $absen;
-            return new JsonResponse($data);
         }
+        return new JsonResponse($data);
 
         $apem = [];
         foreach ($data as $key => $value) {
