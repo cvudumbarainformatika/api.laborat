@@ -30,6 +30,7 @@ class TransaksiAbsenController extends Controller
         $userCollections = collect($user);
 
         $dataUser = $userCollections->only('data');
+        $dataUser->all();
         $meta = $userCollections->except('data');
         $meta->all();
         $data = [];
