@@ -9,6 +9,7 @@ use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Mockery\Undefined;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class TransaksiAbsenController extends Controller
@@ -35,11 +36,11 @@ class TransaksiAbsenController extends Controller
         foreach ($user as $key) {
             $absen = $key->absens;
             foreach ($absen as $value) {
-                return new JsonResponse($value);
-                if ($value['kategory']->masuk === null || $value['kategory']->masuk === '') {
+                // return new JsonResponse($value);
+                if ($value['masuk'] === null || $value['masuk'] === '') {
                     return new JsonResponse($value);
                 }
-                if ($value['kategory']->masuk !== null) {
+                if ($value['masuk'] !== null) {
                     $temp = explode('-', $value['tanggal']);
                     // $temp = explode('-', $value->tanggal);
                     $day = $temp[2];
