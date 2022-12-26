@@ -28,12 +28,12 @@ class TransaksiAbsenController extends Controller
             ->simplePaginate($per_page);
         $userCollections = collect($user);
 
-        return new JsonResponse($userCollections);
 
         $meta = $userCollections->except('data');
         $meta->all();
         $data = [];
         foreach ($user as $key) {
+            return new JsonResponse($user);
             $absen = $key->absens;
             foreach ($absen as $value) {
                 // return new JsonResponse($value);
