@@ -84,6 +84,7 @@ class TransaksiAbsenController extends Controller
         }
         $data['apem'] = $apem;
         $data['meta'] = $meta;
+        $data['user'] = $user;
         return new JsonResponse($data);
     }
     public function index()
