@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
@@ -84,6 +85,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(TransaksiAbsen::class);
     }
+    public function libur()
+    {
+        return $this->hasMany(Libur::class);
+    }
+
 
     public function scopeFilter($search, array $reqs)
     {
