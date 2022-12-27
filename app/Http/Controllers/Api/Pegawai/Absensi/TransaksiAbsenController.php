@@ -236,8 +236,8 @@ class TransaksiAbsenController extends Controller
             ->get();
 
         $col['libur'] = $libur;
-        return new JsonResponse($col);
-        // return new JsonResponse($data);
+        // return new JsonResponse($col);
+        return new JsonResponse($data);
 
         // $tanggals = [];
         // foreach ($data as $key) {
