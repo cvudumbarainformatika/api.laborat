@@ -521,8 +521,8 @@ class AutogenController extends Controller
             ->latest()
             ->get();
 
-        // $col['libur'] = $libur;
-        // return new JsonResponse($data);
+        $col['libur'] = $libur;
+        return new JsonResponse($data);
         return new JsonResponse($col);
     }
 
