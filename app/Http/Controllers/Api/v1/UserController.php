@@ -34,11 +34,12 @@ class UserController extends Controller
         return new JsonResponse($data);
     }
 
+    // null, '' = bisa login, 2 = ganti device, 8=tidak bisa scan barcode, 9= tidak bisa scan barcode dan wajah
     public function updateStatus(Request $request)
     {
         $user = User::find($request->id);
         $user->update([
-            'status' => '2'
+            'status' => $request->status
         ]);
         if ($user->wasChanged()) {
             return new JsonResponse(['message' => 'Request Update device apporved'], 200);

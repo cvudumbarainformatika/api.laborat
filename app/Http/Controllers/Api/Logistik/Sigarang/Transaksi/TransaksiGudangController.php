@@ -21,7 +21,7 @@ class TransaksiGudangController extends Controller
         $second = $terima[0];
         $second['tanggal'] = date('Y-m-d H:i:s');
         // $second->asal = null;
-        $second->tujuan = 'Gd-00000000';
+        $second->tujuan = 'Gd-02010100';
         $second->nama = 'PENERIMAAN GUDANG';
         $detail = $second->details;
 

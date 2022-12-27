@@ -72,7 +72,7 @@ class DistribusiDepoController extends Controller
 
         foreach ($data->details as $key) {
             $jumlah = $key->jumlah;
-            $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+            $stok = RecentStokUpdate::where('kode_ruang', 'Gd-02010100')
                 ->where('kode_rs', $key->kode_rs)
                 ->where('sisa_stok', '>', 0)
                 ->oldest()
@@ -123,7 +123,7 @@ class DistribusiDepoController extends Controller
             } while ($loop);
 
 
-            // $stok = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+            // $stok = RecentStokUpdate::where('kode_ruang', 'Gd-02010100')
             //     ->where('kode_rs', $key->kode_rs)
             //     ->where('no_penerimaan', $data->no_penerimaan)
             //     ->first();
@@ -155,7 +155,7 @@ class DistribusiDepoController extends Controller
             //         'no_penerimaan' => $data->no_penerimaan,
             //     ]);
             //     // ambil stok baru
-            //     $stok2 = RecentStokUpdate::where('kode_ruang', 'Gd-00000000')
+            //     $stok2 = RecentStokUpdate::where('kode_ruang', 'Gd-02010100')
             //         ->where('kode_rs', $key->kode_rs)
             //         ->where('sisa_stok', '>', 0)
             //         ->first();

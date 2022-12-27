@@ -162,4 +162,7 @@ class AuthController extends Controller
         // JWTAuth::logout();
         return response()->json(['message' => 'User sukses logout dari aplikasi']);
     }
+
+    // ganti status
+    // null, '' = bisa loagin, 8=tidak bisa scan barcode, 9= tidak bisa scan barcode dan wajah
 }

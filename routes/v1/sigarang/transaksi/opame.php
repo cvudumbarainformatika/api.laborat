@@ -13,4 +13,6 @@ Route::group([
     Route::post('/ambil', [StokOpnameController::class, 'index']);
     Route::get('/monthly-stok', [StokOpnameController::class, 'getDataStokOpname']);
     Route::get('/store-opname', [StokOpnameController::class, 'storeMonthly']);
+    Route::get('/opname-by-depo', [StokOpnameController::class, 'getDataStokOpnameByDepo']);
+    Route::post('/simpan-penyesuaian', [StokOpnameController::class, 'storePenyesuaian']);
 });

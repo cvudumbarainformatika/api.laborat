@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
+use App\Models\Sigarang\StokOpname;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,12 +15,11 @@ class StokOpnameController extends Controller
     // data gudang dan depo sigarang
     public function getDataGudangDepo()
     {
-        $umum = Gudang::where('gedung', 0)
-            ->first();
+
         $data = Gudang::where('gedung', 2)
-            ->where('depo', '>', 0)
+            ->where('lantai', '>', 0)
+            ->where('gudang', '>', 0)
             ->get();
-        $data[count($data)] = $umum;
         return new JsonResponse($data);
     }
     // ambil data stok current ->
@@ -54,6 +54,25 @@ class StokOpnameController extends Controller
         return new JsonResponse($data);
     }
 
+    public function getDataStokOpnameByDepo()
+    {
+        $bulan = request('bulan') ? request('bulan') : date('m');
+        $tahun = request('tahun') ? request('tahun') : date('Y');
+
+        $raw = MonthlyStokUpdate::where('tanggal', '>=', $tahun . '-' . $bulan . '-1')
+            ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
+            ->where('kode_ruang', '=', request('search'))
+            ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo')
+            ->paginate(request('per_page'));
+        $col = collect($raw);
+        $meta = $col->except('data');
+        $meta->all();
+
+        $data = $col->only('data');
+        $data['meta'] = $meta;
+        return new JsonResponse($data);
+    }
+
     public function storeMonthly()
     {
         $recent = RecentStokUpdate::where('sisa_stok', '>', 0)->get();
@@ -74,5 +93,40 @@ class StokOpnameController extends Controller
             return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
         }
         return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+    }
+
+    public function storePenyesuaian(Request $request)
+    {
+        $monthlyStok = MonthlyStokUpdate::find($request->id);
+
+        $recent = RecentStokUpdate::where('kode_rs', $monthlyStok->kode_rs)
+            ->where('kode_ruang', $monthlyStok->kode_ruang)
+            ->where('no_penerimaan', $monthlyStok->no_penerimaan)->first();
+
+        // return new JsonResponse([
+        //     'monthly' => $monthlyStok,
+        //     'recent' => $recent,
+        //     'request' => $request->all(),
+        // ], 200);
+
+        $penyesuaian = StokOpname::updateOrCreate(
+            [
+                'monthly_stok_update_id' => $monthlyStok->id,
+            ],
+            $request->all()
+        );
+
+        $recent->update([
+            'sisa_stok' => $request->jumlah
+        ]);
+
+        if ($penyesuaian->wasRecentlyCreated) {
+            return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+        }
+        if ($penyesuaian->wasChanged()) {
+            return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+        }
+
+        return new JsonResponse(['message' => 'Tidak ada perubahan data'], 417);
     }
 }
