@@ -505,7 +505,7 @@ class AutogenController extends Controller
         $thisYear = request('tahun') ? request('tahun') : date('Y');
         $month = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
-        $data = TransaksiAbsen::where('user_id', $user->id)
+        $masuk = TransaksiAbsen::where('user_id', $user->id)
             ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
             ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
             // ->paginate($per_page);
@@ -514,7 +514,7 @@ class AutogenController extends Controller
             ->get();
 
 
-        $data['masuk'] = $data;
+        $data['masuk'] = $masuk;
         $libur = Libur::where('user_id', $user->id)
             ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
             ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
