@@ -11,6 +11,7 @@ use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Kategory;
+use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\Qrcode;
 use App\Models\Pegawai\TransaksiAbsen;
@@ -487,19 +488,41 @@ class AutogenController extends Controller
         // $collection = collect($data)->unique('kode_rs');
         // $collection->values()->all();
         // return new JsonResponse([$data, $collection[0]]);
-        $umum = Gudang::where('gedung', 0)
-            ->first();
-        $data = Gudang::where('gedung', 2)
-            ->where('depo', '>', 0)
-            ->get();
-        $data[count($data)] = $umum;
-        // array_push($data, $umum);
-        return new JsonResponse([
-            $umum,
-            count($data),
-            $data,
+        // $umum = Gudang::where('gedung', 0)
+        //     ->first();
+        // $data = Gudang::where('gedung', 2)
+        //     ->where('depo', '>', 0)
+        //     ->get();
+        // $data[count($data)] = $umum;
+        // // array_push($data, $umum);
+        // return new JsonResponse([
+        //     $umum,
+        //     count($data),
+        //     $data,
 
-        ]);
+        // ]);
+        $user = User::find(19);
+        $thisYear = request('tahun') ? request('tahun') : date('Y');
+        $month = request('bulan') ? request('bulan') : date('m');
+        $per_page = request('per_page') ? request('per_page') : 10;
+        $data = TransaksiAbsen::where('user_id', $user->id)
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            // ->paginate($per_page);
+            ->with('kategory')
+            ->latest()
+            ->get();
+
+
+        $col = collect($data);
+        $libur = Libur::where('user_id', $user->id)
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->latest()
+            ->get();
+
+        $col['libur'] = $libur;
+        return new JsonResponse($col);
     }
 
     public function wawanpost(Request $request)
