@@ -225,10 +225,18 @@ class TransaksiAbsenController extends Controller
             ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
             ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
             // ->paginate($per_page);
-            ->with('kategory', 'user.libur')
+            ->with('kategory')
+            ->latest()
+            ->get();
+        $col = collect($data);
+        $libur = Libur::where('user_id', $user->id)
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
             ->latest()
             ->get();
 
+        $col['libur'] = $libur;
+        return new JsonResponse($col);
         return new JsonResponse($data);
 
         // $tanggals = [];
