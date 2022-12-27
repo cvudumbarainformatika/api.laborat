@@ -522,8 +522,6 @@ class AutogenController extends Controller
             ->get();
 
         $data['libur'] = $libur;
-        // array_push($col, ['libur' => $libur]);
-        // return new JsonResponse($data);
         return new JsonResponse($data);
     }
 
