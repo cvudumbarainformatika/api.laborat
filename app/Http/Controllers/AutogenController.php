@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
+use App\Exports\pegawaiExport;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AutogenController extends Controller
 {
@@ -534,6 +536,10 @@ class AutogenController extends Controller
             ->get();
 
 
+        // $data = collect($pegawai);
+        // $excel = $data->only('nip', 'nip_baru', 'nama');
+        // return Excel::download($excel, 'pegawai.xlsx');
+        // return Excel::download(new pegawaiExport, 'pegawai.xlsx');
         return view('list_user_not_registered', [
             'jml' => count($pegawai1),
             'pegawaies' => $pegawai1
