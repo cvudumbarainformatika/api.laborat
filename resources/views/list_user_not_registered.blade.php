@@ -446,29 +446,29 @@
                 <div class="anak">
                     <div class="row">
                         <div class="mr-2">
-                            No,
+                            No;
                         </div>
                         <div class="ml-2">
-                            Nama,
+                            Nama;
                         </div>
                     </div>
                 </div>
-                <div class="anak">NIK,</div>
+                <div class="anak">NIK;</div>
 
             </div>
             @foreach ($pegawaies as $key=>$pegawai)
             <div class="container">
                 <div class="anak">
                     <div class="row">
-                        <div class="mr-2">{{$key+1}},</div>
-                        <div class="ml-2">{{$pegawai->nama}},</div>
+                        <div class="mr-2">{{$key+1}};</div>
+                        <div class="ml-2">{{$pegawai->nama}};</div>
                     </div>
 
                 </div>
                 @if($pegawai->nip_baru!=='')
-                <div class="anak">{{$pegawai->nip_baru}}, </div>
+                <div class="anak">{{$pegawai->nip_baru}}; </div>
                 @else
-                <div class="anak">{{$pegawai->nip}}, </div>
+                <div class="anak">{{$pegawai->nip}}; </div>
                 @endif
             </div>
             @endforeach
