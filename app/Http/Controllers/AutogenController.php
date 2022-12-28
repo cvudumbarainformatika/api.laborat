@@ -533,13 +533,16 @@ class AutogenController extends Controller
             ->get();
 
 
-
-        return new JsonResponse([
-            'jml' => count($pegawai),
-            'jml1' => count($pegawai1),
-            // 'pegawai' => $pegawai,
-            'pegawai1' => $pegawai1
+        return view('ListUserNotRegistered', [
+            'jml' => count($pegawai1),
+            'pegawai' => $pegawai1
         ]);
+        // return new JsonResponse([
+        //     'jml' => count($pegawai),
+        //     'jml1' => count($pegawai1),
+        //     // 'pegawai' => $pegawai,
+        //     'pegawai1' => $pegawai1
+        // ]);
     }
 
     public function wawanpost(Request $request)
