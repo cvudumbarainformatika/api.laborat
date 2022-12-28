@@ -290,6 +290,11 @@
             grid-template-columns: repeat(1, minmax(0, 1fr))
         }
 
+        .mx-sm {
+            margin-left: 1em;
+            margin-right: 1em
+        }
+
         @media (min-width:640px) {
             .sm\:rounded-lg {
                 border-radius: .5rem
@@ -395,6 +400,34 @@
                 color: rgba(107, 114, 128, var(--tw-text-opacity))
             }
         }
+
+        .page {
+            margin-top: 2em;
+            margin-bottom: 2em;
+            margin-left: 3em;
+            margin-right: 1em;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-content: center;
+            justify-content: start;
+            align-items: center;
+            margin-top: 0.5em;
+        }
+
+        .anak {
+            width: calc(80vw/2);
+        }
+
+        .row {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0.2rem;
+        }
     </style>
 
     <style>
@@ -405,9 +438,42 @@
 </head>
 
 <body class="antialiased">
-    <div>Coba</div>
-    <div>{{$jml}}</div>
-    <div>{{$pegawai}}</div>
+    <div class="mx-sm page">
+        <div class="text-lg font-semibold">Data Pegawai Belum teregestrasi</div>
+        <div class="mt-2">Jumlah pegawai yang belum teregestrasi : {{$jml}}</div>
+        <div class="mt-2">
+            <div class="container">
+                <div class="anak">
+                    <div class="row">
+                        <div class="mr-2">
+                            No
+                        </div>
+                        <div class="ml-2">
+                            Nama
+                        </div>
+                    </div>
+                </div>
+                <div class="anak">NIK</div>
+
+            </div>
+            @foreach ($pegawaies as $key=>$pegawai)
+            <div class="container">
+                <div class="anak">
+                    <div class="row">
+                        <div class="mr-2">{{$key+1}}</div>
+                        <div class="ml-2">{{$pegawai->nama}}</div>
+                    </div>
+
+                </div>
+                @if($pegawai->nip_baru!=='')
+                <div class="anak">{{$pegawai->nip_baru}} </div>
+                @else
+                <div class="anak">{{$pegawai->nip}} </div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+    </div>
 </body>
 
 </html>

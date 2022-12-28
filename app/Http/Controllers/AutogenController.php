@@ -526,17 +526,22 @@ class AutogenController extends Controller
         // return new JsonResponse($data);
 
         $pegawai = Pegawai::where('aktif', 'AKTIF')
-            ->orWhere('aktif', 'Aktif')
+            ->where('account_pass', null)
             ->get();
         $pegawai1 = Pegawai::where('aktif', 'AKTIF')
             ->where('account_pass', null)
+            ->orWhere('account_pass', '')
             ->get();
 
 
         return view('list_user_not_registered', [
             'jml' => count($pegawai1),
-            'pegawai' => $pegawai1
+            'pegawaies' => $pegawai1
         ]);
+        // return view('list_user_not_registered', [
+        //     'jml' => count($pegawai),
+        //     'pegawai' => $pegawai
+        // ]);
         // return new JsonResponse([
         //     'jml' => count($pegawai),
         //     'jml1' => count($pegawai1),
