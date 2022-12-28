@@ -529,7 +529,6 @@ class AutogenController extends Controller
             ->orWhere('aktif', 'Aktif')
             ->get();
         $pegawai1 = Pegawai::where('aktif', 'AKTIF')
-            ->orWhere('aktif', 'Aktif')
             ->get();
 
 
