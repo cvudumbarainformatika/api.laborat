@@ -529,6 +529,7 @@ class AutogenController extends Controller
             ->orWhere('aktif', 'Aktif')
             ->get();
         $pegawai1 = Pegawai::where('aktif', 'AKTIF')
+            ->where('account_pass', null)
             ->get();
 
 
@@ -537,7 +538,7 @@ class AutogenController extends Controller
             'jml' => count($pegawai),
             'jml1' => count($pegawai1),
             // 'pegawai' => $pegawai,
-            // 'pegawai1' => $pegawai1
+            'pegawai1' => $pegawai1
         ]);
     }
 
