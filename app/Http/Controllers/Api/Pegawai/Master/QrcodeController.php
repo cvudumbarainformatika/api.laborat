@@ -135,4 +135,19 @@ class QrcodeController extends Controller
         }
         return new JsonResponse($data, 200);
     }
+    public function scanWajah(Request $request)
+    {
+        $user = JWTAuth::user();
+        $jadwal = JadwalController::toMatch2($user->id, $request);
+        // $pegawai = Pegawai::find($user->pegawai_id);
+
+        if (!$jadwal) {
+            return new JsonResponse(['message' => 'Tidak Ada jadwal',], 410);
+        }
+        return new JsonResponse([
+            'message' => 'Absen diterima',
+            'user' => $user,
+            'jadwal' => $jadwal,
+        ], 200);
+    }
 }

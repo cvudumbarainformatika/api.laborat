@@ -13,6 +13,15 @@ Route::group([
     Route::post('/store', [QrcodeController::class, 'createQr']);
     Route::post('/scan', [QrcodeController::class, 'qrScanned']);
 });
+
+Route::group([
+    'middleware' => 'auth:api',
+    // 'middleware' => 'jwt.verify',
+    'prefix' => 'pegawai/absensi/scan'
+], function () {
+    Route::post('/wajah', [QrcodeController::class, 'scanWajah']);
+});
+
 Route::group([
     // 'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
