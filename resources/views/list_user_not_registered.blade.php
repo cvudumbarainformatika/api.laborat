@@ -419,7 +419,7 @@
         }
 
         .anak {
-            width: calc(80vw/2);
+            width: calc(80vw/3);
         }
 
         .row {
@@ -454,6 +454,7 @@
                     </div>
                 </div>
                 <div class="anak">NIK;</div>
+                <div class="anak">Ruangan;</div>
 
             </div>
             @foreach ($pegawaies as $key=>$pegawai)
@@ -470,6 +471,7 @@
                 @else
                 <div class="anak">{{$pegawai->nip}}; </div>
                 @endif
+                <div class="anak">{{$pegawai->ruangan->namaruang}}; </div>
             </div>
             @endforeach
         </div>

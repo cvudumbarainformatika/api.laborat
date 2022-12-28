@@ -533,6 +533,7 @@ class AutogenController extends Controller
         $pegawai1 = Pegawai::where('aktif', 'AKTIF')
             ->where('account_pass', null)
             ->orWhere('account_pass', '')
+            ->with('ruangan')
             ->get();
 
 

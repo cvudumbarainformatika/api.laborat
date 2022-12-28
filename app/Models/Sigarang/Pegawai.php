@@ -5,6 +5,7 @@ namespace App\Models\Sigarang;
 use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\Ruangan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,13 @@ class Pegawai extends Model
     {
         return $this->hasMany(JadwalAbsen::class);
     }
+
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruangan::class, 'ruang', 'koderuangan');
+    }
+
+
 
 
     public function scopeFilter($search, array $reqs)
