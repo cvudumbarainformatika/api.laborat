@@ -533,7 +533,7 @@ class AutogenController extends Controller
             ->get();
 
 
-        return view('ListUserNotRegistered', [
+        return view('list_user_not_registered', [
             'jml' => count($pegawai1),
             'pegawai' => $pegawai1
         ]);
