@@ -20,6 +20,7 @@ use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\MinMaxDepo;
 use App\Models\Sigarang\MinMaxPengguna;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
@@ -501,28 +502,44 @@ class AutogenController extends Controller
         //     $data,
 
         // ]);
-        $user = User::find(19);
-        $thisYear = request('tahun') ? request('tahun') : date('Y');
-        $month = request('bulan') ? request('bulan') : date('m');
-        $per_page = request('per_page') ? request('per_page') : 10;
-        $masuk = TransaksiAbsen::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
-            // ->paginate($per_page);
-            ->with('kategory')
-            ->latest()
+        // $user = User::find(19);
+        // $thisYear = request('tahun') ? request('tahun') : date('Y');
+        // $month = request('bulan') ? request('bulan') : date('m');
+        // $per_page = request('per_page') ? request('per_page') : 10;
+        // $masuk = TransaksiAbsen::where('user_id', $user->id)
+        //     ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+        //     ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+        //     // ->paginate($per_page);
+        //     ->with('kategory')
+        //     ->latest()
+        //     ->get();
+
+
+        // $data['masuk'] = $masuk;
+        // $libur = Libur::where('user_id', $user->id)
+        //     ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+        //     ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+        //     ->latest()
+        //     ->get();
+
+        // $data['libur'] = $libur;
+        // return new JsonResponse($data);
+
+        $pegawai = Pegawai::where('aktif', 'AKTIF')
+            ->orWhere('aktif', 'Aktif')
+            ->get();
+        $pegawai1 = Pegawai::where('aktif', 'AKTIF')
+            ->orWhere('aktif', 'Aktif')
             ->get();
 
 
-        $data['masuk'] = $masuk;
-        $libur = Libur::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
-            ->latest()
-            ->get();
 
-        $data['libur'] = $libur;
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'jml' => count($pegawai),
+            'jml1' => count($pegawai1),
+            'pegawai' => $pegawai,
+            'pegawai1' => $pegawai1
+        ]);
     }
 
     public function wawanpost(Request $request)
