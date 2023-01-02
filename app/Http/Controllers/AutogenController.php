@@ -560,12 +560,13 @@ class AutogenController extends Controller
 
         $data = BarangRS::oldest('id')
             ->filter(request(['q']))
-            ->with('satuan')
+            // ->with('satuan')
             ->paginate(request('per_page'));
         // return BarangRSResource::collection($data);
         $collect = collect($data);
         $balik = $collect->only('data');
         $balik['meta'] = $collect->except('data');
+        return new JsonResponse($balik);
     }
 
     public function wawanpost(Request $request)
