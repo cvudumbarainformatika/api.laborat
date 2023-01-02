@@ -15,7 +15,7 @@ class BarangRSController extends Controller
     public function index()
     {
         // $data = BarangRS::paginate();
-        $data = BarangRS::latest()
+        $data = BarangRS::oldest('id')
             ->filter(request(['q']))
             ->with('satuan')
             ->paginate(request('per_page'));

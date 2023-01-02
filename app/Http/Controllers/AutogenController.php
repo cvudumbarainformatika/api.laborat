@@ -19,11 +19,13 @@ use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\MinMaxDepo;
 use App\Models\Sigarang\MinMaxPengguna;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\RecentStokUpdate;
+use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
@@ -527,24 +529,24 @@ class AutogenController extends Controller
         // $data['libur'] = $libur;
         // return new JsonResponse($data);
 
-        $pegawai = Pegawai::where('aktif', 'AKTIF')
-            ->where('account_pass', null)
-            ->get();
-        $pegawai1 = Pegawai::where('aktif', 'AKTIF')
-            ->where('account_pass', null)
-            ->orWhere('account_pass', '')
-            ->with('ruangan')
-            ->get();
+        // $pegawai = Pegawai::where('aktif', 'AKTIF')
+        //     ->where('account_pass', null)
+        //     ->get();
+        // $pegawai1 = Pegawai::where('aktif', 'AKTIF')
+        //     ->where('account_pass', null)
+        //     ->orWhere('account_pass', '')
+        //     ->with('ruangan')
+        //     ->get();
 
 
         // $data = collect($pegawai);
         // $excel = $data->only('nip', 'nip_baru', 'nama');
         // return Excel::download($excel, 'pegawai.xlsx');
         // return Excel::download(new pegawaiExport, 'pegawai.xlsx');
-        return view('list_user_not_registered', [
-            'jml' => count($pegawai1),
-            'pegawaies' => $pegawai1
-        ]);
+        // return view('list_user_not_registered', [
+        //     'jml' => count($pegawai1),
+        //     'pegawaies' => $pegawai1
+        // ]);
         // return view('list_user_not_registered', [
         //     'jml' => count($pegawai),
         //     'pegawai' => $pegawai
@@ -555,6 +557,15 @@ class AutogenController extends Controller
         //     // 'pegawai' => $pegawai,
         //     'pegawai1' => $pegawai1
         // ]);
+
+        $data = BarangRS::oldest('id')
+            ->filter(request(['q']))
+            ->with('satuan')
+            ->paginate(request('per_page'));
+        // return BarangRSResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
     }
 
     public function wawanpost(Request $request)
@@ -573,12 +584,40 @@ class AutogenController extends Controller
     // sigarang set min max stok depo dan pengguna
     public function setMinMax()
     {
-        $barang = BarangRS::latest('id')->get();
-        $pengguna = Pengguna::get();
-        $depo = Gudang::where('depo', '<>', null)
-            ->where('depo', '<>', '')
-            ->where('gedung', '=', 2)
-            ->get();
+        // $barang = BarangRS::oldest('id')->get();
+        // $pengguna = Pengguna::where('id', '>=', request('from'))
+        //     ->where('id', '<=', request('to'))
+        //     ->get();
+        // $totruang = Ruang::get();
+        // $ruang = Ruang::where('id', '>=', request('from'))
+        //     ->where('id', '<=', request('to'))
+        //     ->get();
+        // $depo = Gudang::where('depo', '<>', null)
+        //     ->where('depo', '<>', '')
+        //     ->where('gedung', '=', 2)
+        //     ->get();
+
+        // if ($ruang) {
+        //     foreach ($ruang as $room) {
+        //         foreach ($barang as $goods) {
+        //             MaxRuangan::firstOrCreate(
+        //                 [
+        //                     'kode_rs' => $goods['kode'],
+        //                     'kode_ruang' => $room['kode'],
+        //                 ],
+        //                 [
+        //                     'max_stok' => 100,
+        //                 ]
+        //             );
+        //         }
+        //     }
+        // }
+
+        // return new JsonResponse([
+        //     'id ' . request('from') . ' - ' . request('to') . ' dari total ' . count($totruang),
+        //     $ruang,
+        //     count($barang),
+        // ]);
         // foreach ($barang as $goods) {
         //     foreach ($pengguna as $user) {
         //         MinMaxPengguna::firstOrCreate(
@@ -594,20 +633,20 @@ class AutogenController extends Controller
         //     }
         // }
 
-        foreach ($barang as $goods) {
-            foreach ($depo as $apem) {
-                MinMaxDepo::firstOrCreate(
-                    [
-                        'kode_rs' => $goods['kode'],
-                        'kode_depo' => $apem['kode'],
-                    ],
-                    [
-                        'min_stok' => 5,
-                        'max_stok' => 10,
-                    ]
-                );
-            }
-        }
+        // foreach ($barang as $goods) {
+        //     foreach ($depo as $apem) {
+        //         MinMaxDepo::firstOrCreate(
+        //             [
+        //                 'kode_rs' => $goods['kode'],
+        //                 'kode_depo' => $apem['kode'],
+        //             ],
+        //             [
+        //                 'min_stok' => 5,
+        //                 'max_stok' => 10,
+        //             ]
+        //         );
+        //     }
+        // }
 
 
         return new JsonResponse('ok');
