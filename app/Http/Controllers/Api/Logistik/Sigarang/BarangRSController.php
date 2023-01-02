@@ -17,7 +17,7 @@ class BarangRSController extends Controller
         // $data = BarangRS::paginate();
         $data = BarangRS::oldest('id')
             ->filter(request(['q']))
-            ->with('satuan')
+            ->with('barang108', 'satuan')
             ->paginate(request('per_page'));
         // return BarangRSResource::collection($data);
         $collect = collect($data);
