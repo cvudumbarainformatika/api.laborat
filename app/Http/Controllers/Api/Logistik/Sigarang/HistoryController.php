@@ -22,13 +22,13 @@ class HistoryController extends Controller
         $nama = request('nama');
         if ($nama === 'Pemesanan') {
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
-            $data = $pemesanan->filter(request(['q']))->with('perusahaan',  'details.barangrs', 'details.barang108', 'details.satuan')->paginate(request('per_page'));
+            $data = $pemesanan->filter(request(['q']))->with('perusahaan',  'details.barangrs', 'details.barang108', 'details.satuan')->latest('id')->paginate(request('per_page'));
         } else if ($nama === 'Penerimaan') {
-            $data = $penerimaan->filter(request(['q']))->with('perusahaan',  'details.barangrs', 'details.barang108', 'details.satuan')->paginate(request('per_page'));
+            $data = $penerimaan->filter(request(['q']))->with('perusahaan',  'details.barangrs', 'details.barang108', 'details.satuan')->latest('id')->paginate(request('per_page'));
         } else if ($nama === 'Gudang') {
-            $data = $gudang->filter(request(['q']))->with('asal', 'tujuan', 'details.barangrs', 'details.barang108', 'details.satuan')->paginate(request('per_page'));
+            $data = $gudang->filter(request(['q']))->with('asal', 'tujuan', 'details.barangrs', 'details.barang108', 'details.satuan')->latest('id')->paginate(request('per_page'));
         } else if ($nama === 'Permintaan') {
-            $data = $permintaan->filter(request(['q']))->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->paginate(request('per_page'));
+            $data = $permintaan->filter(request(['q']))->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->latest('id')->paginate(request('per_page'));
         }
         // $data = request()->all();
         $apem = $data->all();
