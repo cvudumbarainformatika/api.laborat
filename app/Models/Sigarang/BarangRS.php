@@ -16,6 +16,10 @@ class BarangRS extends Model
     {
         return $this->belongsTo(Satuan::class, 'kode_satuan', 'kode');
     }
+    public function satuankecil()
+    {
+        return $this->belongsTo(Satuan::class, 'kode_satuan_kecil', 'kode');
+    }
     public function barang108()
     {
         return $this->belongsTo(Barang108::class, 'kode_108', 'kode');

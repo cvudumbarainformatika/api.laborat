@@ -17,7 +17,7 @@ class BarangRSController extends Controller
         // $data = BarangRS::paginate();
         $data = BarangRS::oldest('id')
             ->filter(request(['q']))
-            ->with('barang108', 'satuan')
+            ->with('barang108', 'satuan', 'satuankecil')
             ->paginate(request('per_page'));
         // return BarangRSResource::collection($data);
         $collect = collect($data);
@@ -28,7 +28,7 @@ class BarangRSController extends Controller
     }
     public function barangrs()
     {
-        $data = BarangRS::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
+        $data = BarangRS::oldest('id')->with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
         return BarangRSResource::collection($data);
     }
     public function store(Request $request)
