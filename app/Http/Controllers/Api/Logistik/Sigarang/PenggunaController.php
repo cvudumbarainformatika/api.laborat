@@ -33,13 +33,14 @@ class PenggunaController extends Controller
     public function pengguna()
     {
         $data = Pengguna::latest('id')->where('level_4', '<>', null)
+            ->with('pj')
             ->get();
-        return PenggunaResource::collection($data);
+        // return PenggunaResource::collection($data);
+        return new JsonResponse($data);
     }
     public function penanggungjawab()
     {
-        $data = Pengguna::where('level_3', '<>', null)
-            ->where('level_4', '=', null)
+        $data = Pengguna::where('penanggungjawab', '<>', null)
             ->latest('id')
             ->filter(request(['q']))
             ->get(); //paginate(request('per_page'));

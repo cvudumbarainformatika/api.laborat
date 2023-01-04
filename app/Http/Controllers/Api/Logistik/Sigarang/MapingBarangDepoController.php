@@ -15,4 +15,10 @@ class MapingBarangDepoController extends Controller
         $data = collect($mentah)->groupBy('kode_gudang');
         return new JsonResponse($data);
     }
+    public function allMapingBarangDepo()
+    {
+        $mentah = MapingBarangDepo::with('barangrs.satuan', 'barangrs.barang108', 'gudang')->get();
+        // $data = collect($mentah)->groupBy('kode_gudang');
+        return new JsonResponse($mentah);
+    }
 }

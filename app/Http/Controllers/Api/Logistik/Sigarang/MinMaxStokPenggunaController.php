@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\MinMaxPengguna;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class MinMaxStokPenggunaController extends Controller
     public function index()
     {
         // $data = MinMaxPengguna::paginate();
-        $data = MinMaxPengguna::latest('id')
+        $data = MaxRuangan::latest('id')
             ->filter(request(['q', 'barang', 'pengguna']))
             ->with('barang', 'pengguna')
             ->paginate(request('per_page'));
@@ -28,7 +29,7 @@ class MinMaxStokPenggunaController extends Controller
 
     public function all()
     {
-        $data = MinMaxPengguna::latest('id')
+        $data = MaxRuangan::latest('id')
             // ->filter(request(['q']))
             ->with('barang', 'pengguna')
             ->get(); //paginate(request('per_page'));
@@ -36,10 +37,10 @@ class MinMaxStokPenggunaController extends Controller
     }
     public function spesifik(Request $request)
     {
-        $data = MinMaxPengguna::where('kode_pengguna', '=', $request->kode_pengguna)
+        $data = MaxRuangan::where('kode_ruang', '=', $request->kode_ruang)
             ->where('kode_rs', '=', $request->kode_rs)
             ->latest('id')
-            ->with('barang', 'pengguna')
+            ->with('barang', 'ruang')
             ->first();
         // ->get();
         return new JsonResponse($data);
@@ -61,16 +62,16 @@ class MinMaxStokPenggunaController extends Controller
                     return response()->json($validatedData->errors(), 422);
                 }
 
-                $data = MinMaxPengguna::firstOrCreate($request->all());
+                $data = MaxRuangan::firstOrCreate($request->all());
 
-                // $auth->log("Memasukkan data MinMaxPengguna {$user->name}");
+                // $auth->log("Memasukkan data MaxRuangan {$user->name}");
             } else {
                 $toUpdate = $request->all();
                 unset($toUpdate['id']);
-                $data = MinMaxPengguna::find($request->id);
+                $data = MaxRuangan::find($request->id);
                 $data->update($toUpdate);
 
-                // $auth->log("Merubah data MinMaxPengguna {$user->name}");
+                // $auth->log("Merubah data MaxRuangan {$user->name}");
             }
 
             DB::commit();
@@ -96,7 +97,7 @@ class MinMaxStokPenggunaController extends Controller
         // $auth = auth()->user()->id;
         $id = $request->id;
 
-        $data = MinMaxPengguna::find($id);
+        $data = MaxRuangan::find($id);
         $del = $data->delete();
 
         if (!$del) {
@@ -105,7 +106,7 @@ class MinMaxStokPenggunaController extends Controller
             ], 500);
         }
 
-        // $user->log("Menghapus Data MinMaxPengguna {$data->nama}");
+        // $user->log("Menghapus Data MaxRuangan {$data->nama}");
         return response()->json([
             'message' => 'Data sukses terhapus'
         ], 200);

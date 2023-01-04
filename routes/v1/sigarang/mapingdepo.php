@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'mapingdepo'
 ], function () {
     Route::get('/maping', [MapingBarangDepoController::class, 'allMapingDepo']);
+    Route::get('/barang', [MapingBarangDepoController::class, 'allMapingBarangDepo']);
 });

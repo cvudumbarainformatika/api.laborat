@@ -22,7 +22,9 @@ class PermintaanruanganController extends Controller
                 'details.barangrs',
                 'details.satuan',
                 'details.ruang',
-                'details.gudang'
+                'details.gudang',
+                'pj',
+                'pengguna',
             ])->get();
         if (count($draft)) {
             foreach ($draft as $key) {
