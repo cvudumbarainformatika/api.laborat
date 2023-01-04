@@ -19,6 +19,7 @@ use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\PemeriksaanLaborat;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\MapingBarangDepo;
 use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\MinMaxDepo;
 use App\Models\Sigarang\MinMaxPengguna;
@@ -558,15 +559,22 @@ class AutogenController extends Controller
         //     'pegawai1' => $pegawai1
         // ]);
 
-        $data = BarangRS::oldest('id')
-            ->filter(request(['q']))
-            // ->with('satuan')
-            ->paginate(request('per_page'));
-        // return BarangRSResource::collection($data);
-        $collect = collect($data);
-        $balik = $collect->only('data');
-        $balik['meta'] = $collect->except('data');
-        return new JsonResponse($balik);
+        // $data = BarangRS::oldest('id')
+        //     ->filter(request(['q']))
+        //     // ->with('satuan')
+        //     ->paginate(request('per_page'));
+        // // return BarangRSResource::collection($data);
+        // $collect = collect($data);
+        // $balik = $collect->only('data');
+        // $balik['meta'] = $collect->except('data');
+        // return new JsonResponse($balik);
+
+        // $data = collect($mentah);
+        // $data->groupBy('kode_gudang');
+        // $data->all();
+        $mentah = MapingBarangDepo::with('barangrs.satuan', 'barangrs.barang108', 'gudang')->get();
+        $data = collect($mentah)->groupBy('kode_gudang');
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
