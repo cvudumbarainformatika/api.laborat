@@ -87,13 +87,14 @@ class DistribusiDepoController extends Controller
             // pengecekan stok FIFO
             do {
                 $ada = $stok[$index]->sisa_stok;
+
                 // return new JsonResponse(['message' => 'Stok tidak mencukupi permintaan'], 413);
-                if ($ada <= $masuk) {
+                if ($ada < $masuk) {
                     $sisa = $masuk - $ada;
                     RecentStokUpdate::create([
                         'kode_rs' => $key->kode_rs,
                         'kode_ruang' => $data->kode_depo,
-                        'sisa_stok' => $key->jumlah,
+                        'sisa_stok' => $ada,
                         'harga' => $stok[$index]->harga,
                         'no_penerimaan' => $stok[$index]->no_penerimaan,
                     ]);
@@ -101,25 +102,28 @@ class DistribusiDepoController extends Controller
                         'sisa_stok' => 0
                     ]);
                     $data->details()->update(['no_penerimaan' => $stok[$index]->no_penerimaan]);
+
                     $index = $index + 1;
                     $loop = true;
+                    $masuk = $sisa;
+                } else {
+                    $sisa = $ada - $masuk;
+
+                    RecentStokUpdate::create([
+                        'kode_rs' => $key->kode_rs,
+                        'kode_ruang' => $data->kode_depo,
+                        'sisa_stok' => $masuk,
+                        'harga' => $stok[$index]->harga,
+                        'no_penerimaan' => $stok[$index]->no_penerimaan,
+                    ]);
+
+                    $stok[$index]->update([
+                        'sisa_stok' => $sisa
+                    ]);
+
+                    $data->details()->update(['no_penerimaan' => $stok[$index]->no_penerimaan]);
+                    $loop = false;
                 }
-                $sisa = $ada - $masuk;
-
-                RecentStokUpdate::create([
-                    'kode_rs' => $key->kode_rs,
-                    'kode_ruang' => $data->kode_depo,
-                    'sisa_stok' => $key->jumlah,
-                    'harga' => $stok[$index]->harga,
-                    'no_penerimaan' => $stok[$index]->no_penerimaan,
-                ]);
-
-                $stok[$index]->update([
-                    'sisa_stok' => $sisa
-                ]);
-
-                $data->details()->update(['no_penerimaan' => $stok[$index]->no_penerimaan]);
-                $loop = false;
             } while ($loop);
 
 

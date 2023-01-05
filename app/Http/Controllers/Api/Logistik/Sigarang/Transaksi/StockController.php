@@ -38,6 +38,21 @@ class StockController extends Controller
         // return new JsonResponse($data);
         return new JsonResponse($collection);
     }
+    // ambil data stok yang masih ada di gudang.
+    // data ini berarti data yang belum di distribusikan
+    public function currentStokGudang()
+    {
+        // $data = RecentStokUpdate::get();
+        $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->where('kode_ruang', 'Gd-02010100')
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->get();
+        $collection = collect($data)->unique('kode_rs');
+        $collection->values()->all();
+
+        // return new JsonResponse($data);
+        return new JsonResponse($collection);
+    }
 
     public function currentStokByRuangan(Request $request)
     {
