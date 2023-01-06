@@ -42,6 +42,9 @@ class DistribusiController extends Controller
             'tanggal_distribusi' => $tanggal_distribusi,
             'status' => $status,
         ]);
+        foreach ($request->detail as $key) {
+            $data->details()->update(['jumlah_distribusi' => $key->jumlah_distribusi]);
+        }
 
         if (!$data->wasChanged()) {
             return new JsonResponse(['message' => 'data gagal di update'], 501);
