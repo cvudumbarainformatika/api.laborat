@@ -23,6 +23,16 @@ class PenerimaanruanganController extends Controller
         }
     }
 
+    // distribusi yang sudah tercatat di tabel penerimaan ruanga
+    // tapi masih belum di konfirmasi ruangan
+    public function distributedPenerimaan()
+    {
+        $data = Penerimaanruangan::where('status', 1)
+            ->get();
+
+        return new JsonResponse($data);
+    }
+
     public function store(Request $request)
     {
         $stok = [];
@@ -212,8 +222,33 @@ class PenerimaanruanganController extends Controller
         ];
     }
 
-    public function updateStatusPenerimaan(Request $request)
+    public function distribusiDiterima(Request $request)
     {
+        // $data = Penerimaanruangan::where('no_distribusi', $request->no_distribusi)->first();
+        // $permintaan = Permintaanruangan::find($request->permintaan_id);
+        // return new JsonResponse([$data, $permintaan], 410);
+        try {
+            DB::beginTransaction();
+            $data = Penerimaanruangan::where('no_distribusi', $request->no_distribusi)->first();
+            $permintaan = Permintaanruangan::find($request->permintaan_id);
+            $data->update([
+                'reff' => $request->reff,
+                'status' => 2
+            ]);
+            $permintaan->update([
+                'status' => 8
+            ]);
+
+            DB::commit();
+
+            return new JsonResponse(['message' => 'Penerimaan Ruangan sudah dicatat'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'tidak ada update',
+                'error' => $e
+            ], 410);
+        }
     }
     public function updatePermintaan($id)
     {

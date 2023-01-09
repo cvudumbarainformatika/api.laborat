@@ -67,7 +67,7 @@ class HistoryController extends Controller
         } else if ($nama === 'Penerimaan Ruangan') {
 
             $data = $penerimaanruangan->filter(request(['q']))
-                ->with('details.barangrs.barang108', 'details.satuan')
+                ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
                 ->latest('id')
                 ->paginate(request('per_page'));
         } else if ($nama === 'Retur') {
