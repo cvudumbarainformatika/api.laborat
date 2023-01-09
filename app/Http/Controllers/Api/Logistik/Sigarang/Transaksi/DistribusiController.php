@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DistribusiController extends Controller
 {
@@ -34,21 +35,34 @@ class DistribusiController extends Controller
             'id' => 'required',
             'no_distribusi' => 'required',
         ]);
-        $tanggal_distribusi = date('Y-m-d H:i:s');
-        $status = 7;
-        $data = Permintaanruangan::find($request->id);
-        $data->update([
-            'no_distribusi' => $request->no_distribusi,
-            'tanggal_distribusi' => $tanggal_distribusi,
-            'status' => $status,
-        ]);
-        foreach ($request->detail as $key) {
-            $data->details()->update(['jumlah_distribusi' => $key->jumlah_distribusi]);
-        }
+        try {
 
-        if (!$data->wasChanged()) {
-            return new JsonResponse(['message' => 'data gagal di update'], 501);
+            DB::beginTransaction();
+
+            $tanggal_distribusi = date('Y-m-d H:i:s');
+            $status = 7;
+            $data = Permintaanruangan::find($request->id);
+            $data->update([
+                'no_distribusi' => $request->no_distribusi,
+                'tanggal_distribusi' => $tanggal_distribusi,
+                'status' => $status,
+            ]);
+            foreach ($request->detail as $key) {
+                $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_distribusi']]);
+            }
+
+            DB::commit();
+
+            if (!$data->wasChanged()) {
+                return new JsonResponse(['message' => 'data gagal di update'], 501);
+            }
+            return new JsonResponse(['message' => 'data berhasi di update'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'ada kesalahan',
+                'error' => $e
+            ], 500);
         }
-        return new JsonResponse(['message' => 'data berhasi di update'], 200);
     }
 }
