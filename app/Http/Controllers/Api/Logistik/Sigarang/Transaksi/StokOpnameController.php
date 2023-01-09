@@ -116,9 +116,9 @@ class StokOpnameController extends Controller
             $request->all()
         );
 
-        $recent->update([
-            'sisa_stok' => $request->jumlah
-        ]);
+        // $recent->update([
+        //     'sisa_stok' => $request->jumlah
+        // ]);
 
         if ($penyesuaian->wasRecentlyCreated) {
             return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
