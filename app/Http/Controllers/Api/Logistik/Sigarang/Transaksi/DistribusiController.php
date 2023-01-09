@@ -35,6 +35,12 @@ class DistribusiController extends Controller
             'id' => 'required',
             'no_distribusi' => 'required',
         ]);
+
+        $permintaanruangan = Permintaanruangan::find($request->id);
+        $temp = PenerimaanruanganController::telahDiDistribusikan($request, $permintaanruangan);
+        if ($temp['status'] !== 201) {
+            return new JsonResponse($temp, $temp['status']);
+        }
         try {
 
             DB::beginTransaction();

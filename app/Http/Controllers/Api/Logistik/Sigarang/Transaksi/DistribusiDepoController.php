@@ -104,8 +104,8 @@ class DistribusiDepoController extends Controller
                     $data->details()->update(['no_penerimaan' => $stok[$index]->no_penerimaan]);
 
                     $index = $index + 1;
-                    $loop = true;
                     $masuk = $sisa;
+                    $loop = true;
                 } else {
                     $sisa = $ada - $masuk;
 
