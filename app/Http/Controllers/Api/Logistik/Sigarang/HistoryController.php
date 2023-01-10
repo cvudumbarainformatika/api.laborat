@@ -28,48 +28,68 @@ class HistoryController extends Controller
         $permintaan = Permintaanruangan::query();
         $retur = Retur::query();
         $nama = request('nama');
+        // pemesanan
         if ($nama === 'Pemesanan') {
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
             $data = $pemesanan->filter(request(['q']))
                 ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            /*
+            * Penerimaan
+            */
         } else if ($nama === 'Penerimaan') {
 
             $data = $penerimaan->filter(request(['q']))
                 ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            /*
+            * transaksi gudang
+            */
         } else if ($nama === 'Gudang') {
 
             $data = $gudang->filter(request(['q']))
                 ->with('asal', 'tujuan', 'details.barangrs.barang108', 'details.satuan')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            // permintaan ruangan
         } else if ($nama === 'Permintaan Ruangan') {
 
             $data = $permintaan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            /*
+            * Distribusi depo
+            */
         } else if ($nama === 'Distribusi Depo') {
 
             $data = $distribusidepo->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'depo')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            /*
+            * pemakaian ruangan
+            */
         } else if ($nama === 'Pemakaian Ruangan') {
 
             $data = $pemakaianruangan->filter(request(['q']))
-                ->with('details.barangrs.barang108', 'details.satuan')
+                ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'ruang')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            /*
+            * penerimaan ruangan
+            */
         } else if ($nama === 'Penerimaan Ruangan') {
 
             $data = $penerimaanruangan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
                 ->latest('id')
                 ->paginate(request('per_page'));
+            /*
+            * retur
+            */
         } else if ($nama === 'Retur') {
 
             $data = $retur->filter(request(['q']))
