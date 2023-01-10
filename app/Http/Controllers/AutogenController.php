@@ -25,6 +25,7 @@ use App\Models\Sigarang\MinMaxDepo;
 use App\Models\Sigarang\MinMaxPengguna;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
@@ -572,9 +573,28 @@ class AutogenController extends Controller
         // $data = collect($mentah);
         // $data->groupBy('kode_gudang');
         // $data->all();
-        $mentah = MapingBarangDepo::with('barangrs.satuan', 'barangrs.barang108', 'gudang')->get();
-        $data = collect($mentah)->groupBy('kode_gudang');
-        return new JsonResponse($data);
+        // $mentah = MapingBarangDepo::with('barangrs.satuan', 'barangrs.barang108', 'gudang')->get();
+        // $data = collect($mentah)->groupBy('kode_gudang');
+        // return new JsonResponse($data);
+
+        // cari pengguna dan penanggung jawab ruangan
+        $pengguna = PenggunaRuang::with('ruang', 'pengguna', 'penanggungjawab')->get();
+        $temp = collect($pengguna);
+        $apem = $temp->map(function ($item, $key) {
+            if ($item->kode_penanggungjawab === null || $item->kode_penanggungjawab === '') {
+                $item->kode_penanggungjawab = $item->kode_pengguna;
+            }
+            return $item;
+        });
+
+        $apem->all();
+        $group = $apem->groupBy('kode_penanggungjawab');
+
+        $rawStok = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->where('kode_ruang', 'LIKE', 'R-' . '%')
+            ->get();
+        return new JsonResponse($rawStok);
     }
 
     public function wawanpost(Request $request)

@@ -263,12 +263,13 @@ class PenerimaanruanganController extends Controller
     }
     public function getItems()
     {
-        $kode = request('kode_pengguna');
+        // return new JsonResponse(['message' => 'tak balikno', request()->all()]);
         // $data = DetailsPenerimaanruangan::distinct()->get(['kode_rs']);
+        $kode = request('kode_pengguna');
         $data = DetailsPenerimaanruangan::selectRaw('kode_rs, sum(jumlah) as jml')
             ->whereHas('penerimaanruangan', function ($wew) use ($kode) {
                 $wew->where('kode_pengguna', '=', $kode)
-                    ->where('status', '=', 1);
+                    ->where('status', '=', 2);
             })->groupBy('kode_rs')->get();
         return new JsonResponse($data, 200);
     }

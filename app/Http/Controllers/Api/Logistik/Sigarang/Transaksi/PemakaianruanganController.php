@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\PenggunaRuang;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\DetailsPemakaianruangan;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +13,33 @@ use Illuminate\Support\Facades\DB;
 
 class PemakaianruanganController extends Controller
 {
-    //
+    //ambil data barang dan penanggungjawab ruangan
+    public function allData()
+    {
+        $pengguna = PenggunaRuang::with('ruang', 'pengguna', 'penanggungjawab')
+            ->get();
+        $temp = collect($pengguna);
+        $apem = $temp->map(function ($item, $key) {
+            if ($item->kode_penanggungjawab === null || $item->kode_penanggungjawab === '') {
+                $item->kode_penanggungjawab = $item->kode_pengguna;
+            }
+            return $item;
+        });
+
+        $apem->all();
+        $group = $apem->groupBy('kode_penanggungjawab');
+
+        $rawStok = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->where('kode_ruang', 'LIKE', 'R-' . '%')
+            ->get();
+
+        $data['penanggungjawab'] = $group;
+        $data['stok'] = $rawStok;
+
+        return new JsonResponse($data);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -27,10 +55,16 @@ class PemakaianruanganController extends Controller
                 $pakai->details()->updateOrCreate(
                     [
                         'id' => $key['id']
-                        // 'id' => $key->id
                     ],
                     $key
                 );
+                $recentStok = RecentStokUpdate::where('kode_ruang', $request->kode_ruang)
+                    ->where('kode_rs', $key['kode_rs'])
+                    ->first();
+                $sisa = $recentStok->sisa_stok - $key['jumlah'];
+                $recentStok->update([
+                    'sisa_stok' => $sisa
+                ]);
             }
         }
         if ($pakai->wasRecentlyCreated) {

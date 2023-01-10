@@ -9,6 +9,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'transaksi/pemakaianruangan'
 ], function () {
+    Route::get('/all-data', [PemakaianruanganController::class, 'allData']);
     Route::post('/store', [PemakaianruanganController::class, 'store']);
     Route::post('/rusak', [PemakaianruanganController::class, 'simpanRusak']);
 });
