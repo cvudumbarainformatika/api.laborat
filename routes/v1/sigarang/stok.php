@@ -14,5 +14,5 @@ Route::group([
     Route::post('/current-by-ruangan', [StockController::class, 'currentStokByRuangan']);
     Route::post('/current-by-permintaan', [StockController::class, 'currentStokByPermintaan']);
     Route::post('/current-by-barang', [StockController::class, 'currentStokByBarang']);
-    Route::post('/sum-current-by-ruangan', [StockController::class, 'stokByRuangan']);
+    Route::get('/get-current-by-ruangan', [StockController::class, 'stokByRuangan']);
 });
