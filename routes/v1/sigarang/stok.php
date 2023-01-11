@@ -8,6 +8,7 @@ Route::group([
     'prefix' => 'stok'
 ], function () {
     Route::get('/current-by-gudang', [StockController::class, 'currentStokByGudang']);
+    Route::get('/stok-sekarang', [StockController::class, 'stokSekarang']);
     Route::get('/all-current', [StockController::class, 'currentStok']);
     Route::get('/all-current-has-stok', [StockController::class, 'currentHasStok']);
     Route::get('/current-gudang', [StockController::class, 'currentStokGudang']);

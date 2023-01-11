@@ -26,6 +26,20 @@ class StockController extends Controller
         return new JsonResponse($data, 200);
     }
 
+    public function stokSekarang()
+    {
+        $perpage = request('per_page') ? request('per_page') : 10;
+        $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
+            ->paginate($perpage);
+        $col = collect($raw);
+        $meta = $col->except('data');
+        $meta->all();
+
+        $data = $col->only('data');
+        $data['meta'] = $meta;
+        return new JsonResponse($data);
+    }
+
     public function currentStok()
     {
         // $data = RecentStokUpdate::get();
