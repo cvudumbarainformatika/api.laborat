@@ -21,6 +21,10 @@ class PenggunaRuang extends Model
     {
         return $this->belongsTo(Pengguna::class, 'kode_penanggungjawab', 'kode');
     }
+    public function pj()
+    {
+        return $this->belongsTo(Pengguna::class, 'kode_penanggungjawab', 'kode');
+    }
 
     public function pengguna()
     {

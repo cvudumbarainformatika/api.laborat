@@ -16,6 +16,7 @@ class Pengguna extends Model
     {
         return $this->belongsTo(Pengguna::class, 'penanggungjawab', 'kode');
     }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {

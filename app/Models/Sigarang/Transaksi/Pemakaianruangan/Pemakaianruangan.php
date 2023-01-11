@@ -3,6 +3,7 @@
 namespace App\Models\Sigarang\Transaksi\Pemakaianruangan;
 
 use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\Ruang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,10 +29,23 @@ class Pemakaianruangan extends Model
     {
         return $this->belongsTo(Pengguna::class, 'kode_pengguna', 'kode');
     }
+
     public function ruang()
     {
         return $this->belongsTo(Ruang::class, 'kode_pengguna', 'kode');
     }
+
+    public function penggunaruang()
+    {
+        return $this->belongsTo(PenggunaRuang::class, 'kode_pengguna', 'kode_pengguna');
+    }
+
+    public function ruangpengguna()
+    {
+        return $this->belongsTo(PenggunaRuang::class, 'kode_pengguna', 'kode_ruang');
+    }
+
+
 
     public function scopeFilter($search, array $reqs)
     {

@@ -39,6 +39,20 @@ class StockController extends Controller
         return new JsonResponse($collection);
     }
 
+    //ambil stok tiap-tiap ruangan
+    public function stokRuangan()
+    {
+        $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->where('kode_ruang', 'LIKE', 'R-' . '%')
+            ->where('sisa_stok', '>', 0)
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->get();
+        $collection = collect($data)->unique('kode_rs');
+        $collection->values()->all();
+
+        // return new JsonResponse($data);
+        return new JsonResponse($collection);
+    }
     //ambil stok berdasarkan ruangan
     public function stokByRuangan()
     {
