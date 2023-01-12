@@ -578,23 +578,31 @@ class AutogenController extends Controller
         // return new JsonResponse($data);
 
         // cari pengguna dan penanggung jawab ruangan
-        $pengguna = PenggunaRuang::with('ruang', 'pengguna', 'penanggungjawab')->get();
-        $temp = collect($pengguna);
-        $apem = $temp->map(function ($item, $key) {
-            if ($item->kode_penanggungjawab === null || $item->kode_penanggungjawab === '') {
-                $item->kode_penanggungjawab = $item->kode_pengguna;
-            }
-            return $item;
-        });
+        // $pengguna = PenggunaRuang::with('ruang', 'pengguna', 'penanggungjawab')->get();
+        // $temp = collect($pengguna);
+        // $apem = $temp->map(function ($item, $key) {
+        //     if ($item->kode_penanggungjawab === null || $item->kode_penanggungjawab === '') {
+        //         $item->kode_penanggungjawab = $item->kode_pengguna;
+        //     }
+        //     return $item;
+        // });
 
-        $apem->all();
-        $group = $apem->groupBy('kode_penanggungjawab');
+        // $apem->all();
+        // $group = $apem->groupBy('kode_penanggungjawab');
 
-        $rawStok = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
-            ->groupBy('kode_rs', 'kode_ruang')
-            ->where('kode_ruang', 'LIKE', 'R-' . '%')
-            ->get();
-        return new JsonResponse($rawStok);
+        // $rawStok = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+        //     ->groupBy('kode_rs', 'kode_ruang')
+        //     ->where('kode_ruang', 'LIKE', 'R-' . '%')
+        //     ->get();
+        // return new JsonResponse($rawStok);
+
+        // cari ruangan yang punya stok
+
+        $raw = RecentStokUpdate::where('sisa_stok', '>', 0)
+            ->with('depo', 'ruang')->get();
+        $data = collect($raw)->unique('kode_ruang');
+        $data->all();
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
