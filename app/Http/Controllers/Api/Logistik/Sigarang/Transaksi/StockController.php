@@ -30,6 +30,7 @@ class StockController extends Controller
     {
         $perpage = request('per_page') ? request('per_page') : 10;
         $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
+            ->where('kode_ruang', '<>', 'Gd-02010100')
             ->filter(request(['q']))
             ->paginate($perpage);
         $col = collect($raw);
@@ -58,6 +59,7 @@ class StockController extends Controller
     public function ruangHasStok()
     {
         $raw = RecentStokUpdate::where('sisa_stok', '>', 0)
+            ->where('kode_ruang', '<>', 'Gd-02010100')
             ->with('depo', 'ruang')->get();
         $data = collect($raw)->unique('kode_ruang');
         $data->all();
