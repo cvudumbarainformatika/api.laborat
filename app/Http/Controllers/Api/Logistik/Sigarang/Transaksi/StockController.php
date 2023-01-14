@@ -30,6 +30,8 @@ class StockController extends Controller
     {
         $perpage = request('per_page') ? request('per_page') : 10;
         $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
+            ->where('kode_ruang', '<>', 'Gd-02010100')
+            ->filter(request(['q']))
             ->paginate($perpage);
         $col = collect($raw);
         $meta = $col->except('data');
@@ -53,6 +55,32 @@ class StockController extends Controller
         return new JsonResponse($collection);
     }
 
+    // ruang yang punya stok
+    public function ruangHasStok()
+    {
+        $raw = RecentStokUpdate::where('sisa_stok', '>', 0)
+            ->where('kode_ruang', '<>', 'Gd-02010100')
+            ->with('depo', 'ruang')->get();
+        $data = collect($raw)->unique('kode_ruang');
+        $data->all();
+        return new JsonResponse($data);
+    }
+    // get data by depo
+    public function getDataStokByDepo()
+    {
+
+        $raw = RecentStokUpdate::where('kode_ruang', '=', request('search'))
+            ->filter(request(['q']))
+            ->with('ruang', 'barang.barang108', 'depo')
+            ->paginate(request('per_page'));
+        $col = collect($raw);
+        $meta = $col->except('data');
+        $meta->all();
+
+        $data = $col->only('data');
+        $data['meta'] = $meta;
+        return new JsonResponse($data);
+    }
     public function currentHasStok()
     {
         // $data = RecentStokUpdate::get();

@@ -11,6 +11,8 @@ Route::group([
     Route::get('/stok-sekarang', [StockController::class, 'stokSekarang']);
     Route::get('/all-current', [StockController::class, 'currentStok']);
     Route::get('/all-current-has-stok', [StockController::class, 'currentHasStok']);
+    Route::get('/ruang-has-stok', [StockController::class, 'ruangHasStok']);
+    Route::get('/stok-by-ruang', [StockController::class, 'getDataStokByDepo']);
     Route::get('/current-gudang', [StockController::class, 'currentStokGudang']);
     Route::get('/current-non-ruangan', [StockController::class, 'stokNonRuangan']);
     Route::get('/current-ruangan', [StockController::class, 'stokRuangan']);
