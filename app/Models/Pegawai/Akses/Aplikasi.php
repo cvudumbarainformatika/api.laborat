@@ -13,7 +13,7 @@ class Aplikasi extends Model
 
     public function menus()
     {
-        $this->hasMany(Menu::class);
+        return $this->hasMany(Menu::class);
     }
     public function access()
     {

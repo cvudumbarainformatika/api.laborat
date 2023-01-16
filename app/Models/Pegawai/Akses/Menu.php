@@ -13,11 +13,11 @@ class Menu extends Model
 
     public function aplikasi()
     {
-        $this->belongsTo(Aplikasi::class);
+        return $this->belongsTo(Aplikasi::class);
     }
 
     public function submenus()
     {
-        $this->hasMany(Submenu::class);
+        return $this->hasMany(Submenu::class);
     }
 }

@@ -19,5 +19,8 @@ Route::prefix('v1')->group(function () {
 Route::prefix('v2')->group(function () {
     RouteHelper::includeRouteFiles(__DIR__ . '/v2');
 });
+Route::prefix('login')->group(function () {
+    RouteHelper::includeRouteFiles(__DIR__ . '/login');
+});
 
 Route::post('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);

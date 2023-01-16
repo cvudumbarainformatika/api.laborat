@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
+use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Kategory;
 use App\Models\Pegawai\Libur;
@@ -35,6 +36,7 @@ use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
+use App\Models\Pegawai\Akses\User as Akses;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -598,10 +600,60 @@ class AutogenController extends Controller
 
         // cari ruangan yang punya stok
 
-        $raw = RecentStokUpdate::where('sisa_stok', '>', 0)
-            ->with('depo', 'ruang')->get();
-        $data = collect($raw)->unique('kode_ruang');
-        $data->all();
+        // $raw = RecentStokUpdate::where('sisa_stok', '>', 0)
+        //     ->with('depo', 'ruang')->get();
+        // $data = collect($raw)->unique('kode_ruang');
+        // $data->all();
+        // return new JsonResponse($data);
+
+
+        $akses = Akses::with('role')->find(1);
+        $submenu = Access::where('role_id', $akses->role_id)->with('aplikasi', 'submenu.menu')->get();
+        $col = collect($submenu);
+        $apli = $col->map(function ($item, $key) {
+            if ($item->aplikasi !== null) {
+                return $item->aplikasi;
+            }
+        })->unique('id');
+        $subm = $col->map(function ($item, $key) {
+
+            return $item->submenu;
+        });
+
+        $menu = $col->map(function ($item, $key) {
+            return $item->submenu->menu;
+        })->unique('id');
+        $into = $menu->map(function ($item, $key) use ($subm) {
+            // $mbuh=[];
+            $temp = $subm->where('menu_id', $item->id);
+            $map = $temp->map(function ($ki, $ke) {
+                return
+                    [
+                        'nama' => $ki->nama,
+                        'name' => $ki->name,
+                        'icon' => $ki->icon,
+                        'link' => $ki->link,
+
+                    ];
+            });
+            // $item->submenus = $temp;
+            $apem = [
+                'aplikasi_id' => $item->aplikasi_id,
+                'nama' => $item->nama,
+                'name' => $item->name,
+                'icon' => $item->icon,
+                'link' => $item->link,
+                'submenus' => $map,
+            ];
+            return $apem;
+        });
+        $data['aplikasi'] = $apli;
+        $data['into'] = $into;
+        $data['menu'] = $menu;
+        $data['sub'] = $subm;
+        $data['user'] = $akses;
+        $data['sumbenu'] = $submenu;
+
         return new JsonResponse($data);
     }
 

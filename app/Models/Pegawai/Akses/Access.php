@@ -13,16 +13,16 @@ class Access extends Model
 
     public function role()
     {
-        $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class);
     }
 
     public function aplikasi()
     {
-        $this->belongsTo(Aplikasi::class);
+        return $this->belongsTo(Aplikasi::class);
     }
 
     public function submenu()
     {
-        $this->belongsTo(Submenu::class);
+        return $this->belongsTo(Submenu::class);
     }
 }

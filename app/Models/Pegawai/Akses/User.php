@@ -2,15 +2,16 @@
 
 namespace App\Models\Pegawai\Akses;
 
+// use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
     protected $connection = 'kepex';
     protected $guarded = ['id'];
 
@@ -21,7 +22,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $hidden = [
         'password',
-        'remember_token',
+        // 'remember_token',
     ];
 
     /**
@@ -45,9 +46,10 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //  relationship
+
     public function role()
     {
-        $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class);
     }
 
     // scope filter for Search

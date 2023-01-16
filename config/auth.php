@@ -66,9 +66,16 @@ return [
     */
 
     'providers' => [
+        // 'users' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\User::class,
+        // ],
+
+        // users dengan akses
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            // 'driver' => 'database',
+            'model' => App\Models\Pegawai\Akses\User::class,
         ],
 
         // 'users' => [
