@@ -30,7 +30,6 @@ class AccessLoginController extends Controller
             return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
         }
         if ($temp) {
-
             $pass = Hash::check($request->password, $temp->password);
             if (!$pass) {
                 return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
