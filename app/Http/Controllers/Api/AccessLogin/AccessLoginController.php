@@ -36,10 +36,11 @@ class AccessLoginController extends Controller
             }
         }
 
-        $token = auth()->attempt($validator->validated());
+        // $token = auth()->attempt($validator->validated());
+        // $token = auth()->login($validator->validated());
         // $token = auth()->attempt($request->only('email', 'password'));
         // $token = $validator->validated();
-        // $token = JWTAuth::attempt($validator->validated());
+        $token = JWTAuth::attempt($validator->validated());
 
         // $data = $request->only('email', 'password');
         // $token = JWTAuth::attempt($data);

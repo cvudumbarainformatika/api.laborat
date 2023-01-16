@@ -45,7 +45,7 @@ class RouteServiceProvider extends ServiceProvider
 
             // gawe dewe
             Route::prefix('geni')
-                ->middleware('api')
+                ->middleware('geni')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/geni.php'));
 

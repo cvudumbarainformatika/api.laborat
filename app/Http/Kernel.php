@@ -46,7 +46,7 @@ class Kernel extends HttpKernel
         ],
         'geni' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
+            'throttle:geni',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
