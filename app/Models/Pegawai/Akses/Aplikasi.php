@@ -15,4 +15,8 @@ class Aplikasi extends Model
     {
         $this->hasMany(Menu::class);
     }
+    public function access()
+    {
+        return $this->hasMany(Access::class);
+    }
 }

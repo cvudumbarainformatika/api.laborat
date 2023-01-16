@@ -15,4 +15,9 @@ class Submenu extends Model
     {
         $this->belongsTo(Menu::class);
     }
+
+    public function access()
+    {
+        return $this->hasMany(Access::class);
+    }
 }

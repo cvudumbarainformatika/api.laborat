@@ -11,4 +11,8 @@ class Role extends Model
     protected $connection = 'kepex';
     protected $guarded = ['id'];
 
+    public function access()
+    {
+        return $this->hasMany(Access::class);
+    }
 }
