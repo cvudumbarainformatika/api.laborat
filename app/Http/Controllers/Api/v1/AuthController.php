@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Akses\Access;
+use App\Models\Pegawai\Akses\Menu;
+use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,8 +50,58 @@ class AuthController extends Controller
     public function me()
     {
         $me = auth()->user();
+        $akses = User::find(auth()->user()->id);
+        $pegawai = Pegawai::find($akses->pegawai_id);
+        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
-        return new JsonResponse(['result' => $me]);
+        $col = collect($submenu);
+        $role = $col->map(function ($item, $key) {
+            return $item->role;
+        })->unique();
+        $apli = $col->map(function ($item, $key) {
+            if ($item->aplikasi !== null) {
+                return $item->aplikasi;
+            }
+        })->unique('id');
+        $subm = $col->map(function ($item, $key) {
+
+            return $item->submenu;
+        });
+
+        $menu = $col->map(function ($item, $key) {
+            return $item->submenu->menu;
+        })->unique('id');
+
+        $into = $menu->map(function ($item, $key) use ($subm) {
+            // $mbuh=[];
+            $temp = $subm->where('menu_id', $item->id);
+            $map = $temp->map(function ($ki, $ke) {
+                return
+                    [
+                        'nama' => $ki->nama,
+                        'name' => $ki->name,
+                        'icon' => $ki->icon,
+                        'link' => $ki->link,
+
+                    ];
+            });
+            $apem = [
+                'aplikasi_id' => $item->aplikasi_id,
+                'nama' => $item->nama,
+                'name' => $item->name,
+                'icon' => $item->icon,
+                'link' => $item->link,
+                'submenus' => $map,
+            ];
+            return $apem;
+        });
+
+        return new JsonResponse([
+            'result' => $me,
+            'aplikasi' => $apli,
+            'menus' => $into,
+            'role' => $role,
+        ]);
     }
 
     public function user()
@@ -70,9 +123,59 @@ class AuthController extends Controller
 
     protected function createNewToken($token)
     {
+
+        $akses = User::find(auth()->user()->id);
+        $pegawai = Pegawai::find($akses->pegawai_id);
+        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
+
+        $col = collect($submenu);
+        $role = $col->map(function ($item, $key) {
+            return $item->role;
+        })->unique();
+        $apli = $col->map(function ($item, $key) {
+            if ($item->aplikasi !== null) {
+                return $item->aplikasi;
+            }
+        })->unique('id');
+        $subm = $col->map(function ($item, $key) {
+
+            return $item->submenu;
+        });
+
+        $menu = $col->map(function ($item, $key) {
+            return $item->submenu->menu;
+        })->unique('id');
+
+        $into = $menu->map(function ($item, $key) use ($subm) {
+            // $mbuh=[];
+            $temp = $subm->where('menu_id', $item->id);
+            $map = $temp->map(function ($ki, $ke) {
+                return
+                    [
+                        'nama' => $ki->nama,
+                        'name' => $ki->name,
+                        'icon' => $ki->icon,
+                        'link' => $ki->link,
+
+                    ];
+            });
+            $apem = [
+                'aplikasi_id' => $item->aplikasi_id,
+                'nama' => $item->nama,
+                'name' => $item->name,
+                'icon' => $item->icon,
+                'link' => $item->link,
+                'submenus' => $map,
+            ];
+            return $apem;
+        });
+
         return response()->json([
             'token' => $token,
-            'user' => auth()->user()
+            'user' => auth()->user(),
+            'aplikasi' => $apli,
+            'menus' => $into,
+            'role' => $role,
         ]);
     }
 

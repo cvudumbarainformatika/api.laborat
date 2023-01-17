@@ -11,6 +11,7 @@ use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
 use App\Models\Pegawai\Akses\Access;
+use App\Models\Pegawai\Akses\Menu;
 use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\Kategory;
 use App\Models\Pegawai\Libur;
@@ -607,22 +608,27 @@ class AutogenController extends Controller
         // return new JsonResponse($data);
 
 
-        $akses = Akses::with('role')->find(1);
-        $submenu = Access::where('role_id', $akses->role_id)->with('aplikasi', 'submenu.menu')->get();
+        $akses = User::find(12);
+        $pegawai = Pegawai::find($akses->pegawai_id);
+        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
+        $menu = Menu::get();
+
         $col = collect($submenu);
+        $role = $col->map(function ($item, $key) {
+            return $item->role;
+        })->unique();
         $apli = $col->map(function ($item, $key) {
             if ($item->aplikasi !== null) {
                 return $item->aplikasi;
             }
         })->unique('id');
         $subm = $col->map(function ($item, $key) {
-
             return $item->submenu;
         });
 
-        $menu = $col->map(function ($item, $key) {
-            return $item->submenu->menu;
-        })->unique('id');
+        // $menu = $col->map(function ($item, $key) {
+        //     return $item->submenu->menu;
+        // })->unique('id');
         $into = $menu->map(function ($item, $key) use ($subm) {
             // $mbuh=[];
             $temp = $subm->where('menu_id', $item->id);
@@ -647,11 +653,35 @@ class AutogenController extends Controller
             ];
             return $apem;
         });
-        $data['aplikasi'] = $apli;
+
+        $aplikasi = $apli->map(function ($item, $key) use ($into) {
+            $mo = $into->where('aplikasi_id', $item->id);
+            $map = $mo->map(function ($mbuh, $ke) {
+                // return $mbuh;
+                return [
+                    'nama' => $mbuh['nama'],
+                    'name' => $mbuh['name'],
+                    'icon' => $mbuh['icon'],
+                    'link' => $mbuh['link'],
+                    'submenus' => $mbuh['submenus'],
+
+                ];
+            });
+            $kucur = [
+                'aplikasi' => $item->aplikasi,
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'menus' => $map,
+            ];
+            return $kucur;
+        });
+        $data['user'] = $akses;
+        // $data['pegawai'] = $pegawai;
+        $data['role'] = $role;
+        $data['aplikasi'] = $aplikasi;
         $data['into'] = $into;
         $data['menu'] = $menu;
         $data['sub'] = $subm;
-        $data['user'] = $akses;
         $data['sumbenu'] = $submenu;
 
         return new JsonResponse($data);
