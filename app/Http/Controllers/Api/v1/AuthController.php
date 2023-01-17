@@ -73,17 +73,17 @@ class AuthController extends Controller
         })->unique('id');
 
         $into = $menu->map(function ($item, $key) use ($subm) {
-            // $mbuh=[];
+            // $mbuh = [];
             $temp = $subm->where('menu_id', $item->id);
             $map = $temp->map(function ($ki, $ke) {
-                return
-                    [
-                        'nama' => $ki->nama,
-                        'name' => $ki->name,
-                        'icon' => $ki->icon,
-                        'link' => $ki->link,
+                // $map = $temp->each(function ($ki, $ke) {
+                return [
+                    'nama' => $ki->nama,
+                    'name' => $ki->name,
+                    'icon' => $ki->icon,
+                    'link' => $ki->link,
 
-                    ];
+                ];
             });
             $apem = [
                 'aplikasi_id' => $item->aplikasi_id,
@@ -150,14 +150,13 @@ class AuthController extends Controller
             // $mbuh=[];
             $temp = $subm->where('menu_id', $item->id);
             $map = $temp->map(function ($ki, $ke) {
-                return
-                    [
-                        'nama' => $ki->nama,
-                        'name' => $ki->name,
-                        'icon' => $ki->icon,
-                        'link' => $ki->link,
+                return [
+                    'nama' => $ki->nama,
+                    'name' => $ki->name,
+                    'icon' => $ki->icon,
+                    'link' => $ki->link,
 
-                    ];
+                ];
             });
             $apem = [
                 'aplikasi_id' => $item->aplikasi_id,
