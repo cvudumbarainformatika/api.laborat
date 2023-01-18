@@ -30,8 +30,7 @@ class VerifPermintaanruanganController extends Controller
         ]);
         $details = $request->details;
         $permintaan = Permintaanruangan::updateOrCreate(['id' => $request->id], $request->only('status', 'tanggal_verif'));
-        // dibawah ini bermasalah
-        // seharusnya update aja yang jumlah disetujui
+
         foreach ($details as $value) {
             $id = $value['id'];
             $permintaan->details()->updateOrCreate(['id' => $id], $value);
