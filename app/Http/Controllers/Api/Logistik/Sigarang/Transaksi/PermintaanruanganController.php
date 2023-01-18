@@ -15,7 +15,7 @@ class PermintaanruanganController extends Controller
     public function draft()
     {
         $complete = Permintaanruangan::where('reff', '=', request()->reff)
-            ->where('status', '=', 2)->get();
+            ->where('status', '>=', 5)->get();
         $draft = Permintaanruangan::where('reff', '=', request()->reff)
             ->where('status', '=', 1)
             ->latest('id')->with([
@@ -85,5 +85,10 @@ class PermintaanruanganController extends Controller
             }
         }
         return new JsonResponse(['message' => 'Input telah dinyatakan Selesai', $data]);
+    }
+    public function getAlokasiPermintaan()
+    {
+        $data = Permintaanruangan::where('status', '>=', 5)
+            ->where('status', '<', 8)->get();
     }
 }

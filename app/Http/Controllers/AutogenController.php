@@ -38,6 +38,7 @@ use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\TransaksiLaborat;
 use App\Models\User;
 use App\Models\Pegawai\Akses\User as Akses;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -608,81 +609,92 @@ class AutogenController extends Controller
         // return new JsonResponse($data);
 
 
-        $akses = User::find(12);
-        $pegawai = Pegawai::find($akses->pegawai_id);
-        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
-        $menu = Menu::get();
+        // $akses = User::find(12);
+        // $pegawai = Pegawai::find($akses->pegawai_id);
+        // $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
+        // $menu = Menu::get();
 
-        $col = collect($submenu);
-        $role = $col->map(function ($item, $key) {
-            return $item->role;
-        })->unique();
-        $apli = $col->map(function ($item, $key) {
-            if ($item->aplikasi !== null) {
-                return $item->aplikasi;
-            }
-        })->unique('id');
-        $subm = $col->map(function ($item, $key) {
-            return $item->submenu;
-        });
-
-        // $menu = $col->map(function ($item, $key) {
-        //     return $item->submenu->menu;
+        // $col = collect($submenu);
+        // $role = $col->map(function ($item, $key) {
+        //     return $item->role;
+        // })->unique();
+        // $apli = $col->map(function ($item, $key) {
+        //     if ($item->aplikasi !== null) {
+        //         return $item->aplikasi;
+        //     }
         // })->unique('id');
-        $into = $menu->map(function ($item, $key) use ($subm) {
-            // $mbuh=[];
-            $temp = $subm->where('menu_id', $item->id);
-            $map = $temp->map(function ($ki, $ke) {
-                return
-                    [
-                        'nama' => $ki->nama,
-                        'name' => $ki->name,
-                        'icon' => $ki->icon,
-                        'link' => $ki->link,
+        // $subm = $col->map(function ($item, $key) {
+        //     return $item->submenu;
+        // });
 
-                    ];
-            });
-            // $item->submenus = $temp;
-            $apem = [
-                'aplikasi_id' => $item->aplikasi_id,
-                'nama' => $item->nama,
-                'name' => $item->name,
-                'icon' => $item->icon,
-                'link' => $item->link,
-                'submenus' => $map,
-            ];
-            return $apem;
-        });
+        // // $menu = $col->map(function ($item, $key) {
+        // //     return $item->submenu->menu;
+        // // })->unique('id');
+        // $into = $menu->map(function ($item, $key) use ($subm) {
+        //     // $mbuh=[];
+        //     $temp = $subm->where('menu_id', $item->id);
+        //     $map = $temp->map(function ($ki, $ke) {
+        //         return
+        //             [
+        //                 'nama' => $ki->nama,
+        //                 'name' => $ki->name,
+        //                 'icon' => $ki->icon,
+        //                 'link' => $ki->link,
 
-        $aplikasi = $apli->map(function ($item, $key) use ($into) {
-            $mo = $into->where('aplikasi_id', $item->id);
-            $map = $mo->map(function ($mbuh, $ke) {
-                // return $mbuh;
-                return [
-                    'nama' => $mbuh['nama'],
-                    'name' => $mbuh['name'],
-                    'icon' => $mbuh['icon'],
-                    'link' => $mbuh['link'],
-                    'submenus' => $mbuh['submenus'],
+        //             ];
+        //     });
+        //     // $item->submenus = $temp;
+        //     $apem = [
+        //         'aplikasi_id' => $item->aplikasi_id,
+        //         'nama' => $item->nama,
+        //         'name' => $item->name,
+        //         'icon' => $item->icon,
+        //         'link' => $item->link,
+        //         'submenus' => $map,
+        //     ];
+        //     return $apem;
+        // });
 
-                ];
-            });
-            $kucur = [
-                'aplikasi' => $item->aplikasi,
-                'id' => $item->id,
-                'nama' => $item->nama,
-                'menus' => $map,
-            ];
-            return $kucur;
-        });
-        $data['user'] = $akses;
-        // $data['pegawai'] = $pegawai;
-        $data['role'] = $role;
-        $data['aplikasi'] = $aplikasi;
-        $data['into'] = $into;
-        $data['menu'] = $menu;
-        $data['sub'] = $subm;
-        $data['sumbenu'] = $submenu;
+        // $aplikasi = $apli->map(function ($item, $key) use ($into) {
+        //     $mo = $into->where('aplikasi_id', $item->id);
+        //     $map = $mo->map(function ($mbuh, $ke) {
+        //         // return $mbuh;
+        //         return [
+        //             'nama' => $mbuh['nama'],
+        //             'name' => $mbuh['name'],
+        //             'icon' => $mbuh['icon'],
+        //             'link' => $mbuh['link'],
+        //             'submenus' => $mbuh['submenus'],
+
+        //         ];
+        //     });
+        //     $kucur = [
+        //         'aplikasi' => $item->aplikasi,
+        //         'id' => $item->id,
+        //         'nama' => $item->nama,
+        //         'menus' => $map,
+        //     ];
+        //     return $kucur;
+        // });
+        // $data['user'] = $akses;
+        // // $data['pegawai'] = $pegawai;
+        // $data['role'] = $role;
+        // $data['aplikasi'] = $aplikasi;
+        // $data['into'] = $into;
+        // $data['menu'] = $menu;
+        // $data['sub'] = $subm;
+        // $data['sumbenu'] = $submenu;
+
+        // return new JsonResponse($data);
+        // ambil berdasarkna kode rs
+        // $kode_rs = 'RS-0974';
+        // $kode_rs = 'RS-0982';
+        $kode_rs = 'RS-2242';
+        // $data = DetailPermintaanruangan::SelectRaw('*, sum(jumlah) as jml, sum(jumlah_disetujui) as disetujui')
+        $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
+            $q->where('status', '>=', 5)
+                ->where('status', '<', 8);
+        })->where('kode_rs', $kode_rs)->get();
 
         return new JsonResponse($data);
     }
