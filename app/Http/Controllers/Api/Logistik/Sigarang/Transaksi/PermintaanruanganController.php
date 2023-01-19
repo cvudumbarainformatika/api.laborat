@@ -83,8 +83,9 @@ class PermintaanruanganController extends Controller
                 //     return new JsonResponse(['message' => 'Gagal Update Status']);
                 // }
             }
+            return new JsonResponse(['message' => 'Input telah dinyatakan Selesai', $data]);
         }
-        return new JsonResponse(['message' => 'Input telah dinyatakan Selesai', $data]);
+        return new JsonResponse(['message' => 'Tidak input', $data], 410);
     }
     public function getAlokasiPermintaan()
     {

@@ -689,14 +689,62 @@ class AutogenController extends Controller
         // ambil berdasarkna kode rs
         // $kode_rs = 'RS-0974';
         // $kode_rs = 'RS-0982';
-        $kode_rs = 'RS-2242';
         // $data = DetailPermintaanruangan::SelectRaw('*, sum(jumlah) as jml, sum(jumlah_disetujui) as disetujui')
+        // })->where('kode_rs', $kode_rs)->groupBy('kode_rs')->get();
+
+        $kode_rs = '';
+        $kode_ruangan = '';
+        $permintaan = Permintaanruangan::where('status', '=', 5)
+            ->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->get();
+
+
+        // ambil data barang
+        $barang = BarangRS::where('kode', $kode_rs)->first();
+
+        // cari barang ini masuk depo mana
+        $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
+
+        // ambil stok ruangan
+        $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)->get();
+        $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+        // cari stok di depo
+        $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $depo->kode_gudang)->get();
+        $totalStok = collect($stok)->sum('sisa_stok');
+
+        // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
             $q->where('status', '>=', 5)
-                ->where('status', '<', 8);
+                ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->get();
+        $col = collect($data);
+        $gr = $col->map(function ($item) {
+            $jumsem = $item->jumlah_disetujui ? $item->jumlah_disetujui : $item->jumlah;
+            $item->alokasi = $jumsem;
+            return $item;
+        });
+        $sum = $gr->sum('alokasi');
+        $alokasi = 0;
+        // hitung alokasi
+        if ($totalStok >= $sum) {
+            $alokasi =  $totalStok - $sum;
+        } else {
+            $alokasi = 0;
+        }
 
-        return new JsonResponse($data);
+        $barang->alokasi = $alokasi;
+        $barang->stok = $totalStok;
+        $barang->stokRuangan = $totalStokRuangan;
+        $balik['barang'] = $barang;
+        $balik['permintaan'] = $permintaan;
+        $balik['totalStok'] = $totalStok;
+        $balik['stok'] = $stok;
+        $balik['depo'] = $depo;
+        $balik['sum'] = $sum;
+        $balik['gr'] = $gr;
+        $balik['data'] = $data;
+        return new JsonResponse($balik);
     }
 
     public function wawanpost(Request $request)
