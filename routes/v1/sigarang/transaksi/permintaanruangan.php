@@ -17,6 +17,7 @@ Route::group([
     // verif permintaan
     Route::get('/get-permintaan', [VerifPermintaanruanganController::class, 'getPermintaan']);
     Route::post('/update-permintaan', [VerifPermintaanruanganController::class, 'updatePermintaan']);
+    Route::post('/tolak-permintaan', [VerifPermintaanruanganController::class, 'tolakPermintaan']);
     // distribusi
     Route::get('/get-permintaan-verified', [DistribusiController::class, 'getPermintaanVerified']);
     Route::post('/update-distribusi', [DistribusiController::class, 'updateDistribusi']);

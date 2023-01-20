@@ -117,4 +117,22 @@ class VerifPermintaanruanganController extends Controller
         }
         return new JsonResponse(['data' => $permintaan, 'message' => 'data berhasil di simpan'], 200);
     }
+
+    public function tolakPermintaan(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+        ]);
+        // $details = $request->details;
+        $permintaan = Permintaanruangan::updateOrCreate(['id' => $request->id], $request->only('status'));
+
+        // foreach ($details as $value) {
+        //     $id = $value['id'];
+        //     $permintaan->details()->updateOrCreate(['id' => $id], $value);
+        // }
+        if (!$permintaan->wasChanged()) {
+            return new JsonResponse(['message' => 'data gagal di update'], 501);
+        }
+        return new JsonResponse(['data' => $permintaan, 'message' => 'Permintaan sudah ditolak'], 200);
+    }
 }
