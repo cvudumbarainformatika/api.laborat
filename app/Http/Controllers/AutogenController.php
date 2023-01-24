@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
+use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
@@ -692,59 +693,103 @@ class AutogenController extends Controller
         // $data = DetailPermintaanruangan::SelectRaw('*, sum(jumlah) as jml, sum(jumlah_disetujui) as disetujui')
         // })->where('kode_rs', $kode_rs)->groupBy('kode_rs')->get();
 
-        $kode_rs = '';
-        $kode_ruangan = '';
-        $permintaan = Permintaanruangan::where('status', '=', 5)
-            ->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->get();
+        /*
+        * hitung alokasi
+        */
+        // $kode_rs = '';
+        // $kode_ruangan = '';
+        // $permintaan = Permintaanruangan::where('status', '=', 5)
+        //     ->with('details.barangrs', 'details.satuan', 'pj', 'pengguna')->get();
 
 
-        // ambil data barang
-        $barang = BarangRS::where('kode', $kode_rs)->first();
+        // // ambil data barang
+        // $barang = BarangRS::where('kode', $kode_rs)->first();
 
-        // cari barang ini masuk depo mana
-        $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
+        // // cari barang ini masuk depo mana
+        // $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
 
-        // ambil stok ruangan
-        $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $kode_ruangan)->get();
-        $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
-        // cari stok di depo
-        $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $depo->kode_gudang)->get();
-        $totalStok = collect($stok)->sum('sisa_stok');
+        // // ambil stok ruangan
+        // $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+        //     ->where('kode_ruang', $kode_ruangan)->get();
+        // $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+        // // cari stok di depo
+        // $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
+        //     ->where('kode_ruang', $depo->kode_gudang)->get();
+        // $totalStok = collect($stok)->sum('sisa_stok');
 
-        // ambil alokasi barang
-        $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 5)
-                ->where('status', '<', 7);
-        })->where('kode_rs', $kode_rs)->get();
-        $col = collect($data);
-        $gr = $col->map(function ($item) {
-            $jumsem = $item->jumlah_disetujui ? $item->jumlah_disetujui : $item->jumlah;
-            $item->alokasi = $jumsem;
-            return $item;
-        });
-        $sum = $gr->sum('alokasi');
-        $alokasi = 0;
-        // hitung alokasi
-        if ($totalStok >= $sum) {
-            $alokasi =  $totalStok - $sum;
-        } else {
-            $alokasi = 0;
+        // // ambil alokasi barang
+        // $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
+        //     $q->where('status', '>=', 5)
+        //         ->where('status', '<', 7);
+        // })->where('kode_rs', $kode_rs)->get();
+        // $col = collect($data);
+        // $gr = $col->map(function ($item) {
+        //     $jumsem = $item->jumlah_disetujui ? $item->jumlah_disetujui : $item->jumlah;
+        //     $item->alokasi = $jumsem;
+        //     return $item;
+        // });
+        // $sum = $gr->sum('alokasi');
+        // $alokasi = 0;
+        // // hitung alokasi
+        // if ($totalStok >= $sum) {
+        //     $alokasi =  $totalStok - $sum;
+        // } else {
+        //     $alokasi = 0;
+        // }
+
+        // $barang->alokasi = $alokasi;
+        // $barang->stok = $totalStok;
+        // $barang->stokRuangan = $totalStokRuangan;
+        // $balik['barang'] = $barang;
+        // $balik['permintaan'] = $permintaan;
+        // $balik['totalStok'] = $totalStok;
+        // $balik['stok'] = $stok;
+        // $balik['depo'] = $depo;
+        // $balik['sum'] = $sum;
+        // $balik['gr'] = $gr;
+        // $balik['data'] = $data;
+        // return new JsonResponse($balik);
+
+        /*
+        * hitung mundur jam
+        */
+
+        // $now = date('d-m-Y H:i:s');
+        // $str = strtotime($now);
+        // $yst = date('d-m-Y H:i:s', $str);
+        // $tgl = strtotime('23-01-2023 07:56:23');
+        // $diff = round(($str - $tgl) / 3600, 1);
+        // return new JsonResponse([
+        //     $now,
+        //     $str,
+        //     $yst,
+        //     $tgl,
+        //     $diff
+        // ]);
+
+        /** cari permintaan ruangan */
+
+        // $permintaanRuangan = Permintaanruangan::with('details')->find(9);
+        // return new JsonResponse($permintaanRuangan);
+
+
+        /** cari alokasi penerimaan ruangn */
+
+        $data = Permintaanruangan::where('status', '=', 7)
+            ->with('details.barangrs.barang108', 'details.barangrs.satuan', 'pj', 'pengguna')->get();
+        // $col = collect($data);
+
+        foreach ($data as $key) {
+            foreach ($key->details as $detail) {
+                $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
+                $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
+                $detail['barangrs']->maxStok = $max->max_stok;
+                $detail['barangrs']->alokasi = $temp->alokasi;
+                $detail['barangrs']->stokDepo = $temp->stok;
+                $detail['barangrs']->stokRuangan = $temp->stokRuangan;
+            }
         }
-
-        $barang->alokasi = $alokasi;
-        $barang->stok = $totalStok;
-        $barang->stokRuangan = $totalStokRuangan;
-        $balik['barang'] = $barang;
-        $balik['permintaan'] = $permintaan;
-        $balik['totalStok'] = $totalStok;
-        $balik['stok'] = $stok;
-        $balik['depo'] = $depo;
-        $balik['sum'] = $sum;
-        $balik['gr'] = $gr;
-        $balik['data'] = $data;
-        return new JsonResponse($balik);
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)

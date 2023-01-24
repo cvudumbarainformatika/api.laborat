@@ -68,7 +68,7 @@ class StockController extends Controller
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
             $q->where('status', '>=', 5)
-                ->where('status', '<', 7);
+                ->where('status', '<', 8);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
         $gr = $col->map(function ($item) {
@@ -89,6 +89,57 @@ class StockController extends Controller
         $barang->stok = $totalStok;
         $barang->stokRuangan = $totalStokRuangan;
         return new JsonResponse($barang);
+    }
+    public static function getDetailsStok($kode_rs, $kode_ruangan)
+    {
+        // $kode_rs = request('kode_rs');
+        // $kode_ruangan = request('kode_ruangan');
+
+        // ambil data barang
+        $barang = BarangRS::where('kode', $kode_rs)->first();
+
+        // cari barang ini masuk depo mana
+        $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
+
+        // ambil stok ruangan
+        $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)->get();
+        $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+
+        // cari stok di depo
+        $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $depo->kode_gudang)->get();
+        $totalStok = collect($stok)->sum('sisa_stok');
+
+        // ambil alokasi barang
+        $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
+            $q->where('status', '>=', 5)
+                ->where('status', '<', 8);
+        })->where('kode_rs', $kode_rs)->get();
+        $col = collect($data);
+        $gr = $col->map(function ($item) {
+            $jumsem = $item->jumlah_disetujui ? $item->jumlah_disetujui : $item->jumlah;
+            $item->alokasi = $jumsem;
+            return $item;
+        });
+        $sum = $gr->sum('alokasi');
+        $alokasi = 0;
+        // hitung alokasi
+        if ($totalStok >= $sum) {
+            $alokasi =  $totalStok - $sum;
+        } else {
+            $alokasi = 0;
+        }
+
+        // $barang->depo = $depo;
+        // $barang->sum = $sum;
+        // $barang->stok = $stok;
+        // $barang->stokRuangan = $stokRuangan;
+        $barang->alokasi = $alokasi;
+        $barang->stok = $totalStok;
+        $barang->stokRuangan = $totalStokRuangan;
+        return $barang;
+        // return new JsonResponse($barang);
     }
 
     public function currentStok()

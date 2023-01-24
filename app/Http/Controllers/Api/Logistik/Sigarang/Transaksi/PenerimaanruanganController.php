@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\BarangRS;
+use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
@@ -18,6 +20,18 @@ class PenerimaanruanganController extends Controller
     { {
             $data = Permintaanruangan::where('status', '=', 7)
                 ->with('details.barangrs.barang108', 'details.barangrs.satuan', 'pj', 'pengguna')->get();
+
+            foreach ($data as $key) {
+                foreach ($key->details as $detail) {
+                    $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
+                    $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
+                    $detail['barangrs']->maxStok = $max->max_stok;
+                    $detail['barangrs']->alokasi = $temp->alokasi;
+                    $detail['temp'] = $temp;
+                    $detail['barangrs']->stokDepo = $temp->stok;
+                    $detail['barangrs']->stokRuangan = $temp->stokRuangan;
+                }
+            }
 
             return new JsonResponse($data);
         }
@@ -96,13 +110,17 @@ class PenerimaanruanganController extends Controller
         }
     }
 
-    public static function telahDiDistribusikan($request, $permintaanruangan)
+    // public static function telahDiDistribusikan($request, $permintaanruangan)
+    public static function telahDiDistribusikan($permintaanruangan)
     {
         // return $request->all();
         // $stok = [];
-        // check stok masih cukup atau tidak
 
-        foreach ($request->detail as $detail) {
+        // check stok masih cukup atau tidak
+        //
+
+
+        foreach ($permintaanruangan->details as $key => $detail) {
             $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
                 ->where('kode_rs', $detail['kode_rs'])
                 ->where('sisa_stok', '>', 0)
@@ -112,14 +130,23 @@ class PenerimaanruanganController extends Controller
             $sisaStok = collect($dari)->sum('sisa_stok');
             $jumlahDistribusi = $detail['jumlah_distribusi'];
 
+            // return ['status' => 500, 'message' => $detail, 'key' => $key];
             // kembali jika ada jumlah stok yang kurang dari jumnlah distribusi
 
+            if (count($dari) === 0) {
+                $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
+                $pesan = 'stok ' .  $barang->nama . ' tidak ada';
+                $status = 500;
+
+                return ['status' => $status, 'message' => $pesan,];
+            }
+
             if ($sisaStok < $jumlahDistribusi) {
-                $barang = $dari[0]['barang']['nama'];
+                $barang = $dari[$key]['barang']['nama'];
                 $pesan = 'stok ' .  $barang . ' tidak mencukupi';
                 $status = 500;
 
-                return ['status' => $status, 'pesan' => $pesan,];
+                return ['status' => $status, 'message' => $pesan,];
             }
         }
         // return [
@@ -134,6 +161,7 @@ class PenerimaanruanganController extends Controller
         //     'request' => $request->all()
         // ];
 
+        // buat penerimaan
 
         $tmpreff = explode('-', $permintaanruangan->reff);
         $reff = 'TRMR-' . $tmpreff[1];
@@ -141,7 +169,7 @@ class PenerimaanruanganController extends Controller
         $penerimaanruangan = Penerimaanruangan::updateOrCreate(
             [
                 'reff' => $reff,
-                'no_distribusi' => $request->no_distribusi
+                'no_distribusi' => $permintaanruangan->no_distribusi
             ],
             [
                 'tanggal' => date('Y-m-d H:i:s'),
@@ -151,7 +179,7 @@ class PenerimaanruanganController extends Controller
         );
 
         // detail barang + update recent stok ruangan dan depo
-        foreach ($request->detail as $detail) {
+        foreach ($permintaanruangan->details as $detail) {
 
             $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
                 ->where('kode_rs', $detail['kode_rs'])
@@ -183,7 +211,7 @@ class PenerimaanruanganController extends Controller
                     $penerimaanruangan->details()->create([
                         'no_penerimaan' => $dari[$index]->no_penerimaan,
                         'jumlah' => $ada,
-                        'no_distribusi' => $request->no_distribusi,
+                        'no_distribusi' => $permintaanruangan->no_distribusi,
                         'kode_rs' => $detail['kode_rs'],
                         'kode_satuan' => $detail['kode_satuan'],
                     ]);
@@ -208,7 +236,7 @@ class PenerimaanruanganController extends Controller
                     $penerimaanruangan->details()->create([
                         'no_penerimaan' => $dari[$index]->no_penerimaan,
                         'jumlah' => $masuk,
-                        'no_distribusi' => $request->no_distribusi,
+                        'no_distribusi' => $permintaanruangan->no_distribusi,
                         'kode_rs' => $detail['kode_rs'],
                         'kode_satuan' => $detail['kode_satuan'],
                     ]);
@@ -227,6 +255,14 @@ class PenerimaanruanganController extends Controller
         // $data = Penerimaanruangan::where('no_distribusi', $request->no_distribusi)->first();
         // $permintaan = Permintaanruangan::find($request->permintaan_id);
         // return new JsonResponse([$data, $permintaan], 410);
+        $permintaanRuangan = Permintaanruangan::with('details')->find($request->permintaan_id);
+        // $permintaanRuangan = Permintaanruangan::with('details')->find(3);
+        // return new JsonResponse($permintaanRuangan, 500);
+        $temp = $this->telahDiDistribusikan($permintaanRuangan);
+        if ($temp['status'] !== 201) {
+            return new JsonResponse($temp, $temp['status']);
+        }
+
         try {
             DB::beginTransaction();
             $data = Penerimaanruangan::where('no_distribusi', $request->no_distribusi)->first();
