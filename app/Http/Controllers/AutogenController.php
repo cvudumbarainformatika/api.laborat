@@ -775,21 +775,41 @@ class AutogenController extends Controller
 
         /** cari alokasi penerimaan ruangn */
 
-        $data = Permintaanruangan::where('status', '=', 7)
-            ->with('details.barangrs.barang108', 'details.barangrs.satuan', 'pj', 'pengguna')->get();
-        // $col = collect($data);
+        // $data = Permintaanruangan::where('status', '=', 7)
+        //     ->with('details.barangrs.barang108', 'details.barangrs.satuan', 'pj', 'pengguna')->get();
+        // // $col = collect($data);
 
-        foreach ($data as $key) {
-            foreach ($key->details as $detail) {
-                $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
-                $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
-                $detail['barangrs']->maxStok = $max->max_stok;
-                $detail['barangrs']->alokasi = $temp->alokasi;
-                $detail['barangrs']->stokDepo = $temp->stok;
-                $detail['barangrs']->stokRuangan = $temp->stokRuangan;
-            }
+        // foreach ($data as $key) {
+        //     foreach ($key->details as $detail) {
+        //         $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
+        //         $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
+        //         $detail['barangrs']->maxStok = $max->max_stok;
+        //         $detail['barangrs']->alokasi = $temp->alokasi;
+        //         $detail['barangrs']->stokDepo = $temp->stok;
+        //         $detail['barangrs']->stokRuangan = $temp->stokRuangan;
+        //     }
+        // }
+        // return new JsonResponse($data);
+
+        /** Cari banrang yang punya stok */
+        // cari depo dibawah gudang habis pakai
+        $depos = Gudang::where('gedung', 2)
+            ->where('lantai', 1)
+            ->where('gudang', 1)
+            ->where('depo', '>', 0)
+            ->get();
+        $stok = [];
+        foreach ($depos as $depo) {
+            $temp = RecentStokUpdate::where('sisa_stok', '>', 0)
+                ->where('kode_ruang', $depo->kode)
+                ->get();
+            array_push($stok, $temp);
         }
-        return new JsonResponse($data);
+
+        return new JsonResponse([
+            $stok,
+            $depos,
+        ]);
     }
 
     public function wawanpost(Request $request)

@@ -60,6 +60,7 @@ class StockController extends Controller
         $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
             ->where('kode_ruang', $kode_ruangan)->get();
         $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+
         // cari stok di depo
         $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
             ->where('kode_ruang', $depo->kode_gudang)->get();
@@ -147,6 +148,7 @@ class StockController extends Controller
         // $data = RecentStokUpdate::get();
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
             ->groupBy('kode_rs', 'kode_ruang')
+            ->with('barang.barang108', 'barang.satuan', 'depo')
             ->get();
         $collection = collect($data)->unique('kode_rs');
         $collection->values()->all();
