@@ -68,7 +68,8 @@ class DistribusiController extends Controller
                 'status' => $status,
             ]);
             foreach ($request->detail as $key) {
-                $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_distribusi']]);
+                // $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_distribusi']]);
+                $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_disetujui']]);
             }
 
             DB::commit();

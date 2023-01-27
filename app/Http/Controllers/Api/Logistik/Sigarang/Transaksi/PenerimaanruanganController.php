@@ -255,13 +255,13 @@ class PenerimaanruanganController extends Controller
         // $data = Penerimaanruangan::where('no_distribusi', $request->no_distribusi)->first();
         // $permintaan = Permintaanruangan::find($request->permintaan_id);
         // return new JsonResponse([$data, $permintaan], 410);
-        $permintaanRuangan = Permintaanruangan::with('details')->find($request->permintaan_id);
+        // $permintaanRuangan = Permintaanruangan::with('details')->find($request->permintaan_id);
         // $permintaanRuangan = Permintaanruangan::with('details')->find(3);
         // return new JsonResponse($permintaanRuangan, 500);
-        $temp = $this->telahDiDistribusikan($permintaanRuangan);
-        if ($temp['status'] !== 201) {
-            return new JsonResponse($temp, $temp['status']);
-        }
+        // $temp = $this->telahDiDistribusikan($permintaanRuangan);
+        // if ($temp['status'] !== 201) {
+        //     return new JsonResponse($temp, $temp['status']);
+        // }
 
         try {
             DB::beginTransaction();
