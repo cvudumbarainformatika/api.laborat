@@ -110,8 +110,8 @@ class PenerimaanruanganController extends Controller
         }
     }
 
-    // public static function telahDiDistribusikan($request, $permintaanruangan)
-    public static function telahDiDistribusikan($permintaanruangan)
+    public static function telahDiDistribusikan($request, $permintaanruangan)
+    // public static function telahDiDistribusikan($permintaanruangan)
     {
         // return $request->all();
         // $stok = [];
