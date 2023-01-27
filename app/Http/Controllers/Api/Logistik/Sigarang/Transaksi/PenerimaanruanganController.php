@@ -128,7 +128,8 @@ class PenerimaanruanganController extends Controller
                 ->get();
 
             $sisaStok = collect($dari)->sum('sisa_stok');
-            $jumlahDistribusi = $detail['jumlah_distribusi'];
+            // $jumlahDistribusi = $detail['jumlah_distribusi'];
+            $jumlahDistribusi = $detail['jumlah_disetujui'];
 
             // return ['status' => 500, 'message' => $detail, 'key' => $key];
             // kembali jika ada jumlah stok yang kurang dari jumnlah distribusi
@@ -189,7 +190,8 @@ class PenerimaanruanganController extends Controller
 
             $sisaStok = collect($dari)->sum('sisa_stok');
             $index = 0;
-            $jumlahDistribusi = $detail['jumlah_distribusi'];
+            // $jumlahDistribusi = $detail['jumlah_distribusi'];
+            $jumlahDistribusi = $detail['jumlah_disetujui'];
 
             // masukkan detail sesuai order FIFO
             $masuk = $jumlahDistribusi;
