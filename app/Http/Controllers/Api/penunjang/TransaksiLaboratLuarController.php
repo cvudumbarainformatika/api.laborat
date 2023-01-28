@@ -20,25 +20,25 @@ class TransaksiLaboratLuarController extends Controller
         $now = date('Y-m-d');
         $to = date('2018-05-02');
         $query = LaboratLuar::query()
-                ->selectRaw('nota,tgl,nama,kelamin,alamat,tgl_lahir,pengirim,perusahaan_id,lunas,akhir,akhirx, kd_lab')
-                ->filter(request(['q']))
-                ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
-                ->groupBy('nota')
-                ->latest('tgl');
-                // ->whereDate('rs3', '=', $now);
+            ->selectRaw('nota,tgl,nama,kelamin,alamat,tgl_lahir,pengirim,perusahaan_id,lunas,akhir,akhirx, kd_lab')
+            ->filter(request(['q']))
+            ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
+            ->groupBy('nota')
+            ->latest('tgl');
+        // ->whereDate('rs3', '=', $now);
         $data = $query->paginate(request('per_page'));
         // $count = collect($query->get())->count();
-                // ->simplePaginate(request('per_page'));
+        // ->simplePaginate(request('per_page'));
 
-       return new JsonResponse($data);
+        return new JsonResponse($data);
     }
 
     public function get_details()
     {
         $data = LaboratLuar::query()
-                ->where('nota', request('nota'))
-                ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
-                ->get();
+            ->where('nota', request('nota'))
+            ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
+            ->get();
 
         return new JsonResponse($data);
     }
@@ -50,40 +50,40 @@ class TransaksiLaboratLuarController extends Controller
 
         //     DB::beginTransaction();
 
-            $temp = collect($request->details);
-            // $data = PemeriksaanLaborat::whereIn('rs1',$temp)->get();
+        $temp = collect($request->details);
+        // $data = PemeriksaanLaborat::whereIn('rs1',$temp)->get();
 
-            $n = Carbon::now();
-            $tgl = $n->toDateTimeString();
+        $n = Carbon::now();
+        $tgl = $n->toDateTimeString();
 
-            $containers = [];
+        $containers = [];
 
-            foreach ($temp as $key) {
-                LaboratLuar::create([
-                    'kd_lab' => $key['rs1'],
-                    'tarif_sarana'=>$key['rs3'],
-                    'tarif_pelayanan'=>$key['rs4'],
-                    'nama'=>$request->nama,
-                    'kelamin'=>$request->kelamin,
-                    'pengirim'=>$request->pengirim,
-                    'tgl_lahir'=>$request->tgl_lahir,
-                    'temp_lahir'=>$request->temp_lahir,
-                    'nota'=>$request->nota,
-                    'alamat'=>$request->alamat,
-                    'jenispembayaran'=>$request->jenispembayaran,
-                    'nosurat'=>$request->nosurat ? $request->nosurat:'',
-                    'noktp'=>$request->noktp,
-                    'agama'=>$request->agama,
-                    'nohp'=>$request->nohp,
-                    'kode_pekerjaan'=>$request->kode_pekerjaan,
-                    'nama_pekerjaan'=>$request->kode_pekerjaan,
-                    'sampel_diambil'=>$request->sampel_diambil,
-                    'jam_sampel_diambil'=>$request->jam_sampel_diambil,
-                    'tgl'=>$tgl,
-                    'jml'=>1,
-                ]);
-            }
-            return new JsonResponse(['message'=>'success'], 201);
+        foreach ($temp as $key) {
+            LaboratLuar::create([
+                'kd_lab' => $key['rs1'],
+                'tarif_sarana' => $key['rs3'],
+                'tarif_pelayanan' => $key['rs4'],
+                'nama' => $request->nama,
+                'kelamin' => $request->kelamin,
+                'pengirim' => $request->pengirim,
+                'tgl_lahir' => $request->tgl_lahir,
+                'temp_lahir' => $request->temp_lahir,
+                'nota' => $request->nota,
+                'alamat' => $request->alamat,
+                'jenispembayaran' => $request->jenispembayaran,
+                'nosurat' => $request->nosurat ? $request->nosurat : '',
+                'noktp' => $request->noktp,
+                'agama' => $request->agama,
+                'nohp' => $request->nohp,
+                'kode_pekerjaan' => $request->kode_pekerjaan,
+                'nama_pekerjaan' => $request->kode_pekerjaan,
+                'sampel_diambil' => $request->sampel_diambil,
+                'jam_sampel_diambil' => $request->jam_sampel_diambil,
+                'tgl' => $tgl,
+                'jml' => 1,
+            ]);
+        }
+        return new JsonResponse(['message' => 'success'], 201);
     }
 
     public function destroy(Request $request)
@@ -98,7 +98,7 @@ class TransaksiLaboratLuarController extends Controller
             ], 500);
         }
 
-            // $user->log("Menghapus Data Jabatan {$data->nama}");
+        // $user->log("Menghapus Data Jabatan {$data->nama}");
         return response()->json([
             'message' => 'Data sukses terhapus'
         ], 200);
@@ -107,9 +107,9 @@ class TransaksiLaboratLuarController extends Controller
     public function kunci_dan_kirim_ke_lis()
     {
         $data = LaboratLuar::query()
-        ->where('nota', request('nota'))
-        ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
-        ->get();
+            ->where('nota', request('nota'))
+            ->with(['perusahaan', 'pemeriksaan_laborat', 'catatan'])
+            ->get();
 
         if (!$data) {
             return response()->json([
@@ -133,30 +133,30 @@ class TransaksiLaboratLuarController extends Controller
 
         $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
         $postInput = [
-            "ADDRESS"=> $data[0]->alamat,
-            "BOD"=>"19981127",
-            "CLASS"=>"",
-            "CLASS_NAME"=>"-",
-            "COMPANY"=>"-",
-            "COMPANY_NAME"=>"RSUD MOCH SALEH",
-            "DATE_ORDER"=> date('Ymdhis',strtotime($data[0]->tgl)),
+            "ADDRESS" => $data[0]->alamat,
+            "BOD" => "19981127",
+            "CLASS" => "",
+            "CLASS_NAME" => "-",
+            "COMPANY" => "-",
+            "COMPANY_NAME" => "RSUD MOCH SALEH",
+            "DATE_ORDER" => date('Ymdhis', strtotime($data[0]->tgl)),
             // "DATE_ORDER"=> time(),
-            "DIAGNOSA"=>"-",
-            "DOCTOR"=>"17",
-            "DOCTOR_NAME"=>$data[0]->pengirim,
-            "GLOBAL_COMMENT"=>"laborat-luar",
-            "IDENTITY_N"=>"-",
-            "IS_CITO"=>"0",
-            "KODE_PRODUCT"=>$kode_lab,
-            "ONO"=>$data[0]->nota,
-            "PATIENT_NAME"=>$data[0]->nama,
-            "EMAIL"=>"rsudmochsaleh@app.com",
-            "PATIENT_NO"=>time(),
-            "ROOM"=>"",
-            "ROOM_NAME"=>"",
-            "SEX"=>$data[0]->kelamin === "Laki-laki"?"1":"2",
-            "STATUS"=>"N",
-            "TYPE_PATIENT"=>"1"
+            "DIAGNOSA" => "-",
+            "DOCTOR" => "17",
+            "DOCTOR_NAME" => $data[0]->pengirim,
+            "GLOBAL_COMMENT" => "laborat-luar",
+            "IDENTITY_N" => "-",
+            "IS_CITO" => "0",
+            "KODE_PRODUCT" => $kode_lab,
+            "ONO" => $data[0]->nota,
+            "PATIENT_NAME" => $data[0]->nama,
+            "EMAIL" => "rsudmochsaleh@app.com",
+            "PATIENT_NO" => time(),
+            "ROOM" => "",
+            "ROOM_NAME" => "",
+            "SEX" => $data[0]->kelamin === "Laki-laki" ? "1" : "2",
+            "STATUS" => "N",
+            "TYPE_PATIENT" => "1"
         ];
 
         $headers = [
@@ -175,9 +175,9 @@ class TransaksiLaboratLuarController extends Controller
         $statusCode = $response->status();
         $responseBody = json_decode($response->getBody(), true);
 
-        LaboratLuar::where('nota', $data[0]->nota)->update(['akhir'=> "1"]);
+        LaboratLuar::where('nota', $data[0]->nota)->update(['akhir' => "1"]);
 
-        return response()->json(['responseNya'=>$responseBody, 'dataku_mbalik'=> $postInput ]);
+        return response()->json(['responseNya' => $responseBody, 'dataku_mbalik' => $postInput]);
 
         // return response()->json($postInput);
     }
