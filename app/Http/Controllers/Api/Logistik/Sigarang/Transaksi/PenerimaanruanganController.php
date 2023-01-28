@@ -170,7 +170,8 @@ class PenerimaanruanganController extends Controller
         $penerimaanruangan = Penerimaanruangan::updateOrCreate(
             [
                 'reff' => $reff,
-                'no_distribusi' => $permintaanruangan->no_distribusi
+                // 'no_distribusi' => $permintaanruangan->no_distribusi
+                'no_distribusi' => $request->no_distribusi
             ],
             [
                 'tanggal' => date('Y-m-d H:i:s'),
@@ -213,7 +214,8 @@ class PenerimaanruanganController extends Controller
                     $penerimaanruangan->details()->create([
                         'no_penerimaan' => $dari[$index]->no_penerimaan,
                         'jumlah' => $ada,
-                        'no_distribusi' => $permintaanruangan->no_distribusi,
+                        // 'no_distribusi' => $permintaanruangan->no_distribusi,
+                        'no_distribusi' => $request->no_distribusi,
                         'kode_rs' => $detail['kode_rs'],
                         'kode_satuan' => $detail['kode_satuan'],
                     ]);
@@ -238,7 +240,8 @@ class PenerimaanruanganController extends Controller
                     $penerimaanruangan->details()->create([
                         'no_penerimaan' => $dari[$index]->no_penerimaan,
                         'jumlah' => $masuk,
-                        'no_distribusi' => $permintaanruangan->no_distribusi,
+                        // 'no_distribusi' => $permintaanruangan->no_distribusi,
+                        'no_distribusi' => $request->no_distribusi,
                         'kode_rs' => $detail['kode_rs'],
                         'kode_satuan' => $detail['kode_satuan'],
                     ]);
