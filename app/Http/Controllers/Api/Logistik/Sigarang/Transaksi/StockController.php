@@ -32,10 +32,15 @@ class StockController extends Controller
     public function stokSekarang()
     {
         $perpage = request('per_page') ? request('per_page') : 10;
-        $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
+        // $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
+        $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
+            ->orderBy(request('order_by'), request('sort'))
+            ->with('depo', 'ruang', 'barang.barang108')
             ->where('kode_ruang', '<>', 'Gd-02010100')
+            ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
             ->paginate($perpage);
+
         $col = collect($raw);
         $meta = $col->except('data');
         $meta->all();
@@ -150,6 +155,7 @@ class StockController extends Controller
             ->groupBy('kode_rs', 'kode_ruang')
             ->with('barang.barang108', 'barang.satuan', 'depo', 'maping.gudang')
             ->get();
+        // ->paginate(10);
         $collection = collect($data)->unique('kode_rs');
         $collection->values()->all();
 
@@ -171,7 +177,9 @@ class StockController extends Controller
     public function getDataStokByDepo()
     {
 
-        $raw = RecentStokUpdate::where('kode_ruang', '=', request('search'))
+        $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
+            ->where('kode_ruang', '=', request('search'))
+            ->orderBy(request('order_by'), request('sort'))
             ->filter(request(['q']))
             ->with('ruang', 'barang.barang108', 'depo')
             ->paginate(request('per_page'));
