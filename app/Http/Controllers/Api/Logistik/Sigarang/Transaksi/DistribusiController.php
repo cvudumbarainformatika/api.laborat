@@ -15,6 +15,7 @@ class DistribusiController extends Controller
     public function getPermintaanVerified()
     {
         $data = Permintaanruangan::where('status', '>=', 6)
+            ->where('status', '<=', 7)
             ->orderBy(request('order_by'), request('sort'))
             ->with('details.barangrs.mapingbarang.barang108',  'details.satuan', 'pj', 'pengguna')
             ->filter(request(['q']))
@@ -50,7 +51,8 @@ class DistribusiController extends Controller
             'no_distribusi' => 'required',
         ]);
 
-        $permintaanruangan = Permintaanruangan::find($request->id);
+        // $permintaanruangan = Permintaanruangan::find($request->id);
+        $permintaanruangan = Permintaanruangan::with('details')->find($request->id);
         $temp = PenerimaanruanganController::telahDiDistribusikan($request, $permintaanruangan);
         if ($temp['status'] !== 201) {
             return new JsonResponse($temp, $temp['status']);
@@ -61,13 +63,14 @@ class DistribusiController extends Controller
 
             $tanggal_distribusi = date('Y-m-d H:i:s');
             $status = 7;
-            $data = Permintaanruangan::find($request->id);
+            // $data = Permintaanruangan::find($request->id);
+            $data = $permintaanruangan;
             $data->update([
                 'no_distribusi' => $request->no_distribusi,
                 'tanggal_distribusi' => $tanggal_distribusi,
                 'status' => $status,
             ]);
-            foreach ($request->detail as $key) {
+            foreach ($data->details as $key) {
                 // $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_distribusi']]);
                 $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_disetujui']]);
             }
@@ -83,7 +86,7 @@ class DistribusiController extends Controller
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e
-            ], 500);
+            ], 410);
         }
     }
 }
