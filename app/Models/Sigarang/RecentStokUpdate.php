@@ -16,6 +16,10 @@ class RecentStokUpdate extends Model
     {
         return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
     }
+    public function maping()
+    {
+        return $this->belongsTo(MapingBarangDepo::class, 'kode_rs', 'kode_rs');
+    }
     public function depo()
     {
         return $this->belongsTo(Gudang::class, 'kode_ruang', 'kode');
