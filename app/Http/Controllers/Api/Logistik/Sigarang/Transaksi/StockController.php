@@ -255,6 +255,7 @@ class StockController extends Controller
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
             ->where('kode_ruang', 'Gd-02010100')
             ->groupBy('kode_rs', 'kode_ruang')
+            ->with('maping', 'barang')
             ->get();
         $collection = collect($data)->unique('kode_rs');
         $collection->values()->all();

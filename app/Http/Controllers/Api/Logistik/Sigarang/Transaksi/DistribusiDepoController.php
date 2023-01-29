@@ -66,7 +66,7 @@ class DistribusiDepoController extends Controller
 
     public function diterimaDepo(Request $request)
     {
-        $tanggal = date('Y-m-d H:i:s');
+        $tanggal = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         $data = DistribusiDepo::with('details')->find($request->id);
 
 
