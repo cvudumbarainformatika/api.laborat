@@ -183,7 +183,7 @@ class StockController extends Controller
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
             // ->filter(request(['search']))
-            ->with('ruang', 'barang.barang108', 'depo')
+            ->with('ruang', 'barang.barang108', 'barang.satuan', 'depo')
             ->paginate(request('per_page'));
         $col = collect($raw);
         $meta = $col->except('data');
