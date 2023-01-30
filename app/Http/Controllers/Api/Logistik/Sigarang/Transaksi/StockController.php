@@ -35,7 +35,7 @@ class StockController extends Controller
         // $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
         $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
             ->orderBy(request('order_by'), request('sort'))
-            ->with('depo', 'ruang', 'barang.barang108')
+            ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
             ->where('kode_ruang', '<>', 'Gd-02010100')
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
