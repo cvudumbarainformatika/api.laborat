@@ -180,7 +180,9 @@ class StockController extends Controller
         $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
             ->where('kode_ruang', '=', request('search'))
             ->orderBy(request('order_by'), request('sort'))
+            ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
+            // ->filter(request(['search']))
             ->with('ruang', 'barang.barang108', 'depo')
             ->paginate(request('per_page'));
         $col = collect($raw);
