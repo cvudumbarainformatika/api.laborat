@@ -20,7 +20,7 @@ class Pegawai extends Model
 
     public $timestamps = false;
 
-    public function jabatan()
+    public function relasi_jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan', 'kode_jabatan');
     }
