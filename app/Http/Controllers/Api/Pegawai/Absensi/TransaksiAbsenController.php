@@ -424,14 +424,6 @@ class TransaksiAbsenController extends Controller
         $periode = request('periode');
 
         $data = Pegawai::where('aktif', 'AKTIF')
-            // ->with('transaksi_absen')
-            // ->whereRelation('transaksi_absen', function ($q) use ($periode) {
-            //     $split = explode("-", $periode);
-            //     $year = $split[0];
-            //     $month = $split[1];
-            //     $q->whereMonth('created_at', $month)
-            //         ->whereYear('created_at', $year);
-            // })
             ->with(["transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
                 $split = explode("-", $periode);
                 $year = $split[0];
@@ -439,6 +431,7 @@ class TransaksiAbsenController extends Controller
                 $q->whereMonth('created_at', $month)
                     ->whereYear('created_at', $year);
             }])
+            ->orderBy(request('order_by'), request('sort'))
             ->paginate(request('per_page'));
         return response()->json($data);
     }
