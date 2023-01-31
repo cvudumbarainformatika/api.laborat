@@ -437,7 +437,7 @@ class TransaksiAbsenController extends Controller
                 $year = $split[0];
                 $month = $split[1];
                 $q->whereMonth('transaksi_absen.created_at', $month)
-                    ->whereYear('created_at', $year);
+                    ->whereYear('transaksi_absen.created_at', $year);
             }])
             ->paginate(request('per_page'));
         return response()->json($data);
