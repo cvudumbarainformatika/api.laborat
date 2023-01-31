@@ -439,9 +439,11 @@ class TransaksiAbsenController extends Controller
             if (request('ruang') === 'all') {
                 return $query->where('flag', '=', request('flag'))
                     ->where('aktif', '=', 'AKTIF');
-            } elseif (request('flag') === 'all') {
+            } else if (request('flag') === 'all') {
                 return $query->where('ruang', '=', request('ruang'))
                     ->where('aktif', '=', 'AKTIF');
+            } else if (request('flag') === 'all' && request('ruang') === 'all') {
+                return $query->where('aktif', '=', 'AKTIF');
             } else {
                 return $query->where('flag', '=', request('flag'))
                     ->where('ruang', '=', request('ruang'))
