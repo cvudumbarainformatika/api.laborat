@@ -421,9 +421,18 @@ class TransaksiAbsenController extends Controller
 
     public function rekapan_absen_perbulan()
     {
+        $periode = request('periode');
+
         $data = Pegawai::where('aktif', 'AKTIF')
+            ->hasByNonDependentSubquery('transaksi_absen', null, function ($q) use ($periode) {
+                $split = explode("-", $periode);
+                $year = $split[0];
+                $month = $split[1];
+                $q->whereYear('created_at', '=', $year)
+                    ->whereMonth('created_at', '=', $month);
+            })
             ->with('transaksi_absen')
-            ->get();
+            ->paginate(request('per_page'));
         return response()->json($data);
     }
 }
