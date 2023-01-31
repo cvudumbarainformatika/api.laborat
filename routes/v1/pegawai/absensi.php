@@ -12,6 +12,7 @@ Route::group([
 ], function () {
     Route::get('/index', [TransaksiAbsenController::class, 'index']);
     Route::get('/rekap', [TransaksiAbsenController::class, 'rekap']);
+    Route::get('/report', [TransaksiAbsenController::class, 'rekapan_absen_perbulan']);
 
     // Hapus Jadwal
     Route::post('/hapus-jadwal', [JadwalController::class, 'destroy']);

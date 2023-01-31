@@ -416,4 +416,10 @@ class TransaksiAbsenController extends Controller
         }
         return $temp;
     }
+
+
+    public function rekapan_absen_perbulan()
+    {
+        response()->json('percobaan');
+    }
 }
