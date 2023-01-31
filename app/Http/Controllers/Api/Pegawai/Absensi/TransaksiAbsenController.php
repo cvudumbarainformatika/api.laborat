@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\Prota;
+use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
 use App\Models\User;
@@ -419,6 +421,16 @@ class TransaksiAbsenController extends Controller
     }
 
 
+    public function autocomplete()
+    {
+        $ruangan = Ruangan::all();
+        $jenis = JenisPegawai::all();
+        $data = [
+            'ruangan' => $ruangan,
+            'jenis_pegawai' => $jenis
+        ];
+        return response()->json($data);
+    }
     public function rekapan_absen_perbulan()
     {
         $periode = request('periode');
