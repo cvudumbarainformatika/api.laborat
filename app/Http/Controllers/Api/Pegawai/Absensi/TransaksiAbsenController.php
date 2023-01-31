@@ -446,9 +446,7 @@ class TransaksiAbsenController extends Controller
             //     return $query->where('aktif', '=', 'AKTIF');
             // }
             return $query->where('aktif', '=', 'AKTIF')
-                ->where('ruang', '<>', 'all')
                 ->orWhere('ruang', '=', request('ruang'))
-                ->where('flag', '<>', 'all')
                 ->orWhere('flag', '=', request('flag'));
         })
             ->with(["transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
