@@ -16,7 +16,7 @@ class VerifPermintaanruanganController extends Controller
     // ambil semua permintaan yang sudah selesai di input
     public function getPermintaan()
     {
-        $datas = Permintaanruangan::where('status', '=', 5)
+        $datas = Permintaanruangan::where('status', '=', 4)
             ->with('details.barangrs', 'details.satuan', 'details.ruang', 'pj', 'pengguna')->get();
         // if (count($data)) {
         //     foreach ($data as $key) {
@@ -61,7 +61,7 @@ class VerifPermintaanruanganController extends Controller
 
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 5)
+            $q->where('status', '>=', 4)
                 ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->get();
 
@@ -78,7 +78,7 @@ class VerifPermintaanruanganController extends Controller
         $alokasi = 0;
         // ambil permintaan dari ruangan ybs
         $permintaanRuangan = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 5)
+            $q->where('status', '>=', 4)
                 ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->where('tujuan', $kode_ruangan)->first();
         // jumlah alokasi depo dikurangi permintaan ruangan
@@ -133,6 +133,8 @@ class VerifPermintaanruanganController extends Controller
         if (!$permintaan->wasChanged()) {
             return new JsonResponse(['message' => 'data gagal di update'], 501);
         }
-        return new JsonResponse(['data' => $permintaan, 'message' => 'Permintaan sudah ditolak'], 200);
+        $pesan = 'Status Permintaan sudah berganti';
+
+        return new JsonResponse(['data' => $permintaan, 'message' => $pesan], 200);
     }
 }

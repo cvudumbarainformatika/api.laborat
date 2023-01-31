@@ -78,7 +78,7 @@ class PermintaanruanganController extends Controller
         $data = Permintaanruangan::where('reff', $req->reff)->get();
         if (count($data)) {
             foreach ($data as $key) {
-                $key->update(['status' => 5]);
+                $key->update(['status' => 4]);
                 // if (!$data->save()) {
                 //     return new JsonResponse(['message' => 'Gagal Update Status']);
                 // }
@@ -89,7 +89,7 @@ class PermintaanruanganController extends Controller
     }
     public function getAlokasiPermintaan()
     {
-        $data = Permintaanruangan::where('status', '>=', 5)
+        $data = Permintaanruangan::where('status', '>=', 4)
             ->where('status', '<', 8)->get();
     }
 }
