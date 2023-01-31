@@ -64,7 +64,7 @@ class PenerimaanController extends Controller
     public function simpanPenerimaan(Request $request)
     {
         $second = $request->all();
-        $second['tanggal'] = date('Y-m-d H:i:s');
+        $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
 
         try {
             DB::beginTransaction();

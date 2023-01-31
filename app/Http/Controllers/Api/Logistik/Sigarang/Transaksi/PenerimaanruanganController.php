@@ -166,6 +166,7 @@ class PenerimaanruanganController extends Controller
 
         $tmpreff = explode('-', $permintaanruangan->reff);
         $reff = 'TRMR-' . $tmpreff[1];
+        $tanggal = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
 
         $penerimaanruangan = Penerimaanruangan::updateOrCreate(
             [
@@ -174,7 +175,8 @@ class PenerimaanruanganController extends Controller
                 'no_distribusi' => $request->no_distribusi
             ],
             [
-                'tanggal' => date('Y-m-d H:i:s'),
+                // 'tanggal' => date('Y-m-d H:i:s'),
+                'tanggal' => $tanggal,
                 'kode_pengguna' => $permintaanruangan->kode_pengguna,
                 'kode_penanggungjawab' => $permintaanruangan->kode_penanggungjawab,
             ]

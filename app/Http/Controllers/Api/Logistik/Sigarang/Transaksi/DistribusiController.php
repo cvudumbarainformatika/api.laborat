@@ -19,7 +19,7 @@ class DistribusiController extends Controller
             ->orderBy(request('order_by'), request('sort'))
             ->with('details.barangrs.mapingbarang.barang108',  'details.satuan', 'pj', 'pengguna')
             ->filter(request(['q']))
-            ->paginate(request('per-page'));
+            ->paginate(request('per_page'));
 
         foreach ($data as $key) {
             foreach ($key->details as $detail) {
@@ -61,7 +61,7 @@ class DistribusiController extends Controller
 
             DB::beginTransaction();
 
-            $tanggal_distribusi = date('Y-m-d H:i:s');
+            $tanggal_distribusi = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
             $status = 7;
             // $data = Permintaanruangan::find($request->id);
             $data = $permintaanruangan;

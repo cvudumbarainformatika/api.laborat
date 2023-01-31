@@ -92,9 +92,10 @@ class PemakaianruanganController extends Controller
             'reff' => 'required',
             'kode_pengguna' => 'required',
         ]);
+        $tanggal = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:m:s');
         // return new JsonResponse($request->all(), 500);
         $pakai = Pemakaianruangan::create($request->all());
-        $pakai->update(['tanggal' => date('Y-m-d H:m:s')]);
+        $pakai->update(['tanggal' => $request->tanggal]);
 
         if ($request->details) {
             foreach ($request->details as $key) {
