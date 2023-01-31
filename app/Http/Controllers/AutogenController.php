@@ -793,23 +793,30 @@ class AutogenController extends Controller
 
         /** Cari banrang yang punya stok */
         // cari depo dibawah gudang habis pakai
-        $depos = Gudang::where('gedung', 2)
-            ->where('lantai', 1)
-            ->where('gudang', 1)
-            ->where('depo', '>', 0)
-            ->get();
-        $stok = [];
-        foreach ($depos as $depo) {
-            $temp = RecentStokUpdate::where('sisa_stok', '>', 0)
-                ->where('kode_ruang', $depo->kode)
-                ->get();
-            array_push($stok, $temp);
-        }
+        // $depos = Gudang::where('gedung', 2)
+        //     ->where('lantai', 1)
+        //     ->where('gudang', 1)
+        //     ->where('depo', '>', 0)
+        //     ->get();
+        // $stok = [];
+        // foreach ($depos as $depo) {
+        //     $temp = RecentStokUpdate::where('sisa_stok', '>', 0)
+        //         ->where('kode_ruang', $depo->kode)
+        //         ->get();
+        //     array_push($stok, $temp);
+        // }
 
-        return new JsonResponse([
-            $stok,
-            $depos,
-        ]);
+        // return new JsonResponse([
+        //     $stok,
+        //     $depos,
+        // ]);
+
+        $user = User::find(3);
+        $pegawai = Pegawai::with('ruang', 'mapingpengguna')->find($user->pegawai_id);
+
+        $data['user'] = $user;
+        $data['pegawai'] = $pegawai;
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)

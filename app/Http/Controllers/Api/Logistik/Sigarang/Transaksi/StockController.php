@@ -73,7 +73,7 @@ class StockController extends Controller
 
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 5)
+            $q->where('status', '>=', 4)
                 ->where('status', '<', 8);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
@@ -119,7 +119,7 @@ class StockController extends Controller
 
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 5)
+            $q->where('status', '>=', 4)
                 ->where('status', '<', 8);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
@@ -153,7 +153,7 @@ class StockController extends Controller
         // $data = RecentStokUpdate::get();
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
             ->groupBy('kode_rs', 'kode_ruang')
-            ->with('barang.barang108', 'barang.satuan', 'depo', 'maping.gudang')
+            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang')
             ->get();
         // ->paginate(10);
         $collection = collect($data)->unique('kode_rs');
@@ -166,9 +166,12 @@ class StockController extends Controller
     // ruang yang punya stok
     public function ruangHasStok()
     {
-        $raw = RecentStokUpdate::where('sisa_stok', '>', 0)
+        $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->where('sisa_stok', '>', 0)
             ->where('kode_ruang', '<>', 'Gd-02010100')
-            ->with('depo', 'ruang')->get();
+            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang')
+            ->get();
+
         $data = collect($raw)->unique('kode_ruang');
         $data->all();
         return new JsonResponse($data);

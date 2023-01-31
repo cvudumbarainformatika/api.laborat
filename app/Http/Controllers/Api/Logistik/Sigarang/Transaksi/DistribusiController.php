@@ -14,7 +14,7 @@ class DistribusiController extends Controller
 
     public function getPermintaanVerified()
     {
-        $data = Permintaanruangan::where('status', '>=', 6)
+        $data = Permintaanruangan::where('status', '>=', 4)
             ->where('status', '<=', 7)
             ->orderBy(request('order_by'), request('sort'))
             ->with('details.barangrs.mapingbarang.barang108',  'details.satuan', 'pj', 'pengguna')
