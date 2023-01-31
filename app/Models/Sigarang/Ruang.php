@@ -16,6 +16,12 @@ class Ruang extends Model
     {
         return $this->belongsTo(Gedung::class, 'gedung', 'nomor');
     }
+
+    public function mapingRuang()
+    {
+        return $this->hasOne(PenggunaRuang::class, 'kode', 'kode_ruang');
+    }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {

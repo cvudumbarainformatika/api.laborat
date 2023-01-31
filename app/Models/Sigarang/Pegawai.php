@@ -42,6 +42,16 @@ class Pegawai extends Model
         return $this->belongsTo(Ruangan::class, 'ruang', 'koderuangan');
     }
 
+    public function ruang()
+    {
+        return $this->hasOne(Ruang::class, 'kode', 'kode_ruang');
+    }
+
+    public function mapingPengguna()
+    {
+        return $this->hasOne(PenggunaRuang::class, 'kode_ruang', 'kode_ruang');
+    }
+
 
 
 
