@@ -42,7 +42,7 @@ class PermintaanruanganController extends Controller
     public function store(Request $request)
     {
         $second = $request->all();
-        $second['tanggal'] = date('Y-m-d H:i:s');
+        $second['tanggal'] = $request->tanggal ? $request->tanggal : date('Y-m-d H:i:s');
 
         try {
             DB::beginTransaction();
