@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -420,6 +421,7 @@ class TransaksiAbsenController extends Controller
 
     public function rekapan_absen_perbulan()
     {
-        response()->json('percobaan');
+        $data = Pegawai::where('aktif', 'AKTIF')->get();
+        return response()->json($data);
     }
 }
