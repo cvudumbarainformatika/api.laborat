@@ -5,6 +5,7 @@ namespace App\Models\Sigarang;
 use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\User;
@@ -23,6 +24,10 @@ class Pegawai extends Model
     public function relasi_jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan', 'kode_jabatan');
+    }
+    public function jenis_pegawai()
+    {
+        return $this->belongsTo(JenisPegawai::class, 'flag', 'kode_jenis');
     }
     public function jabatanTambahan()
     {
