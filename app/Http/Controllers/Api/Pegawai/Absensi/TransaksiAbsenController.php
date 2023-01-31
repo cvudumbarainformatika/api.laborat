@@ -421,7 +421,9 @@ class TransaksiAbsenController extends Controller
 
     public function rekapan_absen_perbulan()
     {
-        $data = Pegawai::where('aktif', 'AKTIF')->get();
+        $data = Pegawai::where('aktif', 'AKTIF')
+            ->with('transaksi_absen')
+            ->get();
         return response()->json($data);
     }
 }

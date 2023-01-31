@@ -6,6 +6,7 @@ use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Ruangan;
+use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +51,11 @@ class Pegawai extends Model
     public function mapingPengguna()
     {
         return $this->hasOne(PenggunaRuang::class, 'kode_ruang', 'kode_ruang');
+    }
+
+    public function transaksi_absen()
+    {
+        return $this->hasMany(TransaksiAbsen::class);
     }
 
 
