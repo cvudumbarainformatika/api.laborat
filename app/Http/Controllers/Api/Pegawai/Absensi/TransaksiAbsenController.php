@@ -436,13 +436,17 @@ class TransaksiAbsenController extends Controller
         $periode = request('periode');
 
         $data = Pegawai::where(function ($query) {
-            if (request('flag') !== 'all') {
-                $query->where('flag', '=', request('flag'));
+            if (request('ruang') === 'all') {
+                return $query->where('flag', '=', request('flag'))
+                    ->where('aktif', '=', 'AKTIF');
+            } elseif (request('flag') === 'all') {
+                return $query->where('ruang', '=', request('ruang'))
+                    ->where('aktif', '=', 'AKTIF');
+            } else {
+                return $query->where('flag', '=', request('flag'))
+                    ->where('ruang', '=', request('ruang'))
+                    ->where('aktif', '=', 'AKTIF');
             }
-            if (request('flag') !== 'all') {
-                $query->where('ruang', '=', request('ruang'));
-            }
-            $query->where('aktif', '=', 'AKTIF');
         })
             ->with(["transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
                 $split = explode("-", $periode);
