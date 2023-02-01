@@ -437,18 +437,6 @@ class TransaksiAbsenController extends Controller
 
         $data = Pegawai::where('aktif', '=', 'AKTIF')
             ->where(function ($query) {
-                // if (request('ruang') !== 'all') {
-                //     return $query->where('ruang', '=', request('ruang'))
-                //         ->where('aktif', '=', 'AKTIF');
-                // } else if (request('flag') === 'all') {
-                //     return $query->where('ruang', '=', request('ruang'))
-                //         ->where('aktif', '=', 'AKTIF');
-                // } else if (request('flag') === 'all' && request('ruang') === 'all') {
-                //     return $query->where('aktif', '=', 'AKTIF');
-                // }
-                // return $query->where('aktif', '=', 'AKTIF')
-                //     ->orWhere('ruang', '=', request('ruang'))
-                //     ->orWhere('flag', '=', request('flag'));
                 $query->when(request('flag') ?? false, function ($search, $q) {
                     return $search->where('flag', '=', $q);
                 });
@@ -456,6 +444,7 @@ class TransaksiAbsenController extends Controller
                     return $search->where('ruang', '=', $q);
                 });
             })
+            ->filter(request(['q']))
             ->with(["transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
                 $split = explode("-", $periode);
                 $year = $split[0];
