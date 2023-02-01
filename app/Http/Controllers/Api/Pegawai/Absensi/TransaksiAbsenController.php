@@ -431,6 +431,16 @@ class TransaksiAbsenController extends Controller
         ];
         return response()->json($data);
     }
+    public function prota()
+    {
+        $periode = request('periode');
+        $split = explode("-", $periode);
+        $year = $split[0];
+        $month = $split[1];
+        $prota = Prota::whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)->sum();
+        return response()->json($prota);
+    }
     public function rekapan_absen_perbulan()
     {
         $periode = request('periode');
