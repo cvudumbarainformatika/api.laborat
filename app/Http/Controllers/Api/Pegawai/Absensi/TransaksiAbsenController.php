@@ -437,8 +437,8 @@ class TransaksiAbsenController extends Controller
         $split = explode("-", $periode);
         $year = $split[0];
         $month = $split[1];
-        $prota = Prota::whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)->get();
+        $prota = Prota::whereMonth('tgl_libur', $month)
+            ->whereYear('tgl_libur', $year)->get();
         return response()->json($prota);
     }
     public function rekapan_absen_perbulan()
