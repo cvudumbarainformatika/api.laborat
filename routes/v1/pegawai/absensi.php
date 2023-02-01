@@ -14,6 +14,7 @@ Route::group([
     Route::get('/rekap', [TransaksiAbsenController::class, 'rekap']);
     Route::get('/report', [TransaksiAbsenController::class, 'rekapan_absen_perbulan']);
     Route::get('/autocomplete', [TransaksiAbsenController::class, 'autocomplete']);
+    Route::get('/prota', [TransaksiAbsenController::class, 'prota']);
 
     // Hapus Jadwal
     Route::post('/hapus-jadwal', [JadwalController::class, 'destroy']);

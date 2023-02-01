@@ -431,24 +431,22 @@ class TransaksiAbsenController extends Controller
         ];
         return response()->json($data);
     }
+    public function prota()
+    {
+        $periode = request('periode');
+        $split = explode("-", $periode);
+        $year = $split[0];
+        $month = $split[1];
+        $prota = Prota::whereMonth('tgl_libur', $month)
+            ->whereYear('tgl_libur', $year)->get();
+        return response()->json($prota);
+    }
     public function rekapan_absen_perbulan()
     {
         $periode = request('periode');
 
         $data = Pegawai::where('aktif', '=', 'AKTIF')
             ->where(function ($query) {
-                // if (request('ruang') !== 'all') {
-                //     return $query->where('ruang', '=', request('ruang'))
-                //         ->where('aktif', '=', 'AKTIF');
-                // } else if (request('flag') === 'all') {
-                //     return $query->where('ruang', '=', request('ruang'))
-                //         ->where('aktif', '=', 'AKTIF');
-                // } else if (request('flag') === 'all' && request('ruang') === 'all') {
-                //     return $query->where('aktif', '=', 'AKTIF');
-                // }
-                // return $query->where('aktif', '=', 'AKTIF')
-                //     ->orWhere('ruang', '=', request('ruang'))
-                //     ->orWhere('flag', '=', request('flag'));
                 $query->when(request('flag') ?? false, function ($search, $q) {
                     return $search->where('flag', '=', $q);
                 });
@@ -456,7 +454,8 @@ class TransaksiAbsenController extends Controller
                     return $search->where('ruang', '=', $q);
                 });
             })
-            ->with(["transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+            ->filter(request(['q']))
+            ->with(["user.libur", "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
                 $split = explode("-", $periode);
                 $year = $split[0];
                 $month = $split[1];
