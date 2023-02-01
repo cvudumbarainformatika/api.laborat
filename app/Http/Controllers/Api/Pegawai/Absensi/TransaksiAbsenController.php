@@ -455,7 +455,7 @@ class TransaksiAbsenController extends Controller
                 });
             })
             ->filter(request(['q']))
-            ->with(["user", "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+            ->with(["user.libur", "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
                 $split = explode("-", $periode);
                 $year = $split[0];
                 $month = $split[1];
