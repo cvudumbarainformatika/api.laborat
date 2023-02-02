@@ -1522,35 +1522,103 @@ class AutogenController extends Controller
             'RS-4507',
 
         ];
+
+        $akses = [
+            ['nama' =>    'ANDY PURWANTO',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'DHANY MEILANDA',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'MUHAMAD IQBAL RAMADHANI',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'JUMADI',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'PIPIN INDAYANI',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'SOVI SULUSIYA',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'NURYASIN',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'LISMAWATI',    'ruang' =>    'R-0202003'],
+            ['nama' =>    'MUHAMMAD FIRMANSYAH',    'ruang' =>    'R-0202006'],
+            ['nama' =>    'ENIK ZULIARIFAH',    'ruang' =>    'R-0202007'],
+            ['nama' =>    'JAROT HADI WIBOWO ',    'ruang' =>    'R-0202007'],
+            ['nama' =>    'R.A. DESSY INDRANINGSIH',    'ruang' =>    'R-1001001'],
+            ['nama' =>    'SUYANI',    'ruang' =>    'R-1001001'],
+            ['nama' =>    'HUSNUL KHOTIMAH',    'ruang' =>    'R-1001002'],
+            ['nama' =>    'HENY HARYUNI',    'ruang' =>    'R-1001002'],
+            ['nama' =>    'ALVY NOOR LATIFA SARI ',    'ruang' =>    'R-0101028'],
+            ['nama' =>    'PUTRI MELATI',    'ruang' =>    'R-0101019'],
+            ['nama' =>    'JONI WIJAKSONO',    'ruang' =>    'R-0101019'],
+            ['nama' =>    'RAMA ADI DIHARTA.',    'ruang' =>    'R-0901001'],
+            ['nama' =>    'SULAIMAN',    'ruang' =>    'R-0101073'],
+            ['nama' =>    'ERNA SUSIYATI',    'ruang' =>    'R-0101073'],
+            ['nama' =>    'DESI ROSALIA PUTRI RAHMANITA',    'ruang' =>    'R-0101073'],
+            ['nama' =>    'DEVI WIJI MEGAWATI',    'ruang' =>    'R-0101030'],
+            ['nama' =>    'SUYITNO',    'ruang' =>    'R-0101030'],
+            ['nama' =>    'JULIAN DWI WARASTIONO',    'ruang' =>    'R-0301010'],
+            ['nama' =>    'GARINDA APRILIA',    'ruang' =>    'R-0302006'],
+            ['nama' =>    'PEBRIANTI PURTINI ',    'ruang' =>    'R-0302013'],
+            ['nama' =>    'LULUK MUKARROMAH',    'ruang' =>    'R-0301009'],
+            ['nama' =>    'SITI NURHOLIFAH',    'ruang' =>    'R-0302009'],
+            ['nama' =>    'NIKE APRILIA',    'ruang' =>    'R-0301004'],
+            ['nama' =>    'IRA WAHYUNINGSIH',    'ruang' =>    'R-0301003'],
+            ['nama' =>    'EKA YULI ASTUTIK',    'ruang' =>    'R-0302007'],
+            ['nama' =>    'SITI MAISYAROH',    'ruang' =>    'R-0302015'],
+            ['nama' =>    'DEWI HANDAYANI',    'ruang' =>    'R-0302012'],
+            ['nama' =>    'KIKI RIZKILLAH',    'ruang' =>    'R-0301005'],
+            ['nama' =>    'INDAH KUSUMAWATI',    'ruang' =>    'R-0302010'],
+            ['nama' =>    'NIKMATUS SHOLIHAH',    'ruang' =>    'R-0301006'],
+            ['nama' =>    'RIZKI SEPTIANA',    'ruang' =>    'R-0202010'],
+            ['nama' =>    'HARIYADI',    'ruang' =>    'R-0202010'],
+            ['nama' =>    'DINI ARI KUSUSA',    'ruang' =>    'R-0202010'],
+            ['nama' =>    'MARIYONO',    'ruang' =>    'R-0202010'],
+            ['nama' =>    'NAJIBURROHMAN',    'ruang' =>    'R-0202010'],
+            ['nama' =>    'SUBHAN SODIQ',    'ruang' =>    'R-0202010'],
+            ['nama' =>    'WAHYUDI ARIFIN',    'ruang' =>    'R-0302014'],
+            ['nama' =>    'IVAN DWI WASISTO',    'ruang' =>    'R-0201020'],
+            ['nama' =>    'AHMAD FANNI ROSYADI',    'ruang' =>    'R-0802019'],
+            ['nama' =>    'MUJIB',    'ruang' =>    'R-0202011'],
+            ['nama' =>    'ARIF RAKHMAD ANDRIANTO ',    'ruang' =>    'R-0902001'],
+            ['nama' =>    'MOH. NURHADIANSYAH',    'ruang' =>    'R-0101044'],
+            ['nama' =>    'RONY ROMADHONA',    'ruang' =>    'R-0702001'],
+            ['nama' =>    'DWI SISWIJAYANTO IBRAHIM',    'ruang' =>    'R-0101036'],
+            ['nama' =>    'NANIK WISYATI',    'ruang' =>    'R-0101004'],
+            ['nama' =>    'REKA LEO SAM PRAMATA',    'ruang' =>    'R-0401001'],
+            ['nama' =>    'ALFIA GUARDIOLA',    'ruang' =>    'R-0402002'],
+            ['nama' =>    'SHINTA AYU NUR FATIMAH',    'ruang' =>    'R-0101010'],
+            ['nama' =>    'ATIK AGUSTINA',    'ruang' =>    'R-0501001'],
+            ['nama' =>    'RETNO FEBY HARIYATI',    'ruang' =>    'R-0202001']
+
+        ];
         $all = [];
+        foreach ($akses as $key) {
+            $pegawai = Pegawai::where('nama', 'like', '%' . $key['nama'] . '%')->first();
+
+            $pegawai->update(['role_id' => 5, 'kode_ruang' => $key['ruang']]);
+            // array_push($all, $pegawai);
+            // return new JsonResponse($pegawai);
+        }
         // foreach ($kode_rs as $key) {
         //     $barang = BarangRS::where('kode', $key)->first();
         //     $barang->update(['tipe' => 'basah']);
         //     array_push($all, $barang);
         //     // return new JsonResponse($barang);
         // }
-        foreach ($rs_maping as $key) {
-            $barang = MapingBarangDepo::where('kode_rs', $key)->first();
-            $barang->update(['kode_gudang' => 'Gd-02010103']);
-            array_push($all, $barang);
-            // return new JsonResponse($barang);
-        }
-        foreach ($rs_maping as $key) {
-            $barang = RecentStokUpdate::where('kode_rs', $key)->first();
-            if ($barang) {
-                $barang->update(['kode_ruang' => 'Gd-02010103']);
-            }
-            array_push($all, $barang);
-            // return new JsonResponse($barang);
-        }
-        foreach ($rs_maping as $key) {
-            $barang = MonthlyStokUpdate::where('kode_rs', $key)->first();
-            if ($barang) {
-                $barang->update(['kode_ruang' => 'Gd-02010103']);
-            }
-            array_push($all, $barang);
-            // return new JsonResponse($barang);
-        }
+        // foreach ($rs_maping as $key) {
+        //     $barang = MapingBarangDepo::where('kode_rs', $key)->first();
+        //     $barang->update(['kode_gudang' => 'Gd-02010103']);
+        //     array_push($all, $barang);
+        //     // return new JsonResponse($barang);
+        // }
+        // foreach ($rs_maping as $key) {
+        //     $barang = RecentStokUpdate::where('kode_rs', $key)->first();
+        //     if ($barang) {
+        //         $barang->update(['kode_ruang' => 'Gd-02010103']);
+        //     }
+        //     array_push($all, $barang);
+        //     // return new JsonResponse($barang);
+        // }
+        // foreach ($rs_maping as $key) {
+        //     $barang = MonthlyStokUpdate::where('kode_rs', $key)->first();
+        //     if ($barang) {
+        //         $barang->update(['kode_ruang' => 'Gd-02010103']);
+        //     }
+        //     array_push($all, $barang);
+        //     // return new JsonResponse($barang);
+        // }
 
 
         return new JsonResponse($all);
