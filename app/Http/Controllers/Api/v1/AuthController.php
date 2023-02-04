@@ -95,12 +95,13 @@ class AuthController extends Controller
             ];
             return $apem;
         });
-
+        $foto = $pegawai->nip . '/' . $pegawai->foto;
         return new JsonResponse([
             'result' => $me,
             'aplikasi' => $apli,
             'menus' => $into,
             'role' => $role,
+            'foto' => $foto
         ]);
     }
 
@@ -168,13 +169,14 @@ class AuthController extends Controller
             ];
             return $apem;
         });
-
+        $foto = $pegawai->nip . '/' . $pegawai->foto;
         return response()->json([
             'token' => $token,
             'user' => auth()->user(),
             'aplikasi' => $apli,
             'menus' => $into,
             'role' => $role,
+            'foto' => $foto
         ]);
     }
 

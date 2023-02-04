@@ -15,7 +15,7 @@ class KontrakPengerjaan extends Model
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->where('nokontrak', 'LIKE', '%' . $query . '%')
+            return $search->where('nokontrakx', 'LIKE', '%' . $query . '%')
                 ->orWhere('namaperusahaan', 'LIKE', '%' . $query . '%');
             // ->orWhere('kodemapingrs', 'LIKE', '%' . $query . '%');
         });
