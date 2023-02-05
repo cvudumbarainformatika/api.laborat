@@ -18,7 +18,7 @@ class BarangRSController extends Controller
         // $data = BarangRS::paginate();
         $data = BarangRS::latest('id')
             ->filter(request(['q']))
-            ->with('barang108', 'satuan', 'satuankecil')
+            ->with('barang108', 'satuan', 'satuankecil', 'mapingdepo.gudang')
             ->paginate(request('per_page'));
         // return BarangRSResource::collection($data);
         $collect = collect($data);
@@ -102,11 +102,21 @@ class BarangRSController extends Controller
         $id = $request->id;
 
         $data = BarangRS::find($id);
+        $maping = MapingBarangDepo::where('kode_rs', $data->kode)->first();
         $del = $data->delete();
+        $hapus = $maping->delete();
 
-        if (!$del) {
+        if (!$del && !$hapus) {
             return response()->json([
                 'message' => 'Error on Delete'
+            ], 500);
+        } else if ($del && !$hapus) {
+            return response()->json([
+                'message' => 'Error on Delete Maping data Depo'
+            ], 500);
+        } else if (!$del && $hapus) {
+            return response()->json([
+                'message' => 'Error on Delete Data barang'
             ], 500);
         }
 
