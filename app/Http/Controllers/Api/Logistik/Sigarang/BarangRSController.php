@@ -30,7 +30,8 @@ class BarangRSController extends Controller
     public function barangrs()
     {
         $data = BarangRS::oldest('id')->with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
-        return BarangRSResource::collection($data);
+        // return BarangRSResource::collection($data);
+        return new JsonResponse($data);
     }
     public function storeByKode(Request $request)
     {
