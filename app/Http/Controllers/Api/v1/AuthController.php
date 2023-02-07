@@ -51,7 +51,7 @@ class AuthController extends Controller
     {
         $me = auth()->user();
         $akses = User::find(auth()->user()->id);
-        $pegawai = Pegawai::find($akses->pegawai_id);
+        $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
         $col = collect($submenu);
@@ -96,12 +96,17 @@ class AuthController extends Controller
             return $apem;
         });
         $foto = $pegawai->nip . '/' . $pegawai->foto;
+        $raw = collect($pegawai);
+        $apem = $raw['ruang'];
+        $gud = $raw['depo'];
         return new JsonResponse([
             'result' => $me,
             'aplikasi' => $apli,
             'menus' => $into,
             'role' => $role,
-            'foto' => $foto
+            'foto' => $foto,
+            'ruang' => $apem,
+            'depo' => $gud,
         ]);
     }
 
@@ -126,7 +131,7 @@ class AuthController extends Controller
     {
 
         $akses = User::find(auth()->user()->id);
-        $pegawai = Pegawai::find($akses->pegawai_id);
+        $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
         $col = collect($submenu);
@@ -170,13 +175,16 @@ class AuthController extends Controller
             return $apem;
         });
         $foto = $pegawai->nip . '/' . $pegawai->foto;
+        $raw = collect($pegawai);
+        $apem = $raw['ruang'];
         return response()->json([
             'token' => $token,
             'user' => auth()->user(),
             'aplikasi' => $apli,
             'menus' => $into,
             'role' => $role,
-            'foto' => $foto
+            'foto' => $foto,
+            'ruang' => $apem,
         ]);
     }
 

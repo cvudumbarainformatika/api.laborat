@@ -53,7 +53,7 @@ class PenggunaRuangController extends Controller
                 }
                 // return new JsonResponse($validatedData);
                 // PenggunaRuang::create($request->only('nama'));
-                PenggunaRuang::firstOrCreate($request->only(['kode_ruang', 'kode_penanggungjawab', 'kode_pengguna']));
+                PenggunaRuang::firstOrCreate($request->only('kode_ruang'), $request->only(['kode_ruang', 'kode_penanggungjawab', 'kode_pengguna']));
 
                 //     PenggunaRuang::firstOrCreate([
                 //         'kode' => $request->kode,
