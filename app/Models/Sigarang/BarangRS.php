@@ -5,10 +5,11 @@ namespace App\Models\Sigarang;
 use App\Models\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BarangRS extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
 
