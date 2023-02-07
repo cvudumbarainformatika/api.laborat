@@ -106,6 +106,7 @@ class AuthController extends Controller
             'role' => $role,
             'foto' => $foto,
             'ruang' => $apem,
+            'kode_ruang' => $pegawai->kode_ruang,
             'depo' => $gud,
         ]);
     }
@@ -177,6 +178,7 @@ class AuthController extends Controller
         $foto = $pegawai->nip . '/' . $pegawai->foto;
         $raw = collect($pegawai);
         $apem = $raw['ruang'];
+        $gud = $raw['depo'];
         return response()->json([
             'token' => $token,
             'user' => auth()->user(),
@@ -185,6 +187,8 @@ class AuthController extends Controller
             'role' => $role,
             'foto' => $foto,
             'ruang' => $apem,
+            'kode_ruang' => $pegawai->kode_ruang,
+            'depo' => $gud,
         ]);
     }
 
