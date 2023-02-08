@@ -28,6 +28,7 @@ class KontrakPengerjaanController extends Controller
         $data = KontrakPengerjaan::orderBy(request('order_by'), request('sort'))
             // ->whereYear('tglmulaikontrak', '=', date('Y')) // ini nanti dipakai
             ->where('kunci', '=', 1)
+            ->where('flag', '=', '')
             ->filter(request(['q']))->get();
         // return KontrakPengerjaanResource::collection($data);
         // $collect = collect($data);

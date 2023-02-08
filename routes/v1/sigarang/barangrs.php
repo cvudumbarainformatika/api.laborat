@@ -12,5 +12,6 @@ Route::group([
     Route::get('/index', [BarangRSController::class, 'index']);
     Route::get('/barangrs', [BarangRSController::class, 'barangrs']);
     Route::post('/store', [BarangRSController::class, 'store']);
+    Route::post('/store-by-kode', [BarangRSController::class, 'storeByKode']);
     Route::post('/destroy', [BarangRSController::class, 'destroy']);
 });

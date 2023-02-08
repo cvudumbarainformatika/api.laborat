@@ -1529,28 +1529,28 @@ class AutogenController extends Controller
         //     array_push($all, $barang);
         //     // return new JsonResponse($barang);
         // }
-        foreach ($rs_maping as $key) {
-            $barang = MapingBarangDepo::where('kode_rs', $key)->first();
-            $barang->update(['kode_gudang' => 'Gd-02010103']);
-            array_push($all, $barang);
-            // return new JsonResponse($barang);
-        }
-        foreach ($rs_maping as $key) {
-            $barang = RecentStokUpdate::where('kode_rs', $key)->first();
-            if ($barang) {
-                $barang->update(['kode_ruang' => 'Gd-02010103']);
-            }
-            array_push($all, $barang);
-            // return new JsonResponse($barang);
-        }
-        foreach ($rs_maping as $key) {
-            $barang = MonthlyStokUpdate::where('kode_rs', $key)->first();
-            if ($barang) {
-                $barang->update(['kode_ruang' => 'Gd-02010103']);
-            }
-            array_push($all, $barang);
-            // return new JsonResponse($barang);
-        }
+        // foreach ($rs_maping as $key) {
+        //     $barang = MapingBarangDepo::where('kode_rs', $key)->first();
+        //     $barang->update(['kode_gudang' => 'Gd-02010103']);
+        //     array_push($all, $barang);
+        //     // return new JsonResponse($barang);
+        // }
+        // foreach ($rs_maping as $key) {
+        //     $barang = RecentStokUpdate::where('kode_rs', $key)->first();
+        //     if ($barang) {
+        //         $barang->update(['kode_ruang' => 'Gd-02010103']);
+        //     }
+        //     array_push($all, $barang);
+        //     // return new JsonResponse($barang);
+        // }
+        // foreach ($rs_maping as $key) {
+        //     $barang = MonthlyStokUpdate::where('kode_rs', $key)->first();
+        //     if ($barang) {
+        //         $barang->update(['kode_ruang' => 'Gd-02010103']);
+        //     }
+        //     array_push($all, $barang);
+        //     // return new JsonResponse($barang);
+        // }
 
 
         return new JsonResponse($all);

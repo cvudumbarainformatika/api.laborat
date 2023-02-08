@@ -474,4 +474,38 @@ class TransaksiAbsenController extends Controller
             ->paginate(request('per_page'));
         return response()->json($data);
     }
+
+    public function print_absen_perbulan()
+    {
+        $periode = request('periode');
+
+        $data = Pegawai::where('aktif', '=', 'AKTIF')
+            ->where(function ($query) {
+                $query->when(request('flag') ?? false, function ($search, $q) {
+                    return $search->where('flag', '=', $q);
+                });
+                $query->when(request('ruang') ?? false, function ($search, $q) {
+                    return $search->where('ruang', '=', $q);
+                });
+            })
+            ->filter(request(['q']))
+            ->with([
+                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('created_at', $month)
+                        ->whereYear('created_at', $year);
+                }, "user.libur" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('tanggal', $month)
+                        ->whereYear('tanggal', $year);
+                }
+            ])
+            ->orderBy(request('order_by'), request('sort'))
+            ->get();
+        return response()->json($data);
+    }
 }

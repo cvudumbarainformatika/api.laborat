@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MaxRuangan;
+use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
@@ -17,24 +19,28 @@ class PenerimaanruanganController extends Controller
 {
     //
     public function index()
-    { {
-            $data = Permintaanruangan::where('status', '=', 7)
-                ->with('details.barangrs.barang108', 'details.barangrs.satuan', 'pj', 'pengguna')->get();
+    {
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
 
-            foreach ($data as $key) {
-                foreach ($key->details as $detail) {
-                    $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
-                    $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
-                    $detail['barangrs']->maxStok = $max->max_stok;
-                    $detail['barangrs']->alokasi = $temp->alokasi;
-                    $detail['temp'] = $temp;
-                    $detail['barangrs']->stokDepo = $temp->stok;
-                    $detail['barangrs']->stokRuangan = $temp->stokRuangan;
-                }
+        $data = Permintaanruangan::where('status', '=', 7)
+            ->where('kode_pengguna', $pengguna->kode_pengguna)
+            ->with('details.barangrs.barang108', 'details.barangrs.satuan', 'pj', 'pengguna')->get();
+
+        foreach ($data as $key) {
+            foreach ($key->details as $detail) {
+                $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
+                $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
+                $detail['barangrs']->maxStok = $max->max_stok;
+                $detail['barangrs']->alokasi = $temp->alokasi;
+                $detail['temp'] = $temp;
+                $detail['barangrs']->stokDepo = $temp->stok;
+                $detail['barangrs']->stokRuangan = $temp->stokRuangan;
             }
-
-            return new JsonResponse($data);
         }
+
+        return new JsonResponse($data);
     }
 
     // distribusi yang sudah tercatat di tabel penerimaan ruanga
