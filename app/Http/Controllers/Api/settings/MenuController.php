@@ -4,16 +4,24 @@ namespace App\Http\Controllers\Api\settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
+use App\Models\Pegawai\Akses\Aplikasi;
 use App\Models\Submenu;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
+
     public function index()
     {
         $data = Menu::with('submenu')->get();
 
+        return new JsonResponse($data);
+    }
+
+    public function aplikasi()
+    {
+        $data = Aplikasi::with(['menus.submenus'])->all();
         return new JsonResponse($data);
     }
 
