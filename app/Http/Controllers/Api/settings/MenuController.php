@@ -89,11 +89,4 @@ class MenuController extends Controller
             'message' => 'Data sukses terhapus'
         ], 200);
     }
-
-    public function aplikasi()
-    {
-        $data = Aplikasi::with('menus.submenus')->get();
-
-        return new JsonResponse($data);
-    }
 }
