@@ -39,29 +39,35 @@ class SatuanController extends Controller
 
             DB::beginTransaction();
 
-            if (!$request->has('id')) {
 
-                $validatedData = Validator::make($request->all(), [
-                    'kode' => 'required'
-                ]);
-                if ($validatedData->fails()) {
-                    return response()->json($validatedData->errors(), 422);
-                }
-
-                Satuan::firstOrCreate($request->all());
-
-                // $auth->log("Memasukkan data Satuan {$user->name}");
-            } else {
-                $toUpdate = $request->all();
-                unset($toUpdate['id']);
-                $barang = Satuan::find($request->id);
-                $barang->update($toUpdate);
-
-                // $auth->log("Merubah data Satuan {$user->name}");
+            $validatedData = Validator::make($request->all(), [
+                'kode' => 'required'
+            ]);
+            if ($validatedData->fails()) {
+                return response()->json($validatedData->errors(), 422);
             }
 
+            $data = Satuan::updateOrCreate(['kode' => $request->kode], $request->all());
+
+            // $auth->log("Memasukkan data Satuan {$user->name}");
+            // if (!$request->has('id')) {
+            // } else {
+            //     $toUpdate = $request->all();
+            //     unset($toUpdate['id']);
+            //     $barang = Satuan::find($request->id);
+            //     $barang->update($toUpdate);
+
+            //     // $auth->log("Merubah data Satuan {$user->name}");
+            // }
+
             DB::commit();
-            return response()->json(['message' => 'success'], 201);
+            if ($data->wasRecentlyCreated) {
+                return response()->json(['message' => 'dibuat'], 201);
+            } else if ($data->wasChanged()) {
+                return response()->json(['message' => 'diupdate'], 200);
+            } else {
+                return response()->json(['message' => 'data tidak berubah'], 410);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);

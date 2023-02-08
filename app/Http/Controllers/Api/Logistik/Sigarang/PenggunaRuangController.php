@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\PenggunaRuangResource;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\PenggunaRuang;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,8 +29,19 @@ class PenggunaRuangController extends Controller
     }
     public function penggunaRuang()
     {
-        $data = PenggunaRuang::with('ruang.namagedung', 'pengguna', 'penanggungjawab')
-            ->get();
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+        $role = $pegawai->role_id;
+        if ($pengguna && $pegawai->role_id === 5) {
+            $data = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->with('ruang.namagedung', 'pengguna', 'penanggungjawab')
+                ->get();
+        } else {
+            $data = PenggunaRuang::with('ruang.namagedung', 'pengguna', 'penanggungjawab')
+                ->get();
+        }
+
+        // return new JsonResponse([$role, $pengguna, $pegawai, $data]);
         return new JsonResponse($data);
     }
     public function store(Request $request)
@@ -53,7 +65,7 @@ class PenggunaRuangController extends Controller
                 }
                 // return new JsonResponse($validatedData);
                 // PenggunaRuang::create($request->only('nama'));
-                PenggunaRuang::firstOrCreate($request->only(['kode_ruang', 'kode_penanggungjawab', 'kode_pengguna']));
+                PenggunaRuang::firstOrCreate($request->only('kode_ruang'), $request->only(['kode_ruang', 'kode_penanggungjawab', 'kode_pengguna']));
 
                 //     PenggunaRuang::firstOrCreate([
                 //         'kode' => $request->kode,

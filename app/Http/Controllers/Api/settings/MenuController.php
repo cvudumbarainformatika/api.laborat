@@ -11,10 +11,17 @@ use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
+
     public function index()
     {
         $data = Menu::with('submenu')->get();
 
+        return new JsonResponse($data);
+    }
+
+    public function aplikasi()
+    {
+        $data = Aplikasi::with(['menus.submenus'])->all();
         return new JsonResponse($data);
     }
 

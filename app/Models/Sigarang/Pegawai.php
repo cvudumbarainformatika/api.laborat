@@ -53,6 +53,11 @@ class Pegawai extends Model
         return $this->hasOne(Ruang::class, 'kode', 'kode_ruang');
     }
 
+    public function depo()
+    {
+        return $this->hasOne(Gudang::class, 'kode', 'kode_ruang');
+    }
+
     public function mapingPengguna()
     {
         return $this->hasOne(PenggunaRuang::class, 'kode_ruang', 'kode_ruang');
