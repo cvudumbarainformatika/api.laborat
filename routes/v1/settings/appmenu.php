@@ -10,5 +10,5 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'settings/appmenu'
 ], function () {
-    Route::get('/apilkasi', [MenuController::class, 'aplikasi']);
+    Route::get('/aplikasi', [MenuController::class, 'aplikasi']);
 });
