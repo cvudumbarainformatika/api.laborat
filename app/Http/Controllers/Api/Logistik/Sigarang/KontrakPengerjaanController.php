@@ -27,7 +27,7 @@ class KontrakPengerjaanController extends Controller
     {
         // return new JsonResponse(request()->all());
         // return new JsonResponse($request->all());
-        $data = KontrakPengerjaan::oldest('id')
+        $data = KontrakPengerjaan::latest('id')
             ->where('kunci', '=', 1)
             ->where('flag', '=', '')
             ->filter(['q' => $request->q])
