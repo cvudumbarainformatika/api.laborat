@@ -1553,7 +1553,12 @@ class AutogenController extends Controller
         // }
 
 
-        return new JsonResponse($all);
+        // return new JsonResponse($all);
+        // return new JsonResponse([$_GET, request()->all()]);
+        // $data = BarangRS::oldest('id')->with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
+        $data = BarangRS::with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
+        // return BarangRSResource::collection($data);
+        return new JsonResponse($data);
         // return new JsonResponse($kode_rs);
     }
 

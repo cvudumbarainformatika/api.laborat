@@ -20,7 +20,13 @@ class PemesananController extends Controller
             ->where('status', '=', 2)->get();
         $draft = Pemesanan::where('reff', '=', request()->reff)
             ->where('status', '=', 1)
-            ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan'])->get();
+            ->latest('id')->with([
+                'details.barang108', 'details.barangrs', 'details.satuan',
+                'details_kontrak' => function ($kueri) {
+                    $kueri->where('kunci', '=', 1)
+                        ->where('flag', '=', '');
+                }
+            ])->get();
         if (count($complete)) {
             return new JsonResponse(['message' => 'completed']);
         }

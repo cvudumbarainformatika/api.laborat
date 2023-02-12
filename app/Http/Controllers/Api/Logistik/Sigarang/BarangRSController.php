@@ -9,18 +9,29 @@ use App\Models\Sigarang\MapingBarangDepo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 
 class BarangRSController extends Controller
 {
     public function index()
     {
-        // $data = BarangRS::paginate();
+        $data = BarangRS::filter(request(['q']))
+            ->latest('id')
+            ->with('barang108', 'satuan', 'satuankecil', 'depo')
+            ->paginate(request('per_page'));
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
+    }
+    public function indexForPemesanan()
+    {
         $data = BarangRS::latest('id')
             ->filter(request(['q']))
             ->with('barang108', 'satuan', 'satuankecil', 'depo')
             ->paginate(request('per_page'));
-        // return BarangRSResource::collection($data);
         $collect = collect($data);
         $balik = $collect->only('data');
         $balik['meta'] = $collect->except('data');
