@@ -21,4 +21,8 @@ class MapingBarangDepo extends Model
     {
         return $this->belongsTo(Gudang::class, 'kode_gudang', 'kode');
     }
+    public function depo()
+    {
+        return $this->belongsTo(Gudang::class, 'kode_depo', 'kode');
+    }
 }

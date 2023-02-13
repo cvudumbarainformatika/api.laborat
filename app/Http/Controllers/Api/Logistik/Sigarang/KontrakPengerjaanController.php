@@ -22,6 +22,26 @@ class KontrakPengerjaanController extends Controller
 
         return new JsonResponse($balik);
     }
+    // public function pagedKontrakAktif()
+    public function pagedKontrakAktif(Request $request)
+    {
+        // return new JsonResponse(request()->all());
+        // return new JsonResponse($request->all());
+        $data = KontrakPengerjaan::latest('id')
+            ->where('kunci', '=', 1)
+            ->where('flag', '=', '')
+            ->filter(['q' => $request->q])
+            ->paginate($request->per_page);
+        // ->filter(request(['q']))
+        // ->paginate(request('per_page'));
+        // return KontrakPengerjaanResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+        $balik['request'] = $request->all();
+
+        return new JsonResponse($balik);
+    }
     public function kontrakAktif()
     {
         // $tahun = date('Y');

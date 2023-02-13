@@ -25,7 +25,7 @@ class Pemesanan extends Model
 
     public function details_kontrak()
     {
-        return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrak');
+        return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrakx');
     }
 
     public function scopeFilter($search, array $reqs)

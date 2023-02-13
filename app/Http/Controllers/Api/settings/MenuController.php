@@ -21,7 +21,7 @@ class MenuController extends Controller
 
     public function aplikasi()
     {
-        $data = Aplikasi::with(['menus.submenus'])->all();
+        $data = Aplikasi::with(['menus.submenus'])->get();
         return new JsonResponse($data);
     }
 

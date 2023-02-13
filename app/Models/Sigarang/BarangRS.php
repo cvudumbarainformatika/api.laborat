@@ -35,6 +35,11 @@ class BarangRS extends Model
     {
         return $this->hasOne(MapingBarangDepo::class, 'kode_rs', 'kode');
     }
+    public function depo()
+    {
+        return $this->belongsTo(Gudang::class, 'kode_depo', 'kode');
+    }
+
 
 
     public function scopeFilter($search, array $reqs)

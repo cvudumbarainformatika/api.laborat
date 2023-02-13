@@ -17,7 +17,7 @@ class DistribusiController extends Controller
         $data = Permintaanruangan::where('status', '>=', 4)
             ->where('status', '<=', 7)
             ->orderBy(request('order_by'), request('sort'))
-            ->with('details.barangrs.mapingbarang.barang108',  'details.satuan', 'pj', 'pengguna')
+            ->with('details.barangrs.mapingbarang.barang108', 'details.satuan',  'details.ruang', 'pj', 'pengguna')
             ->filter(request(['q']))
             ->paginate(request('per_page'));
 
