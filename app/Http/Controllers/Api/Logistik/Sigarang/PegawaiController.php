@@ -34,7 +34,7 @@ class PegawaiController extends Controller
         $data = Pegawai::where('nik',  $request->nik)
             // ->orWhere('nip_baru',  $request->nip)
             ->orWhere('tgllahir', '=', $request->tgllahir)
-            ->with('jabatan', 'jabatanTambahan', 'user')
+            ->with('jabatanTambahan', 'user')
             ->first();
         if (!$data) {
             return new JsonResponse(['message' => 'NIK Anda tidak ditemukan, Silahkan hubungi SDM untuk melengkapi Data'], 200);
