@@ -34,7 +34,8 @@ class KeuanganController extends Controller
                 ->where(function ($query) {
                     $query->whereNull('tglBatal')
                         ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
-                });
+                })
+                ->whereHas('keu_trans_setor');
         })->with('header_penerimaan')
             ->get();
 

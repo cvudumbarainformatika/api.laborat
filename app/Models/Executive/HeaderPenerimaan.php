@@ -17,4 +17,20 @@ class HeaderPenerimaan extends Model
     {
         return $this->hasMany(DetailPenerimaan::class, 'rs1', 'rs1');
     }
+    public function keu_trans_setor()
+    {
+        return $this->hasOne(KeuTransSetor::class, 'noSetor', 'noSetor');
+    }
+
+    // public function detail_keu_trans_setor()
+    // {
+    //     return $this->hasOneThrough(
+    //         Pasien::class,
+    //         KunjunganPoli::class,
+    //         'rs1', // Foreign key on the kunjungan poli table...
+    //         'rs1', // Foreign key on the pasien table...
+    //         'rs1', // Local key on rs258 table...
+    //         'rs2' // Local key on the keu_trans_setor table...
+    //     );
+    // }
 }
