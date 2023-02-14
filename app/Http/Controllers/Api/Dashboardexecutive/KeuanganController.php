@@ -26,7 +26,7 @@ class KeuanganController extends Controller
                         ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
                 });
         })->with('header_penerimaan')
-            ->get();
+            ->sum('rs4');
         return response()->json($data);
     }
 }
