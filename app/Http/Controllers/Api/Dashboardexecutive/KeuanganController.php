@@ -28,9 +28,20 @@ class KeuanganController extends Controller
         })->with('header_penerimaan')
             ->sum('rs4');
 
+        $penerimaan2 = DetailPenerimaan::whereHas('header_penerimaan', function ($q) {
+            $q->whereYear('rs2', request('year'))
+                ->where('setor', '<>', 'Setor')
+                ->where(function ($query) {
+                    $query->whereNull('tglBatal')
+                        ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
+                });
+        })->with('header_penerimaan')
+            ->get();
+
         $data = array(
             'transaksi_pendapatan' => $transaksiPendapatan,
-            'penerimaan' => $penerimaan
+            'penerimaan' => $penerimaan,
+            'penerimaan2' => $penerimaan2
         );
         return response()->json($data);
     }
