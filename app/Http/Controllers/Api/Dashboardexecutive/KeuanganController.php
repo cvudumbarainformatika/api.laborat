@@ -46,7 +46,7 @@ class KeuanganController extends Controller
         //     'penerimaan2' => $penerimaan2
         // );
 
-        $tgl = request('year') . "-" . request('month') . "-01";
+        $tgl = request('year') . "-" . "01-01";
         $tglx = request('year') . "-" . request('month') . "-31";
 
         $data = DB::select("select sum(penerimaan) as penerimaan from (
