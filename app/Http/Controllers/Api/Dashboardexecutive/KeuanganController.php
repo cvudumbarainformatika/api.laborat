@@ -20,7 +20,7 @@ class KeuanganController extends Controller
             ->whereYear('rs2', request('year'))
             ->where('setor', '=', 'Setor')
             ->whereNull('tglBatal')
-            ->where('tglBatal', '=', '0000-00-00 00:00:00')
+            // ->orWhere('tglBatal', '=', '0000-00-00 00:00:00')
             ->get();
         return response()->json($data);
     }
