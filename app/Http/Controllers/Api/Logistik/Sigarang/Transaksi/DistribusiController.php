@@ -26,10 +26,10 @@ class DistribusiController extends Controller
                 $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
                 $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
                 $detail['barangrs']->maxStok = $max->max_stok;
-                $detail['barangrs']->alokasi = $temp->alokasi;
+                $detail['barangrs']->alokasi = $temp->alokasi ? $temp->alokasi : 0;
                 $detail['temp'] = $temp;
-                $detail['barangrs']->stokDepo = $temp->stok;
-                $detail['barangrs']->stokRuangan = $temp->stokRuangan;
+                $detail['barangrs']->stokDepo = $temp->stok ? $temp->stok : 0;
+                $detail['barangrs']->stokRuangan = $temp->stokRuangan ? $temp->stokRuangan : 0;
             }
         }
 
