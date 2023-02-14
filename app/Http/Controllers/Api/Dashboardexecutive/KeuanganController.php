@@ -23,7 +23,7 @@ class KeuanganController extends Controller
                 $query->whereNull('tglBatal')
                     ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
             })
-            - with('detail_penerimaan')
+            ->with('detail_penerimaan')
             ->get();
         return response()->json($data);
     }
