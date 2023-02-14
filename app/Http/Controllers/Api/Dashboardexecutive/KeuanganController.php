@@ -18,8 +18,7 @@ class KeuanganController extends Controller
         //     ->whereMonth('tgl', request('month'))
         //     ->whereYear('tgl', request('year'))->get();
         $data = DetailPenerimaan::whereHas('header_penerimaan', function ($q) {
-            $q->whereMonth('rs2', request('month'))
-                ->whereYear('rs2', request('year'))
+            $q->whereYear('rs2', request('year'))
                 ->where('setor', '=', 'Setor')
                 ->where(function ($query) {
                     $query->whereNull('tglBatal')
