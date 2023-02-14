@@ -49,7 +49,7 @@ class KeuanganController extends Controller
         $tgl = request('year') . "-" . "01-01";
         $tglx = request('year') . "-" . request('month') . "-31";
 
-        $data = DB::select("select sum(penerimaan) as penerimaan from (
+        $penerimaan = DB::select("select sum(penerimaan) as penerimaan from (
 									select
 										tgl,
 										noRek,
@@ -191,7 +191,7 @@ class KeuanganController extends Controller
 										tanggalpenerimaan>='" . $tgl . "'
 										and tanggalpenerimaan<='" . $tglx . "'
 								) as vBku order by tgl,urut");
-
+        $data = [$penerimaan];
         return response()->json($data);
     }
 }
