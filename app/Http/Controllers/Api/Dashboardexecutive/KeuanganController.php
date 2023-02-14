@@ -25,7 +25,7 @@ class KeuanganController extends Controller
                     $query->whereNull('tglBatal')
                         ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
                 });
-        })
+        })->with('header_penerimaan')
             ->get();
         return response()->json($data);
     }
