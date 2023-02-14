@@ -19,8 +19,10 @@ class KeuanganController extends Controller
         $data = HeaderPenerimaan::whereMonth('rs2', request('month'))
             ->whereYear('rs2', request('year'))
             ->where('setor', '=', 'Setor')
-            ->whereNull('tglBatal')
-            // ->orWhere('tglBatal', '=', '0000-00-00 00:00:00')
+            ->whrere(function ($query) {
+                $query->whereNull('tglBatal')
+                    ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
+            })
             ->get();
         return response()->json($data);
     }
