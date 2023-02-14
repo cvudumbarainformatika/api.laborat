@@ -18,7 +18,7 @@ class KeuanganController extends Controller
             ->whereMonth('tgl', request('month'))
             ->whereYear('tgl', request('year'))->sum('nilai');
 
-        $penerimaan = DetailPenerimaan::whereHas('header_penerimaan', function ($q) {
+        $penerimaan = DetailPenerimaan::hasByNonDependentSubquery('header_penerimaan', function ($q) {
             $q->whereYear('rs2', request('year'))
                 ->where('setor', '=', 'Setor')
                 ->where(function ($query) {
@@ -28,7 +28,7 @@ class KeuanganController extends Controller
         })->with('header_penerimaan')
             ->sum('rs4');
 
-        $penerimaan2 = DetailPenerimaan::whereHas('header_penerimaan', function ($q) {
+        $penerimaan2 = DetailPenerimaan::hasByNonDependentSubquery('header_penerimaan', function ($q) {
             $q->whereYear('rs2', request('year'))
                 ->where('setor', '<>', 'Setor')
                 ->where(function ($query) {
