@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
@@ -55,9 +56,15 @@ class HistoryController extends Controller
                 ->paginate(request('per_page'));
             // permintaan ruangan
         } else if ($nama === 'Permintaan Ruangan') {
-
-            $data = $permintaan->filter(request(['q']))
-                ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang')
+            $user = auth()->user();
+            $pegawai = Pegawai::find($user->pegawai_id);
+            if ($pegawai->role_id === 5) {
+                $filterRuangan = $permintaan->where('kode_ruang', $pegawai->kode_ruang);
+            } else {
+                $filterRuangan = $permintaan;
+            }
+            $data = $filterRuangan->filter(request(['q']))
+                ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang', 'ruangan')
                 ->latest('id')
                 ->paginate(request('per_page'));
             /*
