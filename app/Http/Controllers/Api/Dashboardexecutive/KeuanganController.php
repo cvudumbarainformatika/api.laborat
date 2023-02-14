@@ -12,7 +12,8 @@ class KeuanganController extends Controller
 {
     public function pendapatan()
     {
-        $data = KeuTransPendapatan::whereMonth('tgl', request('month'))
+        $data = KeuTransPendapatan::where('noTrans', 'not like', "%TBP-UJ%")
+            ->whereMonth('tgl', request('month'))
             ->whereYear('tgl', request('year'))->get();
         return response()->json($data);
     }
