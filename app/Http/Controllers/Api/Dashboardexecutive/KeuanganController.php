@@ -16,8 +16,7 @@ class KeuanganController extends Controller
         // $data = KeuTransPendapatan::where('noTrans', 'not like', "%TBP-UJ%")
         //     ->whereMonth('tgl', request('month'))
         //     ->whereYear('tgl', request('year'))->get();
-        $data = HeaderPenerimaan::where('noTrans', 'not like', "%TBP-UJ%")
-            ->whereMonth('rs2', request('month'))
+        $data = HeaderPenerimaan::whereMonth('rs2', request('month'))
             ->whereYear('rs2', request('year'))
             ->where('setor', '=', 'Setor')
             ->whereNull('tglBatal')
