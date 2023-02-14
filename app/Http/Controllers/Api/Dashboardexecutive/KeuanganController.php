@@ -191,7 +191,12 @@ class KeuanganController extends Controller
 										tanggalpenerimaan>='" . $tgl . "'
 										and tanggalpenerimaan<='" . $tglx . "'
 								) as vBku order by tgl,urut");
-        $data = [$penerimaan];
+
+        $targetPendapatan = 0;
+        $data = array(
+            'penerimaan' => $penerimaan,
+            'targetPendapatan' => $targetPendapatan
+        );
         return response()->json($data);
     }
 }
