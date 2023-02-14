@@ -14,10 +14,11 @@ class KeuanganController extends Controller
 {
     public function pendapatan()
     {
-        // $data = KeuTransPendapatan::where('noTrans', 'not like', "%TBP-UJ%")
-        //     ->whereMonth('tgl', request('month'))
-        //     ->whereYear('tgl', request('year'))->get();
-        $data = DetailPenerimaan::whereHas('header_penerimaan', function ($q) {
+        $transaksiPendapatan = KeuTransPendapatan::where('noTrans', 'not like', "%TBP-UJ%")
+            ->whereMonth('tgl', request('month'))
+            ->whereYear('tgl', request('year'))->get();
+
+        $penerimaan = DetailPenerimaan::whereHas('header_penerimaan', function ($q) {
             $q->whereYear('rs2', request('year'))
                 ->where('setor', '=', 'Setor')
                 ->where(function ($query) {
@@ -26,6 +27,11 @@ class KeuanganController extends Controller
                 });
         })->with('header_penerimaan')
             ->sum('rs4');
+
+        $data = array(
+            'transaksi_pendapatan' => $transaksiPendapatan,
+            'penerimaan' => $penerimaan
+        );
         return response()->json($data);
     }
 }
