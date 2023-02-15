@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\MaxRuangan;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,10 +15,20 @@ class DistribusiController extends Controller
 
     public function getPermintaanVerified()
     {
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
         $data = Permintaanruangan::where('status', '>=', 4)
-            ->where('status', '<=', 7)
+            ->where('status', '<', 7)
             ->orderBy(request('order_by'), request('sort'))
-            ->with('details.barangrs.mapingbarang.barang108', 'details.satuan',  'details.ruang', 'pj', 'pengguna')
+            ->with([
+                // 'details.barangrs.mapingbarang.barang108', 'details.satuan',  'details.ruang',
+                'pj', 'pengguna', 'details' => function ($wew) use ($pegawai) {
+                    if ($pegawai->role_id === 4) {
+                        $wew->where('dari', $pegawai->kode_ruang);
+                    }
+                    $wew->with('barangrs.mapingbarang.barang108', 'satuan', 'ruang');
+                }
+            ])
             ->filter(request(['q']))
             ->paginate(request('per_page'));
 

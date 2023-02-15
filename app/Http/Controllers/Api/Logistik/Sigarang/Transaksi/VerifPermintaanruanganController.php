@@ -23,8 +23,10 @@ class VerifPermintaanruanganController extends Controller
             ->with([
                 // 'details.barangrs', 'details.satuan', 'details.ruang',
                 'pj', 'pengguna', 'details' => function ($wew) use ($pegawai) {
-                    $wew->where('dari', $pegawai->kode_ruang)
-                        ->with('barangrs', 'satuan', 'ruang');
+                    if ($pegawai->role_id === 4) {
+                        $wew->where('dari', $pegawai->kode_ruang);
+                    }
+                    $wew->with('barangrs', 'satuan', 'ruang');
                 }
             ])->get();
         // if (count($data)) {
