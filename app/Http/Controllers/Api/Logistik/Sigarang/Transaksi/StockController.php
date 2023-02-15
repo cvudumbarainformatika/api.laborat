@@ -68,7 +68,7 @@ class StockController extends Controller
 
         // cari stok di depo
         $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $depo->kode_gudang)->get();
+            ->where('kode_ruang', $barang->kode_depo)->get();
         $totalStok = collect($stok)->sum('sisa_stok');
 
         // ambil alokasi barang
