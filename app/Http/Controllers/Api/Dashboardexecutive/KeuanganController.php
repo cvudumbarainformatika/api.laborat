@@ -193,7 +193,7 @@ class KeuanganController extends Controller
 										and tanggalpenerimaan<='" . $tglx . "'
 								) as vBku order by tgl,urut");
 
-        $targetPendapatan = AnggaranPendapatan::where('tahun', '=', request('year'))->get();
+        $targetPendapatan = AnggaranPendapatan::where('tahun', '=', request('year'))->sum('nilai');
 
         $data = array(
             'penerimaan' => $penerimaan,
