@@ -82,7 +82,7 @@ class StockController extends Controller
             $item->alokasi = $jumsem;
             return $item;
         });
-        $sum = $gr->sum('alokasi');
+        $sum = $gr ? $gr->sum('alokasi') : 0;
         $alokasi = 0;
         // hitung alokasi
         if ($totalStok >= $sum) {
