@@ -74,7 +74,7 @@ class StockController extends Controller
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
             $q->where('status', '>=', 4)
-                ->where('status', '<', 8);
+                ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
         $gr = $col->map(function ($item) {
@@ -120,7 +120,7 @@ class StockController extends Controller
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
             $q->where('status', '>=', 4)
-                ->where('status', '<', 8);
+                ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
         $gr = $col->map(function ($item) {
