@@ -197,9 +197,9 @@ class KeuanganController extends Controller
         $realisasiBelanja = DB::connection('siasik')->select(
             "select sum(realisasi)-sum(kurangi) as realisasix from(
 				select '' as kode,'' as uraian,'' as anggaran,sum(npkls_rinci.total) as realisasi,'' as kurangi
-															   from npkls_rinci,npkls_heder
-															   where npkls_heder.nopencairan=npkls_rinci.nopencairan
-															   and npkls_heder.tglpencairan >= '" . $tgl . "' and npkls_heder.tglpencairan <= '" . $tglx . "'
+                from npkls_rinci,npkls_heder
+                where npkls_heder.nopencairan=npkls_rinci.nopencairan
+                and npkls_heder.tglpencairan >= '" . $tgl . "' and npkls_heder.tglpencairan <= '" . $tglx . "'
 															   union all
 															   select '' as kode,'' as uraian,'' as anggaran,sum(spjpanjar_rinci.jumlahbelanjapanjar) as realisasi,'' as kurangi
 															   from spjpanjar_heder,spjpanjar_rinci
@@ -210,6 +210,9 @@ class KeuanganController extends Controller
         $anggaranBelanja = DB::connection('siasik')->select(
             "select sum(pagu) as anggaran from t_tampung where tgl= '" . request('year') . "'"
         );
+
+
+        // SELECT * FROM table WHERE DATE_FORMAT(column_name,'%Y-%m') = '2021-06'
 
         $data = array(
             'penerimaan' => $penerimaan,
