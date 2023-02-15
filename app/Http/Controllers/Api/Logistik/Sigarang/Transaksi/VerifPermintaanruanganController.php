@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MapingBarangDepo;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
@@ -16,8 +17,18 @@ class VerifPermintaanruanganController extends Controller
     // ambil semua permintaan yang sudah selesai di input
     public function getPermintaan()
     {
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
         $datas = Permintaanruangan::where('status', '=', 4)
-            ->with('details.barangrs', 'details.satuan', 'details.ruang', 'pj', 'pengguna')->get();
+            ->with([
+                // 'details.barangrs', 'details.satuan', 'details.ruang',
+                'pj', 'pengguna', 'details' => function ($wew) use ($pegawai) {
+                    if ($pegawai->role_id === 4) {
+                        $wew->where('dari', $pegawai->kode_ruang);
+                    }
+                    $wew->with('barangrs', 'satuan', 'ruang');
+                }
+            ])->get();
         // if (count($data)) {
         //     foreach ($data as $key) {
         //         $key->gudang = collect($key->details)->groupBy('dari');
@@ -32,6 +43,7 @@ class VerifPermintaanruanganController extends Controller
                 $detail->stokDepo = $temp->stokDepo;
                 $detail->stokRuangan = $temp->stokRuangan;
             }
+            $key->user = $pegawai;
         }
 
         return new JsonResponse($datas);

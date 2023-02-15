@@ -68,13 +68,13 @@ class StockController extends Controller
 
         // cari stok di depo
         $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $depo->kode_gudang)->get();
+            ->where('kode_ruang', $barang->kode_depo)->get();
         $totalStok = collect($stok)->sum('sisa_stok');
 
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
             $q->where('status', '>=', 4)
-                ->where('status', '<', 8);
+                ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
         $gr = $col->map(function ($item) {
@@ -82,7 +82,7 @@ class StockController extends Controller
             $item->alokasi = $jumsem;
             return $item;
         });
-        $sum = $gr->sum('alokasi');
+        $sum = $gr ? $gr->sum('alokasi') : 0;
         $alokasi = 0;
         // hitung alokasi
         if ($totalStok >= $sum) {
@@ -120,7 +120,7 @@ class StockController extends Controller
         // ambil alokasi barang
         $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
             $q->where('status', '>=', 4)
-                ->where('status', '<', 8);
+                ->where('status', '<', 7);
         })->where('kode_rs', $kode_rs)->get();
         $col = collect($data);
         $gr = $col->map(function ($item) {
