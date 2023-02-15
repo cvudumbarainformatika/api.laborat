@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Dashboardexecutive;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agama;
+use App\Models\Executive\AnggaranPendapatan;
 use App\Models\Executive\DetailPenerimaan;
 use App\Models\Executive\HeaderPenerimaan;
 use App\Models\Executive\KeuTransPendapatan;
@@ -192,7 +193,8 @@ class KeuanganController extends Controller
 										and tanggalpenerimaan<='" . $tglx . "'
 								) as vBku order by tgl,urut");
 
-        $targetPendapatan = 0;
+        $targetPendapatan = AnggaranPendapatan::where('tahun', '=', request('year'))->sum('nilai');
+
         $data = array(
             'penerimaan' => $penerimaan,
             'targetPendapatan' => $targetPendapatan
