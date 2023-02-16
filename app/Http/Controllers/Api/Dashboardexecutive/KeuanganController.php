@@ -14,43 +14,43 @@ use Illuminate\Support\Facades\DB;
 
 class KeuanganController extends Controller
 {
-	public function pendapatan()
-	{
-		// $transaksiPendapatan = KeuTransPendapatan::where('noTrans', 'not like', "%TBP-UJ%")
-		//     ->whereMonth('tgl', request('month'))
-		//     ->whereYear('tgl', request('year'))->sum('nilai');
+    public function pendapatan()
+    {
+        // $transaksiPendapatan = KeuTransPendapatan::where('noTrans', 'not like', "%TBP-UJ%")
+        //     ->whereMonth('tgl', request('month'))
+        //     ->whereYear('tgl', request('year'))->sum('nilai');
 
-		// $penerimaan = DetailPenerimaan::hasByNonDependentSubquery('header_penerimaan', function ($q) {
-		//     $q->whereYear('rs2', request('year'))
-		//         ->where('setor', '=', 'Setor')
-		//         ->where(function ($query) {
-		//             $query->whereNull('tglBatal')
-		//                 ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
-		//         });
-		// })->with('header_penerimaan')
-		//     ->sum('rs4');
+        // $penerimaan = DetailPenerimaan::hasByNonDependentSubquery('header_penerimaan', function ($q) {
+        //     $q->whereYear('rs2', request('year'))
+        //         ->where('setor', '=', 'Setor')
+        //         ->where(function ($query) {
+        //             $query->whereNull('tglBatal')
+        //                 ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
+        //         });
+        // })->with('header_penerimaan')
+        //     ->sum('rs4');
 
-		// $penerimaan2 = DetailPenerimaan::hasByNonDependentSubquery('header_penerimaan', function ($q) {
-		//     $q->whereYear('rs2', request('year'))
-		//         ->where('setor', '<>', 'Setor')
-		//         ->where(function ($query) {
-		//             $query->whereNull('tglBatal')
-		//                 ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
-		//         })
-		//         ->whereHas('keu_trans_setor');
-		// })->with('header_penerimaan')
-		//     ->sum('rs4');
+        // $penerimaan2 = DetailPenerimaan::hasByNonDependentSubquery('header_penerimaan', function ($q) {
+        //     $q->whereYear('rs2', request('year'))
+        //         ->where('setor', '<>', 'Setor')
+        //         ->where(function ($query) {
+        //             $query->whereNull('tglBatal')
+        //                 ->orWhere('tglBatal', '=', '0000-00-00 00:00:00');
+        //         })
+        //         ->whereHas('keu_trans_setor');
+        // })->with('header_penerimaan')
+        //     ->sum('rs4');
 
-		// $data = array(
-		//     'transaksi_pendapatan' => $transaksiPendapatan,
-		//     'penerimaan' => $penerimaan,
-		//     'penerimaan2' => $penerimaan2
-		// );
+        // $data = array(
+        //     'transaksi_pendapatan' => $transaksiPendapatan,
+        //     'penerimaan' => $penerimaan,
+        //     'penerimaan2' => $penerimaan2
+        // );
 
-		$tgl = request('year') . "-" . "01-01";
-		$tglx = request('year') . "-" . request('month') . "-31";
+        $tgl = request('year') . "-" . "01-01";
+        $tglx = request('year') . "-" . request('month') . "-31";
 
-		$penerimaan = DB::select("select sum(penerimaan) as penerimaan from (
+        $penerimaan = DB::select("select sum(penerimaan) as penerimaan from (
 									select
 										tgl,
 										noRek,
@@ -193,30 +193,33 @@ class KeuanganController extends Controller
 										and tanggalpenerimaan<='" . $tglx . "'
 								) as vBku order by tgl,urut");
 
-		$targetPendapatan = AnggaranPendapatan::where('tahun', '=', request('year'))->sum('nilai');
-		$realisasiBelanja = DB::connection('siasik')->select(
-			"select sum(realisasi)-sum(kurangi) as realisasix from(
+        $targetPendapatan = AnggaranPendapatan::where('tahun', '=', request('year'))->sum('nilai');
+        $realisasiBelanja = DB::connection('siasik')->select(
+            "select sum(realisasi)-sum(kurangi) as realisasix from(
 				select '' as kode,'' as uraian,'' as anggaran,sum(npkls_rinci.total) as realisasi,'' as kurangi
-															   from npkls_rinci,npkls_heder
-															   where npkls_heder.nopencairan=npkls_rinci.nopencairan
-															   and npkls_heder.tglpencairan >= '2022-01-01' and npkls_heder.tglpencairan <= '2022-02-31'
+                from npkls_rinci,npkls_heder
+                where npkls_heder.nopencairan=npkls_rinci.nopencairan
+                and npkls_heder.tglpencairan >= '" . $tgl . "' and npkls_heder.tglpencairan <= '" . $tglx . "'
 															   union all
 															   select '' as kode,'' as uraian,'' as anggaran,sum(spjpanjar_rinci.jumlahbelanjapanjar) as realisasi,'' as kurangi
 															   from spjpanjar_heder,spjpanjar_rinci
 															   where spjpanjar_heder.nospjpanjar=spjpanjar_rinci.nospjpanjar and spjpanjar_heder.verif=1
-															   and spjpanjar_heder.tglspjpanjar >= '2022-01-01' and spjpanjar_heder.tglspjpanjar <= '2022-02-31') as total;"
-		);
+															   and spjpanjar_heder.tglspjpanjar >= '" . $tgl . "' and spjpanjar_heder.tglspjpanjar <= '" . $tglx . "') as total;"
+        );
 
-		$anggaranBelanja = DB::connection('siasik')->select(
-			"select sum(pagu) as anggaran from t_tampung where tgl= 2023;"
-		);
+        $anggaranBelanja = DB::connection('siasik')->select(
+            "select sum(pagu) as anggaran from t_tampung where tgl= '" . request('year') . "'"
+        );
 
-		$data = array(
-			'penerimaan' => $penerimaan,
-			'targetPendapatan' => $targetPendapatan,
-			'realisasiBelanja' => $realisasiBelanja,
-			'anggaranBelanja' => $anggaranBelanja
-		);
-		return response()->json($data);
-	}
+
+        // SELECT * FROM table WHERE DATE_FORMAT(column_name,'%Y-%m') = '2021-06'
+
+        $data = array(
+            'penerimaan' => $penerimaan,
+            'targetPendapatan' => $targetPendapatan,
+            'realisasiBelanja' => $realisasiBelanja,
+            'anggaranBelanja' => $anggaranBelanja
+        );
+        return response()->json($data);
+    }
 }

@@ -18,7 +18,7 @@ class DistribusiController extends Controller
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
         $data = Permintaanruangan::where('status', '>=', 4)
-            ->where('status', '<', 7)
+            ->where('status', '<=', 7)
             ->orderBy(request('order_by'), request('sort'))
             ->with([
                 // 'details.barangrs.mapingbarang.barang108', 'details.satuan',  'details.ruang',
