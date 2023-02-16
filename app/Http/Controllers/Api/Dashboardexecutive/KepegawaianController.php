@@ -23,9 +23,16 @@ class KepegawaianController extends Controller
             count(nip) jumlah from pegawai p,m_jenispegawai jp where p.flag=jp.kode_jenis and aktif='AKTIF' group by flag"
         );
 
+        $golongan = DB::connection('kepex')->select("
+            select p.golruang kode_gol,g.golruang,keterangan,count(nip) jumlah
+		    from pegawai p left join m_golruang g on p.golruang=g.kode_gol
+            where aktif='AKTIF' and (flag='P01' or flag='P04') group by golruang order by golruang desc
+        ");
+
         $data = array(
             'kategori_pegawai' => $kategori_pegawai,
             'status_pegawai' => $status_pegawai,
+            'golongan' => $golongan,
         );
         return response()->json($data);
     }
