@@ -27,6 +27,6 @@ class KepegawaianController extends Controller
             'kategori_pegawai' => $kategori_pegawai,
             'status_pegawai' => $status_pegawai,
         );
-        return response()->json($status_pegawai);
+        return response()->json($data);
     }
 }
