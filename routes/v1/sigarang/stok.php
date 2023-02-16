@@ -10,6 +10,7 @@ Route::group([
     Route::get('/current-by-gudang', [StockController::class, 'currentStokByGudang']);
     Route::get('/stok-sekarang', [StockController::class, 'stokSekarang']);
     Route::get('/all-current', [StockController::class, 'currentStok']);
+    Route::get('/stok-depo', [StockController::class, 'stokDepo']);
     Route::get('/all-current-has-stok', [StockController::class, 'currentHasStok']);
     Route::get('/ruang-has-stok', [StockController::class, 'ruangHasStok']);
     Route::get('/stok-by-ruang', [StockController::class, 'getDataStokByDepo']);

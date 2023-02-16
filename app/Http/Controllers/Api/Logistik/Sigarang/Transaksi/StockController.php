@@ -152,6 +152,22 @@ class StockController extends Controller
     {
         // $data = RecentStokUpdate::get();
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            // ->where('kode_ruang', '<>', 'Gd-02010100')
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang')
+            ->get();
+        // ->paginate(10);
+        $collection = collect($data)->unique('kode_rs');
+        $collection->values()->all();
+
+        // return new JsonResponse($data);
+        return new JsonResponse($collection);
+    }
+    public function stokDepo()
+    {
+        // $data = RecentStokUpdate::get();
+        $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->where('kode_ruang', '<>', 'Gd-02010100')
             ->groupBy('kode_rs', 'kode_ruang')
             ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang')
             ->get();
