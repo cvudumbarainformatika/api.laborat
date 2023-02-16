@@ -12,7 +12,9 @@ class KepegawaianController extends Controller
     public function index()
     {
         $struktural = DB::connection('kepex')->select(
-            "select jenispegawai,count(nip) jumlah from pegawai p where jenispegawai='Struktural' and aktif='AKTIF'"
+            "select p.kategoripegawai kode_kat,namakategoripeg,count(nip) jumlah
+		            from pegawai p left join m_kategori_peg k on p.kategoripegawai=k.kodekategoripeg
+                    where aktif='AKTIF' and jenispegawai!='Struktural' group by kategoripegawai order by k.kodekategoripeg"
         );
 
         $data = array(
