@@ -132,4 +132,10 @@ class HistoryController extends Controller
             'permintaan' => $permintaan,
         ]);
     }
+
+    public function destroy(Request $request)
+    {
+
+        return new JsonResponse($request->all());
+    }
 }
