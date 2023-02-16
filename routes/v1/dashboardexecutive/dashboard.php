@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Dashboardexecutive\KepegawaianController;
 use App\Http\Controllers\Api\Dashboardexecutive\KeuanganController;
 use App\Http\Controllers\Api\settings\MenuController;
 use Illuminate\Support\Facades\Route;
@@ -12,4 +13,5 @@ Route::group([
     'prefix' => 'dashboardexecutive'
 ], function () {
     Route::get('/pendapatan', [KeuanganController::class, 'pendapatan']);
+    Route::get('/kepegawaian', [KepegawaianController::class, 'index']);
 });
