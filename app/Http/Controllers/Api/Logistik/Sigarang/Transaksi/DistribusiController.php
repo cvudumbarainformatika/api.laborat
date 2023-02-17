@@ -17,7 +17,11 @@ class DistribusiController extends Controller
     {
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
-        $data = Permintaanruangan::where('status', '>=', 4)
+        $p = Permintaanruangan::query();
+        if ($pegawai->role_id === 4) {
+            $p->where('dari', $pegawai->kode_ruang);
+        }
+        $data = $p->where('status', '>=', 4)
             ->where('status', '<=', 7)
             ->orderBy(request('order_by'), request('sort'))
             ->with([
@@ -31,6 +35,7 @@ class DistribusiController extends Controller
             ])
             ->filter(request(['q']))
             ->paginate(request('per_page'));
+        // ->get();
 
         foreach ($data as $key) {
             foreach ($key->details as $detail) {

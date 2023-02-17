@@ -1555,12 +1555,29 @@ class AutogenController extends Controller
 
 
         // return new JsonResponse($all);
-        return new JsonResponse([$_GET, request()->all()]);
+        // return new JsonResponse([$_GET, request()->all()]);
         // $data = BarangRS::oldest('id')->with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
-        $data = BarangRS::with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
+        // $data = BarangRS::with('barang108', 'satuan', 'satuankecil')->get(); //paginate(request('per_page'));
         // return BarangRSResource::collection($data);
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
         // return new JsonResponse($kode_rs);
+        $permintaan = Permintaanruangan::with('details')->get();
+        $col = collect($permintaan)->map(function ($item, $a) {
+            return $item->id;
+        });
+        foreach ($col as $key) {
+            $minta = Permintaanruangan::find($key);
+            $det = DetailPermintaanruangan::where('permintaanruangan_id', $key)->first();
+            $minta->update([
+                'dari' => $det->dari,
+                'kode_ruang' => $det->tujuan
+            ]);
+            // return new JsonResponse([$minta, $det]);
+        }
+        $data['count'] = count($permintaan);
+        $data['col'] = $col;
+        $data['permintaan'] = $permintaan;
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)

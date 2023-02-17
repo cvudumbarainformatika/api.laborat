@@ -135,7 +135,78 @@ class HistoryController extends Controller
 
     public function destroy(Request $request)
     {
+        if ($request->nama === 'PEMESANAN') {
+            $data = $this->hapusPemesanan($request);
+        } else if ($request->nama === 'PERMINTAAN RUANGAN') {
+            $data = $this->hapusPermintaan($request);
+        } else if ($request->nama === 'PENERIMAAN') {
+            $data = $this->hapusPenerimaan($request);
+        } else if ($request->nama === 'PEMAKAIAN RUANGAN') {
+            $data = $this->hapusPemakaianRuangan($request);
+        } else if ($request->nama === 'DISTRIBUSI DEPO') {
+            $data = $this->hapusDistribusiDepo($request);
+        } else {
+            $data = [
+                'message' => 'Transaksi ini tidak bisa di hapus',
+                'status' => 410
+            ];
+        }
 
-        return new JsonResponse($request->all());
+        return new JsonResponse($data, $data['status']);
+    }
+
+    public function hapusPemesanan($request)
+    {
+        $return = Pemesanan::find($request->id);
+        $return->delete();
+        if (!$return) {
+
+            return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
+        }
+        return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
+    }
+
+    public function hapusPermintaan($request)
+    {
+        $return = Permintaanruangan::find($request->id);
+        $return->delete();
+        if (!$return) {
+
+            return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
+        }
+        return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
+    }
+
+    public function hapusPenerimaan($request)
+    {
+        $return = Penerimaan::find($request->id);
+        $return->delete();
+        if (!$return) {
+
+            return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
+        }
+        return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
+    }
+
+    public function hapusPemakaianRuangan($request)
+    {
+        $return = Pemakaianruangan::find($request->id);
+        $return->delete();
+        if (!$return) {
+
+            return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
+        }
+        return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
+    }
+
+    public function hapusDistribusiDepo($request)
+    {
+        $return = DistribusiDepo::find($request->id);
+        $return->delete();
+        if (!$return) {
+
+            return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
+        }
+        return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
     }
 }
