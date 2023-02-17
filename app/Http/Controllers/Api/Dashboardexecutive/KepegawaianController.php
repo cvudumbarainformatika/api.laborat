@@ -33,18 +33,18 @@ class KepegawaianController extends Controller
             where aktif='AKTIF' and (flag='P01' or flag='P04') group by golruang order by golruang desc
         ");
 
-        $pegawai = Pegawai::where('aktif', '=', 'AKTIF')
-            ->with([
-                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) {
+        // $pegawai = Pegawai::where('aktif', '=', 'AKTIF')
+        //     ->with([
+        //         "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) {
 
-                    $q->whereDate('created_at', Carbon::today());
-                }, "user.libur" => function ($q) {
+        //             $q->whereDate('created_at', Carbon::today());
+        //         }, "user.libur" => function ($q) {
 
-                    $q->whereMonth('tanggal', Carbon::today());
-                }
-            ])
-            ->orderBy(request('order_by'), request('sort'))
-            ->get();
+        //             $q->whereMonth('tanggal', Carbon::today());
+        //         }
+        //     ])
+        //     ->orderBy(request('order_by'), request('sort'))
+        //     ->get();
         $trans_absens = TransaksiAbsen::whereDate('created_at', Carbon::today())->get();
         $trans_libur = Libur::whereDate('tanggal', Carbon::today())->get();
 
@@ -53,7 +53,7 @@ class KepegawaianController extends Controller
             'status_pegawai' => $status_pegawai,
             'golongan' => $golongan,
             'yg_absen' => $trans_absens,
-            'yg_libur' => $trans_absens,
+            'yg_libur' => $trans_libur,
         );
         return response()->json($data);
     }
