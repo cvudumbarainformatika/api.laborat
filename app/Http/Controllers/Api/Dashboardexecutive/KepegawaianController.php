@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api\Dashboardexecutive;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Libur;
+use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Pegawai;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,10 +33,27 @@ class KepegawaianController extends Controller
             where aktif='AKTIF' and (flag='P01' or flag='P04') group by golruang order by golruang desc
         ");
 
+        $pegawai = Pegawai::where('aktif', '=', 'AKTIF')
+            ->with([
+                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) {
+
+                    $q->whereDate('created_at', Carbon::today());
+                }, "user.libur" => function ($q) {
+
+                    $q->whereMonth('tanggal', Carbon::today());
+                }
+            ])
+            ->orderBy(request('order_by'), request('sort'))
+            ->get();
+        $trans_absens = TransaksiAbsen::whereDate('created_at', Carbon::today())->get();
+        $trans_libur = Libur::whereDate('tanggal', Carbon::today())->get();
+
         $data = array(
             'kategori_pegawai' => $kategori_pegawai,
             'status_pegawai' => $status_pegawai,
             'golongan' => $golongan,
+            'yg_absen' => $trans_absens,
+            'yg_libur' => $trans_absens,
         );
         return response()->json($data);
     }
