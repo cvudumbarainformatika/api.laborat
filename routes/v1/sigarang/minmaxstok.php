@@ -35,6 +35,7 @@ Route::group([
 ], function () {
     Route::get('/index', [MinMaxStokPenggunaController::class, 'index']);
     Route::get('/all', [MinMaxStokPenggunaController::class, 'all']);
+    Route::get('/terima-semua', [MinMaxStokPenggunaController::class, 'terimaSemua']);
     Route::post('/spesifik', [MinMaxStokPenggunaController::class, 'spesifik']);
     Route::post('/store', [MinMaxStokPenggunaController::class, 'store']);
     Route::post('/destroy', [MinMaxStokPenggunaController::class, 'destroy']);

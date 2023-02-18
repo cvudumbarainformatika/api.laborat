@@ -15,9 +15,13 @@ class MinMaxStokPenggunaController extends Controller
     public function index()
     {
         // $data = MinMaxPengguna::paginate();
-        $data = MaxRuangan::latest('id')
-            ->filter(request(['q', 'barang', 'pengguna']))
-            ->with('barang', 'pengguna')
+        $apem = MaxRuangan::query();
+        if (request('flag_minta') !== 'all') {
+            $apem->where('flag_minta', request('flag_minta'));
+        }
+        $data = $apem->latest('id')
+            ->filter(request(['q', 'barang', 'ruang']))
+            ->with('barang', 'ruang')
             ->paginate(request('per_page'));
         // return Barang108Resource::collection($data);
         $collect = collect($data);
@@ -31,7 +35,7 @@ class MinMaxStokPenggunaController extends Controller
     {
         $data = MaxRuangan::latest('id')
             // ->filter(request(['q']))
-            ->with('barang', 'pengguna')
+            ->with('barang', 'ruang')
             ->get(); //paginate(request('per_page'));
         return new JsonResponse($data);
     }
@@ -85,11 +89,25 @@ class MinMaxStokPenggunaController extends Controller
                 $status = 500;
                 $pesan = 'Tidak ada perubahan data';
             }
-            return new JsonResponse(['message' => $pesan], $status);
+            return new JsonResponse(['message' => $pesan, 'data' => $data], $status);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
+    }
+    public function terimaSemua()
+    {
+        $data = MaxRuangan::where('flag_minta', '1')->get();
+        foreach ($data as $key) {
+            $ask = $key->minta;
+            $key->update([
+                'max_stok' => $ask,
+                'minta' => 0,
+                'flag_minta' => null,
+            ]);
+            // return new JsonResponse(['data' => $key, 'message' => 'Data Max Ruangan sudah ditambahkan'], 200);
+        }
+        return new JsonResponse(['data' => $data, 'message' => 'Data Max Ruangan sudah ditambahkan'], 200);
     }
     public function destroy(Request $request)
     {

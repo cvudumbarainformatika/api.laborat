@@ -22,4 +22,16 @@ class MaxRuangan extends Model
     {
         return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
     }
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['barang'] || $reqs['ruang'] ?? false, function ($search, $query) use ($reqs) {
+            $barang = $reqs['barang'] ? $reqs['barang'] : '';
+            $pengguna = $reqs['ruang'] ? $reqs['ruang'] : '';
+            return $search->whereHas('barang', function ($q) use ($barang) {
+                $q->where('nama', 'like', '%' . $barang . '%');
+            })->whereHas('ruang', function ($q) use ($pengguna) {
+                $q->where('uraian', 'like', '%' . $pengguna . '%');
+            });
+        });
+    }
 }
