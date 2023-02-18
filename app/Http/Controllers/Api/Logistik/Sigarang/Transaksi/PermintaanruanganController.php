@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,5 +92,22 @@ class PermintaanruanganController extends Controller
     {
         $data = Permintaanruangan::where('status', '>=', 4)
             ->where('status', '<', 8)->get();
+    }
+
+    public function deleteDetails(Request $request)
+    {
+        $data = DetailPermintaanruangan::find($request->id);
+        $count = DetailPermintaanruangan::where('permintaanruangan_id', $data->permintaanruangan_id)->get();
+        $del = $data->delete();
+        if (!$del) {
+            return new JsonResponse(['message' => 'Data gagal dihapus'], 410);
+        }
+        if (count($count) === 1) {
+            $permintaan = Permintaanruangan::find($data->permintaanruangan_id);
+            $hapus = $permintaan->delete();
+
+            return new JsonResponse(['message' => 'Data header dan detail telah dihapus'], 200);
+        }
+        return new JsonResponse(['message' => 'Data telah dihapus'], 200);
     }
 }

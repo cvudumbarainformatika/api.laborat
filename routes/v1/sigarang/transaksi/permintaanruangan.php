@@ -14,6 +14,7 @@ Route::group([
     Route::get('/draft', [PermintaanruanganController::class, 'draft']);
     Route::post('/store', [PermintaanruanganController::class, 'store']);
     Route::post('/selesai-input', [PermintaanruanganController::class, 'selesaiInput']);
+    Route::post('/hapus-detail', [PermintaanruanganController::class, 'deleteDetails']);
     // verif permintaan
     Route::get('/get-permintaan', [VerifPermintaanruanganController::class, 'getPermintaan']);
     Route::post('/update-permintaan', [VerifPermintaanruanganController::class, 'updatePermintaan']);
