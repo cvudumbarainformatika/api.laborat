@@ -27,11 +27,16 @@ class MaxRuangan extends Model
         $search->when($reqs['barang'] || $reqs['ruang'] ?? false, function ($search, $query) use ($reqs) {
             $barang = $reqs['barang'] ? $reqs['barang'] : '';
             $pengguna = $reqs['ruang'] ? $reqs['ruang'] : '';
-            return $search->whereHas('barang', function ($q) use ($barang) {
+            $search->hasByNonDependentSubquery('barang', function ($q) use ($barang) {
                 $q->where('nama', 'like', '%' . $barang . '%');
-            })->whereHas('ruang', function ($q) use ($pengguna) {
+            })->hasByNonDependentSubquery('ruang', function ($q) use ($pengguna) {
                 $q->where('uraian', 'like', '%' . $pengguna . '%');
             });
+            // return $search->whereHas('barang', function ($q) use ($barang) {
+            //     $q->where('nama', 'like', '%' . $barang . '%');
+            // })->whereHas('ruang', function ($q) use ($pengguna) {
+            //     $q->where('uraian', 'like', '%' . $pengguna . '%');
+            // });
         });
     }
 }
