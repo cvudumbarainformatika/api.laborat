@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\MinMaxPengguna;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,23 +17,41 @@ class MinMaxStokPenggunaController extends Controller
     {
         // $data = MinMaxPengguna::paginate();
         $apem = MaxRuangan::query();
+        $barang = (request('barang') !== '' && request('barang') !== null) ? request('barang') : false;
+        $ruang = (request('ruang') !== '' && request('ruang') !== null) ? request('ruang') : false;
         if (request('flag_minta') !== 'all') {
             $apem->where('flag_minta', request('flag_minta'));
         }
-        if (request('barang') !== '') {
-            $apem->filter(request(['barang']));
+        if ($barang) {
+            $apem->hasByNonDependentSubquery('barang', function ($q) use ($barang) {
+                $q->where('nama', 'like', '%' . $barang . '%');
+            });
+            // $apem->whereRelation('barang', 'nama', 'like', '%' . request('barang') . '%');
+            // $apem->withCount(['barang', 'barang as barang_rs' => function (Builder $wew) {
+            //     $wew->where('nama', 'like', '%' . request('barang') . '%');
+            // }]);
+            //     // $apem->filter(request(['barang']));
         }
-        if (request('ruang') !== '') {
-            $apem->filter(request(['ruang']));
+        if ($ruang) {
+            $apem->hasByNonDependentSubquery('ruang', function ($q) use ($ruang) {
+                $q->where('uraian', 'like', '%' . $ruang . '%');
+            });
+            // $apem->whereRelation('ruang', 'uraian', 'like', '%' . request('ruang') . '%');
+            // $apem->withCount(['ruang', 'ruang as ruang_rs' => function (Builder $wew) {
+            //     $wew->where('uraian', 'like', '%' . request('ruang') . '%');
+            // }]);
+            // $apem->filter(request(['ruang']));
         }
         $data = $apem->latest('id')
             // ->filter(request(['q', 'barang']))
             ->with('barang', 'ruang')
-            ->paginate(request('per_page'));
+            // ->paginate(request('per_page'));
+            ->simplePaginate(request('per_page'));
         // return Barang108Resource::collection($data);
         $collect = collect($data);
         $balik = $collect->only('data');
         $balik['meta'] = $collect->except('data');
+        $balik['re'] = request()->all();
 
         return new JsonResponse($balik);
     }
