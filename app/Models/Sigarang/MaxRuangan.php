@@ -24,13 +24,29 @@ class MaxRuangan extends Model
     }
     public function scopeFilter($search, array $reqs)
     {
-        $search->when($reqs['barang'] || $reqs['ruang'] ?? false, function ($search, $query) use ($reqs) {
-            $barang = $reqs['barang'] ? $reqs['barang'] : '';
-            $pengguna = $reqs['ruang'] ? $reqs['ruang'] : '';
-            $search->hasByNonDependentSubquery('barang', function ($q) use ($barang) {
-                $q->where('nama', 'like', '%' . $barang . '%');
-            })->hasByNonDependentSubquery('ruang', function ($q) use ($pengguna) {
-                $q->where('uraian', 'like', '%' . $pengguna . '%');
+        $search->when($reqs['barang'] ?? false, function ($search, $query) use ($reqs) {
+            // $barang = $reqs['barang'] ? $reqs['barang'] : '';
+            // $pengguna = $reqs['ruang'] ? $reqs['ruang'] : '';
+            return $search->hasByNonDependentSubquery('barang', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%');
+            });
+            // ->hasByNonDependentSubquery('ruang', function ($q) use ($pengguna) {
+            //     $q->where('uraian', 'like', '%' . $pengguna . '%');
+            // });
+            // return $search->whereHas('barang', function ($q) use ($barang) {
+            //     $q->where('nama', 'like', '%' . $barang . '%');
+            // })->whereHas('ruang', function ($q) use ($pengguna) {
+            //     $q->where('uraian', 'like', '%' . $pengguna . '%');
+            // });
+        });
+        $search->when($reqs['ruang'] ?? false, function ($search, $query) use ($reqs) {
+            // $barang = $reqs['barang'] ? $reqs['barang'] : '';
+            // $pengguna = $reqs['ruang'] ? $reqs['ruang'] : '';
+            // return $search->hasByNonDependentSubquery('barang', function ($q) use ($barang) {
+            //     $q->where('nama', 'like', '%' . $barang . '%');
+            // });
+            return $search->hasByNonDependentSubquery('ruang', function ($q) use ($query) {
+                $q->where('uraian', 'like', '%' . $query . '%');
             });
             // return $search->whereHas('barang', function ($q) use ($barang) {
             //     $q->where('nama', 'like', '%' . $barang . '%');

@@ -37,7 +37,7 @@ class RuangController extends Controller
     public function allRuang()
     {
         // $data = Ruang::paginate();
-        $data = Ruang::where('ruang', '>', 0)
+        $data = Ruang::latest()->where('ruang', '>', 0)
             ->get();
         return new JsonResponse($data);
     }
