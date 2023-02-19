@@ -19,11 +19,14 @@ class MinMaxStokPenggunaController extends Controller
         if (request('flag_minta') !== 'all') {
             $apem->where('flag_minta', request('flag_minta'));
         }
-        // if(request('barang')!==''){
-        //     $apem->;
-        // }
+        if (request('barang') !== '') {
+            $apem->filter(request(['barang']));
+        }
+        if (request('ruang') !== '') {
+            $apem->filter(request(['ruang']));
+        }
         $data = $apem->latest('id')
-            ->filter(request(['q', 'barang', 'ruang']))
+            // ->filter(request(['q', 'barang']))
             ->with('barang', 'ruang')
             ->paginate(request('per_page'));
         // return Barang108Resource::collection($data);

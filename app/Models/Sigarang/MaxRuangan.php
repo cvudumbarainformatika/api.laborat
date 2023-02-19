@@ -45,12 +45,12 @@ class MaxRuangan extends Model
             // return $search->hasByNonDependentSubquery('barang', function ($q) use ($barang) {
             //     $q->where('nama', 'like', '%' . $barang . '%');
             // });
-            // return $search->hasByNonDependentSubquery('ruang', function ($q) use ($query) {
-            //     $q->where('uraian', 'like', '%' . $query . '%');
-            // });
-            return $search->whereHas('ruang', function ($q) use ($query) {
+            return $search->hasByNonDependentSubquery('ruang', function ($q) use ($query) {
                 $q->where('uraian', 'like', '%' . $query . '%');
             });
+            // return $search->whereHas('ruang', function ($q) use ($query) {
+            //     $q->where('uraian', 'like', '%' . $query . '%');
+            // });
             // return $search->whereHas('barang', function ($q) use ($barang) {
             //     $q->where('nama', 'like', '%' . $barang . '%');
             // })->whereHas('ruang', function ($q) use ($pengguna) {
