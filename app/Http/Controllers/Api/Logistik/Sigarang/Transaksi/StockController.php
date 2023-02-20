@@ -49,6 +49,7 @@ class StockController extends Controller
         $raw = $before->orderBy(request('order_by'), request('sort'))
             ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
             ->where('kode_ruang', '<>', 'Gd-02010100')
+            ->where('sisa_stok', '>', 0)
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
             ->paginate($perpage);
