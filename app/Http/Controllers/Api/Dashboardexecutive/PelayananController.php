@@ -79,14 +79,15 @@ class PelayananController extends Controller
         // );
 
         $poli_hariinibelum = DB::table('rs17')
+            ->join('rs15', 'rs17.rs2', '=', 'rs15.rs1') // JOIN DATA PASIEN
+            ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1') // JOIN DATA MASTER POLI
+            ->join('rs9', 'rs17.rs14', '=', 'rs9.rs1') // JOIN DATA MASTER CARA BAYAR
             // ->selectRaw('rs1 as noreg, rs3 as tanggal, rs2 as norm, rs8 as kd_poli, rs14 as kd_akun, rs19 as status')
             ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
             ->whereDate('rs3', Carbon::today())
             ->where('rs19', '=', '')
-            // ->join('rs15', 'rs17.rs2', '=', 'rs15.rs1') // JOIN DATA PASIEN
-            // ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1') // JOIN DATA MASTER POLI
-            // ->join('rs9', 'rs17.rs14', '=', 'rs9.rs1') // JOIN DATA MASTER CARA BAYAR
+
             ->get();
 
         $poli_hariinisudah = DB::select(
