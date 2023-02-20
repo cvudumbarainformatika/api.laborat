@@ -24,4 +24,9 @@ class KunjunganPoli extends Model
     {
         return $this->belongsTo(Pasien::class, 'rs2', 'rs1');
     }
+
+    public function poli()
+    {
+        return $this->belongsTo(Poli::class, 'rs8', 'rs1');
+    }
 }
