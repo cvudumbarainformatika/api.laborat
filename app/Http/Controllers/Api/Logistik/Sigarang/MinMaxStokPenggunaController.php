@@ -23,24 +23,10 @@ class MinMaxStokPenggunaController extends Controller
             $apem->where('flag_minta', request('flag_minta'));
         }
         if ($barang) {
-            $apem->hasByNonDependentSubquery('barang', function ($q) use ($barang) {
-                $q->where('nama', 'like', '%' . $barang . '%');
-            });
-            // $apem->whereRelation('barang', 'nama', 'like', '%' . request('barang') . '%');
-            // $apem->withCount(['barang', 'barang as barang_rs' => function (Builder $wew) {
-            //     $wew->where('nama', 'like', '%' . request('barang') . '%');
-            // }]);
-            //     // $apem->filter(request(['barang']));
+            $apem->where('kode_rs', $barang);
         }
         if ($ruang) {
-            $apem->hasByNonDependentSubquery('ruang', function ($q) use ($ruang) {
-                $q->where('uraian', 'like', '%' . $ruang . '%');
-            });
-            // $apem->whereRelation('ruang', 'uraian', 'like', '%' . request('ruang') . '%');
-            // $apem->withCount(['ruang', 'ruang as ruang_rs' => function (Builder $wew) {
-            //     $wew->where('uraian', 'like', '%' . request('ruang') . '%');
-            // }]);
-            // $apem->filter(request(['ruang']));
+            $apem->where('kode_ruang', $ruang);
         }
         $data = $apem->latest('id')
             // ->filter(request(['q', 'barang']))
