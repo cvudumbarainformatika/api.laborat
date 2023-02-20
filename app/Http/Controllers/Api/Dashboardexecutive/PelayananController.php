@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KunjunganPoli;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Poli;
 use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -76,11 +77,13 @@ class PelayananController extends Controller
         //     "
         // );
 
-        $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs8, rs19 as sudah')
-            ->where('rs19', '=', '1')
-            ->whereDate('rs3', Carbon::today())
-            ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-            ->orderBy('rs3', 'asc')->groupBy('rs1')
+        // $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs8, rs19 as sudah')
+        //     ->where('rs19', '=', '1')
+        //     ->whereDate('rs3', Carbon::today())
+        //     ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
+        //     ->orderBy('rs3', 'asc')->groupBy('rs1')
+        //     ->get();
+        $poli_hariini = Poli::where('rs5', '=', '1')
             ->get();
 
         $data = array(
