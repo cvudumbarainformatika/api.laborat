@@ -76,7 +76,7 @@ class PelayananController extends Controller
         //     "
         // );
 
-        $poli_hariini = KunjunganPoli::select('rs1', 'rs2', 'rs3', 'rs8')
+        $poli_hariini = KunjunganPoli::select('rs1', 'rs2', 'rs3', 'rs8', 'rs9 as sudah')
             ->whereDate('rs3', Carbon::today())
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
             ->with('poli')
