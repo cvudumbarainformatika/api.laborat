@@ -79,8 +79,8 @@ class PelayananController extends Controller
 
         $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs19 as sudah')
             ->where('rs19', '=', '1')
-            ->whereDate('rs3', date('d'))
-            ->whereMonth('rs3', date('m'))
+            ->whereDate('rs3', date('dd'))
+            ->whereMonth('rs3', date('mm'))
             ->whereYear('rs3', date('Y'))
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
             ->orderBy('rs3', 'asc')->groupBy('rs1')
