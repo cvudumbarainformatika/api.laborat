@@ -1561,23 +1561,39 @@ class AutogenController extends Controller
         // return BarangRSResource::collection($data);
         // return new JsonResponse($data);
         // return new JsonResponse($kode_rs);
-        $permintaan = Permintaanruangan::with('details')->get();
-        $col = collect($permintaan)->map(function ($item, $a) {
-            return $item->id;
-        });
-        foreach ($col as $key) {
-            $minta = Permintaanruangan::find($key);
-            $det = DetailPermintaanruangan::where('permintaanruangan_id', $key)->first();
-            $minta->update([
-                'dari' => $det->dari,
-                'kode_ruang' => $det->tujuan
-            ]);
-            // return new JsonResponse([$minta, $det]);
-        }
-        $data['count'] = count($permintaan);
-        $data['col'] = $col;
-        $data['permintaan'] = $permintaan;
-        return new JsonResponse($data);
+        // $permintaan = Permintaanruangan::with('details')->get();
+        // $col = collect($permintaan)->map(function ($item, $a) {
+        //     return $item->id;
+        // });
+        // foreach ($col as $key) {
+        //     $minta = Permintaanruangan::find($key);
+        //     $det = DetailPermintaanruangan::where('permintaanruangan_id', $key)->first();
+        //     $minta->update([
+        //         'dari' => $det->dari,
+        //         'kode_ruang' => $det->tujuan
+        //     ]);
+        //     // return new JsonResponse([$minta, $det]);
+        // }
+        // $data['count'] = count($permintaan);
+        // $data['col'] = $col;
+        // $data['permintaan'] = $permintaan;
+        // return new JsonResponse($data);
+        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
+        $raw = $before->where('sisa_stok', '>', 0)
+            ->where('kode_ruang', '<>', 'Gd-02010100')
+            ->groupBy('kode_ruang')
+            ->with(
+                'barang.barang108',
+                'barang.satuan',
+                'depo',
+                'barang.mapingdepo.gudang',
+                'ruang'
+            )
+            ->get();
+        $col = collect($raw);
+        $data = $col->unique('kode_ruang');
+        $data->all();
+        return new JsonResponse(['col' => $col, 'data' => $data]);
     }
 
     public function wawanpost(Request $request)
