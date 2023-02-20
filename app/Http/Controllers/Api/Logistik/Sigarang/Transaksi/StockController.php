@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MapingBarangDepo;
 use App\Models\Sigarang\MinMaxDepo;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Illuminate\Http\JsonResponse;
@@ -33,8 +34,19 @@ class StockController extends Controller
     {
         $perpage = request('per_page') ? request('per_page') : 10;
         // $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
-        $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
-            ->orderBy(request('order_by'), request('sort'))
+
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+
+        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok');
+        if ($pegawai->role_id === 5) {
+            $before->where('kode_ruang', $pegawai->kode_ruang);
+        }
+        if ($pegawai->role_id === 4) {
+            $before->where('kode_ruang', $pegawai->kode_ruang)
+                ->orWhere('kode_ruang', 'like', '%R-%');
+        }
+        $raw = $before->orderBy(request('order_by'), request('sort'))
             ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
             ->where('kode_ruang', '<>', 'Gd-02010100')
             ->groupBy('kode_rs', 'kode_ruang')
@@ -182,10 +194,20 @@ class StockController extends Controller
     // ruang yang punya stok
     public function ruangHasStok()
     {
-        $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
-            ->where('sisa_stok', '>', 0)
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
+        if ($pegawai->role_id === 5) {
+            $before->where('kode_ruang', $pegawai->kode_ruang);
+        }
+        if ($pegawai->role_id === 4) {
+            $before->where('kode_ruang', $pegawai->kode_ruang)
+                ->orWhere('kode_ruang', 'like', '%R-%');
+        }
+        $raw = $before->where('sisa_stok', '>', 0)
             ->where('kode_ruang', '<>', 'Gd-02010100')
-            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang')
+            ->groupBy('kode_ruang')
+            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang', 'ruang')
             ->get();
 
         $data = collect($raw)->unique('kode_ruang');
