@@ -40,7 +40,8 @@ class PelayananController extends Controller
             rs15.rs6 as kecamatan,rs15.rs7 as rt,rs15.rs8 as rw,rs15.rs10 as propinsi,rs15.rs11 as kabupaten,rs15.rs16 as tgllahir,
             rs15.rs17 as kelamin,rs15.rs36 as normlama,rs15.rs37 as tmplahir,rs17.rs3 as tanggalmasuk,rs17.rs4 as penanggungjawab,
             rs17.rs6 as kodeasalrujukan,rs17.rs20 as asalpendaftaran,rs17.rs7 as namaperujuk,rs17.rs8 as kodepoli,rs19.rs2 as poli,
-            rs17.rs18 as userid,rs17.rs19 as status,rs9.rs2 as sistembayar,IF(rs15.rs31>1,'Lama','Baru') as tipe,rs17.rs9 as kodedokter,'' as nosep,rs15.flag_covid as flagcovid
+            rs17.rs18 as userid,rs17.rs19 as status,rs9.rs2 as sistembayar,IF(rs15.rs31>1,'Lama','Baru') as tipe,rs17.rs9 as kodedokter,'' as nosep,
+            rs15.flag_covid as flagcovid
             from rs15,rs17,rs19,rs9
             where rs15.rs1=rs17.rs2 and rs17.rs8=rs19.rs1 and rs9.rs1=rs17.rs14
             and rs17.rs19='' and year(rs17.rs3)='" . date("Y") . "' and month(rs17.rs3)='" . date("m") . "' and dayofmonth(rs17.rs3)='" . date("d") . "'
@@ -62,13 +63,23 @@ class PelayananController extends Controller
         //         rs15.rs17 as kelamin,rs15.rs36 as normlama,rs15.rs37 as tmplahir,rs17.rs3 as tanggalmasuk,rs17.rs4 as penanggungjawab,
         //         rs17.rs6 as kodeasalrujukan,rs17.rs20 as asalpendaftaran,rs17.rs7 as namaperujuk,rs17.rs8 as kodepoli,rs19.rs2 as poli,
         //         rs17.rs18 as userid,rs17.rs19 as status,rs9.rs2 as sistembayar,IF(rs15.rs31>1,'Lama','Baru') as tipe,rs17.rs9 as kodedokter,'' as nosep,'' as prmrj from rs15,rs17,rs19,rs9
-        //         where rs15.rs1=rs17.rs2 and rs17.rs8=rs19.rs1 and rs9.rs1=rs17.rs14
-        //         and rs17.rs19='' and year(rs17.rs3)='" . date("Y") . "' and month(rs17.rs3)='" . date("m") . "' and dayofmonth(rs17.rs3)='" . date("d") . "'
-        //         and rs17.rs8<>'POL014' and rs17.rs8<>'POL005' and rs17.rs8<>'POL025') as v_15_17 order by tanggalmasuk
+        //         where rs15.rs1=rs17.rs2
+        // and rs17.rs8=rs19.rs1 and
+        // rs9.rs1=rs17.rs14
+        //         and rs17.rs19=''
+        // and year(rs17.rs3)='" . date("Y") . "'
+        // and month(rs17.rs3)='" . date("m") . "' and
+        // dayofmonth(rs17.rs3)='" . date("d") . "'
+        //         and rs17.rs8<>'POL014'
+        // and rs17.rs8<>'POL005' and
+        // rs17.rs8<>'POL025') as v_15_17 order by tanggalmasuk
         //     "
         // );
 
-        $poli_hariini = KunjunganPoli::whereDate('rs3', Carbon::today())->get();
+        $poli_hariini = KunjunganPoli::whereDate('rs3', Carbon::today())
+            ->where('rs19', '')
+            ->with('poli')
+            ->get();
 
         $data = array(
             "tempat_tidur" => $tempat_tidur,
