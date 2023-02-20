@@ -68,7 +68,7 @@ class PelayananController extends Controller
         //     "
         // );
 
-        $poli_hariini = KunjunganPoli::where('rs3', Carbon::today())->get();
+        $poli_hariini = KunjunganPoli::whereDate('rs3', Carbon::today())->get();
 
         $data = array(
             "tempat_tidur" => $tempat_tidur,
