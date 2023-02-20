@@ -80,7 +80,7 @@ class PelayananController extends Controller
             ->whereDate('rs3', Carbon::today())
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
             ->with('poli')
-            ->groupBy('rs2')
+            ->orderBy('rs3', 'asc')->groupBy('rs1')
             ->get();
 
         $data = array(
