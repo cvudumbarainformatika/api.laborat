@@ -77,7 +77,6 @@ class PelayananController extends Controller
         // );
 
         $poli_hariini = KunjunganPoli::whereDate('rs3', Carbon::today())
-            ->where('rs19', '')
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
             ->with('poli')
             ->get();
