@@ -78,6 +78,9 @@ class PelayananController extends Controller
 
         $poli_hariini = KunjunganPoli::whereDate('rs3', Carbon::today())
             ->where('rs19', '')
+            ->where('rs8', '<>', 'POL014')
+            ->where('rs8', '<>', 'POL005')
+            ->where('rs8', '<>', 'POL025')
             ->with('poli')
             ->get();
 
