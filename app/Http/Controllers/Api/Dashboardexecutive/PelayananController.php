@@ -27,8 +27,8 @@ class PelayananController extends Controller
 
         $tgl = date('Y-m-d', $time);
 
-        $periode1 = $y . '-' . '01' . '-' . '01';
-        $periode2 = $y . '-' . '12' . '-' . '31';
+        $periode1 = '2022' . '-' . '01' . '-' . '01';
+        $periode2 = '2022' . '-' . '12' . '-' . '31';
 
         $tempat_tidur = DB::select(
             "SELECT * FROM (
@@ -135,7 +135,6 @@ class PelayananController extends Controller
 
         $poli_tahun = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
-            // ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->selectRaw('count(rs17.rs1) as jumlah, MONTH(rs17.rs3) month')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
             ->whereBetween('rs17.rs3', [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']) // super cepat
