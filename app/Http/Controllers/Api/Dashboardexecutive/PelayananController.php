@@ -114,7 +114,8 @@ class PelayananController extends Controller
         $poli_hariinibelum = DB::table('rs17')
             ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs3', '=', Carbon::today())
+            // ->whereDate('rs3', '=', Carbon::today())
+            ->whereBetween('rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59'])
             ->where('rs19', '=', '')
             ->get();
 
