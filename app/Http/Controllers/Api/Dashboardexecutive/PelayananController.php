@@ -118,6 +118,15 @@ class PelayananController extends Controller
             ->where('rs17.rs19', '=', '1')
             ->get();
 
+        $poli_tahun = DB::table('rs17')
+            ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
+            ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
+            ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
+            ->whereDate('rs17.rs3', Carbon::today())
+            ->where('rs17.rs19', '=', '1')
+            ->get();
+
+
         // $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs8, rs19 as sudah')
         //     ->where('rs19', '=', '1')
         //     ->whereDate('rs3', Carbon::today())
