@@ -168,7 +168,7 @@ class PelayananController extends Controller
         $ranap_tahun = DB::table('rs23')
             ->selectRaw('count(rs23.rs1) as jumlah, MONTH(rs23.rs3) month')
             ->whereBetween('rs23.rs3', [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']) // super cepat
-            ->where('rs23.rs22', '=', '')
+            // ->where('rs23.rs22', '=', '')
             ->groupBy('month')
             ->get();
 
