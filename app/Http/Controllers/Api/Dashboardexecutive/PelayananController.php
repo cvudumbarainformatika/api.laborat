@@ -22,7 +22,8 @@ class PelayananController extends Controller
         $y = request('year');
         $d = request('d');
         $tglF = $y . '-' . $m . '-' . $d;
-        $tgl = Carbon::createFromFormat('Y-m-d', $tglF);
+        $time = strtotime($tglF);
+        $tgl = date('Y-m-d', $time);
 
         $tempat_tidur = DB::select(
             "SELECT * FROM (
