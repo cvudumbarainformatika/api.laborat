@@ -143,17 +143,34 @@ class PelayananController extends Controller
             ->get();
 
 
-        // $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs8, rs19 as sudah')
-        //     ->where('rs19', '=', '1')
-        //     ->whereDate('rs3', Carbon::today())
-        //     ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-        //     ->whereHas('poli', function ($x) {
-        //         $x->where('rs5', '=', '1');
-        //     })
-        //     ->orderBy('rs3', 'asc')->groupBy('rs1')
-        //     ->get();
-        // $poli_hariini = Poli::where('rs5', '=', '1')
-        //     ->get();
+        // $ranap_lalu = DB::select(
+        //     "
+        //         select tanggalmasuk,noreg,norm,nama,alamat,datediff(tanggalmasuk,tgllahir) umur,floor((datediff(tanggalmasuk,tgllahir)/365)) as thn,
+        // floor((datediff(tanggalmasuk,tgllahir)-(floor((datediff(tanggalmasuk,tgllahir)/365))*365))/30) as bln,
+        // (datediff(tanggalmasuk,tgllahir)-((floor((datediff(tanggalmasuk,tgllahir)/365))*365)+(floor((datediff(tanggalmasuk,tgllahir)-(floor((datediff(tanggalmasuk,tgllahir)/365))*365))/30)*30))) as hari,
+        // ruang,kamar,bad,kodedokter,sistembayar,tipe,'' as asalx,nosep,flagcovid
+        // from(select distinct rs23.rs1 as noreg,rs23.rs2 as norm,rs23.rs19 as kd_akun,rs15.rs2 as nama,
+        // rs15.rs3 as sapaan,rs15.rs4 as alamat,rs15.rs5 as kelurahan,rs15.rs6 as kecamatan,rs15.rs7 as rt,rs15.rs8 as rw,
+        // rs15.rs10 as propinsi,rs15.rs11 as kabupaten,rs15.rs16 as tgllahir,rs15.rs17 as kelamin,rs15.rs36 as normlama,
+        // rs15.rs37 as tmplahir,rs23.rs3 as tanggalmasuk,rs23.rs11 as penanggungjawab,rs23.rs13 as kodeasalrujukan,
+        // rs23.rs20 as asalpendaftaran,rs23.rs16 as namaperujuk,rs23.rs5 as koderuang,rs24.rs2 as ruang,rs23.rs6 as kamar,rs23.rs7 as bad,rs23.rs30 as userid,
+        // rs23.rs28 as status,rs9.rs2 as sistembayar,IF(rs15.rs30>1,'Lama','Baru') as tipe,rs23.rs10 as kodedokter,'' as nosep,
+        // '' as flagcovid
+        // from rs15,rs23,rs24,rs9
+        // where rs15.rs1=rs23.rs2 and rs23.rs5=rs24.rs1
+        // and rs23.rs3<'" . date("Y-m-d") . "'
+        // and rs9.rs1=rs23.rs19
+        // and rs23.rs22=''
+        // )as v_15_23  order by tanggalmasuk desc
+        //     "
+        // );
+
+        $ranap_tahun = DB::table('rs23')
+            ->selectRaw('count(rs23.rs1) as jumlah')
+            ->whereBetween('rs23.rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59']) // super cepat
+            ->where('rs23.rs22', '=', '')
+            ->get();
+
 
         $data = array(
             "tempat_tidur" => $tempat_tidur,
@@ -161,6 +178,7 @@ class PelayananController extends Controller
             'poli_hariinibelum' => $poli_hariinibelum,
             'poli_hariinisudah' => $poli_hariinisudah,
             'poli_tahun' => $poli_tahun,
+            'ranap_tahun' => $ranap_tahun,
         );
         return response()->json($data);
     }
