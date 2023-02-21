@@ -9,6 +9,7 @@ use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Poli;
 use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,8 @@ class PelayananController extends Controller
         $d = request('d');
         $tglF = $y . '-' . $m . '-' . $d;
         $time = strtotime($tglF);
+
+        $tgl = new DateTime($tglF);
 
         $tempat_tidur = DB::select(
             "SELECT * FROM (
@@ -111,7 +114,7 @@ class PelayananController extends Controller
         $poli_hariinibelum = DB::table('rs17')
             ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs3', '=', date('Y-m-d', $time))
+            ->whereDate('rs3', '=', $tgl)
             ->where('rs19', '=', '')
             ->get();
 
@@ -119,7 +122,7 @@ class PelayananController extends Controller
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', '=', date('Y-m-d', $time))
+            ->whereDate('rs17.rs3', '=', $tgl)
             ->where('rs17.rs19', '=', '1')
             ->get();
 
