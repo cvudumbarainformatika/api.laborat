@@ -122,8 +122,8 @@ class PelayananController extends Controller
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereBetween('rs17.rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59'])
-            // ->where(DB::raw("(DATE_FORMAT(rs17.rs3,'%Y-%m-%d'))"), "2023-02-21")
+            // ->whereBetween('rs17.rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59'])
+            ->where(DB::raw("(DATE_FORMAT(rs17.rs3, '%Y-%m-%d'))"), request('tgl'))
             // ->whereDate('rs3', '=', Carbon::today())
             ->where('rs17.rs19', '=', '1')
             ->get();
