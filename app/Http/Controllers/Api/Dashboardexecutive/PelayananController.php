@@ -124,7 +124,6 @@ class PelayananController extends Controller
 
         $poli_hariinisudah = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
-            ->select('rs17.rs1')
             ->selectRaw('count(rs17.rs1) as jumlah')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
             ->whereBetween('rs17.rs3', ['2023-02-21 00:00:00', '2023-02-21 23:59:59']) // super cepat
