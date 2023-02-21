@@ -91,7 +91,7 @@ class PelayananController extends Controller
             // ->selectRaw('rs1 as noreg, rs3 as tanggal, rs2 as norm, rs8 as kd_poli, rs14 as kd_akun, rs19 as status')
             ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
             ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs3', Carbon::today())
+            ->whereDate('rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs19', '=', '')
             ->get();
 
@@ -120,7 +120,7 @@ class PelayananController extends Controller
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', $tgl)
+            ->whereDate('rs17.rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs17.rs19', '=', '1')
             ->get();
 
@@ -128,7 +128,7 @@ class PelayananController extends Controller
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', $tgl)
+            ->whereDate('rs17.rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs17.rs19', '=', '1')
             ->get();
 
