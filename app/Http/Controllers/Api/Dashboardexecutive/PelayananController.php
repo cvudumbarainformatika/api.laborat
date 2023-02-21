@@ -27,8 +27,8 @@ class PelayananController extends Controller
 
         $tgl = date('Y-m-d', $time);
 
-        $periode1 = '2022' . '-' . '01' . '-' . '01';
-        $periode2 = '2022' . '-' . '12' . '-' . '31';
+        $periode1 = $y . '-' . '01' . '-' . '01';
+        $periode2 = $y . '-' . '12' . '-' . '31';
 
         $tempat_tidur = DB::select(
             "SELECT * FROM (
