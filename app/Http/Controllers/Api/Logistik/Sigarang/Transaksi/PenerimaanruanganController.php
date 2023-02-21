@@ -143,7 +143,7 @@ class PenerimaanruanganController extends Controller
             if (count($dari) === 0) {
                 $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
                 $pesan = 'stok ' .  $barang->nama . ' tidak ada';
-                $status = 500;
+                $status = 410;
 
                 return ['status' => $status, 'message' => $pesan,];
             }
@@ -151,7 +151,7 @@ class PenerimaanruanganController extends Controller
             if ($sisaStok < $jumlahDistribusi) {
                 $barang = $dari[$key]['barang']['nama'];
                 $pesan = 'stok ' .  $barang . ' tidak mencukupi';
-                $status = 500;
+                $status = 410;
 
                 return ['status' => $status, 'message' => $pesan,];
             }
