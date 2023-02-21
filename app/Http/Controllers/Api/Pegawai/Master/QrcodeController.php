@@ -40,6 +40,10 @@ class QrcodeController extends Controller
         // $ip = $ip;
         $user = JWTAuth::user();
         $pegawai = Pegawai::find($user->pegawai_id);
+        $dataPegawai = [
+            'foto' => $pegawai->foto,
+            'nip' => $pegawai->nip,
+        ];
         $date = date('Y-m-d H:i:s');
         $nama = $ip . '#' . $date;
 
@@ -51,7 +55,7 @@ class QrcodeController extends Controller
         ]);
         $message = [
             'data' => $data,
-            'user' => $pegawai
+            'user' => $dataPegawai
         ];
         event(new newQrEvent($message));
         // return new JsonResponse($data, 201);
@@ -66,12 +70,16 @@ class QrcodeController extends Controller
             $user = JWTAuth::user();
             $jadwal = JadwalController::toMatch($user->id, $request);
             $pegawai = Pegawai::find($user->pegawai_id);
+            $dataPegawai = [
+                'foto' => $pegawai->foto,
+                'nip' => $pegawai->nip,
+            ];
 
             if ($jadwal) {
                 $message = [
                     'jadwal' => $jadwal,
                     'ip' => $temp[0],
-                    'user' => $pegawai,
+                    'user' => $dataPegawai,
                 ];
                 event(new newQrEvent($message));
                 return new JsonResponse([
@@ -83,7 +91,7 @@ class QrcodeController extends Controller
             $message = [
                 'message' => 'tidak ada jadwal',
                 'ip' => $temp[0],
-                'user' => $pegawai,
+                'user' => $dataPegawai,
             ];
             event(new newQrEvent($message));
             return new JsonResponse([
@@ -106,12 +114,15 @@ class QrcodeController extends Controller
             $user = JWTAuth::user();
             $jadwal = JadwalController::toMatch2($user->id, $request);
             $pegawai = Pegawai::find($user->pegawai_id);
-
+            $dataPegawai = [
+                'foto' => $pegawai->foto,
+                'nip' => $pegawai->nip,
+            ];
             if ($jadwal) {
                 $message = [
                     'jadwal' => $jadwal,
                     'ip' => $temp[0],
-                    'user' => $pegawai,
+                    'user' => $dataPegawai,
                 ];
                 event(new newQrEvent($message));
                 return new JsonResponse([
@@ -123,7 +134,7 @@ class QrcodeController extends Controller
             $message = [
                 'message' => 'tidak ada jadwal',
                 'ip' => $temp[0],
-                'user' => $pegawai,
+                'user' => $dataPegawai,
             ];
             event(new newQrEvent($message));
             return new JsonResponse([
