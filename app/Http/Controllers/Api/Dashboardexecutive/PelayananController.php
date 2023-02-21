@@ -9,6 +9,7 @@ use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Poli;
 use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,18 @@ class PelayananController extends Controller
 {
     public function index()
     {
+
+        $m = request('month');
+        $y = request('year');
+        $d = request('d');
+        $tglF = $y . '-' . $m . '-' . $d;
+        $time = strtotime($tglF);
+
+        $tgl = date('Y-m-d', $time);
+
+        $periode1 = $y . '-' . '01' . '-' . '01';
+        $periode2 = $y . '-' . '12' . '-' . '31';
+
         $tempat_tidur = DB::select(
             "SELECT * FROM (
                     SELECT UPPER(rs24.rs2) AS ruang,COUNT(vBed.rs5) AS total,SUM(vBed.terisi) AS terisi,( COUNT(vBed.rs5) - SUM(vBed.terisi) ) AS sisa FROM (
@@ -78,16 +91,7 @@ class PelayananController extends Controller
         //     "
         // );
 
-        $poli_hariinibelum = DB::table('rs17')
-            // ->join('rs15', 'rs17.rs2', '=', 'rs15.rs1') // JOIN DATA PASIEN
-            // ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1') // JOIN DATA MASTER POLI
-            // ->join('rs9', 'rs17.rs14', '=', 'rs9.rs1') // JOIN DATA MASTER CARA BAYAR
-            // ->selectRaw('rs1 as noreg, rs3 as tanggal, rs2 as norm, rs8 as kd_poli, rs14 as kd_akun, rs19 as status')
-            ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
-            ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs3', Carbon::today())
-            ->where('rs19', '=', '')
-            ->get();
+
 
         // $poli_hariinisudah = DB::select(
         //     "select tanggalmasuk,noreg,norm,nama,alamat,kelamin,IF(thn<1,IF(bln<1,concat(hari,' hari'),concat(bln,' bln')),concat(thn,' thn')) as umur,
@@ -110,40 +114,72 @@ class PelayananController extends Controller
         //         and rs17.rs8<>'POL014' and rs17.rs8<>'POL005' and rs17.rs8<>'POL025') as v_15_17 order by tanggalmasuk"
         // );
 
+        $poli_hariinibelum = DB::table('rs17')
+            ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
+            ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
+            // ->whereDate('rs3', '=', Carbon::today())
+            ->whereBetween('rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59'])
+            ->where('rs19', '=', '')
+            ->get();
+
         $poli_hariinisudah = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', Carbon::today())
+            // ->whereBetween('rs17.rs3', ['2023-02-21 00:00:00', '2023-02-21 23:59:59']) // super cepat
+            ->whereBetween('rs17.rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59']) // super cepat
+            // ->where(DB::raw("(DATE_FORMAT(rs17.rs3, '%Y-%m-%d'))"), request('tgl'))
+            // ->whereDate('rs3', '=', Carbon::today())
             ->where('rs17.rs19', '=', '1')
             ->get();
 
         $poli_tahun = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
-            ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
+            ->selectRaw('count(rs17.rs1) as jumlah, MONTH(rs17.rs3) month')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', Carbon::today())
+            ->whereBetween('rs17.rs3', [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']) // super cepat
             ->where('rs17.rs19', '=', '1')
+            ->groupBy('month')
             ->get();
 
 
-        // $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs8, rs19 as sudah')
-        //     ->where('rs19', '=', '1')
-        //     ->whereDate('rs3', Carbon::today())
-        //     ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-        //     ->whereHas('poli', function ($x) {
-        //         $x->where('rs5', '=', '1');
-        //     })
-        //     ->orderBy('rs3', 'asc')->groupBy('rs1')
-        //     ->get();
-        // $poli_hariini = Poli::where('rs5', '=', '1')
-        //     ->get();
+        // $ranap_lalu = DB::select(
+        //     "
+        //         select tanggalmasuk,noreg,norm,nama,alamat,datediff(tanggalmasuk,tgllahir) umur,floor((datediff(tanggalmasuk,tgllahir)/365)) as thn,
+        // floor((datediff(tanggalmasuk,tgllahir)-(floor((datediff(tanggalmasuk,tgllahir)/365))*365))/30) as bln,
+        // (datediff(tanggalmasuk,tgllahir)-((floor((datediff(tanggalmasuk,tgllahir)/365))*365)+(floor((datediff(tanggalmasuk,tgllahir)-(floor((datediff(tanggalmasuk,tgllahir)/365))*365))/30)*30))) as hari,
+        // ruang,kamar,bad,kodedokter,sistembayar,tipe,'' as asalx,nosep,flagcovid
+        // from(select distinct rs23.rs1 as noreg,rs23.rs2 as norm,rs23.rs19 as kd_akun,rs15.rs2 as nama,
+        // rs15.rs3 as sapaan,rs15.rs4 as alamat,rs15.rs5 as kelurahan,rs15.rs6 as kecamatan,rs15.rs7 as rt,rs15.rs8 as rw,
+        // rs15.rs10 as propinsi,rs15.rs11 as kabupaten,rs15.rs16 as tgllahir,rs15.rs17 as kelamin,rs15.rs36 as normlama,
+        // rs15.rs37 as tmplahir,rs23.rs3 as tanggalmasuk,rs23.rs11 as penanggungjawab,rs23.rs13 as kodeasalrujukan,
+        // rs23.rs20 as asalpendaftaran,rs23.rs16 as namaperujuk,rs23.rs5 as koderuang,rs24.rs2 as ruang,rs23.rs6 as kamar,rs23.rs7 as bad,rs23.rs30 as userid,
+        // rs23.rs28 as status,rs9.rs2 as sistembayar,IF(rs15.rs30>1,'Lama','Baru') as tipe,rs23.rs10 as kodedokter,'' as nosep,
+        // '' as flagcovid
+        // from rs15,rs23,rs24,rs9
+        // where rs15.rs1=rs23.rs2 and rs23.rs5=rs24.rs1
+        // and rs23.rs3<'" . date("Y-m-d") . "'
+        // and rs9.rs1=rs23.rs19
+        // and rs23.rs22=''
+        // )as v_15_23  order by tanggalmasuk desc
+        //     "
+        // );
+
+        $ranap_tahun = DB::table('rs23')
+            ->selectRaw('count(rs23.rs1) as jumlah, MONTH(rs23.rs3) month')
+            ->whereBetween('rs23.rs3', [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']) // super cepat
+            // ->where('rs23.rs22', '=', '')
+            ->groupBy('month')
+            ->get();
+
 
         $data = array(
             "tempat_tidur" => $tempat_tidur,
             'igd_harini' => $igd_harini,
             'poli_hariinibelum' => $poli_hariinibelum,
             'poli_hariinisudah' => $poli_hariinisudah,
+            'poli_tahun' => $poli_tahun,
+            'ranap_tahun' => $ranap_tahun,
         );
         return response()->json($data);
     }
