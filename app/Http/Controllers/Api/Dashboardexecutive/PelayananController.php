@@ -84,16 +84,7 @@ class PelayananController extends Controller
         //     "
         // );
 
-        $poli_hariinibelum = DB::table('rs17')
-            // ->join('rs15', 'rs17.rs2', '=', 'rs15.rs1') // JOIN DATA PASIEN
-            // ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1') // JOIN DATA MASTER POLI
-            // ->join('rs9', 'rs17.rs14', '=', 'rs9.rs1') // JOIN DATA MASTER CARA BAYAR
-            // ->selectRaw('rs1 as noreg, rs3 as tanggal, rs2 as norm, rs8 as kd_poli, rs14 as kd_akun, rs19 as status')
-            ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
-            ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs3', 'LIKE', '%' . $tgl . '%')
-            ->where('rs19', '=', '')
-            ->get();
+
 
         // $poli_hariinisudah = DB::select(
         //     "select tanggalmasuk,noreg,norm,nama,alamat,kelamin,IF(thn<1,IF(bln<1,concat(hari,' hari'),concat(bln,' bln')),concat(thn,' thn')) as umur,
@@ -116,21 +107,28 @@ class PelayananController extends Controller
         //         and rs17.rs8<>'POL014' and rs17.rs8<>'POL005' and rs17.rs8<>'POL025') as v_15_17 order by tanggalmasuk"
         // );
 
+        $poli_hariinibelum = DB::table('rs17')
+            ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
+            ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
+            ->where('rs3', 'LIKE', '%' . $tgl . '%')
+            ->where('rs19', '=', '')
+            ->get();
+
         $poli_hariinisudah = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+            ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
             ->where('rs17.rs19', '=', '1')
             ->get();
 
-        $poli_tahun = DB::table('rs17')
-            ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
-            ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
-            ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereDate('rs17.rs3', 'LIKE', '%' . $tgl . '%')
-            ->where('rs17.rs19', '=', '1')
-            ->get();
+        // $poli_tahun = DB::table('rs17')
+        //     ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
+        //     ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
+        //     ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
+        //     ->whereDate('rs17.rs3','LIKE', '%' . $tgl . '%')
+        //     ->where('rs17.rs19', '=', '1')
+        //     ->get();
 
 
         // $poli_hariini = KunjunganPoli::selectRaw('rs1, rs3, rs8, rs19 as sudah')
