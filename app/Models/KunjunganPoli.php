@@ -29,4 +29,9 @@ class KunjunganPoli extends Model
     {
         return $this->belongsTo(Poli::class, 'rs8', 'rs1');
     }
+
+    public function status_poli()
+    {
+        return $this->hasOne(StatusPasienPoli::class, 'rs1', 'rs1');
+    }
 }
