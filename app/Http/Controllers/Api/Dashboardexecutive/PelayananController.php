@@ -119,7 +119,7 @@ class PelayananController extends Controller
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->where('rs17.rs3', $tgl)
+            ->whereDate('rs17.rs3', $tgl)
             ->where('rs17.rs19', '=', '1')
             ->get();
 
