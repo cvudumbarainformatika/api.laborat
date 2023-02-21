@@ -27,6 +27,9 @@ class PelayananController extends Controller
 
         $tgl = date('Y-m-d', $time);
 
+        $periode1 = $y . '-' . '01' . '-' . '01';
+        $periode2 = $y . '-' . '12' . '-' . '31';
+
         $tempat_tidur = DB::select(
             "SELECT * FROM (
                     SELECT UPPER(rs24.rs2) AS ruang,COUNT(vBed.rs5) AS total,SUM(vBed.terisi) AS terisi,( COUNT(vBed.rs5) - SUM(vBed.terisi) ) AS sisa FROM (
@@ -133,8 +136,9 @@ class PelayananController extends Controller
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
-            ->whereBetween('rs17.rs3', [$tgl . ' 00:00:00', $tgl . ' 23:59:59']) // super cepat
+            ->whereBetween('rs17.rs3', [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']) // super cepat
             ->where('rs17.rs19', '=', '1')
+            ->groupBy('rs17.rs3')
             ->get();
 
 
