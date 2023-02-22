@@ -127,7 +127,7 @@ class PelayananController extends Controller
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
             // ->whereBetween('rs17.rs3', ['2023-02-21 00:00:00', '2023-02-21 23:59:59']) // super cepat
-            ->whereBetween('rs17.rs3', ['2023-01-22' . ' 00:00:00', '2023-01-22' . ' 23:59:59']) // super cepat
+            ->whereBetween('rs17.rs3', ['2023-02-22' . ' 00:00:00', '2023-02-22' . ' 23:59:59']) // super cepat
             // ->where(DB::raw("(DATE_FORMAT(rs17.rs3, '%Y-%m-%d'))"), request('tgl'))
             // ->whereDate('rs3', '=', Carbon::today())
             ->where('rs17.rs19', '=', '1')
