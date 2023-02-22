@@ -178,7 +178,7 @@ class PelayananController extends Controller
             ->get();
 
 
-        $poli = Poli::where('rs5', '1')->get();
+        $poli = Poli::where('rs5', '1')->orderBy('rs2', 'ASC')->get();
         $data = array(
             "tempat_tidur" => $tempat_tidur,
             'igd_harini' => $igd_harini,
