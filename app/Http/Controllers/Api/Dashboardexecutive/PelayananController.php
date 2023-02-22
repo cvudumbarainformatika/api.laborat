@@ -179,9 +179,6 @@ class PelayananController extends Controller
 
 
         $poli = Poli::where('rs5', '1')
-            ->with('kunjungan_poli', function ($q) {
-                $q->whereBetween('rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59']);
-            })
             ->orderBy('rs2', 'ASC')->get();
 
         $data = array(
