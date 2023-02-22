@@ -141,6 +141,7 @@ class PelayananController extends Controller
             ->where('rs17.rs19', '=', '1')
             ->groupBy('month')
             ->get();
+        $poli = Poli::get();
 
 
         // $ranap_lalu = DB::select(
@@ -185,6 +186,7 @@ class PelayananController extends Controller
             'poli_hariinisudah' => $poli_hariinisudah,
             'poli_tahun' => $poli_tahun,
             'ranap_tahun' => $ranap_tahun,
+            'poli' => $poli
         );
         return response()->json($data);
     }
