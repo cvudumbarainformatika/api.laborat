@@ -130,7 +130,7 @@ class PelayananController extends Controller
             ->whereBetween('rs17.rs3', ['2023-02-22' . ' 00:00:00', '2023-02-22' . ' 23:59:59']) // super cepat
             // ->where(DB::raw("(DATE_FORMAT(rs17.rs3, '%Y-%m-%d'))"), request('tgl'))
             // ->whereDate('rs3', '=', Carbon::today())
-            ->where('rs17.rs19', '=', '1')
+            // ->where('rs17.rs19', '=', '1')
             ->get();
 
         $poli_tahun = DB::table('rs17')
