@@ -40,10 +40,15 @@ class StokOpnameController extends Controller
     {
         $bulan = request('bulan') ? request('bulan') : date('m');
         $tahun = request('tahun') ? request('tahun') : date('Y');
+        $awal = $tahun . '-' . $bulan . '-1' . ' 00:00:00';
+        $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
+        // $awal = '2022-12-01 00:00:00';
+        // $akhir = '2022-12-31 23:59:59';
 
-        $raw = MonthlyStokUpdate::where('tanggal', '>=', $tahun . '-' . $bulan . '-1')
-            ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
+        $raw = MonthlyStokUpdate::whereBetween('tanggal', [$awal, $akhir])
+            // ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
             ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo')
+            ->filter(request(['q', 'search']))
             ->paginate(request('per_page'));
         $col = collect($raw);
         $meta = $col->except('data');
@@ -58,10 +63,13 @@ class StokOpnameController extends Controller
     {
         $bulan = request('bulan') ? request('bulan') : date('m');
         $tahun = request('tahun') ? request('tahun') : date('Y');
+        $awal = $tahun . '-' . $bulan . '-1' . ' 00:00:00';
+        $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
 
-        $raw = MonthlyStokUpdate::where('tanggal', '>=', $tahun . '-' . $bulan . '-1')
-            ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
-            ->where('kode_ruang', '=', request('search'))
+        // $raw = MonthlyStokUpdate::where('tanggal', '>=', $tahun . '-' . $bulan . '-1')
+        // ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
+        // ->where('kode_ruang', '=', request('search'))
+        $raw = MonthlyStokUpdate::whereBetween('tanggal', [$awal, $akhir])
             ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo')
             ->paginate(request('per_page'));
         $col = collect($raw);
