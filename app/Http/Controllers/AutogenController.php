@@ -1578,22 +1578,23 @@ class AutogenController extends Controller
         // $data['col'] = $col;
         // $data['permintaan'] = $permintaan;
         // return new JsonResponse($data);
-        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
-        $raw = $before->where('sisa_stok', '>', 0)
-            ->where('kode_ruang', '<>', 'Gd-02010100')
-            ->groupBy('kode_ruang')
-            ->with(
-                'barang.barang108',
-                'barang.satuan',
-                'depo',
-                'barang.mapingdepo.gudang',
-                'ruang'
-            )
-            ->get();
-        $col = collect($raw);
-        $data = $col->unique('kode_ruang');
-        $data->all();
-        return new JsonResponse(['col' => $col, 'data' => $data]);
+        // $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
+        // $raw = $before->where('sisa_stok', '>', 0)
+        //     ->where('kode_ruang', '<>', 'Gd-02010100')
+        //     ->groupBy('kode_ruang')
+        //     ->with(
+        //         'barang.barang108',
+        //         'barang.satuan',
+        //         'depo',
+        //         'barang.mapingdepo.gudang',
+        //         'ruang'
+        //     )
+        //     ->get();
+        // $col = collect($raw);
+        // $data = $col->unique('kode_ruang');
+        // $data->all();
+        // return new JsonResponse(['col' => $col, 'data' => $data]);
+
     }
 
     public function wawanpost(Request $request)

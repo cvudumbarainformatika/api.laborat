@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
+use App\Helpers\StokHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\MonthlyStokUpdate;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\StokOpname;
 use Illuminate\Http\JsonResponse;
@@ -15,11 +17,17 @@ class StokOpnameController extends Controller
     // data gudang dan depo sigarang
     public function getDataGudangDepo()
     {
-
-        $data = Gudang::where('gedung', 2)
-            ->where('lantai', '>', 0)
-            ->where('gudang', '>', 0)
-            ->get();
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $raw = Gudang::query();
+        if ($pegawai->role_id === 4) {
+            $raw->where('kode', $pegawai->kode_ruang);
+        } else {
+            $raw->where('gedung', 2)
+                ->where('lantai', '>', 0)
+                ->where('gudang', '>', 0);
+        }
+        $data = $raw->get();
         return new JsonResponse($data);
     }
     // ambil data stok current ->
@@ -81,26 +89,50 @@ class StokOpnameController extends Controller
         return new JsonResponse($data);
     }
 
+
     public function storeMonthly()
     {
-        $recent = RecentStokUpdate::where('sisa_stok', '>', 0)->get();
-        $total = [];
-        $tanggal = date('Y-m-d') . ' 23:59:59';
-        foreach ($recent as $key) {
-            $data = MonthlyStokUpdate::create([
-                'tanggal' => $tanggal,
-                'kode_rs' => $key->kode_rs,
-                'kode_ruang' => $key->kode_ruang,
-                'no_penerimaan' => $key->no_penerimaan,
-                'harga' => $key->harga,
-                'sisa_stok' => $key->sisa_stok,
-            ]);
-            array_push($total, $data);
+        $header = (object)[];
+        $bulan = request('bulan') ? '-' . request('bulan') : date('m');
+        $tahun = request('tahun') ? '-' . request('tahun') : date('Y');
+        $hari = '-31';
+        $prevTahun = $bulan === '01' ? strval((int)$tahun - 1) : $tahun;
+        $prevbulan = $bulan === '01' ? '12' : strval((int)$bulan - 1);
+        $header->thisMonthFrom = $tahun . $bulan . '-01' . ' 00:00:00';
+        $header->thisMonthTo = $tahun . $bulan . $hari . ' 23:59:59';
+        $header->prevMonthFrom = $prevTahun . $prevbulan . '-01' . ' 00:00:00';
+        $header->prevMonthTo = $prevTahun . $prevbulan . $hari . ' 23:59:59';
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $depo = Gudang::where('kode', $pegawai->kode_ruang)->first();
+        $header->pegawai = $pegawai;
+        if ($depo) {
+            $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
+                ->where('kode_ruang', $pegawai->kode_ruang)
+                ->with('barang')
+                ->get();
+
+            return new JsonResponse(['request' => request()->all(), 'recent' => $recent], 410);
+            $total = [];
+            $tanggal = date('Y-m-d') . ' 23:59:59';
+            foreach ($recent as $key) {
+                $data = MonthlyStokUpdate::create([
+                    'tanggal' => $tanggal,
+                    'kode_rs' => $key->kode_rs,
+                    'kode_ruang' => $key->kode_ruang,
+                    'no_penerimaan' => $key->no_penerimaan,
+                    'harga' => $key->harga,
+                    'sisa_stok' => $key->sisa_stok,
+                ]);
+                array_push($total, $data);
+            }
+            if (count($recent) !== count($total)) {
+                return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
+            }
+            return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
         }
-        if (count($recent) !== count($total)) {
-            return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
-        }
-        return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+
+        return new JsonResponse(['message' => 'Anda tidak terdaftar sebagai petugas Depo'], 422);
     }
 
     public function storePenyesuaian(Request $request)
