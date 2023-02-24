@@ -98,14 +98,17 @@ class StokOpnameController extends Controller
         $hari = '-31';
         $prevTahun = $bulan === '01' ? strval((int)$tahun - 1) : $tahun;
         $prevbulan = $bulan === '01' ? '12' : strval((int)$bulan - 1);
+
         $header->thisMonthFrom = $tahun . $bulan . '-01' . ' 00:00:00';
         $header->thisMonthTo = $tahun . $bulan . $hari . ' 23:59:59';
         $header->prevMonthFrom = $prevTahun . $prevbulan . '-01' . ' 00:00:00';
         $header->prevMonthTo = $prevTahun . $prevbulan . $hari . ' 23:59:59';
+
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
         $depo = Gudang::where('kode', $pegawai->kode_ruang)->first();
         $header->pegawai = $pegawai;
+
         if ($depo) {
             $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
                 ->where('kode_ruang', $pegawai->kode_ruang)
