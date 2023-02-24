@@ -26,6 +26,13 @@ class BarangRSController extends Controller
 
         return new JsonResponse($balik);
     }
+
+    public function countIndex()
+    {
+        $data = BarangRS::count();
+        return new JsonResponse($data, 200);
+    }
+
     public function indexForPemesanan()
     {
         $data = BarangRS::latest('id')
