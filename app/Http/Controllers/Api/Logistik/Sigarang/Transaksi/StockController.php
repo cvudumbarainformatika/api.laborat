@@ -197,17 +197,17 @@ class StockController extends Controller
     {
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
-        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
+        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->where('sisa_stok', '>', 0);
         if ($pegawai->role_id === 5) {
-            $before->where('kode_ruang', $pegawai->kode_ruang);
+            $before->where('kode_ruang', $pegawai->kode_ruang)->where('kode_ruang', '<>', 'Gd-02010100');
         }
         if ($pegawai->role_id === 4) {
             $before->where('kode_ruang', $pegawai->kode_ruang)
+                ->where('kode_ruang', '<>', 'Gd-02010100')
                 ->orWhere('kode_ruang', 'like', '%R-%');
         }
-        $raw = $before->where('sisa_stok', '>', 0)
-            ->where('kode_ruang', '<>', 'Gd-02010100')
-            ->groupBy('kode_ruang')
+        $raw = $before->groupBy('kode_ruang')
             ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang', 'ruang')
             ->get();
 
@@ -221,6 +221,7 @@ class StockController extends Controller
 
         $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
             ->where('kode_ruang', '=', request('search'))
+            ->where('sisa_stok', '>', 0)
             ->orderBy(request('order_by'), request('sort'))
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))

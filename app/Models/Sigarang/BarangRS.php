@@ -2,6 +2,13 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
+use App\Models\Sigarang\Transaksi\DistribusiLangsung\DetailDistribusiLangsung;
+use App\Models\Sigarang\Transaksi\Gudang\DetailTransaksiGudang;
+use App\Models\Sigarang\Transaksi\Pemakaianruangan\DetailsPemakaianruangan;
+use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
+use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +45,38 @@ class BarangRS extends Model
     public function depo()
     {
         return $this->belongsTo(Gudang::class, 'kode_depo', 'kode');
+    }
+    public function detailPemesanan()
+    {
+        return $this->hasMany(DetailPemesanan::class, 'kode_rs', 'kode');
+    }
+    public function detailPenerimaan()
+    {
+        return $this->hasMany(DetailPenerimaan::class, 'kode_rs', 'kode');
+    }
+    public function detailDistribusiDepo()
+    {
+        return $this->hasMany(DetailDistribusiDepo::class, 'kode_rs', 'kode');
+    }
+    public function detailDistribusiLangsung()
+    {
+        return $this->hasMany(DetailDistribusiLangsung::class, 'kode_rs', 'kode');
+    }
+    public function detailTransaksiGudang()
+    {
+        return $this->hasMany(DetailTransaksiGudang::class, 'kode_rs', 'kode');
+    }
+    public function detailPermintaanruangan()
+    {
+        return $this->hasMany(DetailPermintaanruangan::class, 'kode_rs', 'kode');
+    }
+    public function detailPemakaianruangan()
+    {
+        return $this->hasMany(DetailsPemakaianruangan::class, 'kode_rs', 'kode');
+    }
+    public function monthly()
+    {
+        return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
     }
 
 
