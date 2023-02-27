@@ -26,7 +26,7 @@ class DistribusiDepoController extends Controller
     {
         $data = DistribusiDepo::where('status', '=', 1)
             ->latest('id')
-            ->with('details.barangrs', 'details.barang108', 'depo')
+            ->with('details.barangrs', 'depo')
             ->get();
 
         return new JsonResponse($data);
