@@ -242,7 +242,7 @@ class StokOpnameController extends Controller
         if ($diff->d === 0) {
             // ambil data barang yang ada stoknya di tabel sekarang
             $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
-                ->where('kode_ruang', 'like', '%Gd-%')
+                // ->where('kode_ruang', 'like', '%Gd-%')
                 ->with('barang')
                 ->get();
 
@@ -270,7 +270,7 @@ class StokOpnameController extends Controller
                     'harga' => $key->harga,
                     'sisa_stok' => $key->sisa_stok,
                     'satuan' => $key->satuan !== null ? $key->satuan : 'Belum ada satuan',
-                    'kode_satuan' => $key->kode_satuan !== null ? $key->kode_satuan : '71',
+                    'kode_satuan' => $key->kode_satuan !== null ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
                 ]);
                 array_push($total, $data);
             }
