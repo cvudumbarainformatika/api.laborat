@@ -213,8 +213,10 @@ class StokOpnameController extends Controller
         // $raw = MonthlyStokUpdate::where('tanggal', '>=', $tahun . '-' . $bulan . '-1')
         // ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
         // ->where('kode_ruang', '=', request('search'))
-        $raw = MonthlyStokUpdate::whereBetween('tanggal', [$awal, $akhir])
+        $raw = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
+            ->whereBetween('tanggal', [$awal, $akhir])
             ->where('kode_ruang', request('search'))
+            ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
             ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo', 'ruang')
             ->paginate(request('per_page'));
