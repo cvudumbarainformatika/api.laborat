@@ -15,6 +15,7 @@ Route::group([
     Route::get('/store-opname', [StokOpnameController::class, 'storeMonthly']);
     Route::get('/opname-by-depo', [StokOpnameController::class, 'getDataStokOpnameByDepo']);
     Route::post('/simpan-penyesuaian', [StokOpnameController::class, 'storePenyesuaian']);
+    Route::post('/update-stok-fisik', [StokOpnameController::class, 'updateStokFisik']);
 });
 Route::group([
     'middleware' => 'api',

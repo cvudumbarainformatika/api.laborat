@@ -153,7 +153,8 @@ class StokOpnameController extends Controller
         $from = $prevTahun . '-' . $prevbulan . '-01' . ' 00:00:00';
         $to = $prevTahun . '-' . $prevbulan . '-31' . ' 23:59:59';
 
-        $raw = MonthlyStokUpdate::whereBetween('tanggal', [$awal, $akhir])
+        $raw = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
+            ->whereBetween('tanggal', [$awal, $akhir])
             // ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
             ->with([
                 'penyesuaian',
@@ -176,11 +177,13 @@ class StokOpnameController extends Controller
                     $wew->whereBetween('tanggal', [$awal, $akhir]);
                 },
                 'depo',
+                'ruang',
                 'barang.monthly' => function ($wew) use ($from, $to) {
                     $wew->whereBetween('tanggal', [$from, $to]);
                 },
             ])
             ->filter(request(['q']))
+            ->groupBy('kode_rs', 'kode_ruang')
             ->paginate(request('per_page'));
 
         // foreach ($raw as $key) {
@@ -213,7 +216,7 @@ class StokOpnameController extends Controller
         $raw = MonthlyStokUpdate::whereBetween('tanggal', [$awal, $akhir])
             ->where('kode_ruang', request('search'))
             ->filter(request(['q']))
-            ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo')
+            ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo', 'ruang')
             ->paginate(request('per_page'));
         $col = collect($raw);
         $meta = $col->except('data');
@@ -263,12 +266,13 @@ class StokOpnameController extends Controller
                     'kode_ruang' => $key->kode_ruang,
                     'no_penerimaan' => $key->no_penerimaan,
                 ], [
-                    'tanggal' => $tanggal,
-                    'kode_rs' => $key->kode_rs,
-                    'kode_ruang' => $key->kode_ruang,
-                    'no_penerimaan' => $key->no_penerimaan,
+                    // 'tanggal' => $tanggal,
+                    // 'kode_rs' => $key->kode_rs,
+                    // 'kode_ruang' => $key->kode_ruang,
+                    // 'no_penerimaan' => $key->no_penerimaan,
                     'harga' => $key->harga,
                     'sisa_stok' => $key->sisa_stok,
+                    'sisa_fisik' => $key->sisa_stok,
                     'satuan' => $key->satuan !== null ? $key->satuan : 'Belum ada satuan',
                     'kode_satuan' => $key->kode_satuan !== null ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
                 ]);
@@ -317,5 +321,17 @@ class StokOpnameController extends Controller
         }
 
         return new JsonResponse(['message' => 'Tidak ada perubahan data'], 417);
+    }
+    public function updateStokFisik(Request $request)
+    {
+        $data = MonthlyStokUpdate::find($request->id);
+        $data->update([
+            'stok_fisik' => $request->stok_fisik
+        ]);
+
+        if ($data->wasChanged()) {
+            return new JsonResponse(['message' => 'data berhasil disimpan', 'data' => $data], 201);
+        }
+        return new JsonResponse([$request->all(), 'message' => 'Data tidak disimpan'], 410);
     }
 }
