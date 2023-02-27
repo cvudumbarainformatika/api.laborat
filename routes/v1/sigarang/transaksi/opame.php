@@ -16,3 +16,10 @@ Route::group([
     Route::get('/opname-by-depo', [StokOpnameController::class, 'getDataStokOpnameByDepo']);
     Route::post('/simpan-penyesuaian', [StokOpnameController::class, 'storePenyesuaian']);
 });
+Route::group([
+    'middleware' => 'api',
+    // 'middleware' => 'jwt.verify',
+    'prefix' => 'public/transaksi/opname'
+], function () {
+    Route::get('/store-opname', [StokOpnameController::class, 'storeMonthly']);
+});
