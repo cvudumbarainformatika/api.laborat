@@ -24,7 +24,7 @@ class StokOpname extends Model
 
     public function barangrs()
     {
-        return  $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        return  $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
     }
     public function barang108()
     {

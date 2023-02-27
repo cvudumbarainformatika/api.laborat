@@ -29,7 +29,7 @@ class MaxRuangan extends Model
             // $pengguna = $reqs['ruang'] ? $reqs['ruang'] : '';
             return $search->hasByNonDependentSubquery('barang', function ($q) use ($query) {
                 $q->where('nama', 'like', '%' . $query . '%');
-            });
+            })->withTrashed();
             // ->hasByNonDependentSubquery('ruang', function ($q) use ($pengguna) {
             //     $q->where('uraian', 'like', '%' . $pengguna . '%');
             // });

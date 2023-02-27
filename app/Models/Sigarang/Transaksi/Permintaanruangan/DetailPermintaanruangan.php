@@ -35,7 +35,7 @@ class DetailPermintaanruangan extends Model
 
     public function barangrs()
     {
-        return  $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        return  $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
         // return $this->belongsTo(BarangRS::class, 'kode', 'kode_rs');
     }
     public function barang108()

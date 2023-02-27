@@ -18,7 +18,7 @@ class MonthlyStokUpdate extends Model
 
     public function barang()
     {
-        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
     }
     public function depo()
     {
@@ -38,7 +38,8 @@ class MonthlyStokUpdate extends Model
         $search->when($reqs['q'] ?? false, function ($search, $query) {
             return $search->whereHas('barang', function ($q) use ($query) {
                 $q->where('nama', 'like', '%' . $query . '%')
-                    ->orWhere('kode', 'LIKE', '%' . $query . '%');
+                    ->orWhere('kode', 'LIKE', '%' . $query . '%')
+                    ->withTrashed();
                 // })->orWhereHas('ruang', function ($q) use ($query) {
                 //     $q->where('uraian', 'like', '%' . $query . '%')
                 //         ->orWhere('kode', 'LIKE', '%' . $query . '%');

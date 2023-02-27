@@ -19,7 +19,7 @@ class MinMaxDepo extends Model
 
     public function barang()
     {
-        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
     }
 
     public function scopeFilter($search, array $reqs)
@@ -28,7 +28,7 @@ class MinMaxDepo extends Model
             $barang = $reqs['barang'] ? $reqs['barang'] : '';
             $depo = $reqs['depo'] ? $reqs['depo'] : '';
             return $search->whereHas('barang', function ($q) use ($barang) {
-                $q->where('nama', 'like', '%' . $barang . '%');
+                $q->where('nama', 'like', '%' . $barang . '%')->withTrashed();
             })->whereHas('depo', function ($q) use ($depo) {
                 $q->where('nama', 'like', '%' . $depo . '%');
             });
