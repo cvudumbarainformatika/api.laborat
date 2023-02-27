@@ -23,4 +23,5 @@ Route::group([
     Route::post('/current-by-barang', [StockController::class, 'currentStokByBarang']);
     Route::get('/get-current-by-ruangan', [StockController::class, 'stokByRuangan']);
     Route::get('/get-ruangan-by-barang', [StockController::class, 'stokRuanganByBarang']);
+    Route::get('/get-data-kartu-stok', [StockController::class, 'getDataKartuStok']); // untuk kartu stok Recent stok Update
 });
