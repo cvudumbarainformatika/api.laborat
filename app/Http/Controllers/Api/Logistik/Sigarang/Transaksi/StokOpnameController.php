@@ -191,53 +191,55 @@ class StokOpnameController extends Controller
         //     $key->transaksi = $apem;
         // return new JsonResponse(['key' => $key, 'apem' => $apem]);
         // }
-        $rawCount = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
-            ->whereBetween('tanggal', [$awal, $akhir])
-            ->filter(request(['q']))
-            ->with([
-                'barang'
-                // => function ($x) use ($awal, $akhir) {
-                //     $x->withCount([
-                //         'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
-                //             $y->with([
-                //                 'permintaanruangan' => function ($z) use ($awal, $akhir) {
-                //                     $z->whereBetween('tanggal', [$awal, $akhir])
-                //                         ->where('status', '>=', 7)
-                //                         ->where('status', '<=', 8);
-                //                 }
-                //             ]);
-                //         }
-                //     ])
-                //         ->withExists([
-                //             'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
-                //                 $y->with([
-                //                     'permintaanruangan' => function ($z) use ($awal, $akhir) {
-                //                         $z->whereBetween('tanggal', [$awal, $akhir])
-                //                             ->where('status', '>=', 7)
-                //                             ->where('status', '<=', 8);
-                //                     }
-                //                 ]);
-                //             }
-                //         ])
-                //         ->with([
-                //             'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
-                //                 $y->with([
-                //                     'permintaanruangan' => function ($z) use ($awal, $akhir) {
-                //                         $z->whereBetween('tanggal', [$awal, $akhir])
-                //                             ->where('status', '>=', 7)
-                //                             ->where('status', '<=', 8);
-                //                     }
-                //                 ]);
-                //             }
-                //         ]);
-                // }
-            ])
-            ->groupBy('kode_rs', 'kode_ruang')
-            ->paginate(request('per_page'));
-        foreach ($rawCount as $key) {
-            $apem = $this->getDataTransaksiByKodeRs($key->kode_rs);
-            $key->transaksi = $apem;
-        }
+        // $rawCount = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
+        //     ->whereBetween('tanggal', [$awal, $akhir])
+        //     ->filter(request(['q']))
+        //     ->with([
+        //         'barang'
+        //         // => function ($x) use ($awal, $akhir) {
+        //         //     $x->withCount([
+        //         //         'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
+        //         //             $y->with([
+        //         //                 'permintaanruangan' => function ($z) use ($awal, $akhir) {
+        //         //                     $z->whereBetween('tanggal', [$awal, $akhir])
+        //         //                         ->where('status', '>=', 7)
+        //         //                         ->where('status', '<=', 8);
+        //         //                 }
+        //         //             ]);
+        //         //         }
+        //         //     ])
+        //         //         ->withExists([
+        //         //             'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
+        //         //                 $y->with([
+        //         //                     'permintaanruangan' => function ($z) use ($awal, $akhir) {
+        //         //                         $z->whereBetween('tanggal', [$awal, $akhir])
+        //         //                             ->where('status', '>=', 7)
+        //         //                             ->where('status', '<=', 8);
+        //         //                     }
+        //         //                 ]);
+        //         //             }
+        //         //         ])
+        //         //         ->with([
+        //         //             'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
+        //         //                 $y->with([
+        //         //                     'permintaanruangan' => function ($z) use ($awal, $akhir) {
+        //         //                         $z->whereBetween('tanggal', [$awal, $akhir])
+        //         //                             ->where('status', '>=', 7)
+        //         //                             ->where('status', '<=', 8);
+        //         //                     }
+        //         //                 ]);
+        //         //             }
+        //         //         ]);
+        //         // }
+        //     ])
+        //     ->groupBy('kode_rs', 'kode_ruang')
+        //     ->paginate(request('per_page'));
+        // foreach ($rawCount as $key) {
+        //     $apem = $this->getDataTransaksiByKodeRs($key->kode_rs);
+        //     $key->transaksi = $apem;
+        // }
+
+
         $col = collect($raw);
         $meta = $col->except('data');
         $meta->all();
@@ -247,8 +249,8 @@ class StokOpnameController extends Controller
         $data = $col->only('data');
         $data['meta'] = $meta;
         // $data['transaksi'] = $transaksi;
-        $count = collect($rawCount);
-        $data['with count'] = $count->only('data');
+        // $count = collect($rawCount);
+        // $data['with count'] = $count->only('data');
         return new JsonResponse($data);
     }
 
