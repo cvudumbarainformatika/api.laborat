@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Helpers\StokHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\Pegawai;
@@ -11,6 +12,7 @@ use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\StokOpname;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StokOpnameController extends Controller
 {
@@ -135,7 +137,7 @@ class StokOpnameController extends Controller
         ];
     }
 
-    public function getDataStokOpname()
+    public function getDataStokOpname1()
     {
         $bulan = request('bulan') ? request('bulan') : date('m');
         $tahun = request('tahun') ? request('tahun') : date('Y');
@@ -203,6 +205,15 @@ class StokOpnameController extends Controller
         $count = collect($raw);
         $data['with count'] = $count->only('data');
         return new JsonResponse($data);
+    }
+
+    public function getDataStokOpname()
+    {
+        $data = BarangRS::select('barang_r_s.*')
+            ->join('gudangs', function ($query) {
+                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
+                    ->where('gudangs.kode', request('search'));
+            })->paginate(request('per_page'));
     }
 
     public function getDataStokOpnameByDepo()
