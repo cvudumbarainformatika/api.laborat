@@ -209,7 +209,18 @@ class StokOpnameController extends Controller
 
     public function getDataStokOpnameBaru()
     {
-        $data = BarangRS::select('barang_r_s.*')
+        $bulan = request('bulan') ? request('bulan') : date('m');
+        $tahun = request('tahun') ? request('tahun') : date('Y');
+        $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
+        $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
+
+
+        $data = BarangRS::with([
+            'monthly' => function ($q) use ($awal, $akhir) {
+                $q->whereBetween('tanggal', [$awal, $akhir]);
+            }
+        ])
+            ->select('barang_r_s.*')
             ->join('gudangs', function ($query) {
                 $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
                     ->where('gudangs.kode', request('search'));
