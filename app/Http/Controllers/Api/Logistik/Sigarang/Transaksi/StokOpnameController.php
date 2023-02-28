@@ -336,14 +336,7 @@ class StokOpnameController extends Controller
                     ]);
                     array_push($fisik, $anu);
                 }
-                array_push($total, [
-                    'key' => $key->sisa_stok,
-                    'data fisik' => $data->stok_fisik,
-                    'data jika' => $data->stok_fisik > 0 || $data->stok_fisik < 0,
-                    'anu jika' => $anu->stok_fisik == 0,
-                    'data' => $data,
-                    'anu' => $anu,
-                ]);
+                array_push($total, $data);
             }
             if (count($recent) !== count($total)) {
                 return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
@@ -351,8 +344,8 @@ class StokOpnameController extends Controller
             // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
-                'fisik' => $fisik,
-                'total' => $total,
+                // 'fisik' => $fisik,
+                // 'total' => $total,
             ], 201);
         }
 
