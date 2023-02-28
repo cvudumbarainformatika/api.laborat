@@ -137,7 +137,7 @@ class StokOpnameController extends Controller
         ];
     }
 
-    public function getDataStokOpname1()
+    public function getDataStokOpname()
     {
         $bulan = request('bulan') ? request('bulan') : date('m');
         $tahun = request('tahun') ? request('tahun') : date('Y');
@@ -207,7 +207,7 @@ class StokOpnameController extends Controller
         return new JsonResponse($data);
     }
 
-    public function getDataStokOpname()
+    public function getDataStokOpnameBaru()
     {
         $data = BarangRS::select('barang_r_s.*')
             ->join('gudangs', function ($query) {
