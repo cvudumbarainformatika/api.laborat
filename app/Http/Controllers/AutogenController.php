@@ -192,8 +192,16 @@ class AutogenController extends Controller
         // $signature = hash_hmac('sha256', $xid, $secret_key);
         // echo $signature;
         // echo date('Y-m-d', 1665488987);
-        $query = collect($this->query_table());
-        $data = $query->take(10);
+        // $query = collect($this->query_table());
+        // $data = $query->take(10);
+
+        // return new JsonResponse($data);
+
+        $data = BarangRS::select('barang_r_s.*')
+            ->join('gudangs', function ($query) {
+                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
+                    ->where('gudangs.kode', '=', request('search'));
+            })->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
