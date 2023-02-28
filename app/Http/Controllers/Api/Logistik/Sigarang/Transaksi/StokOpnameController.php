@@ -142,7 +142,7 @@ class StokOpnameController extends Controller
         $bulan = request('bulan') ? request('bulan') : date('m');
         $tahun = request('tahun') ? request('tahun') : date('Y');
 
-        $awal = $tahun . '-' . $bulan . '-1' . ' 00:00:00';
+        $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
         $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
 
         $tAwal = $tahun . '-' . $bulan . '-1';
