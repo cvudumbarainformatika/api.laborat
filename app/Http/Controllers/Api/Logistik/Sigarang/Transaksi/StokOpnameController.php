@@ -161,7 +161,6 @@ class StokOpnameController extends Controller
                 'barang.detailPenerimaan.penerimaan' => function ($wew) use ($tAwal, $tAkhir) {
                     $wew->whereBetween('tanggal', [$tAwal, $tAkhir]);
                 },
-                // 'barang.detailPermintaanruangan',
                 'barang.detailPermintaanruangan.permintaanruangan' => function ($wew) use ($awal, $akhir) {
                     $wew->whereBetween('tanggal', [$awal, $akhir])
                         ->where('status', '>=', 7)
@@ -186,71 +185,15 @@ class StokOpnameController extends Controller
             ->groupBy('kode_rs', 'kode_ruang')
             ->paginate(request('per_page'));
 
-        // foreach ($raw as $key) {
-        //     $apem = $this->getDataTransaksiByKodeRs($key->kode_rs);
-        //     $key->transaksi = $apem;
-        // return new JsonResponse(['key' => $key, 'apem' => $apem]);
-        // }
-        // $rawCount = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
-        //     ->whereBetween('tanggal', [$awal, $akhir])
-        //     ->filter(request(['q']))
-        //     ->with([
-        //         'barang'
-        //         // => function ($x) use ($awal, $akhir) {
-        //         //     $x->withCount([
-        //         //         'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
-        //         //             $y->with([
-        //         //                 'permintaanruangan' => function ($z) use ($awal, $akhir) {
-        //         //                     $z->whereBetween('tanggal', [$awal, $akhir])
-        //         //                         ->where('status', '>=', 7)
-        //         //                         ->where('status', '<=', 8);
-        //         //                 }
-        //         //             ]);
-        //         //         }
-        //         //     ])
-        //         //         ->withExists([
-        //         //             'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
-        //         //                 $y->with([
-        //         //                     'permintaanruangan' => function ($z) use ($awal, $akhir) {
-        //         //                         $z->whereBetween('tanggal', [$awal, $akhir])
-        //         //                             ->where('status', '>=', 7)
-        //         //                             ->where('status', '<=', 8);
-        //         //                     }
-        //         //                 ]);
-        //         //             }
-        //         //         ])
-        //         //         ->with([
-        //         //             'detailPermintaanruangan' => function ($y) use ($awal, $akhir) {
-        //         //                 $y->with([
-        //         //                     'permintaanruangan' => function ($z) use ($awal, $akhir) {
-        //         //                         $z->whereBetween('tanggal', [$awal, $akhir])
-        //         //                             ->where('status', '>=', 7)
-        //         //                             ->where('status', '<=', 8);
-        //         //                     }
-        //         //                 ]);
-        //         //             }
-        //         //         ]);
-        //         // }
-        //     ])
-        //     ->groupBy('kode_rs', 'kode_ruang')
-        //     ->paginate(request('per_page'));
-        // foreach ($rawCount as $key) {
-        //     $apem = $this->getDataTransaksiByKodeRs($key->kode_rs);
-        //     $key->transaksi = $apem;
-        // }
-
 
         $col = collect($raw);
         $meta = $col->except('data');
         $meta->all();
 
-        // $transaksi = $this->getDataTransaksi();
-
         $data = $col->only('data');
         $data['meta'] = $meta;
-        // $data['transaksi'] = $transaksi;
-        // $count = collect($rawCount);
-        // $data['with count'] = $count->only('data');
+        $count = collect($raw);
+        $data['with count'] = $count->only('data');
         return new JsonResponse($data);
     }
 
@@ -258,18 +201,51 @@ class StokOpnameController extends Controller
     {
         $bulan = request('bulan') ? request('bulan') : date('m');
         $tahun = request('tahun') ? request('tahun') : date('Y');
+
         $awal = $tahun . '-' . $bulan . '-1' . ' 00:00:00';
         $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
 
-        // $raw = MonthlyStokUpdate::where('tanggal', '>=', $tahun . '-' . $bulan . '-1')
-        // ->where('tanggal', '<=', $tahun . '-' . $bulan . '-31')
-        // ->where('kode_ruang', '=', request('search'))
+        $tAwal = $tahun . '-' . $bulan . '-1';
+        $tAkhir = $tahun . '-' . $bulan . '-31';
+
+        $anu = (int)request('bulan') - 1;
+        $prevTahun = request('bulan') === '01' ? strval((int)$tahun - 1) : $tahun;
+        $prevbulan = request('bulan') === '01' ? '-12' : ($anu < 10 ? '-0' . $anu : '-' . $anu);
+
+        $from = $prevTahun . '-' . $prevbulan . '-01' . ' 00:00:00';
+        $to = $prevTahun . '-' . $prevbulan . '-31' . ' 23:59:59';
+
+
         $raw = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
             ->whereBetween('tanggal', [$awal, $akhir])
             ->where('kode_ruang', request('search'))
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
-            ->with('penyesuaian', 'barang.mapingbarang.barang108', 'depo', 'ruang')
+            ->with([
+                'penyesuaian',
+                'barang.detailPenerimaan.penerimaan' => function ($wew) use ($tAwal, $tAkhir) {
+                    $wew->whereBetween('tanggal', [$tAwal, $tAkhir]);
+                },
+                'barang.detailPermintaanruangan.permintaanruangan' => function ($wew) use ($awal, $akhir) {
+                    $wew->whereBetween('tanggal', [$awal, $akhir])
+                        ->where('status', '>=', 7)
+                        ->where('status', '<=', 8);
+                },
+                'barang.detailTransaksiGudang.transaction' => function ($wew) use ($tAwal, $tAkhir) {
+                    $wew->whereBetween('tanggal', [$tAwal, $tAkhir]);
+                },
+                'barang.detailDistribusiDepo.distribusi' => function ($wew) use ($awal, $akhir) {
+                    $wew->whereBetween('tanggal', [$awal, $akhir]);
+                },
+                'barang.detailDistribusiLangsung.distribusi' => function ($wew) use ($awal, $akhir) {
+                    $wew->whereBetween('tanggal', [$awal, $akhir]);
+                },
+                'depo',
+                'ruang',
+                'barang.monthly' => function ($wew) use ($from, $to) {
+                    $wew->whereBetween('tanggal', [$from, $to]);
+                },
+            ])
             ->paginate(request('per_page'));
         $col = collect($raw);
         $meta = $col->except('data');
