@@ -182,7 +182,7 @@ class StokOpnameController extends Controller
                 },
             ])
             ->filter(request(['q']))
-            ->groupBy('kode_rs', 'kode_ruang')
+            ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
             ->paginate(request('per_page'));
 
 
@@ -219,7 +219,7 @@ class StokOpnameController extends Controller
         $raw = MonthlyStokUpdate::selectRaw('*, sum(sisa_stok) as totalStok')
             ->whereBetween('tanggal', [$awal, $akhir])
             ->where('kode_ruang', request('search'))
-            ->groupBy('kode_rs', 'kode_ruang')
+            ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
             ->filter(request(['q']))
             ->with([
                 'penyesuaian',
