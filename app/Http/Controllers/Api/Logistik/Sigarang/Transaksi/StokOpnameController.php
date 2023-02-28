@@ -159,21 +159,29 @@ class StokOpnameController extends Controller
             ->with([
                 'penyesuaian',
                 'barang.detailPenerimaan.penerimaan' => function ($wew) use ($tAwal, $tAkhir) {
-                    $wew->whereBetween('tanggal', [$tAwal, $tAkhir]);
+                    $wew->whereBetween('tanggal', [$tAwal, $tAkhir])
+                        ->where('status', '>=', 2);
                 },
                 'barang.detailPermintaanruangan.permintaanruangan' => function ($wew) use ($awal, $akhir) {
                     $wew->whereBetween('tanggal', [$awal, $akhir])
                         ->where('status', '>=', 7)
                         ->where('status', '<=', 8);
                 },
-                'barang.detailTransaksiGudang.transaction' => function ($wew) use ($tAwal, $tAkhir) {
-                    $wew->whereBetween('tanggal', [$tAwal, $tAkhir]);
+                'barang.detailTransaksiGudang' => function ($x) {
+                    $x->selectRaw('sum(qty) as jumlah');
                 },
-                'barang.detailDistribusiDepo.distribusi' => function ($wew) use ($awal, $akhir) {
-                    $wew->whereBetween('tanggal', [$awal, $akhir]);
-                },
+                //.transaction' => function ($wew) use ($tAwal, $tAkhir) {
+                //     $wew->whereBetween('tanggal', [$tAwal, $tAkhir])
+                //         ->where('status', '>=', 2);
+                // },
+                'barang.detailDistribusiDepo',
+                //distribusi' => function ($wew) use ($awal, $akhir) {
+                //     $wew->whereBetween('tanggal', [$awal, $akhir])
+                //         ->where('status', '>=', 2);
+                // },
                 'barang.detailDistribusiLangsung.distribusi' => function ($wew) use ($awal, $akhir) {
-                    $wew->whereBetween('tanggal', [$awal, $akhir]);
+                    $wew->whereBetween('tanggal', [$awal, $akhir])
+                        ->where('status', '>=', 2);
                 },
                 'depo',
                 'ruang',
