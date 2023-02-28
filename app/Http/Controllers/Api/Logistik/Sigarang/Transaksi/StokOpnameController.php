@@ -214,10 +214,21 @@ class StokOpnameController extends Controller
         $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
         $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
 
+        $anu = (int)request('bulan') - 1;
+        $prevTahun = request('bulan') === '01' ? strval((int)$tahun - 1) : $tahun;
+        $prevbulan = request('bulan') === '01' ? '-12' : ($anu < 10 ? '-0' . $anu : '-' . $anu);
+
+        $from = $prevTahun . '-' . $prevbulan . '-01' . ' 00:00:00';
+        $to = $prevTahun . '-' . $prevbulan . '-31' . ' 23:59:59';
+
 
         $data = BarangRS::with([
             'monthly' => function ($q) use ($awal, $akhir) {
                 $q->whereBetween('tanggal', [$awal, $akhir])
+                    ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+            },
+            'stok_awal' => function ($q) use ($from, $to) {
+                $q->whereBetween('tanggal', [$from, $to])
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             }
         ])
