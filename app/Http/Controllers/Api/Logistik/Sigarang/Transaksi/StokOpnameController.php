@@ -214,6 +214,8 @@ class StokOpnameController extends Controller
                 $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
                     ->where('gudangs.kode', request('search'));
             })->paginate(request('per_page'));
+
+        return new JsonResponse($data);
     }
 
     public function getDataStokOpnameByDepo()
