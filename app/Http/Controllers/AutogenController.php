@@ -200,7 +200,7 @@ class AutogenController extends Controller
         $data = BarangRS::select('barang_r_s.*')
             ->join('gudangs', function ($query) {
                 $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
-                    ->where('gudangs.kode', '=', request('search'));
+                    ->where('gudangs.kode', '=', 'Gd-02010101');
             })->paginate(request('per_page'));
 
         return new JsonResponse($data);
