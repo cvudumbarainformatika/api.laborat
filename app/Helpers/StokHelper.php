@@ -110,7 +110,7 @@ class StokHelper
                 'detail_penerimaans.qty',
                 'satuans.nama as satuan'
             )
-            ->whereIn('detail_penerimaans.kode_rs', [$header->kode_rs])
+            ->where('detail_penerimaans.kode_rs', [$header->kode_rs])
             ->whereBetween('penerimaans.tanggal', [$header->from, $header->to])
             ->where('penerimaans.status', 2)->get();
         return $data;
@@ -137,7 +137,7 @@ class StokHelper
                 'satuans.nama as satuan',
                 'gudangs.nama as tujuan',
             )
-            ->whereIn('detail_distribusi_depos.kode_rs', [$header->kode_rs])
+            ->where('detail_distribusi_depos.kode_rs', [$header->kode_rs])
             ->whereBetween('distribusi_depos.tanggal', [$header->thisMonthFrom, $header->thisMonthTo])
             ->where('distribusi_depos.status', 2)->get();
 
@@ -164,7 +164,7 @@ class StokHelper
                 'satuans.nama as satuan',
                 'gudangs.nama as depo',
             )
-            ->whereIn('detail_permintaanruangans.kode_rs', [$header->kode_rs])
+            ->where('detail_permintaanruangans.kode_rs', [$header->kode_rs])
             ->whereBetween('permintaanruangans.tanggal', [$header->thisMonthFrom, $header->thisMonthTo])
             ->where('permintaanruangans.status', '>=', 7)
             ->where('permintaanruangans.status', '<=', 8)
