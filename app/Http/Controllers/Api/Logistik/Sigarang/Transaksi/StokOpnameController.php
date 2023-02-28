@@ -217,7 +217,8 @@ class StokOpnameController extends Controller
 
         $data = BarangRS::with([
             'monthly' => function ($q) use ($awal, $akhir) {
-                $q->whereBetween('tanggal', [$awal, $akhir]);
+                $q->whereBetween('tanggal', [$awal, $akhir])
+                    ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             }
         ])
             ->select('barang_r_s.*')
