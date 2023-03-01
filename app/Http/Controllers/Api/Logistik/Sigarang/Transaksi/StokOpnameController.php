@@ -232,11 +232,17 @@ class StokOpnameController extends Controller
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             }
         ])
+
             ->select('barang_r_s.*')
             ->join('gudangs', function ($query) {
                 $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
                     ->where('gudangs.kode', request('search'));
-            })->paginate(request('per_page'));
+            })
+            ->when(request('q'), function ($search) {
+                $search->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
+            })
+            ->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
