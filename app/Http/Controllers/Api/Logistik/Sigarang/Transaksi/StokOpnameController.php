@@ -210,35 +210,112 @@ class StokOpnameController extends Controller
 
     public function getDataStokOpnameBaru()
     {
-        $bulan = request('bulan') ? request('bulan') : date('m');
-        $tahun = request('tahun') ? request('tahun') : date('Y');
-        $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
-        $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
+        $head = (object)[];
+        $head->bulan = request('bulan') ? request('bulan') : date('m');
+        $head->tahun = request('tahun') ? request('tahun') : date('Y');
+
+        $head->awal = $head->tahun . '-' . $head->bulan . '-01' . ' 00:00:00';
+        $head->akhir = $head->tahun . '-' . $head->bulan . '-31' . ' 23:59:59';
+
+        $head->nawal = $head->tahun . '-' . $head->bulan . '-01';
+        $head->nakhir = $head->tahun . '-' . $head->bulan . '-31';
 
         $anu = (int)request('bulan') - 1;
-        $prevTahun = request('bulan') === '01' ? strval((int)$tahun - 1) : $tahun;
-        $prevbulan = request('bulan') === '01' ? '-12' : ($anu < 10 ? '-0' . $anu : '-' . $anu);
+        $head->prevTahun = request('bulan') === '01' ? strval((int)$head->tahun - 1) : $head->tahun;
+        $head->prevbulan = request('bulan') === '01' ? '-12' : ($anu < 10 ? '-0' . $anu : '-' . $anu);
 
-        $from = $prevTahun . '-' . $prevbulan . '-01' . ' 00:00:00';
-        $to = $prevTahun . '-' . $prevbulan . '-31' . ' 23:59:59';
+        $head->from = $head->prevTahun . '-' . $head->prevbulan . '-01' . ' 00:00:00';
+        $head->to = $head->prevTahun . '-' . $head->prevbulan . '-31' . ' 23:59:59';
 
 
         $data = BarangRS::with([
-            'monthly' => function ($q) use ($awal, $akhir) {
-                $q->whereBetween('tanggal', [$awal, $akhir])
+            'monthly' => function ($q) use ($head) {
+                $q->whereBetween('tanggal', [$head->awal, $head->akhir])
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             },
-            'stok_awal' => function ($q) use ($from, $to) {
-                $q->whereBetween('tanggal', [$from, $to])
+            'stok_awal' => function ($q) use ($head) {
+                $q->whereBetween('tanggal', [$head->from, $head->to])
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+            },
+            'detailPermintaanruangan' => function ($detail) use ($head) {
+                $detail->select(
+                    'detail_permintaanruangans.kode_rs',
+                    'detail_permintaanruangans.jumlah_distribusi',
+                    'detail_permintaanruangans.alasan',
+                    'detail_permintaanruangans.no_penerimaan',
+                    'permintaanruangans.id',
+                    'permintaanruangans.kode_ruang',
+                    'permintaanruangans.dari',
+                    'permintaanruangans.tanggal',
+                )
+                    ->join('permintaanruangans', function ($minta) use ($head) {
+                        $minta->on('detail_permintaanruangans.permintaanruangan_id', '=', 'permintaanruangans.id')
+                            ->whereBetween('tanggal', [$head->awal, $head->akhir])
+                            ->whereIn('status', [7, 8]);
+                    })
+                    ->where('jumlah_distribusi', '>', 0);
+            },
+            'detailPenerimaan' => function ($detail) use ($head) {
+                $detail->select(
+                    'detail_penerimaans.kode_rs',
+                    'detail_penerimaans.qty',
+                    'detail_penerimaans.merk',
+                    'penerimaans.nomor',
+                    'penerimaans.no_penerimaan',
+                    'penerimaans.tanggal',
+                )
+                    ->join('penerimaans', function ($minta) use ($head) {
+                        $minta->on('detail_penerimaans.penerimaan_id', '=', 'penerimaans.id')
+                            ->whereBetween('tanggal', [$head->nawal, $head->nakhir])
+                            ->where('status', 2);
+                    });
+            },
+            'detailDistribusiDepo' => function ($detail) use ($head) {
+                $detail->select(
+                    'detail_distribusi_depos.kode_rs',
+                    'detail_distribusi_depos.no_penerimaan',
+                    'detail_distribusi_depos.jumlah',
+                    'detail_distribusi_depos.merk',
+                    'distribusi_depos.kode_depo',
+                    'distribusi_depos.tanggal'
+                )
+                    ->join('distribusi_depos', function ($minta) use ($head) {
+                        $minta->on('detail_distribusi_depos.distribusi_depo_id', '=', 'distribusi_depos.id')
+                            ->whereBetween('tanggal', [$head->awal, $head->akhir])
+                            ->where('status', 2);
+                    });
+            },
+            'detailTransaksiGudang' => function ($detail) use ($head) {
+                $detail->select(
+                    'detail_transaksi_gudangs.kode_rs',
+                    'detail_transaksi_gudangs.no_penerimaan',
+                    'detail_transaksi_gudangs.qty',
+                    'detail_transaksi_gudangs.merk',
+                    'transaksi_gudangs.*'
+                )
+                    ->join('transaksi_gudangs', function ($minta) use ($head) {
+                        $minta->on('detail_transaksi_gudangs.transaksi_gudang_id', '=', 'transaksi_gudangs.id')
+                            ->whereBetween('tanggal', [$head->nawal, $head->nakhir])
+                            ->where('status', 2);
+                    });
+            },
+            'detailPemakaianruangan' => function ($detail) use ($head) {
+                $detail->select('details_pemakaianruangans.*', 'pemakaianruangans.*')
+                    ->join('pemakaianruangans', function ($minta) use ($head) {
+                        $minta->on('details_pemakaianruangans.pemakaianruangan_id', '=', 'pemakaianruangans.id')
+                            ->whereBetween('tanggal', [$head->awal, $head->akhir]);
+                        // ->where('status', 2);
+                    });
             }
         ])
 
-            ->select('barang_r_s.*')
+            ->select('barang_r_s.*', 'satuans.nama as satuan', 'gudangs.nama as depo')
             ->join('gudangs', function ($query) {
                 $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
                     ->where('gudangs.kode', request('search'));
             })
+            ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
+
             ->when(request('q'), function ($search) {
                 $search->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
