@@ -191,6 +191,7 @@ class StokOpnameController extends Controller
                     $wew->whereBetween('tanggal', [$from, $to]);
                 },
             ])
+            ->where('kode_ruang', 'like', '%' . request('search') . '%')
             ->filter(request(['q']))
             ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
             ->paginate(request('per_page'));
