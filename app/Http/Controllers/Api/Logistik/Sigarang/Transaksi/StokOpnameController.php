@@ -285,6 +285,20 @@ class StokOpnameController extends Controller
                             ->where('status', 2);
                     });
             },
+            'detailDistribusiLangsung' => function ($detail) use ($head) {
+                $detail->select(
+                    'detail_distribusi_langsungs.kode_rs',
+                    'detail_distribusi_langsungs.jumlah',
+                    // 'detail_distribusi_langsungs.merk',
+                    'distribusi_langsungs.no_penerimaan',
+                    'distribusi_langsungs.tanggal'
+                )
+                    ->join('distribusi_langsungs', function ($minta) use ($head) {
+                        $minta->on('detail_distribusi_langsungs.distribusi_langsung_id', '=', 'distribusi_langsungs.id')
+                            ->whereBetween('tanggal', [$head->awal, $head->akhir])
+                            ->where('status', 2);
+                    });
+            },
             'detailTransaksiGudang' => function ($detail) use ($head) {
                 $detail->select(
                     'detail_transaksi_gudangs.kode_rs',
