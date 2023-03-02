@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\DetailsPemakaianruangan;
@@ -42,12 +43,16 @@ class PemakaianruanganController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
         $request->validate([
             'reff' => 'required',
             'kode_penanggungjawab' => 'required',
             'kode_pengguna' => 'required',
             'tanggal' => 'required',
         ]);
+        // $masuk = $request->all();
+        $request['kode_ruang'] = $pegawai->kode_ruang;
         $pakai = Pemakaianruangan::updateOrCreate(['id' => $request->id], $request->all());
 
         if ($request->details) {

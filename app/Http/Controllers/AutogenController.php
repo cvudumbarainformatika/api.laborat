@@ -192,8 +192,27 @@ class AutogenController extends Controller
         // $signature = hash_hmac('sha256', $xid, $secret_key);
         // echo $signature;
         // echo date('Y-m-d', 1665488987);
-        $query = collect($this->query_table());
-        $data = $query->take(10);
+        // $query = collect($this->query_table());
+        // $data = $query->take(10);
+
+        // return new JsonResponse($data);
+
+        $bulan = '02';
+        $tahun = 2023;
+        $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
+        $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
+
+
+        $data = BarangRS::with([
+            'monthly' => function ($q) use ($awal, $akhir) {
+                $q->whereBetween('tanggal', [$awal, $akhir]);
+            }
+        ])
+            ->select('barang_r_s.*')
+            ->join('gudangs', function ($query) {
+                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
+                    ->where('gudangs.kode', '=', 'Gd-02010101');
+            })->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
@@ -1578,22 +1597,23 @@ class AutogenController extends Controller
         // $data['col'] = $col;
         // $data['permintaan'] = $permintaan;
         // return new JsonResponse($data);
-        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
-        $raw = $before->where('sisa_stok', '>', 0)
-            ->where('kode_ruang', '<>', 'Gd-02010100')
-            ->groupBy('kode_ruang')
-            ->with(
-                'barang.barang108',
-                'barang.satuan',
-                'depo',
-                'barang.mapingdepo.gudang',
-                'ruang'
-            )
-            ->get();
-        $col = collect($raw);
-        $data = $col->unique('kode_ruang');
-        $data->all();
-        return new JsonResponse(['col' => $col, 'data' => $data]);
+        // $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
+        // $raw = $before->where('sisa_stok', '>', 0)
+        //     ->where('kode_ruang', '<>', 'Gd-02010100')
+        //     ->groupBy('kode_ruang')
+        //     ->with(
+        //         'barang.barang108',
+        //         'barang.satuan',
+        //         'depo',
+        //         'barang.mapingdepo.gudang',
+        //         'ruang'
+        //     )
+        //     ->get();
+        // $col = collect($raw);
+        // $data = $col->unique('kode_ruang');
+        // $data->all();
+        // return new JsonResponse(['col' => $col, 'data' => $data]);
+
     }
 
     public function wawanpost(Request $request)

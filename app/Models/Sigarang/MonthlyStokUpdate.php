@@ -18,7 +18,7 @@ class MonthlyStokUpdate extends Model
 
     public function barang()
     {
-        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
     }
     public function depo()
     {
@@ -31,5 +31,31 @@ class MonthlyStokUpdate extends Model
     public function pengguna()
     {
         return $this->belongsTo(Pengguna::class, 'kode_ruang', 'kode');
+    }
+
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->whereHas('barang', function ($q) use ($query) {
+                $q->where('nama', 'like', '%' . $query . '%')
+                    ->orWhere('kode', 'LIKE', '%' . $query . '%')
+                    ->withTrashed();
+                // })->orWhereHas('ruang', function ($q) use ($query) {
+                //     $q->where('uraian', 'like', '%' . $query . '%')
+                //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+            });
+            $search->when($reqs['search'] ?? false, function ($search, $query) {
+                return $search->where('kode_ruang', '=', $query);
+                // $q->where('nama', 'like', '%' . $query . '%')
+                //     ->orWhere('kode', 'LIKE', '%' . $query . '%');
+                // })->orWhereHas('ruang', function ($q) use ($query) {
+                //     $q->where('uraian', 'like', '%' . $query . '%')
+                //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+            });
+            // ->orWhereHas('satuan', function ($q) use ($query) {
+            //     $q->where('nama', 'like', '%' . $query . '%')
+            //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+            // });
+        });
     }
 }

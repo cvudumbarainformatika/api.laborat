@@ -44,11 +44,12 @@ class StockController extends Controller
         }
         if ($pegawai->role_id === 4) {
             $before->where('kode_ruang', $pegawai->kode_ruang)
+                ->where('kode_ruang', '<>', 'Gd-02010100')
                 ->orWhere('kode_ruang', 'like', '%R-%');
         }
         $raw = $before->orderBy(request('order_by'), request('sort'))
             ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
-            ->where('kode_ruang', '<>', 'Gd-02010100')
+
             ->where('sisa_stok', '>', 0)
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
@@ -182,7 +183,7 @@ class StockController extends Controller
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
             ->where('kode_ruang', '<>', 'Gd-02010100')
             ->groupBy('kode_rs', 'kode_ruang')
-            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang')
+            ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.depo')
             ->get();
         // ->paginate(10);
         $collection = collect($data)->unique('kode_rs');
@@ -197,17 +198,17 @@ class StockController extends Controller
     {
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
-        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok');
+        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
+            ->where('sisa_stok', '>', 0);
         if ($pegawai->role_id === 5) {
-            $before->where('kode_ruang', $pegawai->kode_ruang);
+            $before->where('kode_ruang', $pegawai->kode_ruang)->where('kode_ruang', '<>', 'Gd-02010100');
         }
         if ($pegawai->role_id === 4) {
             $before->where('kode_ruang', $pegawai->kode_ruang)
+                ->where('kode_ruang', '<>', 'Gd-02010100')
                 ->orWhere('kode_ruang', 'like', '%R-%');
         }
-        $raw = $before->where('sisa_stok', '>', 0)
-            ->where('kode_ruang', '<>', 'Gd-02010100')
-            ->groupBy('kode_ruang')
+        $raw = $before->groupBy('kode_ruang')
             ->with('barang.barang108', 'barang.satuan', 'depo', 'barang.mapingdepo.gudang', 'ruang')
             ->get();
 
@@ -221,6 +222,7 @@ class StockController extends Controller
 
         $raw = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
             ->where('kode_ruang', '=', request('search'))
+            ->where('sisa_stok', '>', 0)
             ->orderBy(request('order_by'), request('sort'))
             ->groupBy('kode_rs', 'kode_ruang')
             ->filter(request(['q']))
@@ -283,6 +285,7 @@ class StockController extends Controller
     {
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
             ->where('kode_ruang', request('kode_ruang'))
+            ->with('barang')
             ->groupBy('kode_rs', 'kode_ruang')
             ->get();
         $collection = collect($data)->unique('kode_rs');
@@ -336,5 +339,58 @@ class StockController extends Controller
         $data = RecentStokUpdate::where('kode_ruang', 'Gd-02010100')
             ->get();
         return new JsonResponse($data);
+    }
+
+    // untuk kartu stok recent stok update
+    public function getDataKartuStok()
+    {
+        $from = request('from');
+        $to = request('to');
+        $fromWt = request('from') . ' 00:00:00';
+        $toWt = request('to') . ' 23:59:59';
+
+        $lastDate = date('Y-m-t', strtotime($to));
+        // $m = date('m', strtotime($to));
+        // $y = date('Y', strtotime($to));
+        $prevFromWt = date('Y-m-d', strtotime(request('from') . '- 1 month')) . ' 00:00:00';
+        $prevToWt = date('Y-m-t', strtotime(request('to') . '- 1 month')) . ' 23:59:59';
+        $request = request()->all();
+        $data = BarangRS::where('kode', request('kode_rs'))
+            ->with([
+                'recent.depo',
+                'monthly' => function ($x) use ($prevFromWt, $prevToWt) {
+                    $x->where('kode_ruang', request('kode_ruang'))
+                        ->whereBetween('tanggal', [$prevFromWt, $prevToWt]);
+                },
+                'detailPemesanan.pemesanan' => function ($x) use ($from, $to) {
+                    $x->whereBetween('tanggal', [$from, $to]);
+                },
+                'detailPenerimaan.penerimaan' => function ($x) use ($from, $to) {
+                    $x->whereBetween('tanggal', [$from, $to]);
+                },
+                'detailTransaksiGudang.transaction' => function ($x) use ($from, $to) {
+                    $x->whereBetween('tanggal', [$from, $to]);
+                },
+                'detailDistribusiDepo.distribusi' => function ($x) use ($fromWt, $toWt) {
+                    $x->whereBetween('tanggal', [$fromWt, $toWt]);
+                },
+                'detailDistribusiLangsung.distribusi' => function ($x) use ($fromWt, $toWt) {
+                    $x->whereBetween('tanggal', [$fromWt, $toWt]);
+                },
+                'detailPermintaanruangan.permintaanruangan' => function ($x) use ($fromWt, $toWt) {
+                    $x->whereBetween('tanggal', [$fromWt, $toWt]);
+                },
+                'detailPemakaianruangan.pemakaianruangan' => function ($x) use ($fromWt, $toWt) {
+                    $x->whereBetween('tanggal', [$fromWt, $toWt]);
+                },
+            ])
+            ->first();
+
+        return new JsonResponse([
+            $data,
+            'bulan' => $prevFromWt,
+            'tahun' => $prevToWt,
+            'request' => $request
+        ]);
     }
 }

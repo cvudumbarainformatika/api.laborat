@@ -15,7 +15,7 @@ class DetailDistribusiDepo extends Model
     protected $guarded = ['id'];
     public function barang108()
     {
-        return $this->belongsTo(Barang108::class, 'kode_108', 'kode');
+        return $this->belongsTo(Barang108::class, 'kode_108', 'kode')->withTrashed();
         // return $this->belongsTo(Barang108::class, 'kode', 'kode_108');
     }
 

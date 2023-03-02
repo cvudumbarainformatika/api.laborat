@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\Transaksi\PemesananResource;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use Illuminate\Http\JsonResponse;
@@ -59,6 +60,20 @@ class PemesananController extends Controller
             }
 
             DB::commit();
+            $user = auth()->user();
+            $pegawai = Pegawai::find($user->pegawai_id);
+            if ($data->wasRecentlyCreated) {
+                $data->update([
+                    'created_by' => $pegawai->id
+                ]);
+                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+            }
+            if ($data->wasChanged()) {
+                $data->update([
+                    'updated_by' => $pegawai->id
+                ]);
+                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+            }
             return new JsonResponse(['message' => 'success'], 201);
         } catch (\Exception $e) {
             DB::rollBack();

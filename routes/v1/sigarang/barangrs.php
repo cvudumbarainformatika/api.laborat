@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'barangrs'
 ], function () {
     Route::get('/index', [BarangRSController::class, 'index']);
+    Route::get('/count-index', [BarangRSController::class, 'countIndex']);
     Route::get('/index-pemesanan', [BarangRSController::class, 'indexForPemesanan']);
     Route::get('/barangrs', [BarangRSController::class, 'barangrs']);
     Route::post('/store', [BarangRSController::class, 'store']);

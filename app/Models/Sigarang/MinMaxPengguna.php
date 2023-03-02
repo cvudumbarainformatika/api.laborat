@@ -13,7 +13,7 @@ class MinMaxPengguna extends Model
 
     public function barang()
     {
-        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode');
+        return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
     }
 
 
