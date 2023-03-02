@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
@@ -15,7 +16,12 @@ class PenerimaanController extends Controller
 {
     public function cariPemesanan()
     {
-        $data = Pemesanan::filter(request(['q']))
+        $user = auth()->user();
+        // $pegawai = Pegawai::find($user->pegawai_id);
+        $wew = Pemesanan::query();
+        $wew->where('created_by', $user->pegawai_id);
+        $wew->orWhere('created_by', null);
+        $data = $wew->filter(request(['q']))
             ->where('status', '>=', 2)
             ->where('status', '<', 4)
             ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
