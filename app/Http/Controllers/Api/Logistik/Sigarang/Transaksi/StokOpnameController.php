@@ -291,7 +291,8 @@ class StokOpnameController extends Controller
                     'detail_transaksi_gudangs.no_penerimaan',
                     'detail_transaksi_gudangs.qty',
                     'detail_transaksi_gudangs.merk',
-                    'transaksi_gudangs.*'
+                    'transaksi_gudangs.tanggal',
+                    'transaksi_gudangs.no_penerimaan',
                 )
                     ->join('transaksi_gudangs', function ($minta) use ($head) {
                         $minta->on('detail_transaksi_gudangs.transaksi_gudang_id', '=', 'transaksi_gudangs.id')
@@ -300,7 +301,14 @@ class StokOpnameController extends Controller
                     });
             },
             'detailPemakaianruangan' => function ($detail) use ($head) {
-                $detail->select('details_pemakaianruangans.*', 'pemakaianruangans.*')
+                $detail->select(
+                    'details_pemakaianruangans.kode_rs',
+                    // 'details_pemakaianruangans.no_penerimaan',
+                    'details_pemakaianruangans.jumlah',
+                    'details_pemakaianruangans.merk',
+                    'pemakaianruangans.no_penerimaan',
+                    'pemakaianruangans.tanggal',
+                )
                     ->join('pemakaianruangans', function ($minta) use ($head) {
                         $minta->on('details_pemakaianruangans.pemakaianruangan_id', '=', 'pemakaianruangans.id')
                             ->whereBetween('tanggal', [$head->awal, $head->akhir]);
