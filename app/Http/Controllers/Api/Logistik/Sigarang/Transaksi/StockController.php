@@ -119,7 +119,7 @@ class StockController extends Controller
         $barang = BarangRS::where('kode', $kode_rs)->first();
 
         // cari barang ini masuk depo mana
-        $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
+        // $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
 
         // ambil stok ruangan
         $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
@@ -128,7 +128,7 @@ class StockController extends Controller
 
         // cari stok di depo
         $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $depo->kode_gudang)->get();
+            ->where('kode_ruang', $barang->kode_depo)->get();
         $totalStok = collect($stok)->sum('sisa_stok');
 
         // ambil alokasi barang
