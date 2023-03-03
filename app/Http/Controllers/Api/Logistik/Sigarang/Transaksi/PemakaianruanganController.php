@@ -52,7 +52,7 @@ class PemakaianruanganController extends Controller
             'tanggal' => 'required',
         ]);
         // $masuk = $request->all();
-        $request['kode_ruang'] = $pegawai->kode_ruang;
+        // $request['kode_ruang'] = $pegawai->kode_ruang;
         $pakai = Pemakaianruangan::updateOrCreate(['id' => $request->id], $request->all());
 
         if ($request->details) {
