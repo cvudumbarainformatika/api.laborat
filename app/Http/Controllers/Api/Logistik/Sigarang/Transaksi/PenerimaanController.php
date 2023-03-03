@@ -42,7 +42,7 @@ class PenerimaanController extends Controller
 
         $pemesanan = Pemesanan::where('nomor', '=', request()->nomor)
             ->where('status', '>=', 2)
-            ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
+            ->latest('id')->with(['details', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
         $penerimaanLama = Penerimaan::where('nomor', '=', request()->nomor)
             ->where('status', '>=', 2)->with('details')->get();
 
