@@ -183,6 +183,11 @@ return [
         */
         SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
 
+        /*
+        * Excel import / export
+        */
+        Maatwebsite\Excel\ExcelServiceProvider::class,
+
     ],
 
     /*
@@ -242,6 +247,8 @@ return [
         'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
 
         'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
+
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
 
     ],
 

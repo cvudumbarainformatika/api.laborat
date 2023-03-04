@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\Prota;
+use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Mockery\Undefined;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class TransaksiAbsenController extends Controller
@@ -20,13 +24,17 @@ class TransaksiAbsenController extends Controller
         $thisYear = request('tahun') ? request('tahun') : date('Y');
         $thisMonth = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
-        $user = User::where('id', '>', 3)->oldest('id')
+        $user = User::where('id', '>', 1)->oldest('id')
             ->with(['absens' => function ($query) use ($thisMonth, $thisYear) {
                 $query->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
                     ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31');
             }])
-            ->simplePaginate($per_page);
+            // ->simplePaginate($per_page);
+            ->paginate($per_page);
         $userCollections = collect($user);
+
+        $dataUser = $userCollections->only('data');
+        $dataUser->all();
         $meta = $userCollections->except('data');
         $meta->all();
         $data = [];
@@ -34,31 +42,37 @@ class TransaksiAbsenController extends Controller
             $absen = $key->absens;
             foreach ($absen as $value) {
                 // return new JsonResponse($value);
-                $temp = explode('-', $value['tanggal']);
-                // $temp = explode('-', $value->tanggal);
-                $day = $temp[2];
-                // $day = $this->getDayName($temp[2]);
-                $value['day'] = $day;
+                // if ($value['masuk'] === null || $value['masuk'] === '') {
+                //     return new JsonResponse($value);
+                // }
+                if ($value['masuk'] !== null) {
+                    $temp = explode('-', $value['tanggal']);
+                    // $temp = explode('-', $value->tanggal);
+                    $day = $temp[2];
+                    // $day = $this->getDayName($temp[2]);
+                    $value['day'] = $day;
+                    $toIn = explode(':', $value['kategory']->masuk);
+                    $act = explode(':', $value['masuk']);
+                    $jam = (int)$act[0] - (int)$toIn[0];
+                    $menit =  (int)$act[1] - (int)$toIn[1];
+                    $detik =  (int)$act[2] - (int)$toIn[2];
 
-                $toIn = explode(':', $value['kategory']->masuk);
-                $act = explode(':', $value['masuk']);
-                $jam = (int)$act[0] - (int)$toIn[0];
-                $menit =  (int)$act[1] - (int)$toIn[1];
-                $detik =  (int)$act[2] - (int)$toIn[2];
-
-                if ($jam > 0 || $menit > 00) {
-                    $value['terlambat'] = 'yes';
-                } else {
-                    $value['terlambat'] = 'no';
+                    if ($jam > 0 || $menit > 00) {
+                        $value['terlambat'] = 'yes';
+                    } else {
+                        $value['terlambat'] = 'no';
+                    }
+                    $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+                    $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+                    $diff = $jam . ':' . $dMenit . ':' . $dDetik;
+                    $value['diff'] = $diff;
                 }
-                $dMenit = $menit >= 10 ? $menit : '0' . $menit;
-                $dDetik = $detik >= 10 ? $detik : '0' . $detik;
-                $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-                $value['diff'] = $diff;
             }
 
             $data[$key['id']] = $absen;
         }
+        // return new JsonResponse($data);
+
         $apem = [];
         foreach ($data as $key => $value) {
             // return new JsonResponse($value);
@@ -75,6 +89,7 @@ class TransaksiAbsenController extends Controller
         }
         $data['apem'] = $apem;
         $data['meta'] = $meta;
+        $data['user'] = $dataUser;
         return new JsonResponse($data);
     }
     public function index()
@@ -212,46 +227,37 @@ class TransaksiAbsenController extends Controller
         $data = TransaksiAbsen::where('user_id', $user->id)
             ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
             ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
-            // ->paginate($per_page);
             ->with('kategory')
+            ->latest()
             ->get();
         return new JsonResponse($data);
-
-        // $tanggals = [];
-        // foreach ($data as $key) {
-        //     $temp = date('Y/m/d', strtotime($key['tanggal']));
-        //     $week = date('W', strtotime($key['tanggal']));
-        //     $toIn = explode(':', $key['kategory']->masuk);
-        //     $act = explode(':', $key['masuk']);
-        //     $jam = (int)$act[0] - (int)$toIn[0];
-        //     $menit =  (int)$act[1] - (int)$toIn[1];
-        //     $detik =  (int)$act[2] - (int)$toIn[2];
-
-        //     if ($jam > 0 || $menit > 10) {
-        //         $key['terlambat'] = 'yes';
-        //     } else {
-        //         $key['terlambat'] = 'no';
-        //     }
-        //     $dMenit = $menit >= 10 ? $menit : '0' . $menit;
-        //     $dDetik = $detik >= 10 ? $detik : '0' . $detik;
-        //     $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-        //     $key['diff'] = $diff;
-        //     $key['week'] = $week;
-        //     array_push($tanggals, $temp);
-        // };
-        // $collects = collect($data);
-        // $grouped = $collects->groupBy('week');
-        // $telat = $collects->where('terlambat', 'yes')->count();
-        // return new JsonResponse([
-        //     'telat' => $telat,
-        //     'weeks' => $grouped,
-        //     'tanggals' => $tanggals,
-        //     'data' => $data,
-        //     'user' => $user,
-        // ], 200);
-
-        // return new JsonResponse($data);
     }
+    public function getRekapByUserLibur()
+    {
+        $user = JWTAuth::user();
+        $thisYear = request('tahun') ? request('tahun') : date('Y');
+        $month = request('bulan') ? request('bulan') : date('m');
+        $per_page = request('per_page') ? request('per_page') : 10;
+        $masuk = TransaksiAbsen::where('user_id', $user->id)
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->with('kategory')
+            ->latest()
+            ->get();
+
+
+        $data['masuk'] = $masuk;
+        $libur = Libur::where('user_id', $user->id)
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->latest()
+            ->get();
+
+        $data['libur'] = $libur;
+        return new JsonResponse($data);
+    }
+
+
     public function getRekapPerUser()
     {
         $user = User::find(request('id'));
@@ -412,5 +418,94 @@ class TransaksiAbsenController extends Controller
                 break;
         }
         return $temp;
+    }
+
+
+    public function autocomplete()
+    {
+        $ruangan = Ruangan::all();
+        $jenis = JenisPegawai::all();
+        $data = [
+            'ruangan' => $ruangan,
+            'jenis_pegawai' => $jenis
+        ];
+        return response()->json($data);
+    }
+    public function prota()
+    {
+        $periode = request('periode');
+        $split = explode("-", $periode);
+        $year = $split[0];
+        $month = $split[1];
+        $prota = Prota::whereMonth('tgl_libur', $month)
+            ->whereYear('tgl_libur', $year)->get();
+        return response()->json($prota);
+    }
+    public function rekapan_absen_perbulan()
+    {
+        $periode = request('periode');
+
+        $data = Pegawai::where('aktif', '=', 'AKTIF')
+            ->where(function ($query) {
+                $query->when(request('flag') ?? false, function ($search, $q) {
+                    return $search->where('flag', '=', $q);
+                });
+                $query->when(request('ruang') ?? false, function ($search, $q) {
+                    return $search->where('ruang', '=', $q);
+                });
+            })
+            ->filter(request(['q']))
+            ->with([
+                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('created_at', $month)
+                        ->whereYear('created_at', $year);
+                }, "user.libur" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('tanggal', $month)
+                        ->whereYear('tanggal', $year);
+                }
+            ])
+            ->orderBy(request('order_by'), request('sort'))
+            ->paginate(request('per_page'));
+        return response()->json($data);
+    }
+
+    public function print_absen_perbulan()
+    {
+        $periode = request('periode');
+
+        $data = Pegawai::where('aktif', '=', 'AKTIF')
+            ->where(function ($query) {
+                $query->when(request('flag') ?? false, function ($search, $q) {
+                    return $search->where('flag', '=', $q);
+                });
+                $query->when(request('ruang') ?? false, function ($search, $q) {
+                    return $search->where('ruang', '=', $q);
+                });
+            })
+            ->filter(request(['q']))
+            ->with([
+                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('created_at', $month)
+                        ->whereYear('created_at', $year);
+                }, "user.libur" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('tanggal', $month)
+                        ->whereYear('tanggal', $year);
+                }
+            ])
+            ->orderBy(request('order_by'), request('sort'))
+            ->get();
+        return response()->json($data);
     }
 }

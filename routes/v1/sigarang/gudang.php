@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'gudang'
 ], function () {
     Route::get('/index', [GudangController::class, 'index']);
+    Route::get('/gudang', [GudangController::class, 'gudang']);
     Route::get('/depo', [GudangController::class, 'depo']);
     Route::post('/store', [GudangController::class, 'store']);
     Route::post('/destroy', [GudangController::class, 'destroy']);

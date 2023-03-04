@@ -40,6 +40,10 @@ class QrcodeController extends Controller
         // $ip = $ip;
         $user = JWTAuth::user();
         $pegawai = Pegawai::find($user->pegawai_id);
+        $dataPegawai = [
+            'foto' => $pegawai->foto,
+            'nip' => $pegawai->nip,
+        ];
         $date = date('Y-m-d H:i:s');
         $nama = $ip . '#' . $date;
 
@@ -51,7 +55,7 @@ class QrcodeController extends Controller
         ]);
         $message = [
             'data' => $data,
-            'user' => $pegawai
+            'user' => $dataPegawai
         ];
         event(new newQrEvent($message));
         // return new JsonResponse($data, 201);
@@ -66,12 +70,16 @@ class QrcodeController extends Controller
             $user = JWTAuth::user();
             $jadwal = JadwalController::toMatch($user->id, $request);
             $pegawai = Pegawai::find($user->pegawai_id);
+            $dataPegawai = [
+                'foto' => $pegawai->foto,
+                'nip' => $pegawai->nip,
+            ];
 
             if ($jadwal) {
                 $message = [
                     'jadwal' => $jadwal,
                     'ip' => $temp[0],
-                    'user' => $pegawai,
+                    'user' => $dataPegawai,
                 ];
                 event(new newQrEvent($message));
                 return new JsonResponse([
@@ -83,7 +91,7 @@ class QrcodeController extends Controller
             $message = [
                 'message' => 'tidak ada jadwal',
                 'ip' => $temp[0],
-                'user' => $pegawai,
+                'user' => $dataPegawai,
             ];
             event(new newQrEvent($message));
             return new JsonResponse([
@@ -94,5 +102,63 @@ class QrcodeController extends Controller
             return new JsonResponse(['message' => 'qr Code Expired'], 410);
         }
         return new JsonResponse($data, 200);
+    }
+
+
+    public function qrScanned2(Request $request)
+    {
+        $temp = explode('#', $request->qr);
+        $data = Qrcode::where('ip', $temp[0])->first();
+        if ($data->path === $temp[1]) {
+            $this->updateQr($temp[0]);
+            $user = JWTAuth::user();
+            $jadwal = JadwalController::toMatch2($user->id, $request);
+            $pegawai = Pegawai::find($user->pegawai_id);
+            $dataPegawai = [
+                'foto' => $pegawai->foto,
+                'nip' => $pegawai->nip,
+            ];
+            if ($jadwal) {
+                $message = [
+                    'jadwal' => $jadwal,
+                    'ip' => $temp[0],
+                    'user' => $dataPegawai,
+                ];
+                event(new newQrEvent($message));
+                return new JsonResponse([
+                    'message' => 'Absen diterima',
+                    'user' => $user,
+                    'jadwal' => $jadwal,
+                ], 200);
+            }
+            $message = [
+                'message' => 'tidak ada jadwal',
+                'ip' => $temp[0],
+                'user' => $dataPegawai,
+            ];
+            event(new newQrEvent($message));
+            return new JsonResponse([
+                'message' => 'Tidak ada jadwal',
+                'req' => $request->all()
+            ], 406);
+        } else {
+            return new JsonResponse(['message' => 'qr Code Expired'], 410);
+        }
+        return new JsonResponse($data, 200);
+    }
+    public function scanWajah(Request $request)
+    {
+        $user = JWTAuth::user();
+        $jadwal = JadwalController::toMatch2($user->id, $request);
+        // $pegawai = Pegawai::find($user->pegawai_id);
+
+        if (!$jadwal) {
+            return new JsonResponse(['message' => 'Tidak Ada jadwal',], 410);
+        }
+        return new JsonResponse([
+            'message' => 'Absen diterima',
+            'user' => $user,
+            'jadwal' => $jadwal,
+        ], 200);
     }
 }

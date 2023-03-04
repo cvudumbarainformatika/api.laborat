@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/index', [SettingController::class, 'index']);
     Route::post('/store', [SettingController::class, 'store']);
+    Route::post('/appmenu', [SettingController::class, 'appmenu']);
 });

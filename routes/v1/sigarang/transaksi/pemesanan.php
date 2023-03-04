@@ -12,5 +12,5 @@ Route::group([
     Route::get('/draft', [PemesananController::class, 'draft']);
     Route::get('/ada-penerimaan', [PemesananController::class, 'adaPenerimaan']);
     Route::post('/store', [PemesananController::class, 'store']);
-    Route::get('/destroy', [PemesananController::class, 'destroy']);
+    Route::post('/delete-details', [PemesananController::class, 'deleteDetails']);
 });

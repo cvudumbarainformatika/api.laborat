@@ -4,16 +4,44 @@ namespace App\Http\Controllers\Api\settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
+use App\Models\Pegawai\Akses\Aplikasi;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Submenu;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
+
     public function index()
     {
         $data = Menu::with('submenu')->get();
 
+        return new JsonResponse($data);
+    }
+
+    public function aplikasi()
+    {
+        $data = Aplikasi::with(['menus.submenus'])->orderBy('id', 'DESC')->get();
+        return new JsonResponse($data);
+    }
+    public function aplikasi_store(Request $request)
+    {
+        $id = $request->id;
+
+        $data = Aplikasi::updateOrCreate(['id' => $id], [
+            'nama' => $request->julukan,
+            'julukan' => $request->julukan,
+            'icon' => $request->icon,
+            'aplikasi' => $request->aplikasi,
+        ]);
+        return new JsonResponse($data);
+    }
+
+    public function cariPegawai()
+    {
+        $data = Pegawai::with('ruangan')->where('aktif', '=', 'AKTIF')->filter(request(['q']))
+            ->orderBy('nama', 'ASC')->limit(20)->get();
         return new JsonResponse($data);
     }
 

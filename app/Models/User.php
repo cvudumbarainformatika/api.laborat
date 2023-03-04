@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Ruang;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -84,6 +86,15 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(TransaksiAbsen::class);
     }
+    public function libur()
+    {
+        return $this->hasMany(Libur::class);
+    }
+    public function ruang()
+    {
+        return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
+    }
+
 
     public function scopeFilter($search, array $reqs)
     {

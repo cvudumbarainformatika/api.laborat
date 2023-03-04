@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
@@ -15,11 +16,25 @@ class PenerimaanController extends Controller
 {
     public function cariPemesanan()
     {
-        $data = Pemesanan::filter(request(['q']))
-            ->where('status', '>=', 2)
-            ->where('status', '<', 4)
-            ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
+        $user = auth()->user();
+        // $pegawai = Pegawai::find($user->pegawai_id);
+        $data = Pemesanan::where('created_by', $user->pegawai_id)
+            ->orWhere('created_by', null)
+            // ->whereNotIn('status', [1, 4])
+            ->filter(request(['q']))
+            ->where('status', 2)
+            ->orWhere('status', 3)
+            ->latest('id')
+            ->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])
+            ->get();
+
         return new JsonResponse($data);
+    }
+
+    public function jumlahPenerimaan()
+    {
+        $data = penerimaan::where('nomor', request('nomor'))->get();
+        return new JsonResponse(['jumlah' => count($data)]);
     }
 
     public function penerimaan()
@@ -27,7 +42,7 @@ class PenerimaanController extends Controller
 
         $pemesanan = Pemesanan::where('nomor', '=', request()->nomor)
             ->where('status', '>=', 2)
-            ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
+            ->latest('id')->with(['details', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
         $penerimaanLama = Penerimaan::where('nomor', '=', request()->nomor)
             ->where('status', '>=', 2)->with('details')->get();
 
@@ -54,8 +69,8 @@ class PenerimaanController extends Controller
     }
     public function suratBelumLengkap()
     {
-        $data = Penerimaan::where('faktur', null)
-            ->orWhere('surat_jalan', null)
+        $data = Penerimaan::where('faktur', '=', null)
+            ->orWhere('surat_jalan', '=', null)
             ->latest('id')
             ->get();
         return new JsonResponse($data);
@@ -64,7 +79,7 @@ class PenerimaanController extends Controller
     public function simpanPenerimaan(Request $request)
     {
         $second = $request->all();
-        $second['tanggal'] = date('Y-m-d H:i:s');
+        $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
 
         try {
             DB::beginTransaction();

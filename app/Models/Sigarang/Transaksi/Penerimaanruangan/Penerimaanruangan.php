@@ -21,4 +21,23 @@ class Penerimaanruangan extends Model
     {
         return $this->belongsTo(Pengguna::class, 'kode_penanggungjawab', 'kode');
     }
+    public function pengguna()
+    {
+        return $this->belongsTo(Pengguna::class, 'kode_pengguna', 'kode');
+    }
+    public function scopeFilter($search, array $reqs)
+    {
+        $search->when($reqs['q'] ?? false, function ($search, $query) {
+            return $search->where('no_penerimaan', 'LIKE', '%' . $query . '%');
+            // ->orWhere('tanggal', 'LIKE', '%' . $query . '%');
+
+            // ->orWhereHas('barangrs', function ($q) use ($query) {
+            //     $q->where('nama', 'like', '%' . $query . '%')
+            //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+            // })->orWhereHas('satuan', function ($q) use ($query) {
+            //     $q->where('nama', 'like', '%' . $query . '%')
+            //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+            // });
+        });
+    }
 }

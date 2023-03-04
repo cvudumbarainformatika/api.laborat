@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\SatuanResource;
 use App\Models\Sigarang\Satuan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +18,12 @@ class SatuanController extends Controller
             ->filter(request(['q']))
             ->paginate(request('per_page'));
 
-        return SatuanResource::collection($data);
+        // return SatuanResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function satuan()
     {
@@ -33,29 +39,35 @@ class SatuanController extends Controller
 
             DB::beginTransaction();
 
-            if (!$request->has('id')) {
 
-                $validatedData = Validator::make($request->all(), [
-                    'kode' => 'required'
-                ]);
-                if ($validatedData->fails()) {
-                    return response()->json($validatedData->errors(), 422);
-                }
-
-                Satuan::firstOrCreate($request->all());
-
-                // $auth->log("Memasukkan data Satuan {$user->name}");
-            } else {
-                $toUpdate = $request->all();
-                unset($toUpdate['id']);
-                $barang = Satuan::find($request->id);
-                $barang->update($toUpdate);
-
-                // $auth->log("Merubah data Satuan {$user->name}");
+            $validatedData = Validator::make($request->all(), [
+                'kode' => 'required'
+            ]);
+            if ($validatedData->fails()) {
+                return response()->json($validatedData->errors(), 422);
             }
 
+            $data = Satuan::updateOrCreate(['kode' => $request->kode], $request->all());
+
+            // $auth->log("Memasukkan data Satuan {$user->name}");
+            // if (!$request->has('id')) {
+            // } else {
+            //     $toUpdate = $request->all();
+            //     unset($toUpdate['id']);
+            //     $barang = Satuan::find($request->id);
+            //     $barang->update($toUpdate);
+
+            //     // $auth->log("Merubah data Satuan {$user->name}");
+            // }
+
             DB::commit();
-            return response()->json(['message' => 'success'], 201);
+            if ($data->wasRecentlyCreated) {
+                return response()->json(['message' => 'dibuat'], 201);
+            } else if ($data->wasChanged()) {
+                return response()->json(['message' => 'diupdate'], 200);
+            } else {
+                return response()->json(['message' => 'data tidak berubah'], 410);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);

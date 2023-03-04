@@ -46,6 +46,12 @@ return [
             'provider' => 'users',
             'hash' => false,
         ],
+
+        'geni' => [
+            'driver' => 'jwt',
+            'provider' => 'genis',
+            'hash' => false,
+        ],
     ],
 
     /*
@@ -69,6 +75,12 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
+        ],
+
+        // users dengan akses
+        'genis' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Pegawai\Akses\User::class,
         ],
 
         // 'users' => [

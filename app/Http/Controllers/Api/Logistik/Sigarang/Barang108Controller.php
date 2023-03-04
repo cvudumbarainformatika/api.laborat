@@ -18,7 +18,12 @@ class Barang108Controller extends Controller
         $data = Barang108::latest('id')
             ->filter(request(['q']))
             ->paginate(request('per_page'));
-        return Barang108Resource::collection($data);
+        // return Barang108Resource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
     public function barang108()
     {

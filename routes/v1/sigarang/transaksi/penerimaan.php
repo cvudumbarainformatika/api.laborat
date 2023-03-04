@@ -11,6 +11,7 @@ Route::group([
 ], function () {
     // Route::get('/index', [SupplierController::class, 'index']);
     Route::get('/cari-pemesanan', [PenerimaanController::class, 'cariPemesanan']);
+    Route::get('/jumlah-penerimaan', [PenerimaanController::class, 'jumlahPenerimaan']);
     Route::get('/penerimaan', [PenerimaanController::class, 'penerimaan']);
     Route::get('/surat-belum-lengkap', [PenerimaanController::class, 'suratBelumLengkap']);
     Route::post('/simpan-penerimaan', [PenerimaanController::class, 'simpanPenerimaan']);

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\Transaksi\PemesananResource;
+use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +22,13 @@ class PemesananController extends Controller
             ->where('status', '=', 2)->get();
         $draft = Pemesanan::where('reff', '=', request()->reff)
             ->where('status', '=', 1)
-            ->latest('id')->with(['details.barang108', 'details.barangrs', 'details.satuan'])->get();
+            ->latest('id')->with([
+                'details.barang108', 'details.barangrs', 'details.satuan',
+                'details_kontrak' => function ($kueri) {
+                    $kueri->where('kunci', '=', 1)
+                        ->where('flag', '=', '');
+                }
+            ])->get();
         if (count($complete)) {
             return new JsonResponse(['message' => 'completed']);
         }
@@ -36,7 +44,7 @@ class PemesananController extends Controller
     public function store(Request $request)
     {
         $second = $request->all();
-        $second['tanggal'] = date('Y-m-d H:i:s');
+        $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
         try {
             DB::beginTransaction();
@@ -52,6 +60,20 @@ class PemesananController extends Controller
             }
 
             DB::commit();
+            $user = auth()->user();
+            $pegawai = Pegawai::find($user->pegawai_id);
+            if ($data->wasRecentlyCreated) {
+                $data->update([
+                    'created_by' => $pegawai->id
+                ]);
+                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+            }
+            if ($data->wasChanged()) {
+                $data->update([
+                    'updated_by' => $pegawai->id
+                ]);
+                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+            }
             return new JsonResponse(['message' => 'success'], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -77,5 +99,19 @@ class PemesananController extends Controller
     public function destroy()
     {
         return new JsonResponse(['msg' => 'Belum ada bos']);
+    }
+    public function deleteDetails(Request $request)
+    {
+        $data = DetailPemesanan::find($request->id);
+        $del = $data->delete();
+        if (!$del) {
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
+
+        return new JsonResponse([
+            'message' => 'Data sukses terhapus'
+        ], 200);
     }
 }

@@ -12,4 +12,6 @@ Route::group([
     // Route::get('/get-qr', [QrcodeController::class, 'getQr']);
     // Route::post('/store', [QrcodeController::class, 'createQr']);
     Route::post('/scan', [QrcodeController::class, 'qrScanned']);
+    Route::post('/scan2', [QrcodeController::class, 'qrScanned2']);
+    Route::post('/wajah', [QrcodeController::class, 'scanWajah']);
 });

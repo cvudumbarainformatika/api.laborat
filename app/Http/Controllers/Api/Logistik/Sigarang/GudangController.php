@@ -18,18 +18,27 @@ class GudangController extends Controller
         $data = Gudang::latest()
             ->filter(request(['q']))
             ->paginate(request('per_page'));
-        return GudangResource::collection($data);
+        // return GudangResource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
-    public function gedung()
+
+    public function gudang()
     {
         $data = Gudang::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return GudangResource::collection($data);
         // return new JsonResponse($data);
     }
+
+
     public function depo()
     {
         $data = Gudang::where('depo', '<>', null)
-            ->where('ruang', '=', null)
+            ->where('depo', '<>', '')
+            ->where('gedung', '=', 2)
             ->get();
         return new JsonResponse($data);
     }
@@ -49,7 +58,7 @@ class GudangController extends Controller
                     return response()->json($validatedData->errors(), 422);
                 }
 
-                Gudang::firstOrCreate($request->only(['utama', 'depo', 'ruang', 'kode', 'nama']));
+                Gudang::firstOrCreate($request->only(['gedung', 'depo', 'lantai', 'gudang', 'kode', 'nama']));
                 // Gudang::firstOrCreate([
                 //     'nama' => $request->nama,
                 //     'nomor' => $request->nomor
@@ -58,7 +67,7 @@ class GudangController extends Controller
                 // $auth->log("Memasukkan data Gudang {$user->name}");
             } else {
                 $gedung = Gudang::find($request->id);
-                $gedung->update($request->only(['utama', 'depo', 'ruang', 'kode', 'nama']));
+                $gedung->update($request->only(['gedung', 'depo', 'lantai', 'gudang', 'kode', 'nama']));
                 // $gedung->update([
                 //     'nomor' => $request->nomor,
                 //     'nama' => $request->nama

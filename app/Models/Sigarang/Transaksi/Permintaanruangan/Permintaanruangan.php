@@ -3,6 +3,7 @@
 namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 
 use App\Models\Sigarang\Pengguna;
+use App\Models\Sigarang\Ruang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +27,11 @@ class Permintaanruangan extends Model
     public function pengguna()
     {
         return $this->belongsTo(Pengguna::class, 'kode_pengguna', 'kode');
+    }
+
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
     }
     public function scopeFilter($search, array $reqs)
     {

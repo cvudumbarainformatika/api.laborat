@@ -3,6 +3,7 @@
 namespace App\Models\Sigarang\Transaksi\Pemesanan;
 
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Supplier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +26,17 @@ class Pemesanan extends Model
 
     public function details_kontrak()
     {
-        return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrak');
+        return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrakx');
+    }
+
+    public function dibuat()
+    {
+        return $this->belongsTo(Pegawai::class, 'created_by', 'id');
+    }
+
+    public function diupdate()
+    {
+        return $this->belongsTo(Pegawai::class, 'update_by', 'id');
     }
 
     public function scopeFilter($search, array $reqs)

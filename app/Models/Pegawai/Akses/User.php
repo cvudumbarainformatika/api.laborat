@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models\Sigarang;
+namespace App\Models\Pegawai\Akses;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+// use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,23 +11,9 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable;
-    protected $connection = 'sigarang';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'nip',
-        'username',
-        'status',
-    ];
+    use HasFactory, Notifiable, HasApiTokens;
+    protected $connection = 'kepex';
+    protected $guarded = ['id'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -36,16 +22,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $hidden = [
         'password',
-        'remember_token',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
+        // 'remember_token',
     ];
 
     /**
@@ -57,6 +34,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->getKey();
     }
+
     /**
      * Return a key value array, containing any custom claims to be added to the JWT.
      *
@@ -67,13 +45,18 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    //  relationship
 
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    // scope filter for Search
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->where('nip', 'LIKE', '%' . $query . '%')
-                ->orWhere('name', 'LIKE', '%' . $query . '%')
-                ->orWhere('username', 'LIKE', '%' . $query . '%');
+            return $search->where('nama', 'LIKE', '%' . $query . '%');
         });
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
@@ -19,19 +20,33 @@ class TransaksiGudangController extends Controller
         $first = $terima[0]->reff;
         $second = $terima[0];
         $second['tanggal'] = date('Y-m-d H:i:s');
-        $second->asal = 'Gud-0000001';
-        $second->tujuan = 'Gud-01000';
+        // $second->asal = null;
+        $second->tujuan = 'Gd-02010100';
         $second->nama = 'PENERIMAAN GUDANG';
         $detail = $second->details;
+
         unset($second['reff']);
         try {
             DB::beginTransaction();
             $gudang = TransaksiGudang::updateOrCreate(['reff' => $first],  $second->only('nama', 'nomor', 'no_penerimaan', 'tanggal', 'asal', 'tujuan', 'kode_penanggungjawab', 'kode_penerima', 'total', 'status'));
-
+            // $header = (object) array('no_penerimaan' => $second->no_penerimaan);
+            // $header->kode_ruang = $second->tujuan;
             foreach ($detail as &$value) {
                 $satu = $value->kode_rs;
                 unset($value['kode_rs']);
                 $gudang->details()->updateOrCreate(['kode_rs' => $satu],  $value->only('kode_108', 'qty', 'harga', 'kode_satuan', 'sub_total'));
+                // $header->kode_rs = $satu;
+                // $header->harga = $value->harga;
+                // $header->sisa_stok = $value->sub_total;
+                // $this->terimaStokGudang($header);
+                RecentStokUpdate::create([
+                    'no_penerimaan' => $second->no_penerimaan,
+                    'kode_ruang' => $second->tujuan,
+                    'kode_rs' => $satu,
+                    'harga' => $value->harga,
+                    'sisa_stok' => $value->qty,
+
+                ]);
             }
             DB::commit();
             return new JsonResponse(['message' => 'success', 'data' => $gudang], 201);
@@ -42,5 +57,11 @@ class TransaksiGudangController extends Controller
                 'error' => $e
             ], 500);
         }
+    }
+
+    public function terimaStokGudang($header)
+    {
+        $data = RecentStokUpdate::create($header->all());
+        return 'ok';
     }
 }
