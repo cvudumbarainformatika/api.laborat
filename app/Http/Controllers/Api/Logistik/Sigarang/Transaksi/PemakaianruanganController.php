@@ -43,53 +43,57 @@ class PemakaianruanganController extends Controller
 
     public function store(Request $request)
     {
-        $user = auth()->user();
-        $pegawai = Pegawai::find($user->pegawai_id);
-        $request->validate([
-            'reff' => 'required',
-            'kode_penanggungjawab' => 'required',
-            'kode_pengguna' => 'required',
-            'tanggal' => 'required',
-        ]);
-        // $masuk = $request->all();
-        $request['kode_ruang'] = $pegawai->kode_ruang;
-        $pakai = Pemakaianruangan::updateOrCreate(['id' => $request->id], $request->all());
+        try {
+            DB::beginTransaction();
+            $user = auth()->user();
+            $pegawai = Pegawai::find($user->pegawai_id);
+            $request->validate([
+                'reff' => 'required',
+                'kode_penanggungjawab' => 'required',
+                'kode_pengguna' => 'required',
+                'tanggal' => 'required',
+            ]);
+            // $masuk = $request->all();
+            // $request['kode_ruang'] = $pegawai->kode_ruang;
+            $pakai = Pemakaianruangan::updateOrCreate(['id' => $request->id], $request->all());
 
-        if ($request->details) {
-            foreach ($request->details as $key) {
-                $pakai->details()->updateOrCreate(
-                    [
-                        'id' => $key['id']
-                    ],
-                    $key
-                );
-                $recentStok = RecentStokUpdate::where('kode_ruang', $request->kode_ruang)
-                    ->where('kode_rs', $key['kode_rs'])
-                    ->first();
-                $sisa = $recentStok->sisa_stok - $key['jumlah'];
-                $recentStok->update([
-                    'sisa_stok' => $sisa
-                ]);
+            if ($request->details) {
+                foreach ($request->details as $key) {
+                    $pakai->details()->updateOrCreate(
+                        [
+                            'id' => $key['id']
+                        ],
+                        $key
+                    );
+                    $recentStok = RecentStokUpdate::where('kode_ruang', $request->kode_ruang)
+                        ->where('kode_rs', $key['kode_rs'])
+                        ->first();
+                    $sisa = $recentStok->sisa_stok - $key['jumlah'];
+                    $recentStok->update([
+                        'sisa_stok' => $sisa
+                    ]);
+                }
             }
+            DB::commit();
+            if ($pakai->wasRecentlyCreated) {
+                $status = 201;
+                $pesan = ['message' => 'Pemakaian Ruangan telah disimpan'];
+            } else if ($pakai->wasChanged()) {
+                $status = 200;
+                $pesan = ['message' => 'Pemakaian Ruangan telah diupdate'];
+            }
+            // else {
+            //     $status = 410;
+            //     $pesan = ['message' => 'Pemakaian Ruangan gagal dibuat'];
+            // }
+            return new JsonResponse($pesan, $status);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'ada kesalahan',
+                'error' => $e
+            ], 500);
         }
-        if ($pakai->wasRecentlyCreated) {
-            $status = 201;
-            $pesan = ['message' => 'Pemakaian Ruangan telah disimpan'];
-        } else if ($pakai->wasChanged()) {
-            $status = 200;
-            $pesan = ['message' => 'Pemakaian Ruangan telah diupdate'];
-        } else {
-            $status = 500;
-            $pesan = ['message' => 'Pemakaian Ruangan gagal dibuat'];
-        }
-        return new JsonResponse($pesan, $status);
-        // } catch (\Exception $e) {
-        //         DB::rollBack();
-        //         return new JsonResponse([
-        //             'message' => 'ada kesalahan',
-        //             'error' => $e
-        //         ], 500);
-        //     }
     }
     public function simpanRusak(Request $request)
     {
