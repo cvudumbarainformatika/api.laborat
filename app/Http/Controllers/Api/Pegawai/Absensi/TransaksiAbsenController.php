@@ -447,7 +447,6 @@ class TransaksiAbsenController extends Controller
 
         $data = Pegawai::where('aktif', '=', 'AKTIF')
             // ->where('account_pass', '=', null)
-            // ->where('account_pass', '=', null)
             ->where(function ($query) {
                 $query->when(request('flag') ?? false, function ($search, $q) {
                     return $search->where('flag', '=', $q);

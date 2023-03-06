@@ -34,7 +34,7 @@ class HistoryController extends Controller
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
             $data = $pemesanan->filter(request(['q']))
                 ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * Penerimaan
@@ -43,7 +43,7 @@ class HistoryController extends Controller
 
             $data = $penerimaan->filter(request(['q']))
                 ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * transaksi gudang
@@ -52,7 +52,7 @@ class HistoryController extends Controller
 
             $data = $gudang->filter(request(['q']))
                 ->with('asal', 'tujuan', 'details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             // permintaan ruangan
         } else if ($nama === 'Permintaan Ruangan') {
@@ -65,7 +65,7 @@ class HistoryController extends Controller
             }
             $data = $filterRuangan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang', 'ruangan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * Distribusi depo
@@ -74,7 +74,7 @@ class HistoryController extends Controller
 
             $data = $distribusidepo->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'depo')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * pemakaian ruangan
@@ -90,7 +90,7 @@ class HistoryController extends Controller
                     'pengguna',
                     'pj'
                 )
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * penerimaan ruangan
@@ -99,7 +99,7 @@ class HistoryController extends Controller
 
             $data = $penerimaanruangan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * retur
@@ -108,7 +108,7 @@ class HistoryController extends Controller
 
             $data = $retur->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
         }
         // $data = request()->all();
