@@ -55,6 +55,10 @@ class DistribusiLangsungController extends Controller
             ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
             ->where('kode_depo', $ruang)
             ->where('tipe', request('tipe'))
+            ->when(request('q'), function ($search) {
+                $search->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
+            })
             ->paginate($paginate);
 
         $anu = collect($data);
