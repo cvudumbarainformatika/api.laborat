@@ -139,18 +139,23 @@ class DistribusiLangsungController extends Controller
             if ($valid->fails()) {
                 return new JsonResponse($valid->errors(), 422);
             }
-            $distribusi = DistribusiLangsung::updateOrCreate(['reff' => $request->reff], $request->all());
+            $distribusi = DistribusiLangsung::updateOrCreate(
+                [
+                    'reff' => $request->reff
+                ],
+                $request->all()
+            );
 
             if ($distribusi->wasRecentlyCreated) {
-                $this->setDetail($distribusi, $request);
                 $pesan = 'baru';
-            } else if ($distribusi->wasChanged()) {
                 $this->setDetail($distribusi, $request);
+            } else if ($distribusi->wasChanged()) {
                 $pesan = 'update';
+                $this->setDetail($distribusi, $request);
             } else {
+                $pesan = 'error';
                 $distr = DistribusiLangsung::where('reff', $request->reff)->first();
                 $this->setDetail($distr, $request);
-                $pesan = 'error';
             }
 
             DB::commit();
