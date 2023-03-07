@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
@@ -25,6 +26,8 @@ class DistribusiLangsungController extends Controller
         */
         $paginate = request('per_page') ? request('per_page') : 10;
         $ruang = 'Gd-02010102';
+        $tipe = request('tipe') === 'all' ? ['basah', 'kering'] : [request('tipe')];
+        $distribute = DistribusiLangsung::where('reff', request('reff'))->first();
         $data = BarangRS::with([
             'detailDistribusiLangsung' => function ($detail) {
                 $detail->select(
@@ -41,19 +44,25 @@ class DistribusiLangsungController extends Controller
             // join where has recent stok > 0
             ->select(
                 'barang_r_s.*',
-                // 'sum(recent_stok_updates.sisa_stok) as totalStok',
                 'recent_stok_updates.sisa_stok',
                 'recent_stok_updates.kode_ruang',
-                'recent_stok_updates.kode_rs',
+                'satuans.nama as satuan',
             )
             ->join('recent_stok_updates', function ($wew) {
                 $wew->on('recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
                     ->where('sisa_stok', '>', 0);
             })
+            ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
             ->where('kode_depo', $ruang)
+            ->where('tipe', request('tipe'))
             ->paginate($paginate);
 
-        return new JsonResponse($data);
+        $anu = collect($data);
+        $balik['data'] = $anu->only('data');
+        $balik['meta'] = $anu->except('data');
+        $balik['transaksi'] = $distribute;
+
+        return new JsonResponse($balik);
     }
     //
     public function index()
@@ -84,7 +93,15 @@ class DistribusiLangsungController extends Controller
 
     public function getRuang()
     {
+        $ruang = 'R-0101071';
+        $pengguna = PenggunaRuang::where('kode_ruang', $ruang)->first();
+        $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+        $raw = collect($ruang);
+        $only = $raw->map(function ($y) {
+            return $y->kode_ruang;
+        });
         $data = Ruang::oldest('id')
+            ->whereIn('kode', $only)
             ->filter(request(['q']))
             ->limit(15)
             ->get();

@@ -30,9 +30,13 @@ class HistoryController extends Controller
         $retur = Retur::query();
         $nama = request('nama');
         // pemesanan
+        $user = auth()->user();
+        // $pegawai = Pegawai::find($user->pegawai_id);
         if ($nama === 'Pemesanan') {
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
             $data = $pemesanan->filter(request(['q']))
+                ->where('created_by', $user->pegawai_id)
+                ->orWhere('created_by', null)
                 ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
                 ->paginate(request('per_page'));

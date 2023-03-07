@@ -1621,6 +1621,7 @@ class AutogenController extends Controller
         $only = $raw->map(function ($y) {
             return $y->kode_ruang;
         });
+        // R-0101071
 
         return new JsonResponse([
             'only' => $only,
