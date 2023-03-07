@@ -237,6 +237,11 @@ class StokOpnameController extends Controller
                 $q->whereBetween('tanggal', [$head->from, $head->to])
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             },
+            'fisik' => function ($q) use ($head) {
+                $q->whereBetween('tanggal', [$head->awal, $head->akhir])
+                    ->where('kode_depo', request('search'));
+                // ->where('kode_ruang', request('search'));
+            },
             'detailPermintaanruangan' => function ($detail) use ($head) {
                 $detail->select(
                     'detail_permintaanruangans.kode_rs',
@@ -456,14 +461,14 @@ class StokOpnameController extends Controller
                     'kode_satuan' => $key->kode_satuan !== null ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
                 ]);
 
-                $anu = MonthlyStokUpdate::find($data->id);
+                // $anu = MonthlyStokUpdate::find($data->id);
 
-                if ($anu->stok_fisik == 0) {
-                    $anu->update([
-                        'stok_fisik' => $key->sisa_stok
-                    ]);
-                    array_push($fisik, $anu);
-                }
+                // if ($anu->stok_fisik == 0) {
+                //     $anu->update([
+                //         'stok_fisik' => $key->sisa_stok
+                //     ]);
+                //     array_push($fisik, $anu);
+                // }
                 array_push($total, $data);
             }
             if (count($recent) !== count($total)) {
@@ -479,6 +484,10 @@ class StokOpnameController extends Controller
 
         return new JsonResponse(['message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan'], 410);
         // return new JsonResponse(['message' => 'Anda tidak terdaftar sebagai petugas Depo'], 422);
+    }
+
+    public function autoFisik()
+    {
     }
 
     public function storePenyesuaian(Request $request)
@@ -517,10 +526,33 @@ class StokOpnameController extends Controller
     }
     public function updateStokFisik(Request $request)
     {
-        $data = MonthlyStokUpdate::find($request->id);
-        $data->update([
+
+        $barang = BarangRS::where('kode', $request->kode_rs)->first();
+        $stok = MonthlyStokUpdate::selectRaw('kode_rs, kode_ruang, sisa_stok, sum(sisa_stok) as totalStok')
+            ->where('tanggal', $request->tanggal)
+            ->where('kode_rs', $barang->kode)
+            ->groupBy('kode_rs', 'kode_ruang')
+            ->get();
+        if (!count($stok)) {
+            return new JsonResponse(['message' => 'Tidak ada data Stok Opname untuk barang ini'], 410);
+        }
+        // return new JsonResponse([
+        //     'requset' => $request->all(),
+        //     'stok' => $stok,
+        //     'barang' => $barang
+        // ]);
+
+        $data = StokOpname::updateOrCreate([
+            'tanggal' => $request->tanggal,
+            'kode_rs' => $barang->kode,
+            'kode_depo' => $barang->kode_depo,
+        ], [
             'stok_fisik' => $request->stok_fisik
         ]);
+        // $data = MonthlyStokUpdate::find($request->id);
+        // $data->update([
+        //     'stok_fisik' => $request->stok_fisik
+        // ]);
 
         if ($data->wasChanged()) {
             return new JsonResponse(['message' => 'data berhasil disimpan', 'data' => $data], 201);

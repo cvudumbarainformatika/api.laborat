@@ -10,6 +10,7 @@ use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -183,6 +184,7 @@ class PenerimaanruanganController extends Controller
             [
                 // 'tanggal' => date('Y-m-d H:i:s'),
                 'tanggal' => $tanggal,
+                'status' => 2,
                 'kode_pengguna' => $permintaanruangan->kode_pengguna,
                 'kode_penanggungjawab' => $permintaanruangan->kode_penanggungjawab,
             ]
@@ -227,6 +229,10 @@ class PenerimaanruanganController extends Controller
                         'kode_rs' => $detail['kode_rs'],
                         'kode_satuan' => $detail['kode_satuan'],
                     ]);
+                    $detailPermintaan = DetailPermintaanruangan::find($detail['id']);
+                    $detailPermintaan->update([
+                        'no_penerimaan' => $dari[$index]->no_penerimaan,
+                    ]);
                     $index = $index + 1;
                     $masuk = $sisa;
                     $loop = true;
@@ -253,7 +259,10 @@ class PenerimaanruanganController extends Controller
                         'kode_rs' => $detail['kode_rs'],
                         'kode_satuan' => $detail['kode_satuan'],
                     ]);
-
+                    $detailPermintaan = DetailPermintaanruangan::find($detail['id']);
+                    $detailPermintaan->update([
+                        'no_penerimaan' => $dari[$index]->no_penerimaan,
+                    ]);
                     $loop = false;
                 }
             } while ($loop);

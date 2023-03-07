@@ -86,7 +86,10 @@ class BarangRS extends Model
     {
         return $this->hasMany(RecentStokUpdate::class, 'kode_rs', 'kode');
     }
-
+    public function fisik()
+    {
+        return $this->hasMany(StokOpname::class, 'kode_rs', 'kode');
+    }
 
 
     public function scopeFilter($search, array $reqs)

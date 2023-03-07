@@ -24,8 +24,8 @@ class DistribusiLangsung extends Model
         return $this->belongsTo(Pegawai::class);
     }
 
-    public function details()
+    public function detailLangsung()
     {
-        return $this->hasMany(DetailDistribusiLangsung::class);
+        return $this->hasMany(DetailDistribusiLangsung::class, 'distribusi_langsung_id');
     }
 }

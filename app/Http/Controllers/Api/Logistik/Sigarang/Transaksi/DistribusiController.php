@@ -40,7 +40,9 @@ class DistribusiController extends Controller
         foreach ($data as $key) {
             foreach ($key->details as $detail) {
                 $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
-                $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])->where('kode_ruang', $detail['tujuan'])->first();
+                $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])
+                    ->where('kode_ruang', $detail['tujuan'])
+                    ->first();
                 $detail['barangrs']->maxStok = $max ? $max->max_stok : 0;
                 $detail['barangrs']->alokasi = $temp ? $temp->alokasi : 0;
                 $detail['temp'] = $temp;
@@ -79,6 +81,7 @@ class DistribusiController extends Controller
 
             $tanggal_distribusi = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
             $status = 7;
+            // $status = 8;
             // $data = Permintaanruangan::find($request->id);
             $data = $permintaanruangan;
             $data->update([
