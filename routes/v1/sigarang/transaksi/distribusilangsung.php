@@ -13,4 +13,5 @@ Route::group([
     Route::get('/get-stok-depo', [DistribusiLangsungController::class, 'getStokDepo']);
     Route::get('/get-ruang', [DistribusiLangsungController::class, 'getRuang']);
     Route::post('/store', [DistribusiLangsungController::class, 'store']);
+    Route::get('/get-barang-with-transaksi', [DistribusiLangsungController::class, 'getDataBarangWithTransaksi']);
 });
