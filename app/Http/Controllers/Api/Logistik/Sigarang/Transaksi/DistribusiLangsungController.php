@@ -117,9 +117,21 @@ class DistribusiLangsungController extends Controller
         return new JsonResponse($data);
     }
 
+    public function setDetail($dist, $request)
+    {
+        if ($request->has('kode_rs') && $request->kode_rs !== null) {
+            $dist->detailLangsung()->updateOrCreate(
+                [
+                    'kode_rs' => $request->kode_rs
+                ],
+                $request->all()
+            );
+        }
+    }
     public function store(Request $request)
     {
         // ini belum termasuk fifo
+        $pesan = '';
         try {
             DB::beginTransaction();
 
@@ -127,23 +139,34 @@ class DistribusiLangsungController extends Controller
             if ($valid->fails()) {
                 return new JsonResponse($valid->errors(), 422);
             }
-            $data = DistribusiLangsung::updateOrCreate(['reff' => $request->reff], $request->all());
-            if ($request->has('kode_rs') && $request->kode_rs !== null) {
-                $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $request->all());
+            $distribusi = DistribusiLangsung::updateOrCreate(['reff' => $request->reff], $request->all());
+
+            if ($distribusi->wasRecentlyCreated) {
+                $this->setDetail($distribusi, $request);
+                $pesan = 'baru';
+            } else if ($distribusi->wasChanged()) {
+                $this->setDetail($distribusi, $request);
+                $pesan = 'update';
+            } else {
+                $distr = DistribusiLangsung::where('reff', $request->reff)->first();
+                $this->setDetail($distr, $request);
+                $pesan = 'error';
             }
 
             DB::commit();
 
             return new JsonResponse([
-                'message' => 'success',
-                'data' => $data,
+                'message' => 'distribusi telah ditambahkan',
+                'distribusi' => $distribusi,
                 // 'gudang' => $gudang,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([
                 'message' => 'ada kesalahan',
-                'error' => $e
+                'error' => $e,
+                'distribusi' => $distribusi['id'],
+                'pesan' => $pesan,
             ], 500);
         }
         return new JsonResponse($request->all());
