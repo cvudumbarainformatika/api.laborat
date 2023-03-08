@@ -40,6 +40,7 @@ use App\Models\TransaksiLaborat;
 use App\Models\User;
 use App\Models\Pegawai\Akses\User as Akses;
 use App\Models\Sigarang\MonthlyStokUpdate;
+use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Carbon\Carbon;
 use Exception;
@@ -1674,20 +1675,29 @@ class AutogenController extends Controller
         // $data->all();
         // return new JsonResponse(['col' => $col, 'data' => $data]);
 
-        $pegawai = Pegawai::find(1539);
-        $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
-        $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
-        $raw = collect($ruang);
-        $only = $raw->map(function ($y) {
-            return $y->kode_ruang;
-        });
-        // R-0101071
+        // $pegawai = Pegawai::find(1539);
+        // $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+        // $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+        // $raw = collect($ruang);
+        // $only = $raw->map(function ($y) {
+        //     return $y->kode_ruang;
+        // });
+        // // R-0101071
+
+        // return new JsonResponse([
+        //     'only' => $only,
+        //     'pegawai' => $pegawai,
+        //     'pengguna' => $pengguna,
+        //     'ruang' => $ruang,
+        // ]);
+        $distr = DistribusiLangsung::where(
+            'reff',
+            'DSTL-leyclbx3cnjkb'
+        )->first();
 
         return new JsonResponse([
-            'only' => $only,
-            'pegawai' => $pegawai,
-            'pengguna' => $pengguna,
-            'ruang' => $ruang,
+            'id' => $distr->id,
+            'distr' => $distr,
         ]);
     }
 
