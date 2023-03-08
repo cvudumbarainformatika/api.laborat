@@ -45,14 +45,6 @@ class HistoryController extends Controller
                 )
                     ->orWhere('tanggal', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
-
-                // ->orWhereHas('barangrs', function ($q) use ($query) {
-                //     $q->where('nama', 'like', '%' . $query . '%')
-                //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
-                // })->orWhereHas('satuan', function ($q) use ($query) {
-                //     $q->where('nama', 'like', '%' . $query . '%')
-                //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
-                // });
             });
             // $data = $pemesanan->filter(request(['q']))
             //     ->where('created_by', $user->pegawai_id)
