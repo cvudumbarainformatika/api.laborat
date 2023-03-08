@@ -34,10 +34,30 @@ class HistoryController extends Controller
         // $pegawai = Pegawai::find($user->pegawai_id);
         if ($nama === 'Pemesanan') {
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
-            $data = $pemesanan->filter(request(['q']))
-                ->where('created_by', $user->pegawai_id)
-                ->orWhere('created_by', null)
-                ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
+            $pemesanan->when(request('q') ?? function ($wew) use ($user) {
+                $wew->where('created_by', $user->pegawai_id)
+                    ->orWhere('created_by', null);
+            }, function ($wew) {
+                $wew->where(
+                    'nomor',
+                    'LIKE',
+                    '%' . request('q') . '%'
+                )
+                    ->orWhere('tanggal', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
+
+                // ->orWhereHas('barangrs', function ($q) use ($query) {
+                //     $q->where('nama', 'like', '%' . $query . '%')
+                //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+                // })->orWhereHas('satuan', function ($q) use ($query) {
+                //     $q->where('nama', 'like', '%' . $query . '%')
+                //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
+                // });
+            });
+            // $data = $pemesanan->filter(request(['q']))
+            //     ->where('created_by', $user->pegawai_id)
+            //     ->orWhere('created_by', null)
+            $data = $pemesanan->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*

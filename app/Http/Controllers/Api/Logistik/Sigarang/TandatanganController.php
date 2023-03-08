@@ -17,4 +17,19 @@ class TandatanganController extends Controller
 
         return new JsonResponse($data);
     }
+
+    public function store(Request $request)
+    {
+        $user = auth()->user();
+        $data = Tandatangan::updateOrCreate(
+            ['user_id' => $user->id],
+            $request->all()
+
+        );
+        if ($data->wasChanged()) {
+            return new JsonResponse([
+                'message' => 'Data telah di Update'
+            ]);
+        }
+    }
 }
