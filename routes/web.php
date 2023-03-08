@@ -4,6 +4,7 @@ use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
+use App\Http\Controllers\DvlpController;
 use App\Http\Controllers\PrintController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,8 @@ Route::get('/autogen/wawan', [AutogenController::class, 'wawan']);
 Route::get('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
 Route::get('/autogen/set-min-max', [AutogenController::class, 'setMinMax']);
 Route::get('/autogen/synct', [JadwalController::class, 'sycncroneJadwal']);
+
+Route::get('/dvlp', [DvlpController::class, 'index']);
 
 
 
