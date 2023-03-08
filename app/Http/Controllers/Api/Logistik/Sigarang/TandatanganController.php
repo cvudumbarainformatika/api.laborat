@@ -14,7 +14,7 @@ class TandatanganController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $data = Tandatangan::with('ptk', 'gudang', 'mengetahui')->where('user', $user->id)->first();
+        $data = Tandatangan::with('ptk', 'ppk', 'gudang', 'mengetahui')->where('user', $user->id)->first();
 
         return new JsonResponse($data);
     }
@@ -72,6 +72,18 @@ class TandatanganController extends Controller
                 $wew->limit(20);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('tahu') . '%')
+                    ->limit(20);
+            })
+            ->get();
+        return new JsonResponse($data);
+    }
+    public function getPpk()
+    {
+        $data =
+            Pegawai::when(request('ppk') ?? function ($wew) {
+                $wew->limit(20);
+            }, function ($anu) {
+                $anu->where('nama', 'LIKE', '%' . request('ppk') . '%')
                     ->limit(20);
             })
             ->get();

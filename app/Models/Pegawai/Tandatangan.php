@@ -24,4 +24,8 @@ class Tandatangan extends Model
     {
         return $this->belongsTo(Pegawai::class, 'mengetahui');
     }
+    public function ppk()
+    {
+        return $this->belongsTo(Pegawai::class, 'ppk');
+    }
 }
