@@ -14,14 +14,14 @@ class Tandatangan extends Model
 
     public function ptk()
     {
-        return $this->belongsTo(Pegawai::class);
+        return $this->belongsTo(Pegawai::class, 'ptk');
     }
     public function gudang()
     {
-        return $this->belongsTo(Pegawai::class);
+        return $this->belongsTo(Pegawai::class, 'gudang');
     }
     public function mengetahui()
     {
-        return $this->belongsTo(Pegawai::class);
+        return $this->belongsTo(Pegawai::class, 'mengetahui');
     }
 }
