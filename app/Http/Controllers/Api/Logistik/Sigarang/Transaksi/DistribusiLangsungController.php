@@ -305,6 +305,9 @@ class DistribusiLangsungController extends Controller
                     'sisa_stok' => 0
                 ]);
             }
+            $distribusi->update([
+                'status' => 2
+            ]);
             DB::commit();
             return new JsonResponse([
                 'data' => $data,
