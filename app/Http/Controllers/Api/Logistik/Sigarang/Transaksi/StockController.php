@@ -38,14 +38,18 @@ class StockController extends Controller
 
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
-        $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
-        $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
-        $raw = collect($ruang);
-        $only = $raw->map(function ($y) {
-            return $y->kode_ruang;
-        });
+
         $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok');
+
         if ($pegawai->role_id === 5) {
+            $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+
+            $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+            $raw = collect($ruang);
+            $only = $raw->map(function ($y) {
+                return $y->kode_ruang;
+            });
+
             $before->whereIn('kode_ruang', $only);
         }
         if ($pegawai->role_id === 4) {
