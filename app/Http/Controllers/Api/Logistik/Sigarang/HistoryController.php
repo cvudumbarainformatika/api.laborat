@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
@@ -74,8 +75,17 @@ class HistoryController extends Controller
         } else if ($nama === 'Permintaan Ruangan') {
             $user = auth()->user();
             $pegawai = Pegawai::find($user->pegawai_id);
+
             if ($pegawai->role_id === 5) {
-                $filterRuangan = $permintaan->where('kode_ruang', $pegawai->kode_ruang);
+
+                $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+                $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+                $raw = collect($ruang);
+                $only = $raw->map(function ($y) {
+                    return $y->kode_ruang;
+                });
+
+                $filterRuangan = $permintaan->whereIn('kode_ruang', $only);
             } else {
                 $filterRuangan = $permintaan;
             }
