@@ -32,10 +32,11 @@ class HistoryController extends Controller
         $nama = request('nama');
         // pemesanan
         $user = auth()->user();
+
         // $pegawai = Pegawai::find($user->pegawai_id);
         if ($nama === 'Pemesanan') {
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
-            $pemesanan->when(request('q') ?? function ($wew) use ($user) {
+            $data = $pemesanan->when(request('q') ?? function ($wew) use ($user) {
                 $wew->where('created_by', $user->pegawai_id)
                     ->orWhere('created_by', null);
             }, function ($wew) {
@@ -46,11 +47,13 @@ class HistoryController extends Controller
                 )
                     ->orWhere('tanggal', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
-            });
-            // $data = $pemesanan->filter(request(['q']))
-            //     ->where('created_by', $user->pegawai_id)
-            //     ->orWhere('created_by', null)
-            $data = $pemesanan->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
+            })
+
+                ->when(request('from') && request('to'), function ($anu) {
+                    return $anu->whereBetween('tanggal', [request('from'), request('to')]);
+                })
+
+                ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
@@ -141,7 +144,9 @@ class HistoryController extends Controller
         $apem = $data->all();
         return new JsonResponse([
             'data' => $apem,
-            'meta' => $data
+            'meta' => $data,
+            'req' => request()->all(),
+            'cond' => (request('from') && request('to')),
         ]);
     }
     public function allTransaction()
