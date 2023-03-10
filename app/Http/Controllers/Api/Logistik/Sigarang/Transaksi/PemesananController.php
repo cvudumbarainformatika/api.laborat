@@ -46,16 +46,17 @@ class PemesananController extends Controller
         $second = $request->all();
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
+        $valid = Validator::make($request->all(), [
+            'reff' => 'required|min:5',
+            'nomor' => 'required|unique:sigarang.pemesanans,nomor'
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
         try {
+
             DB::beginTransaction();
 
-            $valid = Validator::make($request->all(), [
-                'reff' => 'required',
-                'nomor' => 'required|unique'
-            ]);
-            if ($valid->fails()) {
-                return new JsonResponse($valid->errors(), 422);
-            }
 
             $data = Pemesanan::updateOrCreate(['reff' => $request->reff], $second);
             if ($request->has('kode_rs') && $request->has('kode_108') && $request->kode_rs !== null) {
@@ -83,7 +84,7 @@ class PemesananController extends Controller
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e
-            ], 500);
+            ], 410);
         }
     }
 
