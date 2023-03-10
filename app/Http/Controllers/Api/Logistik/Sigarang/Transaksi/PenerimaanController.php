@@ -18,12 +18,10 @@ class PenerimaanController extends Controller
     {
         $user = auth()->user();
         // $pegawai = Pegawai::find($user->pegawai_id);
-        $data = Pemesanan::where('created_by', $user->pegawai_id)
-            ->orWhere('created_by', null)
-            // ->whereNotIn('status', [1, 4])
-            ->filter(request(['q']))
-            ->where('status', 2)
-            ->orWhere('status', 3)
+        $data = Pemesanan::filter(request(['q']))
+            // ->where('status', 2)
+            // ->orWhere('status', 3)
+            ->whereIn('status', [2, 3])
             ->latest('id')
             ->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])
             ->get();

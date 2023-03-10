@@ -66,15 +66,15 @@ class PemesananController extends Controller
                 $data->update([
                     'created_by' => $pegawai->id
                 ]);
-                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+                return new JsonResponse(['message' => 'data created', 'data' => $data], 201);
             }
             if ($data->wasChanged()) {
                 $data->update([
                     'updated_by' => $pegawai->id
                 ]);
-                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+                return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
             }
-            return new JsonResponse(['message' => 'success'], 201);
+            return new JsonResponse(['message' => 'No changes', 'data' => $data], 202);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([
