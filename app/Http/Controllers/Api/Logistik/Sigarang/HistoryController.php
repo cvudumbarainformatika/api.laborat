@@ -30,9 +30,14 @@ class HistoryController extends Controller
         $permintaan = Permintaanruangan::query();
         $retur = Retur::query();
         $nama = request('nama');
-        // pemesanan
         $user = auth()->user();
 
+        // pemesanan
+        // $pemesanan->when(request('from') ?? false, function ($anu) {
+        //     // $anu->whereBetween('tanggal', [request('from'), request('to')]);
+        //     $anu->where('tanggal', '>=', request('from'))
+        //         ->where('tanggal', '<=', request('to'));
+        // });
         // $pegawai = Pegawai::find($user->pegawai_id);
         if ($nama === 'Pemesanan') {
             // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
@@ -49,9 +54,8 @@ class HistoryController extends Controller
                     ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
             })
 
-                ->when(request('from') && request('to'), function ($anu) {
-                    return $anu->whereBetween('tanggal', [request('from'), request('to')]);
-                })
+
+                // ->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
 
                 ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
@@ -146,7 +150,6 @@ class HistoryController extends Controller
             'data' => $apem,
             'meta' => $data,
             'req' => request()->all(),
-            'cond' => (request('from') && request('to')),
         ]);
     }
     public function allTransaction()
