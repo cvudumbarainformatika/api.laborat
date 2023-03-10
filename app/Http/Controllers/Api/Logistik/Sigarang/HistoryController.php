@@ -57,7 +57,7 @@ class HistoryController extends Controller
 
                 // ->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
 
-                ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
+                ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
