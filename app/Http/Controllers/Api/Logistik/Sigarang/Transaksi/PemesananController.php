@@ -49,7 +49,10 @@ class PemesananController extends Controller
         try {
             DB::beginTransaction();
 
-            $valid = Validator::make($request->all(), ['reff' => 'required']);
+            $valid = Validator::make($request->all(), [
+                'reff' => 'required',
+                'nomor' => 'required|unique'
+            ]);
             if ($valid->fails()) {
                 return new JsonResponse($valid->errors(), 422);
             }
