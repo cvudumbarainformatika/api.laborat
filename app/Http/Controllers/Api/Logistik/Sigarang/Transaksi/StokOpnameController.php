@@ -252,7 +252,9 @@ class StokOpnameController extends Controller
                     'permintaanruangans.kode_ruang',
                     'permintaanruangans.dari',
                     'permintaanruangans.tanggal',
+                    'ruangs.uraian',
                 )
+                    ->join('ruangs', 'ruangs.kode', '=', 'permintaanruangans.kode_ruang')
                     ->join('permintaanruangans', function ($minta) use ($head) {
                         $minta->on('detail_permintaanruangans.permintaanruangan_id', '=', 'permintaanruangans.id')
                             ->whereBetween('tanggal', [$head->awal, $head->akhir])
