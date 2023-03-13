@@ -48,11 +48,14 @@ class PemesananController extends Controller
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
         $anu = Pemesanan::where('nomor', $request->nomor)->first();
+        // if ($anu) {
+        //     return new JsonResponse($anu, 410);
+        // }
         $valid = Validator::make($request->all(), [
             'reff' => 'required|min:5',
             'nomor' => [
                 'required',
-                Rule::when(!$anu, ['unique:sigarang.pemesanans,nomor'])
+                Rule::when($anu, ['unique:sigarang.pemesanans,nomor'])
             ]
         ]);
         if ($valid->fails()) {
