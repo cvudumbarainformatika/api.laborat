@@ -340,8 +340,14 @@ class StokOpnameController extends Controller
 
             ->select('barang_r_s.*', 'satuans.nama as satuan', 'gudangs.nama as depo')
             ->join('gudangs', function ($query) {
-                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
-                    ->where('gudangs.kode', request('search'));
+                $user = auth()->user();
+                $pegawai = Pegawai::find($user->pegawai_id);
+                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo');
+                if (!request('search')) {
+                    $query->where('gudangs.kode', '=', $pegawai->kode_ruang);
+                } else {
+                    $query->where('gudangs.kode', '=', request('search'));
+                }
             })
             ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
 
