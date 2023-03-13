@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class PemesananController extends Controller
 {
@@ -46,9 +47,13 @@ class PemesananController extends Controller
         $second = $request->all();
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
+        $anu = Pemesanan::where('nomor', $request->nomor)->first();
         $valid = Validator::make($request->all(), [
             'reff' => 'required|min:5',
-            'nomor' => 'required|unique:sigarang.pemesanans,nomor'
+            'nomor' => [
+                'required',
+                Rule::when(!$anu, ['unique:sigarang.pemesanans,nomor'])
+            ]
         ]);
         if ($valid->fails()) {
             return new JsonResponse($valid->errors(), 422);
@@ -60,7 +65,7 @@ class PemesananController extends Controller
 
             $data = Pemesanan::updateOrCreate(['reff' => $request->reff], $second);
             if ($request->has('kode_rs') && $request->has('kode_108') && $request->kode_rs !== null) {
-                $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);
+                $det = $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);
             }
 
             DB::commit();
@@ -78,7 +83,13 @@ class PemesananController extends Controller
                 ]);
                 return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
             }
-            return new JsonResponse(['message' => 'No changes', 'data' => $data], 202);
+            if ($det->wasChanged()) {
+                $data->update([
+                    'updated_by' => $pegawai->id
+                ]);
+                return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
+            }
+            return new JsonResponse(['message' => 'No changes On header', 'data' => $data], 202);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([
