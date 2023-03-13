@@ -31,27 +31,27 @@ class PenerimaanController extends Controller
 
     public function jumlahPenerimaan()
     {
-        $data = penerimaan::where('nomor', request('nomor'))->get();
+        $data = penerimaan::where('reff', request('reff'))->get();
         return new JsonResponse(['jumlah' => count($data)]);
     }
 
     public function penerimaan()
     {
 
-        $pemesanan = Pemesanan::where('nomor', '=', request()->nomor)
+        $pemesanan = Pemesanan::where('reff', '=', request()->reff)
             ->where('status', '>=', 2)
             ->latest('id')->with(['details', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
-        $penerimaanLama = Penerimaan::where('nomor', '=', request()->nomor)
+        $penerimaanLama = Penerimaan::where('reff', '=', request()->reff)
             ->where('status', '>=', 2)->with('details')->get();
 
-        $penerimaanSkr = Penerimaan::where('nomor', '=', request()->nomor)
+        $penerimaanSkr = Penerimaan::where('reff', '=', request()->reff)
             ->where('status', '=', 1)->with('details')->get();
 
         $detailLama = DetailPenerimaan::selectRaw('kode_rs, sum(qty) as jml, harga')->groupBy('kode_rs')
             ->whereHas('penerimaan', function ($p) {
                 // ->where('nama', '=', 'PENERIMAAN')
                 $p->where('status', '>=', 2)
-                    ->where('nomor', '=', request()->nomor);
+                    ->where('reff', '=', request()->reff);
             })->get();
 
 
