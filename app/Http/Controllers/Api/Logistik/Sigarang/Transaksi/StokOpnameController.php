@@ -27,8 +27,10 @@ class StokOpnameController extends Controller
         } else {
             $raw->where('gedung', 2)
                 ->where('lantai', '>', 0)
-                ->where('gudang', '>', 0);
+                ->where('gudang', '>', 0)
+                ->where('depo', '>', 0);
         }
+
         $data = $raw->get();
         return new JsonResponse($data);
     }
@@ -227,6 +229,17 @@ class StokOpnameController extends Controller
         $head->from = $head->prevTahun . '-' . $head->prevbulan . '-01' . ' 00:00:00';
         $head->to = $head->prevTahun . '-' . $head->prevbulan . '-31' . ' 23:59:59';
 
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $raw = Gudang::where('gedung', 2)
+            ->where('lantai', '>', 0)
+            ->where('gudang', '>', 0)
+            ->where('depo', '>', 0)
+            ->get();
+        $wew = collect($raw);
+        $depos = $wew->map(function ($anu) {
+            return $anu->kode;
+        });
 
         $data = BarangRS::with([
             'monthly' => function ($q) use ($head) {
@@ -339,18 +352,55 @@ class StokOpnameController extends Controller
         ])
 
             ->select('barang_r_s.*', 'satuans.nama as satuan', 'gudangs.nama as depo')
-            ->join('gudangs', function ($query) {
-                $user = auth()->user();
-                $pegawai = Pegawai::find($user->pegawai_id);
-                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo');
-                if (!request('search')) {
-                    $query->where('gudangs.kode', '=', $pegawai->kode_ruang);
-                } else {
-                    $query->where('gudangs.kode', '=', request('search'));
-                }
-            })
+            // ->join('gudangs', function ($query) {
+            //     // $user = auth()->user();
+            //     // $pegawai = Pegawai::find($user->pegawai_id);
+            //     // $raw = Gudang::where('gedung', 2)
+            //     //     ->where('lantai', '>', 0)
+            //     //     ->where('gudang', '>', 0)
+            //     //     ->where('depo', '>', 0)
+            //     //     ->get();
+            //     // $wew = collect($raw);
+            //     // $depos = $wew->map(function ($anu) {
+            //     //     return $anu->kode;
+            //     // });
+
+            //     $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo');
+            //     // if (!request('search')) {
+            //     //     if ($pegawai->role_id === 2 || $pegawai->role_id === 1) {
+            //     //         $query->whereIn('gudangs.kode', [$depos]);
+            //     //     } else {
+            //     //         $query->whereIn('gudangs.kode', [$pegawai->kode_ruang]);
+            //     //     }
+            //     // } else {
+            //     //     if (request('search') === 'Gd-02010100') {
+            //     //         $query->whereIn('gudangs.kode', [$depos]);
+            //     //     } else {
+            //     //         $query->whereIn('gudangs.kode', [request('search')]);
+            //     //     }
+            //     // }
+
+
+            // })
+            ->join('gudangs', 'gudangs.kode', '=', 'barang_r_s.kode_depo')
             ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
 
+            // ->when(request('search') ?? function ($anu) use ($pegawai, $depos) {
+            //     if ($pegawai->role_id === 2 || $pegawai->role_id === 1) {
+            //         $anu->whereIn('barang_r_s.kode_depo', [$depos]);
+            //     } else {
+            //         $anu->whereIn('barang_r_s.kode_depo', [$pegawai->kode_ruang]);
+            //     }
+            // }, function ($query) use ($depos) {
+            //     if (request('search') === 'Gd-02010100') {
+            //         $query->whereIn('barang_r_s.kode_depo', [$depos]);
+            //     } else {
+            //         $query->whereIn('barang_r_s.kode_depo', [request('search')]);
+            //     }
+            // })
+            ->when(request('search'), function ($wew) {
+                $wew->whereIn('barang_r_s.kode_depo', [request('search')]);
+            })
             ->when(request('q'), function ($search) {
                 $search->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');

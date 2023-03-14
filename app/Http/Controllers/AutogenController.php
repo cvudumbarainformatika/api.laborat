@@ -1705,6 +1705,16 @@ class AutogenController extends Controller
         $det = $de->map(function ($x) {
             return $x->kode_rs;
         });
+        $raw = Gudang::where('gedung', 2)
+            ->where('lantai', '>', 0)
+            ->where('gudang', '>', 0)
+            ->where('depo', '>', 0)
+            ->get();
+        $wew = collect($raw);
+        $depos = $wew->map(function ($anu) {
+            return $anu->kode;
+        });
+        $data['depos'] = $depos;
         $data['ps'] = $ps;
         $data['det'] = $det;
         return new JsonResponse($data);
