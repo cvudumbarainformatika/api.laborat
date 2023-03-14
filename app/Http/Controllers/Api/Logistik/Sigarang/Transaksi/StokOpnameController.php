@@ -405,6 +405,7 @@ class StokOpnameController extends Controller
                 $search->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
             })
+            ->latest('id')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
