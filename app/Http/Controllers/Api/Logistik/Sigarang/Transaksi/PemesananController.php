@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class PemesananController extends Controller
 {
@@ -46,17 +47,28 @@ class PemesananController extends Controller
         $second = $request->all();
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
+        $anu = Pemesanan::where('nomor', $request->nomor)->first();
+        // if ($anu) {
+        //     return new JsonResponse($anu, 410);
+        // }
+        $valid = Validator::make($request->all(), [
+            'reff' => 'required|min:5',
+            'nomor' => [
+                'required',
+                Rule::when($anu, ['unique:sigarang.pemesanans,nomor'])
+            ]
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
         try {
+
             DB::beginTransaction();
 
-            $valid = Validator::make($request->all(), ['reff' => 'required']);
-            if ($valid->fails()) {
-                return new JsonResponse($valid->errors(), 422);
-            }
 
             $data = Pemesanan::updateOrCreate(['reff' => $request->reff], $second);
             if ($request->has('kode_rs') && $request->has('kode_108') && $request->kode_rs !== null) {
-                $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);
+                $det = $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);
             }
 
             DB::commit();
@@ -66,21 +78,27 @@ class PemesananController extends Controller
                 $data->update([
                     'created_by' => $pegawai->id
                 ]);
-                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+                return new JsonResponse(['message' => 'data created', 'data' => $data], 201);
             }
             if ($data->wasChanged()) {
                 $data->update([
                     'updated_by' => $pegawai->id
                 ]);
-                // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+                return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
             }
-            return new JsonResponse(['message' => 'success'], 201);
+            if ($det->wasChanged()) {
+                $data->update([
+                    'updated_by' => $pegawai->id
+                ]);
+                return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
+            }
+            return new JsonResponse(['message' => 'No changes On header', 'data' => $data], 202);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e
-            ], 500);
+            ], 410);
         }
     }
 
