@@ -41,17 +41,17 @@ class PenerimaanController extends Controller
         $pemesanan = Pemesanan::where('reff', '=', request()->reff)
             ->where('status', '>=', 2)
             ->latest('id')->with(['details', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
-        $penerimaanLama = Penerimaan::where('reff', '=', request()->reff)
+        $penerimaanLama = Penerimaan::where('nomor', '=', request()->nomor)
             ->where('status', '>=', 2)->with('details')->get();
 
-        $penerimaanSkr = Penerimaan::where('reff', '=', request()->reff)
+        $penerimaanSkr = Penerimaan::where('nomor', '=', request()->nomor)
             ->where('status', '=', 1)->with('details')->get();
 
         $detailLama = DetailPenerimaan::selectRaw('kode_rs, sum(qty) as jml, harga')->groupBy('kode_rs')
             ->whereHas('penerimaan', function ($p) {
                 // ->where('nama', '=', 'PENERIMAAN')
                 $p->where('status', '>=', 2)
-                    ->where('reff', '=', request()->reff);
+                    ->where('nomor', '=', request()->nomor);
             })->get();
 
 
