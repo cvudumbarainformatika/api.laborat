@@ -55,7 +55,8 @@ class HistoryController extends Controller
         } else if ($nama === 'Penerimaan') {
 
             if (request('q')) {
-                $penerimaan->where('no_permintaan', 'LIKE', '%' . request('q') . '%');
+                $penerimaan->where('nomor', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('no_penerimaan', 'LIKE', '%' . request('q') . '%');
             }
             if (request('kontrak')) {
                 $penerimaan->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
