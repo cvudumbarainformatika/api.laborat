@@ -29,9 +29,27 @@ class PenerimaanController extends Controller
         return new JsonResponse($data);
     }
 
+    public function cariDetailPenerimaan()
+    {
+        // return new JsonResponse(request()->all());
+        $temp = DetailPenerimaan::query();
+        $temp->join('penerimaans', function ($jo) {
+            $jo->on('detail_penerimaans.penerimaan_id', '=', 'penerimaans.id')
+                ->where('status', 2)
+                ->where('nomor', request('nomor'))
+                ->whereIn('kode_rs', request('kodeBarang'));
+        });
+        $data = $temp->get();
+        // $data['request'] = request()->all();
+
+        return new JsonResponse($data);
+    }
+
     public function jumlahPenerimaan()
     {
-        $data = penerimaan::where('nomor', request('nomor'))->get();
+        // $data = penerimaan::where('nomor', request('nomor'))->get();
+        $data = penerimaan::selectRaw('nomor')->where('nomor', request('nomor'))->get();
+
         return new JsonResponse(['jumlah' => count($data)]);
     }
 
