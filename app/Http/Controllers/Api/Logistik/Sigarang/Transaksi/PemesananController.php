@@ -102,9 +102,9 @@ class PemesananController extends Controller
         }
     }
 
-    public static function updateStatus($nomor, $status)
+    public static function updateStatus($reff, $status)
     {
-        $data = Pemesanan::where('nomor', $nomor)->first();
+        $data = Pemesanan::where('reff', $reff)->first();
         // return new JsonResponse(['message' => $data]);
         $data->status = $status;
         $data->update();

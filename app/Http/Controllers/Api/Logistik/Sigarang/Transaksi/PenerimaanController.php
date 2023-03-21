@@ -115,7 +115,7 @@ class PenerimaanController extends Controller
                 TransaksiGudangController::fromPenerimaan($data->id);
             }
 
-            PemesananController::updateStatus($request->nomor, $request->statuspemesanan);
+            PemesananController::updateStatus($request->reff, $request->statuspemesanan);
 
 
             DB::commit();
