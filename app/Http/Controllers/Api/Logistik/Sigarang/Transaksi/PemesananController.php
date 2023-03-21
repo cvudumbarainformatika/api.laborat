@@ -55,7 +55,7 @@ class PemesananController extends Controller
             'reff' => 'required|min:5',
             'nomor' => [
                 'required',
-                Rule::when($anu, ['unique:sigarang.pemesanans,nomor'])
+                Rule::when(($anu && $anu->reff !== $request->reff), ['unique:sigarang.pemesanans,nomor'])
             ]
         ]);
         if ($valid->fails()) {
