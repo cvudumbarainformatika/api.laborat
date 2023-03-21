@@ -1,64 +1,56 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Helpers;
 
-use Illuminate\Http\Request;
 use LZCompressor\LZString;
 
-class BpjsConfigBridging extends Controller
+class BridgingbpjsHelper
 {
-    // private $base_url;
 
-    // public function __construct()
-    // {
-    //     $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-    // }
 
-    // public static function vclaim()
-    // {
-    //     return $this->base_url . 'vclaim-rest-dev';
-    // }
-    // public static function antreanrs()
-    // {
-    //     return $this->base_url . 'antreanrs_dev';
-    // }
-
-    public static function serviceName($name)
+    public static function get_url(string $name)
     {
-        // VClaim : https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev
-        // Antrean RS : https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev
-        // Apotek : https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev
-        // Pcare : https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev
-        // $this->service_name = $name;
-        // $service = 'vclaim-rest-dev'
-        // if ($this->service_name === 'antrean') {
-        //     $service = 'vclaim-rest-dev';
-        // } elseif($name === 'apotek'){
-        //     $service = 'apotek-rest-dev';
-        // } else {
-        //     $service = 'pcare-rest-dev';
-        // }
+        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        $service_name = 'vclaim-rest-dev';
+        if ($name === 'antrean') {
+            $service_name = 'antreanrs_dev';
+        } else if ($name === 'apotek') {
+            $service_name = 'apotek-rest-dev';
+        } else if ($name === 'pcare') {
+            $service_name = 'apotek-rest-dev';
+        } else {
+            $service_name = 'vclaim-rest-dev';
+        }
 
-        // $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/'.$service;
-        return $name;
+        return $base_url . $service_name . '/';
     }
+
+
     public static function getSignature()
     {
+        // BPJS_ANTREAN_CONS_ID=31014
+        // BPJS_ANTREAN_SECRET=3sY5CB0658
+        // BPJS_ANTREAN_USER_KEY=140dbebe0248aa4ce64557a8ffbdb0e9
+
+        $BPJS_ANTREAN_SECRET = '3sY5CB0658';
+        $BPJS_ANTREAN_USER_KEY = '140dbebe0248aa4ce64557a8ffbdb0e9';
+
+
         $user_key = "fbad382d69383c78969f889077053ebb";
 
-        $data = "31014";
+        $cons = "31014";
         $secretKey = "3sY5CB0658";
         // Computes the timestamp
         date_default_timezone_set('UTC');
         $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
         // Computes the signature by hashing the salt with the secret key as the key
-        $signature = hash_hmac('sha256', $data . "&" . $tStamp, $secretKey, true);
+        $signature = hash_hmac('sha256', $cons . "&" . $tStamp, $secretKey, true);
 
         // base64 encode�
         $encodedSignature = base64_encode($signature);
 
         $data = array(
-            'xconsid' => $data,
+            'xconsid' => $cons,
             'xtimestamp' => $tStamp,
             'xsignature' => $encodedSignature,
             'user_key' => $user_key,
@@ -79,7 +71,18 @@ class BpjsConfigBridging extends Controller
             'X-signature' => $data['xsignature'],
             'user_key' => $data['user_key'],
         ];
+
+
+        // return [
+        //     'Accept' => 'application/json',
+        //     'Content-Type' => 'application/json',
+        //     'x-cons-id' => $data['xconsid'],
+        //     'x-timestamp' => $data['xtimestamp'],
+        //     'x-signature' => $data['xsignature'],
+        //     'user_key' => $data['user_key'],
+        // ];
     }
+
 
     public static function stringDecrypt($key, $string)
     {
