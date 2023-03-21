@@ -40,6 +40,8 @@ use App\Models\TransaksiLaborat;
 use App\Models\User;
 use App\Models\Pegawai\Akses\User as Akses;
 use App\Models\Sigarang\MonthlyStokUpdate;
+use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
+use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Carbon\Carbon;
 use Exception;
@@ -197,24 +199,84 @@ class AutogenController extends Controller
 
         // return new JsonResponse($data);
 
-        $bulan = '02';
-        $tahun = 2023;
-        $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
-        $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
+        // $bulan = '02';
+        // $tahun = 2023;
+        // $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
+        // $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
 
 
-        $data = BarangRS::with([
-            'monthly' => function ($q) use ($awal, $akhir) {
-                $q->whereBetween('tanggal', [$awal, $akhir]);
-            }
-        ])
-            ->select('barang_r_s.*')
-            ->join('gudangs', function ($query) {
-                $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
-                    ->where('gudangs.kode', '=', 'Gd-02010101');
-            })->paginate(request('per_page'));
+        // $data = BarangRS::with([
+        //     'monthly' => function ($q) use ($awal, $akhir) {
+        //         $q->whereBetween('tanggal', [$awal, $akhir]);
+        //     }
+        // ])
+        //     ->select('barang_r_s.*')
+        //     ->join('gudangs', function ($query) {
+        //         $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
+        //             ->where('gudangs.kode', '=', 'Gd-02010101');
+        //     })->paginate(request('per_page'));
 
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
+
+        // VClaim : https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev
+        // Antrean RS : https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev
+        // Apotek : https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev
+        // Pcare : https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev
+
+
+        // Consid : 31014
+        // Secret Key : 3sY5CB0658
+        // user_key: fbad382d69383c78969f889077053ebb
+
+        $user_key = "fbad382d69383c78969f889077053ebb";
+
+        $data = "31014";
+        $secretKey = "3sY5CB0658";
+        // Computes the timestamp
+        date_default_timezone_set('UTC');
+        $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+        // Computes the signature by hashing the salt with the secret key as the key
+        $signature = hash_hmac('sha256', $data . "&" . $tStamp, $secretKey, true);
+
+        // base64 encode�
+        $encodedSignature = base64_encode($signature);
+
+        // urlencode�
+        // $encodedSignature = urlencode($encodedSignature);
+
+        // echo "X-cons-id: " . $data . " ";
+        // echo "X-timestamp:" . $tStamp . " ";
+        // echo "X-signature: " . $encodedSignature;
+
+        $service_name = 'vclaim-rest-dev';
+        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        // {BASE URL}/{Service Name}/Rujukan/RS/{parameter}
+        $no_rujukan = '132701010323P000002';
+        $url2 = 'https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/RS/' . $no_rujukan;
+        $url = $base_url . $service_name .  "/" . $no_rujukan;
+
+        $headers = [
+            'X-cons-id' => $data,
+            'X-timestamp' => $tStamp,
+            'X-signature' => $encodedSignature,
+            'user_key' => $user_key
+        ];
+
+        $response = Http::withHeaders($headers)->get($url2);
+        if (!$response) {
+            return response()->json([
+                'message' => 'ERRROR'
+            ], 500);
+        }
+
+        $statusCode = $response->status();
+        $responseBody = json_decode(
+            $response->getBody(),
+            true
+        );
+
+        // return response()->json($statusCode);
+        echo $response;
     }
 
     public function query_table()
@@ -1614,6 +1676,48 @@ class AutogenController extends Controller
         // $data->all();
         // return new JsonResponse(['col' => $col, 'data' => $data]);
 
+        // $pegawai = Pegawai::find(1539);
+        // $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+        // $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+        // $raw = collect($ruang);
+        // $only = $raw->map(function ($y) {
+        //     return $y->kode_ruang;
+        // });
+        // // R-0101071
+
+        // return new JsonResponse([
+        //     'only' => $only,
+        //     'pegawai' => $pegawai,
+        //     'pengguna' => $pengguna,
+        //     'ruang' => $ruang,
+        // ]);
+        // $distr = DistribusiLangsung::where(
+        //     'reff',
+        //     'DSTL-leyclbx3cnjkb'
+        // )->first();
+
+        // return new JsonResponse([
+        //     'id' => $distr->id,
+        //     'distr' => $distr,
+        // ]);
+        $ps = Pemesanan::where('reff', 'TRP-le6f72emqmekz')->with('details')->first();
+        $de = collect($ps->details);
+        $det = $de->map(function ($x) {
+            return $x->kode_rs;
+        });
+        $raw = Gudang::where('gedung', 2)
+            ->where('lantai', '>', 0)
+            ->where('gudang', '>', 0)
+            ->where('depo', '>', 0)
+            ->get();
+        $wew = collect($raw);
+        $depos = $wew->map(function ($anu) {
+            return $anu->kode;
+        });
+        $data['depos'] = $depos;
+        $data['ps'] = $ps;
+        $data['det'] = $det;
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
@@ -1697,7 +1801,9 @@ class AutogenController extends Controller
         // }
 
 
-        return new JsonResponse('ok');
+        // return new JsonResponse('ok');
+
+
     }
 
 

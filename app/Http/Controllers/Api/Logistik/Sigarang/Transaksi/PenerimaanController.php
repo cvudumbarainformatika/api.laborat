@@ -18,12 +18,10 @@ class PenerimaanController extends Controller
     {
         $user = auth()->user();
         // $pegawai = Pegawai::find($user->pegawai_id);
-        $data = Pemesanan::where('created_by', $user->pegawai_id)
-            ->orWhere('created_by', null)
-            // ->whereNotIn('status', [1, 4])
-            ->filter(request(['q']))
-            ->where('status', 2)
-            ->orWhere('status', 3)
+        $data = Pemesanan::filter(request(['q']))
+            // ->where('status', 2)
+            // ->orWhere('status', 3)
+            ->whereIn('status', [2, 3])
             ->latest('id')
             ->with(['details.barang108', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])
             ->get();
@@ -31,16 +29,34 @@ class PenerimaanController extends Controller
         return new JsonResponse($data);
     }
 
+    public function cariDetailPenerimaan()
+    {
+        // return new JsonResponse(request()->all());
+        $temp = DetailPenerimaan::query();
+        $temp->join('penerimaans', function ($jo) {
+            $jo->on('detail_penerimaans.penerimaan_id', '=', 'penerimaans.id')
+                ->where('status', 2)
+                ->where('nomor', request('nomor'))
+                ->whereIn('kode_rs', request('kodeBarang'));
+        });
+        $data = $temp->get();
+        // $data['request'] = request()->all();
+
+        return new JsonResponse($data);
+    }
+
     public function jumlahPenerimaan()
     {
-        $data = penerimaan::where('nomor', request('nomor'))->get();
+        // $data = penerimaan::where('nomor', request('nomor'))->get();
+        $data = penerimaan::selectRaw('nomor')->where('nomor', request('nomor'))->get();
+
         return new JsonResponse(['jumlah' => count($data)]);
     }
 
     public function penerimaan()
     {
 
-        $pemesanan = Pemesanan::where('nomor', '=', request()->nomor)
+        $pemesanan = Pemesanan::where('reff', '=', request()->reff)
             ->where('status', '>=', 2)
             ->latest('id')->with(['details', 'details.barangrs', 'details.satuan', 'perusahaan', 'details_kontrak'])->get();
         $penerimaanLama = Penerimaan::where('nomor', '=', request()->nomor)
@@ -99,7 +115,7 @@ class PenerimaanController extends Controller
                 TransaksiGudangController::fromPenerimaan($data->id);
             }
 
-            PemesananController::updateStatus($request->nomor, $request->statuspemesanan);
+            PemesananController::updateStatus($request->reff, $request->statuspemesanan);
 
 
             DB::commit();

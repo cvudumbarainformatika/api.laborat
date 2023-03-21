@@ -28,7 +28,7 @@ class Penerimaanruangan extends Model
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
-            return $search->where('no_penerimaan', 'LIKE', '%' . $query . '%');
+            return $search->where('no_distribusi', 'LIKE', '%' . $query . '%');
             // ->orWhere('tanggal', 'LIKE', '%' . $query . '%');
 
             // ->orWhereHas('barangrs', function ($q) use ($query) {

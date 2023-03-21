@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
@@ -29,58 +30,110 @@ class HistoryController extends Controller
         $permintaan = Permintaanruangan::query();
         $retur = Retur::query();
         $nama = request('nama');
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+
         // pemesanan
+
         if ($nama === 'Pemesanan') {
-            // jika status lebih dari tiga ambil penerimaannya.. dan nomor penerimaannya pasti beda lho..
-            $data = $pemesanan->filter(request(['q']))
-                ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+            if (request('q')) {
+                $pemesanan->where('nomor', 'LIKE', '%' . request('q') . '%');
+            }
+            if (request('kontrak')) {
+                $pemesanan->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
+            }
+            if (request('from')) {
+                $pemesanan->whereBetween('tanggal', [request('from'), request('to')]);
+            }
+            if ($pegawai->role_id !== 1) {
+                $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
+            }
+
+            $data = $pemesanan->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * Penerimaan
             */
         } else if ($nama === 'Penerimaan') {
 
-            $data = $penerimaan->filter(request(['q']))
-                ->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+            if (request('q')) {
+                $penerimaan->where('nomor', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('no_penerimaan', 'LIKE', '%' . request('q') . '%');
+            }
+            if (request('kontrak')) {
+                $penerimaan->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
+            }
+            if (request('from')) {
+                $penerimaan->whereBetween('tanggal', [request('from'), request('to')]);
+            }
+
+            $data = $penerimaan->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * transaksi gudang
             */
         } else if ($nama === 'Gudang') {
 
-            $data = $gudang->filter(request(['q']))
-                ->with('asal', 'tujuan', 'details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+            if (request('q')) {
+                $penerimaan->where('nomor', 'LIKE', '%' . request('q') . '%');
+            }
+            if (request('from')) {
+                $penerimaan->whereBetween('tanggal', [request('from'), request('to')]);
+            }
+            $data = $gudang->with('asal', 'tujuan', 'details.barangrs.barang108', 'details.satuan')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             // permintaan ruangan
         } else if ($nama === 'Permintaan Ruangan') {
-            $user = auth()->user();
-            $pegawai = Pegawai::find($user->pegawai_id);
+            // $user = auth()->user();
+            // $pegawai = Pegawai::find($user->pegawai_id);
+
             if ($pegawai->role_id === 5) {
-                $filterRuangan = $permintaan->where('kode_ruang', $pegawai->kode_ruang);
+
+                $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+                $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+                $raw = collect($ruang);
+                $only = $raw->map(function ($y) {
+                    return $y->kode_ruang;
+                });
+
+                $filterRuangan = $permintaan->whereIn('kode_ruang', $only);
             } else {
                 $filterRuangan = $permintaan;
             }
+
+            if (request('q')) {
+                $filterRuangan->where('no_permintaan', 'LIKE', '%' . request('q') . '%');
+            }
+            if (request('from')) {
+                $filterRuangan->whereBetween('tanggal', [request('from'), request('to')]);
+            }
             $data = $filterRuangan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang', 'ruangan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * Distribusi depo
             */
         } else if ($nama === 'Distribusi Depo') {
 
+
+            if (request('from')) {
+                $distribusidepo->whereBetween('tanggal', [request('from'), request('to')]);
+            }
             $data = $distribusidepo->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'depo')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * pemakaian ruangan
             */
         } else if ($nama === 'Pemakaian Ruangan') {
-
+            if (request('from')) {
+                $pemakaianruangan->whereBetween('tanggal', [request('from'), request('to')]);
+            }
             $data = $pemakaianruangan->filter(request(['q']))
                 ->with(
                     'details.barangrs.barang108',
@@ -90,16 +143,21 @@ class HistoryController extends Controller
                     'pengguna',
                     'pj'
                 )
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * penerimaan ruangan
             */
         } else if ($nama === 'Penerimaan Ruangan') {
 
-            $data = $penerimaanruangan->filter(request(['q']))
-                ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
-                ->latest('id')
+            if (request('q')) {
+                $penerimaanruangan->where('no_distribusi', 'LIKE', '%' . request('q') . '%');
+            }
+            if (request('from')) {
+                $penerimaanruangan->whereBetween('tanggal', [request('from'), request('to')]);
+            }
+            $data = $penerimaanruangan->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
             * retur
@@ -108,14 +166,15 @@ class HistoryController extends Controller
 
             $data = $retur->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan')
-                ->latest('id')
+                ->latest('tanggal')
                 ->paginate(request('per_page'));
         }
         // $data = request()->all();
         $apem = $data->all();
         return new JsonResponse([
             'data' => $apem,
-            'meta' => $data
+            'meta' => $data,
+            'req' => request()->all(),
         ]);
     }
     public function allTransaction()
