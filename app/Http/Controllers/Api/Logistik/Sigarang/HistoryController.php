@@ -31,6 +31,7 @@ class HistoryController extends Controller
         $retur = Retur::query();
         $nama = request('nama');
         $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
 
         // pemesanan
 
@@ -44,7 +45,7 @@ class HistoryController extends Controller
             if (request('from')) {
                 $pemesanan->whereBetween('tanggal', [request('from'), request('to')]);
             }
-            if ($user->role_id !== 1) {
+            if ($pegawai->role_id !== 1) {
                 $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
             }
 
@@ -86,8 +87,8 @@ class HistoryController extends Controller
                 ->paginate(request('per_page'));
             // permintaan ruangan
         } else if ($nama === 'Permintaan Ruangan') {
-            $user = auth()->user();
-            $pegawai = Pegawai::find($user->pegawai_id);
+            // $user = auth()->user();
+            // $pegawai = Pegawai::find($user->pegawai_id);
 
             if ($pegawai->role_id === 5) {
 
