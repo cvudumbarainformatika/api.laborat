@@ -44,9 +44,11 @@ class HistoryController extends Controller
             if (request('from')) {
                 $pemesanan->whereBetween('tanggal', [request('from'), request('to')]);
             }
+            if ($user->role_id !== 1) {
+                $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
+            }
 
-            $data = $pemesanan->whereIn('created_by', [$user->pegawai_id, 0])
-                ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
+            $data = $pemesanan->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
                 ->paginate(request('per_page'));
             /*
