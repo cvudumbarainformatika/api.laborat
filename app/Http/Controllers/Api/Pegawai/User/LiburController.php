@@ -80,12 +80,12 @@ class LiburController extends Controller
                     array_push($anu, $temp1);
                 }
             }
-            if ($key['kategory'] === 2) {
-                $temp2 = JadwalAbsen::where('kategory_id', $key['kategory'])
-                    ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
-                    ->update(['masuk' => $key['masuk']]);
-                array_push($anu, $temp2);
-            }
+            // if ($key['kategory'] === 2) {
+            //     $temp2 = JadwalAbsen::where('kategory_id', $key['kategory'])
+            //         ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+            //         ->update(['masuk' => $key['masuk']]);
+            //     array_push($anu, $temp2);
+            // }
         }
         return new JsonResponse(['message' => 'Jadwal diganti ke Jadwal Ramdhan']);
     }
@@ -98,9 +98,9 @@ class LiburController extends Controller
             ->whereIn('hari', ['Jumat'])
             ->update(['pulang' => '13:00:00']);
 
-        $temp2 = JadwalAbsen::where('kategory_id', 2)
-            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
-            ->update(['masuk' => '07:00:00']);
+        // $temp2 = JadwalAbsen::where('kategory_id', 2)
+        //     ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+        //     ->update(['masuk' => '07:00:00']);
 
         return new JsonResponse(['messaga' => 'Jadwal kembali Normal']);
     }
