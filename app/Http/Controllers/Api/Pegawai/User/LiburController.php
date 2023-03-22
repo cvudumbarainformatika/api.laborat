@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Pegawai\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,5 +60,48 @@ class LiburController extends Controller
         }
 
         return new JsonResponse(['message' => 'Berhasil menyimpan data', 'request' => $request->all()], 201);
+    }
+    public function ramadhan(Request $request)
+    {
+        $anu = [];
+        foreach ($request->all() as $key) {
+
+            if ($key['kategory'] === 1) {
+                $temp = JadwalAbsen::where('kategory_id', $key['kategory'])
+                    ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis'])
+                    ->update(['pulang' => $key['pulang']]);
+                $temp1 = JadwalAbsen::where('kategory_id', $key['kategory'])
+                    ->whereIn('hari', ['Jumat'])
+                    ->update(['pulang' => $key['Jumat']]);
+                if ($temp) {
+                    array_push($anu, $temp);
+                }
+                if ($temp1) {
+                    array_push($anu, $temp1);
+                }
+            }
+            if ($key['kategory'] === 2) {
+                $temp2 = JadwalAbsen::where('kategory_id', $key['kategory'])
+                    ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+                    ->update(['masuk' => $key['masuk']]);
+                array_push($anu, $temp2);
+            }
+        }
+        return new JsonResponse(['message' => 'Jadwal diganti ke Jadwal Ramdhan']);
+    }
+    public function lebaran()
+    {
+        $temp = JadwalAbsen::where('kategory_id', 1)
+            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis'])
+            ->update(['pulang' => '16:00:00']);
+        $temp1 = JadwalAbsen::where('kategory_id', 1)
+            ->whereIn('hari', ['Jumat'])
+            ->update(['pulang' => '13:00:00']);
+
+        $temp2 = JadwalAbsen::where('kategory_id', 2)
+            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+            ->update(['masuk' => '07:00:00']);
+
+        return new JsonResponse(['messaga' => 'Jadwal kembali Normal']);
     }
 }

@@ -14,3 +14,11 @@ Route::group([
     Route::get('/month', [LiburController::class, 'month']);
     Route::post('/store', [LiburController::class, 'store']);
 });
+Route::group([
+    'middleware' => 'auth:api',
+    // 'middleware' => 'jwt.verify',
+    'prefix' => 'jadwal'
+], function () {
+    Route::get('/lebaran', [LiburController::class, 'lebaran']);
+    Route::post('/ramadhan', [LiburController::class, 'ramadhan']);
+});
