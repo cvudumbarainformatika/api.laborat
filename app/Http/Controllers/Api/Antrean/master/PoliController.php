@@ -48,7 +48,7 @@ class PoliController extends Controller
             [
                 'kode_simrs' => $request->kode_simrs,
                 'nama' => $request->nama,
-                'max' => $request->max,
+                'max_of' => $request->max,
                 'max_ol' => $request->max_ol,
             ]
         );
