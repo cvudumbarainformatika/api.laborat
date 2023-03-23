@@ -86,12 +86,12 @@ class PemesananController extends Controller
                 ]);
                 return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
             }
-            if ($det->wasChanged()) {
-                $data->update([
-                    'updated_by' => $pegawai->id
-                ]);
-                return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
-            }
+            // if ($det->wasChanged()) {
+            //     $data->update([
+            //         'updated_by' => $pegawai->id
+            //     ]);
+            //     return new JsonResponse(['message' => 'data updated', 'data' => $data], 200);
+            // }
             return new JsonResponse(['message' => 'No changes On header', 'data' => $data], 202);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -114,6 +114,45 @@ class PemesananController extends Controller
         return new JsonResponse(['message' => 'update Berhasil'], 200);
     }
 
+    public function storeDetails(Request $request)
+    {
+        $valid = Validator::make($request->all(), [
+            'reff' => 'required|min:5',
+            'jumlah' => 'required',
+
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+        $second = $request->all();
+        $second['qty'] = $request->jumlah;
+        $data = Pemesanan::where('reff', $request->reff)->first();
+        if ($request->has('kode_rs') && $request->has('kode_108') && $request->kode_rs !== null) {
+            $detail = $data->details()->updateOrCreate(['kode_rs' => $request->kode_rs], $second);
+        }
+
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+
+        if ($detail->wasRecentlyCreated) {
+            $data->update([
+                'updated_by' => $pegawai->id
+            ]);
+            $balik = Pemesanan::where('reff', $request->reff)
+                ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
+                ->first();
+            return new JsonResponse(['message' => 'data created', 'data' => $balik], 201);
+        }
+        if ($detail->wasChanged()) {
+            $data->update([
+                'updated_by' => $pegawai->id
+            ]);
+            $balik = Pemesanan::where('reff', $request->reff)
+                ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
+                ->first();
+            return new JsonResponse(['message' => 'data updated', 'data' => $balik], 200);
+        }
+    }
     public function destroy()
     {
         return new JsonResponse(['msg' => 'Belum ada bos']);
@@ -128,6 +167,12 @@ class PemesananController extends Controller
             ], 500);
         }
 
+        if ($request->has('reff')) {
+            $balik = Pemesanan::where('reff', $request->reff)
+                ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
+                ->first();
+            return new JsonResponse(['message' => 'data deleted', 'data' => $balik], 200);
+        }
         return new JsonResponse([
             'message' => 'Data sukses terhapus'
         ], 200);
