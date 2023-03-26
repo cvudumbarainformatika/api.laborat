@@ -35,9 +35,9 @@ class DvlpController extends Controller
         // $url = BridgingbpjsHelper::get_url('vclaim') . 'referensi/poli/geriatri';
 
 
-        // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/poli';
+        $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/poli';
         // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'antrean/getlisttask';
-        $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/dokter';
+        // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/dokter';
 
         // return $headers;
         $response = Http::withHeaders(BridgingbpjsHelper::getHeader())->get($url);

@@ -6,7 +6,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Layanan;
 use App\Models\Antrean\PoliBpjs;
-use App\Models\Antrean\Unit;
+// use App\Models\Antrean\Unit;
 use App\Models\Poli;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,56 +18,43 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Undefined;
 
-class UnitController extends Controller
+class LayananController extends Controller
 {
     public function index()
     {
         // return new JsonResponse(['message' => 'ok']);
-        $data = Unit::when(request('q'), function ($search, $q) {
-            $search->where('loket', 'LIKE', '%' . $q . '%');
+        $data = Layanan::when(request('q'), function ($search, $q) {
+            $search->where('nama', 'LIKE', '%' . $q . '%');
         })
-            ->with(['layanan'])
-            ->orderBy('layanan_id', 'ASC')
-            ->orderBy('loket_no', 'ASC')
+            // ->with(['layanan'])
+            ->orderBy('id_layanan', 'ASC')
+            // ->orderBy('loket_no', 'ASC')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
 
-    public function getLayanans()
-    {
-        $data = Layanan::all();
-        return new JsonResponse($data);
-    }
-
     public function store(Request $request)
     {
-        // $validator = Validator::make($request->all(), [
-        //     'kode_simrs' => 'required|unique:antrean.masterpoli,kode_simrs, ' . $request->id
-        // ]);
+        $validator = Validator::make($request->all(), [
+            'id_layanan' => 'required|unique:antrean.layanans,id_layanan, ' . $request->id,
+            'kode' => 'required|unique:antrean.layanans,kode, ' . $request->id
+        ]);
 
-        // if ($validator->fails()) {
-        //     return response()->json($validator->errors(), 422);
-        // }
-
-        $kode_layanan = null;
-        if ($request->layanan_id !== null) {
-            $layanan = Layanan::where('id_layanan', '=', $request->layanan_id)->first();
-            $kode_layanan = $layanan->kode;
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
 
-        $data = Unit::updateOrCreate(
+
+
+        $data = Layanan::updateOrCreate(
             [
                 'id' => $request->id,
                 // 'kode_bpjs' => $request->kode_bpjs,
             ],
             [
-                'loket' => $request->loket,
-                'loket_no' => $request->loket_no,
-                'layanan_id' => $request->layanan_id,
-                'kuotajkn' => $request->kuotajkn,
-                'kuotanonjkn' => $request->kuotanonjkn,
-                'kode_layanan' => $kode_layanan
+                'nama' => $request->nama,
+                'kode' => $request->kode,
             ]
         );
 
@@ -81,7 +68,7 @@ class UnitController extends Controller
     public function destroy(Request $request)
     {
         $id = $request->id;
-        $data = Unit::where('id', $id);
+        $data = Layanan::where('id', $id);
         $del = $data->delete();
 
         if (!$del) {

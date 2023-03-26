@@ -6,17 +6,17 @@ namespace App\Models\Antrean;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MasterUnit extends Model
+class Layanan extends Model
 {
     use HasFactory;
     protected $connection = 'antrean';
-    protected $table = 'masterunit';
+    protected $table = 'layanans';
     protected $guarded = ['id'];
 
-    // public function poli_bpjs()
-    // {
-    //     return $this->hasOne(PoliBpjs::class, 'kode', 'kode_bpjs');
-    // }
+    public function unit()
+    {
+        return $this->hasMany(Unit::class, 'layanan_id', 'id_layanan');
+    }
 
     // public function referensi_poli_bpjs()
     // {
