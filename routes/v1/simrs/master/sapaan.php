@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Master\SistemBayarController;
+use App\Http\Controllers\Api\Simrs\Master\SapaanController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -9,5 +9,5 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master'
 ], function () {
-    Route::get('/sistembayar',[SistemBayarController::class, 'index']);
+    Route::get('/sapaan',[SapaanController::class, 'index']);
 });

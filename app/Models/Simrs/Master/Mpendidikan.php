@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Simrs\Master;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Msistembayar extends Model
+class Mpendidikan extends Model
 {
     use HasFactory;
+    protected $table = 'rs16';
 }
