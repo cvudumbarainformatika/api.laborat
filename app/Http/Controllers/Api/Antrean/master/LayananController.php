@@ -50,7 +50,7 @@ class LayananController extends Controller
         $data = Layanan::updateOrCreate(
             [
                 'id' => $request->id,
-                // 'kode_bpjs' => $request->kode_bpjs,
+                'id_layanan' => $request->id_layanan,
             ],
             [
                 'nama' => $request->nama,
