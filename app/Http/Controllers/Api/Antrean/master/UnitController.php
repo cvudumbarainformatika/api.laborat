@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Antrean\master;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Antrean\Display;
 use App\Models\Antrean\Layanan;
 use App\Models\Antrean\PoliBpjs;
 use App\Models\Antrean\Unit;
@@ -39,16 +40,14 @@ class UnitController extends Controller
         $data = Layanan::all();
         return new JsonResponse($data);
     }
+    public function getDisplays()
+    {
+        $data = Display::all();
+        return new JsonResponse($data);
+    }
 
     public function store(Request $request)
     {
-        // $validator = Validator::make($request->all(), [
-        //     'kode_simrs' => 'required|unique:antrean.masterpoli,kode_simrs, ' . $request->id
-        // ]);
-
-        // if ($validator->fails()) {
-        //     return response()->json($validator->errors(), 422);
-        // }
 
         $kode_layanan = null;
         if ($request->layanan_id !== null) {
@@ -59,7 +58,6 @@ class UnitController extends Controller
         $data = Unit::updateOrCreate(
             [
                 'id' => $request->id,
-                // 'kode_bpjs' => $request->kode_bpjs,
             ],
             [
                 'loket' => $request->loket,
@@ -67,7 +65,8 @@ class UnitController extends Controller
                 'layanan_id' => $request->layanan_id,
                 'kuotajkn' => $request->kuotajkn,
                 'kuotanonjkn' => $request->kuotanonjkn,
-                'kode_layanan' => $kode_layanan
+                'kode_layanan' => $kode_layanan,
+                'display_id' => $request->display_id
             ]
         );
 

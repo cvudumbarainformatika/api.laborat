@@ -278,7 +278,7 @@ class AutogenController extends Controller
         // // return response()->json($statusCode);
         // echo $response;
 
-        $str = 'a';
+        $str = 'B';
         echo ++$str; // prints 'b'
     }
 
