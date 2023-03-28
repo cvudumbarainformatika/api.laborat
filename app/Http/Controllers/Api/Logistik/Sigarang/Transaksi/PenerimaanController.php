@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
@@ -27,6 +28,28 @@ class PenerimaanController extends Controller
             ->get();
 
         return new JsonResponse($data);
+    }
+    public function cariDetailPesanan()
+    {
+        // $data = Pemesanan::where('nomor', request('nomor'))
+        //     ->with(
+        //         'details'
+        //     )
+        //     ->get();
+        $raw = DetailPenerimaan::where('penerimaan_id', request('id'))->get();
+        $detail = collect($raw)->map(function ($anu) {
+            return $anu->kode_rs;
+        });
+        $data = DetailPemesanan::with('barangrs', 'satuan')
+            ->select('detail_pemesanans.*', 'pemesanans.nomor')
+            ->join('pemesanans', 'detail_pemesanans.pemesanan_id', '=', 'pemesanans.id')
+            ->where('pemesanans.nomor', request('nomor'))
+            // ->whereIn('detail_pemesanans.kode_rs', [request('detail')])
+            ->whereIn('detail_pemesanans.kode_rs', $detail)
+            ->get();
+        // $data['detail'] = $detail;
+        return new JsonResponse($data);
+        // return new JsonResponse($detail);
     }
 
     public function cariDetailPenerimaan()
