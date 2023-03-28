@@ -48,7 +48,7 @@ class PenerimaanController extends Controller
     public function jumlahPenerimaan()
     {
         // $data = penerimaan::where('nomor', request('nomor'))->get();
-        $data = penerimaan::selectRaw('nomor')->where('nomor', request('nomor'))->get();
+        $data = Penerimaan::selectRaw('nomor')->where('nomor', request('nomor'))->get();
 
         return new JsonResponse(['jumlah' => count($data)]);
     }
@@ -94,8 +94,11 @@ class PenerimaanController extends Controller
 
     public function simpanPenerimaan(Request $request)
     {
+        $user = auth()->user();
+        // $pegawai = Pegawai::find($user->pegawai_id);
         $second = $request->all();
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
+        $second['created_by'] = $user->pegawai_id;
 
         try {
             DB::beginTransaction();

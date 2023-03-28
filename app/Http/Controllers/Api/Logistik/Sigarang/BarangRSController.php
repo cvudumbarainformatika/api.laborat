@@ -30,7 +30,7 @@ class BarangRSController extends Controller
     public function countIndex()
     {
         $data = BarangRS::count();
-        return new JsonResponse($data, 200);
+        return new JsonResponse($data + 1, 200);
     }
 
     public function indexForPemesanan()

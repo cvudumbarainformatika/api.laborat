@@ -42,6 +42,7 @@ use App\Models\Pegawai\Akses\User as Akses;
 use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Carbon\Carbon;
 use Exception;
@@ -1703,23 +1704,26 @@ class AutogenController extends Controller
         //     'id' => $distr->id,
         //     'distr' => $distr,
         // ]);
-        $ps = Pemesanan::where('reff', 'TRP-le6f72emqmekz')->with('details')->first();
-        $de = collect($ps->details);
-        $det = $de->map(function ($x) {
-            return $x->kode_rs;
-        });
-        $raw = Gudang::where('gedung', 2)
-            ->where('lantai', '>', 0)
-            ->where('gudang', '>', 0)
-            ->where('depo', '>', 0)
-            ->get();
-        $wew = collect($raw);
-        $depos = $wew->map(function ($anu) {
-            return $anu->kode;
-        });
-        $data['depos'] = $depos;
-        $data['ps'] = $ps;
-        $data['det'] = $det;
+        // $ps = Pemesanan::where('reff', 'TRP-le6f72emqmekz')->with('details')->first();
+        // $de = collect($ps->details);
+        // $det = $de->map(function ($x) {
+        //     return $x->kode_rs;
+        // });
+        // $raw = Gudang::where('gedung', 2)
+        //     ->where('lantai', '>', 0)
+        //     ->where('gudang', '>', 0)
+        //     ->where('depo', '>', 0)
+        //     ->get();
+        // $wew = collect($raw);
+        // $depos = $wew->map(function ($anu) {
+        //     return $anu->kode;
+        // });
+        // $data['depos'] = $depos;
+        // $data['ps'] = $ps;
+        // $data['det'] = $det;
+        // return new JsonResponse($data);
+
+        $data = Penerimaan::selectRaw('nomor')->where('nomor', '000.3.2/02.0/10/SP-GIZI/1.02.2.14.0.00.03.0301/II/2023')->get();
         return new JsonResponse($data);
     }
 
