@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/pasien',[PasienController::class, 'index']);
+    Route::get('/pasienGetNoRM',[PasienController::class, 'getpasiennorm']);
 });
