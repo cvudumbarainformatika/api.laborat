@@ -48,9 +48,9 @@ class PenerimaanController extends Controller
     public function jumlahPenerimaan()
     {
         // $data = penerimaan::where('nomor', request('nomor'))->get();
-        $data = Penerimaan::selectRaw('nomor')->where('nomor', request('nomor'))->get();
+        $data = Penerimaan::selectRaw('nomor')->where('nomor', request('nomor'))->count();
 
-        return new JsonResponse(['jumlah' => count($data)]);
+        return new JsonResponse(['jumlah' => $data]);
     }
 
     public function penerimaan()

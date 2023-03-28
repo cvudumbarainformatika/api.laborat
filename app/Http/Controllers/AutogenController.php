@@ -1723,7 +1723,7 @@ class AutogenController extends Controller
         // $data['det'] = $det;
         // return new JsonResponse($data);
 
-        $data = Penerimaan::selectRaw('nomor')->where('nomor', '000.3.2/02.0/10/SP-GIZI/1.02.2.14.0.00.03.0301/II/2023')->get();
+        $data = Penerimaan::selectRaw('nomor')->where('nomor', '000.3.2/02.0/10/SP-GIZI/1.02.2.14.0.00.03.0301/II/2023')->count();
         return new JsonResponse($data);
     }
 
