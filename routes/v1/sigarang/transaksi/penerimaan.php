@@ -17,6 +17,7 @@ Route::group([
     Route::get('/penerimaan', [PenerimaanController::class, 'penerimaan']);
     Route::get('/surat-belum-lengkap', [PenerimaanController::class, 'suratBelumLengkap']);
     Route::post('/simpan-penerimaan', [PenerimaanController::class, 'simpanPenerimaan']);
+    Route::post('/edit-header-penerimaan', [PenerimaanController::class, 'editHeaderPenerimaan']);
     Route::post('/lengkapi-surat', [PenerimaanController::class, 'lengkapiSurat']);
     Route::post('/destroy', [PenerimaanController::class, 'destroy']);
 });

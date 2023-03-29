@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
@@ -157,6 +158,25 @@ class PenerimaanController extends Controller
                 'message' => 'ada kesalahan',
                 'error' => $e
             ], 500);
+        }
+    }
+
+    public function editHeaderPenerimaan(Request $request)
+    {
+        // $lama = Penerimaan::find($request->id);
+        // if ($lama->no_penerimaan !== $request->no_penerimaan) {
+        //     $data['stok'] = RecentStokUpdate::where('no_penerimaan', $lama->no_penerimaan)
+        //         ->whereIn('kode_rs', $request->detail)->update(['no_penerimaan', $request->no_penerimaan]);
+        // }
+        $data = Penerimaan::updateOrCreate([
+            'id' => $request->id,
+            'reff' => $request->reff,
+        ], $request->all());
+        $balik = Penerimaan::with('perusahaan',  'details.barangrs.barang108', 'details.satuan')->find($request->id);
+        if ($data->wasChanged()) {
+            return new JsonResponse(['data' => $balik, 'message' => 'header Transaksi sudah di update'], 200);
+        } else {
+            return new JsonResponse(['data' => $balik, 'message' => 'Tidak ada perubahan data'], 200);
         }
     }
 
