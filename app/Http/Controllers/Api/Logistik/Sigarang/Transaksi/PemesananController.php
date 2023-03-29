@@ -138,6 +138,11 @@ class PemesananController extends Controller
             $data->update([
                 'updated_by' => $pegawai->id
             ]);
+            if ($data->status === 4) {
+                $data->update([
+                    'status' => 3
+                ]);
+            }
             $balik = Pemesanan::where('reff', $request->reff)
                 ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
                 ->first();
@@ -166,7 +171,12 @@ class PemesananController extends Controller
                 'message' => 'Error on Delete'
             ], 500);
         }
-
+        if ($request->has('reff') && $request->has('status')) {
+            if ($request->status === 4) {
+                $data = Pemesanan::where('reff', $request->reff)->first();
+                $data->update(['status' => 4]);
+            }
+        }
         if ($request->has('reff')) {
             $balik = Pemesanan::where('reff', $request->reff)
                 ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
