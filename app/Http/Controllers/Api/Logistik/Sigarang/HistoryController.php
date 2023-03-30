@@ -123,6 +123,9 @@ class HistoryController extends Controller
             if (request('from')) {
                 $distribusidepo->whereBetween('tanggal', [request('from'), request('to')]);
             }
+            if ($pegawai->role_id === 4) {
+                $distribusidepo->where('kode_depo', $pegawai->kode_ruang);
+            }
             $data = $distribusidepo->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'depo')
                 ->latest('tanggal')
