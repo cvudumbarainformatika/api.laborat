@@ -16,6 +16,7 @@ class TransaksiGudangController extends Controller
 
     public static function fromPenerimaan($data)
     {
+        $user = auth()->user();
         $terima = Penerimaan::where('id', $data)->with('details')->get();
         $first = $terima[0]->reff;
         $second = $terima[0];
@@ -23,12 +24,14 @@ class TransaksiGudangController extends Controller
         // $second->asal = null;
         $second->tujuan = 'Gd-02010100';
         $second->nama = 'PENERIMAAN GUDANG';
+        $second->nama_penerima = $user->nama;
+        $second->status = 2;
         $detail = $second->details;
 
         unset($second['reff']);
         try {
             DB::beginTransaction();
-            $gudang = TransaksiGudang::updateOrCreate(['reff' => $first],  $second->only('nama', 'nomor', 'no_penerimaan', 'tanggal', 'asal', 'tujuan', 'kode_penanggungjawab', 'kode_penerima', 'total', 'status'));
+            $gudang = TransaksiGudang::updateOrCreate(['reff' => $first],  $second->only('nama', 'nomor', 'no_penerimaan', 'tanggal', 'tujuan', 'nama_penerima', 'total', 'status'));
             // $header = (object) array('no_penerimaan' => $second->no_penerimaan);
             // $header->kode_ruang = $second->tujuan;
             foreach ($detail as &$value) {

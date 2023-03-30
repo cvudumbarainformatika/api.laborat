@@ -104,14 +104,15 @@ class PemesananController extends Controller
 
     public static function updateStatus($reff, $status)
     {
-        $data = Pemesanan::where('reff', $reff)->first();
+        $data = Pemesanan::find($reff);
+        $data->update(['status' => $status]);
         // return new JsonResponse(['message' => $data]);
-        $data->status = $status;
-        $data->update();
-        if (!$data) {
-            return new JsonResponse(['message' => 'update Gagal'], 500);
+        // $data->status = $status;
+        // $data->update();
+        if ($data->wasChanged()) {
+            return new JsonResponse(['message' => 'Status sudah diganti'], 200);
         }
-        return new JsonResponse(['message' => 'update Berhasil'], 200);
+        return new JsonResponse(['message' => 'Status pemesanan tetap'], 200);
     }
 
     public function storeDetails(Request $request)

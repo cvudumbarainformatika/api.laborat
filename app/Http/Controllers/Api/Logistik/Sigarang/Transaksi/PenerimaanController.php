@@ -124,13 +124,13 @@ class PenerimaanController extends Controller
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         $second['created_by'] = $user->pegawai_id;
 
+        $valid = Validator::make($request->all(), ['reff' => 'required']);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+
         try {
             DB::beginTransaction();
-
-            $valid = Validator::make($request->all(), ['reff' => 'required']);
-            if ($valid->fails()) {
-                return new JsonResponse($valid->errors(), 422);
-            }
 
             $data = Penerimaan::updateOrCreate(['reff' => $request->reff], $second);
 
@@ -141,14 +141,14 @@ class PenerimaanController extends Controller
             if ($request->status === 2 && $data) {
                 TransaksiGudangController::fromPenerimaan($data->id);
             }
-
-            PemesananController::updateStatus($request->reff, $request->statuspemesanan);
+            // $pesan=Pemesanan::where()
+            PemesananController::updateStatus($request->id, $request->statuspemesanan);
 
 
             DB::commit();
 
             return new JsonResponse([
-                'message' => 'success',
+                'message' => 'Data Tersimpan',
                 'data' => $data,
                 // 'gudang' => $gudang,
             ], 201);
