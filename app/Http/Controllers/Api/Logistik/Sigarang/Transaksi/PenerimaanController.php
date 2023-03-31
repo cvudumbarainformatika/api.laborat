@@ -42,7 +42,7 @@ class PenerimaanController extends Controller
             return $anu->kode_rs;
         });
         $data = DetailPemesanan::with('barangrs', 'satuan')
-            ->select('detail_pemesanans.*', 'pemesanans.nomor')
+            ->select('detail_pemesanans.*', 'pemesanans.nomor', 'pemesanans.status as statuspesanan')
             ->join('pemesanans', 'detail_pemesanans.pemesanan_id', '=', 'pemesanans.id')
             ->where('pemesanans.nomor', request('nomor'))
             // ->whereIn('detail_pemesanans.kode_rs', [request('detail')])
