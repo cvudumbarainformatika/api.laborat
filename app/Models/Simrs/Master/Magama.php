@@ -5,9 +5,9 @@ namespace App\Models\Simrs\Master;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Mpendidikan extends Model
+class Magama extends Model
 {
     use HasFactory;
-    protected $table = 'rs16';
-    protected $guarded = ['id'];
+    protected $table = 'rs12';
+    protected $guarded = ['id','rs1'];
 }

@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/pendidikan',[PendidikanController::class, 'index']);
+    Route::post('/pendidikanSimpan',[PendidikanController::class, 'store']);
 });
