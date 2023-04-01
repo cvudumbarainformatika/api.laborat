@@ -95,7 +95,7 @@ class BarangRSController extends Controller
                 }
 
                 // insert or take barang
-                BarangRS::firstOrCreate($request->all());
+                BarangRS::firstOrCreate(['kode' => $request->kode], $request->all());
 
                 // $auth->log("Memasukkan data BarangRS {$user->name}");
             } else {
