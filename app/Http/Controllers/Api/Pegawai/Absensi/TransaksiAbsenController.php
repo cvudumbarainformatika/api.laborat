@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Pegawai\Absensi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Alpha;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\Prota;
@@ -508,5 +510,32 @@ class TransaksiAbsenController extends Controller
             ->orderBy(request('order_by'), request('sort'))
             ->get();
         return response()->json($data);
+    }
+
+    public function tulisTidakMasuk()
+    {
+        $today = date('l');
+        $date = date('Y-m-d');
+        $jadwal = JadwalAbsen::where('day', $today)
+            ->where('status', 2)
+            ->get();
+        $absen = TransaksiAbsen::where('tanggal', $date)->get();
+        $peg = collect($absen)->map(function ($x) {
+            return $x->pegawai_id;
+        });
+        $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
+        foreach ($not as $tidak) {
+            $anu = Alpha::firstOrCreate(
+                [
+                    'pegawai_id' => $tidak->pegawai_id,
+                    'tanggal' => $date
+                ],
+                ['flag' => 'ABSEN']
+            );
+        }
+
+        $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
+
+        return new JsonResponse($data);
     }
 }
