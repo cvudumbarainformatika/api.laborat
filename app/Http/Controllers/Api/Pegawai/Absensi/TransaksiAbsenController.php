@@ -511,31 +511,4 @@ class TransaksiAbsenController extends Controller
             ->get();
         return response()->json($data);
     }
-
-    public function tulisTidakMasuk()
-    {
-        $today = date('l');
-        $date = date('Y-m-d');
-        $jadwal = JadwalAbsen::where('day', $today)
-            ->where('status', 2)
-            ->get();
-        $absen = TransaksiAbsen::where('tanggal', $date)->get();
-        $peg = collect($absen)->map(function ($x) {
-            return $x->pegawai_id;
-        });
-        $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
-        foreach ($not as $tidak) {
-            $anu = Alpha::firstOrCreate(
-                [
-                    'pegawai_id' => $tidak->pegawai_id,
-                    'tanggal' => $date
-                ],
-                ['flag' => 'ABSEN']
-            );
-        }
-
-        // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
-
-        return new JsonResponse(['message' => 'sudah di tulis']);
-    }
 }

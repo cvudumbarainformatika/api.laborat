@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Pegawai\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
+use App\Models\Pegawai\TransaksiAbsen;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -103,5 +105,32 @@ class LiburController extends Controller
         //     ->update(['masuk' => '07:00:00']);
 
         return new JsonResponse(['messaga' => 'Jadwal kembali Normal']);
+    }
+
+    public function tulisTidakMasuk()
+    {
+        $today = date('l');
+        $date = date('Y-m-d');
+        $jadwal = JadwalAbsen::where('day', $today)
+            ->where('status', 2)
+            ->get();
+        $absen = TransaksiAbsen::where('tanggal', $date)->get();
+        $peg = collect($absen)->map(function ($x) {
+            return $x->pegawai_id;
+        });
+        $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
+        foreach ($not as $tidak) {
+            $anu = Alpha::firstOrCreate(
+                [
+                    'pegawai_id' => $tidak->pegawai_id,
+                    'tanggal' => $date
+                ],
+                ['flag' => 'ABSEN']
+            );
+        }
+
+        // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
+
+        return new JsonResponse(['message' => 'sudah di tulis']);
     }
 }
