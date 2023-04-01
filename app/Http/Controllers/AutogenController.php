@@ -1727,34 +1727,34 @@ class AutogenController extends Controller
 
         //$data = Penerimaan::selectRaw('nomor')->where('nomor', '000.3.2/02.0/10/SP-GIZI/1.02.2.14.0.00.03.0301/II/2023')->count();
         //return new JsonResponse($data);
-        $today = date('l');
-        $date = date('Y-m-d');
-        $jadwal = JadwalAbsen::where('day', $today)
-            ->where('status', 2)
-            ->get();
-        $absen = TransaksiAbsen::where('tanggal', $date)->get();
-        $peg = collect($absen)->map(function ($x) {
-            return $x->pegawai_id;
-        });
-        $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
-        foreach ($not as $tidak) {
-            $anu = Alpha::firstOrCreate(
-                [
-                    'pegawai_id' => $tidak->pegawai_id,
-                    'tanggal' => $date
-                ],
-                ['flag' => 'ABSEN']
-            );
-        }
+        // $today = date('l');
+        // $date = date('Y-m-d');
+        // $jadwal = JadwalAbsen::where('day', $today)
+        //     ->where('status', 2)
+        //     ->get();
+        // $absen = TransaksiAbsen::where('tanggal', $date)->get();
+        // $peg = collect($absen)->map(function ($x) {
+        //     return $x->pegawai_id;
+        // });
+        // $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
+        // foreach ($not as $tidak) {
+        //     $anu = Alpha::firstOrCreate(
+        //         [
+        //             'pegawai_id' => $tidak->pegawai_id,
+        //             'tanggal' => $date
+        //         ],
+        //         ['flag' => 'ABSEN']
+        //     );
+        // }
 
-        $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
-        $data['not'] = $not;
-        $data['peg'] = $peg;
-        $data['today'] = $today;
-        $data['date'] = $date;
-        $data['jadwal'] = $jadwal;
-        $data['absen'] = $absen;
-        return new JsonResponse($data);
+        // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
+        // $data['not'] = $not;
+        // $data['peg'] = $peg;
+        // $data['today'] = $today;
+        // $data['date'] = $date;
+        // $data['jadwal'] = $jadwal;
+        // $data['absen'] = $absen;
+        // return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
