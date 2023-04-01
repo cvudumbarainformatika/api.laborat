@@ -534,8 +534,8 @@ class TransaksiAbsenController extends Controller
             );
         }
 
-        $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
+        // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
 
-        return new JsonResponse($data);
+        return new JsonResponse(['message' => 'sudah di tulis']);
     }
 }
