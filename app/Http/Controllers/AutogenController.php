@@ -1748,7 +1748,7 @@ class AutogenController extends Controller
         // }
         $tidakDaftar = Pegawai::where('account_pass', '')->where('aktif', 'AKTIF')->get();
         foreach ($tidakDaftar as $tidak) {
-            Alpha::firstOrCreate(
+            Alpha::updateOrCreate(
                 [
                     'pegawai_id' => $tidak->id,
                     'tanggal' => $date

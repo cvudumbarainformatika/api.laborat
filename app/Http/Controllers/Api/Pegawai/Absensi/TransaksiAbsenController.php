@@ -471,6 +471,12 @@ class TransaksiAbsenController extends Controller
                     $month = $split[1];
                     $q->whereMonth('tanggal', $month)
                         ->whereYear('tanggal', $year);
+                }, "alpha" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('tanggal', $month)
+                        ->whereYear('tanggal', $year);
                 }
             ])
             ->orderBy(request('order_by'), request('sort'))
@@ -500,6 +506,12 @@ class TransaksiAbsenController extends Controller
                     $q->whereMonth('created_at', $month)
                         ->whereYear('created_at', $year);
                 }, "user.libur" => function ($q) use ($periode) {
+                    $split = explode("-", $periode);
+                    $year = $split[0];
+                    $month = $split[1];
+                    $q->whereMonth('tanggal', $month)
+                        ->whereYear('tanggal', $year);
+                }, "alpha" => function ($q) use ($periode) {
                     $split = explode("-", $periode);
                     $year = $split[0];
                     $month = $split[1];

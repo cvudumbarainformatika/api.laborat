@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
 use App\Models\Pegawai\JadwalAbsen;
@@ -66,6 +67,11 @@ class Pegawai extends Model
     public function transaksi_absen()
     {
         return $this->hasMany(TransaksiAbsen::class);
+    }
+
+    public function alpha()
+    {
+        return $this->hasMany(Alpha::class);
     }
 
 

@@ -121,7 +121,7 @@ class LiburController extends Controller
         });
         $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
         foreach ($not as $tidak) {
-            $anu = Alpha::firstOrCreate(
+            Alpha::updateOrCreate(
                 [
                     'pegawai_id' => $tidak->pegawai_id,
                     'tanggal' => $date
@@ -131,7 +131,7 @@ class LiburController extends Controller
         }
         $tidakDaftar = Pegawai::where('account_pass', null)->where('aktif', 'AKTIF')->get();
         foreach ($tidakDaftar as $tidak) {
-            Alpha::firstOrCreate(
+            Alpha::updateOrCreate(
                 [
                     'pegawai_id' => $tidak->id,
                     'tanggal' => $date
