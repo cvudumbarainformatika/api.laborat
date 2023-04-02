@@ -1728,7 +1728,7 @@ class AutogenController extends Controller
         //$data = Penerimaan::selectRaw('nomor')->where('nomor', '000.3.2/02.0/10/SP-GIZI/1.02.2.14.0.00.03.0301/II/2023')->count();
         //return new JsonResponse($data);
         // $today = date('l');
-        // $date = date('Y-m-d');
+        $date = date('Y-m-d');
         // $jadwal = JadwalAbsen::where('day', $today)
         //     ->where('status', 2)
         //     ->get();
@@ -1746,15 +1746,27 @@ class AutogenController extends Controller
         //         ['flag' => 'ABSEN']
         //     );
         // }
+        $tidakDaftar = Pegawai::where('account_pass', '')->where('aktif', 'AKTIF')->get();
+        foreach ($tidakDaftar as $tidak) {
+            Alpha::firstOrCreate(
+                [
+                    'pegawai_id' => $tidak->id,
+                    'tanggal' => $date
+                ],
+                ['flag' => 'ABSEN']
+            );
+        }
 
         // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
+        $data['count'] = count($tidakDaftar);
+        $data['tidakDaftar'] = $tidakDaftar;
         // $data['not'] = $not;
         // $data['peg'] = $peg;
         // $data['today'] = $today;
         // $data['date'] = $date;
         // $data['jadwal'] = $jadwal;
         // $data['absen'] = $absen;
-        // return new JsonResponse($data);
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)

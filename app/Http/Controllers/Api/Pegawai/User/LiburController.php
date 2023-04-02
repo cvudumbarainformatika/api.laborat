@@ -7,6 +7,7 @@ use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -123,6 +124,16 @@ class LiburController extends Controller
             $anu = Alpha::firstOrCreate(
                 [
                     'pegawai_id' => $tidak->pegawai_id,
+                    'tanggal' => $date
+                ],
+                ['flag' => 'ABSEN']
+            );
+        }
+        $tidakDaftar = Pegawai::where('account_pass', null)->where('aktif', 'AKTIF')->get();
+        foreach ($tidakDaftar as $tidak) {
+            Alpha::firstOrCreate(
+                [
+                    'pegawai_id' => $tidak->id,
                     'tanggal' => $date
                 ],
                 ['flag' => 'ABSEN']
