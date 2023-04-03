@@ -20,4 +20,7 @@ Route::group([
     Route::post('/edit-header-penerimaan', [PenerimaanController::class, 'editHeaderPenerimaan']);
     Route::post('/lengkapi-surat', [PenerimaanController::class, 'lengkapiSurat']);
     Route::post('/destroy', [PenerimaanController::class, 'destroy']);
+
+    // edit detail penerimaan
+    Route::post('/edit-detail-penerimaan', [PenerimaanController::class, 'editDetailPenerimaan']);
 });

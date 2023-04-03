@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\RecentStokUpdate;
+use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
@@ -41,13 +42,14 @@ class PenerimaanController extends Controller
         $detail = collect($raw)->map(function ($anu) {
             return $anu->kode_rs;
         });
-        $data = DetailPemesanan::with('barangrs', 'satuan')
+        $data['pesanan'] = DetailPemesanan::with('barangrs', 'satuan')
             ->select('detail_pemesanans.*', 'pemesanans.nomor', 'pemesanans.status as statuspesanan')
             ->join('pemesanans', 'detail_pemesanans.pemesanan_id', '=', 'pemesanans.id')
             ->where('pemesanans.nomor', request('nomor'))
-            // ->whereIn('detail_pemesanans.kode_rs', [request('detail')])
             ->whereIn('detail_pemesanans.kode_rs', $detail)
+            // ->whereIn('detail_pemesanans.kode_rs', [request('detail')])
             ->get();
+        $data['distribusi'] = DetailDistribusiDepo::where('no_penerimaan', request('no_penerimaan'))->get();
         // $data['detail'] = $detail;
         return new JsonResponse($data);
         // return new JsonResponse($detail);
@@ -223,5 +225,39 @@ class PenerimaanController extends Controller
     public function destroy()
     {
         return new JsonResponse(['msg' => 'Masih kosong bos']);
+    }
+
+    public function editDetailPenerimaan(Request $request)
+    {
+        $detailPesanan = DetailPemesanan::select('detail_pemesanans.*', 'pemesanans.nomor', 'pemesanans.status as statuspesanan')
+            ->join('pemesanans', 'detail_pemesanans.pemesanan_id', '=', 'pemesanans.id')
+            ->where('pemesanans.nomor', $request->nomor)
+            ->where('detail_pemesanans.kode_rs', $request->kode_rs)
+            ->first();
+
+        $pesanan = Pemesanan::find($detailPesanan->pemesanan_id);
+
+        $detailTerima = DetailPenerimaan::find($request->id);
+        $detailTerima->update(['qty' => $request->qty]);
+
+        if ($detailTerima->wasChanged()) {
+            if ($request->has('statuspesanan')) {
+                if ($request->statuspesanan === 3) {
+                    $pesanan->update(['status' => 3]);
+                }
+            }
+        }
+        // else {
+        // cari antara pesanan dan penerimaan sudah klop atau belum jumlahnya
+        // $detail = DetailPemesanan::where('pemesanan_id', $detailPesanan->pemesanan_id)
+        //     ->get();
+        // $terima = Penerimaan::where('nomor', $request->nomor)
+        //     ->with('details')
+        //     ->get();
+        // }
+        // $data['detail'] = $detailPesanan;
+        $data['pesanan'] = $pesanan;
+        $data['terima'] = $detailTerima;
+        return new JsonResponse($data);
     }
 }
