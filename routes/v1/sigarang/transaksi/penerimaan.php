@@ -23,4 +23,5 @@ Route::group([
 
     // edit detail penerimaan
     Route::post('/edit-detail-penerimaan', [PenerimaanController::class, 'editDetailPenerimaan']);
+    Route::post('/hapus-detail-penerimaan', [PenerimaanController::class, 'hapusDetailPenerimaan']);
 });

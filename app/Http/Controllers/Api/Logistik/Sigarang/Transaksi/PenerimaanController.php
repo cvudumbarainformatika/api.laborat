@@ -260,4 +260,31 @@ class PenerimaanController extends Controller
         $data['terima'] = $detailTerima;
         return new JsonResponse($data);
     }
+
+    public function hapusDetailPenerimaan(Request $request)
+    {
+        $terima = Penerimaan::find($request->penerimaan);
+        $detail = DetailPenerimaan::find($request->id);
+
+        $recent = RecentStokUpdate::where('no_penerimaan', $terima->no_penerimaan)
+            ->where('kode_rs', $detail->kode_rs)
+            ->where('kode_ruang', 'Gd-02010100')->first();
+        if ($recent) {
+            $recent->delete();
+        }
+
+        if ($request->jmlDet <= 1) {
+            $terima->delete();
+            if (!$terima) {
+                return new JsonResponse(['message' => 'Data tidak bisa dihapus'], 410);
+            }
+            return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
+        }
+
+        $detail->delete();
+        if (!$detail) {
+            return new JsonResponse(['message' => 'Data tidak bisa dihapus'], 410);
+        }
+        return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
+    }
 }
