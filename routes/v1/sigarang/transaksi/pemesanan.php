@@ -14,4 +14,5 @@ Route::group([
     Route::post('/store', [PemesananController::class, 'store']);
     Route::post('/delete-details', [PemesananController::class, 'deleteDetails']);
     Route::post('/store-details', [PemesananController::class, 'storeDetails']);
+    Route::post('/ganti-status', [PemesananController::class, 'gantiStatus']);
 });

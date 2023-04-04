@@ -115,6 +115,17 @@ class PemesananController extends Controller
         return new JsonResponse(['message' => 'Status pemesanan tetap'], 200);
     }
 
+    public function gantiStatus(Request $request)
+    {
+        $data = Pemesanan::find($request->id);
+        $data->update(['status' => $request->status]);
+
+        if ($data->wasChanged()) {
+            return new JsonResponse(['message' => 'Status sudah diganti', 'data' => $data], 201);
+        }
+        return new JsonResponse(['message' => 'Status pemesanan tetap'], 200);
+    }
+
     public function storeDetails(Request $request)
     {
         $valid = Validator::make($request->all(), [
