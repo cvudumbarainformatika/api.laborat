@@ -271,8 +271,10 @@ class HistoryController extends Controller
         if (!$return) {
             return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
         }
-        if ($pesan->status === 4) {
-            $pesan->update(['status' => 3]);
+        if ($pesan) {
+            if ($pesan->status === 4) {
+                $pesan->update(['status' => 3]);
+            }
         }
         return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
     }
