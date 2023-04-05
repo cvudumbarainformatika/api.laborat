@@ -242,21 +242,22 @@ class HistoryController extends Controller
     public function hapusPenerimaan($request)
     {
         $terima = Penerimaan::with('details')->find($request->id);
-        $kode = collect($terima->details)->map(function ($x) {
-            return $x->kode_rs;
-        });
-        $pesan = Pemesanan::select(
-            'pemesanans.nomor',
-            'pemesanans.id',
-            'pemesanans.status',
-            'detail_pemesanans.kode_rs',
-            'detail_pemesanans.pemesanan_id',
-        )->join('detail_pemesanans', function ($anu) use ($kode) {
-            $anu->on('pemesanans.id', '=', 'detail_pemesanans.pemesanan_id')
-                ->whereIn('detail_pemesanans.kode_rs', $kode);
-        })->where('pemesanans.nomor', $terima->nomor)
-            ->first();
-
+        if ($terima) {
+            $kode = collect($terima->details)->map(function ($x) {
+                return $x->kode_rs;
+            });
+            $pesan = Pemesanan::select(
+                'pemesanans.nomor',
+                'pemesanans.id',
+                'pemesanans.status',
+                'detail_pemesanans.kode_rs',
+                'detail_pemesanans.pemesanan_id',
+            )->join('detail_pemesanans', function ($anu) use ($kode) {
+                $anu->on('pemesanans.id', '=', 'detail_pemesanans.pemesanan_id')
+                    ->whereIn('detail_pemesanans.kode_rs', $kode);
+            })->where('pemesanans.nomor', $terima->nomor)
+                ->first();
+        }
         // $balik['terima'] = $terima;
         // $balik['kode'] = $kode;
         // $balik['pesan'] = $pesan;

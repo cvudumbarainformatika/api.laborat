@@ -238,6 +238,7 @@ class PenerimaanController extends Controller
         $pesanan = Pemesanan::find($detailPesanan->pemesanan_id);
 
         $detailTerima = DetailPenerimaan::find($request->id);
+
         $detailTerima->update(['qty' => $request->qty]);
 
         if ($detailTerima->wasChanged()) {
