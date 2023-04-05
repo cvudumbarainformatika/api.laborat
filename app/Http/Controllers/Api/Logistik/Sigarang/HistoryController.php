@@ -242,7 +242,7 @@ class HistoryController extends Controller
     public function hapusPenerimaan($request)
     {
         $terima = Penerimaan::with('details')->find($request->id);
-        if ($terima) {
+        if ($terima->details) {
             $kode = collect($terima->details)->map(function ($x) {
                 return $x->kode_rs;
             });
