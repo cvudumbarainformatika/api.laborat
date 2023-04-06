@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Mockery\Undefined;
 
@@ -29,36 +30,49 @@ class VideoController extends Controller
         return new JsonResponse($data);
     }
 
-    // public function store(Request $request)
-    // {
+    public function store(Request $request)
+    {
+        $path = null;
 
-    //     $kode_layanan = null;
-    //     if ($request->layanan_id !== null) {
-    //         $layanan = Layanan::where('id_layanan', '=', $request->layanan_id)->first();
-    //         $kode_layanan = $layanan->kode;
-    //     }
+        if (!$request->hasFile('video')) {
+            return new JsonResponse(['message' => "File Bukan Video"], 500);
+        }
 
-    //     $data = Unit::updateOrCreate(
-    //         [
-    //             'id' => $request->id,
-    //         ],
-    //         [
-    //             'loket' => $request->loket,
-    //             'loket_no' => $request->loket_no,
-    //             'layanan_id' => $request->layanan_id,
-    //             'kuotajkn' => $request->kuotajkn,
-    //             'kuotanonjkn' => $request->kuotanonjkn,
-    //             'kode_layanan' => $kode_layanan,
-    //             'display_id' => $request->display_id
-    //         ]
-    //     );
+        $validator = Validator::make($request->all(), [
+            'video' => 'mimes:mp4,webm|unique:antrean.videos,url, ' . $request->id
+        ]);
 
-    //     if (!$data) {
-    //         return new JsonResponse(['message' => "Gagal Menyimpan"], 500);
-    //     }
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
-    //     return new JsonResponse(['message' => "success"], 200);
-    // }
+        if ($request->has('id')) {
+            $data = Video::find($request->id);
+            $path = $data->url;
+            // if (!empty($old_path)) {
+            //     Storage::delete('public/' . $old_path);
+            // }
+        }
+
+        $path = $request->file('video')->store('videos', 'public');
+
+        $data = Video::updateOrCreate(
+            [
+                'id' => $request->id,
+                'url' => $path
+            ],
+            [
+                'nama' => $request->nama,
+                'type' => $request->type,
+            ]
+        );
+
+        if (!$data) {
+            return new JsonResponse(['message' => "Gagal Menyimpan"], 500);
+        }
+
+        return new JsonResponse(['message' => "success"], 200);
+    }
 
     // public function destroy(Request $request)
     // {
@@ -77,4 +91,12 @@ class VideoController extends Controller
     //         'message' => 'Data sukses terhapus'
     //     ], 200);
     // }
+
+
+
+    public function display()
+    {
+        $data = Video::all();
+        return new JsonResponse($data);
+    }
 }

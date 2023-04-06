@@ -12,6 +12,14 @@ Route::group([
 ], function () {
     Route::get('/data', [VideoController::class, 'index']);
     // Route::get('/synch', [PoliController::class, 'synch']);
-    // Route::post('/store', [DisplayController::class, 'store']);
+    Route::post('/store', [VideoController::class, 'store']);
     // Route::post('/destroy', [DisplayController::class, 'destroy']);
+});
+
+Route::group([
+    // 'middleware' => 'auth:api',
+    // 'middleware' => 'jwt.verify',
+    'prefix' => 'display/video'
+], function () {
+    Route::get('/display', [VideoController::class, 'display']);
 });
