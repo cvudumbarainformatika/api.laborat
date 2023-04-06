@@ -64,6 +64,18 @@ class DistribusiDepoController extends Controller
         return new JsonResponse(['message' => 'data telah dibuat'], 201);
     }
 
+    public function hapusDataStokGudang(Request $request)
+    {
+        $data = RecentStokUpdate::find($request->id);
+
+        $data->delete();
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data Gagal di Hapus'], 410);
+        }
+
+        return new JsonResponse(['message' => 'Data telah di Hapus'], 200);
+    }
+
     public function diterimaDepo(Request $request)
     {
         $tanggal = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
