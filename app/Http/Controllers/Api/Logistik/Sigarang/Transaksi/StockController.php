@@ -12,6 +12,7 @@ use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockController extends Controller
 {
@@ -41,7 +42,24 @@ class StockController extends Controller
 
         $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok');
 
+        $before->when(request('q'), function ($anu) {
+            $anu->select([
+                'barang_r_s.kode',
+                'barang_r_s.nama',
+                'recent_stok_updates.kode_rs',
+                'recent_stok_updates.sisa_stok',
+                'recent_stok_updates.kode_ruang',
+                DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
+            ])
+                ->join('barang_r_s', function ($wew) {
+                    $wew->on('recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
+                        ->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
+                });
+        });
+
         if ($pegawai->role_id === 5) {
+
             $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
 
             $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
@@ -61,7 +79,7 @@ class StockController extends Controller
             ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
             ->where('sisa_stok', '>', 0)
             ->groupBy('kode_rs', 'kode_ruang')
-            ->filter(request(['q']))
+            // ->filter(request(['q']))
             ->paginate($perpage);
 
         $col = collect($raw);
