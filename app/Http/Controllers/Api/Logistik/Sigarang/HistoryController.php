@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\PenggunaRuang;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
@@ -271,6 +272,7 @@ class HistoryController extends Controller
         if (!$return) {
             return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
         }
+        RecentStokUpdate::where('no_penerimaan', $return->no_penerimaan)->delete();
         if ($pesan) {
             if ($pesan->status === 4) {
                 $pesan->update(['status' => 3]);

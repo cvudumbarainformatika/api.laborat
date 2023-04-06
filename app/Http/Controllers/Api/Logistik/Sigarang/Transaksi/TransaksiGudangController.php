@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
@@ -17,9 +18,10 @@ class TransaksiGudangController extends Controller
     public static function fromPenerimaan($data)
     {
         $user = auth()->user();
-        $terima = Penerimaan::where('id', $data)->with('details')->get();
-        $first = $terima[0]->reff;
-        $second = $terima[0];
+        // $terima = Penerimaan::where('id', $data)->with('details')->get();
+        $terima = Penerimaan::with('details')->find($data);
+        $first = $terima->reff;
+        $second = $terima;
         $second['tanggal'] = date('Y-m-d H:i:s');
         // $second->asal = null;
         $second->tujuan = 'Gd-02010100';
@@ -42,9 +44,10 @@ class TransaksiGudangController extends Controller
                 // $header->harga = $value->harga;
                 // $header->sisa_stok = $value->sub_total;
                 // $this->terimaStokGudang($header);
+                $barang = BarangRS::find($satu);
                 RecentStokUpdate::create([
                     'no_penerimaan' => $second->no_penerimaan,
-                    'kode_ruang' => $second->tujuan,
+                    'kode_ruang' => $barang->kode_depo,
                     'kode_rs' => $satu,
                     'harga' => $value->harga,
                     'sisa_stok' => $value->qty,
