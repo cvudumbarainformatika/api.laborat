@@ -30,37 +30,47 @@ class TransaksiGudangController extends Controller
         $second->status = 2;
         $detail = $second->details;
 
-        unset($second['reff']);
+        // unset($second['reff']);
         try {
             DB::beginTransaction();
             $gudang = TransaksiGudang::updateOrCreate(['reff' => $first],  $second->only('nama', 'nomor', 'no_penerimaan', 'tanggal', 'tujuan', 'nama_penerima', 'total', 'status'));
             // $header = (object) array('no_penerimaan' => $second->no_penerimaan);
             // $header->kode_ruang = $second->tujuan;
-            foreach ($detail as &$value) {
+            $anu = [];
+            $barangnya = [];
+            foreach ($detail as $value) {
                 $satu = $value->kode_rs;
-                unset($value['kode_rs']);
+                // unset($value['kode_rs']);
                 $gudang->details()->updateOrCreate(['kode_rs' => $satu],  $value->only('kode_108', 'qty', 'harga', 'kode_satuan', 'sub_total'));
                 // $header->kode_rs = $satu;
                 // $header->harga = $value->harga;
                 // $header->sisa_stok = $value->sub_total;
                 // $this->terimaStokGudang($header);
-                $barang = BarangRS::find($satu);
-                RecentStokUpdate::create([
+                $barang = BarangRS::where('kode', $satu)->first();
+                $rec = RecentStokUpdate::updateOrCreate([
                     'no_penerimaan' => $second->no_penerimaan,
                     'kode_ruang' => $barang->kode_depo,
                     'kode_rs' => $satu,
+
+                ], [
                     'harga' => $value->harga,
                     'sisa_stok' => $value->qty,
-
                 ]);
+                array_push($anu, $rec);
+                array_push($barangnya, $value);
             }
             DB::commit();
-            return new JsonResponse(['message' => 'success', 'data' => $gudang], 201);
+            // return new JsonResponse(['message' => 'success', 'data' => $gudang], 201);
+            return ['data' => $gudang, 'recent' => $anu];
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([
                 'message' => 'ada kesalahan',
-                'error' => $e
+                'error' => $e,
+                'gudang' => $gudang,
+                'anu' => $anu,
+                'barang' => $barangnya,
+                'detail' => $detail,
             ], 500);
         }
     }

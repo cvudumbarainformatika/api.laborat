@@ -6,6 +6,7 @@ use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
+use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Models\Berita;
@@ -1746,26 +1747,29 @@ class AutogenController extends Controller
         //         ['flag' => 'ABSEN']
         //     );
         // }
-        $tidakDaftar = Pegawai::where('account_pass', '')->where('aktif', 'AKTIF')->get();
-        foreach ($tidakDaftar as $tidak) {
-            Alpha::updateOrCreate(
-                [
-                    'pegawai_id' => $tidak->id,
-                    'tanggal' => $date
-                ],
-                ['flag' => 'ABSEN']
-            );
-        }
+        // $tidakDaftar = Pegawai::where('account_pass', '')->where('aktif', 'AKTIF')->get();
+        // foreach ($tidakDaftar as $tidak) {
+        //     Alpha::updateOrCreate(
+        //         [
+        //             'pegawai_id' => $tidak->id,
+        //             'tanggal' => $date
+        //         ],
+        //         ['flag' => 'ABSEN']
+        //     );
+        // }
 
         // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
-        $data['count'] = count($tidakDaftar);
-        $data['tidakDaftar'] = $tidakDaftar;
+        // $data['count'] = count($tidakDaftar);
+        // $data['tidakDaftar'] = $tidakDaftar;
         // $data['not'] = $not;
         // $data['peg'] = $peg;
         // $data['today'] = $today;
         // $data['date'] = $date;
         // $data['jadwal'] = $jadwal;
         // $data['absen'] = $absen;
+        // return new JsonResponse($data);
+
+        $data = TransaksiGudangController::fromPenerimaan(177);
         return new JsonResponse($data);
     }
 
