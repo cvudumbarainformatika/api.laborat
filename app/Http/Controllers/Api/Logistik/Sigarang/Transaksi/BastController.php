@@ -66,46 +66,45 @@ class BastController extends Controller
 
     public function simpanBast(Request $request)
     {
-        // return new JsonResponse($request->all());
-        // try {
-        //     DB::beginTransaction();
-        $berubah = [];
-        foreach ($request->penerimaans as $penerimaan) {
-            $data = Penerimaan::find($penerimaan['id']);
-            $data->update([
-                'no_bast' => $request->no_bast,
-                'tanggal_bast' => $request->tanggal_bast,
-                'nilai_tagihan' => $penerimaan['nilai_tagihan'],
-            ]);
-            foreach ($penerimaan['details'] as $det) {
-                $detail = DetailPenerimaan::find($det['id']);
-                $detail->update([
-                    'diskon' => $det['diskon'],
-                    'harga_kontrak' => $det['harga_kontrak'],
-                    'harga_jadi' => $det['harga_jadi'],
-                    'ppn' => $det['ppn'],
+        try {
+            DB::beginTransaction();
+            $berubah = [];
+            foreach ($request->penerimaans as $penerimaan) {
+                $data = Penerimaan::find($penerimaan['id']);
+                $data->update([
+                    'no_bast' => $request->no_bast,
+                    'tanggal_bast' => $request->tanggal_bast,
+                    'nilai_tagihan' => $penerimaan['nilai_tagihan'],
                 ]);
-                $stok = RecentStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
-                    ->where('kode_rs', $detail['kode_rs'])
-                    ->get();
-                if (count($stok) >= 0) {
-                    foreach ($stok as $key) {
-                        $key->update(['harga' => $det['harga_jadi']]);
+                foreach ($penerimaan['details'] as $det) {
+                    $detail = DetailPenerimaan::find($det['id']);
+                    $detail->update([
+                        'diskon' => $det['diskon'],
+                        'harga_kontrak' => $det['harga_kontrak'],
+                        'harga_jadi' => $det['harga_jadi'],
+                        'ppn' => $det['ppn'],
+                    ]);
+                    $stok = RecentStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
+                        ->where('kode_rs', $detail['kode_rs'])
+                        ->get();
+                    if (count($stok) >= 0) {
+                        foreach ($stok as $key) {
+                            $key->update(['harga' => $det['harga_jadi']]);
+                        }
                     }
                 }
+                if ($data->wasChanged()) {
+                    array_push($berubah, $data);
+                }
             }
-            if ($data->wasChanged()) {
-                array_push($berubah, $data);
+            DB::commit();
+            if (count($berubah) > 0) {
+                return new JsonResponse(['message' => 'data Sudah di update', 'data' => $berubah], 200);
             }
+            return new JsonResponse(['message' => 'data tidak berubah', 'data' => $berubah], 410);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
-        // DB::commit();
-        if (count($berubah) > 0) {
-            return new JsonResponse(['message' => 'data Sudah di update', 'data' => $berubah], 200);
-        }
-        return new JsonResponse(['message' => 'data tidak berubah', 'data' => $berubah], 410);
-        // } catch (\Exception $e) {
-        //     DB::rollBack();
-        //     return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
-        // }
     }
 }
