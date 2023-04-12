@@ -61,7 +61,8 @@ class PemakaianruanganController extends Controller
                 foreach ($request->details as $key) {
                     $pakai->details()->updateOrCreate(
                         [
-                            'id' => $key['id']
+                            'kode_rs' => $key['kode_rs'],
+                            'no_penerimaan' => $key['no_penerimaan']
                         ],
                         $key
                     );

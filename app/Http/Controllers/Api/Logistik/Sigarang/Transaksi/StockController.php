@@ -321,6 +321,7 @@ class StockController extends Controller
     {
         $data = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as stok')
             ->where('kode_ruang', request('kode_ruang'))
+            ->where('sisa_stok', '>', 0)
             ->with('barang')
             ->groupBy('kode_rs', 'kode_ruang')
             ->get();
