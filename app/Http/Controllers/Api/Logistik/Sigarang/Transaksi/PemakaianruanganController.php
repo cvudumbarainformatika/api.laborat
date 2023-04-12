@@ -43,16 +43,16 @@ class PemakaianruanganController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'reff' => 'required',
+            'kode_penanggungjawab' => 'required',
+            'kode_pengguna' => 'required',
+            'tanggal' => 'required',
+        ]);
         try {
             DB::beginTransaction();
             $user = auth()->user();
             $pegawai = Pegawai::find($user->pegawai_id);
-            $request->validate([
-                'reff' => 'required',
-                'kode_penanggungjawab' => 'required',
-                'kode_pengguna' => 'required',
-                'tanggal' => 'required',
-            ]);
             // $masuk = $request->all();
             // $request['kode_ruang'] = $pegawai->kode_ruang;
             $pakai = Pemakaianruangan::updateOrCreate(['id' => $request->id], $request->all());
@@ -61,7 +61,8 @@ class PemakaianruanganController extends Controller
                 foreach ($request->details as $key) {
                     $pakai->details()->updateOrCreate(
                         [
-                            'id' => $key['id']
+                            'kode_rs' => $key['kode_rs'],
+                            'no_penerimaan' => $key['no_penerimaan']
                         ],
                         $key
                     );

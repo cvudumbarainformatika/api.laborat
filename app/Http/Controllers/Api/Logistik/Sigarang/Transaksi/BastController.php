@@ -107,4 +107,16 @@ class BastController extends Controller
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
     }
+
+    public function jumlahNomorBast()
+    {
+        // $data = penerimaan::where('nomor', request('nomor'))->get();
+        $data = Penerimaan::selectRaw('nomor, no_bast')
+            ->where('nomor', request('nomor'))
+            ->where('no_bast', '!=', '')
+            ->count();
+
+        return new JsonResponse($data);
+        // return new JsonResponse(['jumlah' => $data]);
+    }
 }

@@ -8,6 +8,7 @@ Route::group([
     'middleware' => 'auth:api',
     'prefix' => 'transaksi/bast'
 ], function () {
+    Route::get('/no-bast', [BastController::class, 'jumlahNomorBast']);
     Route::get('/perusahaan', [BastController::class, 'cariPerusahaan']);
     Route::get('/nomor-pemesanan', [BastController::class, 'cariPemesanan']);
     Route::get('/pemesanan', [BastController::class, 'ambilPemesanan']);
