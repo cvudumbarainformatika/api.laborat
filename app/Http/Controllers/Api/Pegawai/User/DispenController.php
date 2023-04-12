@@ -21,7 +21,7 @@ class DispenController extends Controller
         $data = Pegawai::where('aktif', '=', 'AKTIF')
             ->when(request('q') ?? false, function ($search, $q) {
                 $search->where('nama', 'LIKE', '%' . $q . '%');
-            })->with(['ruangan'])
+            })->with(['ruangan', 'user'])
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
