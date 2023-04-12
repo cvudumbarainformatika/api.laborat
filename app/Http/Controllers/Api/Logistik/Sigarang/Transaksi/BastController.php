@@ -36,9 +36,11 @@ class BastController extends Controller
     public function cariPemesanan()
     {
         $data = Penerimaan::select('nomor')->distinct()
-            ->where('tanggal_bast', null)
-            ->orWhere('nilai_tagihan', '<=', 0)
             ->where('kode_perusahaan', request('kode_perusahaan'))
+            ->where(function ($a) {
+                $a->where('tanggal_bast', null)
+                    ->orWhere('nilai_tagihan', '<=', 0);
+            })
             ->get();
 
         return new JsonResponse($data);
@@ -50,7 +52,13 @@ class BastController extends Controller
     {
         $data = Pemesanan::where('nomor', request('nomor'))
             ->where('kode_perusahaan', request('kode_perusahaan'))
-            ->with('details', 'penerimaan.details')
+            ->with([
+                'details',
+                'penerimaan' => function ($anu) {
+                    $anu->with('details')->where('tanggal_bast', null)
+                        ->orWhere('nilai_tagihan', '<=', 0);
+                }
+            ])
             ->first();
 
         return new JsonResponse($data);
