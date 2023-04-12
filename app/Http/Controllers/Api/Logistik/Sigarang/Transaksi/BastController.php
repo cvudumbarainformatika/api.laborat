@@ -79,9 +79,11 @@ class BastController extends Controller
                 ]);
                 $stok = RecentStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
                     ->where('kode_rs', $detail['kode_rs'])
-                    ->first();
-                if ($stok) {
-                    $stok->update(['harga' => $det['harga_jadi']]);
+                    ->get();
+                if (count($stok) >= 0) {
+                    foreach ($stok as $key) {
+                        $key->update(['harga' => $det['harga_jadi']]);
+                    }
                 }
             }
             if ($data->wasChanged()) {
