@@ -35,7 +35,7 @@ class PendidikanController extends Controller
             return new JsonResponse(['message' => 'TIDAK TERSIMPAN...!!!'], 500);
         }
 
-        return new JsonResponse(['message' => 'BERHASIL TERSIMPAN...!!!'], 200);
+        return new JsonResponse(['message' => 'BERHASIL TERSIMPAN...!!!',  $simpan], 200);
     }
 
 }

@@ -9,6 +9,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master'
 ], function () {
-    Route::get('/pasien',[PasienController::class, 'index']);
-    Route::get('/pasienGetNoRM',[PasienController::class, 'getpasiennorm']);
+    Route::get('/pasien',[PasienController::class, 'pasien']);
+    Route::get('/pasienGetNoRM',[PasienController::class, 'index']);
+    // Route::get('/pasienx',[PasienController::class, 'coba']);
 });

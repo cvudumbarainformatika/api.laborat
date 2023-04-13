@@ -30,7 +30,7 @@ class KelaminarrController extends Controller
         if(!$simpan){
             return new JsonResponse(['message' => 'GAGAL DISIMPAN'], 500);
         }
-        return new JsonResponse(['message' => 'BERHASIL DISIMPAN'], 200);
+        return new JsonResponse(['message' => 'BERHASIL DISIMPAN', $simpan], 200);
     }
 
     public function hapus(Request $request)

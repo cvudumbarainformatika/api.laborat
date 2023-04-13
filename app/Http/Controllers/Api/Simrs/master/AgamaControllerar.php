@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Magama;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +33,6 @@ class AgamaControllerar extends Controller
             return new JsonResponse(['message' => 'TIDAK TERSIMPAN...!!'], 500);
         }
 
-        return new JsonResponse(['message' => 'BERHASIL DISIMPAN'], 200);
+        return new JsonResponse(['message' => 'BERHASIL DISIMPAN', $simpan], 200);
     }
 }
