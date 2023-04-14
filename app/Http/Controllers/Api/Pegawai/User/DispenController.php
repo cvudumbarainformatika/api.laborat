@@ -36,6 +36,6 @@ class DispenController extends Controller
         foreach ($ids as $user_id) {
             // Libur::create
         }
-        return new JsonResponse($arr);
+        return new JsonResponse($ids);
     }
 }
