@@ -26,4 +26,16 @@ class DispenController extends Controller
 
         return new JsonResponse($data);
     }
+
+    public function store(Request $request)
+    {
+        $data = $request->all();
+        $coll = $request->user_ids;
+        $ids = explode(',', $coll);
+
+        foreach ($ids as $user_id) {
+            // Libur::create
+        }
+        return new JsonResponse($arr);
+    }
 }

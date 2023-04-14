@@ -20,6 +20,7 @@ Route::group([
     'prefix' => 'dispen'
 ], function () {
     Route::get('/pegawai', [DispenController::class, 'index']);
+    Route::post('/store', [DispenController::class, 'store']);
 });
 Route::group([
     'middleware' => 'auth:api',
