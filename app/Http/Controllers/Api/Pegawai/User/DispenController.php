@@ -19,9 +19,16 @@ class DispenController extends Controller
     public function index()
     {
         $data = Pegawai::where('aktif', '=', 'AKTIF')
-            ->when(request('q') ?? false, function ($search, $q) {
-                $search->where('nama', 'LIKE', '%' . $q . '%');
-            })->with(['ruangan', 'user'])
+            ->where(function ($query) {
+                $query->when(request('flag') ?? false, function ($search, $q) {
+                    return $search->where('flag', '=', $q);
+                });
+                $query->when(request('ruang') ?? false, function ($search, $q) {
+                    return $search->where('ruang', '=', $q);
+                });
+            })
+            ->filter(request(['q']))
+            ->with(['ruangan', 'user'])
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
@@ -29,12 +36,17 @@ class DispenController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->all();
+        // $data = $request->all();
         $coll = $request->user_ids;
         $ids = explode(',', $coll);
 
         foreach ($ids as $user_id) {
-            // Libur::create
+            Libur::create([
+                'user_id' => $user_id,
+                'flag' => $request->flag,
+                'alasan' => $request->alasan,
+                'tanggal' => $request->tanggal
+            ]);
         }
         return new JsonResponse($ids);
     }
