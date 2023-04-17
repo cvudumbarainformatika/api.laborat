@@ -85,32 +85,34 @@ class BastController extends Controller
         try {
             DB::beginTransaction();
             $berubah = [];
-            foreach ($request->penerimaans as $penerimaan) {
-                $data = Penerimaan::find($penerimaan['id']);
-                $data->update([
-                    'no_bast' => $request->no_bast,
-                    'tanggal_bast' => $request->tanggal_bast,
-                    'nilai_tagihan' => $penerimaan['nilai_tagihan'],
-                ]);
-                foreach ($penerimaan['details'] as $det) {
-                    $detail = DetailPenerimaan::find($det['id']);
-                    $detail->update([
-                        'diskon' => $det['diskon'],
-                        'harga_kontrak' => $det['harga_kontrak'],
-                        'harga_jadi' => $det['harga_jadi'],
-                        'ppn' => $det['ppn'],
+            foreach ($request->penerimaans as $terima) {
+                foreach ($terima as $penerimaan) {
+                    $data = Penerimaan::find($penerimaan['id']);
+                    $data->update([
+                        'no_bast' => $request->no_bast,
+                        'tanggal_bast' => $request->tanggal_bast,
+                        'nilai_tagihan' => $penerimaan['nilai_tagihan'],
                     ]);
-                    $stok = RecentStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
-                        ->where('kode_rs', $detail['kode_rs'])
-                        ->get();
-                    if (count($stok) >= 0) {
-                        foreach ($stok as $key) {
-                            $key->update(['harga' => $det['harga_jadi']]);
+                    foreach ($penerimaan['details'] as $det) {
+                        $detail = DetailPenerimaan::find($det['id']);
+                        $detail->update([
+                            'diskon' => $det['diskon'],
+                            'harga_kontrak' => $det['harga_kontrak'],
+                            'harga_jadi' => $det['harga_jadi'],
+                            'ppn' => $det['ppn'],
+                        ]);
+                        $stok = RecentStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
+                            ->where('kode_rs', $detail['kode_rs'])
+                            ->get();
+                        if (count($stok) >= 0) {
+                            foreach ($stok as $key) {
+                                $key->update(['harga' => $det['harga_kontrak']]);
+                            }
                         }
                     }
-                }
-                if ($data->wasChanged()) {
-                    array_push($berubah, $data);
+                    if ($data->wasChanged()) {
+                        array_push($berubah, $data);
+                    }
                 }
             }
             DB::commit();
@@ -127,8 +129,8 @@ class BastController extends Controller
     public function jumlahNomorBast()
     {
         // $data = penerimaan::where('nomor', request('nomor'))->get();
-        $data = Penerimaan::selectRaw('nomor, no_bast')
-            ->where('nomor', request('nomor'))
+        $data = Penerimaan::selectRaw('kontrak, no_bast')
+            ->where('kontrak', request('kontrak'))
             ->where('no_bast', '!=', '')
             ->count();
 
