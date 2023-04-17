@@ -33,24 +33,40 @@ class BastController extends Controller
         return new JsonResponse($data);
     }
 
-    public function cariPemesanan()
+    public function cariKontrak()
     {
-        $data = Penerimaan::select('nomor')->distinct()
+        $data = Penerimaan::select('kontrak')
             ->where('kode_perusahaan', request('kode_perusahaan'))
             ->where(function ($a) {
                 $a->where('tanggal_bast', null)
                     ->orWhere('nilai_tagihan', '<=', 0);
             })
+            ->distinct('kontrak')
             ->get();
 
         return new JsonResponse($data);
         // $anu['raw'] = $raw;
         // return new JsonResponse($anu);
     }
+    // public function cariPemesanan()
+    // {
+    //     $data = Penerimaan::select('kontrak')
+    //         ->where('kode_perusahaan', request('kode_perusahaan'))
+    //         ->where(function ($a) {
+    //             $a->where('tanggal_bast', null)
+    //                 ->orWhere('nilai_tagihan', '<=', 0);
+    //         })
+    //         ->distinct('kontrak')
+    //         ->get();
+
+    //     return new JsonResponse($data);
+    //     // $anu['raw'] = $raw;
+    //     // return new JsonResponse($anu);
+    // }
 
     public function ambilPemesanan()
     {
-        $data = Pemesanan::where('nomor', request('nomor'))
+        $data = Pemesanan::where('kontrak', request('kontrak'))
             ->where('kode_perusahaan', request('kode_perusahaan'))
             ->with([
                 'details',
@@ -59,7 +75,7 @@ class BastController extends Controller
                         ->orWhere('nilai_tagihan', '<=', 0);
                 }
             ])
-            ->first();
+            ->get();
 
         return new JsonResponse($data);
     }

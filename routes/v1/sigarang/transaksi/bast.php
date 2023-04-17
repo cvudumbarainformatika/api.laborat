@@ -10,7 +10,8 @@ Route::group([
 ], function () {
     Route::get('/no-bast', [BastController::class, 'jumlahNomorBast']);
     Route::get('/perusahaan', [BastController::class, 'cariPerusahaan']);
-    Route::get('/nomor-pemesanan', [BastController::class, 'cariPemesanan']);
+    Route::get('/kontrak-pemesanan', [BastController::class, 'cariKontrak']);
+    // Route::get('/nomor-pemesanan', [BastController::class, 'cariPemesanan']);
     Route::get('/pemesanan', [BastController::class, 'ambilPemesanan']);
     Route::post('/simpan-bast', [BastController::class, 'simpanBast']);
 });

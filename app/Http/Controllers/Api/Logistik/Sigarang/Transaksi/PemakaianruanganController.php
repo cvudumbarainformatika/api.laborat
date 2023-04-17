@@ -68,11 +68,38 @@ class PemakaianruanganController extends Controller
                     );
                     $recentStok = RecentStokUpdate::where('kode_ruang', $request->kode_ruang)
                         ->where('kode_rs', $key['kode_rs'])
-                        ->first();
-                    $sisa = $recentStok->sisa_stok - $key['jumlah'];
-                    $recentStok->update([
-                        'sisa_stok' => $sisa
-                    ]);
+                        ->oldest()
+                        ->get();
+                    $sisaStok = collect($recentStok)->sum('sisa_stok');
+                    $jumlah = $key['jumlah'];
+                    $index = 0;
+
+                    if ($jumlah > $sisaStok) {
+                        return new JsonResponse(['message' => 'Stok tidak mencukupi pemakaian', $jumlah, $sisaStok], 413);
+                    }
+                    $masuk = $jumlah;
+                    do {
+                        $ada = $recentStok[$index]->sisa_stok;
+                        if ($ada < $masuk) {
+                            $sisa = $masuk - $ada;
+                            $recentStok[$index]->update([
+                                'sisa_stok' => 0
+                            ]);
+                            $index = $index + 1;
+                            $masuk = $sisa;
+                            $loop = true;
+                        } else {
+                            $sisa = $ada - $masuk;
+                            $recentStok[$index]->update([
+                                'sisa_stok' => $sisa
+                            ]);
+                            $loop = false;
+                        }
+                    } while ($loop);
+                    // $sisa = $recentStok->sisa_stok - $key['jumlah'];
+                    // $recentStok->update([
+                    //     'sisa_stok' => $sisa
+                    // ]);
                 }
             }
             DB::commit();
