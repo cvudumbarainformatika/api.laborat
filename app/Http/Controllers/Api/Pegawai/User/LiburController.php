@@ -23,8 +23,8 @@ class LiburController extends Controller
         // ->orderBy('score', 'desc')
         // ->get();
         $data = Libur::with(['user' => function ($q) {
-            $q->when(request('q'), function ($a) use ($q) {
-                $q->where('nama', 'LIKE', '%' . $a . '%');
+            $q->when(request('q'), function ($a, $b) {
+                $a->where('nama', 'LIKE', '%' . $b . '%');
             });
         }])
             ->orderBy(request('order_by'), request('sort'))
