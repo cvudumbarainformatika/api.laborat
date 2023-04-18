@@ -53,6 +53,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
@@ -90,200 +91,13 @@ class AutogenController extends Controller
 
     public function coba()
     {
-        // echo DIRECTORY_SEPARATOR;
-        // $upDir = 'uploads' . DIRECTORY_SEPARATOR . Carbon::now()->toDateString() . DIRECTORY_SEPARATOR;
-        // Storage::makeDirectory($upDir);
-        // echo $upDir;
-        // echo hash_hmac('sha256', '4444&1663225969','lisTest');
-
-        // return URL::signedRoute('unsubscribe', ['user' => 1]);
-        // return URL::temporarySignedRoute(
-        //     'unsubscribe', now()->addMinutes(30), ['user' => 4334]
-        // );
-        // $groupped = PemeriksaanLaborat::selectRaw('rs21')->groupBy('rs21')->get()->pluck('rs21');
-        // $query = collect(PemeriksaanLaborat::all());
-        // $data= $query->groupBy('rs21');
-        // $data = $gr->intersect($groupped);
-        // $grouped = $query->mapToGroups(function ($item, $key) {
-        //     return [
-        //         $item['rs21'] => $item['rs2'],
-        //     ];
-        // });
-
-        // $details = LaboratLuar::query()
-        // ->selectRaw('
-        //     nama, kelamin, alamat,
-        //     nota,tgl,pengirim,hasil,hl,kd_lab,jml,hasil,tarif_sarana,tarif_pelayanan,
-        //     (tarif_sarana + tarif_pelayanan) as biaya, ((tarif_sarana + tarif_pelayanan)* jml) as subtotal')
-        // ->where('nota', '221001/81z6hyc-L')
-        // ->with(['perusahaan', 'pemeriksaan_laborat'])->get();
-        // $data= collect($details)->groupBy('pemeriksaan_laborat.rs21')
-        // ->map(function ($item, $key) {
-        //     return ['name'=>$key, 'child' => $item];
-        // })->toArray();
-
-        // for ($i=0; $i < count($data) ; $i++) {
-        //     echo $data[$i];
-        // }
-
-        // $totNonPaket = $data['']->sum('subtotal');
-        // $tot = $data->map(function($a){
-        //     $sum = 0;
-        //     if ($a->pemeriksaan_laborat->rs21 ==='') {
-        //         $sum = $a->subtotal;
-        //     }
-        //     return $sum;
-        // });
-        // $total = 0;
-        // foreach ($data as $key => $value) {
-        //     // if ($value['name'] === '') {
-        //     //     for ($i=0; $i < count($value) ; $i++) {
-        //     //         $total = $value[$i]->subtotal;
-        //     //     }
-        //     //     // echo count($value);
-        //     // }
-        //     echo count($key['name']);
-        // }
-
-        // echo $total;
-
-
-        // return response()->json($data);
-
-        // $xid = "4444";
-        // $secret_key = 'l15Test';
-        // date_default_timezone_set('UTC');
-        // $xtimestamp = strtotime('2022-09-16 14:12:49');
-        // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
-        // dd($sign);
-        // $xsignature = base64_encode($sign);
-
-        // $decodeb64 = base64_decode ( $xsignature ,false ) ;
-        // echo '<pre>';
-        // echo $sign;
-        // echo '</pre>';
-        // echo $xsignature;
-        // echo '</pre>';
-        // echo '<pre>';
-        // echo $decodeb64;
-        // echo '</pre>';
-        // date_default_timezone_set('UTC');
-        // $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-        // echo date('d M Y H:i:s',$xtimestamp);
-        // $string = '4444';
-
-        // DIPAKE DI MIDDLEWARE
-        // date_default_timezone_set('Asia/Jakarta');
-        // $xid = "4444";
-        // $xtimestamp = time();
-        // $secret_key = 'l15Test';
-        // $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
-        // $xsignature = base64_encode($sign);
-
-        // $signature = hash_hmac('sha256', '4444', 'l15Test');
-        // $signature2 = hash_hmac('sha256', '1664810802', 'l15Test');
-        // echo $xtimestamp;
-        // return hash_equals($signature, (string) $signature2);
-
-
-        // $from = '01'.'-'.date('m').'-'.date('Y');
-        // $to = '31'.'-'.date('m').'-'.date('Y');
-        // $lab = TransaksiLaborat::selectRaw('rs2')
-        // ->whereMonth('rs3', '=', '09')
-        // ->whereYear('rs3', '=', date('Y'))
-        // ->groupBy('rs2')
-        // ->orderBy('rs2', 'desc')->get()->count();
-        // $xid = env('LIS_X_ID');
-        // $secret_key = env('LIS_X_SECRET');
-        // $signature = hash_hmac('sha256', $xid, $secret_key);
-        // echo $signature;
-        // echo date('Y-m-d', 1665488987);
-        // $query = collect($this->query_table());
-        // $data = $query->take(10);
-
-        // return new JsonResponse($data);
-
-        // $bulan = '02';
-        // $tahun = 2023;
-        // $awal = $tahun . '-' . $bulan . '-01' . ' 00:00:00';
-        // $akhir = $tahun . '-' . $bulan . '-31' . ' 23:59:59';
-
-
-        // $data = BarangRS::with([
-        //     'monthly' => function ($q) use ($awal, $akhir) {
-        //         $q->whereBetween('tanggal', [$awal, $akhir]);
-        //     }
-        // ])
-        //     ->select('barang_r_s.*')
-        //     ->join('gudangs', function ($query) {
-        //         $query->on('gudangs.kode', '=', 'barang_r_s.kode_depo')
-        //             ->where('gudangs.kode', '=', 'Gd-02010101');
-        //     })->paginate(request('per_page'));
-
-        // return new JsonResponse($data);
-
-        // VClaim : https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev
-        // Antrean RS : https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev
-        // Apotek : https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev
-        // Pcare : https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev
-
-
-        // Consid : 31014
-        // Secret Key : 3sY5CB0658
-        // user_key: fbad382d69383c78969f889077053ebb
-
-        // $user_key = "fbad382d69383c78969f889077053ebb";
-
-        // $data = "31014";
-        // $secretKey = "3sY5CB0658";
-        // // Computes the timestamp
-        // date_default_timezone_set('UTC');
-        // $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-        // // Computes the signature by hashing the salt with the secret key as the key
-        // $signature = hash_hmac('sha256', $data . "&" . $tStamp, $secretKey, true);
-
-        // // base64 encode�
-        // $encodedSignature = base64_encode($signature);
-
-        // // urlencode�
-        // // $encodedSignature = urlencode($encodedSignature);
-
-        // // echo "X-cons-id: " . $data . " ";
-        // // echo "X-timestamp:" . $tStamp . " ";
-        // // echo "X-signature: " . $encodedSignature;
-
-        // $service_name = 'vclaim-rest-dev';
-        // $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-        // // {BASE URL}/{Service Name}/Rujukan/RS/{parameter}
-        // $no_rujukan = '132701010323P000002';
-        // $url2 = 'https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/RS/' . $no_rujukan;
-        // $url = $base_url . $service_name .  "/" . $no_rujukan;
-
-        // $headers = [
-        //     'X-cons-id' => $data,
-        //     'X-timestamp' => $tStamp,
-        //     'X-signature' => $encodedSignature,
-        //     'user_key' => $user_key
-        // ];
-
-        // $response = Http::withHeaders($headers)->get($url2);
-        // if (!$response) {
-        //     return response()->json([
-        //         'message' => 'ERRROR'
-        //     ], 500);
-        // }
-
-        // $statusCode = $response->status();
-        // $responseBody = json_decode(
-        //     $response->getBody(),
-        //     true
-        // );
-
-        // // return response()->json($statusCode);
-        // echo $response;
-
-        $str = 'B';
-        echo ++$str; // prints 'b'
+        $data = DB::connection('kepex')->table('liburs')
+            ->join('mysql.rs.accounts as user', 'kepex.liburs.user_id', '=', 'user.id')
+            ->limit(100)->get();
+        // $data = DB::table('accounts')
+        //     ->join('kepex.kepegx.liburs as libur', 'accounts.id', '=', 'libur.user_id')
+        //     ->limit(100)->get();
+        return response()->json($data, 200);
     }
 
     public function query_table()
