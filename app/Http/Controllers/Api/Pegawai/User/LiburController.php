@@ -30,6 +30,7 @@ class LiburController extends Controller
         //     ->orderBy(request('order_by'), request('sort'))
         //     ->paginate(request('per_page'));
         $data = DB::connection('kepex')->table('liburs')
+            ->join('mysql.accounts as user', 'liburs.user_id', '=', 'user.id')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
