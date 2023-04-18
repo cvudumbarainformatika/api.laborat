@@ -17,12 +17,21 @@ class LiburController extends Controller
     //
     public function index()
     {
-        $data = Libur::with(['user'])
-            ->whereHas('user', function ($q) {
-                $q->where('nama', 'LIKE', '%' . request('q') . '%');
-            })
+        // Model1::where('postID', $postID)
+        // ->join('database2.table2 as db2', 'Model1.id', '=', 'db2.id')
+        // ->select(['Model1.*', 'db2.firstName', 'db2.lastName'])
+        // ->orderBy('score', 'desc')
+        // ->get();
+        $data = Libur::join('mysql.accounts as user', 'Libur.user_id', '=', 'user.id')
+            ->select(['Libur.*', 'user.nama'])
             ->orderBy(request('order_by'), request('sort'))
             ->paginate(request('per_page'));
+        // $data = Libur::with(['user'])
+        //     ->whereHas('user', function ($q) {
+        //         $q->where('nama', 'LIKE', '%' . request('q') . '%');
+        //     })
+        //     ->orderBy(request('order_by'), request('sort'))
+        //     ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
 
