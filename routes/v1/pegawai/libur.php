@@ -14,6 +14,7 @@ Route::group([
     Route::get('/index', [LiburController::class, 'index']);
     Route::get('/month', [LiburController::class, 'month']);
     Route::post('/store', [LiburController::class, 'store']);
+    Route::post('/delete', [LiburController::class, 'delete']);
 });
 Route::group([
     'middleware' => 'auth:api',

@@ -144,4 +144,14 @@ class LiburController extends Controller
 
         return new JsonResponse(['message' => 'sudah di tulis']);
     }
+
+    public function delete(Request $request)
+    {
+        $data = Libur::find($request->id);
+        $data->delete();
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data gagal dihapus'], 410);
+        }
+        return new JsonResponse(['message' => 'Data sudah dihapus'], 200);
+    }
 }
