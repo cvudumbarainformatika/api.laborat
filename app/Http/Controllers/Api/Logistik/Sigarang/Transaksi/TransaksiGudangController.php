@@ -46,10 +46,11 @@ class TransaksiGudangController extends Controller
                 // $header->harga = $value->harga;
                 // $header->sisa_stok = $value->sub_total;
                 // $this->terimaStokGudang($header);
-                $barang = BarangRS::where('kode', $satu)->first();
+                // $barang = BarangRS::where('kode', $satu)->first();
                 $rec = RecentStokUpdate::updateOrCreate([
                     'no_penerimaan' => $second->no_penerimaan,
-                    'kode_ruang' => $barang->kode_depo,
+                    // 'kode_ruang' => $barang->kode_depo,
+                    'kode_ruang' => $second->tujuan,
                     'kode_rs' => $satu,
 
                 ], [
