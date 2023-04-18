@@ -17,8 +17,13 @@ class LiburController extends Controller
     //
     public function index()
     {
-        $data = Libur::orderBy(request('order_by'), request('sort'))
-            ->with('user')
+        $data = Libur::whereHas('user', function ($q) {
+            $q->when(request('q'), function ($x, $y) {
+                $x->where('nama', 'LIKE', '%' . $y . '%');
+            });
+        })
+            ->orderBy(request('order_by'), request('sort'))
+            // ->with('user', function(){})
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
