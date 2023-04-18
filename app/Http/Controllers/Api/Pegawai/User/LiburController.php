@@ -10,6 +10,7 @@ use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class LiburController extends Controller
@@ -22,11 +23,13 @@ class LiburController extends Controller
         //         $a->where('nama', 'LIKE', '%' . $b . '%');
         //     });
         // }])
-        $data = Libur::with(['user'])
-            ->whereHas('user', function ($a) {
-                $a->where('nama', 'LIKE', '%' . request('q') . '%');
-            })
-            ->orderBy(request('order_by'), request('sort'))
+        // $data = Libur::with(['user'])
+        //     ->whereHas('user', function ($a) {
+        //         $a->where('nama', 'LIKE', '%' . request('q') . '%');
+        //     })
+        //     ->orderBy(request('order_by'), request('sort'))
+        //     ->paginate(request('per_page'));
+        $data = DB::conection('kepex')->table('liburs')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
