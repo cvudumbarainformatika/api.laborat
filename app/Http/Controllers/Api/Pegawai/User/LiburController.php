@@ -22,9 +22,8 @@ class LiburController extends Controller
         // ->select(['Model1.*', 'db2.firstName', 'db2.lastName'])
         // ->orderBy('score', 'desc')
         // ->get();
-        $data = Libur::join('mysql.accounts as user', 'Libur.user_id', '=', 'user.id')
-            ->select(['Libur.*', 'user.nama'])
-            ->orderBy(request('order_by'), request('sort'))
+        $data = Libur::join('mysql.accounts as user', 'liburs.user_id', '=', 'user.id')
+            // ->orderBy(request('order_by'), request('sort'))
             ->paginate(request('per_page'));
         // $data = Libur::with(['user'])
         //     ->whereHas('user', function ($q) {
