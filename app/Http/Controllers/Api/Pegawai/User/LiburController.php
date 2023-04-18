@@ -22,15 +22,11 @@ class LiburController extends Controller
         // ->select(['Model1.*', 'db2.firstName', 'db2.lastName'])
         // ->orderBy('score', 'desc')
         // ->get();
-        $data = Libur::join('mysql.accounts as user', 'liburs.user_id', '=', 'user.id')
-            // ->orderBy(request('order_by'), request('sort'))
+        $data = Libur::with(['user' => function ($q) {
+            $q->where('nama', 'LIKE', '%' . request('q') . '%');
+        }])
+            ->orderBy(request('order_by'), request('sort'))
             ->paginate(request('per_page'));
-        // $data = Libur::with(['user'])
-        //     ->whereHas('user', function ($q) {
-        //         $q->where('nama', 'LIKE', '%' . request('q') . '%');
-        //     })
-        //     ->orderBy(request('order_by'), request('sort'))
-        //     ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
 
