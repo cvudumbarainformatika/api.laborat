@@ -29,7 +29,7 @@ class LiburController extends Controller
         //     })
         //     ->orderBy(request('order_by'), request('sort'))
         //     ->paginate(request('per_page'));
-        $data = DB::conection('kepex')->table('liburs')
+        $data = DB::connection('kepex')->table('liburs')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
