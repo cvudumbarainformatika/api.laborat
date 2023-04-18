@@ -56,7 +56,17 @@ class PasienController extends Controller
     public function index()
     {
         $query = Mpasien::pasien()->filter(request(['q']))
+        ->limit(50)
         ->get();
-        return new JsonResponse($query);
+
+        $queryx = Mpasienx::pasienx()->filter(request(['q']))
+        ->limit(50)
+        ->get();
+
+        if(!$query)
+        {
+            return new JsonResponse($queryx);
+        }
+            return new JsonResponse($query);
     }
 }
