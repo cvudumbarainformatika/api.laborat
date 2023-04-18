@@ -68,6 +68,7 @@ class PemakaianruanganController extends Controller
                     );
                     $recentStok = RecentStokUpdate::where('kode_ruang', $request->kode_ruang)
                         ->where('kode_rs', $key['kode_rs'])
+                        ->where('sisa_tok', '>', 0)
                         ->oldest()
                         ->get();
                     $sisaStok = collect($recentStok)->sum('sisa_stok');
