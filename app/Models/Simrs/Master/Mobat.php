@@ -19,7 +19,15 @@ class Mobat extends Model
         ]);
     }
 
-
+    public function scopeFilter($cari,array $reqs)
+    {
+        $cari->when($reqs['q'] ?? false,
+        function($data, $query){
+            return $data->where('rs1', 'LIKE', '%' . $query . '%')
+                ->orWhere('rs2', 'LIKE', '%' . $query . '%')
+                ->orderBy('rs1');
+        });
+    }
 }
 
 

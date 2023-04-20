@@ -10,7 +10,15 @@ class MobatController extends Controller
 {
     public function index()
     {
-        $query = Mobat::mobat()->get();
+        $query = Mobat::mobat()->paginate(10);
+        return new JsonResponse($query);
+    }
+
+    public function cariobat()
+    {
+        $query = Mobat::mobat()->filter(request(['q']))
+        ->limit(50)
+        ->get();
         return new JsonResponse($query);
     }
 }
