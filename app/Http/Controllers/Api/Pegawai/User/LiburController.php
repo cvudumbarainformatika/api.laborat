@@ -105,6 +105,9 @@ class LiburController extends Controller
         $temp1 = JadwalAbsen::where('kategory_id', 1)
             ->whereIn('hari', ['Jumat'])
             ->update(['pulang' => '13:00:00']);
+        $temp2 = JadwalAbsen::where('kategory_id', 2)
+            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+            ->update(['masuk' => '07:00:00']);
 
         // $temp2 = JadwalAbsen::where('kategory_id', 2)
         //     ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
