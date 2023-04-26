@@ -52,7 +52,7 @@ class AuthController extends Controller
         $me = auth()->user();
         $akses = User::find(auth()->user()->id);
         $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
-        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
+        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi.menus.submenus', 'submenu.menu')->get();
 
         $col = collect($submenu);
         $role = $col->map(function ($item, $key) {
@@ -133,7 +133,7 @@ class AuthController extends Controller
 
         $akses = User::find(auth()->user()->id);
         $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
-        $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
+        $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi.menus.submenus', 'submenu.menu'])->get();
 
         $col = collect($submenu);
         $role = $col->map(function ($item, $key) {
