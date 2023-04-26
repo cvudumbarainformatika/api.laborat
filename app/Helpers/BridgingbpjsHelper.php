@@ -31,12 +31,14 @@ class BridgingbpjsHelper
         // BPJS_ANTREAN_CONS_ID=31014
         // BPJS_ANTREAN_SECRET=3sY5CB0658
         // BPJS_ANTREAN_USER_KEY=140dbebe0248aa4ce64557a8ffbdb0e9
+        // BPJS_ANTREAN_USER_KEY_DEV=f5abd04a8fadc1061e8853715662c3e8
 
         $BPJS_ANTREAN_SECRET = '3sY5CB0658';
-        $BPJS_ANTREAN_USER_KEY = '140dbebe0248aa4ce64557a8ffbdb0e9';
+        $BPJS_ANTREAN_USER_KEY = 'f5abd04a8fadc1061e8853715662c3e8';
 
 
-        $user_key = "fbad382d69383c78969f889077053ebb";
+        $VCLAIM_DEV_USER_KEY_DEV = "fbad382d69383c78969f889077053ebb";
+        $VCLAIM_DEV_USER_KEY = 'belum_ada';
 
         $cons = "31014";
         $secretKey = "3sY5CB0658";
@@ -53,7 +55,8 @@ class BridgingbpjsHelper
             'xconsid' => $cons,
             'xtimestamp' => $tStamp,
             'xsignature' => $encodedSignature,
-            'user_key' => $user_key,
+            // 'user_key' => $VCLAIM_DEV_USER_KEY_DEV, // ini untuk vclaim
+            'user_key' => $BPJS_ANTREAN_USER_KEY, // ini untuk antrean
             'secret_key' => $secretKey
         );
 

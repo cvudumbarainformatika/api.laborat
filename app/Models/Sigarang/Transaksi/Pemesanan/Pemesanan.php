@@ -5,6 +5,7 @@ namespace App\Models\Sigarang\Transaksi\Pemesanan;
 use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Supplier;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +23,11 @@ class Pemesanan extends Model
     public function details()
     {
         return $this->hasMany(DetailPemesanan::class);
+    }
+
+    public function penerimaan()
+    {
+        return $this->hasMany(Penerimaan::class, 'nomor', 'nomor');
     }
 
     public function details_kontrak()

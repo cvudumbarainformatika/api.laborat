@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Http\Controllers\Api\Antrean\master;
+
+use App\Helpers\BridgingbpjsHelper;
+use App\Http\Controllers\Controller;
+use App\Models\Antrean\Display;
+use App\Models\Antrean\PoliBpjs;
+// use App\Models\Antrean\Unit;
+use App\Models\Poli;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
+use Mockery\Undefined;
+
+class DisplayController extends Controller
+{
+    public function index()
+    {
+        // return new JsonResponse(['message' => 'ok']);
+        $data = Display::when(request('q'), function ($search, $q) {
+            $search->where('kode', 'LIKE', '%' . $q . '%');
+        })
+            ->with(['unit'])
+            ->orderBy('kode', 'ASC')
+            // ->orderBy('loket_no', 'ASC')
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
+
+    public function store(Request $request)
+    {
+
+        $kode = 'A';
+        $latest = Display::latest()->first();
+        if (!$request->has('id')) {
+            if ($latest) {
+                $str = $latest->kode;
+                $kode = ++$str;
+            } else {
+                $kode = 'A';
+            }
+        } else {
+            $a = Display::find($request->id)->first();
+            $kode = $a->kode;
+        }
+
+        // $validator = Validator::make($kode, [
+        //     'kode' => 'required|unique:antrean.displays,kode, ' . $request->id
+        // ]);
+
+        // if ($validator->fails()) {
+        //     return response()->json($validator->errors(), 422);
+        // }
+
+
+        $data = Display::updateOrCreate(
+            [
+                'id' => $request->id,
+                'kode' => $kode,
+            ],
+            [
+                'nama' => $request->nama,
+                'keterangan' => $request->keterangan,
+            ]
+        );
+
+        if (!$data) {
+            return new JsonResponse(['message' => "Gagal Menyimpan"], 500);
+        }
+
+        return new JsonResponse(['message' => "success"], 200);
+    }
+
+    public function destroy(Request $request)
+    {
+        $id = $request->id;
+        $data = Display::where('id', $id);
+        $del = $data->delete();
+
+        if (!$del) {
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
+
+        // $user->log("Menghapus Data Jabatan {$data->nama}");
+        return response()->json([
+            'message' => 'Data sukses terhapus'
+        ], 200);
+    }
+}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\PenggunaRuang;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
@@ -123,6 +124,9 @@ class HistoryController extends Controller
             if (request('from')) {
                 $distribusidepo->whereBetween('tanggal', [request('from'), request('to')]);
             }
+            if ($pegawai->role_id === 4) {
+                $distribusidepo->where('kode_depo', $pegawai->kode_ruang);
+            }
             $data = $distribusidepo->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'depo')
                 ->latest('tanggal')
@@ -238,11 +242,41 @@ class HistoryController extends Controller
 
     public function hapusPenerimaan($request)
     {
+        $terima = Penerimaan::with('details')->find($request->id);
+        if ($terima->details) {
+            $kode = collect($terima->details)->map(function ($x) {
+                return $x->kode_rs;
+            });
+            $pesan = Pemesanan::select(
+                'pemesanans.nomor',
+                'pemesanans.id',
+                'pemesanans.status',
+                'detail_pemesanans.kode_rs',
+                'detail_pemesanans.pemesanan_id',
+            )->join('detail_pemesanans', function ($anu) use ($kode) {
+                $anu->on('pemesanans.id', '=', 'detail_pemesanans.pemesanan_id')
+                    ->whereIn('detail_pemesanans.kode_rs', $kode);
+            })->where('pemesanans.nomor', $terima->nomor)
+                ->first();
+        }
+        // $balik['terima'] = $terima;
+        // $balik['kode'] = $kode;
+        // $balik['pesan'] = $pesan;
+        // return [
+        //     $balik,
+        //     'status' => 200,
+        // ];
+
         $return = Penerimaan::find($request->id);
         $return->delete();
         if (!$return) {
-
             return ['message' => 'Data gagal di hapus', $return, 'status' => 410];
+        }
+        RecentStokUpdate::where('no_penerimaan', $return->no_penerimaan)->delete();
+        if ($pesan) {
+            if ($pesan->status === 4) {
+                $pesan->update(['status' => 3]);
+            }
         }
         return ['message' => 'Data sudah di hapus', $return, 'status' => 200];
     }

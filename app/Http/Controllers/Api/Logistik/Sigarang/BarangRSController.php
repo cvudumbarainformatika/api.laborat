@@ -30,7 +30,7 @@ class BarangRSController extends Controller
     public function countIndex()
     {
         $data = BarangRS::count();
-        return new JsonResponse($data, 200);
+        return new JsonResponse($data + 1, 200);
     }
 
     public function indexForPemesanan()
@@ -95,7 +95,7 @@ class BarangRSController extends Controller
                 }
 
                 // insert or take barang
-                BarangRS::firstOrCreate($request->all());
+                BarangRS::firstOrCreate(['kode' => $request->kode], $request->all());
 
                 // $auth->log("Memasukkan data BarangRS {$user->name}");
             } else {

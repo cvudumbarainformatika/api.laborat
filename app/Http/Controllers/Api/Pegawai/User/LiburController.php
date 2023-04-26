@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Api\Pegawai\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Alpha;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
+use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,8 +17,13 @@ class LiburController extends Controller
     //
     public function index()
     {
-        $data = Libur::orderBy(request('order_by'), request('sort'))
-            ->with('user')
+        // $data = Libur::with(['user' => function ($q) {
+        //     $q->when(request('q'), function ($a, $b) {
+        //         $a->where('nama', 'LIKE', '%' . $b . '%');
+        //     });
+        // }])
+        $data = Libur::with(['user'])
+            ->orderBy(request('order_by'), request('sort'))
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
@@ -59,5 +68,98 @@ class LiburController extends Controller
         }
 
         return new JsonResponse(['message' => 'Berhasil menyimpan data', 'request' => $request->all()], 201);
+    }
+    public function ramadhan(Request $request)
+    {
+        $anu = [];
+        foreach ($request->all() as $key) {
+
+            if ($key['kategory'] === 1) {
+                $temp = JadwalAbsen::where('kategory_id', $key['kategory'])
+                    ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis'])
+                    ->update(['pulang' => $key['pulang']]);
+                $temp1 = JadwalAbsen::where('kategory_id', $key['kategory'])
+                    ->whereIn('hari', ['Jumat'])
+                    ->update(['pulang' => $key['Jumat']]);
+                if ($temp) {
+                    array_push($anu, $temp);
+                }
+                if ($temp1) {
+                    array_push($anu, $temp1);
+                }
+            }
+            // if ($key['kategory'] === 2) {
+            //     $temp2 = JadwalAbsen::where('kategory_id', $key['kategory'])
+            //         ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+            //         ->update(['masuk' => $key['masuk']]);
+            //     array_push($anu, $temp2);
+            // }
+        }
+        return new JsonResponse(['message' => 'Jadwal diganti ke Jadwal Ramdhan']);
+    }
+    public function lebaran()
+    {
+        $temp = JadwalAbsen::where('kategory_id', 1)
+            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis'])
+            ->update(['pulang' => '16:00:00']);
+        $temp1 = JadwalAbsen::where('kategory_id', 1)
+            ->whereIn('hari', ['Jumat'])
+            ->update(['pulang' => '13:00:00']);
+        $temp2 = JadwalAbsen::where('kategory_id', 2)
+            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+            ->update(['masuk' => '07:00:00']);
+
+        // $temp2 = JadwalAbsen::where('kategory_id', 2)
+        //     ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+        //     ->update(['masuk' => '07:00:00']);
+
+        return new JsonResponse(['messaga' => 'Jadwal kembali Normal']);
+    }
+
+    public function tulisTidakMasuk()
+    {
+        $today = date('l');
+        $date = date('Y-m-d');
+        $jadwal = JadwalAbsen::where('day', $today)
+            ->where('status', 2)
+            ->get();
+        $absen = TransaksiAbsen::where('tanggal', $date)->get();
+        $peg = collect($absen)->map(function ($x) {
+            return $x->pegawai_id;
+        });
+        $not = collect($jadwal)->whereNotIn('pegawai_id', $peg);
+        foreach ($not as $tidak) {
+            Alpha::updateOrCreate(
+                [
+                    'pegawai_id' => $tidak->pegawai_id,
+                    'tanggal' => $date
+                ],
+                ['flag' => 'ABSEN']
+            );
+        }
+        $tidakDaftar = Pegawai::where('account_pass', null)->where('aktif', 'AKTIF')->get();
+        foreach ($tidakDaftar as $tidak) {
+            Alpha::updateOrCreate(
+                [
+                    'pegawai_id' => $tidak->id,
+                    'tanggal' => $date
+                ],
+                ['flag' => 'ABSEN']
+            );
+        }
+
+        // $data['tidak masuk'] = Alpha::where('tanggal', $date)->get();
+
+        return new JsonResponse(['message' => 'sudah di tulis']);
+    }
+
+    public function delete(Request $request)
+    {
+        $data = Libur::find($request->id);
+        $data->delete();
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data gagal dihapus'], 410);
+        }
+        return new JsonResponse(['message' => 'Data sudah dihapus'], 200);
     }
 }

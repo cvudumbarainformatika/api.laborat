@@ -21,6 +21,7 @@ class PoliController extends Controller
 {
     public function index()
     {
+        // return new JsonResponse(['message' => 'ok']);
         $data = MasterPoli::when(request('q'), function ($search, $q) {
             $search->where('nama', 'LIKE', '%' . $q . '%')
                 ->orWhere('kode_simrs', 'LIKE', '%' . $q . '%');
@@ -48,7 +49,7 @@ class PoliController extends Controller
             [
                 'kode_simrs' => $request->kode_simrs,
                 'nama' => $request->nama,
-                'max' => $request->max,
+                'max_of' => $request->max,
                 'max_ol' => $request->max_ol,
             ]
         );

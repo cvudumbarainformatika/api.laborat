@@ -32,6 +32,7 @@ Route::get('/autogen/set-min-max', [AutogenController::class, 'setMinMax']);
 Route::get('/autogen/synct', [JadwalController::class, 'sycncroneJadwal']);
 
 Route::get('/dvlp', [DvlpController::class, 'index']);
+Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
 
 
 

@@ -156,7 +156,7 @@ class JadwalController extends Controller
         $user = User::find($id);
 
         if ($request->status === 'masuk') {
-            $data = TransaksiAbsen::firstOrCreate(
+            $data = TransaksiAbsen::updateOrCreate(
                 [
                     'user_id' => $user->id,
                     'tanggal' => $request->tanggal,
@@ -397,7 +397,7 @@ class JadwalController extends Controller
                         'pegawai_id' => $user->pegawai_id,
                         'ruang_id' => $pegawai->ruang,
                         'status' => 2,
-                        'masuk' => '07:00',
+                        'masuk' => '07:30',
                         'pulang' => '14:00',
                         'jam' => 7,
                         'menit' => 0,
@@ -420,7 +420,7 @@ class JadwalController extends Controller
                         [
                             'kategory_id' => 2,
                             'status' => '2',
-                            'masuk' => '07:00',
+                            'masuk' => '07:30',
                             'pulang' => '11:30',
                             'jam' => 4,
                             'menit' => 30,
@@ -432,7 +432,7 @@ class JadwalController extends Controller
                         [
                             'kategory_id' => 2,
                             'status' => '2',
-                            'masuk' => '07:00',
+                            'masuk' => '07:30',
                             'pulang' => '12:00',
                             'jam' => 5,
                             'menit' => 0,

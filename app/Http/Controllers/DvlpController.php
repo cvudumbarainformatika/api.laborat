@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\BridgingbpjsHelper;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use \LZCompressor\LZString;
@@ -30,9 +31,13 @@ class DvlpController extends Controller
         //     'user_key' => $sign['user_key']
         // ];
 
-        $url = BridgingbpjsHelper::get_url('vclaim') . 'Rujukan/' . $no_rujukan;
+        // $url = BridgingbpjsHelper::get_url('vclaim') . 'Rujukan/' . $no_rujukan;
         // $url = BridgingbpjsHelper::get_url('vclaim') . 'referensi/poli/geriatri';
-        // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/poli';
+
+
+        $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/poli';
+        // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'antrean/getlisttask';
+        // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/dokter';
 
         // return $headers;
         $response = Http::withHeaders(BridgingbpjsHelper::getHeader())->get($url);
@@ -53,7 +58,21 @@ class DvlpController extends Controller
         $nilairespon = $data["response"];
         $hasilakhir = BridgingbpjsHelper::decompress(BridgingbpjsHelper::stringDecrypt($kunci, $nilairespon));
 
-        $data['result'] = json_decode($hasilakhir);
-        return $data;
+        $res['metadata'] = $data['metadata'];
+        $res['result'] = json_decode($hasilakhir);
+        return $res;
+    }
+
+    public function antrian()
+    {
+        $reqLog = (new Client())->post('http://192.168.160.100:2000/api/api' . '/get_list_antrian_tanggal', [
+            'form_params' => [
+                'tanggal' => date('Y-m-d')
+            ],
+            'http_errors' => false
+        ]);
+        $resLog = json_decode($reqLog->getBody()->getContents(), true);
+
+        return $resLog;
     }
 }

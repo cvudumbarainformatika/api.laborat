@@ -247,12 +247,16 @@ class StokOpnameController extends Controller
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             },
             'stok_awal' => function ($q) use ($head) {
+                // if($head->bulan==12){
+
+                // }else{
                 $q->whereBetween('tanggal', [$head->from, $head->to])
                     ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+                // }
             },
             'fisik' => function ($q) use ($head) {
-                $q->whereBetween('tanggal', [$head->awal, $head->akhir])
-                    ->where('kode_depo', request('search'));
+                $q->whereBetween('tanggal', [$head->awal, $head->akhir]);
+                // ->where('kode_depo', request('search'));
                 // ->where('kode_ruang', request('search'));
             },
             'detailPermintaanruangan' => function ($detail) use ($head) {
@@ -587,14 +591,14 @@ class StokOpnameController extends Controller
     {
 
         $barang = BarangRS::where('kode', $request->kode_rs)->first();
-        $stok = MonthlyStokUpdate::selectRaw('kode_rs, kode_ruang, sisa_stok, sum(sisa_stok) as totalStok')
-            ->where('tanggal', $request->tanggal)
-            ->where('kode_rs', $barang->kode)
-            ->groupBy('kode_rs', 'kode_ruang')
-            ->get();
-        if (!count($stok)) {
-            return new JsonResponse(['message' => 'Tidak ada data Stok Opname untuk barang ini'], 410);
-        }
+        // $stok = MonthlyStokUpdate::selectRaw('kode_rs, kode_ruang, sisa_stok, sum(sisa_stok) as totalStok')
+        //     ->where('tanggal', $request->tanggal)
+        //     ->where('kode_rs', $barang->kode)
+        //     ->groupBy('kode_rs', 'kode_ruang')
+        //     ->get();
+        // if (!count($stok)) {
+        //     return new JsonResponse(['message' => 'Tidak ada data Stok Opname untuk barang ini'], 410);
+        // }
         // return new JsonResponse([
         //     'requset' => $request->all(),
         //     'stok' => $stok,
@@ -614,7 +618,10 @@ class StokOpnameController extends Controller
         // ]);
 
         if ($data->wasChanged()) {
-            return new JsonResponse(['message' => 'data berhasil disimpan', 'data' => $data], 201);
+            return new JsonResponse(['message' => 'data berhasil disimpan', 'data' => $data], 200);
+        }
+        if ($data->wasRecentlyCreated) {
+            return new JsonResponse(['message' => 'data berhasil Dibuat', 'data' => $data], 201);
         }
         return new JsonResponse([$request->all(), 'message' => 'Data tidak berubah'], 410);
     }
