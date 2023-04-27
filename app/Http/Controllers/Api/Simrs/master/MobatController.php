@@ -1,6 +1,5 @@
 <?php
 
-// namespace App\Http\Controllers\Api\Simrs\Master;
 namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Controller;
