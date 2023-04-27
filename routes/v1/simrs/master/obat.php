@@ -9,6 +9,6 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master'
 ], function () {
-    Route::get('/masterObat',[MobatController::class, 'index']);
-    Route::get('/cariObat',[MobatController::class, 'cariobat']);
+    Route::get('/masterObat', [MobatController::class, 'index']);
+    Route::get('/cariObat', [MobatController::class, 'cariobat']);
 });
