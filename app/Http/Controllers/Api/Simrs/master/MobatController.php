@@ -1,5 +1,6 @@
 <?php
 
+// namespace App\Http\Controllers\Api\Simrs\Master;
 namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Controller;
@@ -17,8 +18,8 @@ class MobatController extends Controller
     public function cariobat()
     {
         $query = Mobat::mobat()->filter(request(['q']))
-        ->limit(50)
-        ->get();
+            ->limit(50)
+            ->get();
         return new JsonResponse($query);
     }
 }
