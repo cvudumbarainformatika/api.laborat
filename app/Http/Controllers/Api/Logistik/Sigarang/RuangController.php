@@ -34,6 +34,15 @@ class RuangController extends Controller
             ->get();
         return RuangResource::collection($data);
     }
+    public function cariRuang()
+    {
+        // $data = Ruang::paginate();
+        $data = Ruang::latest()
+            ->filter(request(['q']))
+            ->limit(50)
+            ->get();
+        return new JsonResponse($data);
+    }
     public function allRuang()
     {
         // $data = Ruang::paginate();

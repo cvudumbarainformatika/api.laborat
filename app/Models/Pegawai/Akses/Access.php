@@ -25,4 +25,8 @@ class Access extends Model
     {
         return $this->belongsTo(Submenu::class);
     }
+    public function menus()
+    {
+        return $this->belongsTo(Menu::class);
+    }
 }
