@@ -9,5 +9,6 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/masterObat', [MobatController::class, 'index']);
-    Route::get('/cariObat', [MobatController::class, 'cariobat']);
+    // Route::get('/cariObat', [MobatController::class, 'cariobat']);
+    Route::get('/cariObat', 'App\Http\Controllers\Api\Simrs\Master\MobatController@cariobat');
 });
