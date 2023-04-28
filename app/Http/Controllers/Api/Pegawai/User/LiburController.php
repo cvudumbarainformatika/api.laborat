@@ -24,6 +24,12 @@ class LiburController extends Controller
         // }])
         $data = Libur::with(['user'])
             ->orderBy(request('order_by'), request('sort'))
+            ->when(request('tanggal'), function ($tg) {
+                $tg->where('tanggal', request('tanggal'));
+            })
+            ->when(request('bulan'), function ($tg) {
+                $tg->whereMonth('tanggal',  request('bulan'));
+            })
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
