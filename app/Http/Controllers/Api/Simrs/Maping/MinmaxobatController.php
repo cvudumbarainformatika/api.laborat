@@ -27,8 +27,9 @@ class MinmaxobatController extends Controller
 
     public function listminmaxobat()
     {
-        $query =  Mminmaxobat::with(['obat:rs1,rs2 as obat', 'ruanganx:kode,uraian as ruangan'])
+        $query =  Mminmaxobat::with(['obat:rs1,rs2 as namaobat', 'ruanganx:kode,uraian as namaruangan'])
         ->paginate(request('per_page'));
+
 
         return new JsonResponse($query, 200);
     }
