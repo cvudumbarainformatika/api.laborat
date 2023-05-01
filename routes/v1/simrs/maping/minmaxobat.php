@@ -9,5 +9,6 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/maping'
 ], function () {
+    Route::get('/listminmaxobat',[MinmaxobatController::class, 'listminmaxobat']);
     Route::post('/minmaxobat',[MinmaxobatController::class, 'simpan']);
 });

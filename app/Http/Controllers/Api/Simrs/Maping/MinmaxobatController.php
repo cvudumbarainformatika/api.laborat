@@ -22,6 +22,14 @@ class MinmaxobatController extends Controller
         {
             return new JsonResponse(['message' => 'DATA TIDAK TERSIMPAN...!!!'], 500);
         }
-            return new JsonResponse(['message' => 'DATA TERSIMPAN...!!!', $simpan], 200);
+            return new JsonResponse(['message' => 'DATA TERSIMPAN...!!!'], 200);
+    }
+
+    public function listminmaxobat()
+    {
+        $query =  Mminmaxobat::with(['obat:rs1,rs2 as obat', 'ruanganx:kode,uraian as ruangan'])
+        ->paginate(request('per_page'));
+
+        return new JsonResponse($query, 200);
     }
 }
