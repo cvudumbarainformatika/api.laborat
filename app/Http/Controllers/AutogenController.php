@@ -1583,7 +1583,8 @@ class AutogenController extends Controller
         // $data['absen'] = $absen;
         // return new JsonResponse($data);
 
-        $data = TransaksiGudangController::fromPenerimaan(177);
+        // $data = TransaksiGudangController::fromPenerimaan(177);
+        $data = date('m');
         return new JsonResponse($data);
     }
 

@@ -53,16 +53,17 @@ class BarangRSController extends Controller
     }
     public function storeByKode(Request $request)
     {
+        $validatedData = Validator::make($request->all(), [
+            'kode' => 'required'
+        ]);
+        if ($validatedData->fails()) {
+            return response()->json($validatedData->errors(), 422);
+        }
         try {
             DB::beginTransaction();
-            $validatedData = Validator::make($request->all(), [
-                'kode' => 'required'
-            ]);
-            if ($validatedData->fails()) {
-                return response()->json($validatedData->errors(), 422);
-            }
             // update or crete
             $data = BarangRS::updateOrCreate(['kode' => $request->kode], $request->all());
+
             if ($data->wasRecentlyCreated) {
                 $depo = MapingBarangDepo::updateOrCreate(['kode_rs' => $request->kode], ['kode_gudang' => $request->kode_gudang]);
                 return new JsonResponse(['message' => 'data berhasil ditambahkan', 'depo' => $depo], 201);

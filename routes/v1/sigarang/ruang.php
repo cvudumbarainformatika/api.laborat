@@ -11,6 +11,7 @@ Route::group([
 ], function () {
     Route::get('/index', [RuangController::class, 'index']);
     Route::get('/ruang', [RuangController::class, 'ruang']);
+    Route::get('/cari-ruang', [RuangController::class, 'cariRuang']);
     Route::get('/all-ruang', [RuangController::class, 'allRuang']);
     Route::post('/store', [RuangController::class, 'store']);
     Route::post('/destroy', [RuangController::class, 'destroy']);

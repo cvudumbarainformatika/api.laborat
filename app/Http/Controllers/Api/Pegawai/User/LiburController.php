@@ -24,6 +24,12 @@ class LiburController extends Controller
         // }])
         $data = Libur::with(['user'])
             ->orderBy(request('order_by'), request('sort'))
+            ->when(request('tanggal'), function ($tg) {
+                $tg->where('tanggal', request('tanggal'));
+            })
+            ->when(request('bulan'), function ($tg) {
+                $tg->whereMonth('tanggal',  request('bulan'));
+            })
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
@@ -105,6 +111,9 @@ class LiburController extends Controller
         $temp1 = JadwalAbsen::where('kategory_id', 1)
             ->whereIn('hari', ['Jumat'])
             ->update(['pulang' => '13:00:00']);
+        $temp2 = JadwalAbsen::where('kategory_id', 2)
+            ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
+            ->update(['masuk' => '07:00:00']);
 
         // $temp2 = JadwalAbsen::where('kategory_id', 2)
         //     ->whereIn('hari', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
