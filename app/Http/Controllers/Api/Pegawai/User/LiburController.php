@@ -8,6 +8,7 @@ use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -17,12 +18,15 @@ class LiburController extends Controller
     //
     public function index()
     {
-        // $data = Libur::with(['user' => function ($q) {
-        //     $q->when(request('q'), function ($a, $b) {
-        //         $a->where('nama', 'LIKE', '%' . $b . '%');
-        //     });
-        // }])
+        $userIds = User::query()
+            ->where('nama', 'LIKE', '%' . request('q') . '%')
+            ->pluck('id');
+
         $data = Libur::with(['user'])
+            // ->whereHas('user', function ($q) {
+            //     $q->where('nama', 'LIKE', '%' . request('q') . '%');
+            // })
+            ->whereIn('user_id', $userIds)
             ->orderBy(request('order_by'), request('sort'))
             ->when(request('tanggal'), function ($tg) {
                 $tg->where('tanggal', request('tanggal'));

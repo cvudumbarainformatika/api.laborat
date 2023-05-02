@@ -20,7 +20,7 @@ class DvlpController extends Controller
         $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
         // {BASE URL}/{Service Name}/Rujukan/RS/{parameter}
         $no_rujukan = '132701010323P000003';
-        // $url2 = 'https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/' . $no_rujukan;
+        // $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/' . $no_rujukan;
         // $url = $base_url . $service_name .  "/" . $no_rujukan;
 
         // $headers = [
@@ -31,11 +31,11 @@ class DvlpController extends Controller
         //     'user_key' => $sign['user_key']
         // ];
 
-        // $url = BridgingbpjsHelper::get_url('vclaim') . 'Rujukan/' . $no_rujukan;
+        $url = BridgingbpjsHelper::get_url('vclaim') . 'Rujukan/' . $no_rujukan;
         // $url = BridgingbpjsHelper::get_url('vclaim') . 'referensi/poli/geriatri';
 
 
-        $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/poli';
+        // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/poli';
         // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'antrean/getlisttask';
         // $url =  'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/' . 'ref/dokter';
 
@@ -58,7 +58,7 @@ class DvlpController extends Controller
         $nilairespon = $data["response"];
         $hasilakhir = BridgingbpjsHelper::decompress(BridgingbpjsHelper::stringDecrypt($kunci, $nilairespon));
 
-        $res['metadata'] = $data['metadata'];
+        // $res['metadata'] = $data['metadata'];
         $res['result'] = json_decode($hasilakhir);
         return $res;
     }

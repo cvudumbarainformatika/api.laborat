@@ -55,8 +55,8 @@ class BridgingbpjsHelper
             'xconsid' => $cons,
             'xtimestamp' => $tStamp,
             'xsignature' => $encodedSignature,
-            // 'user_key' => $VCLAIM_DEV_USER_KEY_DEV, // ini untuk vclaim
-            'user_key' => $BPJS_ANTREAN_USER_KEY, // ini untuk antrean
+            'user_key' => $VCLAIM_DEV_USER_KEY_DEV, // ini untuk vclaim
+            // 'user_key' => $BPJS_ANTREAN_USER_KEY, // ini untuk antrean
             'secret_key' => $secretKey
         );
 
