@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Simrs\Maping;
+namespace App\Models\Simrs\Penunjang\Farmasi;
 
 use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mruangan;
@@ -22,5 +22,4 @@ class Mminmaxobat extends Model
     {
         return $this->belongsTo(Mruangan::class, 'kd_ruang', 'kode');
     }
-
 }
