@@ -12,7 +12,6 @@ class Mminmaxobat extends Model
     use HasFactory;
     protected $table = 'min_max_ruang';
     protected $guarded = ['id'];
-    //protected $appends = ['obat'];
 
     public function obat()
     {
@@ -23,6 +22,5 @@ class Mminmaxobat extends Model
     {
         return $this->belongsTo(Mruangan::class, 'kd_ruang', 'kode');
     }
-
 
 }

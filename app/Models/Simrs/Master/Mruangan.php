@@ -11,4 +11,15 @@ class Mruangan extends Model
     protected $connection = 'sigarang';
     protected $table      = 'ruangs';
     protected $guarded = ['id'];
+
+    public function conruangan()
+    {
+        $conruangan = new Mruangan;
+
+        $conruangan->setConnection('sigarang');
+
+        $wew = $conruangan->find(1);
+
+        return $wew;
+    }
 }
