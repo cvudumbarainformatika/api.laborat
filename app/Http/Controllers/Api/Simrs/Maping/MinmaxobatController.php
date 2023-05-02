@@ -46,23 +46,6 @@ class MinmaxobatController extends Controller
         })
         ->whereIn('kd_ruang', $id)
         ->get();
-    //     $query_wew = DB::connection('sigarang');
-    //     $tabel = $query_wew->table('ruangs');
-    //     $data = $tabel->select('uraian as ruangan');
-
-    //     $query = Mminmaxobat::select(
-    //         'min_max_ruang.kd_obat as kd_obat',
-    //         'rs32.rs2 as obat',
-    //         'min_max_ruang.kd_ruang as kd_ruang',
-    //         $tabel,
-    //         'min_max_ruang.min as min',
-    //         'min_max_ruang.max as max'
-    //     )
-    //     ->leftJoin('rs32','rs32.rs1','=','min_max_ruang.kd_obat')
-    //     ->leftJoin($tabel,$tabel->select('kode'),'=','min_max_ruang.kd_ruang')
-    //     ->where('rs32.rs2','LIKE', '%' . request('q') . '%')
-    //    // ->with(['ruanganx:kode,uraian as namaruangan'])
-    //     ->get();
          return new JsonResponse($qwerty, 200);
     }
 }
