@@ -39,10 +39,13 @@ class MinmaxobatController extends Controller
 
     public function caribynamaobat()
     {
+        $id=Mruangan::where('uraian','LIKE','%' . request('r') . '%')->pluck('kode');
         $qwerty = Mminmaxobat::with(['obat:rs1,rs2 as namaobat', 'ruanganx:kode,uraian as namaruangan'])
         ->whereHas('obat', function($e){
-            $e->where('rs32.rs2','LIKE', '%' . request('q') . '%');
-        })->get();
+            $e->where('rs32.rs2','LIKE', '%' . request('o') . '%');
+        })
+        ->whereIn('kd_ruang', $id)
+        ->get();
     //     $query_wew = DB::connection('sigarang');
     //     $tabel = $query_wew->table('ruangs');
     //     $data = $tabel->select('uraian as ruangan');
