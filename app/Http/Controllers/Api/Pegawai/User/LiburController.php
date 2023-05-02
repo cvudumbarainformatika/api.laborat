@@ -23,6 +23,9 @@ class LiburController extends Controller
         //     });
         // }])
         $data = Libur::with(['user'])
+            // ->whereHas('user', function ($q) {
+            //     $q->where('nama', 'LIKE', '%' . request('q') . '%');
+            // })
             ->orderBy(request('order_by'), request('sort'))
             ->when(request('tanggal'), function ($tg) {
                 $tg->where('tanggal', request('tanggal'));
