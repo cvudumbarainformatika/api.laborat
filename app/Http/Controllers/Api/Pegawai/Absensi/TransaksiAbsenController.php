@@ -479,7 +479,9 @@ class TransaksiAbsenController extends Controller
                         ->whereYear('tanggal', $year);
                 }
             ])
-            ->orderBy(request('order_by'), request('sort'))
+            // ->orderBy(request('order_by'), request('sort'))
+            ->orderBy('flag', 'ASC')
+            ->orderBy('nama', 'ASC')
             ->paginate(request('per_page'));
         return response()->json($data);
     }
@@ -519,7 +521,9 @@ class TransaksiAbsenController extends Controller
                         ->whereYear('tanggal', $year);
                 }
             ])
-            ->orderBy(request('order_by'), request('sort'))
+            // ->orderBy(request('order_by'), request('sort'))
+            ->orderBy('flag', 'ASC')
+            ->orderBy('nama', 'ASC')
             ->get();
         return response()->json($data);
     }
