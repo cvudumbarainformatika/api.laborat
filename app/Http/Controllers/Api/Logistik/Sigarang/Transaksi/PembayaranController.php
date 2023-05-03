@@ -34,4 +34,28 @@ class PembayaranController extends Controller
 
         return new JsonResponse($data);
     }
+    public function ambilPenerimaan()
+    {
+        $data = Penerimaan::where('kontrak', request('kontrak'))
+            ->whereNotNull('tanggal_bast')
+            ->whereNull('tanggal_pembayaran')
+            ->with(['details' => function ($anu) {
+                $anu->select('uraian_50', 'penerimaan_id')
+                    ->distinct('uraian_50');
+            }])
+            ->get();
+
+        return new JsonResponse($data);
+    }
+    public function ambilNoBayar()
+    {
+        $data = Penerimaan::select('kontrak', 'tanggal_bast', 'tanggal_pembayaran')
+            ->distinct('tanggal_pembayaran')
+            ->where('kontrak', request('kontrak'))
+            ->whereNotNull('tanggal_bast')
+            ->whereNotNull('tanggal_pembayaran')
+            ->count();
+
+        return new JsonResponse($data);
+    }
 }

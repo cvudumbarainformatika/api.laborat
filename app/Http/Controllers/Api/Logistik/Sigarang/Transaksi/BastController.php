@@ -92,6 +92,7 @@ class BastController extends Controller
                         'no_bast' => $request->no_bast,
                         'tanggal_bast' => $request->tanggal_bast,
                         'nilai_tagihan' => $penerimaan['nilai_tagihan'],
+                        'faktur' => $penerimaan['faktur'],
                     ]);
                     foreach ($penerimaan['details'] as $det) {
                         $detail = DetailPenerimaan::find($det['id']);
@@ -132,6 +133,7 @@ class BastController extends Controller
         $data = Penerimaan::selectRaw('kontrak, no_bast')
             ->where('kontrak', request('kontrak'))
             ->where('no_bast', '!=', '')
+            ->distinct('no_bast')
             ->count();
 
         return new JsonResponse($data);
