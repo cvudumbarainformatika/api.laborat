@@ -9,6 +9,6 @@ class DaftarrajalumumController extends Controller
 {
     public function simpandaftar(Request $request)
     {
-        $masterpasien =
+        //$masterpasien =
     }
 }
