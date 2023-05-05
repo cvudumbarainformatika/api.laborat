@@ -11,5 +11,7 @@ Route::group(
     function () {
         Route::get('/cari-kontrak', [PembayaranController::class, 'cariKontrak']);
         Route::get('/ambil-kontrak', [PembayaranController::class, 'ambilKontrak']);
+        Route::get('/ambil-penerimaan', [PembayaranController::class, 'ambilPenerimaan']);
+        Route::get('/ambil-no-bayar', [PembayaranController::class, 'ambilNoBayar']);
     }
 );

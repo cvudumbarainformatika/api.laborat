@@ -243,15 +243,20 @@ class StokOpnameController extends Controller
 
         $data = BarangRS::with([
             'monthly' => function ($q) use ($head) {
-                $q->whereBetween('tanggal', [$head->awal, $head->akhir])
-                    ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+                $q->whereBetween('tanggal', [$head->awal, $head->akhir]);
+                // ->when(request('search'), function ($anu) {
+                //     $anu->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+                // });
+                // ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
             },
             'stok_awal' => function ($q) use ($head) {
                 // if($head->bulan==12){
 
                 // }else{
-                $q->whereBetween('tanggal', [$head->from, $head->to])
-                    ->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+                $q->whereBetween('tanggal', [$head->from, $head->to]);
+                // ->when(request('search'), function ($anu) {
+                //     $anu->whereIn('kode_ruang', [request('search'), 'Gd-02010100']);
+                // });
                 // }
             },
             'fisik' => function ($q) use ($head) {
