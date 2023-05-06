@@ -58,4 +58,22 @@ class PembayaranController extends Controller
 
         return new JsonResponse($data);
     }
+
+    public function simpanBayar(Request $request)
+    {
+        $anu = [];
+        foreach ($request->penerimaans as $terima) {
+            $temp = Penerimaan::find($terima['id']);
+            if ($temp) {
+                $temp->update([
+                    'nilai_pembayaran' => $terima['nilai_pembayaran'],
+                    'no_kwitansi' => $request->no_kwitansi,
+                    'no_pembayaran' => $request->no_pembayaran,
+                    'tanggal_pembayaran' => $request->tanggal_pembayaran,
+                ]);
+                array_push($anu, $temp);
+            }
+        }
+        return new JsonResponse($anu);
+    }
 }
