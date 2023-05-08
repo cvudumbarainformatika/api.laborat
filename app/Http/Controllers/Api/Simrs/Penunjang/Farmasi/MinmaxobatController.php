@@ -28,14 +28,14 @@ class MinmaxobatController extends Controller
         return new JsonResponse(['message' => 'DATA TERSIMPAN...!!!'], 200);
     }
 
-    public function listminmaxobat()
-    {
-        $query =  Mminmaxobat::with(['obat:rs1,rs2 as namaobat', 'ruanganx:kode,uraian as namaruangan'])
-            ->paginate(request('per_page'));
+    // public function listminmaxobat()
+    // {
+    //     $query =  Mminmaxobat::with(['obat:rs1,rs2 as namaobat', 'ruanganx:kode,uraian as namaruangan'])
+    //         ->paginate(request('per_page'));
 
 
-        return new JsonResponse($query, 200);
-    }
+    //     return new JsonResponse($query, 200);
+    // }
 
     public function caribynamaobat()
     {
@@ -45,7 +45,7 @@ class MinmaxobatController extends Controller
                 $e->where('rs32.rs2', 'LIKE', '%' . request('o') . '%');
             })
             ->whereIn('kd_ruang', $id)
-            ->get();
+            ->paginate(request('per_page'));
         return new JsonResponse($qwerty, 200);
     }
 }
