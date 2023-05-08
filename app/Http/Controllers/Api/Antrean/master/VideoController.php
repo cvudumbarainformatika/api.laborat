@@ -48,10 +48,10 @@ class VideoController extends Controller
 
         if ($request->has('id')) {
             $data = Video::find($request->id);
-            $path = $data->url;
-            // if (!empty($old_path)) {
-            //     Storage::delete('public/' . $old_path);
-            // }
+            $old_path = $data->url;
+            if (!empty($old_path)) {
+                Storage::delete('public/' . $old_path);
+            }
         }
 
         $path = $request->file('video')->store('videos', 'public');
@@ -59,9 +59,9 @@ class VideoController extends Controller
         $data = Video::updateOrCreate(
             [
                 'id' => $request->id,
-                'url' => $path
             ],
             [
+                'url' => $path,
                 'nama' => $request->nama,
                 'type' => $request->type,
             ]
@@ -74,23 +74,24 @@ class VideoController extends Controller
         return new JsonResponse(['message' => "success"], 200);
     }
 
-    // public function destroy(Request $request)
-    // {
-    //     $id = $request->id;
-    //     $data = Unit::where('id', $id);
-    //     $del = $data->delete();
+    public function destroy(Request $request)
+    {
+        $id = $request->id;
+        $data = Video::find($id);
+        Storage::delete('public/' . $data->url);
+        $del = $data->delete();
 
-    //     if (!$del) {
-    //         return response()->json([
-    //             'message' => 'Error on Delete'
-    //         ], 500);
-    //     }
+        if (!$del) {
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
 
-    //     // $user->log("Menghapus Data Jabatan {$data->nama}");
-    //     return response()->json([
-    //         'message' => 'Data sukses terhapus'
-    //     ], 200);
-    // }
+        // $user->log("Menghapus Data Jabatan {$data->nama}");
+        return response()->json([
+            'message' => 'Data sukses terhapus'
+        ], 200);
+    }
 
 
 
