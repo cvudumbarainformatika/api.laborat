@@ -53,10 +53,11 @@ class PemesananController extends Controller
         // }
         $valid = Validator::make($request->all(), [
             'reff' => 'required|min:5',
-            'nomor' => [
-                'required',
-                Rule::when(($anu && $anu->reff !== $request->reff), ['unique:sigarang.pemesanans,nomor'])
-            ]
+            'nomor' => 'required|unique:sigarang.pemesanans,nomor' . $request->reff
+            // 'nomor' => [
+            //     'required',
+            //     Rule::when(($anu && $anu->reff !== $request->reff), ['unique:sigarang.pemesanans,nomor'])
+            // ]
         ]);
         if ($valid->fails()) {
             return new JsonResponse($valid->errors(), 422);
