@@ -37,16 +37,10 @@ class Permintaanruangan extends Model
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
             return $search->where('no_permintaan', 'LIKE', '%' . $query . '%');
-            // ->orWhere('tanggal', 'LIKE', '%' . $query . '%')
-            // ->orWhere('kontrak', 'LIKE', '%' . $query . '%');
-
-            // ->orWhereHas('barangrs', function ($q) use ($query) {
-            //     $q->where('nama', 'like', '%' . $query . '%')
-            //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
-            // })->orWhereHas('satuan', function ($q) use ($query) {
-            //     $q->where('nama', 'like', '%' . $query . '%')
-            //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
-            // });
+        });
+        $search->when($reqs['r'] ?? false, function ($search, $query) {
+            $ruang = Ruang::select('kode')->where('uraian', 'LIKE', '%' . $query . '%')->get();
+            return $search->whereIn('kode_ruang', $ruang);
         });
     }
 }

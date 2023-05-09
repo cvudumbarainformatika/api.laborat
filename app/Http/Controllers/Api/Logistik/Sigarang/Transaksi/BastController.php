@@ -92,6 +92,7 @@ class BastController extends Controller
                         'no_bast' => $request->no_bast,
                         'tanggal_bast' => $request->tanggal_bast,
                         'nilai_tagihan' => $penerimaan['nilai_tagihan'],
+                        'total' => $penerimaan['nilai_tagihan'],
                         'faktur' => $penerimaan['faktur'],
                     ]);
                     foreach ($penerimaan['details'] as $det) {

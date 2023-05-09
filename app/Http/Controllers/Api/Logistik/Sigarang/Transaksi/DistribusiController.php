@@ -33,7 +33,7 @@ class DistribusiController extends Controller
                     $wew->with('barangrs.mapingbarang.barang108', 'satuan', 'ruang');
                 }
             ])
-            ->filter(request(['q']))
+            ->filter(request(['q', 'r']))
             ->paginate(request('per_page'));
         // ->get();
 
