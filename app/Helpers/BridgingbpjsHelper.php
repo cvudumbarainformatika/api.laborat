@@ -2,15 +2,17 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Http;
 use LZCompressor\LZString;
 
 class BridgingbpjsHelper
 {
 
 
-    public static function get_url(string $name)
+    public static function get_url(string $name, $param)
     {
         $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        // $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
         $service_name = 'vclaim-rest-dev';
         if ($name === 'antrean') {
             $service_name = 'antreanrs_dev';
@@ -22,18 +24,56 @@ class BridgingbpjsHelper
             $service_name = 'vclaim-rest-dev';
         }
 
-        return $base_url . $service_name . '/';
+        $url = $base_url . $service_name . '/' . $param;
+
+
+
+        $sign = self::getSignature($name);
+        $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
+
+        $header = self::getHeader($sign);
+        $response = Http::withHeaders($header)->get($url);
+
+        $data = json_decode($response, true);
+        // return $data;
+        if (!$data) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'ERRROR SIGNATURE'
+            ], 500);
+        }
+
+
+
+        $res['metadata'] = '';
+        $res['result'] = 'Tidak ditemukan';
+
+        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+
+        // if (!$data["response"]) {
+        //     return $res;
+        // }
+        $nilairespon = $data["response"] ?? false;
+        if (!$nilairespon) {
+            return $res;
+        }
+        $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
+        $res['result'] = json_decode($hasilakhir);
+        if (!$hasilakhir) {
+            return response()->json($data);
+        }
+        return $res;
     }
 
 
-    public static function getSignature()
+    public static function getSignature(string $name)
     {
         // BPJS_ANTREAN_CONS_ID=31014
         // BPJS_ANTREAN_SECRET=3sY5CB0658
-        // BPJS_ANTREAN_USER_KEY=140dbebe0248aa4ce64557a8ffbdb0e9
+        // $BPJS_ANTREAN_USER_KEY = '140dbebe0248aa4ce64557a8ffbdb0e9';
         // BPJS_ANTREAN_USER_KEY_DEV=f5abd04a8fadc1061e8853715662c3e8
 
-        $BPJS_ANTREAN_SECRET = '3sY5CB0658';
+        // $BPJS_ANTREAN_SECRET = '3sY5CB0658';
         $BPJS_ANTREAN_USER_KEY = 'f5abd04a8fadc1061e8853715662c3e8';
 
 
@@ -42,10 +82,16 @@ class BridgingbpjsHelper
 
         $cons = "31014";
         $secretKey = "3sY5CB0658";
-        // Computes the timestamp
+
+        $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
+        if ($name === 'vclaim') {
+            $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
+        } else {
+            $USERKEY = $BPJS_ANTREAN_USER_KEY;
+        }
+
         date_default_timezone_set('UTC');
         $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-        // Computes the signature by hashing the salt with the secret key as the key
         $signature = hash_hmac('sha256', $cons . "&" . $tStamp, $secretKey, true);
 
         // base64 encode�
@@ -55,7 +101,7 @@ class BridgingbpjsHelper
             'xconsid' => $cons,
             'xtimestamp' => $tStamp,
             'xsignature' => $encodedSignature,
-            'user_key' => $VCLAIM_DEV_USER_KEY_DEV, // ini untuk vclaim
+            'user_key' => $USERKEY, // ini untuk vclaim
             // 'user_key' => $BPJS_ANTREAN_USER_KEY, // ini untuk antrean
             'secret_key' => $secretKey
         );
@@ -63,9 +109,9 @@ class BridgingbpjsHelper
         return $data;
     }
 
-    public static function getHeader()
+    public static function getHeader($data)
     {
-        $data = self::getSignature();
+        // $data = self::getSignature();
         return [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
