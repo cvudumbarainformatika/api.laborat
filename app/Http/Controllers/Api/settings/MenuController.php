@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Pegawai\Akses\Aplikasi;
 use App\Models\Pegawai\Akses\Menu as AksesMenu;
+use App\Models\Pegawai\Akses\Submenu as AksesSubmenu;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Submenu;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +30,7 @@ class MenuController extends Controller
     }
     public function aplikasi_store(Request $request)
     {
-        return new JsonResponse($request->all());
+        // return new JsonResponse($request->all());
         $id = $request->id;
 
         $data = Aplikasi::updateOrCreate(['id' => $id], [
@@ -39,6 +40,7 @@ class MenuController extends Controller
             'aplikasi' => $request->aplikasi,
             'color' => $request->color,
             'singkatan' => $request->singkatan,
+            'url' => $request->url,
         ]);
         return new JsonResponse($data);
     }
@@ -52,7 +54,7 @@ class MenuController extends Controller
             return new JsonResponse($valid->errors(), 422);
         }
 
-        return new JsonResponse($request->all());
+        // return new JsonResponse($request->all());
 
         $id = $request->id;
 
@@ -61,6 +63,30 @@ class MenuController extends Controller
             'link' => $request->link,
             'icon' => $request->icon,
             'nama' => $request->nama,
+            'name' => $request->name,
+        ]);
+
+        return new JsonResponse(($data));
+    }
+    public function submenuStore(Request $request)
+    {
+        $valid = Validator::make($request->all(), [
+            'menu_id' => 'required'
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+
+        // return new JsonResponse($request->all());
+
+        $id = $request->id;
+
+        $data = AksesSubmenu::updateOrCreate(['id' => $id], [
+            'menu_id' => $request->menu_id,
+            'link' => $request->link,
+            'icon' => $request->icon,
+            'nama' => $request->nama,
+            'name' => $request->name,
         ]);
 
         return new JsonResponse(($data));
