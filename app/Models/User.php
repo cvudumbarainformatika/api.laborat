@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
@@ -93,6 +94,11 @@ class User extends Authenticatable implements JWTSubject
     public function ruang()
     {
         return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
+    }
+
+    public function menus()
+    {
+        return $this->hasMany(AksesUser::class);
     }
 
 
