@@ -147,4 +147,13 @@ class BridgingbpjsHelper
     {
         return LZString::decompressFromEncodedURIComponent($string);
     }
+
+    public static function metaData($code = 200, $msg = 'ok', $value = null)
+    {
+        $metadata = ['code' => $code, 'message' => $msg];
+        $res['metadata'] = $metadata;
+        $res['result'] = $value;
+
+        return response()->json($res);
+    }
 }
