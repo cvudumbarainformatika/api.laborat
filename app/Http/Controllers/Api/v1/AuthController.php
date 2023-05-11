@@ -50,7 +50,7 @@ class AuthController extends Controller
     public function me()
     {
         $me = auth()->user();
-        $akses = User::find(auth()->user()->id);
+        $akses = User::with('menus')->find(auth()->user()->id);
         $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
@@ -105,6 +105,7 @@ class AuthController extends Controller
             'ruang' => $apem,
             'kode_ruang' => $pegawai->kode_ruang,
             'depo' => $gud,
+            'akses' => $akses
         ]);
     }
 
@@ -128,7 +129,7 @@ class AuthController extends Controller
     protected function createNewToken($token)
     {
 
-        $akses = User::find(auth()->user()->id);
+        $akses = User::with('menus')->find(auth()->user()->id);
         $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
 
@@ -184,6 +185,7 @@ class AuthController extends Controller
             'ruang' => $apem,
             'kode_ruang' => $pegawai->kode_ruang,
             'depo' => $gud,
+            'akses' => $akses
         ]);
     }
 
