@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api\settings;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Pegawai\Akses\Aplikasi;
+use App\Models\Pegawai\Akses\Menu as AksesMenu;
+use App\Models\Pegawai\Akses\Submenu as AksesSubmenu;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Submenu;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class MenuController extends Controller
 {
@@ -27,6 +30,7 @@ class MenuController extends Controller
     }
     public function aplikasi_store(Request $request)
     {
+        // return new JsonResponse($request->all());
         $id = $request->id;
 
         $data = Aplikasi::updateOrCreate(['id' => $id], [
@@ -34,8 +38,58 @@ class MenuController extends Controller
             'julukan' => $request->julukan,
             'icon' => $request->icon,
             'aplikasi' => $request->aplikasi,
+            'color' => $request->color,
+            'singkatan' => $request->singkatan,
+            'url' => $request->url,
         ]);
         return new JsonResponse($data);
+    }
+
+    public function menuStore(Request $request)
+    {
+        $valid = Validator::make($request->all(), [
+            'aplikasi_id' => 'required'
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+
+        // return new JsonResponse($request->all());
+
+        $id = $request->id;
+
+        $data = AksesMenu::updateOrCreate(['id' => $id], [
+            'aplikasi_id' => $request->aplikasi_id,
+            'link' => $request->link,
+            'icon' => $request->icon,
+            'nama' => $request->nama,
+            'name' => $request->name,
+        ]);
+
+        return new JsonResponse(($data));
+    }
+    public function submenuStore(Request $request)
+    {
+        $valid = Validator::make($request->all(), [
+            'menu_id' => 'required'
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+
+        // return new JsonResponse($request->all());
+
+        $id = $request->id;
+
+        $data = AksesSubmenu::updateOrCreate(['id' => $id], [
+            'menu_id' => $request->menu_id,
+            'link' => $request->link,
+            'icon' => $request->icon,
+            'nama' => $request->nama,
+            'name' => $request->name,
+        ]);
+
+        return new JsonResponse(($data));
     }
 
     public function cariPegawai()
