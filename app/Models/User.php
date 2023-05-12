@@ -96,7 +96,7 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
     }
 
-    public function menus()
+    public function akses()
     {
         return $this->hasMany(AksesUser::class);
     }

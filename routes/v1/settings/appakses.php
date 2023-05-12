@@ -10,6 +10,7 @@ Route::group(
         'prefix' => 'settings/appakses'
     ],
     function () {
+        Route::get('/migrasi', [AksesUserController::class, 'migrasiAkses']);
         Route::get('/akses', [AksesUserController::class, 'userAkses']);
         Route::post('/store-akses', [AksesUserController::class, 'storeAkses']);
     }

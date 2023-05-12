@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Api\settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Akses\AksesUser;
+use App\Models\Pegawai\Akses\Role;
+use App\Models\Pegawai\Akses\Submenu;
+use App\Models\Sigarang\Pegawai;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -56,5 +61,36 @@ class AksesUserController extends Controller
         }
 
         return false;
+    }
+
+    public function migrasiAkses()
+    {
+        $aksesPegawai = Pegawai::select('id', 'role_id')->whereNotNull('role_id')->get();
+        $data = [];
+        foreach ($aksesPegawai as $key) {
+            $user = User::where('pegawai_id', $key['id'])->first();
+            if ($user) {
+                $akses = Access::where('role_id', $key['role_id'])->get();
+                foreach ($akses as $aks) {
+                    $sub = Submenu::find($aks['submenu_id']);
+                    $insert = AksesUser::firstOrCreate([
+                        'user_id' => $user->id,
+                        'submenu_id' => $sub->id,
+                        'menu_id' => $sub->menu_id,
+                        'aplikasi_id' => $aks['aplikasi_id']
+                    ]);
+                    array_push($data, $insert);
+                    // return new JsonResponse([
+                    //     'user_id' => $user->id,
+                    //     'submenu_id' => $sub->id,
+                    //     'menu_id' => $sub->menu_id,
+                    //     'aplikasi_id' => $aks['aplikasi_id']
+                    // ]);
+                }
+            }
+        }
+
+        // $data['akses pegawai'] = $aksesPegawai;
+        return new JsonResponse($data);
     }
 }

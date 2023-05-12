@@ -26,7 +26,7 @@ class AksesUser extends Model
     {
         return $this->belongsTo(Submenu::class);
     }
-    public function menus()
+    public function menu()
     {
         return $this->belongsTo(Menu::class);
     }

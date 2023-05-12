@@ -50,7 +50,7 @@ class AuthController extends Controller
     public function me()
     {
         $me = auth()->user();
-        $akses = User::with('menus')->find(auth()->user()->id);
+        $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
         $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
@@ -92,6 +92,43 @@ class AuthController extends Controller
             ];
             return $apem;
         });
+        // akses 2 start
+        $aks = collect($akses->akses);
+        // $apli2 = $aks;
+        $apli2 = $aks->map(function ($item, $key) {
+            return $item->aplikasi;
+        })->unique('id');
+        $subm2 = $aks->map(function ($item, $key) {
+            return $item->submenu;
+        });
+        $menu2 = $aks->map(function ($item, $key) {
+            return $item->menu;
+        })->unique('id');
+
+        $into2 = $menu2->map(function ($item, $key) use ($subm2) {
+            // $mbuh = [];
+            $temp = $subm2->where('menu_id', $item->id);
+            $map = $temp->map(function ($ki, $ke) {
+                // $map = $temp->each(function ($ki, $ke) {
+                return [
+                    'nama' => $ki->nama,
+                    'name' => $ki->name,
+                    'icon' => $ki->icon,
+                    'link' => $ki->link,
+
+                ];
+            });
+            $apem = [
+                'aplikasi_id' => $item->aplikasi_id,
+                'nama' => $item->nama,
+                'name' => $item->name,
+                'icon' => $item->icon,
+                'link' => $item->link,
+                'submenus' => $map,
+            ];
+            return $apem;
+        });
+        // akses 2 end
         $foto = $pegawai->nip . '/' . $pegawai->foto;
         $raw = collect($pegawai);
         $apem = $raw['ruang'];
@@ -99,7 +136,9 @@ class AuthController extends Controller
         return new JsonResponse([
             'result' => $me,
             'aplikasi' => $apli,
+            'aplikasi2' => $apli2,
             'menus' => $into,
+            'menus2' => $into2,
             'role' => $role,
             'foto' => $foto,
             'ruang' => $apem,
@@ -129,7 +168,7 @@ class AuthController extends Controller
     protected function createNewToken($token)
     {
 
-        $akses = User::with('menus')->find(auth()->user()->id);
+        $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
         $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
 
@@ -171,6 +210,43 @@ class AuthController extends Controller
             ];
             return $apem;
         });
+        // akses 2 start
+        $aks = collect($akses->akses);
+        // $apli2 = $aks;
+        $apli2 = $aks->map(function ($item, $key) {
+            return $item->aplikasi;
+        })->unique('id');
+        $subm2 = $aks->map(function ($item, $key) {
+            return $item->submenu;
+        });
+        $menu2 = $aks->map(function ($item, $key) {
+            return $item->menu;
+        })->unique('id');
+
+        $into2 = $menu2->map(function ($item, $key) use ($subm2) {
+            // $mbuh = [];
+            $temp = $subm2->where('menu_id', $item->id);
+            $map = $temp->map(function ($ki, $ke) {
+                // $map = $temp->each(function ($ki, $ke) {
+                return [
+                    'nama' => $ki->nama,
+                    'name' => $ki->name,
+                    'icon' => $ki->icon,
+                    'link' => $ki->link,
+
+                ];
+            });
+            $apem = [
+                'aplikasi_id' => $item->aplikasi_id,
+                'nama' => $item->nama,
+                'name' => $item->name,
+                'icon' => $item->icon,
+                'link' => $item->link,
+                'submenus' => $map,
+            ];
+            return $apem;
+        });
+        // akses 2 end
         $foto = $pegawai->nip . '/' . $pegawai->foto;
         $raw = collect($pegawai);
         $apem = $raw['ruang'];
@@ -180,6 +256,8 @@ class AuthController extends Controller
             'user' => auth()->user(),
             'aplikasi' => $apli,
             'menus' => $into,
+            'aplikasi' => $apli2,
+            'menus' => $into2,
             'role' => $role,
             'foto' => $foto,
             'ruang' => $apem,
