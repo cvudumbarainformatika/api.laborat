@@ -23,7 +23,7 @@ class AnjunganController extends Controller
     public function cari_rujukan_rs()
     {
         // $rujukan = false;
-        $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . request('search'));
+        $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . request('search'));
         return $rujukanPcare;
     }
     public function cari_noka()
