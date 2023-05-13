@@ -10,11 +10,12 @@ class FormatingHelper
 {
     public static function gennoreg($n,$kode)
     {
+        $has=null;
         $lbr=strlen($n);
         for($i=1;$i<=5-$lbr;$i++){
-            $has=@$has."0";
+            $has=$has."0";
         }
-        return @$has.$n."/".date("m")."/".date("Y")."/".$kode;
+        return $has.$n."/".date("m")."/".date("Y")."/".$kode;
     }
 
     public static function getKarcisPoli($poli,$kartu)
@@ -31,17 +32,21 @@ class FormatingHelper
         $biaya_rm1 = $data2?$data2->rs8:'0';
         $biaya_rm2 = $data2?$data2->rs9:'0';
 
+        $nama_biaya_lama=null;
+        $kode_biaya_lama=null;
         $data3 = DB::table('rs30z')->select('rs2','rs8','rs9')->where('rs3', '=', 'K2#')
         ->where('rs4', 'LIKE', '%' . $flag . '%')->get();
-        $nama_biaya_lama=@$nama_biaya."#".$data3[0]->rs2;
-        $kode_biaya_lama=@$kode_biaya."#"."K2";
+        $nama_biaya_lama=$nama_biaya_lama."#".$data3[0]->rs2;
+        $kode_biaya_lama=$kode_biaya_lama."#"."K2";
         $biaya_karcis1=$data3[0]->rs8;
         $biaya_karcis2=$data3[0]->rs9;
 
+        $nama_biaya_tidak_lama=null;
+        $kode_biaya_tidak_lama=null;
         $data4 = DB::table('rs30z')->select('rs2','rs8','rs9')->where('rs3', '=', 'K1#')
         ->where('rs4', '=', 'RJ')->get();
-        $nama_biaya_tidak_lama=@$nama_biaya_tidak_lama."#".$data4[0]->rs2;
-        $kode_biaya_tidak_lama=@$kode_biaya."#"."K1";
+        $nama_biaya_tidak_lama=$nama_biaya_tidak_lama."#".$data4[0]->rs2;
+        $kode_biaya_tidak_lama=$kode_biaya_tidak_lama."#"."K1";
         $biaya_kartu1=$data4[0]->rs8;
         $biaya_kartu2=$data4[0]->rs9;
 
@@ -59,8 +64,10 @@ class FormatingHelper
 
         if($biaya_rm1 > 0)
         {
-            $sarana=@$sarana.$biaya_rm1;
-            $pelayanan=@$pelayanan.$biaya_rm2;
+            $sarana=null;
+            $pelayanan=null;
+            $sarana=$sarana.$biaya_rm1;
+            $pelayanan=$pelayanan.$biaya_rm2;
         }
 
         if($biaya_karcis1 > 0){
