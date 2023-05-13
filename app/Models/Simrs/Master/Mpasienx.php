@@ -68,7 +68,8 @@ class Mpasienx extends Model
                 'rs48 as tglrujuk',
                 'rs49 as noktp',
                 'rs50 as statusrstinggi',
-                'rs55 as telepon'
+                'rs55 as telepon',
+                'bahasa as bahasa'
         ]);
     }
 

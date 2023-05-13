@@ -13,7 +13,7 @@ class SistemBayarController extends Controller
     {
         $data = Msistembayar::query()
         ->selectRaw('rs1 as kode,rs2 as groupsistembayar')
-        ->where('rs3', '=' ,'')
+        ->where('hidden', '=' ,'')
         ->get();
         return new JsonResponse($data);
     }

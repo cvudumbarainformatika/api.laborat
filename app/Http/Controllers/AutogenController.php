@@ -99,6 +99,18 @@ class AutogenController extends Controller
         //     ->limit(100)->get();
         return response()->json($data, 200);
     }
+    public function gennoreg()
+    {
+        $n=1;
+        $kode='mm';
+        $has=null;
+        $lbr=strlen($n);
+        for($i=1;$i<=5-$lbr;$i++){
+            $has=$has."0";
+        }
+        return $has.$n."/".date("m")."/".date("Y")."/".$kode;
+    }
+
 
     public function query_table()
     {
