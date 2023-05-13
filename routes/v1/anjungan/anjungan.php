@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'anjungan'
 ], function () {
     Route::get('/cari-rujukan', [AnjunganController::class, 'cari_rujukan']);
+    Route::get('/cari-noka', [AnjunganController::class, 'cari_noka']);
 });
