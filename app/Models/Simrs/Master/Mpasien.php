@@ -11,6 +11,10 @@ class Mpasien extends Model
     use HasFactory;
     protected $table = 'rs15';
     protected $appends = ['usia'];
+    protected $guarded = [];
+    protected $primaryKey = 'rs1';
+
+    // public $timestamps = false;
 
     public function getUsiaAttribute()
     {
@@ -73,7 +77,8 @@ class Mpasien extends Model
                 'rs48 as tglrujuk',
                 'rs49 as noktp',
                 'rs50 as statusrstinggi',
-                'rs55 as telepon'
+                'rs55 as telepon',
+                'bahasa as bahasa'
         ]);
     }
 
