@@ -39,7 +39,7 @@ class RuangController extends Controller
         // $data = Ruang::paginate();
         $data = Ruang::latest()
             ->filter(request(['q']))
-            ->limit(50)
+            ->limit(10)
             ->get();
         return new JsonResponse($data);
     }

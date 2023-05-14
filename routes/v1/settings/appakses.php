@@ -12,6 +12,9 @@ Route::group(
     function () {
         Route::get('/migrasi', [AksesUserController::class, 'migrasiAkses']);
         Route::get('/akses', [AksesUserController::class, 'userAkses']);
+        Route::get('/role', [AksesUserController::class, 'userRole']);
         Route::post('/store-akses', [AksesUserController::class, 'storeAkses']);
+        Route::post('/store-role', [AksesUserController::class, 'storeRole']);
+        Route::post('/store-ruang', [AksesUserController::class, 'storeRuang']);
     }
 );
