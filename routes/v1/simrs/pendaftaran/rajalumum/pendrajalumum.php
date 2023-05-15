@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\DaftarrajalbpjsController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\DaftarrajalumumController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,4 +12,5 @@ Route::group([
 ], function () {
 
     Route::post('/rajalumumsimpan', [DaftarrajalumumController::class, 'simpandaftar']);
+    Route::post('/rajalbpjssimpan', [DaftarrajalbpjsController::class, 'simpandaftarbpjs']);
 });

@@ -14,7 +14,7 @@ class GeneralconsentController extends Controller
         $request->validate([
         'noreg' => 'required|unique:generalconsent,noreg'
         ]);
-        $simpangeneralcontent = Mgeneralconsent::create($request->all);
+        $simpangeneralcontent = Mgeneralconsent::create($request->all());
 
         if(!$simpangeneralcontent)
         {
