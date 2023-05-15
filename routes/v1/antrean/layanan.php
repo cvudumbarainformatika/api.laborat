@@ -11,7 +11,7 @@ Route::group([
     'prefix' => 'layanan'
 ], function () {
     Route::get('/data', [LayananController::class, 'index']);
-    // Route::get('/synch', [PoliController::class, 'synch']);
+    Route::get('/synch', [LayananController::class, 'synch']);
     Route::post('/store', [LayananController::class, 'store']);
     Route::post('/destroy', [LayananController::class, 'destroy']);
 });

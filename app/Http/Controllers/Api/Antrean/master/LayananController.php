@@ -83,84 +83,77 @@ class LayananController extends Controller
         ], 200);
     }
 
-    // public function synch()
-    // {
-    //     $polirs = Poli::where('rs5', '1')->get();
+    public function synch()
+    {
+        $polirs = Poli::where('rs4', 'Poliklinik')->get();
 
-    //     $collection = collect($polirs);
-    //     $data = $collection->map(function ($item, $key) {
-    //         $text = $item['rs2'];
-    //         $pecah = explode("Poli ", $text);
-    //         $jadi = null;
-    //         if ($pecah[0] === '') {
-    //             $jadi = $pecah[1];
-    //         } else {
-    //             $jadi = $pecah[0];
-    //         }
+        $collection = collect($polirs);
+        $data = $collection->map(function ($item, $key) {
+            $text = $item['rs2'];
+            // $pecah = explode("Poli ", $text);
+            // $jadi = null;
+            // if ($pecah[0] === '') {
+            //     $jadi = $pecah[1];
+            // } else {
+            //     $jadi = $pecah[0];
+            // }
 
-    //         $pecah2 = explode("Peny. ", $jadi);
+            // $pecah2 = explode("Peny. ", $jadi);
 
-    //         $jadi2 = null;
-    //         if ($pecah2[0] === '') {
-    //             $jadi2 = $pecah2[1];
-    //         } else {
-    //             $jadi2 = $pecah2[0];
-    //         }
+            // $jadi2 = null;
+            // if ($pecah2[0] === '') {
+            //     $jadi2 = $pecah2[1];
+            // } else {
+            //     $jadi2 = $pecah2[0];
+            // }
+
+            // // return $jadi;
+            // $bpjs = $this->caribpjs($jadi2);
+
+            // if ($bpjs['metadata']['code'] === 201) {
+            //     $bpjs = $this->caribpjs($item['rs6']);
+            // }
+            // // return $bpjs['result'];
 
 
-    //         $bpjs = $this->caribpjs($jadi2);
 
-    //         if ($bpjs === null) {
-    //             $bpjs = $this->caribpjs($item['rs6']);
-    //         }
+            // $dat['nama'] = $jadi2;
+            // $dat['bpjs'] = $bpjs['result'] !== 'Tidak ditemukan' ? $bpjs['result']->poli : null;
+            // // // return $dat;
+            // // // $coba = [];
 
+            Layanan::updateOrCreate(
+                ['id_layanan' => $item['rs1']],
+                [
+                    'kode_bpjs' => $item['rs6'],
+                    'nama' => $item['rs2'],
+                ]
+            );
 
+            // if ($dat['bpjs'] !== null) {
+            //     foreach ($dat['bpjs'] as $key) {
+            //         // array_push($coba, $key->nama);
 
-    //         $dat['nama'] = $jadi2;
-    //         $dat['bpjs'] = $bpjs ? $bpjs->poli : null;
-    //         // return $dat;
-    //         // $coba = [];
+            //         Layanan::updateOrCreate(
+            //             ['id_layanan' => $item['rs1']],
+            //             ['nama' => $key->nama, 'kode_bpjs' => $key->kode]
+            //         );
+            //     }
+            // }
+            return 'ok';
+        });
 
-    //         MasterPoli::updateOrCreate(
-    //             ['kode_simrs' => $item['rs1']],
-    //             [
-    //                 'kode_bpjs' => $item['rs6'],
-    //                 'nama' => $item['rs2'],
-    //             ]
-    //         );
+        // if (!$data) {
+        //     return new JsonResponse(['message' => 'error'], 500);
+        // }
 
-    //         if ($dat['bpjs'] !== null) {
-    //             foreach ($dat['bpjs'] as $key) {
-    //                 // array_push($coba, $key->nama);
+        // return new JsonResponse(['message' => 'success'], 200);
+        return response()->json($data);
+    }
 
-    //                 PoliBpjs::firstOrCreate(
-    //                     ['koders' => $item['rs1'], 'kode' => $key->kode],
-    //                     ['nama' => $key->nama]
-    //                 );
-    //             }
-    //         }
-    //         return 'ok';
-    //     });
-
-    //     if (!$data) {
-    //         return new JsonResponse(['message' => 'error'], 500);
-    //     }
-
-    //     return new JsonResponse(['message' => 'success'], 200);
-    // }
-
-    // public function caribpjs($param)
-    // {
-    //     $sign = BridgingbpjsHelper::getSignature();
-    //     $url = BridgingbpjsHelper::get_url('vclaim') . 'referensi/poli/' . $param;
-    //     $response = Http::withHeaders(BridgingbpjsHelper::getHeader())->get($url);
-    //     $res = json_decode($response, true);
-
-    //     $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
-    //     $nilairespon = $res["response"];
-    //     $hasilakhir = BridgingbpjsHelper::decompress(BridgingbpjsHelper::stringDecrypt($kunci, $nilairespon));
-
-    //     $bpjs = json_decode($hasilakhir);
-    //     return $bpjs;
-    // }
+    public function caribpjs($param)
+    {
+        // $sign = BridgingbpjsHelper::getSignature();
+        return BridgingbpjsHelper::get_url('vclaim', 'referensi/poli/' . $param);
+    }
 }

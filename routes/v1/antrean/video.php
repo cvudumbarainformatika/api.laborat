@@ -13,7 +13,7 @@ Route::group([
     Route::get('/data', [VideoController::class, 'index']);
     // Route::get('/synch', [PoliController::class, 'synch']);
     Route::post('/store', [VideoController::class, 'store']);
-    // Route::post('/destroy', [DisplayController::class, 'destroy']);
+    Route::post('/destroy', [VideoController::class, 'destroy']);
 });
 
 Route::group([
