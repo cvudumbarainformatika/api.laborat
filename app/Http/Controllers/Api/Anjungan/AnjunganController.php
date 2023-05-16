@@ -32,6 +32,6 @@ class AnjunganController extends Controller
         if (!$cari) {
             return response()->json(['result' => 'Tidak ditemukan']);
         }
-        return response()->json(['result' => 'Ada']); // ditemukan
+        return response()->json(['result' => $cari]); // ditemukan
     }
 }
