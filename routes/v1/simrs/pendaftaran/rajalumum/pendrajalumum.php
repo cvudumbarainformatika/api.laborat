@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\DaftarrajalbpjsController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\DaftarrajalumumController;
 use Illuminate\Support\Facades\Route;
 
