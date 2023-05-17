@@ -77,7 +77,7 @@ class Mpasien extends Model
                 'kd_negara as negara',
                 'kd_rt_dom as rtdomisili',
                 'kd_rw_dom as rwdomisili',
-                'kd_kel_dom aswew  kelurahandomisili',
+                'kd_kel_dom as  kelurahandomisili',
                 'kd_kec_dom as kecamatandomisili' ,
                 'kd_kota_dom as kabupatenkotadomisili' ,
                 'kodeposdom as kodeposdomisili',
