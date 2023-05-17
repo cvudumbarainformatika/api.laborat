@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Pegawai\Akses\Role;
 use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
@@ -52,6 +53,11 @@ class Pegawai extends Model
     public function ruang()
     {
         return $this->hasOne(Ruang::class, 'kode', 'kode_ruang');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 
     public function depo()

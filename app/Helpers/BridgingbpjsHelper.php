@@ -11,17 +11,22 @@ class BridgingbpjsHelper
 
     public static function get_url(string $name, $param)
     {
-        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-        // $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
-        $service_name = 'vclaim-rest-dev';
+        // $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        // $service_name = 'vclaim-rest-dev';
+        $service_name = 'vclaim-rest';
         if ($name === 'antrean') {
-            $service_name = 'antreanrs_dev';
+            // $service_name = 'antreanrs_dev';
+            $service_name = 'antreanrs';
         } else if ($name === 'apotek') {
-            $service_name = 'apotek-rest-dev';
+            // $service_name = 'apotek-rest-dev';
+            $service_name = 'apotek-rest';
         } else if ($name === 'pcare') {
-            $service_name = 'apotek-rest-dev';
+            // $service_name = 'apotek-rest-dev';
+            $service_name = 'apotek-rest';
         } else {
-            $service_name = 'vclaim-rest-dev';
+            // $service_name = 'vclaim-rest-dev';
+            $service_name = 'vclaim-rest';
         }
 
         $url = $base_url . $service_name . '/' . $param;
