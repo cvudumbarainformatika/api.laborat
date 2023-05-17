@@ -8,6 +8,7 @@ use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\Akses\Role;
 use App\Models\Pegawai\Akses\Submenu;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Ruang;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,29 @@ class AksesUserController extends Controller
     //
     public function userAkses()
     {
+    }
+    public function userRole()
+    {
+        $data = Role::select('id', 'nama')->get();
+        return new JsonResponse($data);
+    }
+    public function storeRole(Request $request)
+    {
+        $data = Pegawai::find($request->id);
+        $role = Role::find($request->role_id);
+        $data->update([
+            'role_id' => $request->role_id
+        ]);
+        return new JsonResponse($role);
+    }
+    public function storeRuang(Request $request)
+    {
+        $data = Pegawai::find($request->id);
+        $ruang = Ruang::where('kode', $request->kode_ruang)->first();
+        $data->update([
+            'kode_ruang' => $request->kode_ruang
+        ]);
+        return new JsonResponse($ruang);
     }
     public function storeAkses(Request $request)
     {
