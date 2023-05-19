@@ -59,12 +59,6 @@ class BookingController extends Controller
                 }
             }
         }
-        // return response()->json($id_layanan);
-
-
-
-
-
 
         $date = Carbon::parse($request->tanggalperiksa);
         $dt = $date->addMinutes(10);
