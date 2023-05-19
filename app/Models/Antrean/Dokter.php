@@ -6,16 +6,16 @@ namespace App\Models\Antrean;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Booking extends Model
+class Dokter extends Model
 {
     use HasFactory;
     protected $connection = 'antrean';
-    protected $table = 'bookings';
+    protected $table = 'dokters';
     protected $guarded = ['id'];
 
-    public function dokter()
+    public function booking()
     {
-        return $this->belongsTo(Dokter::class);
+        return $this->hasOne(Booking::class);
     }
 
     // public function referensi_poli_bpjs()

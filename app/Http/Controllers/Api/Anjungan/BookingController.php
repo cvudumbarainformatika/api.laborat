@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Anjungan;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
+use App\Models\Antrean\Dokter;
 use App\Models\Antrean\Layanan;
 use App\Models\Antrean\Unit;
 use App\Models\KunjunganPoli;
@@ -16,6 +17,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+
+use function PHPUnit\Framework\isNull;
 
 class BookingController extends Controller
 {
@@ -32,9 +35,35 @@ class BookingController extends Controller
         $layanan = self::cari_layanan($pasienjkn, $pasienbaru, $kodepoli);
         $id_layanan = $layanan->id_layanan;
         $kodelayanan = $layanan->kode;
+        $kuotajkn = $layanan->kuotajkn;
+        $kuotanonjkn = $layanan->kuotanonjkn;
 
         $angkaantrean = self::nomor_anteran($id_layanan) + 1;
         $nomorantrean = $kodelayanan . sprintf("%03s", $angkaantrean);
+
+        $sisakuotajkn = $kuotajkn;
+        $sisakuotanonjkn = $kuotanonjkn;
+
+        $os = array("1", "2", "3", "AP0001");
+        if (!in_array($id_layanan, $os)) {
+            if ($pasienjkn) {
+                $sisakuotajkn = (int)$kuotajkn > 0 ? (int)$kuotajkn - (int)$angkaantrean : 0;
+
+                if ($sisakuotajkn === 0) {
+                    return response()->json('Maaf, Antrian Sudah Penuh');
+                }
+            } else {
+                $sisakuotanonjkn = (int)$kuotanonjkn > 0 ? (int)$kuotanonjkn - (int)$angkaantrean : 0;
+                if ($sisakuotanonjkn === 0) {
+                    return response()->json('Maaf, Antrian Sudah Penuh');
+                }
+            }
+        }
+        // return response()->json($id_layanan);
+
+
+
+
 
 
         $date = Carbon::parse($request->tanggalperiksa);
@@ -42,6 +71,17 @@ class BookingController extends Controller
         $estimasidilayani = $dt->getPreciseTimestamp(3);
         // $toSecond = $estimasidilayani / 1000;
         // $coba = Carbon::createFromTimestamp($toSecond)->toDateTimeString();
+
+
+        $dok = $request->dokter ?? false;
+        $dokter = $dok ? Dokter::firstOrCreate(
+            ['kodedokter' => $dok['kodedokter']],
+            [
+                'namadokter' => $dok['kodedokter'],
+                'kodesubspesialis' => $dok['kodesubspesialis'],
+            ]
+        ) : false;
+
 
         $save = Booking::create(
             [
@@ -57,17 +97,17 @@ class BookingController extends Controller
                 'pasienbaru' => $request->pasienbaru,
                 'layanan_id' => $id_layanan,
                 'jeniskunjungan' => $request->jeniskunjungan,
-                // 'dokter_id' => $request->dokter_id,
+                'dokter_id' => $dok ? $dokter->id : null,
                 'tanggalperiksa' => $request->tanggalperiksa,
                 'tgl_ambil' => $request->tgl_ambil,
                 'nomorreferensi' => $request->nomorreferensi,
                 'nomorantrean' => $nomorantrean,
                 'angkaantrean' => $angkaantrean,
                 'estimasidilayani' => $estimasidilayani,
-                // 'sisakuotajkn' => $request->sisakuotajkn,
-                // 'kuotajkn' => $request->kuotajkn,
-                // 'sisakuotanonjkn' => $request->sisakuotanonjkn,
-                // 'kuotanonjkn' => $request->kuotanonjkn,
+                'sisakuotajkn' => $sisakuotajkn,
+                'kuotajkn' => $kuotajkn,
+                'sisakuotanonjkn' => $sisakuotanonjkn,
+                'kuotanonjkn' => $kuotanonjkn,
                 'keterangan' => 'Peserta harap hadir 30 menit lebih awal guna pencatatan administrasi',
             ]
         );
