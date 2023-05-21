@@ -33,6 +33,14 @@ class BookingController extends Controller
 
 
         $layanan = self::cari_layanan($pasienjkn, $pasienbaru, $kodepoli);
+
+        if (!$layanan) {
+            $msg = 'Maaf Layanan ini Belum Ada di RSUD MOHAMAD SALEH';
+            $metadata = ['code' => 201, 'message' => $msg];
+            $res['metadata'] = $metadata;
+            return response()->json($res);
+        }
+
         $id_layanan = $layanan->id_layanan;
         $kodelayanan = $layanan->kode;
         $kuotajkn = $layanan->kuotajkn;
@@ -50,12 +58,18 @@ class BookingController extends Controller
                 $sisakuotajkn = (int)$kuotajkn > 0 ? (int)$kuotajkn - (int)$angkaantrean : 0;
 
                 if ($sisakuotajkn === 0) {
-                    return response()->json('Maaf, Antrian Sudah Penuh');
+                    $msg = 'Maaf, Antrian Sudah Penuh';
+                    $metadata = ['code' => 201, 'message' => $msg];
+                    $res['metadata'] = $metadata;
+                    return response()->json($res);
                 }
             } else {
                 $sisakuotanonjkn = (int)$kuotanonjkn > 0 ? (int)$kuotanonjkn - (int)$angkaantrean : 0;
                 if ($sisakuotanonjkn === 0) {
-                    return response()->json('Maaf, Antrian Sudah Penuh');
+                    $msg = 'Maaf, Antrian Sudah Penuh';
+                    $metadata = ['code' => 201, 'message' => $msg];
+                    $res['metadata'] = $metadata;
+                    return response()->json($res);
                 }
             }
         }
@@ -107,14 +121,44 @@ class BookingController extends Controller
         );
 
 
-        return response()->json($save);
+        $metadata = ['code' => 200, 'message' => 'ok'];
+        $result = [
+            'booking' => $save,
+            'layanan' => $layanan
+        ];
+        $res['metadata'] = $metadata;
+        $res['result'] = $result;
+
+        return response()->json($res);
     }
 
-    public static function cari_layanan($pasienjkn = true, $pasienbaru = true, $kodepoli)
+    public function cetak_antrean()
+    {
+        $date = new Carbon();
+        // $toSecond = $estimasidilayani / 1000;
+        $tgl_ambil = $date->toDateTimeString();
+        // return response()->json($tgl_ambil);
+
+        $upd = Booking::where('kodebooking', request('kodebooking'))
+            ->update(['statuscetak' => 1, 'tgl_ambil' =>  $tgl_ambil]);
+
+        if (!$upd) {
+            return response()->json('Ada Kesalahan', 500);
+        }
+
+        // Add Antrean to Ws BPJS .. belum
+
+        return response()->json('ok');
+    }
+
+    public static function cari_layanan($pasienjkn, $pasienbaru, $kodepoli)
     {
         $data = null;
         if (!$pasienjkn) { // jika pasien umum
-            $data = Layanan::where('id_layanan', '1')->first();
+            $data = Layanan::where('kode_bpjs', $kodepoli)->first();
+            if (!$pasienbaru) {
+                $data = Layanan::where('id_layanan', '1')->first();
+            }
         } else {
             if (!$pasienbaru) {
                 $data = Layanan::where('kode_bpjs', $kodepoli)->first();

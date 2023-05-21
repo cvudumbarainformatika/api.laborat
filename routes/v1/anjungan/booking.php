@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'booking'
 ], function () {
     Route::post('/store', [BookingController::class, 'store']);
+    Route::get('/cetak-antrean', [BookingController::class, 'cetak_antrean']);
 });
