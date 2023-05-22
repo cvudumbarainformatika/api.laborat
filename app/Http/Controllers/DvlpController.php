@@ -17,41 +17,43 @@ class DvlpController extends Controller
         // jadwaldokt05-22er/kodepoli/{Parameter1}/tanggal/{Parameter2}
 
 
-        // $post = [
-        //     "kodebooking" => "18AB032021A001",
-        //     "jenispasien" => "NON JKN",
-        //     "nomorkartu" => null,
-        //     "nik" => null,
-        //     "nohp" => null,
-        //     "kodepoli" => 'LAI',
-        //     "namapoli" => 'PENDAFTARAN',
-        //     "pasienbaru" => 1,
-        //     "norm" => "",
-        //     "tanggalperiksa" => "2023-05-22",
-        //     "kodedokter" => 'LAI',
-        //     "namadokter" => null,
-        //     "jampraktek" => null,
-        //     "jeniskunjungan" => null,
-        //     "nomorreferensi" => null,
-        //     "nomorantrean" => "B-12",
-        //     "angkaantrean" => 12,
-        //     "estimasidilayani" => 1615869169000,
-        //     "sisakuotajkn" => 999,
-        //     "kuotajkn" => 999,
-        //     "sisakuotanonjkn" => 80,
-        //     "kuotanonjkn" => 90,
-        //     "keterangan" => "Ini Hanya Percobaan WS Karena yang dvlp sdh gak bisa digunakan."
-        // ];
+        $post = [
+            "kodebooking" => "18AB032021A001",
+            "jenispasien" => "NON JKN",
+            "nomorkartu" => null,
+            "nik" => null,
+            "nohp" => null,
+            "kodepoli" => 'LAI',
+            "namapoli" => 'PEND',
+            "pasienbaru" => 1,
+            "norm" => "",
+            "tanggalperiksa" => "2023-05-22",
+            "kodedokter" => null,
+            "namadokter" => null,
+            "jampraktek" => null,
+            "jeniskunjungan" => null,
+            "nomorreferensi" => null,
+            "nomorantrean" => "B-12",
+            "angkaantrean" => 12,
+            "estimasidilayani" => 1615869169000,
+            "sisakuotajkn" => 999,
+            "kuotajkn" => 999,
+            "sisakuotanonjkn" => 80,
+            "kuotanonjkn" => 90,
+            "keterangan" => "Ini Hanya Percobaan WS Karena yang dvlp sdh gak bisa digunakan."
+        ];
 
-        // $coba = BridgingbpjsHelper::post_url('antrean', 'antrean/add', $post);
-        // if (!$coba) {
-        //     return response()->json('bridging error');
-        // }
+        $coba = BridgingbpjsHelper::post_url('antrean', 'antrean/add', $post);
+        if (!$coba) {
+            return response()->json('bridging error');
+        }
+
+        return response()->json($coba);
 
         // return response()->json($coba);
-        $tgl = '2023-05-22';
-        $data = BridgingbpjsHelper::get_url('antrean', "antrean/pendaftaran/tanggal/$tgl");
-        return $data;
+        //     $tgl = '2023-05-22';
+        //     $data = BridgingbpjsHelper::get_url('antrean', "antrean/pendaftaran/tanggal/$tgl");
+        //     return $data;
     }
 
     public function antrian()
