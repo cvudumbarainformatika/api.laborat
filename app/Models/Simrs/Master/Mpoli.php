@@ -11,6 +11,7 @@ class Mpoli extends Model
     protected $table = 'rs19';
     protected $guarded = [];
     public $primarykey = 'rs1';
+    protected $keyType = 'string';
 
     public function scopeListpoli($data)
     {
@@ -24,4 +25,5 @@ class Mpoli extends Model
             'rs7 as polimapingbpjs',
         ]);
     }
+
 }

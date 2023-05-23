@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,4 +35,6 @@ class KunjunganPoli extends Model
     {
         return $this->hasOne(StatusPasienPoli::class, 'rs1', 'rs1');
     }
+
+
 }
