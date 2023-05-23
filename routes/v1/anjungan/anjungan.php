@@ -13,4 +13,6 @@ Route::group([
     Route::get('/cari-rujukan-rs', [AnjunganController::class, 'cari_rujukan_rs']);
     Route::get('/cari-noka', [AnjunganController::class, 'cari_noka']);
     Route::get('/cari-dokter', [AnjunganController::class, 'cari_dokter']);
+
+    Route::get('/norm', [AnjunganController::class, 'cari_norm']);
 });
