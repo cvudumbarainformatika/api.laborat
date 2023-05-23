@@ -28,7 +28,7 @@ class BookingController extends Controller
         $kodeBooking = self::kode_booking($request->pasienbaru);
 
         $pasienjkn = $request->jenispasien === 'JKN';
-        $pasienbaru = $request->pasienbaru === 1;
+        $pasienbaru = $request->pasienbaru === 1 ||  $request->pasienbaru === '1';
         $kodepoli = $request->kodepoli;
 
 
@@ -55,7 +55,7 @@ class BookingController extends Controller
         $os = array("1", "2", "3", "AP0001");
         if (!in_array($id_layanan, $os)) {
             if ($pasienjkn) {
-                $sisakuotajkn = (int)$kuotajkn > 0 ? (int)$kuotajkn - (int)$angkaantrean : 0;
+                // $sisakuotajkn = (int)$kuotajkn > 0 ? (int)$kuotajkn - (int)$angkaantrean : 0;
 
                 if ($sisakuotajkn === 0) {
                     $msg = 'Maaf, Antrian Sudah Penuh';
@@ -64,7 +64,7 @@ class BookingController extends Controller
                     return response()->json($res);
                 }
             } else {
-                $sisakuotanonjkn = (int)$kuotanonjkn > 0 ? (int)$kuotanonjkn - (int)$angkaantrean : 0;
+                // $sisakuotanonjkn = (int)$kuotanonjkn > 0 ? (int)$kuotanonjkn - (int)$angkaantrean : 0;
                 if ($sisakuotanonjkn === 0) {
                     $msg = 'Maaf, Antrian Sudah Penuh';
                     $metadata = ['code' => 201, 'message' => $msg];
@@ -120,6 +120,8 @@ class BookingController extends Controller
             ]
         );
 
+        // $hitungsisakuotajkn = self::sisaKuotaJkn();
+
 
         $metadata = ['code' => 200, 'message' => 'ok'];
         $result = [
@@ -138,9 +140,31 @@ class BookingController extends Controller
         // $toSecond = $estimasidilayani / 1000;
         $tgl_ambil = $date->toDateTimeString();
         // return response()->json($tgl_ambil);
+        $booking = Booking::where('kodebooking', request('kodebooking'))->first();
+        $pasienjkn = $booking->jenispasien === 'JKN';
+        $pasienbaru = $booking->pasienbaru === 1;
+        $kodepoli = $booking->kodepoli;
+
+        $layanan_id = $booking->layanan_id;
+        $sisakuotajkn = $booking->sisakuotajkn;
+        $sisakuotanonjkn = $booking->sisakuotanonjkn;
+
+        $os = array("1", "2", "3", "AP0001");
+        if (!in_array($layanan_id, $os)) {
+            if ($pasienjkn) {
+                $sisakuotajkn = (int)$sisakuotajkn > 0 ? (int)$sisakuotajkn - 1 : 0;
+            } else {
+                $sisakuotanonjkn = (int)$sisakuotanonjkn > 0 ? (int)$sisakuotanonjkn - 1 : 0;
+            }
+        }
 
         $upd = Booking::where('kodebooking', request('kodebooking'))
-            ->update(['statuscetak' => 1, 'tgl_ambil' =>  $tgl_ambil]);
+            ->update([
+                'statuscetak' => 1,
+                'sisakuotajkn' => $sisakuotajkn,
+                'sisakuotanonjkn' => $sisakuotanonjkn,
+                'tgl_ambil' =>  $tgl_ambil
+            ]);
 
         if (!$upd) {
             return response()->json('Ada Kesalahan', 500);
@@ -155,23 +179,26 @@ class BookingController extends Controller
 
     public static function cari_layanan($pasienjkn, $pasienbaru, $kodepoli)
     {
-        $data = null;
-        if (!$pasienjkn) { // jika pasien umum
-            $data = Layanan::where('kode_bpjs', $kodepoli)->first();
-            if (!$pasienbaru) {
-                $data = Layanan::where('id_layanan', '1')->first();
-            }
-        } else {
-            if (!$pasienbaru) {
+        // $data = null;
+        if ($pasienjkn === false) { // jika pasien umum
+            // $data = Layanan::where('kode_bpjs', $kodepoli)->first(); // umum lama
+            $data = Layanan::where('id_layanan', '1')->first(); //umum baru
+            // if ($pasienbaru) {
+            //     $data = Layanan::where('id_layanan', '1')->first(); //umum baru
+            // }
+            return $data;
+        } else { //jika pasien jkn
+            if ($pasienbaru === false) { //jika pasien lama
                 $data = Layanan::where('kode_bpjs', $kodepoli)->first();
                 if (!$data) {
                     $data = Layanan::where('id_layanan', '2')->first();
                 }
+                return $data;
             } else {
                 $data = Layanan::where('id_layanan', '2')->first();
+                return $data;
             }
         }
-        return $data;
     }
 
     public static function kode_booking($pasienbaru)
