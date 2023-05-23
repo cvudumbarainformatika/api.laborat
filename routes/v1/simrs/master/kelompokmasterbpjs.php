@@ -13,7 +13,7 @@ Route::group([
     'prefix' => 'simrs/bpjs/master'
 ], function () {
     Route::get('/jeniskunjunganbpjs',[JeniskunjunganbpjsController::class, 'jeniskunjunganbpjs']);
-    Route::get('/procedurebpjs',[ProcedurebpjsController::class], 'procedurebpjs');
+    Route::get('/procedurebpjs',[ProcedurebpjsController::class, 'procedurebpjs']);
     Route::get('/assesmenbpjs',[AssesmentbpjsController::class, 'assesmentbpjs']);
     Route::get('/penunjangbpjs',[PenunjangbpjsController::class, 'penunjangbpjs']);
 });
