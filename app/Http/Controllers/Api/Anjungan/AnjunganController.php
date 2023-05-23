@@ -44,4 +44,13 @@ class AnjunganController extends Controller
         }
         return response()->json(['result' => $cari]); // ditemukan
     }
+
+    public function cari_norm()
+    {
+        $cari = Pasien::where('rs1', request('search'))->first();
+        if (!$cari) {
+            return response()->json(['result' => 'Tidak ditemukan']);
+        }
+        return response()->json(['result' => $cari]); // ditemukan
+    }
 }

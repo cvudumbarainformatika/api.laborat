@@ -8,11 +8,10 @@ use LZCompressor\LZString;
 class BridgingbpjsHelper
 {
 
-
-    public static function get_url(string $name, $param)
+    public static function ws_url(string $name, $param)
     {
         //$base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-         $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
         $service_name = 'vclaim-rest';
         if ($name === 'antrean') {
             $service_name = 'antreanrs';
@@ -25,7 +24,14 @@ class BridgingbpjsHelper
         }
 
         $url = $base_url . $service_name . '/' . $param;
+        return $url;
+    }
 
+
+    public static function get_url(string $name, $param)
+    {
+
+        $url = self::ws_url($name, $param);
 
 
         $sign = self::getSignature($name);
@@ -61,6 +67,38 @@ class BridgingbpjsHelper
         $res['result'] = json_decode($hasilakhir);
         if (!$hasilakhir) {
             return response()->json($data);
+        }
+        return $res;
+    }
+
+    public static function post_url(string $name, $param, $post)
+    {
+        $url = self::ws_url($name, $param);
+
+        $sign = self::getSignature($name);
+        $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
+
+        $header = self::getHeader($sign);
+        $response = Http::withHeaders($header)->post($url, $post);
+
+        $data = json_decode($response, true);
+        // return $data;
+        if (!$data) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'ERRROR SIGNATURE'
+            ], 500);
+        }
+
+
+
+        $res['metadata'] = '';
+
+        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+
+        $nilairespon = $data["response"] ?? false;
+        if (!$nilairespon) {
+            return $res;
         }
         return $res;
     }

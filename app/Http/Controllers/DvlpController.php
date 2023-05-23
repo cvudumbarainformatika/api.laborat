@@ -14,11 +14,46 @@ class DvlpController extends Controller
     {
         // $no_rujukan = '132701010323P000001';
         // return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $no_rujukan);
-        // jadwaldokter/kodepoli/{Parameter1}/tanggal/{Parameter2}
-        $kodepoli = 'BED';
-        $tgl = '2024-05-09';
+        // jadwaldokt05-22er/kodepoli/{Parameter1}/tanggal/{Parameter2}
 
-        return BridgingbpjsHelper::get_url('antrean', 'jadwaldokter/kodepoli/' . $kodepoli . '/tanggal' . '/' . $tgl);
+
+        $post = [
+            "kodebooking" => "18AB032021A001",
+            "jenispasien" => "NON JKN",
+            "nomorkartu" => null,
+            "nik" => null,
+            "nohp" => null,
+            "kodepoli" => 'LAI',
+            "namapoli" => 'PEND',
+            "pasienbaru" => 1,
+            "norm" => "",
+            "tanggalperiksa" => "2023-05-22",
+            "kodedokter" => null,
+            "namadokter" => null,
+            "jampraktek" => null,
+            "jeniskunjungan" => null,
+            "nomorreferensi" => null,
+            "nomorantrean" => "B-12",
+            "angkaantrean" => 12,
+            "estimasidilayani" => 1615869169000,
+            "sisakuotajkn" => 999,
+            "kuotajkn" => 999,
+            "sisakuotanonjkn" => 80,
+            "kuotanonjkn" => 90,
+            "keterangan" => "Ini Hanya Percobaan WS Karena yang dvlp sdh gak bisa digunakan."
+        ];
+
+        $coba = BridgingbpjsHelper::post_url('antrean', 'antrean/add', $post);
+        if (!$coba) {
+            return response()->json('bridging error');
+        }
+
+        return response()->json($coba);
+
+        // return response()->json($coba);
+        //     $tgl = '2023-05-22';
+        //     $data = BridgingbpjsHelper::get_url('antrean', "antrean/pendaftaran/tanggal/$tgl");
+        //     return $data;
     }
 
     public function antrian()
