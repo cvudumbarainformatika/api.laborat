@@ -9,8 +9,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master'
 ], function () {
-    Route::get('/Pekerjaan',[PekerjaanController::class, 'index']);
-    Route::post('/simpanPekerjaan',[PekerjaanController::class, 'store']);
-    Route::post('/hapusPekerjaan',[PekerjaanController::class, 'hapus']);
-
+    Route::get('/pekerjaan', [PekerjaanController::class, 'index']);
+    Route::post('/simpanPekerjaan', [PekerjaanController::class, 'store']);
+    Route::post('/hapusPekerjaan', [PekerjaanController::class, 'hapus']);
 });
