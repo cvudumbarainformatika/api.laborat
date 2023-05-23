@@ -11,7 +11,7 @@ class AsalrujukanContoller extends Controller
 {
     public function listasalrujukan()
     {
-        $asalrujukan = Masalrujukan::asalrujukan()->whereNull('aktif')->where('rs1', '!=', '')->get();
+        $asalrujukan = Masalrujukan::asalrujukan()->where('rs1', '!=', '')->get();
         return new JsonResponse($asalrujukan, 200);
     }
 }
