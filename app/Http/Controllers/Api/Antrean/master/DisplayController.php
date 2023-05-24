@@ -100,7 +100,7 @@ class DisplayController extends Controller
 
     public function display()
     {
-        $data = Display::with(['unit'])->where('kode', request('kode'))->first();
+        $data = Display::with(['unit.layanan'])->where('kode', request('kode'))->first();
         if (!$data) {
             return response()->json('Maaf display belum ada');
         }
