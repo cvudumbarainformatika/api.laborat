@@ -113,7 +113,8 @@ class HistoryController extends Controller
             }
             $data = $filterRuangan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang', 'ruangan')
-                ->latest('tanggal')
+                // ->latest('tanggal')
+                ->orderBy(request('order_by'), request('sort'))
                 ->paginate(request('per_page'));
             /*
             * Distribusi depo
