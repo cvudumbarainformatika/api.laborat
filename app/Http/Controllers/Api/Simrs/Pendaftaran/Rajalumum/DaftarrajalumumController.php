@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Rajal\KunjunganPoli;
