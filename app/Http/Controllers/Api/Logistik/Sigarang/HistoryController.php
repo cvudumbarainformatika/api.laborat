@@ -100,7 +100,8 @@ class HistoryController extends Controller
                     return $y->kode_ruang;
                 });
 
-                $filterRuangan = $permintaan->whereIn('kode_ruang', $only);
+                $filterRuangan = $permintaan->whereIn('kode_ruang', $only)
+                    ->where('status', '>=', 4);
             } else {
                 $filterRuangan = $permintaan;
             }
