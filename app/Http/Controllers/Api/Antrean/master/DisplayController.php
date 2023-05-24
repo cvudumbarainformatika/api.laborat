@@ -95,4 +95,16 @@ class DisplayController extends Controller
             'message' => 'Data sukses terhapus'
         ], 200);
     }
+
+
+
+    public function display()
+    {
+        $data = Display::with(['unit'])->where('kode', request('kode'))->first();
+        if (!$data) {
+            return response()->json('Maaf display belum ada');
+        }
+
+        return response()->json($data);
+    }
 }
