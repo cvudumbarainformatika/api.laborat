@@ -22,12 +22,20 @@ class CallController extends Controller
         $sub = $dt->sub('0 day');
         $tgl = $sub->toDateString();
 
-        $os = array("1", "2", "3", "AP0001");
-        $data = Booking::whereNotIn('layanan_id', $os)
-            ->where('statuscetak', 1)
+        // $os = array("1", "2", "3", "AP0001");
+        // $data = Booking::whereNotIn('layanan_id', $os)
+        // ->where('statuscetak', 1)
+        // ->whereBetween('created_at', [$tgl . ' 00:00:00', $tgl . ' 23:59:59'])
+        // ->paginate(request('per_page'));
+        $data = Booking::where('statuscetak', 1)
             ->whereBetween('created_at', [$tgl . ' 00:00:00', $tgl . ' 23:59:59'])
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
+    }
+
+    public function calling_layanan(Request $request)
+    {
+        return response()->json($request->all());
     }
 }
