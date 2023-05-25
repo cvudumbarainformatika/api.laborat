@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Antrean;
 
+use App\Events\AntreanEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
 use Carbon\Carbon;
@@ -19,8 +20,10 @@ class CallController extends Controller
     public function index()
     {
         $dt = new Carbon();
-        $sub = $dt->sub('2 day');
+        $sub = $dt->sub('0 day');
         $tgl = $sub->toDateString();
+
+        // $tgl = '2023-05-25';
 
         // $os = array("1", "2", "3", "AP0001");
         // $data = Booking::whereNotIn('layanan_id', $os)
@@ -36,6 +39,17 @@ class CallController extends Controller
 
     public function calling_layanan(Request $request)
     {
-        return response()->json($request->all());
+        // $message = array(
+        //     'SSO' => 'LABORAT',
+        //     'menu' => $request->GLOBAL_COMMENT,
+        //     '__key' => $request->ONO,
+        //     'data' => 'Hasil Selesai',
+        //     'LIS' => $temp
+        // );
+        $message = $request->all();
+
+        event(new AntreanEvent($message));
+        return response()->json(['message' => 'success'], 201);
+        // return response()->json($request->all());
     }
 }
