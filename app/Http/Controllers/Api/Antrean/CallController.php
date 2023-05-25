@@ -19,7 +19,7 @@ class CallController extends Controller
     public function index()
     {
         $dt = new Carbon();
-        $sub = $dt->sub('0 day');
+        $sub = $dt->sub('2 day');
         $tgl = $sub->toDateString();
 
         // $os = array("1", "2", "3", "AP0001");
