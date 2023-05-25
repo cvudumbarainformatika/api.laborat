@@ -101,6 +101,8 @@ class HistoryController extends Controller
                 });
 
                 $filterRuangan = $permintaan->whereIn('kode_ruang', $only);
+            } else if ($pegawai->role_id === 4) {
+                $filterRuangan = $permintaan->where('status', '>=', 4);
             } else {
                 $filterRuangan = $permintaan;
             }
@@ -113,7 +115,8 @@ class HistoryController extends Controller
             }
             $data = $filterRuangan->filter(request(['q']))
                 ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang', 'ruangan')
-                ->latest('tanggal')
+                // ->latest('tanggal')
+                ->orderBy(request('order_by'), request('sort'))
                 ->paginate(request('per_page'));
             /*
             * Distribusi depo
