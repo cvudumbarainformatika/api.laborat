@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Rajal;
 
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,11 @@ class KunjunganPoli extends Model
     public $timestamps = false;
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
+
+    public function masterpasien()
+    {
+        return $this->hasMany(Mpasien::class, 'rs1', 'rs2');
+    }
 
     // public function relrekomdpjp()
     // {
