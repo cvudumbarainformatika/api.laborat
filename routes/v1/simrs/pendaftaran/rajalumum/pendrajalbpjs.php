@@ -17,4 +17,5 @@ Route::group([
     Route::post('/listsepmrs', [listsepController::class, 'listsepmrs']);
     Route::post('/diagnosabybpjs', [BridgingbpjsController::class, 'diagnosabybpjs']);
     Route::post('/faskesasalbpjs', [BridgingbpjsController::class, 'faskesasalbpjs']);
+    Route::post('/dpjpbpjs', [BridgingbpjsController::class, 'dpjpbpjs']);
 });
