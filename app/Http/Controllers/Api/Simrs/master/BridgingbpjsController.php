@@ -48,6 +48,12 @@ class BridgingbpjsController extends Controller
     public function faskesasalbpjs(Request $request)
     {
         $faskesbpjs = BridgingbpjsHelper::get_url('vclaim', 'referensi/faskes/' . $request->faskesasal . '/1');
-        return $faskesbpjs;
+        return ($faskesbpjs);
+    }
+
+    public function dpjpbpjs(Request $request)
+    {
+        $dpjpbpjs = BridgingbpjsHelper::get_url('vclaim', 'referensi/dokter/pelayanan/'. $request->jenis_pelayanan . '/tglPelayanan/'. $request->tglsep .'/Spesialis/' . $request->kdmappolbpjs);
+        return ($dpjpbpjs);
     }
 }
