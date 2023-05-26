@@ -48,12 +48,16 @@ class CallController extends Controller
     public function calling_layanan(Request $request)
     {
         $unit = Unit::find($request->unit_id);
-        $message = array(
+        $data = array(
             'nomorantrean' => $request->nomorantrean,
             'kodebooking' => $request->kodebooking,
             'layanan_id' => $request->layanan_id,
             'namapasien' => $request->namapasien,
             'unit' => $unit
+        );
+        $message = array(
+            'menu' => 'panggil-antrean',
+            'data' => $data
         );
 
         $cek = Panggil::where('display', $unit->display_id)->count();
