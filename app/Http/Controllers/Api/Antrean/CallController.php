@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Antrean;
 use App\Events\AntreanEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
+use App\Models\Antrean\Panggil;
+use App\Models\Antrean\Unit;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,19 +39,37 @@ class CallController extends Controller
         return new JsonResponse($data);
     }
 
+    public function units()
+    {
+        $data = Unit::Select('id as value', 'loket as label')->orderBy('layanan_id', 'asc')->get();
+        return response()->json($data);
+    }
+
     public function calling_layanan(Request $request)
     {
-        // $message = array(
-        //     'SSO' => 'LABORAT',
-        //     'menu' => $request->GLOBAL_COMMENT,
-        //     '__key' => $request->ONO,
-        //     'data' => 'Hasil Selesai',
-        //     'LIS' => $temp
-        // );
-        $message = $request->all();
+        $unit = Unit::find($request->unit_id);
+        $message = array(
+            'nomorantrean' => $request->nomorantrean,
+            'kodebooking' => $request->kodebooking,
+            'layanan_id' => $request->layanan_id,
+            'namapasien' => $request->namapasien,
+            'unit' => $unit
+        );
+
+        $cek = Panggil::where('display', $unit->display_id)->count();
+
+        $resp = [
+            'code' => 202,
+            'message' => 'Maaf Ada Panggilan Lain'
+        ];
+        if ($cek > 0) {
+            return response()->json($resp, 200);
+        }
+
+        //memasukkan panggilan
 
         event(new AntreanEvent($message));
-        return response()->json(['message' => 'success'], 201);
+        return response()->json(['data' => $request->all()], 200);
         // return response()->json($request->all());
     }
 }
