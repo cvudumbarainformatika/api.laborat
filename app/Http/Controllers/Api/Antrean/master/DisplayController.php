@@ -6,6 +6,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Display;
 use App\Models\Antrean\PoliBpjs;
+use App\Models\Antrean\Unit;
 // use App\Models\Antrean\Unit;
 use App\Models\Poli;
 use Carbon\Carbon;
@@ -100,7 +101,12 @@ class DisplayController extends Controller
 
     public function display()
     {
-        $data = Display::with(['unit.layanan'])->where('kode', request('kode'))->first();
+        $hr_ini = date('Y-m-d');
+        $data = Unit::where('display_id', request('kode'))
+            ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
+                $q->where('tanggalperiksa', $hr_ini);
+            }])
+            ->get();
         if (!$data) {
             return response()->json('Maaf display belum ada');
         }

@@ -17,6 +17,10 @@ class Unit extends Model
     {
         return $this->belongsTo(Layanan::class, 'layanan_id', 'id_layanan');
     }
+    public function display()
+    {
+        return $this->belongsTo(Display::class, 'display_id', 'kode');
+    }
 
     // public function referensi_poli_bpjs()
     // {
