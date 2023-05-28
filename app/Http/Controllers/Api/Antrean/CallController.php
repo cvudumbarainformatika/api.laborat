@@ -49,14 +49,29 @@ class CallController extends Controller
     {
         $date = new Carbon();
         $hr_ini = $date->toDateTimeString();
+        $hr = $date->toDateString();
         $unit = Unit::find($request->unit_id);
+
+        $banyaknyaAntrian = Booking::whereBetween('tanggalperiksa', [$hr . ' 00:00:00', $hr . ' 23:59:59'])
+            ->where('layanan_id', $request->layanan_id)
+            ->where('statuscetak', 1)
+            ->count();
+        $sdhdipanggil = Booking::whereBetween('tanggalperiksa', [$hr . ' 00:00:00', $hr . ' 23:59:59'])
+            ->where('layanan_id', $request->layanan_id)
+            ->where('statuscetak', 1)
+            ->where('statuspanggil', 1)
+            ->count();
+        $sisaAntrian = $banyaknyaAntrian - $sdhdipanggil;
         $data = array(
             'nomorantrean' => $request->nomorantrean,
             'kodebooking' => $request->kodebooking,
             'layanan_id' => $request->layanan_id,
             'namapasien' => $request->namapasien,
             'set' => $request->set, // 1.panggil nomor || 2.panggil nama || 3. Panggil Suara dan Nama
-            'unit' => $unit
+            'unit' => $unit,
+            'jumlahantrian' => $banyaknyaAntrian,
+            'jumlahterpanggil' => $sdhdipanggil,
+            'sisaantrian' => $sisaAntrian
         );
         $message = array(
             'menu' => 'panggil-antrean',
