@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Antrean\master;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Display;
+use App\Models\Antrean\Panggil;
 use App\Models\Antrean\PoliBpjs;
 use App\Models\Antrean\Unit;
 // use App\Models\Antrean\Unit;
@@ -104,7 +105,10 @@ class DisplayController extends Controller
         $hr_ini = date('Y-m-d');
         $data = Unit::where('display_id', request('kode'))
             ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
-                $q->where('tanggalperiksa', $hr_ini);
+                $q->whereBetween('tanggalperiksa', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                    ->where('statuscetak', '=', 1)
+                    ->where('statuspanggil', '=', 1)
+                    ->orderBy('angkaantrean', 'DESC');
             }])
             ->get();
         if (!$data) {
@@ -112,5 +116,11 @@ class DisplayController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function delete_panggilan(Request $request)
+    {
+        Panggil::where('nomorantrean', $request->nomorantrean)->delete();
+        return response()->json($request->all(), 200);
     }
 }

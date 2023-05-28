@@ -32,7 +32,7 @@ class CallController extends Controller
         // ->where('statuscetak', 1)
         // ->whereBetween('created_at', [$tgl . ' 00:00:00', $tgl . ' 23:59:59'])
         // ->paginate(request('per_page'));
-        $data = Booking::where('statuscetak', 1)
+        $data = Booking::where('statuscetak', 1)->where('layanan_id', request('unit'))
             ->whereBetween('created_at', [$tgl . ' 00:00:00', $tgl . ' 23:59:59'])
             ->paginate(request('per_page'));
 
@@ -47,12 +47,15 @@ class CallController extends Controller
 
     public function calling_layanan(Request $request)
     {
+        $date = new Carbon();
+        $hr_ini = $date->toDateTimeString();
         $unit = Unit::find($request->unit_id);
         $data = array(
             'nomorantrean' => $request->nomorantrean,
             'kodebooking' => $request->kodebooking,
             'layanan_id' => $request->layanan_id,
             'namapasien' => $request->namapasien,
+            'set' => $request->set, // 1.panggil nomor || 2.panggil nama || 3. Panggil Suara dan Nama
             'unit' => $unit
         );
         $message = array(
@@ -60,20 +63,37 @@ class CallController extends Controller
             'data' => $data
         );
 
-        $cek = Panggil::where('display', $unit->display_id)->count();
+        $cek = Panggil::whereBetween('tanggal', [$date->toDateString() . ' 00:00:00', $date->toDateString() . ' 23:59:59'])
+            ->where('display', $unit->display_id)->count();
 
-        $resp = [
-            'code' => 202,
-            'message' => 'Maaf Ada Panggilan Lain'
-        ];
+        // return response()->json($cek, 200);
         if ($cek > 0) {
+            $resp = [
+                'code' => 202,
+                'message' => 'Maaf Ada Panggilan Lain'
+            ];
             return response()->json($resp, 200);
         }
 
-        //memasukkan panggilan
-
+        //kirim event ke websockets
         event(new AntreanEvent($message));
-        return response()->json(['data' => $request->all()], 200);
-        // return response()->json($request->all());
+        //memasukkan panggilan
+        Panggil::create(
+            [
+                'display' => $unit->display_id,
+                'tanggal' => $hr_ini,
+                'layanan_id' => $request->layanan_id,
+                'nomorantrean' => $request->nomorantrean,
+                'kodebooking' => $request->kodebooking,
+            ]
+        );
+
+        Booking::where('kodebooking', $request->kodebooking)
+            ->update(['statuspanggil' => 1]);
+        $resp = [
+            'code' => 200,
+            'message' => 'Success'
+        ];
+        return response()->json($resp, 200);
     }
 }
