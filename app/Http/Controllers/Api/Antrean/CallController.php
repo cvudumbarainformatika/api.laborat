@@ -52,6 +52,24 @@ class CallController extends Controller
         $hr = $date->toDateString();
         $unit = Unit::find($request->unit_id);
 
+
+        $cek = Panggil::whereBetween('tanggal', [$date->toDateString() . ' 00:00:00', $date->toDateString() . ' 23:59:59'])
+            ->where('display', $unit->display_id)->count();
+
+        // return response()->json($cek, 200);
+        if ($cek > 0) {
+            $resp = [
+                'code' => 202,
+                'message' => 'Maaf Ada Panggilan Lain'
+            ];
+            return response()->json($resp, 200);
+        }
+
+        // UPDATE BOOKING
+
+        Booking::where('kodebooking', $request->kodebooking)
+            ->update(['statuspanggil' => 1]);
+
         $banyaknyaAntrian = Booking::whereBetween('tanggalperiksa', [$hr . ' 00:00:00', $hr . ' 23:59:59'])
             ->where('layanan_id', $request->layanan_id)
             ->where('statuscetak', 1)
@@ -62,6 +80,7 @@ class CallController extends Controller
             ->where('statuspanggil', 1)
             ->count();
         $sisaAntrian = $banyaknyaAntrian - $sdhdipanggil;
+
         $data = array(
             'nomorantrean' => $request->nomorantrean,
             'kodebooking' => $request->kodebooking,
@@ -77,19 +96,6 @@ class CallController extends Controller
             'menu' => 'panggil-antrean',
             'data' => $data
         );
-
-        $cek = Panggil::whereBetween('tanggal', [$date->toDateString() . ' 00:00:00', $date->toDateString() . ' 23:59:59'])
-            ->where('display', $unit->display_id)->count();
-
-        // return response()->json($cek, 200);
-        if ($cek > 0) {
-            $resp = [
-                'code' => 202,
-                'message' => 'Maaf Ada Panggilan Lain'
-            ];
-            return response()->json($resp, 200);
-        }
-
         //kirim event ke websockets
         event(new AntreanEvent($message));
         //memasukkan panggilan
@@ -103,8 +109,7 @@ class CallController extends Controller
             ]
         );
 
-        Booking::where('kodebooking', $request->kodebooking)
-            ->update(['statuspanggil' => 1]);
+
         $resp = [
             'code' => 200,
             'message' => 'Success'
