@@ -37,13 +37,12 @@ return [
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
-                // 'host' => env('PUSHER_HOST'),
-                'host' => 'xenter.my.id',
-                'port' => env('LARAVEL_WEBSOCKETS_PORT', 6001),
+                'host' => env('LARAVEL_WEBSOCKETS_HOST', 'xenter.my.id'),
+                'port' => 6001,
                 'useTLS' => true,
                 'encrypted' => true,
                 'debug' => true,
-                'scheme' => 'https',
+                'scheme' => env('LARAVEL_WEBSOCKETS_SCHEME', 'https'),
                 'curl_options' => [
                     CURLOPT_SSL_VERIFYHOST => 0,
                     CURLOPT_SSL_VERIFYPEER => 0,
