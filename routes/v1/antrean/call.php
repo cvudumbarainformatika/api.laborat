@@ -11,5 +11,6 @@ Route::group([
     'prefix' => 'call'
 ], function () {
     Route::get('/data', [CallController::class, 'index']);
+    Route::get('/units', [CallController::class, 'units']);
     Route::post('/calling-layanan', [CallController::class, 'calling_layanan']);
 });

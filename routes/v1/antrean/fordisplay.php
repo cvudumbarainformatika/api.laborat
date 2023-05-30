@@ -11,4 +11,5 @@ Route::group([
     'prefix' => 'fordisplay'
 ], function () {
     Route::get('/display', [DisplayController::class, 'display']);
+    Route::post('/delete_panggilan', [DisplayController::class, 'delete_panggilan']);
 });

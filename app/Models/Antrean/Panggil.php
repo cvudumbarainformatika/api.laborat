@@ -6,21 +6,17 @@ namespace App\Models\Antrean;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Unit extends Model
+class Panggil extends Model
 {
     use HasFactory;
     protected $connection = 'antrean';
-    protected $table = 'units';
+    protected $table = 'panggils';
     protected $guarded = ['id'];
 
-    public function layanan()
-    {
-        return $this->belongsTo(Layanan::class, 'layanan_id', 'id_layanan');
-    }
-    public function display()
-    {
-        return $this->belongsTo(Display::class, 'display_id', 'kode');
-    }
+    // public function dokter()
+    // {
+    //     return $this->belongsTo(Dokter::class);
+    // }
 
     // public function referensi_poli_bpjs()
     // {
