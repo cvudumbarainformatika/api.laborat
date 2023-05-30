@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Laporan\LapoperasiController;
+use App\Http\Controllers\Api\Simrs\Laporan\Operasi\LapoperasiController;
 use Illuminate\Support\Facades\Route;
 
 
