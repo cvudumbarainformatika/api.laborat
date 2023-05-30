@@ -18,4 +18,10 @@ class SistemBayarController extends Controller
         return new JsonResponse($data);
     }
 
+    public function sistembayar2()
+    {
+        $data = Msistembayar::where('groups','=', request('sistembayar1'))->get();
+        return new JsonResponse($data);
+    }
+
 }

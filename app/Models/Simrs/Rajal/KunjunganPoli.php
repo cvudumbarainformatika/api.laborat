@@ -31,4 +31,5 @@ class KunjunganPoli extends Model
     {
         return $this->belongsTo(Mpoli::class, 'rs8', 'rs1');
     }
+
 }
