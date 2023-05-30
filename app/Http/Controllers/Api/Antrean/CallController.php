@@ -60,7 +60,7 @@ class CallController extends Controller
         if ($cek > 0) {
             $resp = [
                 'code' => 202,
-                'message' => 'Maaf Ada Panggilan Lain'
+                'message' => 'Maaf Masih Ada Panggilan Lain, Harap Tunggu..'
             ];
             return response()->json($resp, 200);
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Antrean\master;
 
+use App\Events\AnjunganEvent;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Display;
@@ -107,7 +108,7 @@ class DisplayController extends Controller
             ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
                 $q->whereBetween('tanggalperiksa', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
                     ->where('statuscetak', '=', 1)
-                    ->where('statuspanggil', '=', 1)
+                    // ->where('statuspanggil', '=', 1)
                     ->orderBy('angkaantrean', 'DESC');
             }])
             ->get();
@@ -121,6 +122,11 @@ class DisplayController extends Controller
     public function delete_panggilan(Request $request)
     {
         Panggil::where('nomorantrean', $request->nomorantrean)->delete();
+        $message = array(
+            'menu' => 'panggilan-berakhir',
+            'data' => $request->nomorantrean
+        );
+        event(new AnjunganEvent($message));
         return response()->json($request->all(), 200);
     }
 }

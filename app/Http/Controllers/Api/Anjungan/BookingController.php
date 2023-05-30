@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Anjungan;
 
+use App\Events\AnjunganEvent;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
@@ -158,13 +159,22 @@ class BookingController extends Controller
             }
         }
 
-        $upd = Booking::where('kodebooking', request('kodebooking'))
-            ->update([
-                'statuscetak' => 1,
-                'sisakuotajkn' => $sisakuotajkn,
-                'sisakuotanonjkn' => $sisakuotanonjkn,
-                'tgl_ambil' =>  $tgl_ambil
-            ]);
+        $booking = Booking::where('kodebooking', request('kodebooking'))->first();
+
+        // $upd = Booking::where('kodebooking', request('kodebooking'))
+        //     ->update([
+        //         'statuscetak' => 1,
+        //         'sisakuotajkn' => $sisakuotajkn,
+        //         'sisakuotanonjkn' => $sisakuotanonjkn,
+        //         'tgl_ambil' =>  $tgl_ambil
+        //     ]);
+
+        $upd = $booking->update([
+            'statuscetak' => 1,
+            'sisakuotajkn' => $sisakuotajkn,
+            'sisakuotanonjkn' => $sisakuotanonjkn,
+            'tgl_ambil' =>  $tgl_ambil
+        ]);
 
         if (!$upd) {
             return response()->json('Ada Kesalahan', 500);
@@ -172,7 +182,12 @@ class BookingController extends Controller
 
         // Add Antrean to Ws BPJS .. belum
 
+        $message = array(
+            'menu' => 'cetak-antrean',
+            'data' => $booking
+        );
 
+        event(new AnjunganEvent($message));
 
         return response()->json('ok');
     }
