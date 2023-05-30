@@ -18,8 +18,8 @@ class Layanan extends Model
         return $this->hasMany(Unit::class, 'layanan_id', 'id_layanan');
     }
 
-    // public function referensi_poli_bpjs()
-    // {
-    //     return $this->hasMany(PoliBpjs::class, 'koders', 'kode_simrs');
-    // }
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'layanan_id', 'id_layanan');
+    }
 }

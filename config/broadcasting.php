@@ -38,7 +38,7 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'host' => env('LARAVEL_WEBSOCKETS_HOST', 'xenter.my.id'),
-                'port' => 6001,
+                'port' => 6003,
                 'useTLS' => true,
                 'encrypted' => true,
                 'debug' => true,

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Antrean\master;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Display;
+use App\Models\Antrean\Panggil;
 use App\Models\Antrean\PoliBpjs;
+use App\Models\Antrean\Unit;
 // use App\Models\Antrean\Unit;
 use App\Models\Poli;
 use Carbon\Carbon;
@@ -100,11 +102,25 @@ class DisplayController extends Controller
 
     public function display()
     {
-        $data = Display::with(['unit.layanan'])->where('kode', request('kode'))->first();
+        $hr_ini = date('Y-m-d');
+        $data = Unit::where('display_id', request('kode'))
+            ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
+                $q->whereBetween('tanggalperiksa', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                    ->where('statuscetak', '=', 1)
+                    ->where('statuspanggil', '=', 1)
+                    ->orderBy('angkaantrean', 'DESC');
+            }])
+            ->get();
         if (!$data) {
             return response()->json('Maaf display belum ada');
         }
 
         return response()->json($data);
+    }
+
+    public function delete_panggilan(Request $request)
+    {
+        Panggil::where('nomorantrean', $request->nomorantrean)->delete();
+        return response()->json($request->all(), 200);
     }
 }
