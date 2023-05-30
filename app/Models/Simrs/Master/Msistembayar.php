@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Msistembayar extends Model
 {
     use HasFactory;
-    protected $table = 'rs8';
+    protected $table = 'rs9';
 
     // protected $guarded=['rs1'];
 }

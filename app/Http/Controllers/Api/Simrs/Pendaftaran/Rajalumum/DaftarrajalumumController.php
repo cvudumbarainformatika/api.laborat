@@ -212,4 +212,13 @@ class DaftarrajalumumController extends Controller
         }
 
     }
+
+    public function listpasienumum()
+    {
+        $tgldari = date('Y-m-d 00:00:00');
+        $tglsampai = date('Y-m-d 23:59:59');
+        $listpasienumum = KunjunganPoli::with('masterpasien')
+        ->where('rs14','=','UMUM')->limit(100)->get();
+        return new JsonResponse($listpasienumum) ;
+    }
 }

@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/sistembayar',[SistemBayarController::class, 'index']);
+    Route::get('/sistembayar2',[SistemBayarController::class, 'sistembayar2']);
 });
