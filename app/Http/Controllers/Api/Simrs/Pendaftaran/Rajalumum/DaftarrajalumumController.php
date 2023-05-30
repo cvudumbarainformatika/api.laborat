@@ -117,14 +117,14 @@ class DaftarrajalumumController extends Controller
                 'rs3' => $request->tglmasuk,
                 'rs6' => $request->asalrujukan,
                 'rs8' => $request->kodepoli,
-                'rs9' => $request->dpjp,
+                //'rs9' => $request->dpjp,
                 'rs10' => 0,
                 'rs11' => '',
                 'rs12' => 0,
                 'rs13' => 0,
                 'rs14' => $request->sistembayar,
                 'rs15' => $request->karcis,
-                'rs18' => 'sementara',
+                'rs18' => auth()->user()->pegawai_id,
                 'rs20' => 'Pendaftaran',
 
             ]);
@@ -197,7 +197,7 @@ class DaftarrajalumumController extends Controller
             DB::commit();
             return new JsonResponse([
                 'message' => 'DATA TERSIMPAN...!!!',
-                'rm' => $simpankunjunganpoli?$simpankunjunganpoli['input']->noreg:'gagal',
+                'noreg' => $simpankunjunganpoli?$simpankunjunganpoli['input']->noreg:'gagal',
                 'cek' => $simpankunjunganpoli?$simpankunjunganpoli['count']:'gagal',
                 'masuk' => $simpankunjunganpoli?$simpankunjunganpoli['masuk']:'gagal',
                 'hasil' => $simpankunjunganpoli?$simpankunjunganpoli['simpan']:'gagal',
