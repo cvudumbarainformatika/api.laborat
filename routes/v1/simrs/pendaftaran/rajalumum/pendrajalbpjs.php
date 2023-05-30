@@ -18,4 +18,10 @@ Route::group([
     Route::post('/diagnosabybpjs', [BridgingbpjsController::class, 'diagnosabybpjs']);
     Route::post('/faskesasalbpjs', [BridgingbpjsController::class, 'faskesasalbpjs']);
     Route::post('/dpjpbpjs', [BridgingbpjsController::class, 'dpjpbpjs']);
+    Route::post('/cekfingerprint', [BridgingbpjsController::class, 'cekfingerprint']);
+    Route::post('/provinsibpjs', [BridgingbpjsController::class, 'provinsibpjs']);
+    Route::post('/kabupatenbpjs', [BridgingbpjsController::class, 'kabupatenbpjs']);
+    Route::post('/kecamatanbpjs', [BridgingbpjsController::class, 'kecamatanbpjs']);
+    Route::post('/ceksuplesibpjs', [BridgingbpjsController::class, 'ceksuplesibpjs']);
+    Route::post('/rencanakontrolbpjs', [BridgingbpjsController::class, 'rencanakontrolbpjs']);
 });
