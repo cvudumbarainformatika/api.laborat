@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Laporan;
+namespace App\Http\Controllers\Api\Simrs\Laporan\Operasi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Laporan\Operasi\LaporanOperasi;

@@ -241,6 +241,10 @@ class PenerimaanController extends Controller
 
         $detailTerima->update(['qty' => $request->qty]);
 
+        if ($request->has('harga')) {
+            $detailTerima->update(['harga' => $request->harga]);
+        }
+
         if ($detailTerima->wasChanged()) {
             if ($request->has('statuspesanan')) {
                 if ($request->statuspesanan === 3) {

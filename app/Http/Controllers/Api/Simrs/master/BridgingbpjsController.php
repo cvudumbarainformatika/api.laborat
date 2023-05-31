@@ -56,4 +56,40 @@ class BridgingbpjsController extends Controller
         $dpjpbpjs = BridgingbpjsHelper::get_url('vclaim', 'referensi/dokter/pelayanan/'. $request->jenis_pelayanan . '/tglPelayanan/'. $request->tglsep .'/Spesialis/' . $request->kdmappolbpjs);
         return ($dpjpbpjs);
     }
+
+    public function cekfingerprint(Request $request)
+    {
+        $cekfingerprint = BridgingbpjsHelper::get_url('vclaim', 'SEP/FingerPrint/Peserta/'. $request->noka .'/TglPelayanan/' . $request->tglsep);
+        return ($cekfingerprint);
+    }
+
+    public function provinsibpjs(Request $request)
+    {
+        $provinsibpjs = BridgingbpjsHelper::get_url('vclaim', 'referensi/propinsi');
+        return ($provinsibpjs);
+    }
+
+    public function kabupatenbpjs(Request $request)
+    {
+        $kabupatenbpjs = BridgingbpjsHelper::get_url('vclaim', 'referensi/kabupaten/propinsi/'. $request->kodepropinsi);
+        return ($kabupatenbpjs);
+    }
+
+    public function kecamatanbpjs(Request $request)
+    {
+        $kecamatanbpjs = BridgingbpjsHelper::get_url('vclaim', 'referensi/kecamatan/kabupaten/'. $request->kodekabupaten);
+        return ($kecamatanbpjs);
+    }
+
+    public function ceksuplesibpjs(Request $request)
+    {
+        $ceksuplesibpjs = BridgingbpjsHelper::get_url('vclaim', 'sep/JasaRaharja/Suplesi/'. $request->noka .'/tglPelayanan/' . $request->tglsep);
+        return ($ceksuplesibpjs);
+    }
+
+    public function rencanakontrolbpjs(Request $request)
+    {
+        $rencanakontrolbpjs = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/ListRencanaKontrol/Bulan/'. $request->bulan.'/Tahun/'. $request->tahun.'/Nokartu/'. $request->noka.'/filter/2');
+        return ($rencanakontrolbpjs);
+    }
 }
