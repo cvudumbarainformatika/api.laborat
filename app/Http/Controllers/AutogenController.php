@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
+use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
@@ -65,28 +66,46 @@ class AutogenController extends Controller
 
     public function index()
     {
-        $tableName = 'accounts';
-        $data = Schema::getColumnListing($tableName);
+        // $tableName = 'accounts';
+        // $data = Schema::getColumnListing($tableName);
 
-        echo '<br>';
-        echo '====================================== RESOURCE ============================';
-        echo '<br>';
-        foreach ($data as $key) {
-            echo '\'' . $key . '\' => $this->' . $key . ',<br>';
-        }
-        echo '<br>';
-        echo '====================================== INI UNTUK request->only ============================';
-        echo '<br>';
-        foreach ($data as $key) {
-            echo '\'' . $key . '\',';
-        }
-        echo '<br>';
-        echo '====================================== INI UNTUK QUASAR ============================';
-        echo '<br>';
-        foreach ($data as $key) {
-            echo $key . ': "", <br>';
-        }
-        echo '<br>';
+        // echo '<br>';
+        // echo '====================================== RESOURCE ============================';
+        // echo '<br>';
+        // foreach ($data as $key) {
+        //     echo '\'' . $key . '\' => $this->' . $key . ',<br>';
+        // }
+        // echo '<br>';
+        // echo '====================================== INI UNTUK request->only ============================';
+        // echo '<br>';
+        // foreach ($data as $key) {
+        //     echo '\'' . $key . '\',';
+        // }
+        // echo '<br>';
+        // echo '====================================== INI UNTUK QUASAR ============================';
+        // echo '<br>';
+        // foreach ($data as $key) {
+        //     echo $key . ': "", <br>';
+        // }
+        // echo '<br>';
+        $tanggalperiksa = '2023-05-29';
+        $logAntrean = Booking::whereBetween('created_at', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
+            ->where('layanan_id', 1)
+            ->where('statuscetak', 1)
+            // ->where('statuspanggil', 1)
+            ->orderBy(
+                'id',
+                'DESC'
+            )
+            ->get();
+        $collection = collect($logAntrean);
+        $filtered = $collection->filter(function ($value, $key) {
+            return $value['statuspanggil'] === 1 && $value['jenispasien'] === 'JKN';
+        })->count();
+
+        // $data = $filtered->first();
+
+        return new JsonResponse($filtered);
     }
 
     public function coba()
@@ -101,14 +120,14 @@ class AutogenController extends Controller
     }
     public function gennoreg()
     {
-        $n=1;
-        $kode='mm';
-        $has=null;
-        $lbr=strlen($n);
-        for($i=1;$i<=5-$lbr;$i++){
-            $has=$has."0";
+        $n = 1;
+        $kode = 'mm';
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 5 - $lbr; $i++) {
+            $has = $has . "0";
         }
-        return $has.$n."/".date("m")."/".date("Y")."/".$kode;
+        return $has . $n . "/" . date("m") . "/" . date("Y") . "/" . $kode;
     }
 
 
