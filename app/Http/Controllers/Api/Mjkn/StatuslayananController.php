@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Mjkn;
 
+use App\Helpers\AuthjknHelper;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
@@ -21,7 +22,8 @@ class StatuslayananController extends Controller
 {
     public function byLayanan(Request $request)
     {
-        // $user = request('auth')->id;
+
+        // $user = AuthjknHelper::user();
         $validator = Validator::make($request->all(), [
             'kodepoli' => 'required',
             'kodedokter' => 'required',
@@ -89,14 +91,14 @@ class StatuslayananController extends Controller
 
         $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
 
-        if (!$cekDokter) {
+        if (!$cekDokter)
             return response()->json([
                 'metadata' => [
                     'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
                     'code' => 201,
                 ]
             ], 201);
-        }
+
 
         $logAntrean = Booking::whereBetween('created_at', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
             ->where('layanan_id', $unitAntrian->layanan_id)
@@ -114,7 +116,7 @@ class StatuslayananController extends Controller
         $logPanggilan = $collectLog->first();
         $antreanpanggil = '-';
         if ($logPanggilan) {
-            $logPanggilan->nomorantrean;
+            $antreanpanggil = $logPanggilan->nomorantrean;
         }
 
         $jumlahAntreanPanggil = $logPanggil->count();
@@ -134,9 +136,9 @@ class StatuslayananController extends Controller
         $logNonJkn = $collectLog->filter(function ($value, $key) {
             return $value['jenispasien'] !== 'JKN';
         })->count();
-        $logPanggilNonJkn = $collectLog->filter(function ($value, $key) {
-            return $value['jenispasien'] !== 'JKN' && $value['statuspanggil'] === 1;
-        });
+        // $logPanggilNonJkn = $collectLog->filter(function ($value, $key) {
+        //     return $value['jenispasien'] !== 'JKN' && $value['statuspanggil'] === 1;
+        // });
 
         $sisakuotajkn = $kuotaJkn - $logJkn;
         $sisakuotanonjkn = $kuotanonJkn - $logNonJkn;

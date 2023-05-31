@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\AuthjknHelper;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -52,6 +53,7 @@ class JknMiddleware extends BaseMiddleware
             // // $apy = base64_decode($token);
 
             $apy = Namshi::decode3rdparty($token);
+            AuthjknHelper::authenticate($apy);
 
             // return response()->json($apy);
         } catch (TokenExpiredException $e) {
@@ -76,10 +78,10 @@ class JknMiddleware extends BaseMiddleware
             return response()->json($data, $metadata['code']);
         }
 
-        $user = User::find($apy['sub']);
-        // return response()->json($user);
-        // Now let's put the user in the request class so that you can grab it from there
-        $request['auth'] = $user;
+        // $user = User::find($apy['sub']);
+        // // return response()->json($user);
+        // // Now let's put the user in the request class so that you can grab it from there
+        // $request['auth'] = $user;
         return $next($request);
     }
 }

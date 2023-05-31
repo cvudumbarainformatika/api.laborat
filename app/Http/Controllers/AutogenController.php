@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
@@ -13,6 +14,7 @@ use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
+use App\Models\Pasien;
 use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Akses\Menu;
 use App\Models\Pegawai\Hari;
@@ -88,24 +90,12 @@ class AutogenController extends Controller
         //     echo $key . ': "", <br>';
         // }
         // echo '<br>';
-        $tanggalperiksa = '2023-05-29';
-        $logAntrean = Booking::whereBetween('created_at', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
-            ->where('layanan_id', 1)
-            ->where('statuscetak', 1)
-            // ->where('statuspanggil', 1)
-            ->orderBy(
-                'id',
-                'DESC'
-            )
-            ->get();
-        $collection = collect($logAntrean);
-        $filtered = $collection->filter(function ($value, $key) {
-            return $value['statuspanggil'] === 1 && $value['jenispasien'] === 'JKN';
-        })->count();
 
-        // $data = $filtered->first();
 
-        return new JsonResponse($filtered);
+
+        $data = Pasien::getByNoBpjs('0000112490818')->get();
+
+        return new JsonResponse(DateHelper::usia($data[0]->rs16));
     }
 
     public function coba()
