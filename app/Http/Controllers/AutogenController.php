@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
+use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
+use App\Models\Pasien;
 use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Akses\Menu;
 use App\Models\Pegawai\Hari;
@@ -65,28 +68,34 @@ class AutogenController extends Controller
 
     public function index()
     {
-        $tableName = 'accounts';
-        $data = Schema::getColumnListing($tableName);
+        // $tableName = 'accounts';
+        // $data = Schema::getColumnListing($tableName);
 
-        echo '<br>';
-        echo '====================================== RESOURCE ============================';
-        echo '<br>';
-        foreach ($data as $key) {
-            echo '\'' . $key . '\' => $this->' . $key . ',<br>';
-        }
-        echo '<br>';
-        echo '====================================== INI UNTUK request->only ============================';
-        echo '<br>';
-        foreach ($data as $key) {
-            echo '\'' . $key . '\',';
-        }
-        echo '<br>';
-        echo '====================================== INI UNTUK QUASAR ============================';
-        echo '<br>';
-        foreach ($data as $key) {
-            echo $key . ': "", <br>';
-        }
-        echo '<br>';
+        // echo '<br>';
+        // echo '====================================== RESOURCE ============================';
+        // echo '<br>';
+        // foreach ($data as $key) {
+        //     echo '\'' . $key . '\' => $this->' . $key . ',<br>';
+        // }
+        // echo '<br>';
+        // echo '====================================== INI UNTUK request->only ============================';
+        // echo '<br>';
+        // foreach ($data as $key) {
+        //     echo '\'' . $key . '\',';
+        // }
+        // echo '<br>';
+        // echo '====================================== INI UNTUK QUASAR ============================';
+        // echo '<br>';
+        // foreach ($data as $key) {
+        //     echo $key . ': "", <br>';
+        // }
+        // echo '<br>';
+
+
+
+        $data = Pasien::getByNoBpjs('0000112490818')->get();
+
+        return new JsonResponse(DateHelper::usia($data[0]->rs16));
     }
 
     public function coba()
@@ -101,14 +110,14 @@ class AutogenController extends Controller
     }
     public function gennoreg()
     {
-        $n=1;
-        $kode='mm';
-        $has=null;
-        $lbr=strlen($n);
-        for($i=1;$i<=5-$lbr;$i++){
-            $has=$has."0";
+        $n = 1;
+        $kode = 'mm';
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 5 - $lbr; $i++) {
+            $has = $has . "0";
         }
-        return $has.$n."/".date("m")."/".date("Y")."/".$kode;
+        return $has . $n . "/" . date("m") . "/" . date("Y") . "/" . $kode;
     }
 
 
