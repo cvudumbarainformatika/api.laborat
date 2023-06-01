@@ -26,7 +26,7 @@ class AllbillrajalController extends Controller
         'laborat:id,rs1,rs2,rs3,rs4,rs5,rs6,rs13',
         'laborat.pemeriksaanlab:rs1,rs2,rs21',
         'radiologi',
-        'radiologi.relmasterpemeriksaan:rs1,rs2'
+        'radiologi.relmasterpemeriksaan:rs1,rs3,rs2'
        ])
         ->whereBetween('rs3', [$dari, $sampai])
         ->where('rs8','!=','POL014')->where('rs8','!=','PEN004')->where('rs8','!=','PEN005')
