@@ -44,10 +44,11 @@ class Allbillrajal extends Model
 
     public function apotekracikanrajal()
     {
-        return $this->hasOneThrough(
+        return $this->hasManyThrough(
             Apotekrajalracikanrincilalu::class,
             Apotekrajalracikanhedlalu::class,
-            'rs1','rs1'
+            'rs1',
+            'rs1'
         );
     }
 
