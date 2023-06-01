@@ -10,6 +10,8 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
+use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -55,5 +57,14 @@ class Allbillrajal extends Model
     public function laborat()
     {
         return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
+    public function radiologi()
+    {
+        return $this->hasManyThrough(
+            Transradiologi::class,
+            Transpermintaanradiologi::class,
+            'rs1','rs1'
+        );
     }
 }

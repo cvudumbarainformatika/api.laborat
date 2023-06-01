@@ -21,6 +21,11 @@ class Apotekrajalracikanrincilalu extends Model
         return $this->belongsTo(Mobat::class, 'rs4', 'rs1');
     }
 
+    public function relasihederracikan()
+    {
+        return $this->belongsTo(Apotekrajalracikanhedlalu::class, 'rs1', 'rs1');
+    }
+
     public function getSubtotalAttribute()
     {
         $harga = (int) $this->rs7;

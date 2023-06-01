@@ -21,9 +21,12 @@ class AllbillrajalController extends Controller
         'msistembayar:rs1,rs2',
         'apotekrajalpolilalu:rs1,rs2,rs3,rs4,rs6,rs8,rs10',
         'apotekrajalpolilalu.mobat:rs1,rs2',
+        'apotekracikanrajal.relasihederracikan:rs1,rs2,rs8',
         'apotekracikanrajal.racikanrinci:rs1,rs2',
         'laborat:id,rs1,rs2,rs3,rs4,rs5,rs6,rs13',
-        'laborat.pemeriksaanlab:rs1,rs2,rs21'
+        'laborat.pemeriksaanlab:rs1,rs2,rs21',
+        'radiologi',
+        'radiologi.relmasterpemeriksaan:rs1,rs2'
        ])
         ->whereBetween('rs3', [$dari, $sampai])
         ->where('rs8','!=','POL014')->where('rs8','!=','PEN004')->where('rs8','!=','PEN005')
