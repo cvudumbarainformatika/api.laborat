@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Anjungan;
 
 use App\Events\AnjunganEvent;
+use App\Helpers\BookingHelper;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
@@ -26,7 +27,8 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         // $nomor = Booking::where()
-        $kodeBooking = self::kode_booking($request->pasienbaru);
+        // $kodeBooking = self::kode_booking($request->pasienbaru);
+        $kodeBooking = BookingHelper::kodeBooking($request->pasienbaru);
 
         $pasienjkn = $request->jenispasien === 'JKN';
         $pasienbaru = $request->pasienbaru === 1 ||  $request->pasienbaru === '1';
@@ -86,7 +88,7 @@ class BookingController extends Controller
         $dokter = $dok ? Dokter::firstOrCreate(
             ['kodedokter' => $dok['kodedokter']],
             [
-                'namadokter' => $dok['kodedokter'],
+                'namadokter' => $dok['namadokter'],
                 'kodesubspesialis' => $dok['kodesubspesialis'],
             ]
         ) : false;

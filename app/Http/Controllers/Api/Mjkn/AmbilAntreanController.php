@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Mjkn;
 
 use App\Helpers\AuthjknHelper;
+use App\Helpers\BookingHelper;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Booking;
+use App\Models\Antrean\Dokter;
 use App\Models\Antrean\Unit;
 use App\Models\Pasien;
 use App\Models\Sigarang\Pegawai;
@@ -91,24 +93,29 @@ class AmbilAntreanController extends Controller
 
         $jadwalPoli = self::cari_dokter($kdPoli, $tanggalperiksa); // json_decode($jadwalPoli) for back to jSon
         // return new JsonResponse($jadwalPoli);
-        $code = $jadwalPoli['metadata']['code'];
-        if ($code != 200)
-            return response()->json([
-                'metadata' => [
-                    'message' => 'Maaf, jadwal poli tujuan tidak ditemukan pada tanggal tersebut.',
-                    'code' => 201,
-                ]
-            ], 201);
+        // $code = $jadwalPoli['metadata']['code'];
+        // if ($code != 200)
+        //     return response()->json([
+        //         'metadata' => [
+        //             'message' => 'Maaf, jadwal poli tujuan tidak ditemukan pada tanggal tersebut.',
+        //             'code' => 201,
+        //         ]
+        //     ], 201);
 
-        $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
+        // $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
 
-        if (!$cekDokter)
-            return response()->json([
-                'metadata' => [
-                    'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
-                    'code' => 201,
-                ]
-            ], 201);
+
+
+        // if (!$cekDokter)
+        //     return response()->json([
+        //         'metadata' => [
+        //             'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
+        //             'code' => 201,
+        //         ]
+        //     ], 201);
+
+
+
 
         $jamTutup = strtotime($tanggalperiksa . ' 10:59:59');
         $jamSekarang = strtotime(date('Y-m-d H:i:s'));
@@ -146,32 +153,239 @@ class AmbilAntreanController extends Controller
         $bpjsPasienGetByNoBpjs = BpjsPasienBaru::getByNoBpjs($noBpjs)->get();
 
         $layanan_id = $poli->kdpolirs;
-        $keterangan = '-';
+        $keterangan = 'Harap Hadir 30 Menit lebih Awal untuk verifikasi Pasien';
         $norm = '-';
+        $pasienbaru = 0;
+        $namapasien = '';
+        $nohp = '';
 
         // CARI PASIEN DI WS BPJS
         // $cekBpjs = self::cari_dokter($noBpjs, $tanggalperiksa);
 
 
         if (count($pasienGetByNoBpjs) == 0) {
+            $pasienbaru = 1;
+            $response = [
+                'metadata' => [
+                    'message' => 'Data pasien ini tidak ditemukan, silahkan Melakukan Registrasi Pasien Baru',
+                    'code' => 202,
+                ]
+            ];
+            return response()->json($response, $response['metadata']['code']);
+        }
+
+        // Masih Pasien Baru
+        if (count($bpjsPasienGetByNoBpjs) > 0 && count($pasienGetByNoBpjs) == 0) {
+            $pasienbaru = 1;
             $layanan_id = '2';
-            $keterangan = 'Silahkan peserta menunggu panggilan antrian di pendaftaran.';
-        } else {
-            $usia = DateHelper::usia($pasienGetByNoBpjs[0]->rs16);
-            $norm = $pasienGetByNoBpjs[0]->rs1;
+            $norm = '';
+
+            $tglLahir = $bpjsPasienGetByNoBpjs[0]->tanggallahir;
+            $usia = DateHelper::usia($tglLahir);
+            $namapasien = $bpjsPasienGetByNoBpjs[0]->nama;
+            $nohp = $bpjsPasienGetByNoBpjs[0]->nohp;
             if ((int) $usia > 60) {
                 $layanan_id = '3'; // LANSIA
                 $keterangan = 'Silahkan peserta menunggu panggilan antrian di pendaftaran.';
-            } else {
-                $keterangan = 'Data pasien ini tidak ditemukan, silahkan Melakukan Registrasi Pasien Baru';
             }
+        } else {
+            $layanan_id = $poli->kdpolirs;
+            $norm = $pasienGetByNoBpjs[0]->rs1;
+            $namapasien = $pasienGetByNoBpjs[0]->rs2;
+            $nohp = $pasienGetByNoBpjs[0]->rs55;
+            $keterangan = 'Silahkan peserta langsung datang ke pendaftaran tanpa menunggu panggilan antrian.';
         }
 
 
-        // AMBIL NO ANTRIAN
-        //...
 
-        return new JsonResponse('ok');
+        // AMBIL NO ANTRIAN
+
+        $booking = Booking::select('tanggalperiksa', 'nomorkartu')->whereBetween(
+            'tanggalperiksa',
+            [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59']
+        )
+            ->where('nomorkartu', $noBpjs)
+            ->count();
+
+        if ($booking > 0) {
+            $response = [
+                'metadata' => [
+                    'message' => 'Anda sudah mengambil antrian.. !',
+                    'code' => 201,
+                ]
+            ];
+            return response()->json($response, $response['metadata']['code']);
+        }
+
+        $kodebooking = BookingHelper::kodeBooking($pasienbaru);
+        $pasienjkn = true;
+        $pasienbaru = $pasienbaru === 1 ||  $pasienbaru === '1';
+        $kodepoli = $layanan_id;
+
+        $layanan = BookingHelper::cari_layanan($pasienjkn, $pasienbaru, $kodepoli);
+
+        if (!$layanan) {
+            $msg = 'Maaf Layanan ini Belum Ada di RSUD MOHAMAD SALEH';
+            $metadata = ['code' => 201, 'message' => $msg];
+            $res['metadata'] = $metadata;
+            return response()->json($res);
+        }
+
+
+        $id_layanan = $layanan->id_layanan;
+        $kodelayanan = $layanan->kode;
+        $kuotajkn = $layanan->kuotajkn;
+        $kuotanonjkn = $layanan->kuotanonjkn;
+
+
+        // $coba = Booking::select(
+        //     'tanggalperiksa',
+        //     'layanan_id',
+        //     'jenispasien',
+        //     'statuscetak',
+        //     'statuspanggil',
+        //     'id',
+        //     DB::raw('MAX(angkaantrean) as angkaterbesar')
+        // )
+        //     ->whereBetween('tanggalperiksa', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
+        //     ->where('layanan_id', $id_layanan)
+        //     // ->where('statuspanggil', 1)
+        //     ->orderBy('id', 'DESC')
+        //     ->get();
+
+        // return response()->json($coba);
+
+        $cekKuota = BookingHelper::jumlahKuotaTerpesan($tanggalperiksa, $id_layanan);
+        $angkaantrean = $cekKuota['angkaantrean'];
+        $logJkn = $cekKuota['jkn'];
+        $logNonJkn = $cekKuota['nonjkn'];
+
+        $nomorantrean = $kodelayanan . sprintf("%03s", $angkaantrean);
+
+        $sisakuotajkn = $kuotajkn - $logJkn;
+        $sisakuotanonjkn = $kuotanonjkn - $logNonJkn;
+
+        $os = array("1", "2", "3", "AP0001");
+        if (!in_array($id_layanan, $os)) {
+            if ($pasienjkn) {
+                $sisakuotajkn = (int)$sisakuotajkn > 0 ? (int)$sisakuotajkn - 1 : $sisakuotajkn;
+            } else {
+                $sisakuotanonjkn = (int)$sisakuotanonjkn > 0 ? (int)$sisakuotanonjkn - 1 : $sisakuotanonjkn;
+            }
+        }
+
+        // CEK PENUH
+        $os = array("1", "2", "3", "AP0001");
+        if (!in_array($id_layanan, $os)) {
+            if ($pasienjkn) {
+                // $sisakuotajkn = (int)$kuotajkn > 0 ? (int)$kuotajkn - (int)$angkaantrean : 0;
+
+                if ($sisakuotajkn === 0) {
+                    $msg = 'Maaf, Antrian Sudah Penuh';
+                    $metadata = ['code' => 201, 'message' => $msg];
+                    $res['metadata'] = $metadata;
+                    return response()->json($res, 201);
+                }
+            } else {
+                // $sisakuotanonjkn = (int)$kuotanonjkn > 0 ? (int)$kuotanonjkn - (int)$angkaantrean : 0;
+                if ($sisakuotanonjkn === 0) {
+                    $msg = 'Maaf, Antrian Sudah Penuh';
+                    $metadata = ['code' => 201, 'message' => $msg];
+                    $res['metadata'] = $metadata;
+                    return response()->json($res, 201);
+                }
+            }
+        }
+
+        $date = Carbon::parse($tanggalperiksa);
+        $dt = $date->addMinutes(10);
+        $estimasidilayani = $dt->getPreciseTimestamp(3);
+
+        $dok = $cekDokter ?? false;
+        // return new JsonResponse($dok);
+
+        $dokter = $dok ? Dokter::firstOrCreate(
+            ['kodedokter' => $dok['kodedokter']],
+            [
+                'namadokter' => $dok['namadokter'],
+                'kodesubspesialis' => $dok['kodesubspesialis'],
+            ]
+        ) : false;
+
+        $saiki = new Carbon();
+        $hariIni = $saiki->toDayDateTimeString();
+
+        $save = Booking::create(
+            [
+                'kodebooking' => $kodebooking,
+                'jenispasien' => $pasienjkn ? 'JKN' : 'NON JKN',
+                'norm' => $norm,
+                'namapasien' => $namapasien,
+                'nomorkartu' => $noBpjs,
+                'nik' => $noKtp,
+                'nohp' => $nohp,
+                'kodepoli' => $kdPoli,
+                'namapoli' => $namapoli,
+                'pasienbaru' => $pasienbaru ? 1 : 0,
+                'layanan_id' => $id_layanan,
+                'jeniskunjungan' => $request->jeniskunjungan,
+                'dokter_id' => $dok ? $dokter->id : null,
+                'tanggalperiksa' => $tanggalperiksa,
+                'tgl_ambil' => $hariIni,
+                'nomorreferensi' => $request->nomorreferensi,
+                'nomorantrean' => $nomorantrean,
+                'angkaantrean' => $angkaantrean,
+                'estimasidilayani' => $estimasidilayani,
+                'sisakuotajkn' => $sisakuotajkn,
+                'kuotajkn' => $kuotajkn,
+                'sisakuotanonjkn' => $sisakuotanonjkn,
+                'kuotanonjkn' => $kuotanonjkn,
+                'statuscetak' => 1,
+                'keterangan' => 'Peserta harap hadir 30 menit lebih awal guna pencatatan administrasi',
+            ]
+        );
+
+        if (!$save) {
+            $response = [
+                'metadata' => [
+                    'message' => 'Maaf Ada Kesalahan coba ulangi!',
+                    'code' => 201,
+                ]
+            ];
+            return response()->json($response, $response['metadata']['code']);
+        }
+
+        // $sisakuotajkn = $pasienjkn ? $kuotajkn - 1 : $save->sisakuotajkn;
+        // $sisakuotanonjkn = !$pasienjkn ? $kuotajkn - 1 : $save->sisakuotanonjkn;
+
+        // Booking::find($save->id)->update(
+        //     [
+        //         'sisakuotajkn' => $sisakuotajkn,
+        //         'sisakuotanonjkn' => $sisakuotanonjkn
+        //     ]
+        // );
+
+        $response = [
+            'response' => [
+                'nomorantrean' => $save->nomorantrean,
+                'angkaantrean' => $save->angkaantrean,
+                'kodebooking' => $save->kodebooking,
+                'norm' => $save->norm,
+                'namapoli' => $save->namapoli,
+                'namadokter' => $save->namadokter,
+                'estimasidilayani' => $save->estimasidilayani,
+                'sisakuotajkn' => $save->sisakuotajkn,
+                'kuotajkn' => $save->kuotajkn,
+                'sisakuotanonjkn' => $save->sisakuotanonjkn,
+                'kuotanonjkn' => $save->kuotanonjkn,
+                'keterangan' => $save->keterangan
+            ],
+            'metadata' => [
+                'message' => 'Ok',
+                'code' => 200,
+            ]
+        ];
+        return response()->json($response, $response['metadata']['code']);
     }
 
     public function cari_dokter($kodepoli, $tanggal)
