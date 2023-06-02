@@ -9,7 +9,10 @@ class Mobat extends Model
 {
     use HasFactory;
     protected $table = 'rs32';
-    protected $guarded = ['rs1'];
+    protected $guarded = [''];
+    public $timestamps = false;
+    protected $primaryKey = 'rs1';
+    protected $keyType = 'string';
 
     public function scopeMobat($data)
     {

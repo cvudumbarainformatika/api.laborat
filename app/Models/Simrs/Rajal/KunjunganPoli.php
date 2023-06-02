@@ -4,6 +4,8 @@ namespace App\Models\Simrs\Rajal;
 
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +32,11 @@ class KunjunganPoli extends Model
     public function relmpoli()
     {
         return $this->belongsTo(Mpoli::class, 'rs8', 'rs1');
+    }
+
+    public function msistembayar()
+    {
+        return $this->belongsTo(Msistembayar::class, 'rs14', 'rs1');
     }
 
 }

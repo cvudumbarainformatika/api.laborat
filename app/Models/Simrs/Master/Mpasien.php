@@ -11,8 +11,9 @@ class Mpasien extends Model
     use HasFactory;
     protected $table = 'rs15';
     protected $appends = ['usia'];
-    protected $guarded = [];
+    protected $guarded = [''];
     protected $primaryKey = 'rs1';
+    protected $keyType = 'string';
 
     // public $timestamps = false;
 
