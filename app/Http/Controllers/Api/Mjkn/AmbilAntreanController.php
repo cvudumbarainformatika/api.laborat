@@ -238,23 +238,6 @@ class AmbilAntreanController extends Controller
         $kuotanonjkn = $layanan->kuotanonjkn;
 
 
-        // $coba = Booking::select(
-        //     'tanggalperiksa',
-        //     'layanan_id',
-        //     'jenispasien',
-        //     'statuscetak',
-        //     'statuspanggil',
-        //     'id',
-        //     DB::raw('MAX(angkaantrean) as angkaterbesar')
-        // )
-        //     ->whereBetween('tanggalperiksa', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
-        //     ->where('layanan_id', $id_layanan)
-        //     // ->where('statuspanggil', 1)
-        //     ->orderBy('id', 'DESC')
-        //     ->get();
-
-        // return response()->json($coba);
-
         $cekKuota = BookingHelper::jumlahKuotaTerpesan($tanggalperiksa, $id_layanan);
         $angkaantrean = $cekKuota['angkaantrean'];
         $logJkn = $cekKuota['jkn'];
