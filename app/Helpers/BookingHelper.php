@@ -36,12 +36,12 @@ class BookingHelper
         } else { //jika pasien jkn
             if ($pasienbaru === false) { //jika pasien lama
                 $data = Layanan::where('id_layanan', $kodepoli)->first();
-                // if (!$data) {
-                //     $data = Layanan::where('id_layanan', '2')->first();
-                // }
+                if (!$data) {
+                    $data = Layanan::where('id_layanan', '2')->first();
+                }
                 return $data;
-            } else {
-                $data = Layanan::where('id_layanan', $kodepoli)->first();
+            } else { //jika pasien baru
+                $data = Layanan::where('id_layanan', '2')->first();
                 return $data;
             }
         }
