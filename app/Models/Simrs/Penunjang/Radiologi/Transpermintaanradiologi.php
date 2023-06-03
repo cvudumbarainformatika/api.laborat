@@ -10,6 +10,8 @@ class Transpermintaanradiologi extends Model
     use HasFactory;
     protected $table = 'rs106';
     protected $gurded = ['id'];
+    public $timestamps = false;
+    protected $primaryKey = 'rs1';
 
     public function reltransrinci()
     {
