@@ -23,9 +23,9 @@ class Apotekrajallalu extends Model
 
     public function getSubtotalAttribute()
     {
-        $harga = (int) $this->rs6;
-        $jumlah = (int) $this->rs8;
-        $jumlah_r = (int) $this->rs10;
+        $harga = $this->rs6;
+        $jumlah = $this->rs8;
+        $jumlah_r = $this->rs10;
         return (($harga*$jumlah)+$jumlah_r);
     }
 }
