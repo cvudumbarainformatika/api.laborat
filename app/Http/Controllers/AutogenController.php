@@ -52,6 +52,7 @@ use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use Carbon\Carbon;
 use Exception;
+use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -93,9 +94,27 @@ class AutogenController extends Controller
 
 
 
-        $data = Pasien::getByNoBpjs('0000112490818')->get();
+        $reqGetAntrian = (new Client())->post(env('ANTRIAN_ADDRESS') . '/daftar_lokal_layanan', [
+            'form_params' => [
+                'layanan' => 'POL008',
+                'booking_type' => 'b',
+                'id_customer' => '0000112142665',
+                'tgl_booking' => '2023-06-02'
+            ],
+            'http_errors' => false
+        ]);
+        $getAntrian = json_decode($reqGetAntrian->getBody()->getContents());
+        if ($getAntrian->status != 200) {
+            $response = [
+                'metadata' => [
+                    'message' => $getAntrian->msg,
+                    'code' => 201,
+                ]
+            ];
+            return response()->json($response, $response['metadata']['code']);
+        }
 
-        return new JsonResponse(DateHelper::usia($data[0]->rs16));
+        return new JsonResponse($getAntrian);
     }
 
     public function coba()
