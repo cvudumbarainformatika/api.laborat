@@ -7,6 +7,7 @@ use App\Models\Antrean\Layanan;
 use App\Models\User;
 use Carbon\Carbon;
 use DateTime;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -70,24 +71,28 @@ class BookingHelper
 
         //$query = mysqli_query($koneksi, "SELECT max(kode) as kodeTerbesar FROM barang");
 
-        $logAntrean = Booking::select('tanggalperiksa', 'layanan_id', 'jenispasien', 'statuscetak', 'statuspanggil', 'id')
-            ->whereBetween('tanggalperiksa', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
-            ->where('layanan_id', $id_layanan)
-            // ->where('statuspanggil', 1)
-            ->orderBy('id', 'DESC')
-            ->get();
+        // $logAntrean = Booking::select('tanggalperiksa', 'layanan_id', 'jenispasien', 'statuscetak', 'statuspanggil', 'id')
+        //     ->whereBetween('tanggalperiksa', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
+        //     ->where('layanan_id', $id_layanan)
+        //     // ->where('statuspanggil', 1)
+        //     ->orderBy('id', 'DESC')
+        //     ->get();
+
+        $logAntrean = DB::connection('antrean')
+            ->select("CALL getCountDataByDateAndLayananId('$id_layanan','$tanggalperiksa')");
 
         $collectLog = collect($logAntrean);
 
         $totalantrean = $collectLog->count();
 
         $logJkn = $collectLog->filter(function ($value, $key) {
-            return $value['jenispasien'] === 'JKN' && $value['statuscetak'] === 1;
+            return $value->jenispasien === 'JKN' && $value->statuscetak === 1;
         })->count();
 
         $logNonJkn = $collectLog->filter(function ($value, $key) {
-            return $value['jenispasien'] !== 'JKN' && $value['statuscetak'] === 1;
+            return $value->jenispasien !== 'JKN' && $value->statuscetak === 1;
         })->count();
+
 
 
 

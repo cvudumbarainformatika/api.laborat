@@ -333,8 +333,8 @@ class AmbilAntreanController extends Controller
                 'tanggalperiksa' => $tanggalperiksa,
                 'tgl_ambil' => $hariIni,
                 'nomorreferensi' => $request->nomorreferensi,
-                'nomorantrean' => $nomorantrean,
-                'angkaantrean' => $angkaantrean,
+                'nomorantrean' => null, // diisi otomatis by procedure
+                'angkaantrean' => null, // diisi otomatis by procedure
                 'estimasidilayani' => $estimasidilayani,
                 'sisakuotajkn' => $sisakuotajkn,
                 'kuotajkn' => $kuotajkn,

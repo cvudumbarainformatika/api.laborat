@@ -93,28 +93,69 @@ class AutogenController extends Controller
         // echo '<br>';
 
 
+        // $query = 'CALL getTotalAllAntrean(@total)';
+        // DB::connection('antrean')->select($query);
+        // $data = DB::connection('antrean')->select('select @total as total');
+        // return response()->json($data[0]->total);
 
-        $reqGetAntrian = (new Client())->post(env('ANTRIAN_ADDRESS') . '/daftar_lokal_layanan', [
-            'form_params' => [
-                'layanan' => 'POL008',
-                'booking_type' => 'b',
-                'id_customer' => '0000112142665',
-                'tgl_booking' => '2023-06-02'
-            ],
-            'http_errors' => false
-        ]);
-        $getAntrian = json_decode($reqGetAntrian->getBody()->getContents());
-        if ($getAntrian->status != 200) {
-            $response = [
-                'metadata' => [
-                    'message' => $getAntrian->msg,
-                    'code' => 201,
-                ]
-            ];
-            return response()->json($response, $response['metadata']['code']);
-        }
+        // DB::select('call reg_rajal(@nomor)');
+        // $data = DB::select('select @nomor as nomor');
+        $tanggalperiksa = '2023-05-20';
+        $layanan_id = '2';
+        // $logAntrean = DB::connection('antrean')
+        //     ->select("CALL getCountDataByDateAndLayananId('$layanan_id','$tanggalperiksa')");
 
-        return new JsonResponse($getAntrian);
+        // $collectLog = collect($logAntrean);
+
+        // $totalantrean = $collectLog->count();
+
+        // $logJkn = $collectLog->filter(function ($value, $key) {
+        //     return $value->jenispasien === 'JKN' && $value->statuscetak === 1;
+        // })->count();
+
+        // $logNonJkn = $collectLog->filter(function ($value, $key) {
+        //     return $value->jenispasien !== 'JKN' && $value->statuscetak === 1;
+        // })->count();
+
+
+
+        // $data = [
+        //     'jkn' => $logJkn,
+        //     'nonjkn' => $logNonJkn,
+        //     'totalantrean' => $totalantrean,
+        //     'angkaantrean' => $totalantrean + 1
+        // ];
+
+        $save = Booking::create(
+            [
+                'kodebooking' => null,
+                'jenispasien' => 1,
+                'norm' => null,
+                'namapasien' => null,
+                'nomorkartu' => null,
+                'nik' => null,
+                'nohp' => null,
+                'kodepoli' => null,
+                'namapoli' => null,
+                'pasienbaru' => 1,
+                'layanan_id' => $layanan_id,
+                'jeniskunjungan' => 1,
+                'dokter_id' => null,
+                'tanggalperiksa' => $tanggalperiksa,
+                'tgl_ambil' => null,
+                'nomorreferensi' => null,
+                'nomorantrean' => '',
+                'angkaantrean' => null,
+                'estimasidilayani' => null,
+                'sisakuotajkn' => null,
+                'kuotajkn' => null,
+                'sisakuotanonjkn' => null,
+                'kuotanonjkn' => null,
+                'keterangan' => 'Peserta harap hadir 30 menit lebih awal guna pencatatan administrasi',
+            ]
+        );
+
+        return response()->json('ok');
     }
 
     public function coba()
