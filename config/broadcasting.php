@@ -38,7 +38,7 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'host' => env('LARAVEL_WEBSOCKETS_HOST', 'xenter.my.id'),
-                'port' => env('LARAVEL_WEBSOCKETS_PORT', 6002),
+                'port' => env('LARAVEL_WEBSOCKETS_PORT', 6002), //ini pengaruh ke Xenter..
                 'useTLS' => true,
                 'encrypted' => true,
                 'debug' => true,
