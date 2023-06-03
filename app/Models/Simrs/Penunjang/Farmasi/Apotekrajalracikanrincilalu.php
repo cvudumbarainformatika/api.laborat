@@ -28,8 +28,8 @@ class Apotekrajalracikanrincilalu extends Model
 
     public function getSubtotalAttribute()
     {
-        $harga = (int) $this->rs7;
-        $jumlah = (int) $this->rs5;
+        $harga = $this->rs7;
+        $jumlah = $this->rs5;
         return ($harga*$jumlah);
     }
 }

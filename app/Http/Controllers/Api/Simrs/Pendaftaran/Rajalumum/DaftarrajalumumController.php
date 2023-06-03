@@ -215,10 +215,27 @@ class DaftarrajalumumController extends Controller
 
     public function listpasienumum()
     {
-        $tgldari = date('Y-m-d 00:00:00');
-        $tglsampai = date('Y-m-d 23:59:59');
-        $listpasienumum = KunjunganPoli::with('masterpasien')
-        ->where('rs14','=','UMUM')->limit(100)->get();
+        $tgldari = date('2023-01-10 00:00:00');
+        $tglsampai = date('2023-01-10 23:59:59');
+        $listpasienumum = KunjunganPoli::select('rs1','rs2','rs3','rs8','rs14')
+        ->with(
+            'masterpasien',
+            'relmpoli:rs1,rs2',
+            'msistembayar:rs1,rs2')
+        ->whereBetween('rs3', [$tgldari, $tglsampai])
+        ->where('rs14','=','UMUM')
+        ->where('rs8','!=', 'POL014')
+        ->paginate(request('per_page'));
         return new JsonResponse($listpasienumum) ;
     }
+
+    public function createsep($request)
+    {
+        $createsep = BridgingbpjsHelper::post_url(
+            'vclaim',
+            'SEP/2.0/insert',
+            '$request->nokabpjs,$request->nokabpjs');
+        return($createsep);
+    }
+
 }

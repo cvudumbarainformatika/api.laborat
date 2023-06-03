@@ -13,6 +13,7 @@ class Transradiologi extends Model
     public $timestamps = false;
     protected $appends = ['subtotal'];
     protected $primaryKey = 'rs1';
+    protected $keyType = 'string';
 
 
     public function relmasterpemeriksaan()
