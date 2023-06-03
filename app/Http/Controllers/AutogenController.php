@@ -92,70 +92,35 @@ class AutogenController extends Controller
         // }
         // echo '<br>';
 
+        $tanggalperiksa = '2023-05-30';
+        $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
+            'form_params' => [
+                'tanggal' => $tanggalperiksa
+            ],
+            'http_errors' => true
+        ]);
+        $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
 
-        // $query = 'CALL getTotalAllAntrean(@total)';
-        // DB::connection('antrean')->select($query);
-        // $data = DB::connection('antrean')->select('select @total as total');
-        // return response()->json($data[0]->total);
+        $col = collect($antrianLogByTgl->data);
+        $layanan = '4';
+        $byLayanan = $col->filter(function ($value, $key) use ($layanan) {
+            return $value->layanan === $layanan;
+        });
 
-        // DB::select('call reg_rajal(@nomor)');
-        // $data = DB::select('select @nomor as nomor');
-        $tanggalperiksa = '2023-05-20';
-        $layanan_id = '2';
-        // $logAntrean = DB::connection('antrean')
-        //     ->select("CALL getCountDataByDateAndLayananId('$layanan_id','$tanggalperiksa')");
-
-        // $collectLog = collect($logAntrean);
-
-        // $totalantrean = $collectLog->count();
-
-        // $logJkn = $collectLog->filter(function ($value, $key) {
-        //     return $value->jenispasien === 'JKN' && $value->statuscetak === 1;
-        // })->count();
-
-        // $logNonJkn = $collectLog->filter(function ($value, $key) {
-        //     return $value->jenispasien !== 'JKN' && $value->statuscetak === 1;
-        // })->count();
-
-
-
-        // $data = [
-        //     'jkn' => $logJkn,
-        //     'nonjkn' => $logNonJkn,
-        //     'totalantrean' => $totalantrean,
-        //     'angkaantrean' => $totalantrean + 1
-        // ];
-
-        $save = Booking::create(
-            [
-                'kodebooking' => null,
-                'jenispasien' => 1,
-                'norm' => null,
-                'namapasien' => null,
-                'nomorkartu' => null,
-                'nik' => null,
-                'nohp' => null,
-                'kodepoli' => null,
-                'namapoli' => null,
-                'pasienbaru' => 1,
-                'layanan_id' => $layanan_id,
-                'jeniskunjungan' => 1,
-                'dokter_id' => null,
-                'tanggalperiksa' => $tanggalperiksa,
-                'tgl_ambil' => null,
-                'nomorreferensi' => null,
-                'nomorantrean' => '',
-                'angkaantrean' => null,
-                'estimasidilayani' => null,
-                'sisakuotajkn' => null,
-                'kuotajkn' => null,
-                'sisakuotanonjkn' => null,
-                'kuotanonjkn' => null,
-                'keterangan' => 'Peserta harap hadir 30 menit lebih awal guna pencatatan administrasi',
-            ]
-        );
-
-        return response()->json('ok');
+        $byLayananAntri = $col->filter(function ($value, $key) use ($layanan) {
+            return $value->layanan === $layanan && $value->nama_status === 'ANTRI' && $value->id_customer != '';
+        });
+        $byLayananBatal = $col->filter(function ($value, $key) use ($layanan) {
+            return $value->layanan === $layanan && $value->nama_status !== 'ANTRI' && $value->id_customer != '';
+        });
+        $data = [
+            'layanan' => $layanan,
+            'banyakAntrianAll' => $byLayanan->count(),
+            'banyakAntrianAntri' => $byLayananAntri->count(),
+            'banyakAntrianBatal' => $byLayananBatal->count(),
+            'antrianPertama' => $byLayanan->first()
+        ];
+        return response()->json($data);
     }
 
     public function coba()

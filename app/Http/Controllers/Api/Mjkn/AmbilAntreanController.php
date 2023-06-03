@@ -93,26 +93,26 @@ class AmbilAntreanController extends Controller
 
         $jadwalPoli = self::cari_dokter($kdPoli, $tanggalperiksa); // json_decode($jadwalPoli) for back to jSon
         // return new JsonResponse($jadwalPoli);
-        // $code = $jadwalPoli['metadata']['code'];
-        // if ($code != 200)
-        //     return response()->json([
-        //         'metadata' => [
-        //             'message' => 'Maaf, jadwal poli tujuan tidak ditemukan pada tanggal tersebut.',
-        //             'code' => 201,
-        //         ]
-        //     ], 201);
+        $code = $jadwalPoli['metadata']['code'];
+        if ($code != 200)
+            return response()->json([
+                'metadata' => [
+                    'message' => 'Maaf, jadwal poli tujuan tidak ditemukan pada tanggal tersebut.',
+                    'code' => 201,
+                ]
+            ], 201);
 
-        // $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
+        $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
 
 
 
-        // if (!$cekDokter)
-        //     return response()->json([
-        //         'metadata' => [
-        //             'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
-        //             'code' => 201,
-        //         ]
-        //     ], 201);
+        if (!$cekDokter)
+            return response()->json([
+                'metadata' => [
+                    'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
+                    'code' => 201,
+                ]
+            ], 201);
 
 
 
