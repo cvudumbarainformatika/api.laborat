@@ -348,10 +348,12 @@ class AmbilAntreanController extends Controller
         //     ]
         // );
 
+        $look = Booking::select('nomorantrean', 'angkaantrean')->where('id', $save->id)->first();
+
         $response = [
             'response' => [
-                'nomorantrean' => $save->nomorantrean,
-                'angkaantrean' => $save->angkaantrean,
+                'nomorantrean' => $look->nomorantrean,
+                'angkaantrean' => $look->angkaantrean,
                 'kodebooking' => $save->kodebooking,
                 'norm' => $save->norm,
                 'namapoli' => $save->namapoli,
