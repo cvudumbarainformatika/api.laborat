@@ -12,9 +12,10 @@ class Transpermintaanradiologi extends Model
     protected $gurded = ['id'];
     public $timestamps = false;
     protected $primaryKey = 'rs1';
+    protected $keyType = 'string';
 
     public function reltransrinci()
     {
-        return  $this->belongsTo(Transradiologi::class, 'rs1','rs1');
+        return  $this->hasMany(Transradiologi::class, 'rs1','rs1');
     }
 }

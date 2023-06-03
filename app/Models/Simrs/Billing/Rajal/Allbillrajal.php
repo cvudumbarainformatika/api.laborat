@@ -61,10 +61,15 @@ class Allbillrajal extends Model
 
     public function radiologi()
     {
-        return $this->hasManyThrough(
-            Transradiologi::class,
-            Transpermintaanradiologi::class,
-            'rs1','rs1'
-        );
+        return $this->hasMany(Transpermintaanradiologi::class, 'rs1','rs1');
     }
+
+    // public function radiologi()
+    // {
+    //     return $this->hasManyThrough(
+    //         Transradiologi::class,
+    //         Transpermintaanradiologi::class,
+    //         'rs1','rs1'
+    //     );
+    // }
 }
