@@ -18,6 +18,12 @@ class DateHelper
         return $dt->toDateTimeString();
     }
 
+    public static function convertToDateTimeString($tanggal)
+    {
+        $dt = Carbon::createFromTimestamp($tanggal);
+        return $dt->toDateTimeString();
+    }
+
     public static function getSelisihTahunByDate($tglAwal, $tglAkhir)
     {
         $awal = strtotime($tglAwal);

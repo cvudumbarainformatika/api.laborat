@@ -38,7 +38,7 @@ class SisaAntreanController extends Controller
 
         $kodebooking = $request->input('kodebooking');
 
-        $booking = Booking::where('kodebooking', '=', $kodebooking)->first();
+        $booking = Booking::where(['kodebooking' => $kodebooking, 'statuscetak' => 1])->first();
 
 
         if (!$booking) {

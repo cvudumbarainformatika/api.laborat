@@ -324,7 +324,7 @@ class AmbilAntreanController extends Controller
                 'sisakuotanonjkn' => $sisakuotanonjkn,
                 'kuotanonjkn' => $kuotanonjkn,
                 'statuscetak' => 1,
-                'keterangan' => 'Peserta harap hadir 30 menit lebih awal guna pencatatan administrasi',
+                'keterangan' => $keterangan,
             ]
         );
 
