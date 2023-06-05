@@ -12,43 +12,78 @@ class DvlpController extends Controller
 {
     public function index()
     {
-        // $no_rujukan = '132701010323P000001';
-        // return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $no_rujukan);
+        $no_rujukan = '132701010323P000003';
+        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $no_rujukan);
         // jadwaldokt05-22er/kodepoli/{Parameter1}/tanggal/{Parameter2}
 
 
         $post = [
-            "kodebooking" => "18AB032021A001",
-            "jenispasien" => "NON JKN",
-            "nomorkartu" => null,
-            "nik" => null,
-            "nohp" => null,
-            "kodepoli" => 'LAI',
-            "namapoli" => 'PEND',
-            "pasienbaru" => 1,
-            "norm" => "",
-            "tanggalperiksa" => "2023-05-22",
-            "kodedokter" => null,
-            "namadokter" => null,
-            "jampraktek" => null,
-            "jeniskunjungan" => null,
-            "nomorreferensi" => null,
-            "nomorantrean" => "B-12",
-            "angkaantrean" => 12,
-            "estimasidilayani" => 1615869169000,
-            "sisakuotajkn" => 999,
-            "kuotajkn" => 999,
-            "sisakuotanonjkn" => 80,
-            "kuotanonjkn" => 90,
-            "keterangan" => "Ini Hanya Percobaan WS Karena yang dvlp sdh gak bisa digunakan."
+            "request" => [
+                "t_sep" => [
+                    "noKartu" => "0001112230666",
+                    "tglSep" => "2023-06-05",
+                    "ppkPelayanan" => "0301R011",
+                    "jnsPelayanan" => "1",
+                    "klsRawat" => [
+                        "klsRawatHak" => "2",
+                        "klsRawatNaik" => "1",
+                        "pembiayaan" => "1",
+                        "penanggungJawab" => "Pribadi"
+                    ],
+                    "noMR" => "MR9835",
+                    "rujukan" => [
+                        "asalRujukan" => "2",
+                        "tglRujukan" => "2021-07-23",
+                        "noRujukan" => "RJKMR9835001",
+                        "ppkRujukan" => "0301R011"
+                    ],
+                    "catatan" => "testinsert RI",
+                    "diagAwal" => "E10",
+                    "poli" => [
+                        "tujuan" => "",
+                        "eksekutif" => "0"
+                    ],
+                    "cob" => [
+                        "cob" => "0"
+                    ],
+                    "katarak" => [
+                        "katarak" => "0"
+                    ],
+                    "jaminan" => [
+                        "lakaLantas" => "0",
+                        "noLP" => "12345",
+                        "penjamin" => [
+                            "tglKejadian" => "",
+                            "keterangan" => "",
+                            "suplesi" => [
+                                "suplesi" => "0",
+                                "noSepSuplesi" => "",
+                                "lokasiLaka" => [
+                                    "kdPropinsi" => "",
+                                    "kdKabupaten" => "",
+                                    "kdKecamatan" => ""
+                                ]
+                            ]
+                        ]
+                    ],
+                    "tujuanKunj" => "0",
+                    "flagProcedure" => "",
+                    "kdPenunjang" => "",
+                    "assesmentPel" => "",
+                    "skdp" => [
+                        "noSurat" => "000002",
+                        "kodeDPJP" => "31574"
+                    ],
+                    "dpjpLayan" => "",
+                    "noTelp" => "081111111101",
+                    "user" => "Coba Ws"
+                ]
+            ]
         ];
 
-        $coba = BridgingbpjsHelper::post_url('antrean', 'antrean/add', $post);
-        if (!$coba) {
-            return response()->json('bridging error');
-        }
+        return BridgingbpjsHelper::post_url('vclaim', 'SEP/2.0/insert', $post);
 
-        return response()->json($coba);
+        // return response()->json($coba);
 
         // return response()->json($coba);
         //     $tgl = '2023-05-22';

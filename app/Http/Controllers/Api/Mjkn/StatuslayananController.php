@@ -100,7 +100,7 @@ class StatuslayananController extends Controller
             ], 201);
 
 
-        $logAntrean = Booking::whereBetween('created_at', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
+        $logAntrean = Booking::whereBetween('tanggalperiksa', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
             ->where('layanan_id', $unitAntrian->layanan_id)
             ->where('statuscetak', 1)
             // ->where('statuspanggil', 1)

@@ -92,29 +92,35 @@ class AutogenController extends Controller
         // }
         // echo '<br>';
 
-
-
-        $reqGetAntrian = (new Client())->post(env('ANTRIAN_ADDRESS') . '/daftar_lokal_layanan', [
+        $tanggalperiksa = '2023-05-30';
+        $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
             'form_params' => [
-                'layanan' => 'POL008',
-                'booking_type' => 'b',
-                'id_customer' => '0000112142665',
-                'tgl_booking' => '2023-06-02'
+                'tanggal' => $tanggalperiksa
             ],
-            'http_errors' => false
+            'http_errors' => true
         ]);
-        $getAntrian = json_decode($reqGetAntrian->getBody()->getContents());
-        if ($getAntrian->status != 200) {
-            $response = [
-                'metadata' => [
-                    'message' => $getAntrian->msg,
-                    'code' => 201,
-                ]
-            ];
-            return response()->json($response, $response['metadata']['code']);
-        }
+        $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
 
-        return new JsonResponse($getAntrian);
+        $col = collect($antrianLogByTgl->data);
+        $layanan = '4';
+        $byLayanan = $col->filter(function ($value, $key) use ($layanan) {
+            return $value->layanan === $layanan;
+        });
+
+        $byLayananAntri = $col->filter(function ($value, $key) use ($layanan) {
+            return $value->layanan === $layanan && $value->nama_status === 'ANTRI' && $value->id_customer != '';
+        });
+        $byLayananBatal = $col->filter(function ($value, $key) use ($layanan) {
+            return $value->layanan === $layanan && $value->nama_status !== 'ANTRI' && $value->id_customer != '';
+        });
+        $data = [
+            'layanan' => $layanan,
+            'banyakAntrianAll' => $byLayanan->count(),
+            'banyakAntrianAntri' => $byLayananAntri->count(),
+            'banyakAntrianBatal' => $byLayananBatal->count(),
+            'antrianPertama' => $byLayanan->first()
+        ];
+        return response()->json($data);
     }
 
     public function coba()

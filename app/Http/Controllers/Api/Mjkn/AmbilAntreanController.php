@@ -93,26 +93,26 @@ class AmbilAntreanController extends Controller
 
         $jadwalPoli = self::cari_dokter($kdPoli, $tanggalperiksa); // json_decode($jadwalPoli) for back to jSon
         // return new JsonResponse($jadwalPoli);
-        // $code = $jadwalPoli['metadata']['code'];
-        // if ($code != 200)
-        //     return response()->json([
-        //         'metadata' => [
-        //             'message' => 'Maaf, jadwal poli tujuan tidak ditemukan pada tanggal tersebut.',
-        //             'code' => 201,
-        //         ]
-        //     ], 201);
+        $code = $jadwalPoli['metadata']['code'];
+        if ($code != 200)
+            return response()->json([
+                'metadata' => [
+                    'message' => 'Maaf, jadwal poli tujuan tidak ditemukan pada tanggal tersebut.',
+                    'code' => 201,
+                ]
+            ], 201);
 
-        // $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
+        $cekDokter = collect($jadwalPoli['result'])->firstWhere('kodedokter', $kodedokter);
 
 
 
-        // if (!$cekDokter)
-        //     return response()->json([
-        //         'metadata' => [
-        //             'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
-        //             'code' => 201,
-        //         ]
-        //     ], 201);
+        if (!$cekDokter)
+            return response()->json([
+                'metadata' => [
+                    'message' => 'Maaf, jadwal dokter tujuan tidak ditemukan pada tanggal tersebut.',
+                    'code' => 201,
+                ]
+            ], 201);
 
 
 
@@ -238,23 +238,6 @@ class AmbilAntreanController extends Controller
         $kuotanonjkn = $layanan->kuotanonjkn;
 
 
-        // $coba = Booking::select(
-        //     'tanggalperiksa',
-        //     'layanan_id',
-        //     'jenispasien',
-        //     'statuscetak',
-        //     'statuspanggil',
-        //     'id',
-        //     DB::raw('MAX(angkaantrean) as angkaterbesar')
-        // )
-        //     ->whereBetween('tanggalperiksa', [$tanggalperiksa . ' 00:00:00', $tanggalperiksa . ' 23:59:59'])
-        //     ->where('layanan_id', $id_layanan)
-        //     // ->where('statuspanggil', 1)
-        //     ->orderBy('id', 'DESC')
-        //     ->get();
-
-        // return response()->json($coba);
-
         $cekKuota = BookingHelper::jumlahKuotaTerpesan($tanggalperiksa, $id_layanan);
         $angkaantrean = $cekKuota['angkaantrean'];
         $logJkn = $cekKuota['jkn'];
@@ -333,15 +316,15 @@ class AmbilAntreanController extends Controller
                 'tanggalperiksa' => $tanggalperiksa,
                 'tgl_ambil' => $hariIni,
                 'nomorreferensi' => $request->nomorreferensi,
-                'nomorantrean' => $nomorantrean,
-                'angkaantrean' => $angkaantrean,
+                'nomorantrean' => null, // diisi otomatis by procedure
+                'angkaantrean' => null, // diisi otomatis by procedure
                 'estimasidilayani' => $estimasidilayani,
                 'sisakuotajkn' => $sisakuotajkn,
                 'kuotajkn' => $kuotajkn,
                 'sisakuotanonjkn' => $sisakuotanonjkn,
                 'kuotanonjkn' => $kuotanonjkn,
                 'statuscetak' => 1,
-                'keterangan' => 'Peserta harap hadir 30 menit lebih awal guna pencatatan administrasi',
+                'keterangan' => $keterangan,
             ]
         );
 
@@ -365,10 +348,12 @@ class AmbilAntreanController extends Controller
         //     ]
         // );
 
+        $look = Booking::select('nomorantrean', 'angkaantrean')->where('id', $save->id)->first();
+
         $response = [
             'response' => [
-                'nomorantrean' => $save->nomorantrean,
-                'angkaantrean' => $save->angkaantrean,
+                'nomorantrean' => $look->nomorantrean,
+                'angkaantrean' => $look->angkaantrean,
                 'kodebooking' => $save->kodebooking,
                 'norm' => $save->norm,
                 'namapoli' => $save->namapoli,
