@@ -13,7 +13,8 @@ class RekomdpjpController extends Controller
     public function rekomdpjpcon()
     {
         $query = Rekomdpjp::with([
-            'relkunjunganpoli','relkunjunganranap'
+            'relkunjunganpoli.relmpoli',
+            'relkunjunganranap.ruangan'
         ])
         ->where('norm','=', request(['norm']))->where('kdSaran','=','6')->whereNull('tglBatal')
         ->limit(50)->get();
