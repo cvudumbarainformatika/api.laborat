@@ -12,8 +12,9 @@ class DvlpController extends Controller
 {
     public function index()
     {
-        $no_rujukan = '132701010323P000003';
-        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $no_rujukan);
+        // $no_rujukan = '132701010323P000003';
+        $noka = '0003312662758';
+        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/Peserta/' . $noka);
         // jadwaldokt05-22er/kodepoli/{Parameter1}/tanggal/{Parameter2}
 
 
@@ -22,17 +23,17 @@ class DvlpController extends Controller
                 "t_sep" => [
                     "noKartu" => "0001112230666",
                     "tglSep" => "2023-06-05",
-                    "ppkPelayanan" => "0301R011",
-                    "jnsPelayanan" => "1",
+                    "ppkPelayanan" => "1327R001",
+                    "jnsPelayanan" => "2",
                     "klsRawat" => [
                         "klsRawatHak" => "2",
                         "klsRawatNaik" => "1",
                         "pembiayaan" => "1",
                         "penanggungJawab" => "Pribadi"
                     ],
-                    "noMR" => "MR9835",
+                    "noMR" => "123456",
                     "rujukan" => [
-                        "asalRujukan" => "2",
+                        "asalRujukan" => "1",
                         "tglRujukan" => "2021-07-23",
                         "noRujukan" => "RJKMR9835001",
                         "ppkRujukan" => "0301R011"
