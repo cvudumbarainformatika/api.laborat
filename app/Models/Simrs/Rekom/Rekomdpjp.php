@@ -16,32 +16,38 @@ class Rekomdpjp extends Model
     protected $guarded = ['id'];
     public $timestamps = false;
 
-    public function relkunjunganpoli()
-    {
-        return $this->hasOneThrough(
-            Mpoli::class,
-            KunjunganPoli::class,
-            'rs1', // Foreign key on the kunjungan poli table...
-            'rs1', // Foreign key on the masterpoli table...
-            'noreg', // Local key on the rekomdpjp table...
-            'rs8' // Local key on the tabel kunjunganpoli table...
-        );
-    }
-
     // public function relkunjunganpoli()
     // {
-    //     return $this->belongsTo(KunjunganPoli::class, 'noreg', 'rs1');
+    //     return $this->hasOneThrough(
+    //         Mpoli::class,
+    //         KunjunganPoli::class,
+    //         'rs1', // Foreign key on the kunjungan poli table...
+    //         'rs1', // Foreign key on the masterpoli table...
+    //         'noreg', // Local key on the rekomdpjp table...
+    //         'rs8' // Local key on the tabel kunjunganpoli table...
+    //     );
+    // }
+
+    public function relkunjunganpoli()
+    {
+        return $this->belongsTo(KunjunganPoli::class, 'noreg', 'rs1');
+    }
+
+    // public function relkunjunganranap()
+    // {
+    //     return $this->hasOneThrough(
+    //         Mruanganranap::class,
+    //         KunjunganRawatInap::class,
+    //         'rs1',
+    //         'rs1',
+    //         'noreg',
+    //         'rs5'
+    //     );
     // }
 
     public function relkunjunganranap()
     {
-        return $this->hasOneThrough(
-            Mruanganranap::class,
-            KunjunganRawatInap::class,
-            'rs1',
-            'rs1',
-            'noreg',
-            'rs5'
+        return $this->belongsTo(KunjunganRawatInap::class,'noreg','rs1'
         );
     }
 

@@ -83,24 +83,24 @@ class BridgingbpjsHelper
 
         $data = json_decode($response, true);
         // return $data;
-        if (!$data) {
-            return response()->json([
-                'code' => 500,
-                'message' => 'ERRROR SIGNATURE'
-            ], 500);
-        }
+        // if (!$data) {
+        //     return response()->json([
+        //         'code' => 500,
+        //         'message' => 'ERRROR SIGNATURE'
+        //     ], 500);
+        // }
 
 
 
-        $res['metadata'] = '';
+        // $res['metadata'] = '';
 
-        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+        // $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
 
-        $nilairespon = $data["response"] ?? false;
-        if (!$nilairespon) {
-            return $res;
-        }
-        return $res;
+        // $nilairespon = $data["response"] ?? false;
+        // if (!$nilairespon) {
+        //     return $res;
+        // }
+        return $response;
     }
 
 
@@ -152,7 +152,7 @@ class BridgingbpjsHelper
         // $data = self::getSignature();
         return [
             'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'Application/x-www-form-urlencoded',
             'X-cons-id' => $data['xconsid'],
             'X-timestamp' => $data['xtimestamp'],
             'X-signature' => $data['xsignature'],
