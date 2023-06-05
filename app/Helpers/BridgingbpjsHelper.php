@@ -107,24 +107,24 @@ class BridgingbpjsHelper
         // dd($response);
         $data = json_decode($response, true);
         // return $data;
-        if (!$data) {
-            return response()->json([
-                'code' => 500,
-                'message' => 'ERRROR SIGNATURE'
-            ], 500);
-        }
+        // if (!$data) {
+        //     return response()->json([
+        //         'code' => 500,
+        //         'message' => 'ERRROR SIGNATURE'
+        //     ], 500);
+        // }
 
 
 
-        $res['metadata'] = '';
+        // $res['metadata'] = '';
 
-        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+        // $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
 
-        $nilairespon = $data["response"] ?? false;
-        if (!$nilairespon) {
-            return $res;
-        }
-        return $res;
+        // $nilairespon = $data["response"] ?? false;
+        // if (!$nilairespon) {
+        //     return $res;
+        // }
+        return $response;
     }
 
 
