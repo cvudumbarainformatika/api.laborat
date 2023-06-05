@@ -35,7 +35,7 @@ class BookingController extends Controller
         $kodepoli = $request->kodepoli;
 
 
-        $layanan = self::cari_layanan($pasienjkn, $pasienbaru, $kodepoli);
+        $layanan = BookingHelper::cari_layanan($pasienjkn, $pasienbaru, $kodepoli);
 
         if (!$layanan) {
             $msg = 'Maaf Layanan ini Belum Ada di RSUD MOHAMAD SALEH';
@@ -43,6 +43,8 @@ class BookingController extends Controller
             $res['metadata'] = $metadata;
             return response()->json($res);
         }
+
+
 
         $id_layanan = $layanan->id_layanan;
         $kodelayanan = $layanan->kode;
@@ -52,6 +54,12 @@ class BookingController extends Controller
         $angkaantrean = self::nomor_anteran($id_layanan) + 1;
         $nomorantrean = $kodelayanan . sprintf("%03s", $angkaantrean);
 
+
+
+        $date = new Carbon();
+        $tglperiksa = $date->toDateString();
+        $cekKuota = BookingHelper::jumlahKuotaTerpesan($tglperiksa, $id_layanan);
+
         $sisakuotajkn = $kuotajkn;
         $sisakuotanonjkn = $kuotanonjkn;
 
@@ -59,6 +67,7 @@ class BookingController extends Controller
         if (!in_array($id_layanan, $os)) {
             if ($pasienjkn) {
                 // $sisakuotajkn = (int)$kuotajkn > 0 ? (int)$kuotajkn - (int)$angkaantrean : 0;
+                $sisakuotajkn = (int)$kuotajkn - $cekKuota['jkn'];
 
                 if ($sisakuotajkn === 0) {
                     $msg = 'Maaf, Antrian Sudah Penuh';
@@ -68,6 +77,7 @@ class BookingController extends Controller
                 }
             } else {
                 // $sisakuotanonjkn = (int)$kuotanonjkn > 0 ? (int)$kuotanonjkn - (int)$angkaantrean : 0;
+                $sisakuotanonjkn = (int)$kuotanonjkn - $cekKuota['nonjkn'];
                 if ($sisakuotanonjkn === 0) {
                     $msg = 'Maaf, Antrian Sudah Penuh';
                     $metadata = ['code' => 201, 'message' => $msg];
@@ -112,8 +122,8 @@ class BookingController extends Controller
                 'tanggalperiksa' => $request->tanggalperiksa,
                 'tgl_ambil' => $request->tgl_ambil,
                 'nomorreferensi' => $request->nomorreferensi,
-                'nomorantrean' => $nomorantrean,
-                'angkaantrean' => $angkaantrean,
+                'nomorantrean' => null, // diisi otomatis by mysql
+                'angkaantrean' => null, // diisi otomatis by mysql
                 'estimasidilayani' => $estimasidilayani,
                 'sisakuotajkn' => $sisakuotajkn,
                 'kuotajkn' => $kuotajkn,
@@ -151,25 +161,21 @@ class BookingController extends Controller
         $layanan_id = $booking->layanan_id;
         $sisakuotajkn = $booking->sisakuotajkn;
         $sisakuotanonjkn = $booking->sisakuotanonjkn;
+        $kuotajkn = $booking->kuotajkn;
+        $kuotanonjkn = $booking->kuotanonjkn;
+
+        $tglperiksa = $date->toDateString();
 
         $os = array("1", "2", "3", "AP0001");
+
+        $logAntrian = BookingHelper::jumlahKuotaTerpesan($tglperiksa, $layanan_id);
         if (!in_array($layanan_id, $os)) {
             if ($pasienjkn) {
-                $sisakuotajkn = (int)$sisakuotajkn > 0 ? (int)$sisakuotajkn - 1 : 0;
+                $sisakuotajkn = (int)$sisakuotanonjkn > 0 ? (int)$kuotajkn - ($logAntrian['jkn'] + 1) : 0;
             } else {
-                $sisakuotanonjkn = (int)$sisakuotanonjkn > 0 ? (int)$sisakuotanonjkn - 1 : 0;
+                $sisakuotanonjkn = (int)$sisakuotanonjkn > 0 ? (int)$kuotajkn - ($logAntrian['nonjkn'] + 1) : 0;
             }
         }
-
-        $booking = Booking::where('kodebooking', request('kodebooking'))->first();
-
-        // $upd = Booking::where('kodebooking', request('kodebooking'))
-        //     ->update([
-        //         'statuscetak' => 1,
-        //         'sisakuotajkn' => $sisakuotajkn,
-        //         'sisakuotanonjkn' => $sisakuotanonjkn,
-        //         'tgl_ambil' =>  $tgl_ambil
-        //     ]);
 
         $upd = $booking->update([
             'statuscetak' => 1,

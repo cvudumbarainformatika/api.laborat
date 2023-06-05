@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 // use JWTAuth;
 use Exception;
+use Namshi\JOSE\JWS;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -52,7 +53,7 @@ class JknMiddleware extends BaseMiddleware
             // $apy = JWTAuth::getPayload($token)->toArray();
             // // $apy = base64_decode($token);
 
-            $apy = Namshi::decode3rdparty($token);
+            $apy = self::decode3rdparty($token);
             AuthjknHelper::authenticate($apy);
 
             // return response()->json($apy);
@@ -83,5 +84,15 @@ class JknMiddleware extends BaseMiddleware
         // // Now let's put the user in the request class so that you can grab it from there
         // $request['auth'] = $user;
         return $next($request);
+    }
+
+    public static function decode3rdparty($token_string)
+    {
+        try {
+            $result =  JWS::load($token_string, true);
+        } catch (Exception $e) {
+            throw new TokenInvalidException('Could not decode token: ' . $e->getMessage());
+        }
+        return $result->getPayload();
     }
 }
