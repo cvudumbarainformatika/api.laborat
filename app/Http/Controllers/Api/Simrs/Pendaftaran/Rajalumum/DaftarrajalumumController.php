@@ -235,15 +235,15 @@ class DaftarrajalumumController extends Controller
         $data =[
             "request"=>[
                 "t_sep"=>[
-                    "noKartu" => '0001444546719',
+                    "noKartu" => '0003519299158',
                     "tglSep" => '2023-06-05',
                     "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => '2',
                     "klsRawat"=>[
-                        "klsRawatHak" => '2',
-                        "klsRawatNaik" => '1',
-                        "pembiayaan" => '1',
-                        "penanggungJawab" => 'Pribadi',
+                        "klsRawatHak" => '3',
+                        "klsRawatNaik" => '',
+                        "pembiayaan" => '',
+                        "penanggungJawab" => '',
                     ],
                     "noMR" => 'MR9835',
                     "rujukan"=>[
