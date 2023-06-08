@@ -147,6 +147,21 @@ class VerifPermintaanruanganController extends Controller
                 if (!$detail['tujuan']) {
                     return new JsonResponse(['message' => 'periksa data ruangan yang melakukan permintaan'], 422);
                 }
+                $stok = RecentStokUpdate::selectRaw('kode_rs,kode_ruang, sisa_stok, sum(sisa_stok) as stok')
+                    ->where('kode_rs', $detail['kode_rs'])
+                    ->where('kode_ruang', $detail['dari'])
+                    ->with('barang')
+                    ->groupBy('kode_rs')
+                    ->first();
+
+                // return new JsonResponse(['stok' => $stok, 'detail' => $detail]);
+                if (!$stok) {
+                    $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
+                    return new JsonResponse(['stok' => $stok, 'detail' => $detail, 'message' => 'Stok ' . $barang->nama . ' tidak ada'], 410);
+                }
+                if ($detail['jumlah_distribusi'] > $stok->stok) {
+                    return new JsonResponse(['stok' => $stok, 'detail' => $detail, 'message' => 'jumlah Stok tidak mencukupi'], 410);
+                }
             }
         }
         $permintaan = Permintaanruangan::updateOrCreate(['id' => $request->id], $request->only('status'));
