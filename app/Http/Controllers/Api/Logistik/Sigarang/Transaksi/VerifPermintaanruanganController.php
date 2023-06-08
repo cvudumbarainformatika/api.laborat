@@ -136,6 +136,19 @@ class VerifPermintaanruanganController extends Controller
             'id' => 'required',
         ]);
         // $details = $request->details;
+        if ($request->status === 6 || $request->status === '6') {
+
+            $permintaanruangan = Permintaanruangan::with('details')->find($request->id);
+
+            foreach ($permintaanruangan->details as $key => $detail) {
+                // if (!$detail['jumlah_disetujui']) {
+                //     return new JsonResponse(['message' => 'periksa kembali jumlah disetujui'], 422);
+                // }
+                if (!$detail['tujuan']) {
+                    return new JsonResponse(['message' => 'periksa data ruangan yang melakukan permintaan'], 422);
+                }
+            }
+        }
         $permintaan = Permintaanruangan::updateOrCreate(['id' => $request->id], $request->only('status'));
 
         // foreach ($details as $value) {
