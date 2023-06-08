@@ -159,7 +159,7 @@ class VerifPermintaanruanganController extends Controller
                     $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
                     return new JsonResponse(['stok' => $stok, 'detail' => $detail, 'message' => 'Stok ' . $barang->nama . ' tidak ada'], 410);
                 }
-                if ($detail['jumlah_distribusi'] > $stok->stok) {
+                if (($detail['jumlah_distribusi'] > 0) && ($detail['jumlah_distribusi'] > $stok->stok)) {
                     return new JsonResponse(['stok' => $stok, 'detail' => $detail, 'message' => 'jumlah Stok tidak mencukupi'], 410);
                 }
             }
