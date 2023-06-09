@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,19 @@ class DistribusiDepoController extends Controller
     public function index()
     {
         $data = DistribusiDepo::latest('id')
+            ->filter(request(['q']))
+            ->paginate(request('per_page'));
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
+    }
+    public function penerimaan()
+    {
+        $data = Penerimaan::latest('id')
+            ->where('status', 2)
+            ->with('details.barangrs.depo', 'perusahaan')
             ->filter(request(['q']))
             ->paginate(request('per_page'));
         $collect = collect($data);
