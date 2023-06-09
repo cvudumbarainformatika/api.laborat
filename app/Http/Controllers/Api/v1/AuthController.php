@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\aplikasi\Aplikasi;
 use App\Models\Pegawai\Akses\Access;
+use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\Akses\Menu;
 use App\Models\Sigarang\Pegawai;
 use App\Models\User;
@@ -49,7 +51,24 @@ class AuthController extends Controller
     public function authuser()
     {
         $me = auth()->user();
-        return new JsonResponse($me);
+        $user = User::with(['pegawai'])->find($me->id);
+
+        $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
+        $akses = 'all';
+        $allAccess = array('sa');
+
+        if (!in_array(auth()->user()->username, $allAccess)) {
+            // $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find($me);
+            $akses = AksesUser::where('user_id', $me->id)
+                ->with(['aplikasi', 'menu', 'submenu'])->get();
+        }
+
+        $result = [
+            'apps' => $apps,
+            'akses' => $akses,
+            'user' => $user
+        ];
+        return new JsonResponse($result);
     }
 
     public function me()
