@@ -229,12 +229,75 @@ class DaftarrajalumumController extends Controller
         return new JsonResponse($listpasienumum) ;
     }
 
-    public function createsep($request)
+    public function createsep(Request $request)
     {
+
+        $data =[
+            "request"=>[
+                "t_sep"=>[
+                    "noKartu" => '0003519299158',
+                    "tglSep" => '2023-06-05',
+                    "ppkPelayanan" => '1327R001',
+                    "jnsPelayanan" => '2',
+                    "klsRawat"=>[
+                        "klsRawatHak" => '3',
+                        "klsRawatNaik" => '',
+                        "pembiayaan" => '',
+                        "penanggungJawab" => '',
+                    ],
+                    "noMR" => 'MR9835',
+                    "rujukan"=>[
+                        "asalRujukan"=>"2",
+                        "tglRujukan"=>"2021-07-23",
+                        "noRujukan"=>"RJKMR9835001",
+                        "ppkRujukan"=>"0301R011"
+                    ],
+                    "catatan"=>"testinsert RI",
+                    "diagAwal"=>"E10",
+                    "poli"=>[
+                        "tujuan"=>"",
+                        "eksekutif"=>"0"
+                    ],
+                    "cob"=>[
+                        "cob"=>"0"
+                     ],
+                     "katarak"=>[
+                        "katarak"=>"0"
+                     ],
+                     "jaminan"=>[
+                        "lakaLantas"=>"0",
+                        "noLP"=>"12345",
+                        "penjamin"=>[
+                           "tglKejadian"=>"",
+                           "keterangan"=>"",
+                           "suplesi"=>[
+                              "suplesi"=>"0",
+                              "noSepSuplesi"=>"",
+                              "lokasiLaka"=>[
+                                 "kdPropinsi"=>"",
+                                 "kdKabupaten"=>"",
+                                 "kdKecamatan"=>""
+                              ]
+                           ]
+                        ]
+                     ],
+                     "tujuanKunj"=>"0",
+                     "flagProcedure"=>"",
+                     "kdPenunjang"=>"",
+                     "assesmentPel"=>"",
+                     "skdp"=>[
+                        "noSurat"=>"0301R0110721K000021",
+                        "kodeDPJP"=>"31574"
+                     ],
+                     "dpjpLayan"=>"",
+                     "noTelp"=>"081111111101",
+                     "user"=>"Coba Ws"
+                ]
+            ]
+        ];
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
-            'SEP/2.0/insert',
-            '$request->nokabpjs,$request->nokabpjs');
+            '/SEP/2.0/insert', $data);
         return($createsep);
     }
 

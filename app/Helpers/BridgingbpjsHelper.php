@@ -19,8 +19,30 @@ class BridgingbpjsHelper
             $service_name = 'apotek-rest';
         } else if ($name === 'pcare') {
             $service_name = 'apotek-rest';
+        } else if ($name === 'vclaim') {
+            $service_name = 'vclaim-rest';
         } else {
             $service_name = 'vclaim-rest';
+        }
+
+        $url = $base_url . $service_name . '/' . $param;
+        return $url;
+    }
+    public static function ws_url_dev(string $name, $param)
+    {
+        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        // $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        $service_name = 'vclaim-rest';
+        if ($name === 'antrean') {
+            $service_name = 'antreanrs_dev';
+        } else if ($name === 'apotek') {
+            $service_name = 'apotek-rest-dev';
+        } else if ($name === 'pcare') {
+            $service_name = 'pcare-rest-dev';
+        } else if ($name === 'vclaim') {
+            $service_name = 'vclaim-rest-dev';
+        } else {
+            $service_name = 'vclaim-rest-dev';
         }
 
         $url = $base_url . $service_name . '/' . $param;
@@ -32,6 +54,7 @@ class BridgingbpjsHelper
     {
 
         $url = self::ws_url($name, $param);
+        // $url = self::ws_url_dev($name, $param);
 
 
         $sign = self::getSignature($name);
@@ -74,33 +97,34 @@ class BridgingbpjsHelper
     public static function post_url(string $name, $param, $post)
     {
         $url = self::ws_url($name, $param);
+        // $url = self::ws_url_dev($name, $param);
 
         $sign = self::getSignature($name);
         $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
 
         $header = self::getHeader($sign);
         $response = Http::withHeaders($header)->post($url, $post);
-
+        // dd($response);
         $data = json_decode($response, true);
         // return $data;
-        if (!$data) {
-            return response()->json([
-                'code' => 500,
-                'message' => 'ERRROR SIGNATURE'
-            ], 500);
-        }
+        // if (!$data) {
+        //     return response()->json([
+        //         'code' => 500,
+        //         'message' => 'ERRROR SIGNATURE'
+        //     ], 500);
+        // }
 
 
 
-        $res['metadata'] = '';
+        // $res['metadata'] = '';
 
-        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+        // $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
 
-        $nilairespon = $data["response"] ?? false;
-        if (!$nilairespon) {
-            return $res;
-        }
-        return $res;
+        // $nilairespon = $data["response"] ?? false;
+        // if (!$nilairespon) {
+        //     return $res;
+        // }
+        return $response;
     }
 
 
@@ -152,7 +176,7 @@ class BridgingbpjsHelper
         // $data = self::getSignature();
         return [
             'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'Application/x-www-form-urlencoded',
             'X-cons-id' => $data['xconsid'],
             'X-timestamp' => $data['xtimestamp'],
             'X-signature' => $data['xsignature'],

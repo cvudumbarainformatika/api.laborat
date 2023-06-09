@@ -21,9 +21,16 @@ class DistribusiController extends Controller
         if ($pegawai->role_id === 4) {
             $p->where('dari', $pegawai->kode_ruang);
         }
-        $data = $p->where('status', '>=', 4)
-            ->where('status', '<=', 7)
-            ->orderBy(request('order_by'), request('sort'))
+        // $data = $p->where('status', '>=', 4)
+        //     ->where('status', '<=', 7)
+        //     ->orderBy(request('order_by'), request('sort'))
+        if (request('status') && request('status') !== null) {
+            $p->where('status', '=', request('status'));
+        } else {
+            $p->where('status', '>=', 4)
+                ->where('status', '<=', 7);
+        }
+        $data = $p->orderBy(request('order_by'), request('sort'))
             ->with([
                 // 'details.barangrs.mapingbarang.barang108', 'details.satuan',  'details.ruang',
                 'pj', 'pengguna', 'details' => function ($wew) use ($pegawai) {
@@ -68,16 +75,25 @@ class DistribusiController extends Controller
             'id' => 'required',
             'no_distribusi' => 'required',
         ]);
-
-        // $permintaanruangan = Permintaanruangan::find($request->id);
         $permintaanruangan = Permintaanruangan::with('details')->find($request->id);
-        $temp = PenerimaanruanganController::telahDiDistribusikan($request, $permintaanruangan);
-        if ($temp['status'] !== 201) {
-            return new JsonResponse($temp, $temp['status']);
+
+        foreach ($permintaanruangan->details as $key => $detail) {
+            // if (!$detail['jumlah_disetujui']) {
+            //     return new JsonResponse(['message' => 'periksa kembali jumlah disetujui'], 422);
+            // }
+            if (!$detail['tujuan']) {
+                return new JsonResponse(['message' => 'periksa data ruangan yang melakukan permintaan'], 422);
+            }
         }
+        // return new JsonResponse($permintaanruangan);
+        // $permintaanruangan = Permintaanruangan::find($request->id);
         try {
 
             DB::beginTransaction();
+            $temp = PenerimaanruanganController::telahDiDistribusikan($request, $permintaanruangan);
+            if ($temp['status'] !== 201) {
+                return new JsonResponse($temp, $temp['status']);
+            }
 
             $tanggal_distribusi = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
             $status = 7;
@@ -105,7 +121,7 @@ class DistribusiController extends Controller
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e
-            ], 410);
+            ], 417);
         }
     }
 }

@@ -59,6 +59,10 @@ class AksesUserController extends Controller
         // $data = $request->all();
         return new JsonResponse($data);
     }
+    // public function storeAksesMenuOnly(Request $request)
+    // {
+    //     return new JsonResponse($request);
+    // }
     private function createAkses($uncal)
     {
         // return $uncal;
