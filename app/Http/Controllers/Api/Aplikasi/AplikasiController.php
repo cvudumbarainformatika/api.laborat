@@ -18,8 +18,10 @@ class AplikasiController extends Controller
 {
     public function index()
     {
-        $data = Aplikasi::with(['menus', 'menus.submenus'])->get();
+        // $data = Aplikasi::with(['menus', 'menus.submenus'])->get();
 
-        return new JsonResponse($data);
+        $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
+
+        return new JsonResponse($akses);
     }
 }
