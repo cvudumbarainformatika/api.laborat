@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,25 @@ class DistribusiDepoController extends Controller
     {
         $data = DistribusiDepo::latest('id')
             ->filter(request(['q']))
+            ->paginate(request('per_page'));
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
+    }
+    public function penerimaan()
+    {
+        $data = Penerimaan::latest('id')
+            ->where('status', 2)
+            ->with([
+                'details.barangrs.depo',
+                'perusahaan',
+                'stokgudang' => function ($anu) {
+                    $anu->where('kode_ruang', 'Gd-02010100');
+                }
+            ])
+            ->filter(request(['q', 'r']))
             ->paginate(request('per_page'));
         $collect = collect($data);
         $balik = $collect->only('data');
@@ -62,6 +82,11 @@ class DistribusiDepoController extends Controller
             return new JsonResponse(['message' => 'data gagal dibuat'], 500);
         }
         return new JsonResponse(['message' => 'data telah dibuat'], 201);
+    }
+
+    public function newStore(Request $request)
+    {
+        return new JsonResponse($request->all());
     }
 
     public function hapusDataStokGudang(Request $request)

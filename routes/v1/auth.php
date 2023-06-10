@@ -12,6 +12,7 @@ Route::post('/store', [AuthController::class, 'new_reg']);
 Route::middleware('auth:api')
     ->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/authuser', [AuthController::class, 'authuser']);
         Route::get('/user', [AuthController::class, 'user']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });

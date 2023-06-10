@@ -5,6 +5,7 @@ namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 use App\Models\Sigarang\Barang108;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Satuan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -47,5 +48,9 @@ class DetailPermintaanruangan extends Model
     public function permintaanruangan()
     {
         return $this->belongsTo(Permintaanruangan::class);
+    }
+    public function sisastok()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'kode_rs', 'kode_rs');
     }
 }
