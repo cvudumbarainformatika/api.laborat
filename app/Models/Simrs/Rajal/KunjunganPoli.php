@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Rajal;
 
+use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
@@ -37,6 +38,11 @@ class KunjunganPoli extends Model
     public function msistembayar()
     {
         return $this->belongsTo(Msistembayar::class, 'rs14', 'rs1');
+    }
+
+    public function dokter()
+    {
+        return $this->hasOne(Dokter::class,'rs1','rs9');
     }
 
 }
