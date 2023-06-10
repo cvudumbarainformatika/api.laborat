@@ -88,6 +88,10 @@ class DistribusiDepoController extends Controller
     {
         return new JsonResponse($request->all());
     }
+    public function saveDetail(Request $request)
+    {
+        return new JsonResponse($request->all());
+    }
 
     public function hapusDataStokGudang(Request $request)
     {
