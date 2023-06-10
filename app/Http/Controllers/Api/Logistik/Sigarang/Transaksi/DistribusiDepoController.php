@@ -27,8 +27,14 @@ class DistribusiDepoController extends Controller
     {
         $data = Penerimaan::latest('id')
             ->where('status', 2)
-            ->with('details.barangrs.depo', 'perusahaan')
-            ->filter(request(['q']))
+            ->with([
+                'details.barangrs.depo',
+                'perusahaan',
+                'stokgudang' => function ($anu) {
+                    $anu->where('kode_ruang', 'Gd-02010100');
+                }
+            ])
+            ->filter(request(['q', 'r']))
             ->paginate(request('per_page'));
         $collect = collect($data);
         $balik = $collect->only('data');
@@ -76,6 +82,11 @@ class DistribusiDepoController extends Controller
             return new JsonResponse(['message' => 'data gagal dibuat'], 500);
         }
         return new JsonResponse(['message' => 'data telah dibuat'], 201);
+    }
+
+    public function newStore(Request $request)
+    {
+        return new JsonResponse($request->all());
     }
 
     public function hapusDataStokGudang(Request $request)
