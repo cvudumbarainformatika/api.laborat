@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Master;
 
+use App\Models\Simrs\Billing\Rajal\Allbillrajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,12 +31,16 @@ class Mpoli extends Model
 
     public function jumlahkunjunganpolix()
     {
-        return $this->hasMany(KunjunganPoli::class,'rs8','rs1');
+        return $this->hasMany(KunjunganPoli::class, 'rs8', 'rs1');
     }
 
     public function jumlahkunjunganpoli()
     {
-        return $this->hasMany(KunjunganPoli::class,'rs8','rs1');
+        return $this->hasMany(KunjunganPoli::class, 'rs8', 'rs1');
     }
 
+    public function kunjungan()
+    {
+        return $this->hasMany(Allbillrajal::class, 'rs8', 'rs1');
+    }
 }
