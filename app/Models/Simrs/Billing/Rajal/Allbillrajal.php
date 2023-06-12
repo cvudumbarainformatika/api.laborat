@@ -62,6 +62,20 @@ class Allbillrajal extends Model
             'rs1'
         );
     }
+    public function apotekrajalpolilalu()
+    {
+        return $this->hasMany(Apotekrajallalu::class, 'rs1', 'rs1');
+    }
+
+    public function apotekracikanrajal()
+    {
+        return $this->hasManyThrough(
+            Apotekrajalracikanrincilalu::class,
+            Apotekrajalracikanhedlalu::class,
+            'rs1',
+            'rs1'
+        );
+    }
 
     public function laborat()
     {
@@ -70,7 +84,7 @@ class Allbillrajal extends Model
 
     public function radiologi()
     {
-        return $this->hasMany(Transpermintaanradiologi::class, 'rs1','rs1');
+        return $this->hasMany(Transpermintaanradiologi::class, 'rs1', 'rs1');
     }
 
     // public function radiologi()
@@ -84,22 +98,22 @@ class Allbillrajal extends Model
 
     public function dokter()
     {
-        return $this->hasOne(MasterDokter::class,'rs1','rs9');
+        return $this->hasOne(MasterDokter::class, 'rs1', 'rs9');
     }
 
     public function rekammdedikumum()
     {
-        return $this->hasMany(Pembayaran::class, 'rs1','rs1');
+        return $this->hasMany(Pembayaran::class, 'rs1', 'rs1');
     }
 
     public function tindakanpoliumum()
     {
-        return $this->hasMany(Tindakan::class ,'rs1', 'rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function visiteumum()
     {
-        return $this->hasMany(Visite::class,'rs1','rs1');
+        return $this->hasMany(Visite::class, 'rs1', 'rs1');
     }
 
     public function psikologtransumum()
@@ -109,11 +123,11 @@ class Allbillrajal extends Model
 
     public function pendapatanumum()
     {
-        return $this->hasMany(Kwitansilog::class,'noreg','rs1');
+        return $this->hasMany(Kwitansilog::class, 'noreg', 'rs1');
     }
 
     public function pendapatanallbpjs()
     {
-        return $this->hasMany(Klaimrajal::class,'noreg','rs1');
+        return $this->hasMany(Klaimrajal::class, 'noreg', 'rs1');
     }
 }

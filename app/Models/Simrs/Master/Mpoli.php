@@ -16,18 +16,18 @@ class Mpoli extends Model
     public $primarykey = 'rs1';
     protected $keyType = 'string';
 
-    // public function scopeListpoli($data)
-    // {
-    //     return $data->select([
-    //         'rs1 as kodepoli',
-    //         'rs2 as polirs',
-    //         'rs3 as jenispoli',
-    //         'rs4 as jenisruangan',
-    //         'rs5 as statukeaktifan',
-    //         'rs6 as kodemapingbpjs',
-    //         'rs7 as polimapingbpjs',
-    //     ]);
-    // }
+    public function scopeListpoli($data)
+    {
+        return $data->select([
+            'rs1 as kodepoli',
+            'rs2 as polirs',
+            'rs3 as jenispoli',
+            'rs4 as jenisruangan',
+            'rs5 as statukeaktifan',
+            'rs6 as kodemapingbpjs',
+            'rs7 as polimapingbpjs',
+        ]);
+    }
 
     public function jumlahkunjunganpolix()
     {
