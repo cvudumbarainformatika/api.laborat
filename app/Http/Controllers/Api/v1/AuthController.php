@@ -51,7 +51,7 @@ class AuthController extends Controller
     public function authuser()
     {
         $me = auth()->user();
-        $user = User::with(['pegawai'])->find($me->id);
+        $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.depo'])->find($me->id);
 
         $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
         $akses = 'all';
