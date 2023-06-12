@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\aplikasi\Aplikasi;
 use App\Models\Pegawai\Akses\Access;
+use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\Akses\Menu;
 use App\Models\Sigarang\Pegawai;
 use App\Models\User;
@@ -46,12 +48,33 @@ class AuthController extends Controller
     {
         return response()->json(auth()->user());
     }
+    public function authuser()
+    {
+        $me = auth()->user();
+        $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.depo'])->find($me->id);
+
+        $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
+        $akses = 'all';
+        $allAccess = array('sa');
+
+        if (!in_array(auth()->user()->username, $allAccess)) {
+            // $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find($me);
+            $akses = AksesUser::where('user_id', $me->id)->get();
+        }
+
+        $result = [
+            'apps' => $apps,
+            'akses' => $akses,
+            'user' => $user
+        ];
+        return new JsonResponse($result);
+    }
 
     public function me()
     {
         $me = auth()->user();
         $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
-        $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
+        $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
         $col = collect($submenu);
@@ -169,7 +192,7 @@ class AuthController extends Controller
     {
 
         $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
-        $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
+        $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
 
         $col = collect($submenu);

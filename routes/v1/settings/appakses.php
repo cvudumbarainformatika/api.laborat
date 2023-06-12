@@ -16,5 +16,6 @@ Route::group(
         Route::post('/store-akses', [AksesUserController::class, 'storeAkses']);
         Route::post('/store-role', [AksesUserController::class, 'storeRole']);
         Route::post('/store-ruang', [AksesUserController::class, 'storeRuang']);
+        // Route::post('/store-akses-menu-only', [AksesUserController::class, 'storeAksesMenuOnly']);
     }
 );

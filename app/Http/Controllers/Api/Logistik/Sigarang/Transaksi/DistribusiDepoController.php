@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DistribusiDepoController extends Controller
 {
@@ -22,6 +24,146 @@ class DistribusiDepoController extends Controller
 
         return new JsonResponse($balik);
     }
+
+    /** new distribusi depo start */
+    // cari datapenerimaan yang statusnya 2
+    public function penerimaan()
+    {
+        $data = Penerimaan::latest('id')
+            ->where('status', 2)
+            ->with([
+                'details.barangrs.depo',
+                'perusahaan',
+                'stokgudang' => function ($anu) {
+                    $anu->where('kode_ruang', 'Gd-02010100');
+                }
+            ])
+            ->filter(request(['q', 'r']))
+            ->paginate(request('per_page'));
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
+    }
+    // distribusikan data penerimaan
+    public function newStore(Request $request)
+    {
+        $penerimaan = Penerimaan::find($request->trmid);
+        // return new JsonResponse(['penerimaan' => $penerimaan, 'request' => $request->all()]);
+        try {
+            DB::beginTransaction();
+            $details = $request->details;
+            $data = DistribusiDepo::create($request->only('reff', 'no_distribusi',  'kode_depo', 'tanggal', 'status'));
+            if ($data) {
+                $stok = [];
+                foreach ($details as $key) {
+                    $data->details()->create($key);
+
+                    $kirim = (object)[];
+                    $kirim->kode_rs = $key['kode_rs'];
+                    $kirim->no_penerimaan = $key['no_penerimaan'];
+                    $kirim->jumlah = $key['jumlah'];
+                    $kirim->kode_depo = $key['kode_depo'];
+                    $kirim->harga = $key['harga'];
+                    $kirim->kode_satuan = $key['kode_satuan'];
+                    $kirim->satuan = $key['satuan_besar'];
+
+                    $ok = $this->updateStok($kirim);
+                    array_push($stok, $ok);
+                }
+                $penerimaan->update(['status' => 3]);
+            }
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'data berhasil di simpan',
+                'data' => $data,
+                'penerimaan' => $penerimaan,
+                'stok' => $stok
+            ]);
+        } catch (\Exception $th) {
+            //throw $th;
+            DB::rollBack();
+            return response()->json(['Gagal tersimpan' => $th], 417);
+        }
+    }
+    // distribusikan data yang ada detailnya tapi sudah ada sebagian yang di distribusikan
+    public function saveDetail(Request $request)
+    {
+        // $penerimaan = Penerimaan::find($request->trmid);
+        // return new JsonResponse(['penerimaan' => $penerimaan, 'request' => $request->all()]);
+        try {
+            DB::beginTransaction();
+            $data = DistribusiDepo::updateOrCreate(
+                [
+                    'reff' => $request->reff,
+                    'no_distribusi' => $request->no_distribusi,
+                    'kode_depo' => $request->kode_depo, //', 'reff', 'no_distribusi')
+                ],
+                [
+                    'tanggal' => $request->tanggal,
+                    'status' => $request->status,
+                    // $request->only('tanggal', 'status')
+                ],
+            );
+            if ($data) {
+                $data->details()->create($request->all());
+
+                $stok = $this->updateStok($request);
+                // $penerimaan->update(['status' => 3]);
+            }
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'data berhasil di simpan',
+                'data' => $data,
+                // 'penerimaan' => $penerimaan,
+                'stok' => $stok
+            ]);
+        } catch (\Exception $th) {
+            //throw $th;
+            DB::rollBack();
+            return response()->json(['Gagal tersimpan' => $th], 417);
+        }
+    }
+    private function updateStok($data)
+    {
+        $recent = RecentStokUpdate::where('kode_rs', $data->kode_rs)
+            ->where('kode_ruang', 'Gd-02010100')
+            ->where('no_penerimaan', $data->no_penerimaan)
+            ->first();
+        if (!$recent) {
+            return false;
+        }
+        if ($recent->sisa_stok >= $data->jumlah) {
+            $stok = RecentStokUpdate::create([
+                'kode_rs' => $data->kode_rs,
+                'kode_ruang' => $data->kode_depo,
+                'sisa_stok' => $data->jumlah,
+                'no_penerimaan' => $data->no_penerimaan,
+                'harga' => $data->harga,
+                'kode_satuan' => $data->kode_satuan,
+                'satuan' => $data->satuan,
+            ]);
+            $sisa = $recent->sisa_stok - $data->jumlah;
+            $recent->update(['sisa_stok' => $sisa]);
+            return $stok;
+        } else {
+            return false;
+        }
+    }
+    // ganti status penerimaan yang sudah di distribusikan semua
+    public function gantiStatusPenerimaan(Request $request)
+    {
+        $penerimaan = Penerimaan::find($request->id);
+        if (!$penerimaan) {
+            return new JsonResponse(['message' => 'Data Penerimaan tidak ditemukan'], 410);
+        }
+        $penerimaan->update(['status' => 3]);
+        return new JsonResponse(['message' => 'Status penerimaan sudah diganti']);
+    }
+    /** new distribusi depo end */
+
+
     public function toDistribute()
     {
         $data = DistribusiDepo::where('status', '=', 1)
@@ -63,6 +205,8 @@ class DistribusiDepoController extends Controller
         }
         return new JsonResponse(['message' => 'data telah dibuat'], 201);
     }
+
+
 
     public function hapusDataStokGudang(Request $request)
     {

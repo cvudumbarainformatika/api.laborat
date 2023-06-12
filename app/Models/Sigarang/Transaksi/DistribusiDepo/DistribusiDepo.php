@@ -3,6 +3,7 @@
 namespace App\Models\Sigarang\Transaksi\DistribusiDepo;
 
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\KontrakPengerjaan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,6 +37,7 @@ class DistribusiDepo extends Model
             //     $q->where('nama', 'like', '%' . $query . '%')
             //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
             // });
+
         });
     }
 }

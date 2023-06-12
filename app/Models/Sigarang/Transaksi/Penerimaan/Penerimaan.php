@@ -3,6 +3,7 @@
 namespace App\Models\Sigarang\Transaksi\Penerimaan;
 
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Supplier;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,10 @@ class Penerimaan extends Model
     {
         return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrak');
     }
+    public function stokgudang()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'no_penerimaan', 'no_penerimaan');
+    }
 
     public function scopeFilter($search, array $reqs)
     {
@@ -49,6 +54,10 @@ class Penerimaan extends Model
             //     $q->where('nama', 'like', '%' . $query . '%')
             //         ->orWhere('kode', 'LIKE', '%' . $query . '%');
             // });
+        });
+        $search->when($reqs['r'] ?? false, function ($search, $query) {
+            $ruang = Supplier::select('kode')->where('nama', 'LIKE', '%' . $query . '%')->get();
+            return $search->whereIn('kode_perusahaan', $ruang);
         });
     }
 }

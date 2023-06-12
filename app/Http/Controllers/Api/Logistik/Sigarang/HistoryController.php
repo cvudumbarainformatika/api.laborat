@@ -114,7 +114,16 @@ class HistoryController extends Controller
                 $filterRuangan->whereBetween('tanggal', [request('from'), request('to')]);
             }
             $data = $filterRuangan->filter(request(['q']))
-                ->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna', 'details.gudang', 'details.ruang', 'ruangan')
+                ->with([
+                    'details.barangrs.barang108',
+                    'details.satuan',
+                    'pj',
+                    'pengguna',
+                    'details.gudang',
+                    'details.ruang',
+                    'details.sisastok',
+                    'ruangan'
+                ])
                 // ->latest('tanggal')
                 ->orderBy(request('order_by'), request('sort'))
                 ->paginate(request('per_page'));
