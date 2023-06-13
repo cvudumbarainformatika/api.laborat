@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Mobile\Absensi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Extra;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
@@ -43,6 +44,10 @@ class HistoryMobile extends Controller
             ->get();
 
         $data['libur'] = $libur; // ini data yang ijin
+
+        $alpha = Alpha::whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
+        $data['alpha'] = $alpha; // ini data yang punya jadwal tapi alpha ketutup jika ada ijin
+
         return new JsonResponse($data);
     }
 }
