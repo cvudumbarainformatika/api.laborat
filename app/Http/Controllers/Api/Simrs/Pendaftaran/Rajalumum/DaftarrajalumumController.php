@@ -250,9 +250,9 @@ class DaftarrajalumumController extends Controller
                         "asalRujukan"=>"2",
                         "tglRujukan"=>"2021-07-23",
                         "noRujukan"=>"RJKMR9835001",
-                        "ppkRujukan"=>"0301R011"
+                        "ppkRujukan"=>"1327R001"
                     ],
-                    "catatan"=>"testinsert RI",
+                    "catatan"=>"testinsert RJ",
                     "diagAwal"=>"E10",
                     "poli"=>[
                         "tujuan"=>"",
@@ -286,7 +286,7 @@ class DaftarrajalumumController extends Controller
                      "kdPenunjang"=>"",
                      "assesmentPel"=>"",
                      "skdp"=>[
-                        "noSurat"=>"0301R0110721K000021",
+                        "noSurat"=>"",
                         "kodeDPJP"=>"31574"
                      ],
                      "dpjpLayan"=>"",

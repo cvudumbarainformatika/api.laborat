@@ -51,7 +51,7 @@ class AuthController extends Controller
     public function authuser()
     {
         $me = auth()->user();
-        $user = User::with(['pegawai'])->find($me->id);
+        $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.depo'])->find($me->id);
 
         $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
         $akses = 'all';
@@ -74,7 +74,7 @@ class AuthController extends Controller
     {
         $me = auth()->user();
         $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
-        $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
+        $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with('role', 'aplikasi', 'submenu.menu')->get();
 
         $col = collect($submenu);
@@ -192,7 +192,7 @@ class AuthController extends Controller
     {
 
         $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
-        $pegawai = Pegawai::with('ruang', 'depo')->find($akses->pegawai_id);
+        $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
         $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
 
         $col = collect($submenu);

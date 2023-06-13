@@ -14,6 +14,9 @@ Route::group([
     Route::get('/distribusi', [DistribusiDepoController::class, 'getDistribusi']);
     Route::get('/to-distribute', [DistribusiDepoController::class, 'toDistribute']);
     Route::post('/store', [DistribusiDepoController::class, 'store']);
+    Route::post('/new-store', [DistribusiDepoController::class, 'newStore']);
+    Route::post('/save-detail', [DistribusiDepoController::class, 'saveDetail']);
+    Route::post('/status-penerimaan', [DistribusiDepoController::class, 'gantiStatusPenerimaan']);
     Route::post('/terima-depo', [DistribusiDepoController::class, 'diterimaDepo']);
     Route::post('/hapus-data-gudang', [DistribusiDepoController::class, 'hapusDataStokGudang']);
     Route::get('/destroy', [DistribusiDepoController::class, 'destroy']);
