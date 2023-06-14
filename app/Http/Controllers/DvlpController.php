@@ -13,8 +13,9 @@ class DvlpController extends Controller
     public function index()
     {
         // $no_rujukan = '132701010323P000003';
-        $noka = '0003312662758';
-        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/Peserta/' . $noka);
+        // $no_rujukan = '0213B0060523P000015';
+        $noka = '0000112366822';
+        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/List/Peserta/' . $noka);
         // jadwaldokt05-22er/kodepoli/{Parameter1}/tanggal/{Parameter2}
 
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Extra;
 use App\Models\Pegawai\Libur;
+use App\Models\Pegawai\Prota;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -54,6 +55,9 @@ class HistoryMobile extends Controller
             $alpha = Alpha::where('pegawai_id', $pegawai_id)->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
         }
         $data['alpha'] = $alpha; // ini data yang punya jadwal tapi alpha ketutup jika ada ijin
+
+        $prota = Prota::whereBetween('tgl_libur', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
+        $data['prota'] = $prota;
 
         return new JsonResponse($data);
     }
