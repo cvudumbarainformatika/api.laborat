@@ -7,6 +7,7 @@ use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Extra;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -45,7 +46,12 @@ class HistoryMobile extends Controller
 
         $data['libur'] = $libur; // ini data yang ijin
 
-        $alpha = Alpha::whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
+        $akun = User::with('pegawai')->find($user->id);
+        $pegawai_id = null;
+        if ($akun) {
+            $pegawai_id = $akun->pegawai ? $akun->pegawai->id : null;
+        }
+        $alpha = Alpha::where('pegawai_id', $pegawai_id)->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
         $data['alpha'] = $alpha; // ini data yang punya jadwal tapi alpha ketutup jika ada ijin
 
         return new JsonResponse($data);
