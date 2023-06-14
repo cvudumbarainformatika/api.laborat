@@ -32,6 +32,10 @@ class BarangRS extends Model
     {
         return $this->belongsTo(Barang108::class, 'kode_108', 'kode');
     }
+    public function rekening50()
+    {
+        return $this->belongsTo(Rekening50::class, 'kode_50', 'kode');
+    }
 
     public function mapingbarang()
     {

@@ -14,7 +14,7 @@ class TandatanganController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $data = Tandatangan::with('ptk', 'ppk', 'gudang', 'mengetahui')->where('user', $user->id)->first();
+        $data = Tandatangan::with('ptk', 'ppk.relasi_jabatan', 'gudang', 'mengetahui')->where('user', $user->id)->first();
 
         return new JsonResponse($data);
     }
