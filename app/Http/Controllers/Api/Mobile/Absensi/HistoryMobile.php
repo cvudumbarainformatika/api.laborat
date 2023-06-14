@@ -48,10 +48,11 @@ class HistoryMobile extends Controller
 
         $akun = User::with('pegawai')->find($user->id);
         $pegawai_id = null;
+        $alpha = [];
         if ($akun) {
             $pegawai_id = $akun->pegawai ? $akun->pegawai->id : null;
+            $alpha = Alpha::where('pegawai_id', $pegawai_id)->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
         }
-        $alpha = Alpha::where('pegawai_id', $pegawai_id)->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
         $data['alpha'] = $alpha; // ini data yang punya jadwal tapi alpha ketutup jika ada ijin
 
         return new JsonResponse($data);
