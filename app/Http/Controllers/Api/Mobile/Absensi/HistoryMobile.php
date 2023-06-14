@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Mobile\Absensi;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Extra;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,11 @@ class HistoryMobile extends Controller
 
         $alpha = Alpha::whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])->get();
         $data['alpha'] = $alpha; // ini data yang punya jadwal tapi alpha ketutup jika ada ijin
+
+        $today = date('l');
+        $jadwal = JadwalAbsen::where(['user_id' => $user->id, 'day' => $today])->first();
+        $jadwalhariini = $jadwal;
+        $data['jadwal'] = $jadwalhariini;
 
         return new JsonResponse($data);
     }
