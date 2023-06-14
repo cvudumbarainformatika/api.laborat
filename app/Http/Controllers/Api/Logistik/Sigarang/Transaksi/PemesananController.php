@@ -147,6 +147,10 @@ class PemesananController extends Controller
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
 
+        $tatal = DetailPemesanan::where('pemesanan_id', $data->id)->sum('sub_total');
+        if ($tatal > 0) {
+            $data->update(['total' => $tatal]);
+        }
         if ($detail->wasRecentlyCreated) {
             $data->update([
                 'updated_by' => $pegawai->id
@@ -159,7 +163,12 @@ class PemesananController extends Controller
             $balik = Pemesanan::where('reff', $request->reff)
                 ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
                 ->first();
-            return new JsonResponse(['message' => 'data created', 'data' => $balik], 201);
+
+            return new JsonResponse([
+                'message' => 'data created',
+                'tot' => $tatal,
+                'data' => $balik
+            ], 201);
         }
         if ($detail->wasChanged()) {
             $data->update([
@@ -168,7 +177,11 @@ class PemesananController extends Controller
             $balik = Pemesanan::where('reff', $request->reff)
                 ->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
                 ->first();
-            return new JsonResponse(['message' => 'data updated', 'data' => $balik], 200);
+            return new JsonResponse([
+                'message' => 'data updated',
+                'tot' => $tatal,
+                'data' => $balik
+            ], 200);
         }
     }
     public function destroy()

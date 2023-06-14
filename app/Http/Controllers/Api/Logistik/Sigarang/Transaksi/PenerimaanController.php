@@ -245,6 +245,12 @@ class PenerimaanController extends Controller
             $detailTerima->update(['harga' => $request->harga]);
         }
 
+        if ($request->has('totalHarga')) {
+            $penerimaan = Penerimaan::find($request->penerimaan_id);
+            if ($penerimaan) {
+                $penerimaan->update(['total' => $request->totalHarga]);
+            }
+        }
         if ($detailTerima->wasChanged()) {
             if ($request->has('statuspesanan')) {
                 if ($request->statuspesanan === 3) {

@@ -18,7 +18,7 @@ class BarangRSController extends Controller
     {
         $data = BarangRS::filter(request(['q']))
             ->latest('id')
-            ->with('barang108', 'satuan', 'satuankecil', 'depo')
+            ->with('barang108', 'rekening50', 'satuan', 'satuankecil', 'depo')
             ->paginate(request('per_page'));
         $collect = collect($data);
         $balik = $collect->only('data');
