@@ -278,7 +278,7 @@ class AuthController extends Controller
         $gud = $raw['depo'];
         return response()->json([
             'token' => $token,
-            'user' => auth()->user(),
+            'user' => $user,
             'aplikasi' => $apli,
             'menus' => $into,
             'aplikasi2' => $apli2,
