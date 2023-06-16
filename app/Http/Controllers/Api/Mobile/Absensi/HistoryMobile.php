@@ -27,8 +27,6 @@ class HistoryMobile extends Controller
         $to = $thisYear . '-' . $month . '-31';
 
         $masuk = TransaksiAbsen::where('user_id', $user->id)
-            // ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            // ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
             ->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->with('kategory')
             ->latest()
@@ -40,8 +38,6 @@ class HistoryMobile extends Controller
             'user_id',
             $user->id
         )
-            // ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            // ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
             ->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->latest()
             ->get();
