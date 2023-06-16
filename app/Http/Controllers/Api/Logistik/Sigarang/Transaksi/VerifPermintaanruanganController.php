@@ -11,6 +11,7 @@ use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VerifPermintaanruanganController extends Controller
 {
@@ -38,7 +39,7 @@ class VerifPermintaanruanganController extends Controller
         // tujuan itu === kode_ruangn
         foreach ($datas as $key) {
             foreach ($key->details as $detail) {
-                $temp = $this->stokRuanganByBarang($detail->kode_rs, $detail->tujuan, $detail->dari);
+                $temp = $this->stokRuanganByBarang($detail->kode_rs, $detail->tujuan, $detail->dari, $detail->id);
                 $detail->alokasi = $temp->alokasi;
                 $detail->stokDepo = $temp->stokDepo;
                 $detail->stokRuangan = $temp->stokRuangan;
@@ -48,7 +49,7 @@ class VerifPermintaanruanganController extends Controller
 
         return new JsonResponse($datas);
     }
-    public function stokRuanganByBarang($kode_rs, $kode_ruangan, $kode_depo)
+    public function stokRuanganByBarang($kode_rs, $kode_ruangan, $kode_depo, $detailId)
     {
         // $kode_rs = request('kode_rs');
         // $kode_ruangan = request('kode_ruangan');
@@ -60,22 +61,47 @@ class VerifPermintaanruanganController extends Controller
         // $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
 
         // ambil stok ruangan
-        $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $kode_ruangan)->get();
+        // $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+        //     ->where('kode_ruang', $kode_ruangan)->get();
 
-        $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+        // $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+        $totalStokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)->sum('sisa_stok');
+
+        // $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
 
         // cari stok di depo
-        $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $kode_depo)->get();
+        // $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
+        //     ->where('kode_ruang', $kode_depo)->get();
 
-        $totalStok = collect($stok)->sum('sisa_stok');
+        // $totalStok = collect($stok)->sum('sisa_stok');
+        $totalStok = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_depo)->sum('sisa_stok');
+
+        // $totalStok = collect($stok)->sum('sisa_stok');
 
         // ambil alokasi barang
-        $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 4)
-                ->where('status', '<', 7);
-        })->where('kode_rs', $kode_rs)->get();
+        // $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
+        //     $q->where('status', '>=', 4)
+        //         ->where('status', '<', 7);
+        // })->where('kode_rs', $kode_rs)->get();
+        $data = DB::table('detail_permintaanruangans')
+            ->select(
+                'detail_permintaanruangans.permintaanruangan_id',
+                'detail_permintaanruangans.kode_rs',
+                'detail_permintaanruangans.jumlah_disetujui',
+                'detail_permintaanruangans.jumlah',
+                'permintaanruangan.id',
+                'permintaanruangan.status',
+            )
+            ->join('permintaanruangans', function ($minta) {
+                $minta->on(
+                    'detail_permintaanruangans.permintaanruangan_id',
+                    '=',
+                    'permintaanruangans.id'
+                )
+                    ->whereIn('status', [4, 5, 6]);
+            })->where('kode_rs', $kode_rs)->get();
 
         $col = collect($data);
 
@@ -89,10 +115,11 @@ class VerifPermintaanruanganController extends Controller
 
         $alokasi = 0;
         // ambil permintaan dari ruangan ybs
-        $permintaanRuangan = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 4)
-                ->where('status', '<', 7);
-        })->where('kode_rs', $kode_rs)->where('tujuan', $kode_ruangan)->first();
+        // $permintaanRuangan = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
+        //     $q->where('status', '>=', 4)
+        //         ->where('status', '<', 7);
+        // })->where('kode_rs', $kode_rs)->where('tujuan', $kode_ruangan)->first();
+        $permintaanRuangan = DetailPermintaanruangan::find($detailId);
         // jumlah alokasi depo dikurangi permintaan ruangan
         $myAlokasi = $sum - $permintaanRuangan->jumlah;
         // hitung alokasi
