@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KandungannamagenerikCont
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KekuatandosisController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MjenisperbekalanController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MkodebelanjaController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\VolumesediaanController;
 use App\Models\Pegawai\Akses\Role;
 use Illuminate\Support\Facades\Route;
 
@@ -33,4 +34,8 @@ Route::group([
     Route::post('/simpankekuatandosis', [KekuatandosisController::class, 'simpan']);
     Route::post('/hapuskekuatandosis', [KekuatandosisController::class, 'hapus']);
     Route::get('/listkekuatandosis', [KekuatandosisController::class, 'list']);
+
+    Route::post('/simpanvolumesediaan', [VolumesediaanController::class, 'simpan']);
+    Route::post('/hapusvolumesediaan', [VolumesediaanController::class, 'hapus']);
+    Route::get('/listvolumesediaan', [VolumesediaanController::class, 'list']);
 });
