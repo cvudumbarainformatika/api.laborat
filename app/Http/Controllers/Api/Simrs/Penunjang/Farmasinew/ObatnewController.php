@@ -15,7 +15,7 @@ class ObatnewController extends Controller
         [
         'nama_obat' => $request->nama_obat,
         'merk' => $request->merk,
-        'kandungan' => $request->kadnungan,
+        'kandungan' => $request->kandungan,
         'jenis_perbekalan' => $request->jenis_perbekalan,
         'bentuk_sediaan' => $request->bentuk_sediaan,
         'kode108' => $request->kode108,
@@ -45,16 +45,12 @@ class ObatnewController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mobatnew::where(['kd_obat' => $request->kd_obat]);
-        if(!count($cari))
+        $cari = Mobatnew::wherefirst(['kd_obat' => $request->kd_obat]);
+        if($cari)
         {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 401);
         }
-
-        foreach($cari as $kunci)
-        {
-            $hapus = $kunci->delete();
-        }
+        $hapus = $cari->delete();
         if(!$hapus)
         {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
@@ -68,5 +64,7 @@ class ObatnewController extends Controller
         ->orWhere('merk', 'Like' , '%' .request('merk'). '%')
         ->orWhere('kandungan', 'Like' , '%' .request('kandungan'). '%')
         ->get();
+
+        return new JsonResponse($list);
     }
 }

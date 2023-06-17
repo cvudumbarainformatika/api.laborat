@@ -21,16 +21,12 @@ class KekuatandosisController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mkekuatandosis::where(['id' => $request->id])->get();
-        if(!count($cari))
+        $cari = Mkekuatandosis::find($request->id);
+        if($cari)
         {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 401);
         }
-
-        foreach($cari as $kunci)
-        {
-            $hapus = $kunci->delete();
-        }
+        $hapus = $cari->delete();
         if(!$hapus)
         {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);

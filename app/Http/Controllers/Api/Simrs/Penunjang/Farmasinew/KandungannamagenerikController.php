@@ -20,16 +20,13 @@ class KandungannamagenerikController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mkandungan_namagenerik::where(['id' => $request->id])->get();
-        if(!count($cari))
+        $cari = Mkandungan_namagenerik::find($request->id);
+        if($cari)
         {
             return new JsonResponse(['message' =>'data tidak ditemukan'], 401);
         }
 
-        foreach($cari as $kunci)
-        {
-            $hapus = $kunci->delete();
-        }
+        $hapus = $cari->delete();
 
         if(!$hapus)
         {

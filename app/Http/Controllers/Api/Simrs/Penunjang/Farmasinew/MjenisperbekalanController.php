@@ -29,15 +29,12 @@ class MjenisperbekalanController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mjenisperbekalan::where(['id' => $request->id])->get();
-        if(!count($cari))
+        $cari = Mjenisperbekalan::find($request->id);
+        if($cari)
         {
             return new JsonResponse(['message' => 'DATA TIDAK DITEMUKAN....!!!'], 401);
         }
-
-        foreach($cari as $kunci){
-            $hapus = $kunci->delete();
-        }
+        $hapus = $cari->delete();
 
         if(!$hapus){
             return new JsonResponse(['message' => 'GAGAL DIHAPUS'], 500);

@@ -32,15 +32,12 @@ class MkodebelanjaController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mkodebelanjaobat::where(['id' => $request->id])->get();
-        if(!count($cari))
+        $cari = Mkodebelanjaobat::find($request->id);
+        if($cari)
         {
             return new JsonResponse(['message' => 'DATA TIDAK DITEMUKAN....!!!'], 401);
         }
-
-        foreach($cari as $kunci){
-            $hapus = $kunci->delete();
-        }
+        $hapus = $cari->delete();
 
         if(!$hapus){
             return new JsonResponse(['message' => 'GAGAL DIHAPUS'], 500);
