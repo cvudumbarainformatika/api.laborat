@@ -35,6 +35,7 @@ class ObatnewController extends Controller
         'kelas_terapi' =>$request->kelas_terapi,
         'nilai_kdn' =>$request->nilai_kdn,
         'sertifikatkdn' =>$request->sertifikatkdn,
+        'sistembayar' =>$request->sistembayar,
         ]);
         if(!$simpan)
         {
