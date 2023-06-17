@@ -12,26 +12,22 @@ class VolumesediaanController extends Controller
     public function simpan(Request $request)
     {
         $simpan = Mvolumesediaan::firstOrCreate(['volumesediaan' => $request->volumesediaan]);
-        if(!$simpan)
-        {
+        if (!$simpan) {
             return new JsonResponse(['message' => 'gagal disimpan...!!!'], 501);
         }
-            return new JsonResponse(['message' => 'berhasil disimpan...!!!'], 200);
+        return new JsonResponse(['message' => 'berhasil disimpan...!!!'], 200);
     }
 
     public function hapus(Request $request)
     {
         $cari = Mvolumesediaan::where(['id' => $request->id])->get();
-        if(!count($cari))
-        {
+        if (!count($cari)) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 401);
         }
-        foreach($cari as $kunci)
-        {
+        foreach ($cari as $kunci) {
             $hapus = $kunci->delete();
         }
-        if(!$hapus)
-        {
+        if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
@@ -39,7 +35,7 @@ class VolumesediaanController extends Controller
 
     public function list()
     {
-        $list = Mvolumesediaan::where('volumesediaan', 'Like', '%' .request('volumesediaan'). '%')->get();
+        $list = Mvolumesediaan::where('volumesediaan', 'Like', '%' . request('q') . '%')->get();
         return new JsonResponse($list);
     }
 }
