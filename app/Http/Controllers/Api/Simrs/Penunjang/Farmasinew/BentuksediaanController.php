@@ -21,7 +21,7 @@ class BentuksediaanController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mbentuksediaan::find(['id' => $request->id]);
+        $cari = Mbentuksediaan::find($request->id);
         if(!$cari)
         {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 401);
