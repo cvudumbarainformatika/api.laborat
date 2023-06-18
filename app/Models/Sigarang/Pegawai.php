@@ -20,6 +20,9 @@ class Pegawai extends Model
     protected $connection = 'kepex';
     protected $table = 'pegawai';
     protected $guarded = ['id'];
+    protected $hidden = [
+        'account_pass',
+    ];
 
     public $timestamps = false;
 
