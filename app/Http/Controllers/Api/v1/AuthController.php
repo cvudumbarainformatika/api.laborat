@@ -41,7 +41,7 @@ class AuthController extends Controller
         if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        return $this->createNewToken($token);
+        return self::createNewToken($token);
     }
 
     public function userProfile()
@@ -188,7 +188,7 @@ class AuthController extends Controller
     //     return $this->createNewToken(auth()->refresh());
     // }
 
-    protected function createNewToken($token)
+    public static function createNewToken($token)
     {
 
         $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);

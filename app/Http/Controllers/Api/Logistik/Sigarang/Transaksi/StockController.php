@@ -149,20 +149,49 @@ class StockController extends Controller
         // $depo = MapingBarangDepo::where('kode_rs', $kode_rs)->first();
 
         // ambil stok ruangan
-        $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $kode_ruangan)->get();
-        $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+        // $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+        //     ->where('kode_ruang', $kode_ruangan)->get();
+        // $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
+
+        // ambil stok ruangan cara baru
+        $totalStokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)->sum('sisa_stok');
+        // $totalStokRuangan = collect($stokRuangan)->sum('sisa_stok');
 
         // cari stok di depo
-        $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
-            ->where('kode_ruang', $barang->kode_depo)->get();
-        $totalStok = collect($stok)->sum('sisa_stok');
+        // $stok = RecentStokUpdate::where('kode_rs', $kode_rs)
+        //     ->where('kode_ruang', $barang->kode_depo)->get();
+        // $totalStok = collect($stok)->sum('sisa_stok');
+
+        // cari stok di depo cara baru
+        $totalStok = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $barang->kode_depo)->sum('sisa_stok');
+        // $totalStok = collect($stok)->sum('sisa_stok');
 
         // ambil alokasi barang
-        $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
-            $q->where('status', '>=', 4)
-                ->where('status', '<', 7);
-        })->where('kode_rs', $kode_rs)->get();
+        // $data = DetailPermintaanruangan::whereHas('permintaanruangan', function ($q) {
+        //     $q->where('status', '>=', 4)
+        //         ->where('status', '<', 7);
+        // })->where('kode_rs', $kode_rs)->get();
+
+        $data = DB::connection('sigarang')->table('detail_permintaanruangans')
+            ->select(
+                'detail_permintaanruangans.permintaanruangan_id',
+                'detail_permintaanruangans.kode_rs',
+                'detail_permintaanruangans.jumlah_disetujui',
+                'detail_permintaanruangans.jumlah',
+                'permintaanruangans.id',
+                'permintaanruangans.status',
+            )
+            ->join('permintaanruangans', function ($minta) {
+                $minta->on(
+                    'detail_permintaanruangans.permintaanruangan_id',
+                    '=',
+                    'permintaanruangans.id'
+                )
+                    ->whereIn('status', [4, 5, 6]);
+            })->where('kode_rs', $kode_rs)->get();
+
         $col = collect($data);
         $gr = $col->map(function ($item) {
             $jumsem = $item->jumlah_disetujui ? $item->jumlah_disetujui : $item->jumlah;
