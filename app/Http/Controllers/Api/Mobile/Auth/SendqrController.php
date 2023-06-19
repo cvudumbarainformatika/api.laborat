@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Mobile\Auth;
 
 use App\Events\LoginQrEvent;
+use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\User;
@@ -26,6 +27,23 @@ class SendqrController extends Controller
         ];
         event(new LoginQrEvent($message));
         return response()->json($request->qr);
+    }
+
+    public function loginQr(Request $request)
+    {
+        $temp = User::where('email', '=', $request->email)
+            ->first();
+        if (!$temp) {
+            return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
+        }
+
+        JWTAuth::factory()->setTTL(518400);
+        $data = $request->only('email');
+        $token = JWTAuth::attempt($data);
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized', 'validator' => $data], 401);
+        }
+        return AuthController::createNewToken($token);
     }
 
     // ganti status
