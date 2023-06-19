@@ -10,6 +10,7 @@ class Mkekuatandosis extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $connection = 'farmasi';
     protected $table = 'mkekuatandosis';
     protected $guarded = ['id'];
 }

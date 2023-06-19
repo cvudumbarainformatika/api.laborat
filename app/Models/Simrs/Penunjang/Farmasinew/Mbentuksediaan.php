@@ -10,6 +10,7 @@ class Mbentuksediaan extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $connection = 'farmasi';
     protected $table = 'mbentuksediaan';
     protected $guarded = ['id'];
 }
