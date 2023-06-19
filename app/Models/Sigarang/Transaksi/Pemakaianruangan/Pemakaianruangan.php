@@ -45,6 +45,11 @@ class Pemakaianruangan extends Model
         return $this->belongsTo(PenggunaRuang::class, 'kode_pengguna', 'kode_ruang');
     }
 
+    public function ruanganmaster()
+    {
+        return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
+    }
+
 
 
     public function scopeFilter($search, array $reqs)
