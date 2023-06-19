@@ -3,11 +3,14 @@
 namespace App\Models\Sigarang;
 
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
+use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiLangsung\DetailDistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Gudang\DetailTransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\DetailsPemakaianruangan;
 use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
+use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -93,6 +96,47 @@ class BarangRS extends Model
     public function fisik()
     {
         return $this->hasMany(StokOpname::class, 'kode_rs', 'kode');
+    }
+
+    public function stok_akhir()
+    {
+        return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
+    }
+
+    public function caripihakketiga()
+    {
+        return $this->hasManyThrough(
+            Pemesanan::class,
+            DetailPemesanan::class,
+            'kode_rs',
+            'id',
+            'kode',
+            'pemesanan_id'
+        );
+    }
+
+    public function masukgudang()
+    {
+        return $this->hasManyThrough(
+            Penerimaan::class,
+            DetailPenerimaan::class,
+            'kode_rs',  // Kunci asing di tabel yang menghubungkan(tabel detail)...
+            'id',  // Kunci asing di tabel yang di tuju(heder)...
+            'kode',  // Kunci lokal pada tabel master(barang)...
+            'penerimaan_id', // Kunci lokal di tabel penghubung(detail)...
+        );
+    }
+
+    public function keluargudang()
+    {
+        return $this->hasManyThrough(
+            DistribusiDepo::class,
+            DetailDistribusiDepo::class,
+            'kode_rs',
+            'id',
+            'kode',
+            'distribusi_depo_id'
+        );
     }
 
 

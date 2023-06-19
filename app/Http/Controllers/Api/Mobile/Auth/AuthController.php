@@ -99,9 +99,10 @@ class AuthController extends Controller
 
     protected function createNewToken($token)
     {
+        $user = User::with('pegawai')->find(auth()->user()->id);
         return response()->json([
             'token' => $token,
-            'user' => auth()->user()
+            'user' => $user
         ]);
     }
 
