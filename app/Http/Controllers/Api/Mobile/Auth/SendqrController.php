@@ -31,17 +31,16 @@ class SendqrController extends Controller
 
     public function loginQr(Request $request)
     {
-        $temp = User::where('email', '=', $request->email)
-            ->first();
+        $temp = User::where('email', '=', $request->email)->first();
         if (!$temp) {
             return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
         }
 
         JWTAuth::factory()->setTTL(518400);
         $data = $request->only('email');
-        $token = JWTAuth::attempt($data);
+        $token = JWTAuth::getProvider()->retrieveByCredentials(($data));
         if (!$token) {
-            return response()->json(['error' => 'Unauthorized', 'validator' => $data], 401);
+            return response()->json(['error' => 'Unauthorized', 'validator' => $token], 401);
         }
         return AuthController::createNewToken($token);
     }
