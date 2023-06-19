@@ -42,7 +42,16 @@ class SendqrController extends Controller
         if (!$token) {
             return response()->json(['error' => 'Unauthorized', 'validator' => $token], 401);
         }
-        return AuthController::createNewToken($token);
+        return $this->createNewToken($token);
+    }
+
+    protected function createNewToken($token)
+    {
+        $user = User::with('pegawai')->find(auth()->user()->id);
+        return response()->json([
+            'token' => $token,
+            'user' => $user
+        ]);
     }
 
     // ganti status
