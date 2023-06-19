@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Mobile\Auth;
 
+use App\Events\LoginQrEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\User;
@@ -16,7 +17,12 @@ class SendqrController extends Controller
 {
     public function data(Request $request)
     {
-        return response()->json($request->all());
+        $message = [
+            'menu' => 'login-qr',
+            'data' => $request->qr
+        ];
+        event(new LoginQrEvent($message));
+        return response()->json($request->qr);
     }
 
     // ganti status
