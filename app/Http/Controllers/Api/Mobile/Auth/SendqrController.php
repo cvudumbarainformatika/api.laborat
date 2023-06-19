@@ -17,9 +17,12 @@ class SendqrController extends Controller
 {
     public function data(Request $request)
     {
+        $user = JWTAuth::user();
         $message = [
             'menu' => 'login-qr',
-            'data' => $request->qr
+            'data' => $request->qr,
+            'email' => $user->email,
+            'token' => $request->token
         ];
         event(new LoginQrEvent($message));
         return response()->json($request->qr);
