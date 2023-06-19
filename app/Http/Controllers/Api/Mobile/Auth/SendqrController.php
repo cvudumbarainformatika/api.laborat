@@ -37,8 +37,8 @@ class SendqrController extends Controller
         }
 
         JWTAuth::factory()->setTTL(518400);
-        $data = $request->only('email');
-        $token = JWTAuth::getProvider()->retrieveByCredentials(($data));
+        // $data = $request->only('email');
+        $token = JWTAuth::fromUser(($temp));
         if (!$token) {
             return response()->json(['error' => 'Unauthorized', 'validator' => $token], 401);
         }
