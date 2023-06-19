@@ -7,6 +7,7 @@ use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\DvlpController;
 use App\Http\Controllers\PrintController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +47,13 @@ Route::get('/unsubscribe/{user}', function (Request $request, $user) {
 
     return $user;
 })->name('unsubscribe')->middleware('signed');
+
+
+
+// Route::get('/buat-foto-xenter-mobile', function () {
+//     $response = Http::get('http://192.168.100.100/simpeg/foto/050801141030/foto-050801141030.JPG');
+//     return $response;
+// });
 
 // Route::get('/playground', function (Request $request) {
 //    event(New PlaygroundEvent());

@@ -251,6 +251,7 @@ class PenerimaanController extends Controller
                 $penerimaan->update(['total' => $request->totalHarga]);
             }
         }
+        $detailTerima->update(['sub_total' => $detailTerima->qty * $detailTerima->harga]);
         if ($detailTerima->wasChanged()) {
             if ($request->has('statuspesanan')) {
                 if ($request->statuspesanan === 3) {

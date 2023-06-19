@@ -109,4 +109,8 @@ class User extends Authenticatable implements JWTSubject
             // ->orWhere('kode', 'LIKE', '%' . $query . '%');
         });
     }
+    public function scopeSelectAll($query)
+    {
+        $query->select('username', 'nama', 'email', 'pegawai_id');
+    }
 }

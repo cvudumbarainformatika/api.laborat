@@ -193,41 +193,6 @@ class JadwalController extends Controller
                 $result = false;
             }
         }
-        // $jadwal = JadwalAbsen::where('user_id', $id)->where('day', $day)->with('kategory')->first();
-
-
-        // if ($jadwal->status === '2') {
-        //     if ($request->id > 0) {
-        //         $data = TransaksiAbsen::with('kategory')->find($request->id);
-        //         $data->update([
-        //             'pulang' => $time,
-        //         ]);
-        //         $apem = ['id' => 0, 'jam' => 0];
-        //         $result = ['absen' => 'pulang', 'data' => $apem];
-        //         return $result;
-        //     }
-        //     $data = TransaksiAbsen::create([
-        //         'pegawai_id' => $user->pegawai_id,
-        //         'user_id' => $user->id,
-        //         'kategory_id' => $jadwal->kategory_id,
-        //         'tanggal' => $now,
-        //         'masuk' => $time,
-        //     ]);
-        //     $data->load('kategory');
-        //     $result = ['absen' => 'masuk', 'data' => $data];
-        //     return $result;
-        // } else {
-        //     if ($request->has('id') && $request->id > 0) {
-        //         $data = TransaksiAbsen::find($request->id);
-        //         $data->update([
-        //             'pulang' => $time,
-        //         ]);
-        //         $result = ['absen' => 'pulang', 'data' => $data];
-        //         return $result;
-        //     } else {
-        //         $result = false;
-        //     }
-        // }
         return $result;
     }
 
