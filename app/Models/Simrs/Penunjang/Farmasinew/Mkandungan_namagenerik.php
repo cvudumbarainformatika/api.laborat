@@ -10,6 +10,7 @@ class Mkandungan_namagenerik extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $connection = 'farmasi';
     protected $table = 'farmasi_kandungan';
     protected $guarded = ['id'];
 }

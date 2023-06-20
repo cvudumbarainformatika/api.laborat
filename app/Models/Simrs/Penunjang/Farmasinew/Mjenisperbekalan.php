@@ -10,6 +10,7 @@ class Mjenisperbekalan extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $connection = 'farmasi';
     protected $table = 'mjenisperbekalan';
     protected $guarded = ['id'];
 }

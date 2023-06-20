@@ -10,6 +10,7 @@ class Mkodebelanjaobat extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $connection = 'farmasi';
     protected $table = 'kodeBelanjaObat';
     protected $guarded = ['id'];
 }

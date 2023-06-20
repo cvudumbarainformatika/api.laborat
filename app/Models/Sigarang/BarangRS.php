@@ -7,11 +7,13 @@ use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiLangsung\DetailDistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Gudang\DetailTransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\DetailsPemakaianruangan;
+use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
 use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -85,10 +87,7 @@ class BarangRS extends Model
     {
         return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
     }
-    public function stok_awal()
-    {
-        return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
-    }
+
     public function recent()
     {
         return $this->hasMany(RecentStokUpdate::class, 'kode_rs', 'kode');
@@ -98,21 +97,10 @@ class BarangRS extends Model
         return $this->hasMany(StokOpname::class, 'kode_rs', 'kode');
     }
 
-    public function stok_akhir()
+
+    public function stok_awal()
     {
         return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
-    }
-
-    public function caripihakketiga()
-    {
-        return $this->hasManyThrough(
-            Pemesanan::class,
-            DetailPemesanan::class,
-            'kode_rs',
-            'id',
-            'kode',
-            'pemesanan_id'
-        );
     }
 
     public function masukgudang()
@@ -139,6 +127,34 @@ class BarangRS extends Model
         );
     }
 
+    public function stok_akhir()
+    {
+        return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
+    }
+
+    public function pengeluarandepo()
+    {
+        return $this->hasManyThrough(
+            Permintaanruangan::class,
+            detailPermintaanruangan::class,
+            'kode_rs',
+            'id',
+            'kode',
+            'permintaanruangan_id'
+        );
+    }
+
+    public function pemakaianruangan()
+    {
+        return $this->hasManyThrough(
+            Pemakaianruangan::class,
+            DetailsPemakaianruangan::class,
+            'kode_rs',
+            'id',
+            'kode',
+            'pemakaianruangan_id'
+        );
+    }
 
     public function scopeFilter($search, array $reqs)
     {

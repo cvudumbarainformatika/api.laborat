@@ -10,6 +10,7 @@ class Mvolumesediaan extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $connection = 'farmasi';
     protected $table = 'mvolumesediaan';
     protected $guarded = ['id'];
 }

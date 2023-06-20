@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 
+use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Ruang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +34,12 @@ class Permintaanruangan extends Model
     {
         return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
     }
+
+    public function masterdepo()
+    {
+        return $this->belongsTo(Gudang::class, 'dari', 'kode');
+    }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {

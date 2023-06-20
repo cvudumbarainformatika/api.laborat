@@ -12,6 +12,7 @@ class DistribusiDepo extends Model
     use HasFactory;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
+    protected $appends = ['gudangasal'];
 
     public function details()
     {
@@ -22,7 +23,11 @@ class DistribusiDepo extends Model
         return $this->belongsTo(Gudang::class, 'kode_depo', 'kode');
     }
 
-
+    public function getGudangasalAttribute()
+    {
+        $Gudangasal = 'Gudang Habis Pakai';
+        return ($Gudangasal);
+    }
 
     public function scopeFilter($search, array $reqs)
     {

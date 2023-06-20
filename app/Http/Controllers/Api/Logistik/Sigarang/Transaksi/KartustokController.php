@@ -16,7 +16,7 @@ class KartustokController extends Controller
     public function kartustokgudang()
     {
         $kd_tempat = 'Gd-02010100';
-        $kd_obat= request('kd_obat');
+        $kd_barang= request('kd_barang');
         $bln    = request('bln');
         $thn    = request('thn');
 
@@ -53,7 +53,7 @@ class KartustokController extends Controller
                 {
                     $keluar->select('distribusi_depos.id as id','distribusi_depos.tanggal as tanggal','distribusi_depos.no_distribusi as no_distrobusi',
                     'detail_distribusi_depos.jumlah as keluar','distribusi_depos.kode_depo as kode_depo')
-                           ->where('status','=','2')
+                           ->where('distribusi_depos.status','=','2')
                            ->whereMonth('distribusi_depos.tanggal', $bln)
                            ->whereYear('distribusi_depos.tanggal', $thn)->with(['depo:kode,nama']);
                 },
@@ -67,9 +67,124 @@ class KartustokController extends Controller
 
                 }
             ])
-        ->where('kode','=', $kd_obat)
+        ->where('kode','=', $kd_barang)
         ->get();
 
         return new JsonResponse($query);
+    }
+
+    public function kartustokdepo()
+    {
+        $kd_depo = request('kd_depo');
+        $kd_barang= request('kd_barang');
+        $bln    = request('bln');
+        $thn    = request('thn');
+
+        if($bln==1){
+            $blnx=12;
+            $thnx=$thn-1;
+        }else{
+            $blnx=$bln-1;
+            $thnx=$thn;
+        }
+
+        $query = BarangRS::select('kode as kode','nama as nama')->with(
+            [
+                'stok_awal'=>function($stokawal) use ($bln,$blnx,$thn,$thnx,$kd_depo)
+                {
+                    $stokawal->select('monthly_stok_updates.id','monthly_stok_updates.tanggal','monthly_stok_updates.no_penerimaan',
+                    'monthly_stok_updates.harga','monthly_stok_updates.sisa_stok','monthly_stok_updates.kode_rs')
+                               ->whereMonth('monthly_stok_updates.tanggal', $blnx)
+                               ->whereYear('monthly_stok_updates.tanggal', $thnx)
+                               ->where('monthly_stok_updates.kode_ruang','=', $kd_depo);
+
+                },
+                'keluargudang' => function($masukdepo) use($bln,$blnx,$thn,$thnx,$kd_depo)
+                {
+                    $masukdepo->select('distribusi_depos.id as id','distribusi_depos.tanggal as tanggal','distribusi_depos.no_distribusi as no_distrobusi',
+                    'detail_distribusi_depos.jumlah as keluar','distribusi_depos.kode_depo as kode_depo')
+                                    ->where('distribusi_depos.status','=','2')
+                                    ->whereMonth('distribusi_depos.tanggal', $bln)
+                                    ->whereYear('distribusi_depos.tanggal', $thn);
+                },
+                'pengeluarandepo' => function($pengeluarandepo) use($bln,$blnx,$thn,$thnx,$kd_depo)
+                {
+                    $pengeluarandepo->select('permintaanruangans.id','permintaanruangans.no_distribusi','permintaanruangans.tanggal',
+                    'permintaanruangans.kode_pengguna','detail_permintaanruangans.jumlah')
+                                    ->where('permintaanruangans.status','=','7')
+                                    ->whereMonth('permintaanruangans.tanggal', $bln)
+                                    ->whereYear('permintaanruangans.tanggal', $thn)->with(['masterdepo:kode,nama']);
+                },
+                'stok_akhir'=>function($stokahir) use ($bln,$blnx,$thn,$thnx,$kd_depo)
+                {
+                    $stokahir->select('monthly_stok_updates.id','monthly_stok_updates.tanggal','monthly_stok_updates.no_penerimaan',
+                    'monthly_stok_updates.harga','monthly_stok_updates.sisa_stok','monthly_stok_updates.kode_rs')
+                               ->whereMonth('monthly_stok_updates.tanggal', $bln)
+                               ->whereYear('monthly_stok_updates.tanggal', $thn)
+                               ->where('monthly_stok_updates.kode_ruang','=', $kd_depo);
+
+                }
+            ])
+        ->where('kode','=', $kd_barang)
+        ->get();
+
+        return new JsonResponse($query);
+    }
+
+    public function kartustokruangan()
+    {
+        $kd_ruangan = request('kd_ruangan');
+        $kd_barang= request('kd_barang');
+        $bln    = request('bln');
+        $thn    = request('thn');
+
+        if($bln==1){
+            $blnx=12;
+            $thnx=$thn-1;
+        }else{
+            $blnx=$bln-1;
+            $thnx=$thn;
+        }
+
+        $query = BarangRS::select('kode as kode','nama as nama')->with(
+            [
+                'stok_awal'=>function($stokawal) use ($bln,$blnx,$thn,$thnx,$kd_ruangan)
+                {
+                    $stokawal->select('monthly_stok_updates.id','monthly_stok_updates.tanggal','monthly_stok_updates.no_penerimaan',
+                    'monthly_stok_updates.harga','monthly_stok_updates.sisa_stok','monthly_stok_updates.kode_rs')
+                               ->whereMonth('monthly_stok_updates.tanggal', $blnx)
+                               ->whereYear('monthly_stok_updates.tanggal', $thnx)
+                               ->where('monthly_stok_updates.kode_ruang','=', $kd_ruangan);
+
+                },
+                'pengeluarandepo' => function($pengeluarandepo) use($bln,$blnx,$thn,$thnx,$kd_ruangan)
+                {
+                    $pengeluarandepo->select('permintaanruangans.id','permintaanruangans.no_distribusi','permintaanruangans.tanggal',
+                    'permintaanruangans.kode_pengguna','detail_permintaanruangans.jumlah','permintaanruangans.dari')
+                                    ->where('permintaanruangans.status','=','7')
+                                    ->whereMonth('permintaanruangans.tanggal', $bln)
+                                    ->whereYear('permintaanruangans.tanggal', $thn)->with(['masterdepo:kode,nama']);
+                },
+                'pemakaianruangan' => function($pemakaianruangan) use($bln,$blnx,$thn,$thnx,$kd_ruangan)
+                {
+                    $pemakaianruangan->select('pemakaianruangans.id','pemakaianruangans.reff','pemakaianruangans.tanggal',
+                    'pemakaianruangans.kode_ruang','details_pemakaianruangans.jumlah')
+                                    ->whereMonth('pemakaianruangans.tanggal', $bln)
+                                    ->whereYear('pemakaianruangans.tanggal', $thn)->with(['ruanganmaster:kode,uraian']);
+                },
+                'stok_akhir'=>function($stokahir) use ($bln,$blnx,$thn,$thnx,$kd_ruangan)
+                {
+                    $stokahir->select('monthly_stok_updates.id','monthly_stok_updates.tanggal','monthly_stok_updates.no_penerimaan',
+                    'monthly_stok_updates.harga','monthly_stok_updates.sisa_stok','monthly_stok_updates.kode_rs')
+                               ->whereMonth('monthly_stok_updates.tanggal', $bln)
+                               ->whereYear('monthly_stok_updates.tanggal', $thn)
+                               ->where('monthly_stok_updates.kode_ruang','=', $kd_ruangan);
+
+                }
+            ])
+            ->where('kode','=', $kd_barang)
+            ->get();
+
+            return new JsonResponse($query);
     }
 }

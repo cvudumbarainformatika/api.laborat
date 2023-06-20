@@ -10,4 +10,6 @@ Route::group([
     'prefix' => 'transaksi/kartustok'
 ], function () {
     Route::get('/lihatkartustokgudang', [KartustokController::class, 'kartustokgudang']);
+    Route::get('/lihatkartustokdepo', [KartustokController::class, 'kartustokdepo']);
+    Route::get('/lihatkartustokruangan', [KartustokController::class, 'kartustokruangan']);
 });
