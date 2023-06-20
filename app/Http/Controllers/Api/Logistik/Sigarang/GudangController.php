@@ -34,6 +34,13 @@ class GudangController extends Controller
     }
 
 
+    public function gudangHabisPakai()
+    {
+        $data = Gudang::where('gudang', '=', 1)
+            ->where('gedung', '=', 2)
+            ->get();
+        return new JsonResponse($data);
+    }
     public function depo()
     {
         $data = Gudang::where('depo', '<>', null)
