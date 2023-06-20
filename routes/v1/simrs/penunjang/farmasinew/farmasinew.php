@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MkodebelanjaController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\ObatnewController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\VolumesediaanController;
 use App\Models\Pegawai\Akses\Role;
+use App\Models\Simrs\Penunjang\Farmasinew\Mkelasterapi;
 use App\Models\Simrs\Penunjang\Farmasinew\Mkelompokpenyimpanan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mmerk;
 use Illuminate\Support\Facades\Route;
@@ -53,4 +54,8 @@ Route::group([
     Route::post('/simpankelompokpenyimpanan', [Mkelompokpenyimpanan::class, 'simpan']);
     Route::post('/hapuskelompokpenyimpanan', [Mkelompokpenyimpanan::class, 'hapus']);
     Route::get('/listkelompokpenyimpanan', [Mkelompokpenyimpanan::class, 'list']);
+
+    Route::post('/simpankelasterapi', [Mkelasterapi::class, 'simpan']);
+    Route::post('/hapuskelasterapi', [Mkelasterapi::class, 'hapus']);
+    Route::get('/listkelasterapi', [Mkelasterapi::class, 'list']);
 });
