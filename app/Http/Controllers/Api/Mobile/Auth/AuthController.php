@@ -99,7 +99,8 @@ class AuthController extends Controller
 
     protected function createNewToken($token)
     {
-        $user = User::with('pegawai')->find(auth()->user()->id);
+        $user = User::with(['pegawai', 'pegawai.user', 'pegawai.jadwal'])->find(auth()->user()->id);
+        // $pegawai = Pegawai::with('user', 'jadwal')->find($user->pegawai_id);
         return response()->json([
             'token' => $token,
             'user' => $user
