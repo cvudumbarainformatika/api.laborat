@@ -1631,36 +1631,56 @@ class AutogenController extends Controller
 
         // $data = TransaksiGudangController::fromPenerimaan(177);
         // $kd_depo = request('kd_tempat');
-        $kd_depo = 'Gd-02010103';
-        // $kd_barang = request('kd_barang');
-        $kd_barang = 'RS-3974';
-        // $bln    = request('bln');
-        $bln    = 6;
-        $thn    = 2023;
+        // $kd_depo = 'Gd-02010103';
+        // // $kd_barang = request('kd_barang');
+        // $kd_barang = 'RS-3974';
+        // // $bln    = request('bln');
+        // $bln    = 6;
+        // $thn    = 2023;
 
-        if ($bln == 1) {
-            $blnx = 12;
-            $thnx = $thn - 1;
-        } else {
-            $blnx = $bln - 1;
-            $thnx = $thn;
-        }
-        $data = MonthlyStokUpdate::where('kode_rs', $kd_barang)
-            ->whereMonth('monthly_stok_updates.tanggal', $blnx)
-            ->whereYear('monthly_stok_updates.tanggal', $thnx)
-            ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo)->get();
+        // if ($bln == 1) {
+        //     $blnx = 12;
+        //     $thnx = $thn - 1;
+        // } else {
+        //     $blnx = $bln - 1;
+        //     $thnx = $thn;
+        // }
+        // $data = MonthlyStokUpdate::where('kode_rs', $kd_barang)
+        //     ->whereMonth('monthly_stok_updates.tanggal', $blnx)
+        //     ->whereYear('monthly_stok_updates.tanggal', $thnx)
+        //     ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo)->get();
 
-        $akhir = MonthlyStokUpdate::where('kode_rs', $kd_barang)
-            ->whereMonth('monthly_stok_updates.tanggal', $bln)
-            ->whereYear('monthly_stok_updates.tanggal', $thn)
-            ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo)->get();
+        // $akhir = MonthlyStokUpdate::where('kode_rs', $kd_barang)
+        //     ->whereMonth('monthly_stok_updates.tanggal', $bln)
+        //     ->whereYear('monthly_stok_updates.tanggal', $thn)
+        //     ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo)->get();
+        // return new JsonResponse([
+        //     'bln' => $bln,
+        //     'blnx' => $blnx,
+        //     'thn' => $thn,
+        //     'thnx' => $thnx,
+        //     'awal' => $data,
+        //     'akhir' => $akhir,
+        // ]);
+        $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
+        // $today = request('tahun') ? $tanggal : date('Y-m-d');
+        $today = date('2023-05-31');
+        $lastDay = date('Y-m-t', strtotime($today));
+        $dToday = date_create($today);
+        $dLastDay = date_create($lastDay);
+        $diff = date_diff($dToday, $dLastDay);
+
         return new JsonResponse([
-            'bln' => $bln,
-            'blnx' => $blnx,
-            'thn' => $thn,
-            'thnx' => $thnx,
-            'awal' => $data,
-            'akhir' => $akhir,
+            'tanggal' => $tanggal,
+            'today' => $today,
+            'dToday' => $dToday,
+            'lastDay' => $lastDay,
+            'dLastDay' => $dLastDay,
+            'diff d' => $diff->d,
+            'diff m' => $diff->m,
+            'diff y' => $diff->y,
+            'diff ' => $diff,
+
         ]);
     }
 

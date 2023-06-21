@@ -37,11 +37,13 @@ class KartustokController extends Controller
                         'monthly_stok_updates.no_penerimaan',
                         'monthly_stok_updates.harga',
                         'monthly_stok_updates.sisa_stok',
+                        'monthly_stok_updates.kode_satuan',
                         'monthly_stok_updates.kode_rs'
                     )
                         ->whereMonth('monthly_stok_updates.tanggal', $blnx)
                         ->whereYear('monthly_stok_updates.tanggal', $thnx)
-                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_tempat);
+                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_tempat)
+                        ->with('satuan:nama,kode');
                 },
                 'masukgudang' => function ($penerimaan) use ($bln, $blnx, $thn, $thnx, $kd_tempat) {
                     $penerimaan->select(
@@ -61,8 +63,10 @@ class KartustokController extends Controller
                     $keluar->select(
                         'distribusi_depos.id as id',
                         'distribusi_depos.tanggal as tanggal',
-                        'distribusi_depos.no_distribusi as no_distrobusi',
+                        'distribusi_depos.no_distribusi',
                         'detail_distribusi_depos.jumlah as keluar',
+                        'detail_distribusi_depos.no_penerimaan',
+                        'detail_distribusi_depos.satuan_besar',
                         'distribusi_depos.kode_depo as kode_depo'
                     )
                         ->where('distribusi_depos.status', '=', '2')
@@ -76,11 +80,13 @@ class KartustokController extends Controller
                         'monthly_stok_updates.no_penerimaan',
                         'monthly_stok_updates.harga',
                         'monthly_stok_updates.sisa_stok',
+                        'monthly_stok_updates.kode_satuan',
                         'monthly_stok_updates.kode_rs'
                     )
                         ->whereMonth('monthly_stok_updates.tanggal', $bln)
                         ->whereYear('monthly_stok_updates.tanggal', $thn)
-                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_tempat);
+                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_tempat)
+                        ->with('satuan:nama,kode');
                 }
             ]
         )
@@ -115,26 +121,31 @@ class KartustokController extends Controller
                         'monthly_stok_updates.no_penerimaan',
                         'monthly_stok_updates.harga',
                         'monthly_stok_updates.sisa_stok',
+                        'monthly_stok_updates.kode_satuan',
                         'monthly_stok_updates.kode_rs'
                     )
                         ->whereMonth('monthly_stok_updates.tanggal', $blnx)
                         ->whereYear('monthly_stok_updates.tanggal', $thnx)
-                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo);
+                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo)
+                        ->with('satuan:nama,kode');
                 },
                 'keluargudang' => function ($masukdepo) use ($bln, $blnx, $thn, $thnx, $kd_depo) {
                     $masukdepo->select(
                         'distribusi_depos.id as id',
                         'distribusi_depos.tanggal as tanggal',
-                        'distribusi_depos.no_distribusi as no_distrobusi',
+                        'distribusi_depos.no_distribusi',
                         'detail_distribusi_depos.jumlah as keluar',
+                        'detail_distribusi_depos.no_penerimaan',
+                        'detail_distribusi_depos.satuan_besar',
                         'distribusi_depos.kode_depo as kode_depo'
                     )
                         ->where('distribusi_depos.status', '=', '2')
                         ->whereMonth('distribusi_depos.tanggal', $bln)
-                        ->whereYear('distribusi_depos.tanggal', $thn);
+                        ->whereYear('distribusi_depos.tanggal', $thn)->with(['depo:kode,nama']);
                 },
-                'pengeluarandepo' => function ($pengeluarandepo) use ($bln, $blnx, $thn, $thnx, $kd_depo) {
+                'pengeluarandepo' => function ($pengeluarandepo) use ($bln, $blnx, $thn, $thnx, $kd_depo, $kd_barang) {
                     $pengeluarandepo->select(
+                        'detail_permintaanruangans.kode_satuan',
                         'permintaanruangans.id',
                         'permintaanruangans.no_distribusi',
                         'permintaanruangans.tanggal',
@@ -145,7 +156,11 @@ class KartustokController extends Controller
                     )
                         ->where('permintaanruangans.status', '=', '7')
                         ->whereMonth('permintaanruangans.tanggal', $bln)
-                        ->whereYear('permintaanruangans.tanggal', $thn)->with(['masterdepo:kode,nama', 'ruangan:kode,uraian']);
+                        ->whereYear('permintaanruangans.tanggal', $thn)
+                        ->with([
+                            'masterdepo:kode,nama',
+                            'ruangan:kode,uraian'
+                        ]);
                 },
                 'stok_akhir' => function ($stokahir) use ($bln, $blnx, $thn, $thnx, $kd_depo) {
                     $stokahir->select(
@@ -154,11 +169,13 @@ class KartustokController extends Controller
                         'monthly_stok_updates.no_penerimaan',
                         'monthly_stok_updates.harga',
                         'monthly_stok_updates.sisa_stok',
+                        'monthly_stok_updates.kode_satuan',
                         'monthly_stok_updates.kode_rs'
                     )
                         ->whereMonth('monthly_stok_updates.tanggal', $bln)
                         ->whereYear('monthly_stok_updates.tanggal', $thn)
-                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo);
+                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_depo)
+                        ->with('satuan:nama,kode');
                 }
             ]
         )
@@ -184,7 +201,7 @@ class KartustokController extends Controller
             $thnx = $thn;
         }
 
-        $query = BarangRS::select('kode as kode', 'nama as nama')->with(
+        $query = BarangRS::select('kode as kode', 'nama as nama', 'kode_satuan')->with(
             [
                 'stok_awal' => function ($stokawal) use ($bln, $blnx, $thn, $thnx, $kd_ruangan) {
                     $stokawal->select(
@@ -193,11 +210,13 @@ class KartustokController extends Controller
                         'monthly_stok_updates.no_penerimaan',
                         'monthly_stok_updates.harga',
                         'monthly_stok_updates.sisa_stok',
+                        'monthly_stok_updates.kode_satuan',
                         'monthly_stok_updates.kode_rs'
                     )
                         ->whereMonth('monthly_stok_updates.tanggal', $blnx)
                         ->whereYear('monthly_stok_updates.tanggal', $thnx)
-                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_ruangan);
+                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_ruangan)
+                        ->with('satuan:nama,kode');
                 },
                 'pengeluarandepo' => function ($pengeluarandepo) use ($bln, $blnx, $thn, $thnx, $kd_ruangan) {
                     $pengeluarandepo->select(
@@ -232,12 +251,15 @@ class KartustokController extends Controller
                         'monthly_stok_updates.no_penerimaan',
                         'monthly_stok_updates.harga',
                         'monthly_stok_updates.sisa_stok',
+                        'monthly_stok_updates.kode_satuan',
                         'monthly_stok_updates.kode_rs'
                     )
                         ->whereMonth('monthly_stok_updates.tanggal', $bln)
                         ->whereYear('monthly_stok_updates.tanggal', $thn)
-                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_ruangan);
-                }
+                        ->where('monthly_stok_updates.kode_ruang', '=', $kd_ruangan)
+                        ->with('satuan:nama,kode');
+                },
+                'satuan:kode,nama'
             ]
         )
             ->where('kode', '=', $kd_barang)
