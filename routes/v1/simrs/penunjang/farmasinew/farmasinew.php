@@ -11,6 +11,7 @@ use App\Models\Pegawai\Akses\Role;
 use App\Models\Simrs\Penunjang\Farmasinew\Mkelasterapi;
 use App\Models\Simrs\Penunjang\Farmasinew\Mkelompokpenyimpanan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mmerk;
+use App\Models\Simrs\Penunjang\Farmasinew\Mrko;
 use Illuminate\Support\Facades\Route;
 
 
@@ -58,4 +59,8 @@ Route::group([
     Route::post('/simpankelasterapi', [Mkelasterapi::class, 'simpan']);
     Route::post('/hapuskelasterapi', [Mkelasterapi::class, 'hapus']);
     Route::get('/listkelasterapi', [Mkelasterapi::class, 'list']);
+
+    Route::post('/simpanrko', [Mrko::class, 'simpan']);
+    Route::post('/hapusrko', [Mrko::class, 'hapus']);
+    Route::get('/listrko', [Mrko::class, 'list']);
 });

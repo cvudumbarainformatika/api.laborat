@@ -33,4 +33,10 @@ class KelasterapiController extends Controller
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
+
+    public function list()
+    {
+        $list = Mkelasterapi::all();
+        return new JsonResponse($list);
+    }
 }
