@@ -35,7 +35,7 @@ class MkodebelanjaController extends Controller
         $cari = Mkodebelanjaobat::find($request->id);
         if($cari)
         {
-            return new JsonResponse(['message' => 'DATA TIDAK DITEMUKAN....!!!'], 401);
+            return new JsonResponse(['message' => 'DATA TIDAK DITEMUKAN....!!!'], 501);
         }
         $hapus = $cari->delete();
 

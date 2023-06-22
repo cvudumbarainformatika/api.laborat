@@ -29,14 +29,14 @@ class RkoController extends Controller
         $cari = Mrko::find($request->kode);
         if(!$cari)
         {
-            return new JsonResponse(['message' => 'data tidak ditemukan'], 401);
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
         $hapus = $cari->delete();
         if(!$hapus)
         {
-            return new JsonResponse(['message' => 'gagal dihapus'], 401);
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
-        return new JsonResponse(['message' => 'berhasil dihapus'], 401);
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 
     public function list()

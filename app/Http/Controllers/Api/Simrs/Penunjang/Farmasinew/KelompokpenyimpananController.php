@@ -24,7 +24,7 @@ class KelompokpenyimpananController extends Controller
         $cari = Mkelompokpenyimpanan::find($request->id);
         if(!$cari)
         {
-            return new JsonResponse(['message' => 'data tidak ditemukan']);
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
         $hapus = $cari->detele();
         if(!$hapus)

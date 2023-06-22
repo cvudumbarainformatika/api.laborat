@@ -11,4 +11,5 @@ class Mrko extends Model
     use HasFactory,SoftDeletes;
     protected $table = 'master_rko';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

@@ -11,4 +11,5 @@ class Mkelasterapi extends Model
     use HasFactory,SoftDeletes;
     protected $table = 'mkelasterapi';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

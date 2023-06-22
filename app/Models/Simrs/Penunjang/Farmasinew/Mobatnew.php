@@ -12,4 +12,5 @@ class Mobatnew extends Model
     use SoftDeletes;
     protected $table = 'new_masterobat';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

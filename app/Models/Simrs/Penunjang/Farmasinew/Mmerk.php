@@ -11,4 +11,5 @@ class Mmerk extends Model
     use HasFactory,SoftDeletes;
     protected $table = 'Mmerk';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

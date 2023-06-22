@@ -11,4 +11,5 @@ class Mkelompokpenyimpanan extends Model
     use HasFactory,SoftDeletes;
     protected $table ='mkelompokpenyimpanan';
     protected $guraded = ['id'];
+    protected $connection = 'farmasi';
 }
