@@ -136,7 +136,7 @@ class BarangRS extends Model
     {
         return $this->hasManyThrough(
             Permintaanruangan::class,
-            detailPermintaanruangan::class,
+            DetailPermintaanruangan::class,
             'kode_rs',
             'id',
             'kode',

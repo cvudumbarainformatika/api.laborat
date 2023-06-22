@@ -107,6 +107,7 @@ class QrcodeController extends Controller
 
     public function qrScanned2(Request $request)
     {
+        return new JsonResponse(['message' => 'Silahkan Update Aplikasi'], 410);
         $temp = explode('#', $request->qr);
         $data = Qrcode::where('ip', $temp[0])->first();
         if ($data->path === $temp[1]) {

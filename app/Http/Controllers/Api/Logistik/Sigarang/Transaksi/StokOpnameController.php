@@ -502,7 +502,7 @@ class StokOpnameController extends Controller
         //     // 'awal' => $dataAwal,
         // ], 410);
 
-        if ($diff->d === 0) {
+        if ($diff->d === 0 && $diff->m === 0) {
             // ambil data barang yang ada stoknya di tabel sekarang
             $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
                 // ->where('kode_ruang', 'like', '%Gd-%')

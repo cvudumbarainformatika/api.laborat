@@ -33,6 +33,11 @@ class MonthlyStokUpdate extends Model
         return $this->belongsTo(Pengguna::class, 'kode_ruang', 'kode');
     }
 
+    public function satuan()
+    {
+        return $this->belongsTo(Satuan::class, 'kode_satuan', 'kode');
+    }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
