@@ -140,7 +140,7 @@ class KartustokController extends Controller
                         'permintaanruangans.tanggal',
                         'permintaanruangans.kode_pengguna',
                         'permintaanruangans.kode_ruang',
-                        'detail_permintaanruangans.jumlah',
+                        'detail_permintaanruangans.jumlah_distribusi as jumlah',
                         'detail_permintaanruangans.no_penerimaan'
                     )
                         ->where('permintaanruangans.status', '=', '7')
@@ -205,7 +205,7 @@ class KartustokController extends Controller
                         'permintaanruangans.no_distribusi',
                         'permintaanruangans.tanggal',
                         'permintaanruangans.kode_pengguna',
-                        'detail_permintaanruangans.jumlah',
+                        'detail_permintaanruangans.jumlah_distribusi as jumlah',
                         'detail_permintaanruangans.no_penerimaan',
                         'permintaanruangans.dari'
                     )
