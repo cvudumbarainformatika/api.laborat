@@ -11,14 +11,14 @@ class RkoController extends Controller
 {
     public function simpan(Request $request)
     {
-        $simpan = Mrko::firsOrCreate(
+        $simpan = Mrko::firstOrCreate(
             [
                 'rs1' => $request->kode,
                 'rs2' => $request->namaobat,
                 'rs3' => $request->satuan,
-            ]);
-        if(!$simpan)
-        {
+            ]
+        );
+        if (!$simpan) {
             return new JsonResponse(['message' => 'gagal terismpan'], 500);
         }
         return new JsonResponse(['message' => 'berhasil tersimpan'], 200);
@@ -26,14 +26,12 @@ class RkoController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mrko::find($request->kode);
-        if(!$cari)
-        {
+        $cari = Mrko::find($request->id);
+        if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
         $hapus = $cari->delete();
-        if(!$hapus)
-        {
+        if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
@@ -41,8 +39,7 @@ class RkoController extends Controller
 
     public function list()
     {
-        $list = Mrko::where('rs2', 'Like', '%'.request('namaobat').'%')->get();
+        $list = Mrko::where('rs2', 'Like', '%' . request('namaobat') . '%')->get();
         return new JsonResponse($list);
     }
-
 }
