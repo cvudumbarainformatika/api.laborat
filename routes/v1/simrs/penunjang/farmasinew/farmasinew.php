@@ -3,9 +3,13 @@
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\BentuksediaanController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KandungannamagenerikController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KekuatandosisController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KelasterapiController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KelompokpenyimpananController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MerkController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MjenisperbekalanController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MkodebelanjaController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\ObatnewController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\RkoController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\VolumesediaanController;
 use App\Models\Pegawai\Akses\Role;
 use App\Models\Simrs\Penunjang\Farmasinew\Mkelasterapi;
@@ -48,19 +52,19 @@ Route::group([
     Route::post('/hapusobat', [ObatnewController::class, 'hapus']);
     Route::get('/listobat', [ObatnewController::class, 'list']);
 
-    Route::post('/simpanmerk', [Mmerk::class, 'simpan']);
-    Route::post('/hapusmerk', [Mmerk::class, 'hapus']);
-    Route::get('/listmerk', [Mmerk::class, 'list']);
+    Route::post('/simpanmerk', [MerkController::class, 'simpan']);
+    Route::post('/hapusmerk', [MerkController::class, 'hapus']);
+    Route::get('/listmerk', [MerkController::class, 'list']);
 
-    Route::post('/simpankelompokpenyimpanan', [Mkelompokpenyimpanan::class, 'simpan']);
-    Route::post('/hapuskelompokpenyimpanan', [Mkelompokpenyimpanan::class, 'hapus']);
-    Route::get('/listkelompokpenyimpanan', [Mkelompokpenyimpanan::class, 'list']);
+    Route::post('/simpankelompokpenyimpanan', [KelompokpenyimpananController::class, 'simpan']);
+    Route::post('/hapuskelompokpenyimpanan', [KelompokpenyimpananController::class, 'hapus']);
+    Route::get('/listkelompokpenyimpanan', [KelompokpenyimpananController::class, 'list']);
 
-    Route::post('/simpankelasterapi', [Mkelasterapi::class, 'simpan']);
-    Route::post('/hapuskelasterapi', [Mkelasterapi::class, 'hapus']);
-    Route::get('/listkelasterapi', [Mkelasterapi::class, 'list']);
+    Route::post('/simpankelasterapi', [KelasterapiController::class, 'simpan']);
+    Route::post('/hapuskelasterapi', [KelasterapiController::class, 'hapus']);
+    Route::get('/listkelasterapi', [KelasterapiController::class, 'list']);
 
-    Route::post('/simpanrko', [Mrko::class, 'simpan']);
-    Route::post('/hapusrko', [Mrko::class, 'hapus']);
-    Route::get('/listrko', [Mrko::class, 'list']);
+    Route::post('/simpanrko', [RkoController::class, 'simpan']);
+    Route::post('/hapusrko', [RkoController::class, 'hapus']);
+    Route::get('/listrko', [RkoController::class, 'list']);
 });
