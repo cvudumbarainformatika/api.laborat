@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Mmerk extends Model
 {
     use HasFactory,SoftDeletes;
-    protected $table = 'Mmerk';
+    protected $table = 'mmerk';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 }
