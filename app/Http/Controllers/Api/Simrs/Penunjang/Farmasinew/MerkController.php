@@ -15,7 +15,13 @@ class MerkController extends Controller
         if (!$simpan) {
             return new JsonResponse(['message' => 'gagal disimpan'], 501);
         }
-        return new JsonResponse(['message' => 'berhasil disimpan', 'data' => $simpan], 200);
+        return new JsonResponse(
+            [
+                'message' => 'berhasil disimpan',
+                'data' => $simpan
+            ],
+            200
+        );
     }
 
     public function hapus(Request $request)
