@@ -31,6 +31,12 @@ class SatuanController extends Controller
 
         return SatuanResource::collection($data);
     }
+    public function satuanCount()
+    {
+        $data = Satuan::count();
+
+        return new JsonResponse($data);
+    }
 
     public function store(Request $request)
     {
@@ -62,9 +68,9 @@ class SatuanController extends Controller
 
             DB::commit();
             if ($data->wasRecentlyCreated) {
-                return response()->json(['message' => 'dibuat'], 201);
+                return response()->json(['message' => 'dibuat', 'data' => $data], 201);
             } else if ($data->wasChanged()) {
-                return response()->json(['message' => 'diupdate'], 200);
+                return response()->json(['message' => 'diupdate', 'data' => $data], 200);
             } else {
                 return response()->json(['message' => 'data tidak berubah'], 410);
             }

@@ -18,7 +18,10 @@ class MjenisperbekalanController extends Controller
         if (!$simpan) {
             return new JsonResponse(['message' => 'TIDAK TERSIMPAN...!!'], 500);
         }
-        return new JsonResponse(['message' => 'BERHASIL DISIMPAN', $simpan], 200);
+        return new JsonResponse([
+            'message' => 'BERHASIL DISIMPAN',
+            'data' => $simpan
+        ], 200);
     }
 
     public function list()

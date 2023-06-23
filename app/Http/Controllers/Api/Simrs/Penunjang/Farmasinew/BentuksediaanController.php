@@ -12,23 +12,23 @@ class BentuksediaanController extends Controller
     public function simpan(Request $request)
     {
         $simpan = Mbentuksediaan::firstOrCreate(['bentuksediaan' => $request->bentuksediaan]);
-        if(!$simpan)
-        {
+        if (!$simpan) {
             return new JsonResponse(['message' => 'gagal disimpan'], 500);
         }
-        return new JsonResponse(['message' => 'berhasil disimpan'], 200);
+        return new JsonResponse([
+            'message' => 'berhasil disimpan',
+            'data' => $simpan
+        ], 200);
     }
 
     public function hapus(Request $request)
     {
         $cari = Mbentuksediaan::find($request->id);
-        if(!$cari)
-        {
+        if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
         $hapus = $cari->delete();
-        if(!$hapus)
-        {
+        if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
@@ -36,7 +36,7 @@ class BentuksediaanController extends Controller
 
     public function list()
     {
-        $list = Mbentuksediaan::where('bentuksediaan','LIKE','%' . request('q'). '%')->get();
+        $list = Mbentuksediaan::where('bentuksediaan', 'LIKE', '%' . request('q') . '%')->get();
         return new JsonResponse($list);
     }
 }
