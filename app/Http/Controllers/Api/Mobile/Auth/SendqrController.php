@@ -36,7 +36,7 @@ class SendqrController extends Controller
             return new JsonResponse(['message' => 'Harap Periksa Kembali username dan password Anda'], 409);
         }
 
-        JWTAuth::factory()->setTTL(518400);
+        JWTAuth::factory()->setTTL(480);
         // $data = $request->only('email');
         $token = JWTAuth::fromUser(($temp));
         if (!$token) {
