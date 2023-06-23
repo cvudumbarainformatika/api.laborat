@@ -15,7 +15,7 @@ class MjenisperbekalanController extends Controller
             'jenisperbekalan' => $request->jenisperbekalan
         ]);
 
-        if(!$simpan){
+        if (!$simpan) {
             return new JsonResponse(['message' => 'TIDAK TERSIMPAN...!!'], 500);
         }
         return new JsonResponse(['message' => 'BERHASIL DISIMPAN', $simpan], 200);
@@ -30,17 +30,15 @@ class MjenisperbekalanController extends Controller
     public function hapus(Request $request)
     {
         $cari = Mjenisperbekalan::find($request->id);
-        if($cari)
-        {
+        if (!$cari) {
             return new JsonResponse(['message' => 'DATA TIDAK DITEMUKAN....!!!'], 501);
         }
         $hapus = $cari->delete();
 
-        if(!$hapus){
+        if (!$hapus) {
             return new JsonResponse(['message' => 'GAGAL DIHAPUS'], 500);
         }
 
-            return new JsonResponse(['message' => 'BERHASIL DIHAPUS'], 200);
+        return new JsonResponse(['message' => 'BERHASIL DIHAPUS'], 200);
     }
-
 }
