@@ -39,7 +39,7 @@ class RkoController extends Controller
 
     public function list()
     {
-        $list = Mrko::where('rs2', 'Like', '%' . request('namaobat') . '%')->get();
+        $list = Mrko::where('rs2', 'Like', '%' . request('q') . '%')->get();
         return new JsonResponse($list);
     }
 }
