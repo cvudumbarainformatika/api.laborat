@@ -13,7 +13,7 @@ class ObatnewController extends Controller
 {
     public function simpan(Request $request)
     {
-        if($request->kd_obat == '')
+        if($request->kd_obat === '')
         {
             DB::connection('farmasi')->select('call master_obat(@nomor)');
             $x= DB::connection('farmasi')->table('conter')->select('mobat')->get();
@@ -56,19 +56,17 @@ class ObatnewController extends Controller
         {
             return new JsonResponse(['message' => 'data gagal disimpan'], 500);
         }
-            return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
+        return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
     }
 
     public function hapus(Request $request)
     {
         $cari = Mobatnew::wherefirst(['kd_obat' => $request->kd_obat]);
-        if($cari)
-        {
+        if ($cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
         $hapus = $cari->delete();
-        if(!$hapus)
-        {
+        if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
@@ -76,10 +74,10 @@ class ObatnewController extends Controller
 
     public function list()
     {
-        $list = Mobatnew::where('nama_obat', 'Like' , '%' .request('nama_obat'). '%')
-        ->orWhere('merk', 'Like' , '%' .request('merk'). '%')
-        ->orWhere('kandungan', 'Like' , '%' .request('kandungan'). '%')
-        ->get();
+        $list = Mobatnew::where('nama_obat', 'Like', '%' . request('nama_obat') . '%')
+            ->orWhere('merk', 'Like', '%' . request('merk') . '%')
+            ->orWhere('kandungan', 'Like', '%' . request('kandungan') . '%')
+            ->get();
 
         return new JsonResponse($list);
     }

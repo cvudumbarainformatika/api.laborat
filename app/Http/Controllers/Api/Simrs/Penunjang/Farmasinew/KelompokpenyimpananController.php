@@ -12,23 +12,23 @@ class KelompokpenyimpananController extends Controller
     public function simpan(Request $request)
     {
         $simpan = Mkelompokpenyimpanan::firstOrCreate(['kelompokpenyimpanan' => $request->kelompokpenyimpanan]);
-        if(!$simpan)
-        {
+        if (!$simpan) {
             return new JsonResponse(['message' => 'gagal disimpan'], 500);
         }
-        return new JsonResponse(['message' => 'berhasil disimpan'], 200);
+        return new JsonResponse([
+            'message' => 'berhasil disimpan',
+            'data' => $simpan
+        ], 200);
     }
 
     public function hapus(Request $request)
     {
         $cari = Mkelompokpenyimpanan::find($request->id);
-        if(!$cari)
-        {
+        if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
-        $hapus = $cari->detele();
-        if(!$hapus)
-        {
+        $hapus = $cari->delete();
+        if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);

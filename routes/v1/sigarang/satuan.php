@@ -11,6 +11,7 @@ Route::group([
 ], function () {
     Route::get('/index', [SatuanController::class, 'index']);
     Route::get('/satuan', [SatuanController::class, 'satuan']);
+    Route::get('/count', [SatuanController::class, 'satuanCount']);
     Route::post('/store', [SatuanController::class, 'store']);
     Route::post('/destroy', [SatuanController::class, 'destroy']);
 });

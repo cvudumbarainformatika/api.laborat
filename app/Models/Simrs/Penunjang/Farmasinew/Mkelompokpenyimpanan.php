@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Mkelompokpenyimpanan extends Model
 {
-    use HasFactory,SoftDeletes;
-    protected $table ='mkelompokpenyimpanan';
-    protected $guraded = ['id'];
+    use HasFactory, SoftDeletes;
+    protected $table = 'mkelompokpenyimpanan';
+    protected $guarded = ['id'];
     protected $connection = 'farmasi';
 }

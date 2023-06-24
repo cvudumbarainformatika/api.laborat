@@ -15,7 +15,10 @@ class KekuatandosisController extends Controller
         if (!$simpan) {
             return new JsonResponse(['message' => 'gagal disimpan'], 500);
         }
-        return new Jsonresponse(['message' => 'berhasil disimpan'], 200);
+        return new Jsonresponse([
+            'message' => 'berhasil disimpan',
+            'data' => $simpan
+        ], 200);
     }
 
     public function hapus(Request $request)
