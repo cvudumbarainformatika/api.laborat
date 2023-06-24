@@ -2,16 +2,31 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ObatnewController extends Controller
 {
     public function simpan(Request $request)
     {
-        $simpan = Mobatnew::updateOrCreate(['kd_obat' => $request->kd_obat],
+        if($request->kd_obat == '')
+        {
+            DB::connection('farmasi')->select('call master_obat(@nomor)');
+            $x= DB::connection('farmasi')->table('conter')->select('mobat')->get();
+            $wew = $x[0]->mobat;
+            $kodeobat = FormatingHelper::mobat($wew,'FAR');
+        }
+        else
+        {
+            $kodeobat=$request->kd_obat;
+        }
+
+
+        $simpan = Mobatnew::updateOrCreate(['kd_obat' => $kodeobat],
         [
         'nama_obat' => $request->nama_obat,
         'merk' => $request->merk,
