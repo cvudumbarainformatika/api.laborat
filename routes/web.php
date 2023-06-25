@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\DvlpController;
 use App\Http\Controllers\PrintController;
+use App\Websockets\SocketHandler\UpdatePostSocketHandler;
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+
+WebSocketsRouter::webSocket('/socket/update-post', UpdatePostSocketHandler::class);
 
 Route::get('/', function () {
     return view('welcome');
