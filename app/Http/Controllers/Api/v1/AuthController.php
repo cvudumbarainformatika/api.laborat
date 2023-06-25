@@ -58,7 +58,6 @@ class AuthController extends Controller
         $allAccess = array('sa');
 
         if (!in_array(auth()->user()->username, $allAccess)) {
-            // $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find($me);
             $akses = AksesUser::where('user_id', $me->id)->get();
         }
 
