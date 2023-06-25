@@ -4,10 +4,11 @@ namespace App\Models\Sigarang;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Satuan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $connection = 'sigarang';
     // protected $connection = 'mysql2';
     // protected $table = 'satuan_barang';
