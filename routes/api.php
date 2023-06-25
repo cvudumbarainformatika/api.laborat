@@ -3,6 +3,7 @@
 use App\Helpers\Routes\RouteHelper;
 use App\Http\Controllers\AutogenController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 // Route::post('/login', [ApiController::class, 'authenticate']);
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Route;
 // ->group(function () {
 //     Route::post('/logout', [ApiController::class, 'logout']);
 // });
+
+Broadcast::routes(['middleware' => 'auth:api']);
 
 
 

@@ -26,6 +26,7 @@ class ChatMessageEvent implements ShouldBroadcast
     {
         $this->message = $message;
         $this->user = $user;
+        // $this->dontBroadcastToCurrentUser();
     }
 
     /**
@@ -35,7 +36,7 @@ class ChatMessageEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('private.chat.1');
+        return new PresenceChannel('presence.chat.1');
     }
 
     public function broadcastAs()
