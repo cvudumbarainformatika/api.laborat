@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models\Simrs\Penunjang\Farmasi;
+namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mruangan;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,10 +13,16 @@ class Mminmaxobat extends Model
     use HasFactory;
     protected $table = 'min_max_ruang';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
+
+    // public function obat()
+    // {
+    //     return $this->belongsTo(Mobat::class, 'kd_obat', 'rs1');
+    // }
 
     public function obat()
     {
-        return $this->belongsTo(Mobat::class, 'kd_obat', 'rs1');
+        return $this->belongsTo(Mobatnew::class, 'kd_obat', 'kd_obat');
     }
 
     public function ruanganx()
