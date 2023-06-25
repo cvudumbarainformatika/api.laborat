@@ -134,11 +134,16 @@ class BookingController extends Controller
         );
 
         // $hitungsisakuotajkn = self::sisaKuotaJkn();
+        if (!$save) {
+            $metadata = ['code' => 500, 'message' => 'Ada Kesalahan'];
+            $res['metadata'] = $metadata;
+            return response()->json($res, 500);
+        }
 
-
+        $kirim = Booking::find($save->id);
         $metadata = ['code' => 200, 'message' => 'ok'];
         $result = [
-            'booking' => $save,
+            'booking' => $kirim,
             'layanan' => $layanan
         ];
         $res['metadata'] = $metadata;
