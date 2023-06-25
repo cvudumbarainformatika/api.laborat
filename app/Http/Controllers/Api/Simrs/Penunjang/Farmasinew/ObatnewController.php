@@ -13,7 +13,7 @@ class ObatnewController extends Controller
 {
     public function simpan(Request $request)
     {
-        if($request->kd_obat === '')
+        if(!$request->kd_obat)
         {
             DB::connection('farmasi')->select('call master_obat(@nomor)');
             $x= DB::connection('farmasi')->table('conter')->select('mobat')->get();
