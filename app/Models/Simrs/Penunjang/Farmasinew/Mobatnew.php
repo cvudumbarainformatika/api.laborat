@@ -13,4 +13,6 @@ class Mobatnew extends Model
     protected $table = 'new_masterobat';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
+
+
 }
