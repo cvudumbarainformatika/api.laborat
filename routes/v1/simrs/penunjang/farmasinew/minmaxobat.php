@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Penunjang\Farmasi\MinmaxobatController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MinmaxobatController;
 use Illuminate\Support\Facades\Route;
 
 
