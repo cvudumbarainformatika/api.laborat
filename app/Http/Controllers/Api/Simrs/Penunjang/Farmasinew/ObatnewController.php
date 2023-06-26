@@ -81,4 +81,12 @@ class ObatnewController extends Controller
 
         return new JsonResponse($list);
     }
+
+    public function cariobat()
+    {
+        $query = Mobatnew::mobat()->filter(request(['q']))
+            ->limit(50)
+            ->get();
+        return new JsonResponse($query);
+    }
 }

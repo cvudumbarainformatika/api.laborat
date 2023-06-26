@@ -14,5 +14,11 @@ class Mobatnew extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
-
+    public function scopeMobat($data)
+    {
+        return $data->select([
+            'kd_obat as kodeobat',
+            'nama_obat as namaobat'
+        ]);
+    }
 }
