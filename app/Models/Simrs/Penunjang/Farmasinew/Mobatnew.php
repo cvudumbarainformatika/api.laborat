@@ -21,4 +21,14 @@ class Mobatnew extends Model
             'nama_obat as namaobat'
         ]);
     }
+
+    public function scopeFilter($cari,array $reqs)
+    {
+        $cari->when($reqs['q'] ?? false,
+        function($data, $query){
+            return $data->where('kd_obat', 'LIKE', '%' . $query . '%')
+                ->orWhere('nama_obat', 'LIKE', '%' . $query . '%')
+                ->orderBy('nama_obat');
+        });
+    }
 }

@@ -10,7 +10,6 @@ Route::group([
     'prefix' => 'simrs/maping'
 ], function () {
    // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
-   // Route::get('/carilistminmaxbyobat', [MinmaxobatController::class, 'caribynamaobat']);
-    Route::post('/minmaxobat', [MinmaxobatController::class, 'simpan']);
     Route::get('/carilistminmaxbyobat', [MinmaxobatController::class, 'caribynamaobat']);
+    Route::post('/minmaxobat', [MinmaxobatController::class, 'simpan']);
 });

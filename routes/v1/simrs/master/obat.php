@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Master\MobatController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\ObatnewController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -9,5 +10,6 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/masterObat', [MobatController::class, 'index']);
-    Route::get('/cariObat', [MobatController::class, 'cariobat']);
+   // Route::get('/cariObat', [MobatController::class, 'cariobat']);
+   Route::get('/cariObat', [ObatnewController::class, 'cariobat']);
 });
