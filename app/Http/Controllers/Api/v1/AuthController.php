@@ -190,104 +190,109 @@ class AuthController extends Controller
     public static function createNewToken($token)
     {
 
-        $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
+        // $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
         $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.depo'])->find(auth()->user()->id);
 
-        $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
-        $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
+        // $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
+        // $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
 
-        $col = collect($submenu);
-        $role = $col->map(function ($item, $key) {
-            return $item->role;
-        })->unique();
-        $apli = $col->map(function ($item, $key) {
-            return $item->aplikasi;
-        })->unique('id');
-        $subm = $col->map(function ($item, $key) {
+        // $col = collect($submenu);
+        // $role = $col->map(function ($item, $key) {
+        //     return $item->role;
+        // })->unique();
+        // $apli = $col->map(function ($item, $key) {
+        //     return $item->aplikasi;
+        // })->unique('id');
+        // $subm = $col->map(function ($item, $key) {
 
-            return $item->submenu;
-        });
+        //     return $item->submenu;
+        // });
 
-        $menu = $col->map(function ($item, $key) {
-            return $item->submenu->menu;
-        })->unique('id');
+        // $menu = $col->map(function ($item, $key) {
+        //     return $item->submenu->menu;
+        // })->unique('id');
 
-        $into = $menu->map(function ($item, $key) use ($subm) {
-            // $mbuh=[];
-            $temp = $subm->where('menu_id', $item->id);
-            $map = $temp->map(function ($ki, $ke) {
-                return [
-                    'nama' => $ki->nama,
-                    'name' => $ki->name,
-                    'icon' => $ki->icon,
-                    'link' => $ki->link,
+        // $into = $menu->map(function ($item, $key) use ($subm) {
+        //     // $mbuh=[];
+        //     $temp = $subm->where('menu_id', $item->id);
+        //     $map = $temp->map(function ($ki, $ke) {
+        //         return [
+        //             'nama' => $ki->nama,
+        //             'name' => $ki->name,
+        //             'icon' => $ki->icon,
+        //             'link' => $ki->link,
 
-                ];
-            });
-            $apem = [
-                'aplikasi_id' => $item->aplikasi_id,
-                'nama' => $item->nama,
-                'name' => $item->name,
-                'icon' => $item->icon,
-                'link' => $item->link,
-                'submenus' => $map,
-            ];
-            return $apem;
-        });
-        // akses 2 start
-        $aks = collect($akses->akses);
-        // $apli2 = $aks;
-        $apli2 = $aks->map(function ($item, $key) {
-            return $item->aplikasi;
-        })->unique('id');
-        $subm2 = $aks->map(function ($item, $key) {
-            return $item->submenu;
-        });
-        $menu2 = $aks->map(function ($item, $key) {
-            return $item->menu;
-        })->unique('id');
+        //         ];
+        //     });
+        //     $apem = [
+        //         'aplikasi_id' => $item->aplikasi_id,
+        //         'nama' => $item->nama,
+        //         'name' => $item->name,
+        //         'icon' => $item->icon,
+        //         'link' => $item->link,
+        //         'submenus' => $map,
+        //     ];
+        //     return $apem;
+        // });
+        // // akses 2 start
+        // $aks = collect($akses->akses);
+        // // $apli2 = $aks;
+        // $apli2 = $aks->map(function ($item, $key) {
+        //     return $item->aplikasi;
+        // })->unique('id');
+        // $subm2 = $aks->map(function ($item, $key) {
+        //     return $item->submenu;
+        // });
+        // $menu2 = $aks->map(function ($item, $key) {
+        //     return $item->menu;
+        // })->unique('id');
 
-        $into2 = $menu2->map(function ($item, $key) use ($subm2) {
-            // $mbuh = [];
-            $temp = $subm2->where('menu_id', $item->id);
-            $map = $temp->map(function ($ki, $ke) {
-                // $map = $temp->each(function ($ki, $ke) {
-                return [
-                    'nama' => $ki->nama,
-                    'name' => $ki->name,
-                    'icon' => $ki->icon,
-                    'link' => $ki->link,
+        // $into2 = $menu2->map(function ($item, $key) use ($subm2) {
+        //     // $mbuh = [];
+        //     $temp = $subm2->where('menu_id', $item->id);
+        //     $map = $temp->map(function ($ki, $ke) {
+        //         // $map = $temp->each(function ($ki, $ke) {
+        //         return [
+        //             'nama' => $ki->nama,
+        //             'name' => $ki->name,
+        //             'icon' => $ki->icon,
+        //             'link' => $ki->link,
 
-                ];
-            });
-            $apem = [
-                'aplikasi_id' => $item->aplikasi_id,
-                'nama' => $item->nama,
-                'name' => $item->name,
-                'icon' => $item->icon,
-                'link' => $item->link,
-                'submenus' => $map,
-            ];
-            return $apem;
-        });
-        // akses 2 end
-        $foto = $pegawai->nip . '/' . $pegawai->foto;
-        $raw = collect($pegawai);
-        $apem = $raw['ruang'];
-        $gud = $raw['depo'];
+        //         ];
+        //     });
+        //     $apem = [
+        //         'aplikasi_id' => $item->aplikasi_id,
+        //         'nama' => $item->nama,
+        //         'name' => $item->name,
+        //         'icon' => $item->icon,
+        //         'link' => $item->link,
+        //         'submenus' => $map,
+        //     ];
+        //     return $apem;
+        // });
+        // // akses 2 end
+        // $foto = $pegawai->nip . '/' . $pegawai->foto;
+        // $raw = collect($pegawai);
+        // $apem = $raw['ruang'];
+        // $gud = $raw['depo'];
+        // return response()->json([
+        //     'token' => $token,
+        //     'user' => $user,
+        //     'aplikasi' => $apli,
+        //     'menus' => $into,
+        //     'aplikasi2' => $apli2,
+        //     'menus2' => $into2,
+        //     'role' => $role,
+        //     'foto' => $foto,
+        //     'ruang' => $apem,
+        //     'kode_ruang' => $pegawai->kode_ruang,
+        //     'depo' => $gud,
+        //     'akses' => $akses
+        // ]);
+
         return response()->json([
             'token' => $token,
-            'user' => $user,
-            'aplikasi' => $apli,
-            'menus' => $into,
-            'aplikasi2' => $apli2,
-            'menus2' => $into2,
-            'role' => $role,
-            'foto' => $foto,
-            'ruang' => $apem,
-            'kode_ruang' => $pegawai->kode_ruang,
-            'depo' => $gud,
-            'akses' => $akses
+            'user' => $user
         ]);
     }
 
