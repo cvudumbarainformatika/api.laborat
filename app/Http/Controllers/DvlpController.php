@@ -95,10 +95,23 @@ class DvlpController extends Controller
 
     public function antrian()
     {
-        $reqLog = (new Client())->post('http://192.168.160.100:2000/api/api' . '/get_list_antrian_tanggal', [
-            'form_params' => [
-                'tanggal' => date('Y-m-d')
-            ],
+        // $reqLog = (new Client())->post('http://192.168.160.100:2000/api/api' . '/get_list_antrian_tanggal', [
+        //     'form_params' => [
+        //         'tanggal' => date('Y-m-d')
+        //     ],
+        //     'http_errors' => false
+        // ]);
+        // $resLog = json_decode($reqLog->getBody()->getContents(), false);
+
+        // // return response()->json($resLog);
+        // return $resLog;
+        $myReq["layanan"] = '1';
+        $myReq["loket"] = '1';
+        $myReq["id_ruang"] = '1';
+        $myReq["user_id"] = "a1";
+        $myReq["nomor"] = 'B147';
+        $reqLog = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolrecall_layanan_ruang', [
+            'form_params' => $myReq,
             'http_errors' => false
         ]);
         $resLog = json_decode($reqLog->getBody()->getContents(), false);
