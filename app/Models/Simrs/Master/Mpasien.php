@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Master;
 
+use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -86,7 +88,6 @@ class Mpasien extends Model
                 'kd_negara_dom as negaradomisili' ,
                 'noteleponrumah as noteleponrumah',
                 'flag_pernikahan as statuspernikahan' ,
-
                 'gelardepan as gelardepan',
                 'gelarbelakang as gelarbelakang'
         ]);
@@ -104,6 +105,16 @@ class Mpasien extends Model
                         ->orWhere('rs55', 'LIKE', '%' . $query . '%')
                         ->orderBy('rs1');
                 });
+    }
+
+    public function kunjunganpoli()
+    {
+        return $this->hasMany(KunjunganPoli::class, 'rs2', 'rs1' );
+    }
+
+    public function kunjunganranap()
+    {
+        return $this->hasMany(Kunjunganranap::class,'rs2', 'rs1');
     }
 }
 
