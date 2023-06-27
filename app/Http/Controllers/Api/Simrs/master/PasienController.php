@@ -70,7 +70,8 @@ class PasienController extends Controller
     public function listpasien()
     {
         $query = Mpasien::pasien()->filter(request(['q']))
-        ->paginate(request('per_page'));
+            ->orderBy(request('order_by'), request('sort'))
+            ->paginate(request('per_page'));
         return new JsonResponse($query);
     }
 }
