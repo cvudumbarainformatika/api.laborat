@@ -66,4 +66,11 @@ class PasienController extends Controller
 
         return new JsonResponse($queryx);
     }
+
+    public function listpasien()
+    {
+        $query = Mpasien::pasien()->filter(request(['q']))
+        ->paginate(request('per_page'));
+        return new JsonResponse($query);
+    }
 }
