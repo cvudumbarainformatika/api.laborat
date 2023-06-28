@@ -18,4 +18,6 @@ Route::group([
     Route::get('/listpasienumum', [DaftarrajalumumController::class, 'listpasienumum']);
     Route::get('/masterpasien', [PasienController::class,'listpasien']);
     Route::get('/historypasien', [HistorypasienController::class, 'historykunjunganpasien']);
+    Route::post('/createsep', [DaftarrajalumumController::class, 'createsep']);
+    Route::post('/hapussep', [DaftarrajalumumController::class, 'hapussep']);
 });

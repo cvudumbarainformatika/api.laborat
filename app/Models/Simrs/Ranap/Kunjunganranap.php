@@ -19,17 +19,17 @@ class Kunjunganranap extends Model
 
     public function relmasterruangranap()
     {
-        return $this->hasMany(Mruangranap::class, 'rs1', 'rs5');
+        return $this->hasOne(Mruangranap::class, 'rs1', 'rs5');
     }
 
     public function relsistembayar()
     {
-        return $this->hasMany(Msistembayar::class, 'rs1', 'rs19');
+        return $this->hasOne(Msistembayar::class, 'rs1', 'rs19');
     }
 
     public function reldokter()
     {
-        return $this->hasMany(Dokter::class, 'rs1', 'rs10');
+        return $this->hasOne(Dokter::class, 'rs1', 'rs10');
     }
 
 }
