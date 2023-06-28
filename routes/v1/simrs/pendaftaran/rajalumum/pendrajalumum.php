@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Historypasien\HistorypasienController;
 use App\Http\Controllers\Api\Simrs\Master\PasienController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\Bridbpjscontroller;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\DaftarrajalumumController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,6 @@ Route::group([
     Route::get('/listpasienumum', [DaftarrajalumumController::class, 'listpasienumum']);
     Route::get('/masterpasien', [PasienController::class,'listpasien']);
     Route::get('/historypasien', [HistorypasienController::class, 'historykunjunganpasien']);
-    Route::post('/createsep', [DaftarrajalumumController::class, 'createsep']);
-    Route::post('/hapussep', [DaftarrajalumumController::class, 'hapussep']);
+    Route::post('/createsep', [Bridbpjscontroller::class, 'createsep']);
+    Route::post('/hapussep', [Bridbpjscontroller::class, 'hapussep']);
 });

@@ -24,4 +24,5 @@ Route::group([
     Route::post('/kecamatanbpjs', [BridgingbpjsController::class, 'kecamatanbpjs']);
     Route::post('/ceksuplesibpjs', [BridgingbpjsController::class, 'ceksuplesibpjs']);
     Route::post('/rencanakontrolbpjs', [BridgingbpjsController::class, 'rencanakontrolbpjs']);
+    Route::post('/carirujukanpcarebynorujukan', [BridgingbpjsController::class, 'carirujukanpcarebynorujukan']);
 });
