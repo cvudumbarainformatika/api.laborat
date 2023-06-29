@@ -257,7 +257,7 @@ class DaftarrajalController extends Controller
         ])
         ->whereBetween('rs17.rs3', [$tgl, $tglx])
         ->where('rs17.rs8','!=', 'POL014')
-        ->get();
+        ->paginate(10);
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
 
