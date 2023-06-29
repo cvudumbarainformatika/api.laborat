@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum;
+namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use PhpParser\Node\Stmt\TryCatch;
 
-class DaftarrajalumumController extends Controller
+class DaftarrajalController extends Controller
 {
 
     public static function simpanMpasien($request){
@@ -213,20 +213,52 @@ class DaftarrajalumumController extends Controller
 
     }
 
-    public function listpasienumum()
+    public function daftarkunjunganpasienbpjs()
     {
-        $tgldari = date('2023-01-10 00:00:00');
-        $tglsampai = date('2023-01-10 23:59:59');
-        $listpasienumum = KunjunganPoli::select('rs1','rs2','rs3','rs8','rs14')
-        ->with(
-            'masterpasien',
-            'relmpoli:rs1,rs2',
-            'msistembayar:rs1,rs2')
-        ->whereBetween('rs3', [$tgldari, $tglsampai])
-        ->where('rs14','=','UMUM')
-        ->where('rs8','!=', 'POL014')
-        ->paginate(request('per_page'));
-        return new JsonResponse($listpasienumum) ;
+        if(!request('tgl'))
+        {
+            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        }else{
+            $tgl = request('tgl').' 00:00:00';
+            $tglx = request('tgl').' 23:59:59';
+        }
+        $daftarkunjunganpasienbpjs = KunjunganPoli::select(
+            'rs1 as noreg',
+            'rs2',
+            'rs3',
+            'rs8',
+            'rs9',
+            'rs14'
+        )
+        ->with(['masterpasien' => function($q)
+            {
+                $q->select([
+                    'rs1',
+                    DB::raw('concat(rs3," ",gelardepan," ",rs2," ",gelarbelakang) as nama'),
+                    DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
+                    'rs16 as tgllahir',
+                    'rs17 as kelamin',
+                    'rs19 as pendidikan',
+                    'rs22 as agama',
+                    'rs37 as templahir',
+                    'rs39 as suku',
+                    'rs40 as jenispasien',
+                    'rs46 as noka',
+                    'rs49 as nktp',
+                    'rs55 as nohp'
+                ]);
+            }
+        ])->with([
+            'msistembayar:rs1,rs2 as sistembayar,rs9 as groupsistembayar',
+            'relmpoli:rs1,rs2 as namapoli,rs4',
+            'dokter:rs1,rs2 as dokter',
+            'seprajal:rs1,rs8 as sep'
+        ])
+        ->whereBetween('rs17.rs3', [$tgl, $tglx])
+        ->where('rs17.rs8','!=', 'POL014')
+        ->get();
+        return new JsonResponse($daftarkunjunganpasienbpjs);
     }
 
 }

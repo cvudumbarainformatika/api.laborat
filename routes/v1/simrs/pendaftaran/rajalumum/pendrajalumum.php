@@ -2,8 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Historypasien\HistorypasienController;
 use App\Http\Controllers\Api\Simrs\Master\PasienController;
-use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\Bridbpjscontroller;
-use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum\DaftarrajalumumController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\DaftarrajalController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -13,12 +12,13 @@ Route::group([
     'prefix' => 'simrs/pendaftaran'
 ], function () {
 
-    Route::post('/rajalumumsimpan', [DaftarrajalumumController::class, 'simpandaftar']);
-    Route::post('/createsep', [DaftarrajalumumController::class, 'createsep']);
-    // Route::post('/rajalbpjssimpan', [DaftarrajalbpjsController::class, 'simpandaftarbpjs']);
-    Route::get('/listpasienumum', [DaftarrajalumumController::class, 'listpasienumum']);
+    //simpan rs17  ==> rajalumumsimpan
+    Route::post('/simpandaftar', [DaftarrajalController::class, 'simpandaftar']);
     Route::get('/masterpasien', [PasienController::class,'listpasien']);
     Route::get('/historypasien', [HistorypasienController::class, 'historykunjunganpasien']);
-    Route::post('/createsep', [Bridbpjscontroller::class, 'createsep']);
-    Route::post('/hapussep', [Bridbpjscontroller::class, 'hapussep']);
+
+    Route::get('/kunjunganpasienbpjs', [DaftarrajalController::class, 'daftarkunjunganpasienbpjs']);
+
+
+
 });

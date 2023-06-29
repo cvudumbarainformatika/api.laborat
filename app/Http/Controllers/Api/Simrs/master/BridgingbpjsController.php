@@ -85,7 +85,7 @@ class BridgingbpjsController extends Controller
     {
         $provinsibpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/propinsi');
+            'referensi/propinsi/');
         return ($provinsibpjs);
     }
 
@@ -125,7 +125,7 @@ class BridgingbpjsController extends Controller
     {
         $carirujukanpcarebynorujukan=BridgingbpjsHelper::get_url(
             'vclaim',
-            'Rujukan', $request->noka
+            'Rujukan/'. $request->noka
         );
         return ($carirujukanpcarebynorujukan);
     }

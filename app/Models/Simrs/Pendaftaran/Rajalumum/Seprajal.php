@@ -9,4 +9,5 @@ class Seprajal extends Model
 {
     use HasFactory;
     protected $table = 'rs222';
+    protected $guaded = ['id'];
 }
