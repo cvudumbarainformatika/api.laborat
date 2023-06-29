@@ -23,7 +23,7 @@ class KunjunganPoli extends Model
 
     public function masterpasien()
     {
-        return $this->hasMany(Mpasien::class, 'rs1', 'rs2');
+        return $this->hasOne(Mpasien::class, 'rs1', 'rs2');
     }
 
     // public function relrekomdpjp()
