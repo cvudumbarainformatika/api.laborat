@@ -253,12 +253,14 @@ class DaftarrajalController extends Controller
             'msistembayar:rs1,rs2 as sistembayar,rs9 as groupsistembayar',
             'relmpoli:rs1,rs2 as namapoli,rs4',
             'dokter:rs1,rs2 as dokter',
-            'seprajal:rs1,rs8 as sep'
+            'seprajal:rs1,rs8 as sep',
+            'generalconsent',
+            'taskid'
         ])
-        ->whereBetween('rs17.rs3', [$tgl, $tglx])
+        ->whereBetween('rs3', [$tgl, $tglx])
         ->where('rs17.rs8','!=', 'POL014')
         ->where('rs17.rs14','Like', '%BPJS%')
-        ->paginate(10);
+        ->paginate(request('per_page'));
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
 

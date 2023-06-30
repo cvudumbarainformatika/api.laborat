@@ -6,7 +6,9 @@ use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -49,6 +51,16 @@ class KunjunganPoli extends Model
     public function seprajal()
     {
         return $this->hasOne(Seprajal::class,'rs1', 'rs1');
+    }
+
+    public function generalconsent()
+    {
+        return $this->hasOne(Mgeneralconsent::class, 'noreg', 'rs1');
+    }
+
+    public function taskid()
+    {
+        return $this->hasMany(Taskidantrian::class, 'noreg', 'rs1');
     }
 
 }
