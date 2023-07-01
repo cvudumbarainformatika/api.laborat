@@ -310,7 +310,7 @@ class DaftarrajalController extends Controller
                 'taskid'
             ])
             ->whereBetween('rs3', [$tgl, $tglx])
-            ->where('rs8', '!=', 'POL014')
+            //->where('rs8', '!=', 'POL014')
             // ->where('rs9.rs9', '=', 'BPJS')
             // ->where('rs19.rs4', '=', 'Poliklinik')
             // IKI GANTINE MAS UNTUK PASIEN
@@ -321,9 +321,19 @@ class DaftarrajalController extends Controller
                             ->orWhere('rs2', 'LIKE', '%' . request('q') . '%');
                     });
             })
+            ->whereIn('rs14', function ($query){
+                $query->select('rs1')->from('rs9')->where('rs9','=','BPJS');
+            })
+            ->whereIn('rs8', function($query){
+                $query->select('rs1')->from('rs19')->where('rs1', '!=', 'POL014')->where('rs4','=', 'Poliklinik')
+                ->when(request('poli'), function ($search){
+                    $search->where('rs2', 'LIKE', '%' . request('poli') . '%');
+                });
+            })
             // ->where('rs15.rs2','LIKE', '%' . request('q') . '%')
             // ->where('rs17.rs2','LIKE', '%' . request('q') . '%')
             //  ->where('rs19.rs2','LIKE', '%' . request('q') . '%')
+            ->orderby('rs3')
             ->paginate(request('per_page'));
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
