@@ -309,10 +309,10 @@ class DaftarrajalController extends Controller
                 'generalconsent',
                 'taskid'
             ])
-            ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            ->where('rs17.rs8', '!=', 'POL014')
-            ->where('rs9.rs9', '=', 'BPJS')
-            ->where('rs19.rs4', '=', 'Poliklinik')
+            ->whereBetween('rs3', [$tgl, $tglx])
+            ->where('rs8', '!=', 'POL014')
+            // ->where('rs9.rs9', '=', 'BPJS')
+            // ->where('rs19.rs4', '=', 'Poliklinik')
             // IKI GANTINE MAS UNTUK PASIEN
             ->whereIn('rs2', function ($query) {
                 $query->select('rs1')->from('rs15')
