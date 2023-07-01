@@ -224,101 +224,107 @@ class DaftarrajalController extends Controller
             $tgl = request('tgl') . ' 00:00:00';
             $tglx = request('tgl') . ' 23:59:59';
         }
+        // $daftarkunjunganpasienbpjs = KunjunganPoli::select(
+        //     'rs17.rs1 as noreg',
+        //     'rs17.rs2 as norm',
+        //     'rs17.rs3 as tgl_kunjungan',
+        //     'rs17.rs8 as kodepoli',
+        //     'rs19.rs2 as poli',
+        //     'rs17.rs9 as kodedokter',
+        //     'rs21.rs2 as dokter',
+        //     'rs17.rs14 as kodesistembayar',
+        //     'rs9.rs2 as sistembayar',
+        //     DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+        //     DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+        //     DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," TAHUN ",TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," bulan ",) AS umur'),
+        //     'rs15.rs16 as tgllahir',
+        //     'rs15.rs17 as kelamin',
+        //     'rs15.rs19 as pendidikan',
+        //     'rs15.rs22 as agama',
+        //     'rs15.rs37 as templahir',
+        //     'rs15.rs39 as suku',
+        //     'rs15.rs40 as jenispasien',
+        //     'rs15.rs46 as noka',
+        //     'rs15.rs49 as nktp',
+        //     'rs15.rs55 as nohp',
+        //     'rs222.rs8 as sep',
+        //     'generalconsent.noreg as generalconsent',
+        //     'bpjs_respon_time.taskid as taskid',
+        // )
+        //     ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+        //     ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+        //     ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+        //     ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
+        //     ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1')
+        //     ->leftjoin('generalconsent', 'generalconsent.noreg', '=', 'rs17.rs1')
+        //     ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
+        //     ->whereBetween('rs17.rs3', [$tgl, $tglx])
+        //     ->where('rs19.rs4', '=', 'Poliklinik')
+        //     ->where('rs17.rs8', '!=', 'POL014')
+        //     ->where('rs9.rs9', '=', 'BPJS')
+        //     ->where(function ($query) {
+        //         $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+        //             ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
+        //             ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
+        //             ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
+        //             ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
+        //             ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+        //             ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+        //     })
+        //     ->paginate(request('per_page'));
+
+
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1 as noreg',
-            'rs17.rs2 as norm',
-            'rs17.rs3 as tgl_kunjungan',
-            'rs17.rs8 as kodepoli',
-            'rs19.rs2 as poli',
-            'rs17.rs9 as kodedokter',
-            'rs21.rs2 as dokter',
-            'rs17.rs14 as kodesistembayar',
-            'rs9.rs2 as sistembayar',
-            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
-            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
-            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," TAHUN ",TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," bulan ",) AS umur'),
-            'rs15.rs16 as tgllahir',
-            'rs15.rs17 as kelamin',
-            'rs15.rs19 as pendidikan',
-            'rs15.rs22 as agama',
-            'rs15.rs37 as templahir',
-            'rs15.rs39 as suku',
-            'rs15.rs40 as jenispasien',
-            'rs15.rs46 as noka',
-            'rs15.rs49 as nktp',
-            'rs15.rs55 as nohp',
-            'rs222.rs8 as sep',
-            'generalconsent.noreg as generalconsent',
-            'bpjs_respon_time.taskid as taskid',
+            'rs17.rs2',
+            'rs17.rs3',
+            'rs17.rs8',
+            'rs17.rs9',
+            'rs17.rs14'
         )
-            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
-            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
-            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
-            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
-            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1')
-            ->leftjoin('generalconsent', 'generalconsent.noreg', '=', 'rs17.rs1')
-            ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
+            ->with([
+                'masterpasien' => function ($q) {
+                    $q->select([
+                        'rs1',
+                        DB::raw('concat(rs3," ",gelardepan," ",rs2," ",gelarbelakang) as nama'),
+                        DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
+                        'rs16 as tgllahir',
+                        'rs17 as kelamin',
+                        'rs19 as pendidikan',
+                        'rs22 as agama',
+                        'rs37 as templahir',
+                        'rs39 as suku',
+                        'rs40 as jenispasien',
+                        'rs46 as noka',
+                        'rs49 as nktp',
+                        'rs55 as nohp'
+                    ]);
+                }
+            ])
+            ->with([
+                'msistembayar:rs1,rs2 as sistembayar,rs9 as groupsistembayar',
+                'relmpoli:rs1,rs2 as namapoli,rs4',
+                'dokter:rs1,rs2 as dokter',
+                'seprajal:rs1,rs8 as sep',
+                'generalconsent',
+                'taskid'
+            ])
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            ->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')
             ->where('rs9.rs9', '=', 'BPJS')
-            ->where(function ($query) {
-                $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            ->where('rs19.rs4', '=', 'Poliklinik')
+            // IKI GANTINE MAS UNTUK PASIEN
+            ->whereIn('rs2', function ($query) {
+                $query->select('rs1')->from('rs15')
+                    ->when(request('q'), function ($search) {
+                        $search->where('rs1', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('rs2', 'LIKE', '%' . request('q') . '%');
+                    });
             })
+            // ->where('rs15.rs2','LIKE', '%' . request('q') . '%')
+            // ->where('rs17.rs2','LIKE', '%' . request('q') . '%')
+            //  ->where('rs19.rs2','LIKE', '%' . request('q') . '%')
             ->paginate(request('per_page'));
-
-
-        //     $daftarkunjunganpasienbpjs = KunjunganPoli::select(
-        //         'rs17.rs1 as noreg',
-        //         'rs17.rs2',
-        //         'rs17.rs3',
-        //         'rs17.rs8',
-        //         'rs17.rs9',
-        //         'rs17.rs14'
-        //     )
-        //     ->with(['masterpasien' => function($q)
-        //         {
-        //             $q->select([
-        //                 'rs1',
-        //                 DB::raw('concat(rs3," ",gelardepan," ",rs2," ",gelarbelakang) as nama'),
-        //                 DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
-        //                 'rs16 as tgllahir',
-        //                 'rs17 as kelamin',
-        //                 'rs19 as pendidikan',
-        //                 'rs22 as agama',
-        //                 'rs37 as templahir',
-        //                 'rs39 as suku',
-        //                 'rs40 as jenispasien',
-        //                 'rs46 as noka',
-        //                 'rs49 as nktp',
-        //                 'rs55 as nohp'
-        //             ]);
-        //         }
-        //     ])
-        //     ->with([
-        //         'msistembayar:rs1,rs2 as sistembayar,rs9 as groupsistembayar',
-        //         'relmpoli:rs1,rs2 as namapoli,rs4',
-        //         'dokter:rs1,rs2 as dokter',
-        //         'seprajal:rs1,rs8 as sep',
-        //         'generalconsent',
-        //         'taskid'
-        //     ])
-        //     ->join('rs9','rs9.rs1','=','rs17.rs14')
-        //     ->join('rs19','rs19.rs1','=','rs17.rs8')
-        //     ->whereBetween('rs17.rs3', [$tgl, $tglx])
-        //     ->where('rs17.rs8','!=', 'POL014')
-        //     ->where('rs9.rs9','=', 'BPJS')
-        //     ->where('rs19.rs4','=', 'Poliklinik')
-        //     // ->where('rs15.rs2','LIKE', '%' . request('q') . '%')
-        //     // ->where('rs17.rs2','LIKE', '%' . request('q') . '%')
-        //   //  ->where('rs19.rs2','LIKE', '%' . request('q') . '%')
-        //     ->paginate(request('per_page'));
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
 }
