@@ -236,6 +236,7 @@ class DaftarrajalController extends Controller
             'relmpoli:rs1,rs2 as namapoli,rs4',
             'dokter:rs1,rs2 as dokter',
             'seprajal:rs1,rs8 as sep',
+            'taskid',
             'masterpasien' => function ($q) {
                 $q->select([
                     'rs1',
@@ -264,6 +265,14 @@ class DaftarrajalController extends Controller
             ->whereBetween('rs3', [$tgl, $tglx]) // ini default hari ini
             ->where('rs8', '<>', 'POL014')
             ->where('rs14', 'Like', '%BPJS%')
+            // IKI MAS GANTINE WHEREHAS
+            ->whereIn('rs2', function ($query) {
+                $query->select('rs1')->from('rs15')
+                    ->when(request('q') ?? false, function ($search) {
+                        $search->where('rs1', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('rs2', 'LIKE', '%' . request('q') . '%');
+                    });
+            })
             ->orderBy('rs3', 'DESC')
             ->paginate(request('per_page'));
         return new JsonResponse($daftarkunjunganpasienbpjs);
