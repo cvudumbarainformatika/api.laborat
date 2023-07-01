@@ -224,7 +224,6 @@ class DaftarrajalController extends Controller
             $tgl = request('tgl') . ' 00:00:00';
             $tglx = request('tgl') . ' 23:59:59';
         }
-<<<<<<< HEAD
         $daftarkunjunganpasienbpjs= KunjunganPoli::select(
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
@@ -320,59 +319,6 @@ class DaftarrajalController extends Controller
     //     // ->where('rs17.rs2','LIKE', '%' . request('q') . '%')
     //   //  ->where('rs19.rs2','LIKE', '%' . request('q') . '%')
     //     ->paginate(request('per_page'));
-=======
-        $daftarkunjunganpasienbpjs = KunjunganPoli::select(
-            'rs1 as noreg',
-            'rs2',
-            'rs3',
-            'rs8',
-            'rs9',
-            'rs14'
-        )->with([
-            'msistembayar:rs1,rs2 as sistembayar,rs9 as groupsistembayar',
-            'relmpoli:rs1,rs2 as namapoli,rs4',
-            'dokter:rs1,rs2 as dokter',
-            'seprajal:rs1,rs8 as sep',
-            'taskid',
-            'masterpasien' => function ($q) {
-                $q->select([
-                    'rs1',
-                    DB::raw('concat(rs3," ",gelardepan," ",rs2," ",gelarbelakang) as nama'),
-                    DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
-                    'rs16 as tgllahir',
-                    'rs17 as kelamin',
-                    'rs19 as pendidikan',
-                    'rs22 as agama',
-                    'rs37 as templahir',
-                    'rs39 as suku',
-                    'rs40 as jenispasien',
-                    'rs46 as noka',
-                    'rs49 as nktp',
-                    'rs55 as nohp'
-                ]);
-            }
-
-        ])
-            // ->with([
-            //     'msistembayar:rs1,rs2 as sistembayar,rs9 as groupsistembayar',
-            //     'relmpoli:rs1,rs2 as namapoli,rs4',
-            //     'dokter:rs1,rs2 as dokter',
-            //     'seprajal:rs1,rs8 as sep'
-            // ])
-            ->whereBetween('rs3', [$tgl, $tglx]) // ini default hari ini
-            ->where('rs8', '<>', 'POL014')
-            ->where('rs14', 'Like', '%BPJS%')
-            // IKI MAS GANTINE WHEREHAS
-            ->whereIn('rs2', function ($query) {
-                $query->select('rs1')->from('rs15')
-                    ->when(request('q') ?? false, function ($search) {
-                        $search->where('rs1', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('rs2', 'LIKE', '%' . request('q') . '%');
-                    });
-            })
-            ->orderBy('rs3', 'DESC')
-            ->paginate(request('per_page'));
->>>>>>> 3c94424620bb30c848aec3997382b4ac22552372
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
 }
