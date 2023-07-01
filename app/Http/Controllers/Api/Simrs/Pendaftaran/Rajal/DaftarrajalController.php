@@ -265,7 +265,7 @@ class DaftarrajalController extends Controller
             ->whereBetween('rs3', [$tgl, $tglx]) // ini default hari ini
             ->where('rs8', '<>', 'POL014')
             ->where('rs14', 'Like', '%BPJS%')
-            // IKI MAS GANTINE WHEREHAS
+            // IKI MAS GANTINE WHEREHAS ||
             ->whereIn('rs2', function ($query) {
                 $query->select('rs1')->from('rs15')
                     ->when(request('q') ?? false, function ($search) {
