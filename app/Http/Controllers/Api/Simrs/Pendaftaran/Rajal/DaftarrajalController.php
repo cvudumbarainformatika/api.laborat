@@ -305,14 +305,18 @@ class DaftarrajalController extends Controller
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
                         TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
                         TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            'rs15.rs17 as kelamin',
             'bpjs_antrian.tanggalperiksa',
             'bpjs_antrian.namapoli',
             'bpjs_antrian.namadokter',
             'bpjs_antrian.nomorreferensi',
             'bpjs_antrian.checkin',
             'bpjs_antrian.batal',
-            'bpjs_antrian.created_at'
-        )->leftjoin('rs15', 'rs15.rs1', '=', 'bpjs_antrian.norm')
+            'bpjs_antrian.created_at',
+            'rs222.rs8 as seprajal'
+        )
+        ->leftjoin('rs15', 'rs15.rs1', '=', 'bpjs_antrian.norm')
+        ->leftjoin('rs222', 'rs222.rs1', '=', 'bpjs_antrian.noreg')
         ->where(function ($query) {
             $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
                 ->orWhere('bpjs_antrian.kodebooking', 'LIKE', '%' . request('q') . '%')

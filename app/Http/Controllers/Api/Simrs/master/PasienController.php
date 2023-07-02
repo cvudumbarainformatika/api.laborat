@@ -74,4 +74,14 @@ class PasienController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($query);
     }
+
+    public function caripasien()
+    {
+        $query = Mpasien::pasien()->filter(request(['q']))
+            ->orderBy('rs2')
+            ->limit(100)
+            ->get();
+         //   ->paginate(request('per_page'));
+        return new JsonResponse($query);
+    }
 }
