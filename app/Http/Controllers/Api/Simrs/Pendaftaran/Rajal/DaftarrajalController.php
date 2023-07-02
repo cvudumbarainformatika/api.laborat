@@ -10,6 +10,7 @@ use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -282,5 +283,46 @@ class DaftarrajalController extends Controller
             ->paginate(request('per_page'));
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
+    }
+
+    public function antrianmobilejkn()
+    {
+        if (request('tgl') === '' || request('tgl') === null) {
+            $tgl = Carbon::now()->format('Y-m-d');
+            $tglx = Carbon::now()->format('Y-m-d');
+        } else {
+            $tgl = request('tgl');
+            $tglx = request('tgl');
+        }
+        $antrianmjkn = Mjknantrian::select(
+            'bpjs_antrian.kodebooking',
+            'bpjs_antrian.nomorantrean',
+            'bpjs_antrian.nomorkartu',
+            'bpjs_antrian.noreg',
+            'bpjs_antrian.norm',
+            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            'bpjs_antrian.tanggalperiksa',
+            'bpjs_antrian.namapoli',
+            'bpjs_antrian.namadokter',
+            'bpjs_antrian.nomorreferensi',
+            'bpjs_antrian.checkin',
+            'bpjs_antrian.batal',
+            'bpjs_antrian.created_at'
+        )->leftjoin('rs15', 'rs15.rs1', '=', 'bpjs_antrian.norm')
+        ->where(function ($query) {
+            $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('bpjs_antrian.kodebooking', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('bpjs_antrian.nomorantrean', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('bpjs_antrian.noreg', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('bpjs_antrian.norm', 'LIKE', '%' . request('q') . '%');
+        })
+        ->whereBetween('bpjs_antrian.tanggalperiksa', [$tgl, $tglx])
+        ->paginate(request('per_page'));
+
+        return new JsonResponse($antrianmjkn);
     }
 }
