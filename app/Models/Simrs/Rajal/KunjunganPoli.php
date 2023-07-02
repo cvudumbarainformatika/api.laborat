@@ -45,12 +45,12 @@ class KunjunganPoli extends Model
 
     public function dokter()
     {
-        return $this->hasOne(Dokter::class,'rs1','rs9');
+        return $this->hasOne(Dokter::class, 'rs1', 'rs9');
     }
 
     public function seprajal()
     {
-        return $this->hasOne(Seprajal::class,'rs1', 'rs1');
+        return $this->hasOne(Seprajal::class, 'rs1', 'rs1');
     }
 
     public function generalconsent()
@@ -62,5 +62,4 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Taskidantrian::class, 'noreg', 'rs1');
     }
-
 }
