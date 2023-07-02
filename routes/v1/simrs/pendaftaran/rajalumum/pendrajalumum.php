@@ -18,6 +18,7 @@ Route::group([
     Route::get('/historypasien', [HistorypasienController::class, 'historykunjunganpasien']);
 
     Route::get('/kunjunganpasienbpjs', [DaftarrajalController::class, 'daftarkunjunganpasienbpjs']);
+    Route::get('/antrianmobilejkn', [DaftarrajalController::class, 'antrianmobilejkn']);
 
 
 
