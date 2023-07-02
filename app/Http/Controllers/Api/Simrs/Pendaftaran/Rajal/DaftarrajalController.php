@@ -255,11 +255,11 @@ class DaftarrajalController extends Controller
             // 'bpjs_respon_time.taskid as taskid',
             // TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15 . rs16, now()), rs15 . rs16), now(), " Hari ")
         )
-            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
-            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
-            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
-            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
-            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1')
+            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->leftjoin('generalconsent', 'generalconsent.noreg', '=', 'rs17.rs1')
             // ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
@@ -268,11 +268,12 @@ class DaftarrajalController extends Controller
             ->where('rs9.rs9', '=', 'BPJS')
             ->where(function ($query) {
                 $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->with(['taskid' => function ($q) {
