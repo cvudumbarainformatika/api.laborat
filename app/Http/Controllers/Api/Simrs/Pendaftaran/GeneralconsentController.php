@@ -29,14 +29,14 @@ class GeneralconsentController extends Controller
             'petugas' => $request->petugas,
             'user_entry' => auth()->user()->id,
            ]);
-            $simpanrinci = $simpangeneralcontent->hederrinci()->create([
-                'kd_pernyataan' => $request->kd_pernyataan,
+            $simpanrinci = $simpangeneralcontent->hederrinci()->updateOrcreate([ 'kd_pernyataan' => $request->kd_pernyataan],
+            [
                 'jawaban' => $request->jawaban
             ]);
             DB::commit();
             return new JsonResponse(
                 [
-                    'message' => 'DATA TERSIMPAN...!!!', $simpangeneralcontent,['simpanrinci']
+                    'message' => 'DATA TERSIMPAN...!!!', $simpangeneralcontent,$simpanrinci
                 ],
                 200
             );
