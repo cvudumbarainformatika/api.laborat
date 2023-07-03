@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/pendaftaran/generalconscent'
 ], function () {
     Route::get('mastergeneralconsent', [GeneralconsentController::class, 'mastergeneralconsent']);
+    Route::get('simpangeneralcontent', [GeneralconsentController::class, 'simpangeneralcontent']);
 });
