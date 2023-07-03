@@ -36,7 +36,7 @@ class GeneralconsentController extends Controller
             DB::commit();
             return new JsonResponse(
                 [
-                    'message' => 'DATA TERSIMPAN...!!!'
+                    'message' => 'DATA TERSIMPAN...!!!', $simpangeneralcontent,['simpanrinci']
                 ],
                 200
             );
