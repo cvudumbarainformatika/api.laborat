@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 
 class GeneralconsentController extends Controller
 {
+    public function mastergeneralconsent()
+    {
+        $data = Mgeneralconsent::all();
+        return new JsonResponse($data);
+    }
+
     public function simpangeneralcontent(Request $request)
     {
         $request->validate([
@@ -22,4 +28,5 @@ class GeneralconsentController extends Controller
         }
         return new JsonResponse(['message => Data Sudah Disimpan'], 200);
     }
+
 }

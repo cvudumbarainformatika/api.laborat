@@ -261,7 +261,7 @@ class DaftarrajalController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
-            ->leftjoin('generalconsent', 'generalconsent.noreg', '=', 'rs17.rs1')
+            ->leftjoin('generalconsent', 'generalconsent.norm', '=', 'rs17.rs2')
             // ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs19.rs4', '=', 'Poliklinik')
