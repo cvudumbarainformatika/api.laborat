@@ -252,7 +252,7 @@ class DaftarrajalController extends Controller
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
             'rs222.rs8 as sep',
-            'generalconsent.noreg as generalconsent',
+            'generalconsent.norm as generalconsent',
             // 'bpjs_respon_time.taskid as taskid',
             // TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15 . rs16, now()), rs15 . rs16), now(), " Hari ")
         )
