@@ -79,7 +79,7 @@ class PasienController extends Controller
     {
         $query = Mpasien::pasien()->filter(request(['q']))
             ->orderBy('rs2')
-            ->limit(50)
+            ->limit(20)
             ->get();
         //   ->paginate(request('per_page'));
         return new JsonResponse($query);
