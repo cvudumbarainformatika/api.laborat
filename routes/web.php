@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\PlaygroundEvent;
+use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
@@ -29,6 +30,9 @@ WebSocketsRouter::webSocket('/socket/update-post', UpdatePostSocketHandler::clas
 Route::get('/', function () {
     return view('welcome');
 });
+// stok opname
+// Route::get('/opname', [StokOpnameController::class, 'storeMonthly']);
+
 Route::get('/autogen', [AutogenController::class, 'index']);
 Route::get('/autogen/coba', [AutogenController::class, 'coba']);
 Route::get('/autogen/gennoreg', [AutogenController::class, 'gennoreg']);

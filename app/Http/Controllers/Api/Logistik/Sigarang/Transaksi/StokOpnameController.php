@@ -487,7 +487,7 @@ class StokOpnameController extends Controller
 
         $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
         $today = request('tahun') ? $tanggal : date('Y-m-d');
-        // $today = date('2023-02-28');
+        // $today = date('2023-06-30');
         $lastDay = date('Y-m-t', strtotime($today));
         $dToday = date_create($today);
         $dLastDay = date_create($lastDay);
@@ -539,6 +539,7 @@ class StokOpnameController extends Controller
                 // }
                 array_push($total, $data);
             }
+
             if (count($recent) !== count($total)) {
                 return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
             }
@@ -548,6 +549,8 @@ class StokOpnameController extends Controller
                 // 'fisik' => $fisik,
                 // 'total' => $total,
             ], 201);
+
+            //end if
         }
 
         return new JsonResponse(['message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan'], 410);

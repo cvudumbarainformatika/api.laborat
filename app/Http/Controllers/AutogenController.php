@@ -1662,26 +1662,40 @@ class AutogenController extends Controller
         //     'awal' => $data,
         //     'akhir' => $akhir,
         // ]);
-        $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
-        // $today = request('tahun') ? $tanggal : date('Y-m-d');
-        $today = date('2023-05-31');
-        $lastDay = date('Y-m-t', strtotime($today));
-        $dToday = date_create($today);
-        $dLastDay = date_create($lastDay);
-        $diff = date_diff($dToday, $dLastDay);
+        // $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
+        // // $today = request('tahun') ? $tanggal : date('Y-m-d');
+        // $today = date('2023-05-31');
+        // $lastDay = date('Y-m-t', strtotime($today));
+        // $dToday = date_create($today);
+        // $dLastDay = date_create($lastDay);
+        // $diff = date_diff($dToday, $dLastDay);
 
-        return new JsonResponse([
-            'tanggal' => $tanggal,
-            'today' => $today,
-            'dToday' => $dToday,
-            'lastDay' => $lastDay,
-            'dLastDay' => $dLastDay,
-            'diff d' => $diff->d,
-            'diff m' => $diff->m,
-            'diff y' => $diff->y,
-            'diff ' => $diff,
+        // return new JsonResponse([
+        //     'tanggal' => $tanggal,
+        //     'today' => $today,
+        //     'dToday' => $dToday,
+        //     'lastDay' => $lastDay,
+        //     'dLastDay' => $dLastDay,
+        //     'diff d' => $diff->d,
+        //     'diff m' => $diff->m,
+        //     'diff y' => $diff->y,
+        //     'diff ' => $diff,
 
-        ]);
+        // ]);
+        $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
+            ->where('kode_ruang', 'like', '%Gd-%')
+            ->where('kode_rs', 'like', '%4637%')
+            ->with('barang')
+            ->get();
+
+        $month = MonthlyStokUpdate::where('sisa_stok', '>', 0)
+            ->where('kode_ruang', 'like', '%Gd-%')
+            ->where('kode_rs', 'like', '%4637%')
+            ->with('barang')
+            ->get();
+
+
+        return new JsonResponse(['month' => $month, 'recent' => $recent]);
     }
 
     public function wawanpost(Request $request)
