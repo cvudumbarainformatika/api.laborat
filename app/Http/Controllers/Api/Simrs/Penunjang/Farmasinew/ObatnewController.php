@@ -27,7 +27,7 @@ class ObatnewController extends Controller
 
 
         $simpan = Mobatnew::updateOrCreate(['kd_obat' => $kodeobat],
-        [
+
         $request->all()
         // 'nama_obat' => $request->nama_obat,
         // 'merk' => $request->merk,
@@ -52,7 +52,7 @@ class ObatnewController extends Controller
         // 'nilai_kdn' =>$request->nilai_kdn,
         // 'sertifikatkdn' =>$request->sertifikatkdn,
         // 'sistembayar' =>$request->sistembayar,
-        ]);
+        );
         if(!$simpan)
         {
             return new JsonResponse(['message' => 'data gagal disimpan'], 500);
