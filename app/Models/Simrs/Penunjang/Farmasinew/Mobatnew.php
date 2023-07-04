@@ -31,4 +31,9 @@ class Mobatnew extends Model
                 ->orderBy('nama_obat');
         });
     }
+
+    public function mkelasterapi()
+    {
+        return $this->hasMany(Mapingkelasterapi::class, 'kd_obat', 'kd_obat');
+    }
 }

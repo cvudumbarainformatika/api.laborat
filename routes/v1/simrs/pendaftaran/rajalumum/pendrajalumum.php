@@ -21,6 +21,8 @@ Route::group([
     Route::get('/antrianmobilejkn', [DaftarrajalController::class, 'antrianmobilejkn']);
     Route::get('/caripasien', [PasienController::class, 'caripasien']);
 
+    Route::get('/umum/kunjunganpasienumum', [DaftarrajalController::class, 'daftarkunjunganpasienumum']);
+
 
 
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Mapingkelasterapi;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,6 +54,15 @@ class ObatnewController extends Controller
         // 'sertifikatkdn' =>$request->sertifikatkdn,
         // 'sistembayar' =>$request->sistembayar,
         );
+        if($request->has('kelasterapis')){
+            foreach($request->kelasterapis as $key)
+            {
+                $simpanrinci = Mapingkelasterapi::create([
+                    'kd_obat' => $simpan->kd_obat,
+                    'kelas_terapi' => $key->kelasterapi
+                ]);
+            }
+        }
         if(!$simpan)
         {
             return new JsonResponse(['message' => 'data gagal disimpan'], 500);
