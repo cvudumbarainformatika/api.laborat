@@ -59,7 +59,7 @@ class ObatnewController extends Controller
             {
                 $simpanrinci = Mapingkelasterapi::create([
                     'kd_obat' => $simpan->kd_obat,
-                    'kelas_terapi' => $key->kelasterapi
+                    'kelas_terapi' => $key['kelasterapi']
                 ]);
             }
         }
@@ -88,6 +88,7 @@ class ObatnewController extends Controller
         $list = Mobatnew::where('nama_obat', 'Like', '%' . request('nama_obat') . '%')
             ->orWhere('merk', 'Like', '%' . request('merk') . '%')
             ->orWhere('kandungan', 'Like', '%' . request('kandungan') . '%')
+            ->with('mkelasterapi')
             ->get();
 
         return new JsonResponse($list);
