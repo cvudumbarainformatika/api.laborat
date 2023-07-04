@@ -10,4 +10,5 @@ class Mapingkelasterapi extends Model
     use HasFactory;
     protected $table = 'mapingkelasterapi';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }
