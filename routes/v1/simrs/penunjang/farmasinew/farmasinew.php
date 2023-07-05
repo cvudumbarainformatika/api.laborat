@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KelasterapiController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KelompokpenyimpananController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MerkController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MjenisperbekalanController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Mjenisprodukcontroller;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MkodebelanjaController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\ObatnewController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\RkoController;
@@ -67,4 +68,8 @@ Route::group([
     Route::post('/simpanrko', [RkoController::class, 'simpan']);
     Route::post('/hapusrko', [RkoController::class, 'hapus']);
     Route::get('/listrko', [RkoController::class, 'list']);
+
+    Route::post('/simpanjenisproduk', [Mjenisprodukcontroller::class, 'simpan']);
+    Route::post('/hapusjenisproduk', [Mjenisprodukcontroller::class, 'hapus']);
+    Route::get('/listjenisproduk', [Mjenisprodukcontroller::class, 'list']);
 });
