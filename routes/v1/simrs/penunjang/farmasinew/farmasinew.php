@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MerkController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MjenisperbekalanController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Mjenisprodukcontroller;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MkodebelanjaController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Mruangancontroller;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\ObatnewController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\RkoController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\VolumesediaanController;
@@ -72,4 +73,6 @@ Route::group([
     Route::post('/simpanjenisproduk', [Mjenisprodukcontroller::class, 'simpan']);
     Route::post('/hapusjenisproduk', [Mjenisprodukcontroller::class, 'hapus']);
     Route::get('/listjenisproduk', [Mjenisprodukcontroller::class, 'list']);
+
+    Route::get('/listruangan', [Mruangancontroller::class, 'listruangan']);
 });
