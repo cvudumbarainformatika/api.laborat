@@ -25,6 +25,7 @@ class GeneralconsentController extends Controller
            $simpangeneralcontent = Generalconsenttrans_h::updateOrcreate(['norm' => $request->norm],[
             'tanggal' => $request->tanggal,
             'jam' => $request->jam,
+            'pembuatpernyataan' => $request->pembuatpernyataan,
             'penanggungjawab' => $request->penanggungjawab,
             'petugas' => $request->petugas,
             'user_entry' => auth()->user()->id,
