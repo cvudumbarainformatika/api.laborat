@@ -389,7 +389,6 @@ class DaftarrajalController extends Controller
                     ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->with(['taskid' => function ($q) {
