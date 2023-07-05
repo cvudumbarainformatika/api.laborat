@@ -11,6 +11,12 @@ class Mgudangs extends Model
     protected $connection = 'sigarang';
     protected $table = 'gudangs';
     protected $guarded = ['id'];
+    protected $appends = ['keterangan'];
+
+    public function getKeteranganAttribute()
+    {
+        return " JENIS FUNGSI SEBAGAI GUDANG/DEPO";
+    }
 
     public function scopeGudangs($data)
     {

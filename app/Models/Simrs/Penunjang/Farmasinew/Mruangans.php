@@ -11,6 +11,12 @@ class Mruangans extends Model
     protected $connection = 'sigarang';
     protected $table = 'ruangs';
     protected $guarded = ['id'];
+    protected $appends = ['keterangan'];
+
+    public function getKeteranganAttribute()
+    {
+        return " JENIS FUNGSI SEBAGAI RUANGAN";
+    }
 
     public function scopeRuangans($data)
     {
