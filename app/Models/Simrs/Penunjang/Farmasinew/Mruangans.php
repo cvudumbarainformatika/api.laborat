@@ -15,7 +15,7 @@ class Mruangans extends Model
 
     public function getKeteranganAttribute()
     {
-        return "RUANGAN";
+        return " JENIS FUNGSI SEBAGAI RUANGAN";
     }
 
     public function scopeRuangans($data)

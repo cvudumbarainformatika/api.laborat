@@ -15,7 +15,7 @@ class Mgudangs extends Model
 
     public function getKeteranganAttribute()
     {
-        return "GUDANG/DEPO";
+        return " JENIS FUNGSI SEBAGAI GUDANG/DEPO";
     }
 
     public function scopeGudangs($data)
