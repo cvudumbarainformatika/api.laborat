@@ -10,6 +10,7 @@ use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -181,6 +182,26 @@ class DaftarrajalController extends Controller
         return $anu;
     }
 
+    public static function updatelogantrian($request, $input)
+    {
+        $tgl = Carbon::now()->format('Y-m-d');
+        if($request->noantrian !== '')
+        {
+            $updateantrian = Logantrian::where('tgl','=', $tgl)->where('nomor','=', $request->noantrian)
+            ->update(
+            [
+                'noreg' => $input,
+            ]);
+        }
+        return $updateantrian;
+    }
+
+    public static function bpjs_antrian($request)
+    {
+        $noantrian = $request->noantrian;
+
+    }
+
     public function simpandaftar(Request $request)
     {
         try {
@@ -194,6 +215,7 @@ class DaftarrajalController extends Controller
             if ($simpankunjunganpoli) {
                 $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             }
+            $updateantrian = $this->updateantrian($request);
 
 
             DB::commit();
@@ -205,6 +227,7 @@ class DaftarrajalController extends Controller
                     'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
                     'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
                     'karcis' => $karcis ? $karcis : 'gagal',
+                    'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
                     'master' => $masterpasien,
                 ],
                 200
