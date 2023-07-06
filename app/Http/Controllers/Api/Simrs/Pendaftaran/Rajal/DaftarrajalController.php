@@ -196,9 +196,16 @@ class DaftarrajalController extends Controller
         return $updateantrian;
     }
 
-    public static function bpjs_antrian($request)
+    public static function bpjs_antrian($request,$tgl)
     {
         $noantrian = $request->noantrian;
+        $bpjsantrian = Mjknantrian::where('nomorantrean','=', $noantrian)->whereDate('tanggalperiksa','=', $tgl)->first();
+        if($bpjsantrian)
+        {
+
+        }else{
+
+        }
 
     }
 

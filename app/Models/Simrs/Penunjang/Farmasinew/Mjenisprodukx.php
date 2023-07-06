@@ -10,4 +10,5 @@ class Mjenisprodukx extends Model
     use HasFactory;
     protected $table = 'mjenisproduk';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }
