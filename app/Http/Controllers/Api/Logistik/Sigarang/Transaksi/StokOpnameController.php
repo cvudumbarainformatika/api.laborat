@@ -555,7 +555,10 @@ class StokOpnameController extends Controller
             //end if
         }
 
-        return new JsonResponse(['message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan'], 410);
+        return new JsonResponse([
+            'message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan',
+            'hari ini' => $yesterday
+        ], 410);
         // return new JsonResponse(['message' => 'Anda tidak terdaftar sebagai petugas Depo'], 422);
     }
 
