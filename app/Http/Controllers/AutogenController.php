@@ -1682,20 +1682,41 @@ class AutogenController extends Controller
         //     'diff ' => $diff,
 
         // ]);
-        $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
-            ->where('kode_ruang', 'like', '%Gd-%')
-            ->where('kode_rs', 'like', '%4637%')
-            ->with('barang')
-            ->get();
+        // $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
+        //     ->where('kode_ruang', 'like', '%Gd-%')
+        //     ->where('kode_rs', 'like', '%4637%')
+        //     ->with('barang')
+        //     ->get();
 
-        $month = MonthlyStokUpdate::where('sisa_stok', '>', 0)
-            ->where('kode_ruang', 'like', '%Gd-%')
-            ->where('kode_rs', 'like', '%4637%')
-            ->with('barang')
-            ->get();
+        // $month = MonthlyStokUpdate::where('sisa_stok', '>', 0)
+        //     ->where('kode_ruang', 'like', '%Gd-%')
+        //     ->where('kode_rs', 'like', '%4637%')
+        //     ->with('barang')
+        //     ->get();
 
 
-        return new JsonResponse(['month' => $month, 'recent' => $recent]);
+        // return new JsonResponse(['month' => $month, 'recent' => $recent]);
+
+        $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
+        $today = request('tahun') ? $tanggal : date('Y-m-d');
+        // $today = date('2023-08-01');
+        $yesterday = date('Y-m-d', strtotime('-1 days'));
+        // $lastDay = date('Y-m-t', strtotime($today));
+        $firstDay = date('Y-m-01', strtotime($today));
+        $dToday = date_create($today);
+        $dLastDay = date_create($firstDay);
+        $diff = date_diff($dToday, $dLastDay);
+
+        return new JsonResponse([
+            'tanggal' => $tanggal,
+            'today' => $today,
+            'yesterday' => $yesterday,
+            // 'lastDay' => $lastDay,
+            'firstDay' => $firstDay,
+            'dToday' => $dToday,
+            'dLastDay' => $dLastDay,
+            'diff' => $diff,
+        ]);
     }
 
     public function wawanpost(Request $request)
