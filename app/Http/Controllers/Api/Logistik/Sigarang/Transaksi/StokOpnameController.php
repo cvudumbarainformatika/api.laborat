@@ -487,8 +487,10 @@ class StokOpnameController extends Controller
 
         $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
         $today = request('tahun') ? $tanggal : date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 days'));
         // $today = date('2023-06-30');
-        $lastDay = date('Y-m-t', strtotime($today));
+        // $lastDay = date('Y-m-t', strtotime($today));
+        $lastDay = date('Y-m-01', strtotime($today));
         $dToday = date_create($today);
         $dLastDay = date_create($lastDay);
         $diff = date_diff($dToday, $dLastDay);
@@ -511,7 +513,7 @@ class StokOpnameController extends Controller
 
             $total = [];
             $fisik = [];
-            $tanggal = $today . ' 23:59:59';
+            $tanggal = $yesterday . ' 23:59:59';
             foreach ($recent as $key) {
                 $data = MonthlyStokUpdate::updateOrCreate([
                     'tanggal' => $tanggal,
@@ -553,7 +555,10 @@ class StokOpnameController extends Controller
             //end if
         }
 
-        return new JsonResponse(['message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan'], 410);
+        return new JsonResponse([
+            'message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan',
+            'hari ini' => $yesterday
+        ], 410);
         // return new JsonResponse(['message' => 'Anda tidak terdaftar sebagai petugas Depo'], 422);
     }
 
