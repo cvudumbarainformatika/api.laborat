@@ -25,6 +25,8 @@ Route::group([
     Route::post('/ceksuplesibpjs', [BridgingbpjsController::class, 'ceksuplesibpjs']);
     Route::post('/rencanakontrolbpjs', [BridgingbpjsController::class, 'rencanakontrolbpjs']);
     Route::post('/carirujukanpcarebynorujukan', [BridgingbpjsController::class, 'carirujukanpcarebynorujukan']);
+    Route::post('/listpoli', [BridgingbpjsController::class, 'listpoli']);
+
 
     Route::post('/createsep', [DaftarrajalumumController::class, 'createsep']);
     Route::post('/hapussep', [Bridbpjscontroller::class, 'hapussep']);

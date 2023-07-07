@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajalumum;
+namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
@@ -95,5 +95,40 @@ class Bridbpjscontroller extends Controller
             '/SEP/2.0/delete', $data
         );
         return($hapussep);
+    }
+
+    public function ambilantrean()
+    {
+        $data =
+        [
+            "kodebooking" => "48426/07/2023/J",
+            "jenispasien" => "JKN",
+            "nomorkartu" => "0001702018012",
+            "nik" => "3574054201930001",
+            "nohp" => "085204902837",
+            "kodepoli" => "ORT",
+            "namapoli" => "ORTHOPEDI",
+            "pasienbaru" => 1,
+            "norm" => "254729",
+            "tanggalperiksa" => "2023-07-06",
+            "kodedokter" => 17433,
+            "namadokter" => "dr. M. Andrie Wibowo, Sp. OT",
+            "jampraktek" => "08:00-13:00",
+            "jeniskunjungan" => 4,
+            "nomorreferensi" => "0213R0020723B000022",
+            "nomorantrean" => 'B118',
+            "angkaantrean" => 18,
+            "estimasidilayani" => 1688613900000,
+            "sisakuotajkn" => 330,
+            "kuotajkn" => 24,
+            "sisakuotanonjkn" => -32,
+            "kuotanonjkn" => 6,
+            "keterangan" => "Peserta harap 30 menit lebih awal guna pencatatan administrasi."
+        ];
+        $ambilantrian = BridgingbpjsHelper::post_url(
+            'antrean',
+            'antrean/add', $data
+        );
+        return($ambilantrian);
     }
 }

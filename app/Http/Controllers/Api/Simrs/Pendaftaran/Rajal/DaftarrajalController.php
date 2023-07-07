@@ -9,7 +9,9 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Pedaftaran\Rajalumum\Bpjsantrian;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use Carbon\Carbon;
@@ -185,28 +187,56 @@ class DaftarrajalController extends Controller
     public static function updatelogantrian($request, $input)
     {
         $tgl = Carbon::now()->format('Y-m-d');
+        $noantrian = $request->noantrian;
         if($request->noantrian !== '')
         {
-            $updateantrian = Logantrian::where('tgl','=', $tgl)->where('nomor','=', $request->noantrian)
-            ->update(
-            [
+            $updatelogantrian = Logantrian::where('nomor','=',$noantrian)->whereDate('tgl','=', $tgl)->first();
+            $updatelogantrian->update([
                 'noreg' => $input,
+                'norm' => $request->norm
             ]);
         }
-        return $updateantrian;
+        return $updatelogantrian;
     }
 
-    public static function bpjs_antrian($request,$tgl)
+    public static function bpjs_antrian($request,$tgl,$input)
     {
         $noantrian = $request->noantrian;
         $bpjsantrian = Mjknantrian::where('nomorantrean','=', $noantrian)->whereDate('tanggalperiksa','=', $tgl)->first();
         if($bpjsantrian)
         {
-
+            $bpjsantrianx = Bpjsantrian::find($bpjsantrian->id);
+            $bpjsantrianx->update([
+                'noreg' => $input
+            ]);
+            if($request->barulama === 'baru')
+            {
+                // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian); ------------------>>iki sek drong
+			    // updateAkhirWaktuTungguAdmisi($noregx); ------------------>>iki sek drong
+                $bpjsantrianx->update([
+                    'checkin' => date('Y-m-d H:i:s')
+                ]);
+                //updateWaktu($noregx,3); ------------------>>iki sek drong
+            }else{
+                $antrianambil = Antrianambil::create(
+                [
+                    'noreg' => $input,
+                    'norm' => $request->norm,
+                    'tgl_booking' => date('Y-m-d'),
+                    'pelayanan_id' => $request->kodepoli,
+                    'nomor' => $noantrian,
+                    'user_id' => auth()->user()->pegawai_id
+                ]);
+            }
         }else{
-
+            // tambahAntrian($noregx,[ -------------------------------->>>sek dorong
+            //     'kodedpjp'=>$_POST['kodedpjp'],
+            //     'dpjp'=>$_POST['dpjp'],
+            //     'no_antrian'=>$no_antrian
+            // ]);
+            // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian);
+            // updateAkhirWaktuTungguAdmisi($noregx);
         }
-
     }
 
     public function simpandaftar(Request $request)
@@ -222,7 +252,8 @@ class DaftarrajalController extends Controller
             if ($simpankunjunganpoli) {
                 $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             }
-            $updateantrian = $this->updateantrian($request);
+            $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
+            $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'),$simpankunjunganpoli['input']->noreg);
 
 
             DB::commit();

@@ -18,6 +18,15 @@ class BridgingbpjsController extends Controller
         return ($cekpsereta);
     }
 
+    public function listpoli(Request $request)
+    {
+        $cekpsereta = BridgingbpjsHelper::get_url(
+            'vclaim',
+            'referensi/poli/' . $request->poli);
+        // $wew = $cekpsereta['result']->peserta->provUmum;
+        return ($cekpsereta);
+    }
+
     public function cekpsertabpjsbynik(Request $request)
     {
         $cekpseretax = BridgingbpjsHelper::get_url(
