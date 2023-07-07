@@ -10,4 +10,5 @@ class Logantrian extends Model
     use HasFactory;
     protected $table = 'log_antrian';
     protected $guarded = ['id'];
+    public $timestamps = false;
 }

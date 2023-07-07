@@ -9,7 +9,7 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpasien;
-use App\Models\Simrs\Pedaftaran\Rajalumum\Bpjsantrian;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsantrian;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
@@ -188,9 +188,9 @@ class DaftarrajalController extends Controller
     {
         $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;
-        if($request->noantrian !== '')
-        {
-            $updatelogantrian = Logantrian::where('nomor','=',$noantrian)->whereDate('tgl','=', $tgl)->first();
+        if ($request->noantrian !== '') {
+            $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first();
+            // return ['update antrian' => $updatelogantrian];
             $updatelogantrian->update([
                 'noreg' => $input,
                 'norm' => $request->norm
@@ -199,36 +199,37 @@ class DaftarrajalController extends Controller
         return $updatelogantrian;
     }
 
-    public static function bpjs_antrian($request,$tgl,$input)
+    public static function bpjs_antrian($request, $tgl, $input)
     {
         $noantrian = $request->noantrian;
-        $bpjsantrian = Mjknantrian::where('nomorantrean','=', $noantrian)->whereDate('tanggalperiksa','=', $tgl)->first();
-        if($bpjsantrian)
-        {
-            $bpjsantrianx = Bpjsantrian::find($bpjsantrian->id);
-            $bpjsantrianx->update([
+        $bpjsantrian = Bpjsantrian::where('nomorantrean', '=', $noantrian)->whereDate('tanggalperiksa', '=', $tgl)->first();
+        if ($bpjsantrian) {
+            $bpjsantrian->update([
                 'noreg' => $input
             ]);
-            if($request->barulama === 'baru')
-            {
+            if ($request->barulama === 'baru') {
                 // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian); ------------------>>iki sek drong
-			    // updateAkhirWaktuTungguAdmisi($noregx); ------------------>>iki sek drong
-                $bpjsantrianx->update([
+                // updateAkhirWaktuTungguAdmisi($noregx); ------------------>>iki sek drong
+                $bpjsantrian->update([
                     'checkin' => date('Y-m-d H:i:s')
                 ]);
                 //updateWaktu($noregx,3); ------------------>>iki sek drong
-            }else{
+
+                return $bpjsantrian;
+            } else {
                 $antrianambil = Antrianambil::create(
-                [
-                    'noreg' => $input,
-                    'norm' => $request->norm,
-                    'tgl_booking' => date('Y-m-d'),
-                    'pelayanan_id' => $request->kodepoli,
-                    'nomor' => $noantrian,
-                    'user_id' => auth()->user()->pegawai_id
-                ]);
+                    [
+                        'noreg' => $input,
+                        'norm' => $request->norm,
+                        'tgl_booking' => date('Y-m-d'),
+                        'pelayanan_id' => $request->kodepoli,
+                        'nomor' => $noantrian,
+                        'user_id' => auth()->user()->pegawai_id
+                    ]
+                );
+                return $antrianambil;
             }
-        }else{
+        } else {
             // tambahAntrian($noregx,[ -------------------------------->>>sek dorong
             //     'kodedpjp'=>$_POST['kodedpjp'],
             //     'dpjp'=>$_POST['dpjp'],
@@ -253,7 +254,7 @@ class DaftarrajalController extends Controller
                 $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             }
             $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
-            $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'),$simpankunjunganpoli['input']->noreg);
+            $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
 
 
             DB::commit();
@@ -266,6 +267,7 @@ class DaftarrajalController extends Controller
                     'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
                     'karcis' => $karcis ? $karcis : 'gagal',
                     'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
+                    'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
                     'master' => $masterpasien,
                 ],
                 200
@@ -377,17 +379,17 @@ class DaftarrajalController extends Controller
             'bpjs_antrian.created_at',
             'rs222.rs8 as seprajal'
         )
-        ->leftjoin('rs15', 'rs15.rs1', '=', 'bpjs_antrian.norm')
-        ->leftjoin('rs222', 'rs222.rs1', '=', 'bpjs_antrian.noreg')
-        ->where(function ($query) {
-            $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('bpjs_antrian.kodebooking', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('bpjs_antrian.nomorantrean', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('bpjs_antrian.noreg', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('bpjs_antrian.norm', 'LIKE', '%' . request('q') . '%');
-        })
-        ->whereBetween('bpjs_antrian.tanggalperiksa', [$tgl, $tglx])
-        ->paginate(request('per_page'));
+            ->leftjoin('rs15', 'rs15.rs1', '=', 'bpjs_antrian.norm')
+            ->leftjoin('rs222', 'rs222.rs1', '=', 'bpjs_antrian.noreg')
+            ->where(function ($query) {
+                $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('bpjs_antrian.kodebooking', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('bpjs_antrian.nomorantrean', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('bpjs_antrian.noreg', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('bpjs_antrian.norm', 'LIKE', '%' . request('q') . '%');
+            })
+            ->whereBetween('bpjs_antrian.tanggalperiksa', [$tgl, $tglx])
+            ->paginate(request('per_page'));
 
         return new JsonResponse($antrianmjkn);
     }
