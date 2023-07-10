@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -130,6 +131,19 @@ class DaftarigdController extends Controller
         ];
     }
 
+    public function tagihanadminigd($input,$request)
+    {
+        $taguhanigd = Karcispoli::firstOrcreate(['rs1' => $input,'rs3' => 'A2#'],
+        [
+            'rs4' => date('Y-m-d'),
+            'rs5' => 'D',
+            'rs6' => 'Administrasi IGD',
+            'rs7' => 8000
+        ]
+     );
+     return $taguhanigd ;
+    }
+
     public function simpandaftar(Request $request)
     {
         try {
@@ -140,6 +154,7 @@ class DaftarigdController extends Controller
             // $user = auth()->user(]);
             $masterpasien = $this->simpanMpasien($request);
             $simpankunjunganpoli = $this->simpankunjunganpoli($request);
+            $tagihanigd = $this->tagihanadminigd($simpankunjunganpoli['input']->noreg,$request);
             // if ($simpankunjunganpoli) {
             //     $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             // }
@@ -155,6 +170,7 @@ class DaftarigdController extends Controller
                     'cek' => $simpankunjunganpoli ? $simpankunjunganpoli['count'] : 'gagal',
                     'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
                     'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
+                    'tagihanigd' => $tagihanigd ? $tagihanigd['simpan'] : 'gagal',
                     // 'karcis' => $karcis ? $karcis : 'gagal',
                     // 'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
                     // 'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
