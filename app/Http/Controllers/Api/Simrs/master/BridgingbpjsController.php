@@ -138,4 +138,14 @@ class BridgingbpjsController extends Controller
         );
         return ($carirujukanpcarebynorujukan);
     }
+
+    public function jadwaldokter(Request $request)
+    {
+        $tanggal=date('Y-m-d');
+        $jadwaldokter=BridgingbpjsHelper::get_url(
+            'antrean',
+            'jadwaldokter/kodepoli/'. $request->kodepoli .'/tanggal/'. $tanggal
+        );
+        return ($jadwaldokter);
+    }
 }

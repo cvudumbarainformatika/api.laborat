@@ -14,8 +14,8 @@ class Bridbpjscontroller extends Controller
         $data =[
             "request"=>[
                 "t_sep"=>[
-                    "noKartu" => '0001449177478',
-                    "tglSep" => '2023-06-28',
+                    "noKartu" => $request->noka,
+                    "tglSep" => $request->tglsep,
                     "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => '2',
                     "klsRawat"=>[
@@ -24,17 +24,17 @@ class Bridbpjscontroller extends Controller
                         "pembiayaan" => '',
                         "penanggungJawab" => '',
                     ],
-                    "noMR" => '078108',
+                    "noMR" => $request->norm,
                     "rujukan"=>[
                         "asalRujukan"=>"1",
-                        "tglRujukan"=>"2023-05-29",
-                        "noRujukan"=>"132703010523P001443",
-                        "ppkRujukan"=>"13270301"
+                        "tglRujukan"=>"2023-06-21",
+                        "noRujukan"=>"132701010623Y001229",
+                        "ppkRujukan"=>"13270101"
                     ],
                     "catatan"=>"testinsert RJ",
-                    "diagAwal"=>"J44",
+                    "diagAwal"=>"M51",
                     "poli"=>[
-                        "tujuan"=>"PAR",
+                        "tujuan"=>"ORT",
                         "eksekutif"=>"0"
                     ],
                     "cob"=>[
@@ -65,11 +65,11 @@ class Bridbpjscontroller extends Controller
                      "kdPenunjang"=>"",
                      "assesmentPel"=>"5",
                      "skdp"=>[
-                        "noSurat"=>"1327R0010623K001958",
-                        "kodeDPJP"=>"14653"
+                        "noSurat"=>"1327R0010723K000230",
+                        "kodeDPJP"=>"17433"
                      ],
-                     "dpjpLayan"=>"270109",
-                     "noTelp"=>"081233270700",
+                     "dpjpLayan"=>"17433",
+                     "noTelp"=>"081232687158",
                      "user"=>"Coba Ws"
                 ]
             ]
@@ -97,27 +97,33 @@ class Bridbpjscontroller extends Controller
         return($hapussep);
     }
 
-    public function ambilantrean()
+    public static function addantriantobpjs($request,$input)
     {
+        if($request->jkn === 'JKN')
+        {
+            $jenispasien = "JKN";
+        }else{
+            $jenispasien = "Non JKN";
+        }
         $data =
         [
-            "kodebooking" => "48426/07/2023/J",
-            "jenispasien" => "JKN",
-            "nomorkartu" => "0001702018012",
-            "nik" => "3574054201930001",
-            "nohp" => "085204902837",
-            "kodepoli" => "ORT",
-            "namapoli" => "ORTHOPEDI",
-            "pasienbaru" => 1,
-            "norm" => "254729",
-            "tanggalperiksa" => "2023-07-06",
-            "kodedokter" => 17433,
-            "namadokter" => "dr. M. Andrie Wibowo, Sp. OT",
-            "jampraktek" => "08:00-13:00",
-            "jeniskunjungan" => 4,
-            "nomorreferensi" => "0213R0020723B000022",
-            "nomorantrean" => 'B118',
-            "angkaantrean" => 18,
+            "kodebooking" => $input,
+            "jenispasien" => $jenispasien,
+            "nomorkartu" => $request->noka,
+            "nik" => $request->nik,
+            "nohp" => $request->nohp,
+            "kodepoli" => $request->kodepoli,
+            "namapoli" => $request->namapoli,
+            "pasienbaru" => $request->jenispasien,
+            "norm" => $request->norm,
+            "tanggalperiksa" => $request->tglsep,
+            "kodedokter" => $request->dpjp,
+            "namadokter" => $request->namadokter,
+            "jampraktek" => $request->jamperkatek,
+            "jeniskunjungan" => $request->id_kunjungan,
+            "nomorreferensi" => $request->norujukan,
+            "nomorantrean" => $request->noantrian,
+            "angkaantrean" => 6,
             "estimasidilayani" => 1688613900000,
             "sisakuotajkn" => 330,
             "kuotajkn" => 24,
@@ -130,5 +136,18 @@ class Bridbpjscontroller extends Controller
             'antrean/add', $data
         );
         return($ambilantrian);
+    }
+
+    public function batalantrian()
+    {
+        $data = [
+            "kodebooking" => "48426/07/2023/J",
+            "keterangan" => "testing ws",
+        ];
+        $batalantrian = BridgingbpjsHelper::post_url(
+            'antrean',
+            'antrean/batal', $data
+        );
+        return($batalantrian);
     }
 }

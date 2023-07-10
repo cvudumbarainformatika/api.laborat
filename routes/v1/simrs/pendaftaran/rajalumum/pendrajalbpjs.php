@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\Simrs\Master\BridgingbpjsController;
 use App\Http\Controllers\Api\Simrs\Master\listsepController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Daftarrajalumum;
 use Illuminate\Support\Facades\Route;
 
 
@@ -18,6 +20,7 @@ Route::group([
     Route::post('/diagnosabybpjs', [BridgingbpjsController::class, 'diagnosabybpjs']);
     Route::post('/faskesasalbpjs', [BridgingbpjsController::class, 'faskesasalbpjs']);
     Route::post('/dpjpbpjs', [BridgingbpjsController::class, 'dpjpbpjs']);
+    Route::post('/jadwaldokter', [BridgingbpjsController::class, 'jadwaldokter']);
     Route::post('/cekfingerprint', [BridgingbpjsController::class, 'cekfingerprint']);
     Route::post('/provinsibpjs', [BridgingbpjsController::class, 'provinsibpjs']);
     Route::post('/kabupatenbpjs', [BridgingbpjsController::class, 'kabupatenbpjs']);
@@ -28,6 +31,6 @@ Route::group([
     Route::post('/listpoli', [BridgingbpjsController::class, 'listpoli']);
 
 
-    Route::post('/createsep', [DaftarrajalumumController::class, 'createsep']);
+    Route::post('/createsep', [Bridbpjscontroller::class, 'createsep']);
     Route::post('/hapussep', [Bridbpjscontroller::class, 'hapussep']);
 });
