@@ -16,6 +16,8 @@ class BridantrianbpjsController extends Controller
         }else{
             $jenispasien = "Non JKN";
         }
+
+
         $data =
         [
             "kodebooking" => $input,
@@ -30,12 +32,12 @@ class BridantrianbpjsController extends Controller
             "tanggalperiksa" => $request->tglsep,
             "kodedokter" => $request->dpjp,
             "namadokter" => $request->namadokter,
-            "jampraktek" => $request->jamperkatek,
+            "jampraktek" => $request->jampraktek,
             "jeniskunjungan" => $request->id_kunjungan,
             "nomorreferensi" => $request->norujukan,
             "nomorantrean" => $request->noantrian,
-            "angkaantrean" => 6,
-            "estimasidilayani" => 1688613900000,
+            "angkaantrean" => $request->angkaantrean,
+            "estimasidilayani" => $request->estimasidilayani,
             "sisakuotajkn" => 330,
             "kuotajkn" => 24,
             "sisakuotanonjkn" => -32,
