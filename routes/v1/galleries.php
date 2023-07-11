@@ -10,5 +10,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:api')
     ->group(function () {
-        Route::post('/galleries/data', [GalleryController::class, 'index']);
+        Route::get('/galleries/data', [GalleryController::class, 'index']);
+        Route::post('/galleries/upload', [GalleryController::class, 'upload']);
     });
