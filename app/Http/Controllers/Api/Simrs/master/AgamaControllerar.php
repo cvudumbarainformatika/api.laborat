@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class AgamaControllerar extends Controller
 {
-    public function index()//wew
+    public function index()
     {
         $data = Magama::query()
         ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
