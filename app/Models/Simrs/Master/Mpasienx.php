@@ -90,7 +90,6 @@ class Mpasienx extends Model
                     ->orWhere('rs2', 'LIKE', '%' . $query . '%')
                     ->orWhere('rs46', 'LIKE', '%' . $query . '%')
                     ->orWhere('rs49', 'LIKE', '%' . $query . '%')
-                    ->orWhere('rs46', 'LIKE', '%' . $query . '%')
                     ->orWhere('rs55', 'LIKE', '%' . $query . '%')
                     ->orderBy('rs1');
             });
