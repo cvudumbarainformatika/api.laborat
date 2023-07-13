@@ -13,133 +13,133 @@ class Bridbpjscontroller extends Controller
     public function createsep(Request $request)
     {
 
-        // $data =[
-        //     "request"=>[
-        //         "t_sep"=>[
-        //             "noKartu" => $request->noka,
-        //             "tglSep" => $request->tglsep,
-        //             "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
-        //             "jnsPelayanan" => $request->jnspelayanan,
-        //             "klsRawat"=>[
-        //                 "klsRawatHak" => $request->hakkelas,
-        //                 "klsRawatNaik" => '',
-        //                 "pembiayaan" => '',
-        //                 "penanggungJawab" => '',
-        //             ],
-        //             "noMR" => $request->norm,
-        //             "rujukan"=>[
-        //                 "asalRujukan"=> $request->asalrujukan,
-        //                 "tglRujukan"=> $request->tglrujukan,
-        //                 "noRujukan"=> $request->norujukan,
-        //                 "ppkRujukan"=> $request->ppkrujukan,
-        //             ],
-        //             "catatan"=> $request->catatan,
-        //             "diagAwal"=> $request->diagnosaawal,
-        //             "poli"=>[
-        //                 "tujuan"=> $request->poli,
-        //                 "eksekutif"=> $request->eksekutif
-        //             ],
-        //             "cob"=>[
-        //                 "cob"=> $request->eksekutif
-        //              ],
-        //              "katarak"=>[
-        //                 "katarak"=> $request->katarak
-        //              ],
-        //              "jaminan"=>[
-        //                 "lakaLantas"=> $request->lakaLantas,
-        //                 "noLP"=> "",
-        //                 "penjamin"=>[
-        //                    "tglKejadian"=> $request->tglkejadian,
-        //                    "keterangan"=> $request->keterangan,
-        //                    "suplesi"=>[
-        //                       "suplesi"=> $request->suplesi,
-        //                       "noSepSuplesi"=> $request->nosepsuplesi,
-        //                       "lokasiLaka"=>[
-        //                          "kdPropinsi"=> $request->kdpropinsi,
-        //                          "kdKabupaten"=> $request->kdkabupaten,
-        //                          "kdKecamatan"=> $request->kdkecamatan
-        //                       ]
-        //                    ]
-        //                 ]
-        //              ],
-        //              "tujuanKunj"=> $request->tujuanjunjungan,
-        //              "flagProcedure"=> $request->flagprocedure,
-        //              "kdPenunjang"=> $request->kdkunjungan,
-        //              "assesmentPel"=> $request->assesmenpel,
-        //              "skdp"=>[
-        //                 "noSurat"=> $request->nosurat,
-        //                 "kodeDPJP"=> $request->kddpjp
-        //              ],
-        //              "dpjpLayan"=> $request->dpjplayanan,
-        //              "noTelp"=> $request->notelepon,
-        //              "user"=> auth()->user()->pegawai_id
-        //         ]
-        //     ]
-        // ];
-
         $data =[
             "request"=>[
                 "t_sep"=>[
-                    "noKartu" => '',
-                    "tglSep" => '2023-07-11',
-                    "ppkPelayanan" => '1327R001', //'1327R001'
-                    "jnsPelayanan" => '2',
+                    "noKartu" => $request->noka,
+                    "tglSep" => $request->tglsep,
+                    "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
+                    "jnsPelayanan" => $request->jnspelayanan,
                     "klsRawat"=>[
-                        "klsRawatHak" => '3',
+                        "klsRawatHak" => $request->hakkelas,
                         "klsRawatNaik" => '',
                         "pembiayaan" => '',
                         "penanggungJawab" => '',
                     ],
-                    "noMR" => '215501',
+                    "noMR" => $request->norm,
                     "rujukan"=>[
-                        "asalRujukan"=> '2',
-                        "tglRujukan"=> '2023-05-06',
-                        "noRujukan"=> '0213B0080623P000076',
-                        "ppkRujukan"=> '0213B008',
+                        "asalRujukan"=> $request->asalrujukan,
+                        "tglRujukan"=> $request->tglrujukan,
+                        "noRujukan"=> $request->norujukan,
+                        "ppkRujukan"=> $request->ppkrujukan,
                     ],
-                    "catatan"=> '',
-                    "diagAwal"=> 'S62.8',
+                    "catatan"=> $request->catatan,
+                    "diagAwal"=> $request->diagnosaawal,
                     "poli"=>[
-                        "tujuan"=> 'ORT',
-                        "eksekutif"=> '0'
+                        "tujuan"=> $request->poli,
+                        "eksekutif"=> $request->eksekutif
                     ],
                     "cob"=>[
-                        "cob"=> '0'
+                        "cob"=> $request->eksekutif
                      ],
                      "katarak"=>[
-                        "katarak"=> '0'
+                        "katarak"=> $request->katarak
                      ],
                      "jaminan"=>[
-                        "lakaLantas"=> '0',
+                        "lakaLantas"=> $request->lakaLantas,
                         "noLP"=> "",
                         "penjamin"=>[
-                           "tglKejadian"=> '',
-                           "keterangan"=> '',
+                           "tglKejadian"=> $request->tglkejadian,
+                           "keterangan"=> $request->keterangan,
                            "suplesi"=>[
-                              "suplesi"=> '0',
-                              "noSepSuplesi"=> '',
+                              "suplesi"=> $request->suplesi,
+                              "noSepSuplesi"=> $request->nosepsuplesi,
                               "lokasiLaka"=>[
-                                 "kdPropinsi"=> '',
-                                 "kdKabupaten"=> '',
-                                 "kdKecamatan"=> ''
+                                 "kdPropinsi"=> $request->kdpropinsi,
+                                 "kdKabupaten"=> $request->kdkabupaten,
+                                 "kdKecamatan"=> $request->kdkecamatan
                               ]
                            ]
                         ]
                      ],
-                     "tujuanKunj"=> '0',
-                     "flagProcedure"=> '',
-                     "kdPenunjang"=> '',
-                     "assesmentPel"=> '',
+                     "tujuanKunj"=> $request->tujuanjunjungan,
+                     "flagProcedure"=> $request->flagprocedure,
+                     "kdPenunjang"=> $request->kdkunjungan,
+                     "assesmentPel"=> $request->assesmenpel,
                      "skdp"=>[
-                        "noSurat"=> '1327R0010623K004588',
-                        "kodeDPJP"=> '17433'
+                        "noSurat"=> $request->nosurat,
+                        "kodeDPJP"=> $request->kddpjp
                      ],
-                     "dpjpLayan"=> '',
-                     "noTelp"=> '081336604505',
+                     "dpjpLayan"=> $request->dpjplayanan,
+                     "noTelp"=> $request->notelepon,
                      "user"=> auth()->user()->pegawai_id
                 ]
             ]
         ];
+
+        // $data =[
+        //     "request"=>[
+        //         "t_sep"=>[
+        //             "noKartu" => '',
+        //             "tglSep" => '2023-07-11',
+        //             "ppkPelayanan" => '1327R001', //'1327R001'
+        //             "jnsPelayanan" => '2',
+        //             "klsRawat"=>[
+        //                 "klsRawatHak" => '3',
+        //                 "klsRawatNaik" => '',
+        //                 "pembiayaan" => '',
+        //                 "penanggungJawab" => '',
+        //             ],
+        //             "noMR" => '215501',
+        //             "rujukan"=>[
+        //                 "asalRujukan"=> '2',
+        //                 "tglRujukan"=> '2023-05-06',
+        //                 "noRujukan"=> '0213B0080623P000076',
+        //                 "ppkRujukan"=> '0213B008',
+        //             ],
+        //             "catatan"=> '',
+        //             "diagAwal"=> 'S62.8',
+        //             "poli"=>[
+        //                 "tujuan"=> 'ORT',
+        //                 "eksekutif"=> '0'
+        //             ],
+        //             "cob"=>[
+        //                 "cob"=> '0'
+        //              ],
+        //              "katarak"=>[
+        //                 "katarak"=> '0'
+        //              ],
+        //              "jaminan"=>[
+        //                 "lakaLantas"=> '0',
+        //                 "noLP"=> "",
+        //                 "penjamin"=>[
+        //                    "tglKejadian"=> '',
+        //                    "keterangan"=> '',
+        //                    "suplesi"=>[
+        //                       "suplesi"=> '0',
+        //                       "noSepSuplesi"=> '',
+        //                       "lokasiLaka"=>[
+        //                          "kdPropinsi"=> '',
+        //                          "kdKabupaten"=> '',
+        //                          "kdKecamatan"=> ''
+        //                       ]
+        //                    ]
+        //                 ]
+        //              ],
+        //              "tujuanKunj"=> '0',
+        //              "flagProcedure"=> '',
+        //              "kdPenunjang"=> '',
+        //              "assesmentPel"=> '',
+        //              "skdp"=>[
+        //                 "noSurat"=> '1327R0010623K004588',
+        //                 "kodeDPJP"=> '17433'
+        //              ],
+        //              "dpjpLayan"=> '',
+        //              "noTelp"=> '081336604505',
+        //              "user"=> auth()->user()->pegawai_id
+        //         ]
+        //     ]
+        // ];
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
             '/SEP/2.0/insert', $data);
@@ -158,12 +158,12 @@ class Bridbpjscontroller extends Controller
                     'rs2' => $request->norm,
                     'rs3' => $poliBpjs,
                     'rs4' => $request->sistembayar,
-                    'rs5' => $request->rujukan,
+                    'rs5' => $request->norujukan,
                     'rs6' => $request->tglrujukan,
                     'rs7' => $request->namadiagnosa,
                     'rs8' => $nosep,
                     'rs9' => $request->catatan,
-                    'rs10' => $request->faskes,
+                    'rs10' => $request->ppkrujukan,
                     'rs11' => $request->jenispeserta,
                     'rs12' => $request->tglkunjungan,
                     'rs13' => $request->noka,

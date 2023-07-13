@@ -13,8 +13,8 @@ class AllbillrajalperpoliController extends Controller
     public function allbillperlopi()
     {
         //  $sampai = request('tglsampai') .' 23:59:59';
-        $dari = '2020-01-01 00:00:00';
-        $sampai = '2020-01-02 23:59:59';
+        $dari = request('tgldari') .' 00:00:00';
+        $sampai = request('tglsampai') .' 23:59:59';
         // $query = Allbillrajal::select('rs1','rs2','rs3','rs8','rs9')->with([
         //     'relmpoli'
         // ])

@@ -53,8 +53,8 @@ class BridgingbpjsHelper
     public static function get_url(string $name, $param)
     {
 
-       // $url = self::ws_url($name, $param);
-         $url = self::ws_url_dev($name, $param);
+        $url = self::ws_url($name, $param);
+       //  $url = self::ws_url_dev($name, $param);
 
 
         $sign = self::getSignature($name);
