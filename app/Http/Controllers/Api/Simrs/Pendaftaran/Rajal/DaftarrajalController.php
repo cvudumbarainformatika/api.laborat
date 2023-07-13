@@ -12,6 +12,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsantrian;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use Carbon\Carbon;

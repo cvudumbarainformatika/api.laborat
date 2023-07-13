@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
@@ -92,35 +93,38 @@ class AutogenController extends Controller
         // }
         // echo '<br>';
 
-        $tanggalperiksa = '2023-05-30';
-        $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
-            'form_params' => [
-                'tanggal' => $tanggalperiksa
-            ],
-            'http_errors' => true
-        ]);
-        $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
+        // $tanggalperiksa = '2023-05-30';
+        // $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
+        //     'form_params' => [
+        //         'tanggal' => $tanggalperiksa
+        //     ],
+        //     'http_errors' => true
+        // ]);
+        // $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
 
-        $col = collect($antrianLogByTgl->data);
-        $layanan = '4';
-        $byLayanan = $col->filter(function ($value, $key) use ($layanan) {
-            return $value->layanan === $layanan;
-        });
+        // $col = collect($antrianLogByTgl->data);
+        // $layanan = '4';
+        // $byLayanan = $col->filter(function ($value, $key) use ($layanan) {
+        //     return $value->layanan === $layanan;
+        // });
 
-        $byLayananAntri = $col->filter(function ($value, $key) use ($layanan) {
-            return $value->layanan === $layanan && $value->nama_status === 'ANTRI' && $value->id_customer != '';
-        });
-        $byLayananBatal = $col->filter(function ($value, $key) use ($layanan) {
-            return $value->layanan === $layanan && $value->nama_status !== 'ANTRI' && $value->id_customer != '';
-        });
-        $data = [
-            'layanan' => $layanan,
-            'banyakAntrianAll' => $byLayanan->count(),
-            'banyakAntrianAntri' => $byLayananAntri->count(),
-            'banyakAntrianBatal' => $byLayananBatal->count(),
-            'antrianPertama' => $byLayanan->first()
-        ];
-        return response()->json($data);
+        // $byLayananAntri = $col->filter(function ($value, $key) use ($layanan) {
+        //     return $value->layanan === $layanan && $value->nama_status === 'ANTRI' && $value->id_customer != '';
+        // });
+        // $byLayananBatal = $col->filter(function ($value, $key) use ($layanan) {
+        //     return $value->layanan === $layanan && $value->nama_status !== 'ANTRI' && $value->id_customer != '';
+        // });
+        // $data = [
+        //     'layanan' => $layanan,
+        //     'banyakAntrianAll' => $byLayanan->count(),
+        //     'banyakAntrianAntri' => $byLayananAntri->count(),
+        //     'banyakAntrianBatal' => $byLayananBatal->count(),
+        //     'antrianPertama' => $byLayanan->first()
+        // ];
+        // return response()->json($data);
+
+        // $req = BridantrianbpjsController::addantriantobpjs();
+        // return $req;
     }
 
     public function coba()

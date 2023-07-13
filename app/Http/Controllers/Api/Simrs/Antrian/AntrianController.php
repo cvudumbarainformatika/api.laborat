@@ -24,4 +24,19 @@ class AntrianController extends Controller
         $query = json_decode($url->getBody()->getContents(), false);
         return $query;
     }
+
+    public function ambilnoantrian($request)
+    {
+        $myReq["layanan"] = '1';
+        $myReq["booking_type"] = 'w';
+        $myReq["id_customer"] = $request->norm;
+        $myReq["user_id"] = "a1";
+        $myReq["tgl_booking"] = date('Y-m-d');
+
+        $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/daftar_lokal_layanan', [
+            'form_params' => $myReq,
+            'http_errors' => false]);
+            $query = json_decode($url->getBody()->getContents(), false);
+            return $query;
+    }
 }

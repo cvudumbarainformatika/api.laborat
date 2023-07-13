@@ -18,4 +18,7 @@ Route::group([
     Route::get('/ambilantrean', [BridantrianbpjsController::class, 'addantriantobpjs']);
     Route::get('/batalantrian', [BridantrianbpjsController::class, 'batalantrian']);
 
+
+    //Route::post('/wewxx', [BridantrianbpjsController::class, 'wewxx']);
+
 });
