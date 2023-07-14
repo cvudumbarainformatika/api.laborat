@@ -88,6 +88,7 @@ class DaftarrajalController extends Controller
 
     public static function simpankunjunganpoli(Request $request)
     {
+        return new JsonResponse($request->all());
         $tglmasukx = Carbon::create($request->tglmasuk);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
