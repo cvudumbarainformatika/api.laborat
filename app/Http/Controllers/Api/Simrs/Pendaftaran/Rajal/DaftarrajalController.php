@@ -192,12 +192,17 @@ class DaftarrajalController extends Controller
         if ($request->noantrian !== '') {
             $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first();
             // return ['update antrian' => $updatelogantrian];
+            if(!$updatelogantrian)
+            {
+                return new JsonResponse(['message' => 'gagal']);
+            }
             $updatelogantrian->update([
                 'noreg' => $input,
                 'norm' => $request->norm
             ]);
+            return $updatelogantrian;
         }
-        return $updatelogantrian;
+        return new JsonResponse(['message' => 'tidak ada no antrian']);
     }
 
     public static function bpjs_antrian($request, $tgl, $input)
