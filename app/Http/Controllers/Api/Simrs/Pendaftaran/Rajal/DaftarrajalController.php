@@ -97,8 +97,8 @@ class DaftarrajalController extends Controller
             ->count();
 
         if ($cekpoli > 0) {
-            // return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
-            return false;
+             return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
+           // return false;
         }
         return new JsonResponse($request->all());
         DB::select('call reg_rajal(@nomor)');
