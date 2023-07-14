@@ -259,6 +259,7 @@ class DaftarrajalController extends Controller
             if ($simpankunjunganpoli) {
                 $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             }
+            return ($simpankunjunganpoli['input']->noreg);
             $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
             // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
             // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
