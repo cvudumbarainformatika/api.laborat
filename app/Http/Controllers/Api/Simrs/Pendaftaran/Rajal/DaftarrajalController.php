@@ -88,7 +88,11 @@ class DaftarrajalController extends Controller
 
     public static function simpankunjunganpoli(Request $request)
     {
-
+        $masterpasien = self::simpanMpasien($request);
+        if(!$masterpasien)
+        {
+            return new JsonResponse(['message' => 'DATA MASTER PASIEN GAGAL DISIMPAN/DIUPDATE'], 500);
+        }
         $tglmasukx = Carbon::create($request->tglmasuk);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
@@ -166,57 +170,16 @@ class DaftarrajalController extends Controller
 
             array_push($anu, $kar);
         }
-        return(count($anu));
         if (count($anu) === 0)
         {
             return new JsonResponse(['message' => 'karcis gagal disimpan'],500);
         }
-        return $anu;
 
+        $updatelogantrian = self::updatelogantrian($request,$input);
+        $bpjs_antrian = self::bpjs_antrian($request,$input);
     }
 
-    public static function simpankarcis($request, $input)
-    {
-        $kode_biaya = explode('#', $request->kode_biaya);
-        $nama_biaya = explode('#', $request->nama_biaya);
-        $sarana = explode('#', $request->sarana);
-        $pelayanan = explode('#', $request->pelayanan);
 
-        $anu = [];
-        foreach ($kode_biaya as $key => $value) {
-            // $xxx = new Karcispoli();
-            // $xxx->kode_biaya = $value;
-            // $xxx->nama_biaya = $nama_biaya[$key];
-            // $xxx->sarana = $sarana[$key];
-            // $xxx->pelayanan = $pelayanan[$key];
-
-            // if()
-            $kar = Karcispoli::firstOrCreate(
-                [
-                    'rs2' => $request->norm,
-                    'rs4' => $request->tglmasuk,
-                    'rs3' => $value . '#',
-                ],
-                [
-                    'rs1' => $input,
-                    // 'rs3' => $xxx->kode_biaya,
-                    'rs5' => 'D',
-                    'rs6' => $nama_biaya[$key],
-                    'rs7' => $sarana[$key],
-                    'rs8' => $request->sistembayar,
-                    'rs10' => 'userenrty',
-                    // 'rs11' => $xxx->pelayanan,
-                    'rs11' => $pelayanan[$key],
-                    'rs12' => 'userentry',
-                    'rs13' => '1'
-                ]
-            );
-            if ($kar) {
-                array_push($anu, $kar);
-            }
-        }
-        return $anu;
-    }
 
     public static function updatelogantrian($request, $input)
     {
@@ -227,7 +190,7 @@ class DaftarrajalController extends Controller
             // return ['update antrian' => $updatelogantrian];
             if(!$updatelogantrian)
             {
-                return new JsonResponse(['message' => 'gagal']);
+                return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN']);
             }
             $updatelogantrian->update([
                 'noreg' => $input,
@@ -238,8 +201,9 @@ class DaftarrajalController extends Controller
         return new JsonResponse(['message' => 'tidak ada no antrian']);
     }
 
-    public static function bpjs_antrian($request, $tgl, $input)
+    public static function bpjs_antrian($request, $input)
     {
+        $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;
         $bpjsantrian = Bpjsantrian::where('nomorantrean', '=', $noantrian)->whereDate('tanggalperiksa', '=', $tgl)->first();
         if ($bpjsantrian) {
