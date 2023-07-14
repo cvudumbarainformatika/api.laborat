@@ -248,9 +248,9 @@ class DaftarrajalController extends Controller
 
     public function simpandaftar(Request $request)
     {
-        try {
+       // try {
             //code...
-            DB::beginTransaction();
+           // DB::beginTransaction();
 
             //-----------Masuk Transaksi--------------
             // $user = auth()->user(]);
@@ -263,7 +263,7 @@ class DaftarrajalController extends Controller
             // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
             // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
 
-            DB::commit();
+           // DB::commit();
             return new JsonResponse(
                 [
                     'message' => 'DATA TERSIMPAN...!!!',
@@ -279,11 +279,11 @@ class DaftarrajalController extends Controller
                 ],
                 200
             );
-        } catch (\Exception $th) {
+       // } catch (\Exception $th) {
             //throw $th;
-            DB::rollBack();
-            return response()->json(['Gagal tersimpan' => $th], 500);
-        }
+       //     DB::rollBack();
+       //     return response()->json(['Gagal tersimpan' => $th], 500);
+      //  }
     }
 
     public function daftarkunjunganpasienbpjs()
