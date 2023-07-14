@@ -88,7 +88,7 @@ class DaftarrajalController extends Controller
 
     public static function simpankunjunganpoli(Request $request)
     {
-        return new JsonResponse($request->all());
+
         $tglmasukx = Carbon::create($request->tglmasuk);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
@@ -100,7 +100,7 @@ class DaftarrajalController extends Controller
             // return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
             return false;
         }
-
+        return new JsonResponse($request->all());
         DB::select('call reg_rajal(@nomor)');
         $hcounter = DB::table('rs1')->select('rs13')->get();
         $wew = $hcounter[0]->rs13;
