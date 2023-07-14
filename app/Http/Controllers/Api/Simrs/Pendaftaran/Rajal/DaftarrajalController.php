@@ -134,8 +134,12 @@ class DaftarrajalController extends Controller
             'rs20' => 'Pendaftaran',
 
         ]);
+        if(!$simpankunjunganpoli)
+        {
+            return new JsonResponse(['msg' => 'kunjungan tidak tersimpan']);
+        }
         return [
-            'simpan' => $simpankunjunganpoli ? '' : $simpankunjunganpoli,
+            'simpan' => $simpankunjunganpoli,
             'input' => $input,
             'masuk' => $tglmasuk,
             'count' => $cekpoli
