@@ -163,10 +163,13 @@ class DaftarrajalController extends Controller
                     'rs13' => '1'
                 ]
             );
-            if (!$kar) {
-                return new JsonResponse(['message' => 'karcis gagal disimpan'],500);
-            }
+
             array_push($anu, $kar);
+        }
+        return(count($anu));
+        if (count($anu) === 0)
+        {
+            return new JsonResponse(['message' => 'karcis gagal disimpan'],500);
         }
         return $anu;
 
