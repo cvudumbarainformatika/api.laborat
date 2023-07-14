@@ -254,7 +254,7 @@ class DaftarrajalController extends Controller
             if ($simpankunjunganpoli) {
                 $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             }
-            // $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
+            $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
             // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
             // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
 
@@ -267,7 +267,7 @@ class DaftarrajalController extends Controller
                     'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
                     'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
                     'karcis' => $karcis ? $karcis : 'gagal',
-                    // 'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
+                    'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
                     // 'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
                     // 'addantriantobpjs' => $addantriantobpjs ? $addantriantobpjs : 'gagal',
                     'master' => $masterpasien,
