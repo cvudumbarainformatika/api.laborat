@@ -98,9 +98,8 @@ class DaftarrajalController extends Controller
 
         if ($cekpoli > 0) {
              return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
-           // return false;
         }
-        return new JsonResponse($request->all());
+
         DB::select('call reg_rajal(@nomor)');
         $hcounter = DB::table('rs1')->select('rs13')->get();
         $wew = $hcounter[0]->rs13;
@@ -113,10 +112,6 @@ class DaftarrajalController extends Controller
         $input->validate([
             'noreg' => 'required|unique:rs17,rs1'
         ]);
-
-        //   $wew =  Validator::make($input, [
-        //         'noreg' => 'unique:rs17,rs1'
-        //     ]);
 
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
@@ -137,16 +132,44 @@ class DaftarrajalController extends Controller
         ]);
         if(!$simpankunjunganpoli)
         {
-            return new JsonResponse(['msg' => 'kunjungan tidak tersimpan'],500);
+            return new JsonResponse(['message' => 'kunjungan tidak tersimpan'],500);
         }
 
-        return ($simpankunjunganpoli);
-        // return [
-        //     'simpan' => $simpankunjunganpoli,
-        //     'input' => $input,
-        //     'masuk' => $tglmasuk,
-        //     'count' => $cekpoli
-        // ];
+        $kode_biaya = explode('#', $request->kode_biaya);
+        $nama_biaya = explode('#', $request->nama_biaya);
+        $sarana = explode('#', $request->sarana);
+        $pelayanan = explode('#', $request->pelayanan);
+
+        $anu = [];
+        foreach ($kode_biaya as $key => $value) {
+
+            $kar = Karcispoli::firstOrCreate(
+                [
+                    'rs2' => $request->norm,
+                    'rs4' => $request->tglmasuk,
+                    'rs3' => $value . '#',
+                ],
+                [
+                    'rs1' => $input,
+                    // 'rs3' => $xxx->kode_biaya,
+                    'rs5' => 'D',
+                    'rs6' => $nama_biaya[$key],
+                    'rs7' => $sarana[$key],
+                    'rs8' => $request->sistembayar,
+                    'rs10' => 'userenrty',
+                    // 'rs11' => $xxx->pelayanan,
+                    'rs11' => $pelayanan[$key],
+                    'rs12' => 'userentry',
+                    'rs13' => '1'
+                ]
+            );
+            if (!$kar) {
+                return new JsonResponse(['message' => 'karcis gagal disimpan'],500);
+            }
+            array_push($anu, $kar);
+        }
+        return $anu;
+
     }
 
     public static function simpankarcis($request, $input)
