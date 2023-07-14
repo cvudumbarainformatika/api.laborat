@@ -256,10 +256,14 @@ class DaftarrajalController extends Controller
             // $user = auth()->user(]);
             $masterpasien = $this->simpanMpasien($request);
             $simpankunjunganpoli = $this->simpankunjunganpoli($request);
-            if ($simpankunjunganpoli) {
-                $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
+            if(!$simpankunjunganpoli)
+            {
+                return new JsonResponse(['msg' =>'kunjungan poli tidak tersimpan']);
             }
             return ($simpankunjunganpoli);
+            $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
+
+
             $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
             // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
             // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
