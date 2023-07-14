@@ -138,12 +138,14 @@ class DaftarrajalController extends Controller
         {
             return new JsonResponse(['msg' => 'kunjungan tidak tersimpan'],500);
         }
-        return [
-            'simpan' => $simpankunjunganpoli,
-            'input' => $input,
-            'masuk' => $tglmasuk,
-            'count' => $cekpoli
-        ];
+
+        return ($simpankunjunganpoli);
+        // return [
+        //     'simpan' => $simpankunjunganpoli,
+        //     'input' => $input,
+        //     'masuk' => $tglmasuk,
+        //     'count' => $cekpoli
+        // ];
     }
 
     public static function simpankarcis($request, $input)
