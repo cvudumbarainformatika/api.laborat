@@ -13,7 +13,7 @@ Route::group([
 ], function () {
 
     //simpan rs17  ==> rajalumumsimpan
-    Route::post('/simpandaftar', [DaftarrajalController::class, 'simpandaftar']);
+    Route::post('/simpandaftar', [DaftarrajalController::class, 'simpankunjunganpoli']);
     Route::get('/masterpasien', [PasienController::class,'listpasien']);
     Route::get('/historypasien', [HistorypasienController::class, 'historykunjunganpasien']);
 

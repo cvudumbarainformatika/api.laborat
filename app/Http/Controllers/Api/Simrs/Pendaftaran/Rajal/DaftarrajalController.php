@@ -86,7 +86,7 @@ class DaftarrajalController extends Controller
         return $masterpasien;
     }
 
-    public static function simpankunjunganpoli($request)
+    public static function simpankunjunganpoli(Request $request)
     {
         $tglmasukx = Carbon::create($request->tglmasuk);
         $tglmasuk = $tglmasukx->toDateString();
@@ -136,7 +136,7 @@ class DaftarrajalController extends Controller
         ]);
         if(!$simpankunjunganpoli)
         {
-            return new JsonResponse(['msg' => 'kunjungan tidak tersimpan']);
+            return new JsonResponse(['msg' => 'kunjungan tidak tersimpan'],500);
         }
         return [
             'simpan' => $simpankunjunganpoli,
