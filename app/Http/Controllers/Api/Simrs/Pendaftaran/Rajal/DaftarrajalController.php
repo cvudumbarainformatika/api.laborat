@@ -177,6 +177,8 @@ class DaftarrajalController extends Controller
 
         $updatelogantrian = self::updatelogantrian($request,$input);
         $bpjs_antrian = self::bpjs_antrian($request,$input);
+
+        return new JsonResponse (['messgae' => 'DATA BERHASIL DISIMPAN'], 200);
     }
 
 
