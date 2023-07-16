@@ -154,16 +154,16 @@ class DaftarrajalController extends Controller
                     'rs3' => $value . '#',
                 ],
                 [
-                    'rs1' => $input,
+                    'rs1' => $input->noreg,
                     // 'rs3' => $xxx->kode_biaya,
                     'rs5' => 'D',
                     'rs6' => $nama_biaya[$key],
                     'rs7' => $sarana[$key],
                     'rs8' => $request->sistembayar,
-                    'rs10' => 'userenrty',
+                    'rs10' => auth()->user()->pegawai_id,
                     // 'rs11' => $xxx->pelayanan,
                     'rs11' => $pelayanan[$key],
-                    'rs12' => 'userentry',
+                    'rs12' => auth()->user()->pegawai_id,
                     'rs13' => '1'
                 ]
             );
@@ -172,13 +172,70 @@ class DaftarrajalController extends Controller
         }
         if (count($anu) === 0)
         {
+            $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
             return new JsonResponse(['message' => 'karcis gagal disimpan'],500);
         }
 
-        $updatelogantrian = self::updatelogantrian($request,$input);
-        $bpjs_antrian = self::bpjs_antrian($request,$input);
+        //------------LOG ANTRIAN----------------//
+       // $updatelogantrian = self::updatelogantrian($request,$input);
+        $tgl = Carbon::now()->format('Y-m-d');
+        $noantrian = $request->noantrian;
+        if ($request->noantrian === '') {
+            return new JsonResponse(['message' => 'tidak ada no antrian'],500);
+        }
+        $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first();
 
-        return new JsonResponse (['messgae' => 'DATA BERHASIL DISIMPAN'], 200);
+        if(!$updatelogantrian)
+        {
+            $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
+            $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
+            return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN'],500);
+        }
+        $updatelogantrian->update(['noreg' => $input->noreg,'norm' => $request->norm]);
+
+         //------------BPJS ANTRIAN----------------//
+        //$bpjs_antrian = self::bpjs_antrian($request,$input);
+        $tgl = Carbon::now()->format('Y-m-d');
+        $noantrian = $request->noantrian;
+        $bpjsantrian = Bpjsantrian::select('id','nomorantrean')->where('nomorantrean', '=', $noantrian)
+                        ->whereDate('tanggalperiksa', '=', $tgl)->first();
+        if(!$bpjsantrian)
+        {
+                // $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
+                // $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
+                // return new JsonResponse(['message' => 'DATA PADA BPJS ANTRIAN TIDAK DITEMUKAN'],500);
+                $tambahantrian = BridantrianbpjsController::addantriantobpjs($input,$request);
+                $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
+                $updateAkhirWaktuTungguAdmisi = BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+                return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
+        }
+        $id = $bpjsantrian->id;
+        $nomorantrean = $bpjsantrian->nomorantrean;
+        $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
+        $updatebpjsantrian->update([
+            'noreg' => $input->noreg,
+            'checkin' => date('Y-m-d H:i:s')
+        ]);
+
+        if ($request->barulama === 'baru') {
+            $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
+            $updateAkhirWaktuTungguAdmisi = BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+            $updateWaktu = BridantrianbpjsController::updateWaktu($input,3);
+            return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
+        } else {
+            $antrianambil = Antrianambil::create(
+                [
+                    'noreg' => $input->noreg,
+                    'norm' => $request->norm,
+                    'tgl_booking' => date('Y-m-d'),
+                    'pelayanan_id' => $request->kodepoli,
+                    'nomor' => $noantrian,
+                    'user_id' => auth()->user()->pegawai_id
+                ]
+            );
+            return new JsonResponse(['message' => 'berhasil ambil antrian'], 200);
+
+        }
     }
 
 
@@ -188,16 +245,14 @@ class DaftarrajalController extends Controller
         $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;
         if ($request->noantrian !== '') {
-            $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first();
-            // return ['update antrian' => $updatelogantrian];
+            $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first()
+            ->update(['noreg' => $input->noreg,'norm' => $request->norm]);
             if(!$updatelogantrian)
             {
+                $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
+                $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
                 return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN']);
             }
-            $updatelogantrian->update([
-                'noreg' => $input,
-                'norm' => $request->norm
-            ]);
             return $updatelogantrian;
         }
         return new JsonResponse(['message' => 'tidak ada no antrian']);
@@ -207,13 +262,13 @@ class DaftarrajalController extends Controller
     {
         $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;
-        $bpjsantrian = Bpjsantrian::where('nomorantrean', '=', $noantrian)->whereDate('tanggalperiksa', '=', $tgl)->first();
-        if ($bpjsantrian) {
-            $bpjsantrian->update([
-                'noreg' => $input
-            ]);
+        $bpjsantrian = Bpjsantrian::where('nomorantrean', '=', $noantrian)->whereDate('tanggalperiksa', '=', $tgl)->first()
+                        ->update(['noreg' => $input->noreg]);
+        if ($bpjsantrian)
+        {
             if ($request->barulama === 'baru') {
                 // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian); ------------------>>iki sek drong
+                $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
                 // updateAkhirWaktuTungguAdmisi($noregx); ------------------>>iki sek drong
                 $bpjsantrian->update([
                     'checkin' => date('Y-m-d H:i:s')
@@ -224,7 +279,7 @@ class DaftarrajalController extends Controller
             } else {
                 $antrianambil = Antrianambil::create(
                     [
-                        'noreg' => $input,
+                        'noreg' => $input->noreg,
                         'norm' => $request->norm,
                         'tgl_booking' => date('Y-m-d'),
                         'pelayanan_id' => $request->kodepoli,

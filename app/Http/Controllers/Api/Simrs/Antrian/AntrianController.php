@@ -25,18 +25,26 @@ class AntrianController extends Controller
         return $query;
     }
 
-    public function ambilnoantrian($request)
+    public function ambilnoantrian($request,$input)
     {
-        $myReq["layanan"] = '1';
-        $myReq["booking_type"] = 'w';
-        $myReq["id_customer"] = $request->norm;
-        $myReq["user_id"] = "a1";
-        $myReq["tgl_booking"] = date('Y-m-d');
+    //    $idUnitAntrian = '';
+    //    $noreg = $input->noreg;
+    //    $user_id = auth()->user()->pegawai_id;
+    //    $created_at = date('Y-m-d H:i:s');
+    //    $updated_at = date('Y-m-d H:i:s');
+    //    $tglBooking = date('Y-m-d');
+    //    $norm = $request->norm;
+    //    $pelayanan_id_tujuan = $request->kodepoli;
 
-        $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/daftar_lokal_layanan', [
-            'form_params' => $myReq,
-            'http_errors' => false]);
-            $query = json_decode($url->getBody()->getContents(), false);
-            return $query;
+    //     $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/daftar_lokal_layanan',
+    //     [
+    //         "layanan"=>$pelayanan_id,
+    //         "booking_type"=>"w",
+    //         "id_customer"=>$norm,
+    //         "user_id"=>"a1",
+    //         "tgl_booking"=>$tglBooking
+    //     ]);
+    //     $query = json_decode($url->getBody()->getContents(), false);
+    //     return $query;
     }
 }

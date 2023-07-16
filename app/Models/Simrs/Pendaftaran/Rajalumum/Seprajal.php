@@ -10,4 +10,14 @@ class Seprajal extends Model
     use HasFactory;
     protected $table = 'rs222';
     protected $guarded = ['id'];
+    protected $appends = ['noref'];
+
+    public function getNorefAttribute()
+    {
+        if($this->noDpjp === '')
+        {
+            $noref = $this->rs5;
+        }
+        return $noref;
+    }
 }
