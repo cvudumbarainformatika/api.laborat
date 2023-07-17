@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
+use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Sigarang\Transaksi\Retur\Retur;
@@ -207,7 +208,9 @@ class DaftarrajalController extends Controller
                BridantrianbpjsController::addantriantobpjs($input,$request);
                BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
                BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+               AntrianController::ambilnoantrian($request,$input);
                 return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
+
         }
         $id = $bpjsantrian->id;
         $nomorantrean = $bpjsantrian->nomorantrean;
@@ -221,6 +224,7 @@ class DaftarrajalController extends Controller
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input,3);
+            AntrianController::ambilnoantrian($request,$input);
             return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
         } else {
             $antrianambil = Antrianambil::create(
@@ -233,6 +237,7 @@ class DaftarrajalController extends Controller
                     'user_id' => auth()->user()->pegawai_id
                 ]
             );
+            AntrianController::ambilnoantrian($request,$input);
             return new JsonResponse(['message' => 'berhasil ambil antrian'], 200);
 
         }
