@@ -82,6 +82,6 @@ class AntrianController extends Controller
             'http_errors' => false
         ]);
         $query = json_decode($url->getBody()->getContents(), false);
-        return $query;
+        return $query['status'];
     }
 }
