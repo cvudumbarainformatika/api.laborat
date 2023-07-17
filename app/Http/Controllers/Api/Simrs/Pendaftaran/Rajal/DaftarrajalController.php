@@ -208,8 +208,8 @@ class DaftarrajalController extends Controller
                BridantrianbpjsController::addantriantobpjs($input,$request);
                BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
                BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
-               AntrianController::ambilnoantrian($request,$input);
-                return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
+               $cetakantrian = AntrianController::ambilnoantrian($request,$input);
+                return new JsonResponse(['message' => 'data berhasil disimpan',$cetakantrian], 200);
 
         }
         $id = $bpjsantrian->id;
@@ -224,8 +224,8 @@ class DaftarrajalController extends Controller
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input,3);
-            AntrianController::ambilnoantrian($request,$input);
-            return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
+            $cetakantrian = AntrianController::ambilnoantrian($request,$input);
+            return new JsonResponse(['message' => 'data berhasil disimpan', $cetakantrian], 200);
         } else {
             $antrianambil = Antrianambil::create(
                 [
@@ -237,8 +237,8 @@ class DaftarrajalController extends Controller
                     'user_id' => auth()->user()->pegawai_id
                 ]
             );
-            AntrianController::ambilnoantrian($request,$input);
-            return new JsonResponse(['message' => 'berhasil ambil antrian'], 200);
+            $cetakantrian = AntrianController::ambilnoantrian($request,$input);
+            return new JsonResponse(['message' => 'berhasil ambil antrian', $cetakantrian], 200);
 
         }
     }
