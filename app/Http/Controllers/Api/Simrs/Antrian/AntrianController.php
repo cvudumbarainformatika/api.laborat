@@ -70,19 +70,16 @@ class AntrianController extends Controller
             }
        }
 
-        $myReq["layanan"] = '1';
-        $myReq["booking_type"] = '1';
-        $myReq["id_customer"] = '1';
+        $myReq["layanan"] = $pelayanan_id;
+        $myReq["booking_type"] = 'w';
+        $myReq["id_customer"] = $norm;
         $myReq["user_id"] = "a1";
         $myReq["tgl_booking"] = $tglBooking;
 
         $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/daftar_lokal_layanan',
         [
-            "layanan"=>$pelayanan_id,
-            "booking_type"=>"w",
-            "id_customer"=>$norm,
-            "user_id"=>"a1",
-            "tgl_booking"=>$tglBooking
+            'form_params' => $myReq,
+            'http_errors' => false
         ]);
         $query = json_decode($url->getBody()->getContents(), false);
         return $query;
