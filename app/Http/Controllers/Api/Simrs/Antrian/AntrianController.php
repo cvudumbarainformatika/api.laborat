@@ -82,17 +82,17 @@ class AntrianController extends Controller
             'http_errors' => false
         ]);
         $query = json_decode($url->getBody()->getContents(), false);
-        // if($query->status === 200)
-        // {
-        //     $simpanantrian = Antrianambil::create([
-        //         'noreg' => $noreg,
-        //         'norm' => $norm,
-        //         'tgl_booking' => $tglBooking,
-        //         'pelayanan_id' => $pelayanan_id,
-        //         'nomor' => $query->data->nomor,
-        //         'user_id'
-        //     ])
-        // }
-        return $query->data->nomor;
+        if($query->status === 200)
+        {
+            $simpanantrian = Antrianambil::create([
+                'noreg' => $noreg,
+                'norm' => $norm,
+                'tgl_booking' => $tglBooking,
+                'pelayanan_id' => $pelayanan_id,
+                'nomor' => $query->data->nomor,
+                'user_id' => $user_id
+            ]);
+        }
+        return $query;
     }
 }
