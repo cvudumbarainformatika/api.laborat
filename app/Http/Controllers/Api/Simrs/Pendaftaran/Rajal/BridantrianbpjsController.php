@@ -141,35 +141,42 @@ class BridantrianbpjsController extends Controller
             $kodebooking = $cari[0]->kodebooking;
         }
         $tgl=date('Y-m-d');
-        $antrianlog = Antrianlog::select('booking_type','waktu_ambil_tiket')->where('nomor', $request->noantrian)->wheredate('waktu_ambil_tiket', $tgl)->first()->get();
-        $booking_type = $antrianlog[0]->booking_type;
-        $waktu_ambil_tiket = $antrianlog[0]->waktu_ambil_tiket;
-        if($booking_type === 'b')
+        $antrianlog = Antrianlog::select('booking_type','waktu_ambil_tiket')->where('nomor', $request->noantrian)
+                    ->wheredate('waktu_ambil_tiket', $tgl)->get();
+        //return($antrianlog);
+        if(count($antrianlog) > 0)
         {
-            $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl)->get();
-            $waktu_ambil_tiket = $logantrian[0]->tgl;
+            $booking_type = $antrianlog[0]->booking_type;
+            $waktu_ambil_tiket = $antrianlog[0]->waktu_ambil_tiket;
+            if($booking_type === 'b')
+            {
+                $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl)->get();
+                $waktu_ambil_tiket = $logantrian[0]->tgl;
+            }
+            $waktu_ambil_tiket = $waktu_ambil_tiket;
+            $waktu = strtotime($waktu_ambil_tiket) * 1000;
+
+            $simpanbpjsrespontime = Bpjsrespontime::create(['kodebooking' => $kodebooking],
+            [
+                'noreg' => $input->noreg,
+                'taskid' => $taskid,
+                'waktu' => $waktu,
+                'created_at' => date('Y-m-d H:i:s'),
+                'user_id' => $user_id
+            ]);
+
+            $data = [
+                "kodebooking" => $kodebooking,
+                "taskid"=>$taskid,
+                'waktu' => $waktu
+            ];
+            $updatewaktuantrian = BridgingbpjsHelper::post_url(
+                'antrean',
+                'antrean/updatewaktu', $data
+            );
         }
-        $waktu_ambil_tiket = $waktu_ambil_tiket;
-        $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
-        $simpanbpjsrespontime = Bpjsrespontime::create(['kodebooking' => $kodebooking],
-        [
-            'noreg' => $input->noreg,
-            'taskid' => $taskid,
-            'waktu' => $waktu,
-            'created_at' => date('Y-m-d H:i:s'),
-            'user_id' => $user_id
-        ]);
-
-        $data = [
-            "kodebooking" => $kodebooking,
-            "taskid"=>$taskid,
-            'waktu' => $waktu
-        ];
-        $updatewaktuantrian = BridgingbpjsHelper::post_url(
-            'antrean',
-            'antrean/updatewaktu', $data
-        );
+      //  return($updatewaktuantrian);
     }
 
     public static function updateAkhirWaktuTungguAdmisi($input)

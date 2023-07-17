@@ -204,9 +204,9 @@ class DaftarrajalController extends Controller
                 // $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
                 // $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
                 // return new JsonResponse(['message' => 'DATA PADA BPJS ANTRIAN TIDAK DITEMUKAN'],500);
-                $tambahantrian = BridantrianbpjsController::addantriantobpjs($input,$request);
-                $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
-                $updateAkhirWaktuTungguAdmisi = BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+               BridantrianbpjsController::addantriantobpjs($input,$request);
+               BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
+               BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
                 return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
         }
         $id = $bpjsantrian->id;
@@ -218,9 +218,9 @@ class DaftarrajalController extends Controller
         ]);
 
         if ($request->barulama === 'baru') {
-            $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
-            $updateAkhirWaktuTungguAdmisi = BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
-            $updateWaktu = BridantrianbpjsController::updateWaktu($input,3);
+            BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
+            BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+            BridantrianbpjsController::updateWaktu($input,3);
             return new JsonResponse(['message' => 'data berhasil disimpan'], 200);
         } else {
             $antrianambil = Antrianambil::create(
