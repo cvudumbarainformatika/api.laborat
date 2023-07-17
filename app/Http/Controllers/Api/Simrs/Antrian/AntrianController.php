@@ -40,7 +40,7 @@ class AntrianController extends Controller
        $pelayanan_id_tujuan = $request->kodepoli;
        $unitantrian = Unitantrianbpjs::select('tersedia')->where('pelayanan_id', $pelayanan_id_tujuan)->first();
        $tersedia = $unitantrian->tersedia;
-
+       $unitgroup = '';
        if($idUnitAntrian === '')
        {
         $pelayanan_id= $pelayanan_id_tujuan;
