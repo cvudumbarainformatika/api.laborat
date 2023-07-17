@@ -159,7 +159,7 @@ class DaftarrajalController extends Controller
                     'rs5' => 'D',
                     'rs6' => $nama_biaya[$key],
                     'rs7' => $sarana[$key],
-                    'rs8' => $request->sistembayar,
+                    'rs8' => $request->kodesistembayar,
                     'rs10' => auth()->user()->pegawai_id,
                     // 'rs11' => $xxx->pelayanan,
                     'rs11' => $pelayanan[$key],
