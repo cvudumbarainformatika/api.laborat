@@ -128,7 +128,7 @@ class DaftarrajalController extends Controller
             'rs11' => '',
             'rs12' => 0,
             'rs13' => 0,
-            'rs14' => $request->sistembayar,
+            'rs14' => $request->kodesistembayar,
             'rs15' => $request->karcis,
             'rs18' => auth()->user()->pegawai_id,
             'rs20' => 'Pendaftaran',
