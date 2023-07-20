@@ -54,7 +54,7 @@ class BridgingbpjsHelper
     {
 
         $url = self::ws_url($name, $param);
-       //  $url = self::ws_url_dev($name, $param);
+        //  $url = self::ws_url_dev($name, $param);
 
 
         $sign = self::getSignature($name);
@@ -68,7 +68,7 @@ class BridgingbpjsHelper
         if (!$data) {
             return response()->json([
                 'code' => 500,
-                'message' => 'ERRROR SIGNATURE'
+                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
             ], 500);
         }
 
