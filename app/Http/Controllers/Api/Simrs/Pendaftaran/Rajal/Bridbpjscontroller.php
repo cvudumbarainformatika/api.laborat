@@ -12,13 +12,15 @@ class Bridbpjscontroller extends Controller
 {
     public function createsep(Request $request)
     {
+        return new JsonResponse($request->all());
 
         $data = [
             "request" => [
                 "t_sep" => [
                     "noKartu" => $request->noka,
                     "tglSep" => $request->tglsep,
-                    "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
+                    // "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
+                    "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => $request->jnspelayanan,
                     "klsRawat" => [
                         "klsRawatHak" => $request->hakkelas,
@@ -64,8 +66,8 @@ class Bridbpjscontroller extends Controller
                     ],
                     "tujuanKunj" => $request->tujuankunjungan,
                     "flagProcedure" => $request->flagprocedure,
-                    "kdPenunjang" => $request->kdkunjungan,
-                    "assesmentPel" => $request->assesmenpel,
+                    "kdPenunjang" => $request->kdPenunjang,
+                    "assesmentPel" => $request->assesmenPel,
                     "skdp" => [
                         "noSurat" => $request->nosurat,
                         "kodeDPJP" => $request->kddpjp
