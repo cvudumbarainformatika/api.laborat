@@ -20,9 +20,9 @@ class Bridbpjscontroller extends Controller
         $keterangan = $request->keterangan ? $request->keterangan : '';
         $suplesi = $request->suplesi ? $request->suplesi : '';
         $nosepsuplesi = $request->nosepsuplesi ? $request->nosepsuplesi : '';
-        $$kdpropinsi = $request->kodepropinsikecelakaan ? $request->kodepropinsikecelakaan : '';
-        $$kdkabupaten = $request->kodekabupatenkecelakaan ? $request->kodekabupatenkecelakaan : '';
-        $$kdkecamatan = $request->kodekecamatankecelakaan ? $request->kodekecamatankecelakaan : '';
+        $kdpropinsi = $request->kodepropinsikecelakaan ? $request->kodepropinsikecelakaan : '';
+        $kdkabupaten = $request->kodekabupatenkecelakaan ? $request->kodekabupatenkecelakaan : '';
+        $kdkecamatan = $request->kodekecamatankecelakaan ? $request->kodekecamatankecelakaan : '';
         $namadokterdpjp = $request->namadokter ? $request->namadokter : '';
 
 
