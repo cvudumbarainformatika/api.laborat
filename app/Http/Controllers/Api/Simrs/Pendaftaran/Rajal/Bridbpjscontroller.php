@@ -13,7 +13,25 @@ class Bridbpjscontroller extends Controller
     public function createsep(Request $request)
     {
         return new JsonResponse($request->all());
+        $catatan = $request->catatan ? $request->catatan : '';
+        $kodepoli = $request->kodepolibpjs ? $request->kodepolibpjs : '';
+        $kecelakaan = $request->lakalantas ? $request->lakalantas : '';
+        $tglkecelakaan = $request->tglKecelakaan ? $request->tglKecelakaan : '';
+        $keterangan = $request->keterangan ? $request->keterangan : '';
+        $suplesi = $request->suplesi ? $request->suplesi : '';
+        $nosepsuplesi = $request->nosepsuplesi ? $request->nosepsuplesi : '';
+        $$kdpropinsi = $request->kodepropinsikecelakaan ? $request->kodepropinsikecelakaan : '';
+        $$kdkabupaten = $request->kodekabupatenkecelakaan ? $request->kodekabupatenkecelakaan : '';
+        $$kdkecamatan = $request->kodekecamatankecelakaan ? $request->kodekecamatankecelakaan : '';
+        $namadokterdpjp = $request->namadokter ? $request->namadokter : '';
 
+
+        $flagprocedure = $request->flagprocedure ? $request->flagprocedure : '';
+        $kdPenunjang = $request->kdPenunjang ? $request->kdPenunjang : '';
+        $assesmenPel = $request->assesmenPel ? $request->assesmenPel : '';
+        $nosurat = $request->nosuratkontrol ? $request->nosuratkontrol : '';
+        $kddpjp = $request->dpjp ? $request->dpjp : '';
+        $notelepon = $request->noteleponhp ? $request->noteleponhp : '';
         $data = [
             "request" => [
                 "t_sep" => [
@@ -30,50 +48,50 @@ class Bridbpjscontroller extends Controller
                     ],
                     "noMR" => $request->norm,
                     "rujukan" => [
-                        "asalRujukan" => $request->asalrujukan,
+                        "asalRujukan" => $request->asalRujukan,
                         "tglRujukan" => $request->tglrujukan,
                         "noRujukan" => $request->norujukan,
-                        "ppkRujukan" => $request->ppkrujukan,
+                        "ppkRujukan" => $request->ppkRujukan,
                     ],
-                    "catatan" => $request->catatan,
-                    "diagAwal" => $request->diagnosaawal,
+                    "catatan" => $catatan,
+                    "diagAwal" => $request->kodediagnosa,
                     "poli" => [
-                        "tujuan" => $request->poli,
-                        "eksekutif" => $request->eksekutif
+                        "tujuan" => $kodepoli,
+                        "eksekutif" => '0'
                     ],
                     "cob" => [
-                        "cob" => $request->eksekutif
+                        "cob" => '0'
                     ],
                     "katarak" => [
                         "katarak" => $request->katarak
                     ],
                     "jaminan" => [
-                        "lakaLantas" => $request->lakaLantas,
+                        "lakaLantas" => $kecelakaan,
                         "noLP" => "",
                         "penjamin" => [
-                            "tglKejadian" => $request->tglkejadian,
-                            "keterangan" => $request->keterangan,
+                            "tglKejadian" => $tglkecelakaan,
+                            "keterangan" => $keterangan,
                             "suplesi" => [
-                                "suplesi" => $request->suplesi,
-                                "noSepSuplesi" => $request->nosepsuplesi,
+                                "suplesi" => $suplesi,
+                                "noSepSuplesi" => $nosepsuplesi,
                                 "lokasiLaka" => [
-                                    "kdPropinsi" => $request->kdpropinsi,
-                                    "kdKabupaten" => $request->kdkabupaten,
-                                    "kdKecamatan" => $request->kdkecamatan
+                                    "kdPropinsi" => $kdpropinsi,
+                                    "kdKabupaten" => $kdkabupaten,
+                                    "kdKecamatan" => $kdkecamatan
                                 ]
                             ]
                         ]
                     ],
                     "tujuanKunj" => $request->tujuankunjungan,
-                    "flagProcedure" => $request->flagprocedure,
-                    "kdPenunjang" => $request->kdPenunjang,
-                    "assesmentPel" => $request->assesmenPel,
+                    "flagProcedure" => $flagprocedure,
+                    "kdPenunjang" => $kdPenunjang,
+                    "assesmentPel" => $assesmenPel,
                     "skdp" => [
-                        "noSurat" => $request->nosurat,
-                        "kodeDPJP" => $request->kddpjp
+                        "noSurat" => $nosurat,
+                        "kodeDPJP" => $kddpjp
                     ],
-                    "dpjpLayan" => $request->dpjplayanan,
-                    "noTelp" => $request->notelepon,
+                    "dpjpLayan" => '000002',
+                    "noTelp" => $notelepon,
                     "user" => auth()->user()->pegawai_id
                 ]
             ]
@@ -177,35 +195,35 @@ class Bridbpjscontroller extends Controller
                     'rs17' => $request->jenisrawat,
                     'rs18' => $request->kelas,
                     'laka' => $request->kecelakaan,
-                    'lokasilaka' => $request->norm,
+                    'lokasilaka' => $kecelakaan,
                     'penjaminlaka' => $request->norm,
-                    'users' => $request->norm,
-                    'notelepon' => $request->norm,
-                    'tgl_entery' => $request->norm,
-                    'noDpjp' => $request->norm,
-                    'tgl_kejadian_laka' => $request->norm,
-                    'keterangan' => $request->norm,
-                    'suplesi' => $request->norm,
-                    'nosuplesi' => $request->norm,
-                    'kdpropinsi' => $request->norm,
-                    'propinsi' => $request->norm,
-                    'kdkabupaten' => $request->norm,
-                    'kabupaten' => $request->norm,
-                    'kdkecamatan' => $request->norm,
-                    'kecamatan' => $request->norm,
-                    'kodedokterdpjp' => $request->norm,
-                    'dokterdpjp' => $request->norm,
-                    'kodeasalrujuk' => $request->norm,
-                    'namaasalperujuk' => $request->norm,
-                    'Dinsos' => $request->norm,
-                    'prolanisPRB' => $request->norm,
-                    'noSKTM' => $request->norm,
-                    'jeniskunjungan' => $request->norm,
-                    'tujuanKunj' => $request->norm,
-                    'flagProcedure' => $request->norm,
-                    'kdPenunjang' => $request->norm,
-                    'assesmentPel' => $request->norm,
-                    'kdUnit' => $request->norm
+                    'users' => auth()->user()->pegawai_id,
+                    'notelepon' => $notelepon,
+                    'tgl_entery' => date('Y-m-d H:i:s'),
+                    'noDpjp' => $request->noDpjp,
+                    'tgl_kejadian_laka' => $tglkecelakaan,
+                    'keterangan' => $keterangan,
+                    'suplesi' => $suplesi,
+                    'nosuplesi' => $nosepsuplesi,
+                    'kdpropinsi' => $request->kodepropinsikecelakaan,
+                    'propinsi' => $request->propinsikecelakaan,
+                    'kdkabupaten' => $request->kodekabupatenkecelakaan,
+                    'kabupaten' => $request->kabupatenkecelakaan,
+                    'kdkecamatan' => $request->kodekecamatankecelakaan,
+                    'kecamatan' => $request->kecamatankecelakaan,
+                    'kodedokterdpjp' => $request->dpjp,
+                    'dokterdpjp' => $request->namadokter,
+                    'kodeasalrujuk' => $request->ppkRujukan,
+                    'namaasalperujuk' => $request->namappkRujukan,
+                    'Dinsos' => $request->dinsos,
+                    'prolanisPRB' => $request->prolanisPRB,
+                    'noSKTM' => $request->noSKTM,
+                    'jeniskunjungan' => $request->jenis_kunjungan,
+                    'tujuanKunj' => $request->tujuankunjungan,
+                    'flagProcedure' => $request->flagprocedure,
+                    'kdPenunjang' => $request->kdPenunjang,
+                    'assesmentPel' => $request->assesmentPel,
+                    'kdUnit' => $request->kdUnit
                 ]
             );
         }
