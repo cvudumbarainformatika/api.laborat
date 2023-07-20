@@ -13,66 +13,66 @@ class Bridbpjscontroller extends Controller
     public function createsep(Request $request)
     {
 
-        $data =[
-            "request"=>[
-                "t_sep"=>[
+        $data = [
+            "request" => [
+                "t_sep" => [
                     "noKartu" => $request->noka,
                     "tglSep" => $request->tglsep,
                     "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
                     "jnsPelayanan" => $request->jnspelayanan,
-                    "klsRawat"=>[
+                    "klsRawat" => [
                         "klsRawatHak" => $request->hakkelas,
                         "klsRawatNaik" => '',
                         "pembiayaan" => '',
                         "penanggungJawab" => '',
                     ],
                     "noMR" => $request->norm,
-                    "rujukan"=>[
-                        "asalRujukan"=> $request->asalrujukan,
-                        "tglRujukan"=> $request->tglrujukan,
-                        "noRujukan"=> $request->norujukan,
-                        "ppkRujukan"=> $request->ppkrujukan,
+                    "rujukan" => [
+                        "asalRujukan" => $request->asalrujukan,
+                        "tglRujukan" => $request->tglrujukan,
+                        "noRujukan" => $request->norujukan,
+                        "ppkRujukan" => $request->ppkrujukan,
                     ],
-                    "catatan"=> $request->catatan,
-                    "diagAwal"=> $request->diagnosaawal,
-                    "poli"=>[
-                        "tujuan"=> $request->poli,
-                        "eksekutif"=> $request->eksekutif
+                    "catatan" => $request->catatan,
+                    "diagAwal" => $request->diagnosaawal,
+                    "poli" => [
+                        "tujuan" => $request->poli,
+                        "eksekutif" => $request->eksekutif
                     ],
-                    "cob"=>[
-                        "cob"=> $request->eksekutif
-                     ],
-                     "katarak"=>[
-                        "katarak"=> $request->katarak
-                     ],
-                     "jaminan"=>[
-                        "lakaLantas"=> $request->lakaLantas,
-                        "noLP"=> "",
-                        "penjamin"=>[
-                           "tglKejadian"=> $request->tglkejadian,
-                           "keterangan"=> $request->keterangan,
-                           "suplesi"=>[
-                              "suplesi"=> $request->suplesi,
-                              "noSepSuplesi"=> $request->nosepsuplesi,
-                              "lokasiLaka"=>[
-                                 "kdPropinsi"=> $request->kdpropinsi,
-                                 "kdKabupaten"=> $request->kdkabupaten,
-                                 "kdKecamatan"=> $request->kdkecamatan
-                              ]
-                           ]
+                    "cob" => [
+                        "cob" => $request->eksekutif
+                    ],
+                    "katarak" => [
+                        "katarak" => $request->katarak
+                    ],
+                    "jaminan" => [
+                        "lakaLantas" => $request->lakaLantas,
+                        "noLP" => "",
+                        "penjamin" => [
+                            "tglKejadian" => $request->tglkejadian,
+                            "keterangan" => $request->keterangan,
+                            "suplesi" => [
+                                "suplesi" => $request->suplesi,
+                                "noSepSuplesi" => $request->nosepsuplesi,
+                                "lokasiLaka" => [
+                                    "kdPropinsi" => $request->kdpropinsi,
+                                    "kdKabupaten" => $request->kdkabupaten,
+                                    "kdKecamatan" => $request->kdkecamatan
+                                ]
+                            ]
                         ]
-                     ],
-                     "tujuanKunj"=> $request->tujuanjunjungan,
-                     "flagProcedure"=> $request->flagprocedure,
-                     "kdPenunjang"=> $request->kdkunjungan,
-                     "assesmentPel"=> $request->assesmenpel,
-                     "skdp"=>[
-                        "noSurat"=> $request->nosurat,
-                        "kodeDPJP"=> $request->kddpjp
-                     ],
-                     "dpjpLayan"=> $request->dpjplayanan,
-                     "noTelp"=> $request->notelepon,
-                     "user"=> auth()->user()->pegawai_id
+                    ],
+                    "tujuanKunj" => $request->tujuankunjungan,
+                    "flagProcedure" => $request->flagprocedure,
+                    "kdPenunjang" => $request->kdkunjungan,
+                    "assesmentPel" => $request->assesmenpel,
+                    "skdp" => [
+                        "noSurat" => $request->nosurat,
+                        "kodeDPJP" => $request->kddpjp
+                    ],
+                    "dpjpLayan" => $request->dpjplayanan,
+                    "noTelp" => $request->notelepon,
+                    "user" => auth()->user()->pegawai_id
                 ]
             ]
         ];
@@ -142,18 +142,20 @@ class Bridbpjscontroller extends Controller
         // ];
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
-            '/SEP/2.0/insert', $data);
-            $xxx= $createsep['metaData']['code'];
-            if($xxx === 200 || $xxx === '200')
-            {
-                $wew = $createsep['response']['sep'];
-                $poliBpjs = $wew['poli'];
-                $nosep = $wew['noSep'];
-                $dinsos = $wew['informasi'];
-                $prolanisPRB = $wew['informasi']['prolanisPRB'];
-                $noSKTM = $wew['informasi']['noSKTM'];
-                $nosep= $wew['noSep'];
-                $insertsep = Seprajal::firsOrCreate(['rs1' => $request->noreg],
+            '/SEP/2.0/insert',
+            $data
+        );
+        $xxx = $createsep['metaData']['code'];
+        if ($xxx === 200 || $xxx === '200') {
+            $wew = $createsep['response']['sep'];
+            $poliBpjs = $wew['poli'];
+            $nosep = $wew['noSep'];
+            $dinsos = $wew['informasi'];
+            $prolanisPRB = $wew['informasi']['prolanisPRB'];
+            $noSKTM = $wew['informasi']['noSKTM'];
+            $nosep = $wew['noSep'];
+            $insertsep = Seprajal::firsOrCreate(
+                ['rs1' => $request->noreg],
                 [
                     'rs2' => $request->norm,
                     'rs3' => $poliBpjs,
@@ -202,8 +204,9 @@ class Bridbpjscontroller extends Controller
                     'kdPenunjang' => $request->norm,
                     'assesmentPel' => $request->norm,
                     'kdUnit' => $request->norm
-                ]);
-            }
+                ]
+            );
+        }
         return ($createsep);
     }
 
@@ -219,8 +222,9 @@ class Bridbpjscontroller extends Controller
         ];
         $hapussep = BridgingbpjsHelper::post_url(
             'vclaim',
-            '/SEP/2.0/delete', $data
+            '/SEP/2.0/delete',
+            $data
         );
-        return($hapussep);
+        return ($hapussep);
     }
 }
