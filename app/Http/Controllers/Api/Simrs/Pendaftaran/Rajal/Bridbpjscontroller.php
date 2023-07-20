@@ -12,26 +12,8 @@ class Bridbpjscontroller extends Controller
 {
     public function createsep(Request $request)
     {
-        return new JsonResponse($request->all());
-        $catatan = $request->catatan ? $request->catatan : '';
-        $kodepoli = $request->kodepolibpjs ? $request->kodepolibpjs : '';
-        $kecelakaan = $request->lakalantas ? $request->lakalantas : '';
-        $tglkecelakaan = $request->tglKecelakaan ? $request->tglKecelakaan : '';
-        $keterangan = $request->keterangan ? $request->keterangan : '';
-        $suplesi = $request->suplesi ? $request->suplesi : '';
-        $nosepsuplesi = $request->nosepsuplesi ? $request->nosepsuplesi : '';
-        $kdpropinsi = $request->kodepropinsikecelakaan ? $request->kodepropinsikecelakaan : '';
-        $kdkabupaten = $request->kodekabupatenkecelakaan ? $request->kodekabupatenkecelakaan : '';
-        $kdkecamatan = $request->kodekecamatankecelakaan ? $request->kodekecamatankecelakaan : '';
-        $namadokterdpjp = $request->namadokter ? $request->namadokter : '';
+        // return new JsonResponse($request->all());
 
-
-        $flagprocedure = $request->flagprocedure ? $request->flagprocedure : '';
-        $kdPenunjang = $request->kdPenunjang ? $request->kdPenunjang : '';
-        $assesmenPel = $request->assesmenPel ? $request->assesmenPel : '';
-        $nosurat = $request->nosuratkontrol ? $request->nosuratkontrol : '';
-        $kddpjp = $request->dpjp ? $request->dpjp : '';
-        $notelepon = $request->noteleponhp ? $request->noteleponhp : '';
         $data = [
             "request" => [
                 "t_sep" => [
@@ -53,10 +35,10 @@ class Bridbpjscontroller extends Controller
                         "noRujukan" => $request->norujukan,
                         "ppkRujukan" => $request->ppkRujukan,
                     ],
-                    "catatan" => $catatan,
+                    "catatan" => $request->catatan,
                     "diagAwal" => $request->kodediagnosa,
                     "poli" => [
-                        "tujuan" => $kodepoli,
+                        "tujuan" => $request->kodepolibpjs,
                         "eksekutif" => '0'
                     ],
                     "cob" => [
@@ -66,36 +48,38 @@ class Bridbpjscontroller extends Controller
                         "katarak" => $request->katarak
                     ],
                     "jaminan" => [
-                        "lakaLantas" => $kecelakaan,
+                        "lakaLantas" => $request->lakalantas,
                         "noLP" => "",
                         "penjamin" => [
-                            "tglKejadian" => $tglkecelakaan,
-                            "keterangan" => $keterangan,
+                            "tglKejadian" => $request->tglKecelakaan,
+                            "keterangan" => $request->keterangan,
                             "suplesi" => [
-                                "suplesi" => $suplesi,
-                                "noSepSuplesi" => $nosepsuplesi,
+                                "suplesi" => $request->suplesi,
+                                "noSepSuplesi" => $request->nosepsuplesi,
                                 "lokasiLaka" => [
-                                    "kdPropinsi" => $kdpropinsi,
-                                    "kdKabupaten" => $kdkabupaten,
-                                    "kdKecamatan" => $kdkecamatan
+                                    "kdPropinsi" => $request->kodepropinsikecelakaan,
+                                    "kdKabupaten" => $request->kodekabupatenkecelakaan,
+                                    "kdKecamatan" => $request->kodekecamatankecelakaan
                                 ]
                             ]
                         ]
                     ],
                     "tujuanKunj" => $request->tujuankunjungan,
-                    "flagProcedure" => $flagprocedure,
-                    "kdPenunjang" => $kdPenunjang,
-                    "assesmentPel" => $assesmenPel,
+                    "flagProcedure" => $request->flagprocedure,
+                    "kdPenunjang" => $request->kdPenunjang,
+                    "assesmentPel" => $request->assesmentPel,
                     "skdp" => [
-                        "noSurat" => $nosurat,
-                        "kodeDPJP" => $kddpjp
+                        "noSurat" => $request->nosuratkontrol,
+                        "kodeDPJP" => $request->dpjp
                     ],
                     "dpjpLayan" => '000002',
-                    "noTelp" => $notelepon,
+                    "noTelp" => $request->teleponhp,
                     "user" => auth()->user()->pegawai_id
                 ]
             ]
         ];
+
+        return new JsonResponse($data);
 
         // $data =[
         //     "request"=>[
@@ -195,16 +179,16 @@ class Bridbpjscontroller extends Controller
                     'rs17' => $request->jenisrawat,
                     'rs18' => $request->kelas,
                     'laka' => $request->kecelakaan,
-                    'lokasilaka' => $kecelakaan,
-                    'penjaminlaka' => $request->norm,
+                    'lokasilaka' => $request->lakalantas,
+                    'penjaminlaka' => '$request->norm',
                     'users' => auth()->user()->pegawai_id,
-                    'notelepon' => $notelepon,
+                    'notelepon' => $request->teleponhp,
                     'tgl_entery' => date('Y-m-d H:i:s'),
                     'noDpjp' => $request->noDpjp,
-                    'tgl_kejadian_laka' => $tglkecelakaan,
-                    'keterangan' => $keterangan,
-                    'suplesi' => $suplesi,
-                    'nosuplesi' => $nosepsuplesi,
+                    'tgl_kejadian_laka' => $request->tglKecelakaan,
+                    'keterangan' => $request->keterangan,
+                    'suplesi' => $request->suplesi,
+                    'nosuplesi' => $request->nosepsuplesi,
                     'kdpropinsi' => $request->kodepropinsikecelakaan,
                     'propinsi' => $request->propinsikecelakaan,
                     'kdkabupaten' => $request->kodekabupatenkecelakaan,
