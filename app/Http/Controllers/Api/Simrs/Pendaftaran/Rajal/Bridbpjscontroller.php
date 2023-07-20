@@ -73,7 +73,7 @@ class Bridbpjscontroller extends Controller
                         "kodeDPJP" => $request->dpjp
                     ],
                     "dpjpLayan" => '000002',
-                    "noTelp" => $request->teleponhp,
+                    "noTelp" => $request->noteleponhp,
                     "user" => auth()->user()->pegawai_id
                 ]
             ]
@@ -182,7 +182,7 @@ class Bridbpjscontroller extends Controller
                     'lokasilaka' => $request->lakalantas,
                     'penjaminlaka' => '$request->norm',
                     'users' => auth()->user()->pegawai_id,
-                    'notelepon' => $request->teleponhp,
+                    'notelepon' => $request->noteleponhp,
                     'tgl_entery' => date('Y-m-d H:i:s'),
                     'noDpjp' => $request->noDpjp,
                     'tgl_kejadian_laka' => $request->tglKecelakaan,
