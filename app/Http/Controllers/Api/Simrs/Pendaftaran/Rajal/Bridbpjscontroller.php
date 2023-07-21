@@ -231,4 +231,33 @@ class Bridbpjscontroller extends Controller
         );
         return ($hapussep);
     }
+
+    public function rencanakontrol()
+    {
+        $data = [
+            "request" => [
+                "noSEP" => "0301R0111018V000006",
+                "kodeDokter" => "12345",
+                "poliKontrol" => "INT",
+                "tglRencanaKontrol" => "2021-03-20",
+                "user" => "wssa"
+            ]
+        ];
+        $kontrol = BridgingbpjsHelper::post_url('vclaim', '/RencanaKontrol/insert', $data);
+        return $kontrol;
+    }
+
+    public function cari_rujukan()
+    {
+        $rujukan = '0123R0020523B000114';
+        $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $rujukan);
+        return $rujukanPcare;
+    }
+
+    public function cari_rujukan_rs()
+    {
+        $rujukan = '0123R0020523B000114';
+        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', '/Rujukan/RS/' . $rujukan);
+        return $rujukanRs;
+    }
 }

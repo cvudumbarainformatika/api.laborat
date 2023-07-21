@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
+use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
 use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
@@ -125,6 +127,13 @@ class AutogenController extends Controller
 
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
+
+        // $controller = new Bridbpjscontroller();
+
+        // return $controller->cari_rujukan_rs();
+        $rujukan = '0123R0020523B000114';
+        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . $rujukan);
+        return $rujukanRs;
     }
 
     public function coba()
