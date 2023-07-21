@@ -257,7 +257,7 @@ class Bridbpjscontroller extends Controller
     public function cari_rujukan_rs()
     {
         $rujukan = '0123R0020523B000114';
-        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', '/Rujukan/RS/' . $rujukan);
+        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . $rujukan);
         return $rujukanRs;
     }
 }

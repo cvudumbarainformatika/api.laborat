@@ -128,12 +128,9 @@ class AutogenController extends Controller
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
 
-        // $controller = new Bridbpjscontroller();
+        $controller = new Bridbpjscontroller();
 
-        // return $controller->cari_rujukan_rs();
-        $rujukan = '0123R0020523B000114';
-        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . $rujukan);
-        return $rujukanRs;
+        return $controller->cari_rujukan_rs();
     }
 
     public function coba()
