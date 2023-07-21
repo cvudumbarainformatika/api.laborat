@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use Illuminate\Http\JsonResponse;
@@ -13,12 +14,12 @@ class Bridbpjscontroller extends Controller
     public function createsep(Request $request)
     {
         // return new JsonResponse($request->all());
-
+        $tglsep = DateHelper::getDate();
         $data = [
             "request" => [
                 "t_sep" => [
                     "noKartu" => $request->noka,
-                    "tglSep" => $request->tglsep,
+                    "tglSep" => $tglsep,
                     // "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
                     "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => $request->jnspelayanan,
@@ -30,10 +31,13 @@ class Bridbpjscontroller extends Controller
                     ],
                     "noMR" => $request->norm,
                     "rujukan" => [
-                        "asalRujukan" => $request->asalRujukan,
-                        "tglRujukan" => $request->tglrujukan,
+                        // "asalRujukan" => $request->asalRujukan,
+                        "asalRujukan" => '2',
+                        // "tglRujukan" => $request->tglrujukan,
+                        "tglRujukan" => "2023-05-17",
                         "noRujukan" => $request->norujukan,
-                        "ppkRujukan" => $request->ppkRujukan,
+                        // "ppkRujukan" => $request->ppkRujukan,
+                        "ppkRujukan" => "0213R002",
                     ],
                     "catatan" => $request->catatan,
                     "diagAwal" => $request->kodediagnosa,
@@ -64,22 +68,35 @@ class Bridbpjscontroller extends Controller
                             ]
                         ]
                     ],
+                    /* kontrol
+                    "tujuanKunj" => '1',
+                    "flagProcedure" => '0', default // * harus ada
+                    "kdPenunjang" => '10', default // * harus ada
+                    "assesmentPel" => '',
+                    */
+
                     "tujuanKunj" => $request->tujuankunjungan,
+                    // "tujuanKunj" => '0',
                     "flagProcedure" => $request->flagprocedure,
+                    // "flagProcedure" => '',
                     "kdPenunjang" => $request->kdPenunjang,
-                    "assesmentPel" => $request->assesmentPel,
+                    // "kdPenunjang" => '',
+                    // "assesmentPel" => $request->assesmentPel,
+                    "assesmentPel" => '',
                     "skdp" => [
                         "noSurat" => $request->nosuratkontrol,
                         "kodeDPJP" => $request->dpjp
                     ],
-                    "dpjpLayan" => '000002',
-                    "noTelp" => $request->noteleponhp,
+                    // "dpjpLayan" => '17432', // dokter dpjp (rencana kontrol kodeDokter)
+                    "dpjpLayan" => $request->dpjp, // dokter dpjp (rencana kontrol kodeDokter)
+                    // "noTelp" => $request->noteleponhp,
+                    "noTelp" => '085219608688',
                     "user" => auth()->user()->pegawai_id
                 ]
             ]
         ];
 
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
 
         // $data =[
         //     "request"=>[
@@ -146,7 +163,7 @@ class Bridbpjscontroller extends Controller
         // ];
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
-            '/SEP/2.0/insert',
+            'SEP/2.0/insert',
             $data
         );
         $xxx = $createsep['metaData']['code'];
@@ -211,7 +228,7 @@ class Bridbpjscontroller extends Controller
                 ]
             );
         }
-        return ($createsep);
+        return $createsep;
     }
 
     public function hapussep(Request $request)
@@ -257,7 +274,7 @@ class Bridbpjscontroller extends Controller
     public function cari_rujukan_rs()
     {
         $rujukan = '0123R0020523B000114';
-        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . $rujukan);
+        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/0123R0020523B000114');
         return $rujukanRs;
     }
 }
