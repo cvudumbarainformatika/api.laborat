@@ -51,6 +51,7 @@ use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
@@ -125,6 +126,14 @@ class AutogenController extends Controller
 
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
+        $tgl = date('Y-m-d');
+        $updatelogantrian = Logantrian::where('nomor', '=', 'UR002')->whereDate('tgl', '=', $tgl)->first();
+        if(!$updatelogantrian)
+        {
+
+            return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN'],500);
+        }
+        return($updatelogantrian);
     }
 
     public function coba()

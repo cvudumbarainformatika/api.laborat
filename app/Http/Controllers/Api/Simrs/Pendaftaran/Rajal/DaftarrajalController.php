@@ -243,121 +243,121 @@ class DaftarrajalController extends Controller
                     'user_id' => auth()->user()->pegawai_id
                 ]
             );
-            $cetakantrian = AntrianController::ambilnoantrian($request,$input);
-            return new JsonResponse([
-                'message' => 'data berhasil disimpan',
-                'antrian' => $cetakantrian
-            ], 200);
+            // $cetakantrian = AntrianController::ambilnoantrian($request,$input);
+            // return new JsonResponse([
+            //     'message' => 'data berhasil disimpan',
+            //     'antrian' => $cetakantrian
+            // ], 200);
 
         }
     }
 
 
 
-    public static function updatelogantrian($request, $input)
-    {
-        $tgl = Carbon::now()->format('Y-m-d');
-        $noantrian = $request->noantrian;
-        if ($request->noantrian !== '') {
-            $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first()
-            ->update(['noreg' => $input->noreg,'norm' => $request->norm]);
-            if(!$updatelogantrian)
-            {
-                $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
-                $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
-                return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN']);
-            }
-            return $updatelogantrian;
-        }
-        return new JsonResponse(['message' => 'tidak ada no antrian']);
-    }
+    // public static function updatelogantrian($request, $input)
+    // {
+    //     $tgl = Carbon::now()->format('Y-m-d');
+    //     $noantrian = $request->noantrian;
+    //     if ($request->noantrian !== '') {
+    //         $updatelogantrian = Logantrian::where('nomor', '=', $noantrian)->whereDate('tgl', '=', $tgl)->first()
+    //         ->update(['noreg' => $input->noreg,'norm' => $request->norm]);
+    //         if(!$updatelogantrian)
+    //         {
+    //             $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
+    //             $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
+    //             return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN']);
+    //         }
+    //         return $updatelogantrian;
+    //     }
+    //     return new JsonResponse(['message' => 'tidak ada no antrian']);
+    // }
 
-    public static function bpjs_antrian($request, $input)
-    {
-        $tgl = Carbon::now()->format('Y-m-d');
-        $noantrian = $request->noantrian;
-        $bpjsantrian = Bpjsantrian::where('nomorantrean', '=', $noantrian)->whereDate('tanggalperiksa', '=', $tgl)->first()
-                        ->update(['noreg' => $input->noreg]);
-        if ($bpjsantrian)
-        {
-            if ($request->barulama === 'baru') {
-                // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian); ------------------>>iki sek drong
-                $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
-                // updateAkhirWaktuTungguAdmisi($noregx); ------------------>>iki sek drong
-                $bpjsantrian->update([
-                    'checkin' => date('Y-m-d H:i:s')
-                ]);
-                //updateWaktu($noregx,3); ------------------>>iki sek drong
+    // public static function bpjs_antrian($request, $input)
+    // {
+    //     $tgl = Carbon::now()->format('Y-m-d');
+    //     $noantrian = $request->noantrian;
+    //     $bpjsantrian = Bpjsantrian::where('nomorantrean', '=', $noantrian)->whereDate('tanggalperiksa', '=', $tgl)->first()
+    //                     ->update(['noreg' => $input->noreg]);
+    //     if ($bpjsantrian)
+    //     {
+    //         if ($request->barulama === 'baru') {
+    //             // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian); ------------------>>iki sek drong
+    //             $updateMulaiWaktuTungguAdmisi = BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
+    //             // updateAkhirWaktuTungguAdmisi($noregx); ------------------>>iki sek drong
+    //             $bpjsantrian->update([
+    //                 'checkin' => date('Y-m-d H:i:s')
+    //             ]);
+    //             //updateWaktu($noregx,3); ------------------>>iki sek drong
 
-                return $bpjsantrian;
-            } else {
-                $antrianambil = Antrianambil::create(
-                    [
-                        'noreg' => $input->noreg,
-                        'norm' => $request->norm,
-                        'tgl_booking' => date('Y-m-d'),
-                        'pelayanan_id' => $request->kodepoli,
-                        'nomor' => $noantrian,
-                        'user_id' => auth()->user()->pegawai_id
-                    ]
-                );
-                return $antrianambil;
-            }
-        } else {
-            // tambahAntrian($noregx,[ -------------------------------->>>sek dorong
-            //     'kodedpjp'=>$_POST['kodedpjp'],
-            //     'dpjp'=>$_POST['dpjp'],
-            //     'no_antrian'=>$no_antrian
-            // ]);
-            // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian);
-            // updateAkhirWaktuTungguAdmisi($noregx);
-        }
-    }
+    //             return $bpjsantrian;
+    //         } else {
+    //             $antrianambil = Antrianambil::create(
+    //                 [
+    //                     'noreg' => $input->noreg,
+    //                     'norm' => $request->norm,
+    //                     'tgl_booking' => date('Y-m-d'),
+    //                     'pelayanan_id' => $request->kodepoli,
+    //                     'nomor' => $noantrian,
+    //                     'user_id' => auth()->user()->pegawai_id
+    //                 ]
+    //             );
+    //             return $antrianambil;
+    //         }
+    //     } else {
+    //         // tambahAntrian($noregx,[ -------------------------------->>>sek dorong
+    //         //     'kodedpjp'=>$_POST['kodedpjp'],
+    //         //     'dpjp'=>$_POST['dpjp'],
+    //         //     'no_antrian'=>$no_antrian
+    //         // ]);
+    //         // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian);
+    //         // updateAkhirWaktuTungguAdmisi($noregx);
+    //     }
+    // }
 
-    public function simpandaftar(Request $request)
-    {
-       // try {
-            //code...
-           // DB::beginTransaction();
+    // public function simpandaftar(Request $request)
+    // {
+    //    // try {
+    //         //code...
+    //        // DB::beginTransaction();
 
-            //-----------Masuk Transaksi--------------
-            // $user = auth()->user(]);
-            $masterpasien = $this->simpanMpasien($request);
-            $simpankunjunganpoli = $this->simpankunjunganpoli($request);
-            if(!$simpankunjunganpoli)
-            {
-                return new JsonResponse(['msg' =>'kunjungan poli tidak tersimpan']);
-            }
-            return ($simpankunjunganpoli);
-            $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
+    //         //-----------Masuk Transaksi--------------
+    //         // $user = auth()->user(]);
+    //         $masterpasien = $this->simpanMpasien($request);
+    //         $simpankunjunganpoli = $this->simpankunjunganpoli($request);
+    //         if(!$simpankunjunganpoli)
+    //         {
+    //             return new JsonResponse(['msg' =>'kunjungan poli tidak tersimpan']);
+    //         }
+    //         return ($simpankunjunganpoli);
+    //         $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
 
 
-            $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
-            // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
-            // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
+    //         $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
+    //         // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
+    //         // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
 
-           // DB::commit();
-            return new JsonResponse(
-                [
-                    'message' => 'DATA TERSIMPAN...!!!',
-                    'noreg' => $simpankunjunganpoli ? $simpankunjunganpoli['input']->noreg : 'gagal',
-                    'cek' => $simpankunjunganpoli ? $simpankunjunganpoli['count'] : 'gagal',
-                    'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
-                    'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
-                    'karcis' => $karcis ? $karcis : 'gagal',
-                    'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
-                    // 'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
-                    // 'addantriantobpjs' => $addantriantobpjs ? $addantriantobpjs : 'gagal',
-                    'master' => $masterpasien,
-                ],
-                200
-            );
-       // } catch (\Exception $th) {
-            //throw $th;
-       //     DB::rollBack();
-       //     return response()->json(['Gagal tersimpan' => $th], 500);
-      //  }
-    }
+    //        // DB::commit();
+    //         return new JsonResponse(
+    //             [
+    //                 'message' => 'DATA TERSIMPAN...!!!',
+    //                 'noreg' => $simpankunjunganpoli ? $simpankunjunganpoli['input']->noreg : 'gagal',
+    //                 'cek' => $simpankunjunganpoli ? $simpankunjunganpoli['count'] : 'gagal',
+    //                 'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
+    //                 'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
+    //                 'karcis' => $karcis ? $karcis : 'gagal',
+    //                 'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
+    //                 // 'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
+    //                 // 'addantriantobpjs' => $addantriantobpjs ? $addantriantobpjs : 'gagal',
+    //                 'master' => $masterpasien,
+    //             ],
+    //             200
+    //         );
+    //    // } catch (\Exception $th) {
+    //         //throw $th;
+    //    //     DB::rollBack();
+    //    //     return response()->json(['Gagal tersimpan' => $th], 500);
+    //   //  }
+    // }
 
     public function daftarkunjunganpasienbpjs()
     {

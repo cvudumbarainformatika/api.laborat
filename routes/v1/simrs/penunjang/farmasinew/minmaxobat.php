@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/maping'
+    'prefix' => 'simrs/farmasinew'
 ], function () {
    // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
     Route::get('/carilistminmaxbyobat', [MinmaxobatController::class, 'caribynamaobat']);
