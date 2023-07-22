@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
+use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
 use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
@@ -126,6 +128,7 @@ class AutogenController extends Controller
 
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
+<<<<<<< HEAD
         $tgl = date('Y-m-d');
         $updatelogantrian = Logantrian::where('nomor', '=', 'UR002')->whereDate('tgl', '=', $tgl)->first();
         if(!$updatelogantrian)
@@ -134,6 +137,12 @@ class AutogenController extends Controller
             return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN'],500);
         }
         return($updatelogantrian);
+=======
+
+        $controller = new Bridbpjscontroller();
+
+        return $controller->cari_rujukan_rs();
+>>>>>>> 920e0d942a93666af9452bcab1c62a1f6bcb5083
     }
 
     public function coba()

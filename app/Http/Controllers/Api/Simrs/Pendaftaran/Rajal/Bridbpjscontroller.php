@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use Illuminate\Http\JsonResponse;
@@ -12,70 +13,90 @@ class Bridbpjscontroller extends Controller
 {
     public function createsep(Request $request)
     {
-
-        $data =[
-            "request"=>[
-                "t_sep"=>[
+        // return new JsonResponse($request->all());
+        $tglsep = DateHelper::getDate();
+        $data = [
+            "request" => [
+                "t_sep" => [
                     "noKartu" => $request->noka,
-                    "tglSep" => $request->tglsep,
-                    "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
+                    "tglSep" => $tglsep,
+                    // "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
+                    "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => $request->jnspelayanan,
-                    "klsRawat"=>[
+                    "klsRawat" => [
                         "klsRawatHak" => $request->hakkelas,
                         "klsRawatNaik" => '',
                         "pembiayaan" => '',
                         "penanggungJawab" => '',
                     ],
                     "noMR" => $request->norm,
-                    "rujukan"=>[
-                        "asalRujukan"=> $request->asalrujukan,
-                        "tglRujukan"=> $request->tglrujukan,
-                        "noRujukan"=> $request->norujukan,
-                        "ppkRujukan"=> $request->ppkrujukan,
+                    "rujukan" => [
+                        // "asalRujukan" => $request->asalRujukan,
+                        "asalRujukan" => '2',
+                        // "tglRujukan" => $request->tglrujukan,
+                        "tglRujukan" => "2023-05-17",
+                        "noRujukan" => $request->norujukan,
+                        // "ppkRujukan" => $request->ppkRujukan,
+                        "ppkRujukan" => "0213R002",
                     ],
-                    "catatan"=> $request->catatan,
-                    "diagAwal"=> $request->diagnosaawal,
-                    "poli"=>[
-                        "tujuan"=> $request->poli,
-                        "eksekutif"=> $request->eksekutif
+                    "catatan" => $request->catatan,
+                    "diagAwal" => $request->kodediagnosa,
+                    "poli" => [
+                        "tujuan" => $request->kodepolibpjs,
+                        "eksekutif" => '0'
                     ],
-                    "cob"=>[
-                        "cob"=> $request->eksekutif
-                     ],
-                     "katarak"=>[
-                        "katarak"=> $request->katarak
-                     ],
-                     "jaminan"=>[
-                        "lakaLantas"=> $request->lakaLantas,
-                        "noLP"=> "",
-                        "penjamin"=>[
-                           "tglKejadian"=> $request->tglkejadian,
-                           "keterangan"=> $request->keterangan,
-                           "suplesi"=>[
-                              "suplesi"=> $request->suplesi,
-                              "noSepSuplesi"=> $request->nosepsuplesi,
-                              "lokasiLaka"=>[
-                                 "kdPropinsi"=> $request->kdpropinsi,
-                                 "kdKabupaten"=> $request->kdkabupaten,
-                                 "kdKecamatan"=> $request->kdkecamatan
-                              ]
-                           ]
+                    "cob" => [
+                        "cob" => '0'
+                    ],
+                    "katarak" => [
+                        "katarak" => $request->katarak
+                    ],
+                    "jaminan" => [
+                        "lakaLantas" => $request->lakalantas,
+                        "noLP" => "",
+                        "penjamin" => [
+                            "tglKejadian" => $request->tglKecelakaan,
+                            "keterangan" => $request->keterangan,
+                            "suplesi" => [
+                                "suplesi" => $request->suplesi,
+                                "noSepSuplesi" => $request->nosepsuplesi,
+                                "lokasiLaka" => [
+                                    "kdPropinsi" => $request->kodepropinsikecelakaan,
+                                    "kdKabupaten" => $request->kodekabupatenkecelakaan,
+                                    "kdKecamatan" => $request->kodekecamatankecelakaan
+                                ]
+                            ]
                         ]
-                     ],
-                     "tujuanKunj"=> $request->tujuanjunjungan,
-                     "flagProcedure"=> $request->flagprocedure,
-                     "kdPenunjang"=> $request->kdkunjungan,
-                     "assesmentPel"=> $request->assesmenpel,
-                     "skdp"=>[
-                        "noSurat"=> $request->nosurat,
-                        "kodeDPJP"=> $request->kddpjp
-                     ],
-                     "dpjpLayan"=> $request->dpjplayanan,
-                     "noTelp"=> $request->notelepon,
-                     "user"=> auth()->user()->pegawai_id
+                    ],
+                    /* kontrol
+                    "tujuanKunj" => '1',
+                    "flagProcedure" => '0', default // * harus ada
+                    "kdPenunjang" => '10', default // * harus ada
+                    "assesmentPel" => '',
+                    */
+
+                    "tujuanKunj" => $request->tujuankunjungan,
+                    // "tujuanKunj" => '0',
+                    "flagProcedure" => $request->flagprocedure,
+                    // "flagProcedure" => '',
+                    "kdPenunjang" => $request->kdPenunjang,
+                    // "kdPenunjang" => '',
+                    // "assesmentPel" => $request->assesmentPel,
+                    "assesmentPel" => '',
+                    "skdp" => [
+                        "noSurat" => $request->nosuratkontrol,
+                        "kodeDPJP" => $request->dpjp
+                    ],
+                    // "dpjpLayan" => '17432', // dokter dpjp (rencana kontrol kodeDokter)
+                    "dpjpLayan" => $request->dpjp, // dokter dpjp (rencana kontrol kodeDokter)
+                    // "noTelp" => $request->noteleponhp,
+                    "noTelp" => '085219608688',
+                    "user" => auth()->user()->pegawai_id
                 ]
             ]
         ];
+
+        // return new JsonResponse($data);
 
         // $data =[
         //     "request"=>[
@@ -142,18 +163,20 @@ class Bridbpjscontroller extends Controller
         // ];
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
-            '/SEP/2.0/insert', $data);
-            $xxx= $createsep['metaData']['code'];
-            if($xxx === 200 || $xxx === '200')
-            {
-                $wew = $createsep['response']['sep'];
-                $poliBpjs = $wew['poli'];
-                $nosep = $wew['noSep'];
-                $dinsos = $wew['informasi'];
-                $prolanisPRB = $wew['informasi']['prolanisPRB'];
-                $noSKTM = $wew['informasi']['noSKTM'];
-                $nosep= $wew['noSep'];
-                $insertsep = Seprajal::firsOrCreate(['rs1' => $request->noreg],
+            'SEP/2.0/insert',
+            $data
+        );
+        $xxx = $createsep['metaData']['code'];
+        if ($xxx === 200 || $xxx === '200') {
+            $wew = $createsep['response']['sep'];
+            $poliBpjs = $wew['poli'];
+            $nosep = $wew['noSep'];
+            $dinsos = $wew['informasi'];
+            $prolanisPRB = $wew['informasi']['prolanisPRB'];
+            $noSKTM = $wew['informasi']['noSKTM'];
+            $nosep = $wew['noSep'];
+            $insertsep = Seprajal::firsOrCreate(
+                ['rs1' => $request->noreg],
                 [
                     'rs2' => $request->norm,
                     'rs3' => $poliBpjs,
@@ -173,38 +196,39 @@ class Bridbpjscontroller extends Controller
                     'rs17' => $request->jenisrawat,
                     'rs18' => $request->kelas,
                     'laka' => $request->kecelakaan,
-                    'lokasilaka' => $request->norm,
-                    'penjaminlaka' => $request->norm,
-                    'users' => $request->norm,
-                    'notelepon' => $request->norm,
-                    'tgl_entery' => $request->norm,
-                    'noDpjp' => $request->norm,
-                    'tgl_kejadian_laka' => $request->norm,
-                    'keterangan' => $request->norm,
-                    'suplesi' => $request->norm,
-                    'nosuplesi' => $request->norm,
-                    'kdpropinsi' => $request->norm,
-                    'propinsi' => $request->norm,
-                    'kdkabupaten' => $request->norm,
-                    'kabupaten' => $request->norm,
-                    'kdkecamatan' => $request->norm,
-                    'kecamatan' => $request->norm,
-                    'kodedokterdpjp' => $request->norm,
-                    'dokterdpjp' => $request->norm,
-                    'kodeasalrujuk' => $request->norm,
-                    'namaasalperujuk' => $request->norm,
-                    'Dinsos' => $request->norm,
-                    'prolanisPRB' => $request->norm,
-                    'noSKTM' => $request->norm,
-                    'jeniskunjungan' => $request->norm,
-                    'tujuanKunj' => $request->norm,
-                    'flagProcedure' => $request->norm,
-                    'kdPenunjang' => $request->norm,
-                    'assesmentPel' => $request->norm,
-                    'kdUnit' => $request->norm
-                ]);
-            }
-        return ($createsep);
+                    'lokasilaka' => $request->lakalantas,
+                    'penjaminlaka' => '$request->norm',
+                    'users' => auth()->user()->pegawai_id,
+                    'notelepon' => $request->noteleponhp,
+                    'tgl_entery' => date('Y-m-d H:i:s'),
+                    'noDpjp' => $request->noDpjp,
+                    'tgl_kejadian_laka' => $request->tglKecelakaan,
+                    'keterangan' => $request->keterangan,
+                    'suplesi' => $request->suplesi,
+                    'nosuplesi' => $request->nosepsuplesi,
+                    'kdpropinsi' => $request->kodepropinsikecelakaan,
+                    'propinsi' => $request->propinsikecelakaan,
+                    'kdkabupaten' => $request->kodekabupatenkecelakaan,
+                    'kabupaten' => $request->kabupatenkecelakaan,
+                    'kdkecamatan' => $request->kodekecamatankecelakaan,
+                    'kecamatan' => $request->kecamatankecelakaan,
+                    'kodedokterdpjp' => $request->dpjp,
+                    'dokterdpjp' => $request->namadokter,
+                    'kodeasalrujuk' => $request->ppkRujukan,
+                    'namaasalperujuk' => $request->namappkRujukan,
+                    'Dinsos' => $request->dinsos,
+                    'prolanisPRB' => $request->prolanisPRB,
+                    'noSKTM' => $request->noSKTM,
+                    'jeniskunjungan' => $request->jenis_kunjungan,
+                    'tujuanKunj' => $request->tujuankunjungan,
+                    'flagProcedure' => $request->flagprocedure,
+                    'kdPenunjang' => $request->kdPenunjang,
+                    'assesmentPel' => $request->assesmentPel,
+                    'kdUnit' => $request->kdUnit
+                ]
+            );
+        }
+        return $createsep;
     }
 
     public function hapussep(Request $request)
@@ -219,8 +243,38 @@ class Bridbpjscontroller extends Controller
         ];
         $hapussep = BridgingbpjsHelper::post_url(
             'vclaim',
-            '/SEP/2.0/delete', $data
+            '/SEP/2.0/delete',
+            $data
         );
-        return($hapussep);
+        return ($hapussep);
+    }
+
+    public function rencanakontrol()
+    {
+        $data = [
+            "request" => [
+                "noSEP" => "0301R0111018V000006",
+                "kodeDokter" => "12345",
+                "poliKontrol" => "INT",
+                "tglRencanaKontrol" => "2021-03-20",
+                "user" => "wssa"
+            ]
+        ];
+        $kontrol = BridgingbpjsHelper::post_url('vclaim', '/RencanaKontrol/insert', $data);
+        return $kontrol;
+    }
+
+    public function cari_rujukan()
+    {
+        $rujukan = '0123R0020523B000114';
+        $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $rujukan);
+        return $rujukanPcare;
+    }
+
+    public function cari_rujukan_rs()
+    {
+        $rujukan = '0123R0020523B000114';
+        $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/0123R0020523B000114');
+        return $rujukanRs;
     }
 }

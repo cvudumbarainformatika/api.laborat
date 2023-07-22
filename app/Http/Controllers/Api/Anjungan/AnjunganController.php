@@ -26,6 +26,12 @@ class AnjunganController extends Controller
         $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . request('search'));
         return $rujukanPcare;
     }
+    public function cek_jumlah_sep()
+    {
+        // $rujukan = false;
+        $data = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/JumlahSEP/' . request('jenisrujukan') . '/' . request('norujukan'));
+        return $data;
+    }
 
     public function cariRencanaKontrol()
     {

@@ -13,7 +13,8 @@ class BridgingbpjsController extends Controller
     {
         $cekpsereta = BridgingbpjsHelper::get_url(
             'vclaim',
-            'Peserta/nokartu/' . $request->noka . '/tglSEP/' . $request->tglsep);
+            'Peserta/nokartu/' . $request->noka . '/tglSEP/' . $request->tglsep
+        );
         // $wew = $cekpsereta['result']->peserta->provUmum;
         return ($cekpsereta);
     }
@@ -22,7 +23,8 @@ class BridgingbpjsController extends Controller
     {
         $cekpsereta = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/poli/' . $request->poli);
+            'referensi/poli/' . $request->poli
+        );
         // $wew = $cekpsereta['result']->peserta->provUmum;
         return ($cekpsereta);
     }
@@ -31,7 +33,8 @@ class BridgingbpjsController extends Controller
     {
         $cekpseretax = BridgingbpjsHelper::get_url(
             'vclaim',
-            'Peserta/nik/' . $request->nik . '/tglSEP/' . $request->tglsep);
+            'Peserta/nik/' . $request->nik . '/tglSEP/' . $request->tglsep
+        );
         // $wew = $cekpsereta['result']->peserta->provUmum;
         return ($cekpseretax);
     }
@@ -40,7 +43,8 @@ class BridgingbpjsController extends Controller
     {
         $listrujukanpcare = BridgingbpjsHelper::get_url(
             'vclaim',
-            'Rujukan/List/Peserta/' . $request->noka);
+            'Rujukan/List/Peserta/' . $request->noka
+        );
         return ($listrujukanpcare);
     }
 
@@ -48,7 +52,8 @@ class BridgingbpjsController extends Controller
     {
         $listrujukanrs = BridgingbpjsHelper::get_url(
             'vclaim',
-            '/Rujukan/RS/List/Peserta/' . $request->noka);
+            '/Rujukan/RS/List/Peserta/' . $request->noka
+        );
         return ($listrujukanrs);
     }
 
@@ -57,12 +62,14 @@ class BridgingbpjsController extends Controller
         if ($request->kodediagnosa != '') {
             $diagnosa = BridgingbpjsHelper::get_url(
                 'vclaim',
-                'referensi/diagnosa/' . $request->kodediagnosa);
+                'referensi/diagnosa/' . $request->kodediagnosa
+            );
             return ($diagnosa);
         }
         $diagnosa = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/diagnosa/' . $request->diagnosa);
+            'referensi/diagnosa/' . $request->diagnosa
+        );
         return ($diagnosa);
     }
 
@@ -70,7 +77,8 @@ class BridgingbpjsController extends Controller
     {
         $faskesbpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/faskes/' . $request->faskesasal . '/1');
+            'referensi/faskes/' . $request->faskesasal . '/1'
+        );
         return ($faskesbpjs);
     }
 
@@ -78,7 +86,8 @@ class BridgingbpjsController extends Controller
     {
         $dpjpbpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/dokter/pelayanan/'. $request->jenis_pelayanan . '/tglPelayanan/'. $request->tglsep .'/Spesialis/' . $request->kdmappolbpjs);
+            'referensi/dokter/pelayanan/' . $request->jenis_pelayanan . '/tglPelayanan/' . $request->tglsep . '/Spesialis/' . $request->kdmappolbpjs
+        );
         return ($dpjpbpjs);
     }
 
@@ -86,7 +95,8 @@ class BridgingbpjsController extends Controller
     {
         $cekfingerprint = BridgingbpjsHelper::get_url(
             'vclaim',
-            'SEP/FingerPrint/Peserta/'. $request->noka .'/TglPelayanan/' . $request->tglsep);
+            'SEP/FingerPrint/Peserta/' . $request->noka . '/TglPelayanan/' . $request->tglsep
+        );
         return ($cekfingerprint);
     }
 
@@ -94,7 +104,8 @@ class BridgingbpjsController extends Controller
     {
         $provinsibpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/propinsi/');
+            'referensi/propinsi'
+        );
         return ($provinsibpjs);
     }
 
@@ -102,7 +113,8 @@ class BridgingbpjsController extends Controller
     {
         $kabupatenbpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/kabupaten/propinsi/'. $request->kodepropinsi);
+            'referensi/kabupaten/propinsi/' . $request->kodepropinsi
+        );
         return ($kabupatenbpjs);
     }
 
@@ -110,7 +122,8 @@ class BridgingbpjsController extends Controller
     {
         $kecamatanbpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'referensi/kecamatan/kabupaten/'. $request->kodekabupaten);
+            'referensi/kecamatan/kabupaten/' . $request->kodekabupaten
+        );
         return ($kecamatanbpjs);
     }
 
@@ -118,7 +131,8 @@ class BridgingbpjsController extends Controller
     {
         $ceksuplesibpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'sep/JasaRaharja/Suplesi/'. $request->noka .'/tglPelayanan/' . $request->tglsep);
+            'sep/JasaRaharja/Suplesi/' . $request->noka . '/tglPelayanan/' . $request->tglsep
+        );
         return ($ceksuplesibpjs);
     }
 
@@ -126,25 +140,26 @@ class BridgingbpjsController extends Controller
     {
         $rencanakontrolbpjs = BridgingbpjsHelper::get_url(
             'vclaim',
-            'RencanaKontrol/ListRencanaKontrol/Bulan/'. $request->bulan.'/Tahun/'. $request->tahun.'/Nokartu/'. $request->noka.'/filter/2');
+            'RencanaKontrol/ListRencanaKontrol/Bulan/' . $request->bulan . '/Tahun/' . $request->tahun . '/Nokartu/' . $request->noka . '/filter/2'
+        );
         return ($rencanakontrolbpjs);
     }
 
     public function carirujukanpcarebynorujukan(Request $request)
     {
-        $carirujukanpcarebynorujukan=BridgingbpjsHelper::get_url(
+        $carirujukanpcarebynorujukan = BridgingbpjsHelper::get_url(
             'vclaim',
-            'Rujukan/'. $request->noka
+            'Rujukan/' . $request->noka
         );
         return ($carirujukanpcarebynorujukan);
     }
 
     public function jadwaldokter(Request $request)
     {
-        $tanggal=date('Y-m-d');
-        $jadwaldokter=BridgingbpjsHelper::get_url(
+        $tanggal = date('Y-m-d');
+        $jadwaldokter = BridgingbpjsHelper::get_url(
             'antrean',
-            'jadwaldokter/kodepoli/'. $request->kodepoli .'/tanggal/'. $tanggal
+            'jadwaldokter/kodepoli/' . $request->kodepoli . '/tanggal/' . $tanggal
         );
         return ($jadwaldokter);
     }
