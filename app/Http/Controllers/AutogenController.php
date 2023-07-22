@@ -128,21 +128,10 @@ class AutogenController extends Controller
 
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
-<<<<<<< HEAD
-        $tgl = date('Y-m-d');
-        $updatelogantrian = Logantrian::where('nomor', '=', 'UR002')->whereDate('tgl', '=', $tgl)->first();
-        if(!$updatelogantrian)
-        {
-
-            return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN'],500);
-        }
-        return($updatelogantrian);
-=======
 
         $controller = new Bridbpjscontroller();
 
         return $controller->cari_rujukan_rs();
->>>>>>> 920e0d942a93666af9452bcab1c62a1f6bcb5083
     }
 
     public function coba()
