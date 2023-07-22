@@ -257,7 +257,7 @@ class DaftarrajalController extends Controller
 
 
 
-    public static function updatelogantrian($request, $input)
+    public function updatelogantrian($request, $input)
     {
         $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;

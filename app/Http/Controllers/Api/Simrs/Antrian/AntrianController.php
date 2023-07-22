@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Antrian;
 
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianbatal;
@@ -92,6 +93,12 @@ class AntrianController extends Controller
                 'nomor' => $query->data->nomor,
                 'user_id' => $user_id
             ]);
+
+            if($unitgroup === 'Farmasi')
+            {
+                BridantrianbpjsController::updateWaktu($noreg,6);
+            }
+            BridantrianbpjsController::updateWaktu($noreg,3);
         }
         return $query;
     }
