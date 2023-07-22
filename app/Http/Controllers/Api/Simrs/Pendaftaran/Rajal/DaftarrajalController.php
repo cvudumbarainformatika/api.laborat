@@ -257,7 +257,7 @@ class DaftarrajalController extends Controller
 
 
 
-    public static function updatelogantrian($request, $input)
+    public function updatelogantrian($request, $input)
     {
         $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;
@@ -288,31 +288,31 @@ class DaftarrajalController extends Controller
                 $bpjsantrian->update([
                     'checkin' => date('Y-m-d H:i:s')
                 ]);
-                //updateWaktu($noregx,3); ------------------>>iki sek drong
+                //updateWaktu($noregx,3); ------------------>>iki sek drong yoo
 
-    //             return $bpjsantrian;
-    //         } else {
-    //             $antrianambil = Antrianambil::create(
-    //                 [
-    //                     'noreg' => $input->noreg,
-    //                     'norm' => $request->norm,
-    //                     'tgl_booking' => date('Y-m-d'),
-    //                     'pelayanan_id' => $request->kodepoli,
-    //                     'nomor' => $noantrian,
-    //                     'user_id' => auth()->user()->pegawai_id
-    //                 ]
-    //             );
-    //             return $antrianambil;
-    //         }
-    //     } else {
-    //         // tambahAntrian($noregx,[ -------------------------------->>>sek dorong
-    //         //     'kodedpjp'=>$_POST['kodedpjp'],
-    //         //     'dpjp'=>$_POST['dpjp'],
-    //         //     'no_antrian'=>$no_antrian
-    //         // ]);
-    //         // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian);
-    //         // updateAkhirWaktuTungguAdmisi($noregx);
-         }
+                return $bpjsantrian;
+            } else {
+                $antrianambil = Antrianambil::create(
+                    [
+                        'noreg' => $input->noreg,
+                        'norm' => $request->norm,
+                        'tgl_booking' => date('Y-m-d'),
+                        'pelayanan_id' => $request->kodepoli,
+                        'nomor' => $noantrian,
+                        'user_id' => auth()->user()->pegawai_id
+                    ]
+                );
+                return $antrianambil;
+            }
+        } else {
+            // tambahAntrian($noregx,[ -------------------------------->>>sek dorong
+            //     'kodedpjp'=>$_POST['kodedpjp'],
+            //     'dpjp'=>$_POST['dpjp'],
+            //     'no_antrian'=>$no_antrian
+            // ]);
+            // updateMulaiWaktuTungguAdmisi($noregx,$no_antrian);
+            // updateAkhirWaktuTungguAdmisi($noregx);
+        }
     }
 
     public function simpandaftar(Request $request)
