@@ -288,7 +288,7 @@ class DaftarrajalController extends Controller
                 $bpjsantrian->update([
                     'checkin' => date('Y-m-d H:i:s')
                 ]);
-                //updateWaktu($noregx,3); ------------------>>iki sek drong
+                //updateWaktu($noregx,3); ------------------>>iki sek drong yoo
 
                 return $bpjsantrian;
             } else {
