@@ -42,6 +42,7 @@ class PerencanaanpembelianController extends Controller
                 }
             ]
         )->get();
+
         return new JsonResponse($perencanaapembelianobat);
     }
 
@@ -63,7 +64,7 @@ class PerencanaanpembelianController extends Controller
 
     public function simpanrencanabeliobat_r(Request $request)
     {
-        $simpanrinci = RencanabeliR::updateOrcreate(['kdobat' => $request->kdobat],
+        $simpanrinci = RencanabeliR::updateOrcreate(['no_rencbeliobat' => $request->norencanabeliobat,'kdobat' => $request->kdobat],
             [
                 'stok_real_gudang' => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
@@ -76,5 +77,12 @@ class PerencanaanpembelianController extends Controller
                 'user'  => auth()->user()->pegawai_id
             ]);
         return new JsonResponse(["MESSAGE" => "OK",$simpanrinci], 200);
+    }
+
+    public function listrencanabeli()
+    {
+        $rencanabeli = RencanabeliH::where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+                        ->orderBy('tgl')->paginate(request('per_page'));
+        return new JsonResponse($rencanabeli);
     }
 }

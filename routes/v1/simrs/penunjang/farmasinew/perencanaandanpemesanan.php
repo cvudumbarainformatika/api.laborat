@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/dialogperencanaanobat', [PerencanaanpembelianController::class, 'perencanaanpembelian']);
     Route::post('/simpanperencanaanbeliobat', [PerencanaanpembelianController::class, 'simpanrencanabeliobat']);
+    Route::get('/listrencanabeli', [PerencanaanpembelianController::class, 'listrencanabeli']);
 });
