@@ -15,11 +15,15 @@ class Bridbpjscontroller extends Controller
     {
         // return new JsonResponse($request->all());
         $tglsep = DateHelper::getDate();
+        $assesmentPel = $request->assesmentPel === '' || $request->assesmentPel === null ? '' : $request->assesmentPel;
+        $flagprocedure = $request->flagprocedure === '' || $request->flagprocedure === null ? '' : $request->flagprocedure;
+        $kdPenunjang = $request->kdPenunjang === '' || $request->kdPenunjang === null ? '' : $request->kdPenunjang;
         $data = [
             "request" => [
                 "t_sep" => [
                     "noKartu" => $request->noka,
-                    "tglSep" => $tglsep,
+                    // "tglSep" => $tglsep,
+                    "tglSep" => $request->tglsep,
                     // "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
                     "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => $request->jnspelayanan,
@@ -31,13 +35,13 @@ class Bridbpjscontroller extends Controller
                     ],
                     "noMR" => $request->norm,
                     "rujukan" => [
-                        // "asalRujukan" => $request->asalRujukan,
-                        "asalRujukan" => '2',
-                        // "tglRujukan" => $request->tglrujukan,
-                        "tglRujukan" => "2023-05-17",
+                        "asalRujukan" => $request->asalRujukan,
+                        // "asalRujukan" => '2',
+                        "tglRujukan" => $request->tglrujukan,
+                        // "tglRujukan" => "2023-05-17",
                         "noRujukan" => $request->norujukan,
-                        // "ppkRujukan" => $request->ppkRujukan,
-                        "ppkRujukan" => "0213R002",
+                        "ppkRujukan" => $request->ppkRujukan,
+                        // "ppkRujukan" => "0213R002",
                     ],
                     "catatan" => $request->catatan,
                     "diagAwal" => $request->kodediagnosa,
@@ -76,21 +80,21 @@ class Bridbpjscontroller extends Controller
                     */
 
                     "tujuanKunj" => $request->tujuankunjungan,
-                    // "tujuanKunj" => '0',
-                    "flagProcedure" => $request->flagprocedure,
-                    // "flagProcedure" => '',
-                    "kdPenunjang" => $request->kdPenunjang,
+                    // "tujuanKunj" => '1',
+                    "flagProcedure" => $flagprocedure,
+                    // "flagProcedure" => '0',
+                    "kdPenunjang" => $kdPenunjang,
                     // "kdPenunjang" => '',
-                    // "assesmentPel" => $request->assesmentPel,
-                    "assesmentPel" => '',
+                    "assesmentPel" => $assesmentPel,
+                    // "assesmentPel" => '',
                     "skdp" => [
                         "noSurat" => $request->nosuratkontrol,
                         "kodeDPJP" => $request->dpjp
                     ],
                     // "dpjpLayan" => '17432', // dokter dpjp (rencana kontrol kodeDokter)
                     "dpjpLayan" => $request->dpjp, // dokter dpjp (rencana kontrol kodeDokter)
-                    // "noTelp" => $request->noteleponhp,
-                    "noTelp" => '085219608688',
+                    "noTelp" => $request->noteleponhp,
+                    // "noTelp" => '085219608688',
                     "user" => auth()->user()->pegawai_id
                 ]
             ]
