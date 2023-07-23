@@ -96,9 +96,9 @@ class AntrianController extends Controller
 
             if($unitgroup === 'Farmasi')
             {
-                BridantrianbpjsController::updateWaktu($input->noreg,6);
+                BridantrianbpjsController::updateWaktu($input,6);
             }
-            BridantrianbpjsController::updateWaktu($input->noreg,3);
+            BridantrianbpjsController::updateWaktu($input,3);
         }
         return $query;
     }
