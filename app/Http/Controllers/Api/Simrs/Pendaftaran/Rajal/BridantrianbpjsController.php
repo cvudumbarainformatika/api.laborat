@@ -101,7 +101,7 @@ class BridantrianbpjsController extends Controller
     public static function updateWaktu($input, $x)
     {
         // return $input;
-        $kodebooking = $input->noreg;
+        $kodebooking = $input;
         $user_id = auth()->user()->pegawai_id;
         $waktu = strtotime(date('Y-m-d H:i:s')) * 1000;
         $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking);
@@ -113,7 +113,7 @@ class BridantrianbpjsController extends Controller
         $simpanbpjsrespontime = Bpjsrespontime::create(
             ['kodebooking' => $kodebooking],
             [
-                'noreg' => $input->noreg,
+                'noreg' => $input,
                 'taskid' => $x,
                 'waktu' => $waktu,
                 'user_id' => $user_id
