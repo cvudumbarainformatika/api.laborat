@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -102,75 +103,24 @@ class Bridbpjscontroller extends Controller
 
         // return new JsonResponse($data);
 
-        // $data =[
-        //     "request"=>[
-        //         "t_sep"=>[
-        //             "noKartu" => '',
-        //             "tglSep" => '2023-07-11',
-        //             "ppkPelayanan" => '1327R001', //'1327R001'
-        //             "jnsPelayanan" => '2',
-        //             "klsRawat"=>[
-        //                 "klsRawatHak" => '3',
-        //                 "klsRawatNaik" => '',
-        //                 "pembiayaan" => '',
-        //                 "penanggungJawab" => '',
-        //             ],
-        //             "noMR" => '215501',
-        //             "rujukan"=>[
-        //                 "asalRujukan"=> '2',
-        //                 "tglRujukan"=> '2023-05-06',
-        //                 "noRujukan"=> '0213B0080623P000076',
-        //                 "ppkRujukan"=> '0213B008',
-        //             ],
-        //             "catatan"=> '',
-        //             "diagAwal"=> 'S62.8',
-        //             "poli"=>[
-        //                 "tujuan"=> 'ORT',
-        //                 "eksekutif"=> '0'
-        //             ],
-        //             "cob"=>[
-        //                 "cob"=> '0'
-        //              ],
-        //              "katarak"=>[
-        //                 "katarak"=> '0'
-        //              ],
-        //              "jaminan"=>[
-        //                 "lakaLantas"=> '0',
-        //                 "noLP"=> "",
-        //                 "penjamin"=>[
-        //                    "tglKejadian"=> '',
-        //                    "keterangan"=> '',
-        //                    "suplesi"=>[
-        //                       "suplesi"=> '0',
-        //                       "noSepSuplesi"=> '',
-        //                       "lokasiLaka"=>[
-        //                          "kdPropinsi"=> '',
-        //                          "kdKabupaten"=> '',
-        //                          "kdKecamatan"=> ''
-        //                       ]
-        //                    ]
-        //                 ]
-        //              ],
-        //              "tujuanKunj"=> '0',
-        //              "flagProcedure"=> '',
-        //              "kdPenunjang"=> '',
-        //              "assesmentPel"=> '',
-        //              "skdp"=>[
-        //                 "noSurat"=> '1327R0010623K004588',
-        //                 "kodeDPJP"=> '17433'
-        //              ],
-        //              "dpjpLayan"=> '',
-        //              "noTelp"=> '081336604505',
-        //              "user"=> auth()->user()->pegawai_id
-        //         ]
-        //     ]
-        // ];
+
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
             'SEP/2.0/insert',
             $data
         );
-        $xxx = $createsep['metaData']['code'];
+
+        Bpjs_http_respon::firstOrCreate(
+            [
+                'method' => 'POST',
+                'request' => $data,
+                'respon' => $createsep,
+                'url' => '/SEP/2.0/insert',
+                'tgl' => DateHelper::getDateTime()
+            ]
+        );
+
+        $xxx = $createsep['metadata']['code'];
         if ($xxx === 200 || $xxx === '200') {
             $wew = $createsep['response']['sep'];
             $poliBpjs = $wew['poli'];
@@ -204,7 +154,7 @@ class Bridbpjscontroller extends Controller
                     'penjaminlaka' => '$request->norm',
                     'users' => auth()->user()->pegawai_id,
                     'notelepon' => $request->noteleponhp,
-                    'tgl_entery' => date('Y-m-d H:i:s'),
+                    'tgl_entery' => DateHelper::getDateTime(),
                     'noDpjp' => $request->noDpjp,
                     'tgl_kejadian_laka' => $request->tglKecelakaan,
                     'keterangan' => $request->keterangan,
@@ -232,6 +182,8 @@ class Bridbpjscontroller extends Controller
                 ]
             );
         }
+
+
         return $createsep;
     }
 
