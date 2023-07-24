@@ -212,7 +212,7 @@ class DaftarrajalController extends Controller
             BridantrianbpjsController::addantriantobpjs($input->noreg, $request);
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
-            BridantrianbpjsController::updateWaktu($input, 3);
+            // BridantrianbpjsController::updateWaktu($input, 3);
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
