@@ -15,11 +15,15 @@ class Bridbpjscontroller extends Controller
     {
         // return new JsonResponse($request->all());
         $tglsep = DateHelper::getDate();
+        $assesmentPel = $request->assesmentPel === '' || $request->assesmentPel === null ? '' : $request->assesmentPel;
+        $flagprocedure = $request->flagprocedure === '' || $request->flagprocedure === null ? '' : $request->flagprocedure;
+        $kdPenunjang = $request->kdPenunjang === '' || $request->kdPenunjang === null ? '' : $request->kdPenunjang;
         $data = [
             "request" => [
                 "t_sep" => [
                     "noKartu" => $request->noka,
-                    "tglSep" => $tglsep,
+                    // "tglSep" => $tglsep,
+                    "tglSep" => $request->tglsep,
                     // "ppkPelayanan" => $request->ppkpelayanan, //'1327R001'
                     "ppkPelayanan" => '1327R001',
                     "jnsPelayanan" => $request->jnspelayanan,
@@ -31,13 +35,13 @@ class Bridbpjscontroller extends Controller
                     ],
                     "noMR" => $request->norm,
                     "rujukan" => [
-                        // "asalRujukan" => $request->asalRujukan,
-                        "asalRujukan" => '2',
-                        // "tglRujukan" => $request->tglrujukan,
-                        "tglRujukan" => "2023-05-17",
+                        "asalRujukan" => $request->asalRujukan,
+                        // "asalRujukan" => '2',
+                        "tglRujukan" => $request->tglrujukan,
+                        // "tglRujukan" => "2023-05-17",
                         "noRujukan" => $request->norujukan,
-                        // "ppkRujukan" => $request->ppkRujukan,
-                        "ppkRujukan" => "0213R002",
+                        "ppkRujukan" => $request->ppkRujukan,
+                        // "ppkRujukan" => "0213R002",
                     ],
                     "catatan" => $request->catatan,
                     "diagAwal" => $request->kodediagnosa,
@@ -76,21 +80,21 @@ class Bridbpjscontroller extends Controller
                     */
 
                     "tujuanKunj" => $request->tujuankunjungan,
-                    // "tujuanKunj" => '0',
-                    "flagProcedure" => $request->flagprocedure,
-                    // "flagProcedure" => '',
-                    "kdPenunjang" => $request->kdPenunjang,
+                    // "tujuanKunj" => '1',
+                    "flagProcedure" => $flagprocedure,
+                    // "flagProcedure" => '0',
+                    "kdPenunjang" => $kdPenunjang,
                     // "kdPenunjang" => '',
-                    // "assesmentPel" => $request->assesmentPel,
-                    "assesmentPel" => '',
+                    "assesmentPel" => $assesmentPel,
+                    // "assesmentPel" => '',
                     "skdp" => [
                         "noSurat" => $request->nosuratkontrol,
                         "kodeDPJP" => $request->dpjp
                     ],
                     // "dpjpLayan" => '17432', // dokter dpjp (rencana kontrol kodeDokter)
                     "dpjpLayan" => $request->dpjp, // dokter dpjp (rencana kontrol kodeDokter)
-                    // "noTelp" => $request->noteleponhp,
-                    "noTelp" => '085219608688',
+                    "noTelp" => $request->noteleponhp,
+                    // "noTelp" => '085219608688',
                     "user" => auth()->user()->pegawai_id
                 ]
             ]
@@ -253,20 +257,31 @@ class Bridbpjscontroller extends Controller
     {
         $data = [
             "request" => [
-                "noSEP" => "0301R0111018V000006",
-                "kodeDokter" => "12345",
-                "poliKontrol" => "INT",
-                "tglRencanaKontrol" => "2021-03-20",
-                "user" => "wssa"
+                "noSEP" => "1327R0010523V004291",
+                "kodeDokter" => "17432",
+                "poliKontrol" => "BED",
+                "tglRencanaKontrol" => DateHelper::getDate(),
+                "user" => "sasa"
             ]
         ];
         $kontrol = BridgingbpjsHelper::post_url('vclaim', '/RencanaKontrol/insert', $data);
         return $kontrol;
     }
 
+    public function createSPRI()
+    {
+    }
+
+    public function cariseppeserta()
+    {
+        $sep = '1327R0010523V004291';
+        $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        return $a;
+    }
+
     public function cari_rujukan()
     {
-        $rujukan = '0123R0020523B000114';
+        $rujukan = '0213R0020523B000114';
         $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $rujukan);
         return $rujukanPcare;
     }
@@ -275,6 +290,22 @@ class Bridbpjscontroller extends Controller
     {
         $rujukan = '0123R0020523B000114';
         $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/0123R0020523B000114');
+        return $rujukanRs;
+    }
+    public function ref_dokter()
+    {
+        // $rujukan = '0213R0020523B000114';
+        $rujukanRs = BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
+        return $rujukanRs;
+    }
+    public function ref_jadwal_dokter_by_politgl()
+    {
+        $hrIni = DateHelper::getDate();
+        $kdPoli = 'BED';
+
+        $param = "$kdPoli/tanggal/$hrIni";
+        // return $param;
+        $rujukanRs = BridgingbpjsHelper::get_url('antrean', 'jadwaldokter/kodepoli/' . $param);
         return $rujukanRs;
     }
 }
