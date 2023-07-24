@@ -53,6 +53,7 @@ use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use Carbon\Carbon;
 use Exception;
@@ -132,11 +133,24 @@ class AutogenController extends Controller
         // $controller = new Bridbpjscontroller();
 
         // return $controller->rencanakontrol();
-        $input = new Request([
-            'noreg' => '3456346346'
-        ]);
+        // $input = new Request([
+        //     'noreg' => '3456346346'
+        // ]);
 
-        return $input->noreg;
+        // return $input->noreg;
+        $d = Carbon::now();
+        $a = $d->getPreciseTimestamp(3);
+        $simpanbpjsrespontime = Bpjsrespontime::create(
+            [
+                'kodebooking' => '$kodebooking',
+                'noreg' => '$input',
+                'taskid' => '2',
+                'waktu' => $a,
+                'user_id' => '$user_id'
+            ]
+        );
+
+        return response()->json($simpanbpjsrespontime);
     }
 
     public function coba()

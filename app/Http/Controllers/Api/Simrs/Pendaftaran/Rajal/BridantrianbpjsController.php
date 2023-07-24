@@ -124,8 +124,8 @@ class BridantrianbpjsController extends Controller
             $kodebooking = $cari[0]->kodebooking;
         }
         $simpanbpjsrespontime = Bpjsrespontime::create(
-            ['kodebooking' => $kodebooking],
             [
+                'kodebooking' => $kodebooking,
                 'noreg' => $input->noreg,
                 'taskid' => $x,
                 'waktu' => $waktu,
@@ -179,8 +179,8 @@ class BridantrianbpjsController extends Controller
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
             $simpanbpjsrespontime = Bpjsrespontime::create(
-                ['kodebooking' => $kodebooking],
                 [
+                    'kodebooking' => $kodebooking,
                     'noreg' => $input->noreg,
                     'taskid' => $taskid,
                     'waktu' => $waktu,
@@ -232,8 +232,8 @@ class BridantrianbpjsController extends Controller
         $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
         $simpanbpjsrespontime = Bpjsrespontime::create(
-            ['kodebooking' => $kodebooking],
             [
+                'kodebooking' => $kodebooking,
                 'noreg' => $input->noreg,
                 'taskid' => $taskid,
                 'waktu' => $waktu,
