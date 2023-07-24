@@ -97,9 +97,19 @@ class FormatingHelper
     {
         $has=null;
         $lbr=strlen($n);
-        for($i=1;$i<=5-$lbr;$i++){
+        for($i=1;$i<=7-$lbr;$i++){
             $has=$has."0";
         }
         return $has.$n."-".$kode;
+    }
+
+    public static function norencanabeliobat($n,$kode)
+    {
+        $has=null;
+        $lbr=strlen($n);
+        for($i=1;$i<=9-$lbr;$i++){
+            $has=$has."0";
+        }
+        return $has.$n."".date("m")."".date("Y")."/".$kode;
     }
 }

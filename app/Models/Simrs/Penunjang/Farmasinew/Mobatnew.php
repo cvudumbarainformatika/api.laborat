@@ -36,4 +36,19 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Mapingkelasterapi::class, 'kd_obat', 'kd_obat');
     }
+
+    public function stokrealgudang()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
+    }
+
+    public function stokrealallrs()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
+    }
+
+    public function stokmaxrs()
+    {
+        return $this->hasMany(Mminmaxobat::class,'kd_obat', 'kd_obat');
+    }
 }

@@ -53,6 +53,7 @@ use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
