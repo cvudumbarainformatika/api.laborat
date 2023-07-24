@@ -77,6 +77,7 @@ class BridantrianbpjsController extends Controller
             [
                 'method' => 'POST',
                 'request' => $data,
+                'respon' => $ambilantrian,
                 'url' => '/antrean/add',
                 'tgl' => date('Y-m-d H:i:s')
             ]

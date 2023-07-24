@@ -117,6 +117,8 @@ class DaftarrajalController extends Controller
             'noreg' => 'required|unique:rs17,rs1'
         ]);
 
+
+
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
             'rs2' => $request->norm,

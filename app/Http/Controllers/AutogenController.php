@@ -129,9 +129,14 @@ class AutogenController extends Controller
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
 
-        $controller = new Bridbpjscontroller();
+        // $controller = new Bridbpjscontroller();
 
-        return $controller->rencanakontrol();
+        // return $controller->rencanakontrol();
+        $input = new Request([
+            'noreg' => '3456346346'
+        ]);
+
+        return $input->noreg;
     }
 
     public function coba()
