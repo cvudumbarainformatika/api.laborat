@@ -76,8 +76,9 @@ class BridantrianbpjsController extends Controller
             $data
         );
 
-        $simpanbpjshttprespon = Bpjs_http_respon::firstOrCreate(
+        $simpanbpjshttprespon = Bpjs_http_respon::create(
             [
+                'noreg' => $noreg,
                 'method' => 'POST',
                 'request' => $data,
                 'respon' => $ambilantrian,
@@ -99,7 +100,7 @@ class BridantrianbpjsController extends Controller
             'antrean/batal',
             $data
         );
-        Bpjs_http_respon::firstOrCreate(
+        Bpjs_http_respon::create(
             [
                 'method' => 'POST',
                 'request' => $data,
@@ -123,7 +124,8 @@ class BridantrianbpjsController extends Controller
             $cari = $bpjsantrian->get();
             $kodebooking = $cari[0]->kodebooking;
         }
-        $simpanbpjsrespontime = Bpjsrespontime::create(
+
+        Bpjsrespontime::create(
             [
                 'kodebooking' => $kodebooking,
                 'noreg' => $input->noreg,
@@ -142,8 +144,9 @@ class BridantrianbpjsController extends Controller
             'antrean/updatewaktu',
             $data
         );
-        Bpjs_http_respon::firstOrCreate(
+        Bpjs_http_respon::create(
             [
+                'noreg' => $kodebooking,
                 'method' => 'POST',
                 'request' => $data,
                 'respon' => $updatewaktuantrian,
@@ -178,7 +181,7 @@ class BridantrianbpjsController extends Controller
             }
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
-            $simpanbpjsrespontime = Bpjsrespontime::create(
+            Bpjsrespontime::create(
                 [
                     'kodebooking' => $kodebooking,
                     'noreg' => $input->noreg,
@@ -199,8 +202,9 @@ class BridantrianbpjsController extends Controller
                 'antrean/updatewaktu',
                 $data
             );
-            Bpjs_http_respon::firstOrCreate(
+            Bpjs_http_respon::create(
                 [
+                    'noreg' => $kodebooking,
                     'method' => 'POST',
                     'request' => $data,
                     'respon' => $updatewaktuantrian,
@@ -231,7 +235,7 @@ class BridantrianbpjsController extends Controller
         $waktu_ambil_tiket = $logantrian[0]->tgl;
         $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
-        $simpanbpjsrespontime = Bpjsrespontime::create(
+        Bpjsrespontime::create(
             [
                 'kodebooking' => $kodebooking,
                 'noreg' => $input->noreg,
@@ -251,8 +255,9 @@ class BridantrianbpjsController extends Controller
             'antrean/updatewaktu',
             $data
         );
-        Bpjs_http_respon::firstOrCreate(
+        Bpjs_http_respon::create(
             [
+                'noreg' => $kodebooking,
                 'method' => 'POST',
                 'request' => $data,
                 'respon' => $updatewaktuantrian,
