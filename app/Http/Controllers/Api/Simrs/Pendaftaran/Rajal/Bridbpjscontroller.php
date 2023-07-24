@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use Illuminate\Http\JsonResponse;
@@ -236,28 +237,55 @@ class Bridbpjscontroller extends Controller
     {
         $data = [
             "request" => [
-                "noSEP" => "0301R0111018V000006",
-                "kodeDokter" => "12345",
-                "poliKontrol" => "INT",
-                "tglRencanaKontrol" => "2021-03-20",
-                "user" => "wssa"
+                "noSEP" => "1327R0010523V004291",
+                "kodeDokter" => "17432",
+                "poliKontrol" => "BED",
+                "tglRencanaKontrol" => DateHelper::getDate(),
+                "user" => "sasa"
             ]
         ];
         $kontrol = BridgingbpjsHelper::post_url('vclaim', '/RencanaKontrol/insert', $data);
         return $kontrol;
     }
 
+    public function createSPRI()
+    {
+    }
+
+    public function cariseppeserta()
+    {
+        $sep = '1327R0010523V004291';
+        $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        return $a;
+    }
+
     public function cari_rujukan()
     {
-        $rujukan = '0123R0020523B000114';
+        $rujukan = '0213R0020523B000114';
         $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $rujukan);
         return $rujukanPcare;
     }
 
     public function cari_rujukan_rs()
     {
-        $rujukan = '0123R0020523B000114';
+        $rujukan = '0213R0020523B000114';
         $rujukanRs = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/' . $rujukan);
+        return $rujukanRs;
+    }
+    public function ref_dokter()
+    {
+        // $rujukan = '0213R0020523B000114';
+        $rujukanRs = BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
+        return $rujukanRs;
+    }
+    public function ref_jadwal_dokter_by_politgl()
+    {
+        $hrIni = DateHelper::getDate();
+        $kdPoli = 'BED';
+
+        $param = "$kdPoli/tanggal/$hrIni";
+        // return $param;
+        $rujukanRs = BridgingbpjsHelper::get_url('antrean', 'jadwaldokter/kodepoli/' . $param);
         return $rujukanRs;
     }
 }

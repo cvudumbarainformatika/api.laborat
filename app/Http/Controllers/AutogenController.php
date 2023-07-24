@@ -130,7 +130,7 @@ class AutogenController extends Controller
 
         $controller = new Bridbpjscontroller();
 
-        return $controller->cari_rujukan_rs();
+        return $controller->rencanakontrol();
     }
 
     public function coba()
