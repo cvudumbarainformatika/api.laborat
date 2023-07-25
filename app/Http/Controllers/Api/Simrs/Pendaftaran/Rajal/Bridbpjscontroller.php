@@ -19,6 +19,15 @@ class Bridbpjscontroller extends Controller
         $assesmentPel = $request->assesmentPel === '' || $request->assesmentPel === null ? '' : $request->assesmentPel;
         $flagprocedure = $request->flagprocedure === '' || $request->flagprocedure === null ? '' : $request->flagprocedure;
         $kdPenunjang = $request->kdPenunjang === '' || $request->kdPenunjang === null ? '' : $request->kdPenunjang;
+        $catatan = $request->catatan === null ? '' : $request->catatan;
+        $tglKecelakaan = $request->tglKecelakaan === null ? '' : $request->tglKecelakaan;
+        $keterangan = $request->keterangan === null ? '' : $request->keterangan;
+        $nosepsuplesi = $request->nosepsuplesi === null ? '' : $request->nosepsuplesi;
+        $kodepropinsikecelakaan = $request->kodepropinsikecelakaan === null ? '' : $request->kodepropinsikecelakaan;
+        $kodekabupatenkecelakaan = $request->kodekabupatenkecelakaan === null ? '' : $request->kodekabupatenkecelakaan;
+        $kodekecamatankecelakaan = $request->kodekecamatankecelakaan === null ? '' : $request->kodekecamatankecelakaan;
+        $nosuratkontrol = $request->nosuratkontrol === null ? '' : $request->nosuratkontrol;
+
         $data = [
             "request" => [
                 "t_sep" => [
@@ -44,7 +53,7 @@ class Bridbpjscontroller extends Controller
                         "ppkRujukan" => $request->ppkRujukan,
                         // "ppkRujukan" => "0213R002",
                     ],
-                    "catatan" => $request->catatan,
+                    "catatan" => $catatan,
                     "diagAwal" => $request->kodediagnosa,
                     "poli" => [
                         "tujuan" => $request->kodepolibpjs,
@@ -60,15 +69,15 @@ class Bridbpjscontroller extends Controller
                         "lakaLantas" => $request->lakalantas,
                         "noLP" => "",
                         "penjamin" => [
-                            "tglKejadian" => $request->tglKecelakaan,
-                            "keterangan" => $request->keterangan,
+                            "tglKejadian" => $tglKecelakaan,
+                            "keterangan" => $keterangan,
                             "suplesi" => [
                                 "suplesi" => $request->suplesi,
-                                "noSepSuplesi" => $request->nosepsuplesi,
+                                "noSepSuplesi" => $nosepsuplesi,
                                 "lokasiLaka" => [
-                                    "kdPropinsi" => $request->kodepropinsikecelakaan,
-                                    "kdKabupaten" => $request->kodekabupatenkecelakaan,
-                                    "kdKecamatan" => $request->kodekecamatankecelakaan
+                                    "kdPropinsi" => $kodepropinsikecelakaan,
+                                    "kdKabupaten" => $kodekabupatenkecelakaan,
+                                    "kdKecamatan" => $kodekecamatankecelakaan
                                 ]
                             ]
                         ]
@@ -89,7 +98,7 @@ class Bridbpjscontroller extends Controller
                     "assesmentPel" => $assesmentPel,
                     // "assesmentPel" => '',
                     "skdp" => [
-                        "noSurat" => $request->nosuratkontrol,
+                        "noSurat" => $nosuratkontrol,
                         "kodeDPJP" => $request->dpjp
                     ],
                     // "dpjpLayan" => '17432', // dokter dpjp (rencana kontrol kodeDokter)
