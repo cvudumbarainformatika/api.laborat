@@ -11,11 +11,11 @@ class Seprajal extends Model
     protected $table = 'rs222';
     protected $guarded = ['id'];
     protected $appends = ['noref'];
+    public $timestamps = false;
 
     public function getNorefAttribute()
     {
-        if($this->noDpjp === '')
-        {
+        if ($this->noDpjp === '') {
             $noref = $this->rs5;
         }
         return $noref;
