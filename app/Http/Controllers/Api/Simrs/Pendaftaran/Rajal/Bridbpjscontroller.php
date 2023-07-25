@@ -133,12 +133,12 @@ class Bridbpjscontroller extends Controller
         if ($xxx === 200 || $xxx === '200') {
             // $wew = $createsep['response']['sep'];
             $wew = $createsep['response']->sep;
-            $poliBpjs = $wew['poli'];
-            $nosep = $wew['noSep'];
-            $dinsos = $wew['informasi'];
-            $prolanisPRB = $wew['informasi']['prolanisPRB'];
-            $noSKTM = $wew['informasi']['noSKTM'];
-            $nosep = $wew['noSep'];
+            $poliBpjs = $wew->poli;
+            $nosep = $wew->noSep;
+            $dinsos = $wew->informasi;
+            $prolanisPRB = $wew->informasi->prolanisPRB;
+            $noSKTM = $wew->informasi->noSKTM;
+            $nosep = $wew->noSep;
             $insertsep = Seprajal::firsOrCreate(
                 ['rs1' => $request->noreg],
                 [
