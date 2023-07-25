@@ -139,7 +139,7 @@ class Bridbpjscontroller extends Controller
             $prolanisPRB = $wew->informasi->prolanisPRB;
             $noSKTM = $wew->informasi->noSKTM;
             $nosep = $wew->noSep;
-            $insertsep = Seprajal::firsOrCreate(
+            $insertsep = Seprajal::firstOrCreate(
                 ['rs1' => $request->noreg],
                 [
                     'rs2' => $request->norm,
