@@ -131,7 +131,8 @@ class Bridbpjscontroller extends Controller
 
         $xxx = $createsep['metadata']['code'];
         if ($xxx === 200 || $xxx === '200') {
-            $wew = $createsep['response']['sep'];
+            // $wew = $createsep['response']['sep'];
+            $wew = $createsep['response']->sep;
             $poliBpjs = $wew['poli'];
             $nosep = $wew['noSep'];
             $dinsos = $wew['informasi'];
