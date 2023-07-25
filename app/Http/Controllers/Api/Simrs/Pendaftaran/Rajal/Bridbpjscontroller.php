@@ -122,6 +122,7 @@ class Bridbpjscontroller extends Controller
         Bpjs_http_respon::create(
             [
                 'method' => 'POST',
+                'noreg' => $request->noreg === null ? '' : $request->noreg,
                 'request' => $data,
                 'respon' => $createsep,
                 'url' => '/SEP/2.0/insert',
@@ -135,7 +136,7 @@ class Bridbpjscontroller extends Controller
             $wew = $createsep['response']->sep;
             $poliBpjs = $wew->poli;
             $nosep = $wew->noSep;
-            $dinsos = $wew->informasi;
+            $dinsos = $wew->informasi->dinsos;
             $prolanisPRB = $wew->informasi->prolanisPRB;
             $noSKTM = $wew->informasi->noSKTM;
             $nosep = $wew->noSep;
