@@ -119,7 +119,7 @@ class Bridbpjscontroller extends Controller
             $data
         );
 
-        Bpjs_http_respon::firstOrCreate(
+        Bpjs_http_respon::create(
             [
                 'method' => 'POST',
                 'request' => $data,

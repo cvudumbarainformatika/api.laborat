@@ -117,8 +117,10 @@ class BridgingbpjsHelper
 
 
         $res['metadata'] = '';
+        $res['response'] = '';
 
         $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+        $res['response'] =  $data['response'];
 
         $nilairespon = $data["response"] ?? false;
         if (!$nilairespon) {
