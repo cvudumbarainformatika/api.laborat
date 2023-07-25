@@ -10,6 +10,6 @@ Route::group([
     'prefix' => 'simrs/pendaftaran/generalconscent'
 ], function () {
     Route::get('/mastergeneralconsent', [GeneralconsentController::class, 'mastergeneralconsent']);
-    Route::post('simpangeneralcontent', [GeneralconsentController::class, 'simpangeneralcontent']);
+    Route::post('/simpangeneralcontent', [GeneralconsentController::class, 'simpangeneralcontent']);
     Route::post('/simpanmaster', [GeneralconsentController::class, 'simpanmaster']);
 });
