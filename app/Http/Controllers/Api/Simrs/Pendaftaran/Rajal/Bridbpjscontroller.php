@@ -201,17 +201,19 @@ class Bridbpjscontroller extends Controller
         $data = [
             "request" => [
                 "t_sep" => [
-                    "noSep" => "0301R0011017V000007",
-                    "user" => "Coba Ws"
+                    // "noSep" => "1327R0010723V006829",
+                    // "noSep" => "1327R0010723V006801",
+                    "noSep" => $request->noSep,
+                    "user" => '4'
                 ]
             ]
         ];
-        $hapussep = BridgingbpjsHelper::post_url(
+        $hapussep = BridgingbpjsHelper::delete_url(
             'vclaim',
             '/SEP/2.0/delete',
             $data
         );
-        return ($hapussep);
+        return $hapussep;
     }
 
     public function rencanakontrol()
