@@ -12,7 +12,8 @@ Route::group([
     'prefix' => 'simrs/laporan'
 ], function () {
     //RAJAL
-    Route::get('/laporanallbillrajal', [AllbillrajalController::class, 'kumpulanbillpasien']);
+   // Route::get('/laporanallbillrajal', [AllbillrajalController::class, 'kumpulanbillpasien']);
+    Route::get('/laporanallbillrajal', [AllbillrajalController::class, 'rekapanbill']);
     Route::get('/allbillperlopi', [AllbillrajalperpoliController::class, 'allbillperlopi']);
     Route::get('/billpoli', [AllbillrajalperpoliController::class, 'billpoli']);
 

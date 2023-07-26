@@ -46,25 +46,57 @@ class PerencanaanpembelianController extends Controller
         return new JsonResponse($perencanaapembelianobat);
     }
 
-    public function simpanrencanabeliobat_h(Request $request)
-    {
-        DB::connection('farmasi')->select('call rencana_beliobat(@nomor)');
-        $x = DB::connection('farmasi')->table('conter')->select('rencblobat')->get();
-        $wew = $x[0]->rencblobat;
-        $norencanabeliobat = FormatingHelper::norencanabeliobat($wew, 'REN-BOBAT');
+    public function simpanrencanabeliobat(Request $request)
+    {    //return($request->norencanabeliobat);
+        if($request->norencanabeliobat === '' || $request->norencanabeliobat === null)
+        {
+            //return('wew');
+            DB::connection('farmasi')->select('call rencana_beliobat(@nomor)');
+            $x = DB::connection('farmasi')->table('conter')->select('rencblobat')->get();
+            $wew = $x[0]->rencblobat;
+            $norencanabeliobat = FormatingHelper::norencanabeliobat($wew, 'REN-BOBAT');
+            //return('wew');
+            $simpanheder = RencanabeliH::create(
+            [
+                'no_rencbeliobat' => $norencanabeliobat,
+                'tgl' => date('Y-m-d'),
+                'user' => auth()->user()->pegawai_id
+            ]);
 
-        $simpanheder = RencanabeliH::updateOrCreate(['no_rencbeliobat' => $norencanabeliobat],
-        [
-            'tgl' => date('Y-m-d'),
-            'user' => auth()->user()->pegawai_id
-        ]);
+            if(!$simpanheder)
+            {
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
 
-        return new JsonResponse(["MESSAGE" => "OK",$simpanheder], 200);
-    }
+            $simpanrinci = RencanabeliR::create(
+            [
+                'no_rencbeliobat' => $norencanabeliobat,
+                'kdobat' => $request->kdobat,
+                'stok_real_gudang' => $request->stok_real_gudang,
+                'stok_real_rs'  => $request->stok_real_rs,
+                'stok_max_rs'  => $request->stok_max_rs,
+                'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
+                'tgl_stok'  => $request->tgl_stok,
+                'pabrikan'  => $request->pabrikan,
+                'pbf'  => $request->pbf,
+                'jumlahdpesan'  => $request->jumlahdpesan,
+                'user'  => auth()->user()->pegawai_id
+            ]);
 
-    public function simpanrencanabeliobat_r(Request $request)
-    {
-        $simpanrinci = RencanabeliR::updateOrcreate(['no_rencbeliobat' => $request->norencanabeliobat,'kdobat' => $request->kdobat],
+            if(!$simpanrinci)
+            {
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
+
+            return new JsonResponse(
+                [
+                    'message' => 'ok',
+                    'notrans' => $norencanabeliobat,
+                    'heder' => $simpanheder,
+                    'rinci' => $simpanrinci
+                ], 200);
+        }
+        $simpanrinci = RencanabeliR::updateOrCreate(['no_rencbeliobat' => $request->norencanabeliobat,'kdobat' => $request->kdobat],
             [
                 'stok_real_gudang' => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
@@ -76,7 +108,17 @@ class PerencanaanpembelianController extends Controller
                 'jumlahdpesan'  => $request->jumlahdpesan,
                 'user'  => auth()->user()->pegawai_id
             ]);
-        return new JsonResponse(["MESSAGE" => "OK",$simpanrinci], 200);
+
+            if(!$simpanrinci)
+            {
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
+
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'rinci' => $simpanrinci
+            ], 200);
     }
 
     public function listrencanabeli()

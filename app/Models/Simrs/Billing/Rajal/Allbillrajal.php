@@ -130,4 +130,19 @@ class Allbillrajal extends Model
     {
         return $this->hasMany(Klaimrajal::class, 'noreg', 'rs1');
     }
+
+    public function biayarekammedik()
+    {
+        return $this->hasMany(Pembayaran::class, 'rs1', 'rs1');
+    }
+
+    public function biayakartuidentitas()
+    {
+        return $this->hasMany(Pembayaran::class, 'rs1', 'rs1');
+    }
+
+    public function biayapelayananpoli()
+    {
+        return $this->hasMany(Pembayaran::class, 'rs1', 'rs1');
+    }
 }

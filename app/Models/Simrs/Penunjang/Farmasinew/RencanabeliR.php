@@ -17,4 +17,9 @@ class RencanabeliR extends Model
     {
         return $this->hasOne(RencanabeliH::class, 'no_rencbeliobat', 'no_rencbeliobat');
     }
+
+    public function mobat()
+    {
+        return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
+    }
 }

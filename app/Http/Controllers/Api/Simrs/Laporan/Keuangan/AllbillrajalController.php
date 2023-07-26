@@ -40,4 +40,42 @@ class AllbillrajalController extends Controller
         // });
         return new JsonResponse($allbillrajal);
     }
+
+    public function rekapanbill()
+    {
+        $layanan = request('layanan');
+        $dari = request('tgldari') .' 00:00:00';
+        $sampai = request('tglsampai') .' 23:59:59';
+
+        if($layanan === '1')
+        {
+            $allbillrajal = Allbillrajal::select('rs1','rs2','rs3','rs8','rs14')->with([
+                'masterpasien:rs1,rs2',
+                'relmpoli:rs1,rs2',
+                'msistembayar:rs1,rs2',
+                'biayarekammedik' => function($biayarekammedik){
+                    $biayarekammedik->select('rs1','rs2','rs6','rs7','rs11')->where('rs3','RM#');
+                },
+                'biayakartuidentitas' => function($biayakartuidentitas){
+                    $biayakartuidentitas->select('rs1','rs2','rs6','rs7','rs11')->where('rs3','K1#');
+                },
+                'biayapelayananpoli' => function($biayapelayananpoli){
+                    $biayapelayananpoli->select('rs1','rs2','rs6','rs7','rs11')->where('rs3','K2#');
+                },
+                'apotekrajalpolilalu:rs1,rs2,rs3,rs4,rs6,rs8,rs10',
+                'apotekracikanrajal.relasihederracikan:rs1,rs2,rs8',
+                'apotekracikanrajal.racikanrinci:rs1,rs2',
+                'laborat:id,rs1,rs2,rs3,rs4,rs5,rs6,rs13',
+                'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                'radiologi',
+                'radiologi.reltransrinci',
+                'radiologi.reltransrinci.relmasterpemeriksaan'
+                ])
+                ->whereBetween('rs3', [$dari, $sampai])
+                ->where('rs8','!=','POL014')->where('rs8','!=','PEN004')->where('rs8','!=','PEN005')
+                ->where('rs19','=','1')
+                ->get();
+                return new JsonResponse($allbillrajal);
+        }
+    }
 }
