@@ -33,4 +33,5 @@ Route::group([
 
     Route::post('/createsep', [Bridbpjscontroller::class, 'createsep']);
     Route::post('/hapussep', [Bridbpjscontroller::class, 'hapussep']);
+    Route::post('/pengajuansep', [Bridbpjscontroller::class, 'pengajuansep']);
 });
