@@ -13,6 +13,12 @@ class Seprajal extends Model
     protected $appends = ['noref'];
     public $timestamps = false;
 
+    protected $casts = [
+        'Dinsos' => 'array',
+        'prolanisPRB' => 'array',
+        'noSKTM' => 'array',
+    ];
+
     public function getNorefAttribute()
     {
         if ($this->noDpjp === '') {
