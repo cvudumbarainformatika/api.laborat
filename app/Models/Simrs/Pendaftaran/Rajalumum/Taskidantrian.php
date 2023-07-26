@@ -9,5 +9,5 @@ class Taskidantrian extends Model
 {
     use HasFactory;
     protected $table = 'bpjs_respon_time';
-    protected $guarded = [''];
+    protected $guarded = ['id'];
 }

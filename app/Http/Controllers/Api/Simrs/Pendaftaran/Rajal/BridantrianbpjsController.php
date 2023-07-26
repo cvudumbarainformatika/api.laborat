@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Bpjs\BpjsAntrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianlog;
@@ -18,7 +19,7 @@ use Illuminate\Http\Request;
 
 class BridantrianbpjsController extends Controller
 {
-    public static function addantriantobpjs($input, $request)
+    public static function addantriantobpjs($noreg, $request)
     {
         if ($request->jkn === 'JKN') {
             $jenispasien = "JKN";
@@ -28,7 +29,7 @@ class BridantrianbpjsController extends Controller
 
         $tgl = Carbon::now()->format('Y-m-d 00:00:00');
         $tglx = Carbon::now()->format('Y-m-d 23:59:59');
-        $jmlkunjunganpoli = KunjunganPoli::where('rs1', $input->noreg)->count();
+        $jmlkunjunganpoli = KunjunganPoli::where('rs1', $noreg)->count();
         $unit_antrian = Unitantrianbpjs::select('kuotajkn', 'kuotanonjkn')
             ->where('pelayanan_id', '=', $request->kodepoli)->get();
         $kuotajkn = $unit_antrian[0]->kuotajkn;
@@ -37,20 +38,22 @@ class BridantrianbpjsController extends Controller
         $sisakuotajkn = (int)$kuotajkn - $jmlkunjunganpoli;
         $sisakuotanonjkn = (int)$kuotanonjkn - $jmlkunjunganpoli;
 
-        $date = Carbon::parse($request->tanggalperiksa);
+        $date = Carbon::parse($request->tglsep);
         $dt = $date->addMinutes(10);
         $estimasidilayani = $dt->getPreciseTimestamp(3);
 
+        $pasienbaru = $request->barulama == 'lama' ? 1 : 0;
+
         $data =
             [
-                "kodebooking" => $input->noreg,
+                "kodebooking" => $noreg,
                 "jenispasien" => $jenispasien,
                 "nomorkartu" => $request->noka,
                 "nik" => $request->nik,
-                "nohp" => $request->nohp,
-                "kodepoli" => $request->kodepoli,
-                "namapoli" => $request->namapoli,
-                "pasienbaru" => $request->jenispasien,
+                "nohp" => $request->noteleponhp,
+                "kodepoli" => $request->kodepolibpjs,
+                "namapoli" => $request->namapolibpjs,
+                "pasienbaru" => $pasienbaru,
                 "norm" => $request->norm,
                 "tanggalperiksa" => $request->tglsep,
                 "kodedokter" => $request->dpjp,
@@ -73,12 +76,14 @@ class BridantrianbpjsController extends Controller
             $data
         );
 
-        $simpanbpjshttprespon = Bpjs_http_respon::firstOrCreate(
+        $simpanbpjshttprespon = Bpjs_http_respon::create(
             [
+                'noreg' => $noreg,
                 'method' => 'POST',
                 'request' => $data,
+                'respon' => $ambilantrian,
                 'url' => '/antrean/add',
-                'tgl' => date('Y-m-d H:i:s')
+                'tgl' => DateHelper::getDateTime()
             ]
         );
         //return $ambilantrian;
@@ -95,6 +100,15 @@ class BridantrianbpjsController extends Controller
             'antrean/batal',
             $data
         );
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'request' => $data,
+                'respon' => $batalantrian,
+                'url' => 'antrean/batal',
+                'tgl' => DateHelper::getDateTime()
+            ]
+        );
         return ($batalantrian);
     }
 
@@ -110,9 +124,10 @@ class BridantrianbpjsController extends Controller
             $cari = $bpjsantrian->get();
             $kodebooking = $cari[0]->kodebooking;
         }
-        $simpanbpjsrespontime = Bpjsrespontime::create(
-            ['kodebooking' => $kodebooking],
+
+        Bpjsrespontime::create(
             [
+                'kodebooking' => $kodebooking,
                 'noreg' => $input->noreg,
                 'taskid' => $x,
                 'waktu' => $waktu,
@@ -128,6 +143,16 @@ class BridantrianbpjsController extends Controller
             'antrean',
             'antrean/updatewaktu',
             $data
+        );
+        Bpjs_http_respon::create(
+            [
+                'noreg' => $kodebooking,
+                'method' => 'POST',
+                'request' => $data,
+                'respon' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'tgl' => DateHelper::getDateTime()
+            ]
         );
     }
 
@@ -145,21 +170,20 @@ class BridantrianbpjsController extends Controller
         }
         $tgl = date('Y-m-d');
         $antrianlog = Antrianlog::select('booking_type', 'waktu_ambil_tiket')->where('nomor', $request->noantrian)
-            ->wheredate('waktu_ambil_tiket', $tgl)->get();
+            ->whereDate('waktu_ambil_tiket', $tgl)->get();
         //return($antrianlog);
         if (count($antrianlog) > 0) {
             $booking_type = $antrianlog[0]->booking_type;
             $waktu_ambil_tiket = $antrianlog[0]->waktu_ambil_tiket;
             if ($booking_type === 'b') {
-                $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl)->get();
+                $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->get();
                 $waktu_ambil_tiket = $logantrian[0]->tgl;
             }
-            $waktu_ambil_tiket = $waktu_ambil_tiket;
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
-            $simpanbpjsrespontime = Bpjsrespontime::create(
-                ['kodebooking' => $kodebooking],
+            Bpjsrespontime::create(
                 [
+                    'kodebooking' => $kodebooking,
                     'noreg' => $input->noreg,
                     'taskid' => $taskid,
                     'waktu' => $waktu,
@@ -177,6 +201,16 @@ class BridantrianbpjsController extends Controller
                 'antrean',
                 'antrean/updatewaktu',
                 $data
+            );
+            Bpjs_http_respon::create(
+                [
+                    'noreg' => $kodebooking,
+                    'method' => 'POST',
+                    'request' => $data,
+                    'respon' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'tgl' => DateHelper::getDateTime()
+                ]
             );
         }
 
@@ -201,9 +235,9 @@ class BridantrianbpjsController extends Controller
         $waktu_ambil_tiket = $logantrian[0]->tgl;
         $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
-        $simpanbpjsrespontime = Bpjsrespontime::create(
-            ['kodebooking' => $kodebooking],
+        Bpjsrespontime::create(
             [
+                'kodebooking' => $kodebooking,
                 'noreg' => $input->noreg,
                 'taskid' => $taskid,
                 'waktu' => $waktu,
@@ -220,6 +254,16 @@ class BridantrianbpjsController extends Controller
             'antrean',
             'antrean/updatewaktu',
             $data
+        );
+        Bpjs_http_respon::create(
+            [
+                'noreg' => $kodebooking,
+                'method' => 'POST',
+                'request' => $data,
+                'respon' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'tgl' => DateHelper::getDateTime()
+            ]
         );
     }
 }

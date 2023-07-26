@@ -155,6 +155,7 @@ class KartustokController extends Controller
                         'detail_permintaanruangans.no_penerimaan'
                     )
                         ->where('permintaanruangans.status', '=', '7')
+                        ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
                         ->whereMonth('permintaanruangans.tanggal', $bln)
                         ->whereYear('permintaanruangans.tanggal', $thn)
                         ->with([

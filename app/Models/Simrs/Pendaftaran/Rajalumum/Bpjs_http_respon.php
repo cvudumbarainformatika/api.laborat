@@ -12,6 +12,7 @@ class Bpjs_http_respon extends Model
     protected $guarded = ['id'];
     public $timestamps = false;
     protected $casts = [
-        'request' => 'array'
+        'request' => 'array',
+        'respon' => 'array'
     ];
 }

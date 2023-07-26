@@ -53,6 +53,8 @@ use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use Carbon\Carbon;
 use Exception;
@@ -129,9 +131,27 @@ class AutogenController extends Controller
         // $req = BridantrianbpjsController::addantriantobpjs();
         // return $req;
 
-        $controller = new Bridbpjscontroller();
+        // $controller = new Bridbpjscontroller();
 
-        return $controller->cari_rujukan_rs();
+        // return $controller->rencanakontrol();
+        // $input = new Request([
+        //     'noreg' => '3456346346'
+        // ]);
+
+        // return $input->noreg;
+        $d = Carbon::now();
+        $a = $d->getPreciseTimestamp(3);
+        $simpanbpjsrespontime = Bpjsrespontime::create(
+            [
+                'kodebooking' => '$kodebooking',
+                'noreg' => '$input',
+                'taskid' => '2',
+                'waktu' => $a,
+                'user_id' => '$user_id'
+            ]
+        );
+
+        return response()->json($simpanbpjsrespontime);
     }
 
     public function coba()
@@ -301,6 +321,26 @@ class AutogenController extends Controller
         return response()->json(['message' => 'success'], 201);
     }
 
+    public function httpRespBpjs()
+    {
+        $data = Bpjs_http_respon::where('noreg', request('noreg'))
+            ->get();
+        $wew = $data[0]->respon['response']['sep'];
+        $poliBpjs = $wew['poli'];
+        $nosep = $wew['noSep'];
+        $dinsos = $wew['informasi']['dinsos'];
+        $prolanisPRB = $wew['informasi']['prolanisPRB'];
+        $noSKTM = $wew['informasi']['noSKTM'];
+        $nosep = $wew['noSep'];
+
+        return new JsonResponse([
+            'poli' => $poliBpjs,
+            'nosep' => $nosep,
+            'dinsos' => $dinsos,
+            'prolanisPRB' => $prolanisPRB,
+            'noSKTM' => $noSKTM,
+        ]);
+    }
     public function wawan()
     {
         // $data = Pengguna::where('level_3', '<>', null)

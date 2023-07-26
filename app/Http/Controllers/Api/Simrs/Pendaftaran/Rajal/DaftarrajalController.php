@@ -117,6 +117,8 @@ class DaftarrajalController extends Controller
             'noreg' => 'required|unique:rs17,rs1'
         ]);
 
+
+
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
             'rs2' => $request->norm,
@@ -207,9 +209,10 @@ class DaftarrajalController extends Controller
             // $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
             // $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
             // return new JsonResponse(['message' => 'DATA PADA BPJS ANTRIAN TIDAK DITEMUKAN'],500);
-            BridantrianbpjsController::addantriantobpjs($input, $request);
+            BridantrianbpjsController::addantriantobpjs($input->noreg, $request);
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+            // BridantrianbpjsController::updateWaktu($input, 3);
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
