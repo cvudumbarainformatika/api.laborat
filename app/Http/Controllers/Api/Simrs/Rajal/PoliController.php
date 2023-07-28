@@ -68,7 +68,8 @@ class PoliController extends Controller
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->orderby('rs17.rs3', 'DESC')
-            ->paginate(request('per_page'));
+           // ->paginate(request('per_page'))
+           ->get();
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
