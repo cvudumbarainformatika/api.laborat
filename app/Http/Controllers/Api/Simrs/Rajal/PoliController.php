@@ -67,6 +67,7 @@ class PoliController extends Controller
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
+            ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
             ->orderby('rs17.rs3', 'DESC')
            // ->paginate(request('per_page'))
            ->get();
