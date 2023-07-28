@@ -192,12 +192,14 @@ class DaftarrajalController extends Controller
         //     'req noantrian' => $request->noantrian,
         // ]);
 
-        if (!$updatelogantrian) {
-            $hapuskunjunganpoli = KunjunganPoli::where('rs1', $input->noreg)->first()->delete();
-            $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
-            return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN'], 500);
+        // if (!$updatelogantrian) {
+        //     $hapuskunjunganpoli = KunjunganPoli::where('rs1', $input->noreg)->first()->delete();
+        //     $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
+        //     return new JsonResponse(['message' => 'gagal UPDATE LOG ANTIRAN'], 500);
+        // }
+        if ($updatelogantrian) {
+            $updatelogantrian->update(['noreg' => $input->noreg, 'norm' => $request->norm]);
         }
-        $updatelogantrian->update(['noreg' => $input->noreg, 'norm' => $request->norm]);
 
         //------------BPJS ANTRIAN----------------//
         //$bpjs_antrian = self::bpjs_antrian($request,$input);
@@ -206,6 +208,7 @@ class DaftarrajalController extends Controller
         $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')->where('nomorantrean', '=', $noantrian)
             ->whereDate('tanggalperiksa', '=', $tgl)->first();
         if (!$bpjsantrian) {
+
             // $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
             // $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
             // return new JsonResponse(['message' => 'DATA PADA BPJS ANTRIAN TIDAK DITEMUKAN'],500);

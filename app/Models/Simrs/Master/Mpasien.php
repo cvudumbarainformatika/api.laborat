@@ -66,6 +66,7 @@ class Mpasien extends Model
             'rs46 as nokabpjs',
             'rs40 as baru',
             'alamatdomisili as alamatdomisili',
+            'kd_pekerjaan as pekerjaan',
             'kd_kel as kodekelurahan',
             'kd_kec as kodekecamatan',
             'kd_propinsi as kodepropinsi',
