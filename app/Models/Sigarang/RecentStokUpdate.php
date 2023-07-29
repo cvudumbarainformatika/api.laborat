@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Sigarang\Transaksi\DistribusiLangsung\DetailDistribusiLangsung;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,6 +36,10 @@ class RecentStokUpdate extends Model
     public function pengguna()
     {
         return $this->belongsTo(Pengguna::class, 'kode_ruang', 'kode');
+    }
+    public function detailDistribusiLangsung()
+    {
+        return $this->hasMany(DetailDistribusiLangsung::class, 'kode_rs', 'kode_rs');
     }
     public function scopeFilter($search, array $reqs)
     {

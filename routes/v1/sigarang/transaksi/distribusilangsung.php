@@ -13,6 +13,7 @@ Route::group([
     Route::get('/get-stok-depo', [DistribusiLangsungController::class, 'getStokDepo']);
     Route::get('/get-ruang', [DistribusiLangsungController::class, 'getRuang']);
     Route::get('/get-barang-with-transaksi', [DistribusiLangsungController::class, 'getDataBarangWithTransaksi']);
+    Route::get('/get-transaksi-with-barang', [DistribusiLangsungController::class, 'getDataTransaksiWithBarang']);
     Route::post('/basah', [DistribusiLangsungController::class, 'habiskanBahanBasah']);
     Route::post('/store', [DistribusiLangsungController::class, 'store']);
     Route::post('/selesai', [DistribusiLangsungController::class, 'selesai']);
