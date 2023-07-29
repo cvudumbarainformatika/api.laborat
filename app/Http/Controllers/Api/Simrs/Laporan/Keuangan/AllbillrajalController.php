@@ -119,18 +119,94 @@ class AllbillrajalController extends Controller
                 ->where('rs19','=','1')
                 ->get();
                 return new JsonResponse($allbillrajal);
-        }elseif('2'){
-            $allbillrajal = Allbillrajal::select('rs1','rs2','rs3','rs8','rs14')->with([
+        }elseif($layanan === '2'){
+            $allbillrajal = Allbillrajal::select('rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs14')->with([
                     'masterpasien:rs1,rs2',
                     'relmpoli:rs1,rs2',
                     'msistembayar:rs1,rs2',
                     'administrasiigd' => function($administrasiigd){
                         $administrasiigd->select('rs1','rs7')->where('rs3','A2#');
+                    },
+                    'tindakandokterperawat' => function($tindakandokterperawat){
+                        $tindakandokterperawat->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL014');
+                    },
+                    'laborat' => function($laborat){
+                        $laborat->select('rs1','rs2','rs3','rs4','rs5','rs6','rs13','rs23')->where('rs23','POL014')->where('rs18','!=','')
+                        ->where('rs23','!=','1');
+                    },
+                    'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                    'transradiologi' => function($transradiologi){
+                        $transradiologi->select('rs1','rs6','rs8','rs24')->where('rs26','POL014');
+                    },
+                    // 'radiologi.reltransrinci',
+                    // 'radiologi.reltransrinci.relmasterpemeriksaan',
+                    'tindakanfisioterapi' => function($tindakanfisioterapi){
+                        $tindakanfisioterapi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','fisioterapi');
+                    },
+                    'tindakanhd' => function($tindakanhd){
+                        $tindakanhd->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','PEN005')->where('rs25','POL014');
+                    },
+                    'tindakananastesidiluarokdanicu' => function($tindakananastesidiluarokdanicu){
+                        $tindakananastesidiluarokdanicu->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','PEN012')->where('rs25','POL014');
+                    },
+                    'tindakancardio' => function($tindakancardio){
+                        $tindakancardio->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL026');
+                    },
+                    'tindakaneeg' => function($tindakaneeg){
+                        $tindakaneeg->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL024');
+                    },
+                    'bdrs' => function($bdrs){
+                        $bdrs->select('rs1','rs12','rs13')->where('rs14','POL014');
+                    },
+                    'tindakanendoscopy' => function($tindakanendoscopy){
+                        $tindakanendoscopy->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL031');
+                    },
+                    'okigd' => function($okigd){
+                        $okigd->select('rs1','rs5','rs6','rs7')->where('rs15','POL014');
+                    },
+                    'tindakokigd' => function($tindakokigd){
+                        $tindakokigd->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASIIRD2');
+                    },
+                    'kamaroperasi' => function($kamaroperasi){
+                        $kamaroperasi->select('rs1','rs5','rs6','rs7','rs8')->where('rs15','POL014');
+                    },
+                    'tindakanoperasi' => function($tindakanoperasi){
+                        $tindakanoperasi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASI2');
+                    },
+                    'kamarjenasah' => function($kamarjenasah){
+                        $kamarjenasah->select('rs1','rs6','rs7')->where('rs14','POL014');
+                    },
+                    'kamarjenasahinap' => function($kamarjenasahinap){
+                        $kamarjenasahinap->select('rs1','rs5','rs6')->where('rs7','POL014');
+                    },
+                    'ambulan' => function($ambulan){
+                        $ambulan->select('rs1','rs2','rs15','rs16','rs17','rs18','rs23','rs26','rs30')->where('rs20','POL014');
+                    },
+                    'apotekranap' => function($apotekranap){
+                        $apotekranap->select('rs1','rs6','rs8','rs10')->where('rs20','POL014')->where('lunas','!=','1')
+                        ->where('rs25','CENTRAL')->orWhere('rs25','IGD');
+                    },
+                    'apotekranaplalu' => function($apotekranaplalu){
+                        $apotekranaplalu->select('rs1','rs6','rs8','rs10')->where('rs20','POL014')->where('lunas','!=','1')
+                        ->where('rs25','CENTRAL')->orWhere('rs25','IGD');
+                    },
+                    'apotekranapracikanheder' => function($apotekranapracikanheder){
+                        $apotekranapracikanheder->select('rs1','rs8')->where('lunas','!=','1')->where('rs19','CENTRAL')->orWhere('rs19','IGD');
+                    },
+                    'apotekranapracikanrinci:rs1,rs5,rs7',
+                    'apotekranapracikanhederlalu' => function($apotekranapracikanhederlalu){
+                        $apotekranapracikanhederlalu->select('rs1','rs8')->where('lunas','!=','1')->where('rs19','CENTRAL')->orWhere('rs19','IGD');
+                    },
+                    'apotekranapracikanrincilalu:rs1,rs5,rs7',
+                    'biayamaterai' => function($biayamaterai){
+                        $biayamaterai->select('rs1','rs5')->where('rs7','IRD');
                     }
                 ])
-                ->whereBetween('rs3', [$dari, $sampai])
-                ->where('rs8','POL014')
-                ->where('rs19','=','1')
+                ->leftjoin('rs141','rs141.rs1','=', 'rs17.rs1')
+                ->whereBetween('rs17.rs3', [$dari, $sampai])
+                ->where('rs17.rs8','POL014')
+                ->where('rs17.rs19','=','1')
+                ->where('rs141.rs4', '!=', 'Rawat Inap')
                 ->get();
                 return new JsonResponse($allbillrajal);
         }else{

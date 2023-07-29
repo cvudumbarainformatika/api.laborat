@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Billing\Rajal;
 
 use App\Models\Antrean\Dokter;
+use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
@@ -12,11 +13,22 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penjaminan\Klaimrajal;
+use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
+use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranap;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanheder;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanrinci;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanheder;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
+use App\Models\Simrs\Penunjang\Kamarjenazah\Kamarjenasahinap;
+use App\Models\Simrs\Penunjang\Kamarjenazah\Kamarjenasahtrans;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Penunjang\Okigd\Okigdtrans;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
@@ -208,5 +220,74 @@ class Allbillrajal extends Model
         return $this->hasMany(Rstigalimax::class, 'rs1','rs1');
     }
 
+    public function bdrs()
+    {
+        return $this->hasMany(Bdrstrans::class, 'rs1','rs1');
+    }
+
+    public function okigd()
+    {
+        return $this->hasMany(Okigdtrans::class, 'rs1','rs1');
+    }
+
+    public function tindakokigd()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function kamarjenasah()
+    {
+        return $this->hasMany(Kamarjenasahtrans::class, 'rs1','rs1');
+    }
+
+    public function kamarjenasahinap()
+    {
+        return $this->hasMany(Kamarjenasahinap::class, 'rs1','rs1');
+    }
+
+    public function ambulan()
+    {
+        return $this->hasMany(Ambulan::class, 'rs1','rs1');
+    }
+
+    public function apotekranap()
+    {
+        return $this->hasMany(Apotekranap::class, 'rs1','rs1');
+    }
+
+    public function apotekranaplalu()
+    {
+        return $this->hasMany(Apotekranaplalu::class, 'rs1','rs1');
+    }
+
+    public function apotekranapracikanheder()
+    {
+        return $this->hasMany(Apotekranapracikanheder::class, 'rs1','rs1');
+    }
+
+    public function apotekranapracikanrinci()
+    {
+        return $this->hasMany(Apotekranapracikanrinci::class, 'rs1','rs1');
+    }
+
+    public function apotekranapracikanhederlalu()
+    {
+        return $this->hasMany(Apotekranaplaluracikanheder::class, 'rs1','rs1');
+    }
+
+    public function apotekranapracikanrincilalu()
+    {
+        return $this->hasMany(Apotekranaplaluracikanrinci::class, 'rs1','rs1');
+    }
+
+    public function transradiologi()
+    {
+        return $this->hasMany(Transradiologi::class, 'rs1','rs1');
+    }
+
+    public function biayamaterai()
+    {
+        return $this->hasMany(Biayamaterai::class, 'rs1','rs1');
+    }
 
 }
