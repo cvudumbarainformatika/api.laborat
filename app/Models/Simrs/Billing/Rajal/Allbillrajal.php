@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Billing\Rajal;
 use App\Models\Antrean\Dokter;
 use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Kasir\Pembayaran;
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Dokter as MasterDokter;
 use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mpasien;
@@ -201,5 +202,11 @@ class Allbillrajal extends Model
     {
         return $this->hasMany(Tindakan::class, 'rs1','rs1');
     }
+
+    public function administrasiigd()
+    {
+        return $this->hasMany(Rstigalimax::class, 'rs1','rs1');
+    }
+
 
 }

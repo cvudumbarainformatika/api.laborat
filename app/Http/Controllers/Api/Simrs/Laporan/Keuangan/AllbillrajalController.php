@@ -111,13 +111,30 @@ class AllbillrajalController extends Controller
                 },
                 'apotekrajalpolilalu:rs1,rs2,rs3,rs4,rs6,rs8,rs10',
                 'apotekracikanrajal.relasihederracikan:rs1,rs2,rs8',
-                'apotekracikanrajal.racikanrinci:rs1,rs2'
+                'apotekracikanrajal.racikanrinci:rs1,rs2',
+                'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
                 ])
                 ->whereBetween('rs3', [$dari, $sampai])
                 ->where('rs8','!=','POL014')->where('rs8','!=','PEN004')->where('rs8','!=','PEN005')
                 ->where('rs19','=','1')
                 ->get();
                 return new JsonResponse($allbillrajal);
+        }elseif('2'){
+            $allbillrajal = Allbillrajal::select('rs1','rs2','rs3','rs8','rs14')->with([
+                    'masterpasien:rs1,rs2',
+                    'relmpoli:rs1,rs2',
+                    'msistembayar:rs1,rs2',
+                    'administrasiigd' => function($administrasiigd){
+                        $administrasiigd->select('rs1','rs7')->where('rs3','A2#');
+                    }
+                ])
+                ->whereBetween('rs3', [$dari, $sampai])
+                ->where('rs8','POL014')
+                ->where('rs19','=','1')
+                ->get();
+                return new JsonResponse($allbillrajal);
+        }else{
+            return('wew');
         }
     }
 }
