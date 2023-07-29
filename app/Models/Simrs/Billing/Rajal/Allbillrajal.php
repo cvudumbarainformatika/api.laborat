@@ -14,6 +14,7 @@ use App\Models\Simrs\Penjaminan\Klaimrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
+use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
@@ -145,4 +146,60 @@ class Allbillrajal extends Model
     {
         return $this->hasMany(Pembayaran::class, 'rs1', 'rs1');
     }
+
+    public function biayakonsulantarpoli()
+    {
+        return $this->hasMany(Pembayaran::class, 'rs1', 'rs1');
+    }
+
+    public function tindakanall()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+
+    public function kamaroperasi()
+    {
+        return $this->hasMany(Kamaroperasi::class, 'rs1','rs1');
+    }
+
+    public function tindakanoperasi()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakanfisioterapi()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakanhd()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakananastesidiluarokdanicu()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakanendoscopy()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakandokterperawat()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakancardio()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
+    public function tindakaneeg()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+    }
+
 }

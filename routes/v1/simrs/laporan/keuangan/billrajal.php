@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/laporan'
+    'prefix' => 'simrs/laporan/keuangan'
 ], function () {
     //RAJAL
    // Route::get('/laporanallbillrajal', [AllbillrajalController::class, 'kumpulanbillpasien']);
