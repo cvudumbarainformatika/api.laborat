@@ -200,7 +200,8 @@ class AllbillrajalController extends Controller
                     'apotekranapracikanrincilalu:rs1,rs5,rs7',
                     'biayamaterai' => function($biayamaterai){
                         $biayamaterai->select('rs1','rs5')->where('rs7','IRD');
-                    }
+                    },
+                    'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
                 ])
                 ->leftjoin('rs141','rs141.rs1','=', 'rs17.rs1')
                 ->whereBetween('rs17.rs3', [$dari, $sampai])
