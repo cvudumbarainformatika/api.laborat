@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Simrs\Laporan\Keuangan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Billing\Rajal\Allbillrajal;
+use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,9 +68,11 @@ class AllbillrajalController extends Controller
                     $biayakonsulantarpoli->select('rs1','rs2','rs6','rs7','rs11')->where('rs3','K3#');
                 },
                 'tindakandokterperawat' => function($tindakandokterperawat){
-                    $tindakandokterperawat ->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','!=','POL014')
-                    ->where('rs22','!=','POL024')->where('rs22','!=','POL026')->where('rs22','!=','POL029')
-                    ->where('rs22','!=','POL030')->where('rs22','!=','POL031')->where('rs22','!=','POL036');
+                    // $tindakandokterperawat ->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','!=','POL014')
+                    // ->where('rs22','!=','POL024')->where('rs22','!=','POL026')->where('rs22','!=','POL029')
+                    // ->where('rs22','!=','POL030')->where('rs22','!=','POL031')->where('rs22','!=','POL036');
+                    $poli = ['POL014','POL024','POL026','POL029','POL030','POL031','POL036'];
+                    $tindakandokterperawat ->select('rs1','rs2','rs7','rs13','rs5')->whereNotIn('rs22', $poli);
                 },
                 'visiteumum' => function($visiteumum){
                     $visiteumum->select('rs1','rs4','rs5');
@@ -104,7 +108,7 @@ class AllbillrajalController extends Controller
                 'apotekrajalpolilalu:rs1,rs2,rs3,rs4,rs6,rs8,rs10',
                 'apotekracikanrajal.relasihederracikan:rs1,rs2,rs8',
                 'apotekracikanrajal.racikanrinci:rs1,rs2',
-                'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
+                'pendapatanallbpjs:noreg,cbg_tarif,procedure_tarif,prosthesis_tarif,investigation_tarif,drug_tarif,acute_tarif,chronic_tarif'
                 ])
                 ->whereBetween('rs3', [$dari, $sampai])
                 ->where('rs8','!=','POL014')->where('rs8','!=','PEN004')->where('rs8','!=','PEN005')
@@ -193,7 +197,7 @@ class AllbillrajalController extends Controller
                     'biayamaterai' => function($biayamaterai){
                         $biayamaterai->select('rs1','rs5')->where('rs7','IRD');
                     },
-                    'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
+                    'pendapatanallbpjs:noreg,cbg_tarif,procedure_tarif,prosthesis_tarif,investigation_tarif,drug_tarif,acute_tarif,chronic_tarif'
                 ])
                 ->leftjoin('rs141','rs141.rs1','=', 'rs17.rs1')
                 ->whereBetween('rs17.rs3', [$dari, $sampai])
@@ -203,7 +207,46 @@ class AllbillrajalController extends Controller
                 ->get();
                 return new JsonResponse($allbillrajal);
         }else{
-            return('wew');
+            $allbillrajal = Kunjunganranap::select('rs1','rs2','rs3','rs4','rs5','rs19')->with([
+                'masterpasien:rs1,rs2',
+                'relmasterruangranap:rs1,rs2',
+                'relsistembayar:rs1,rs2',
+                'rstigalimax' => function($rstigalimax){
+                    $rstigalimax->select('rs1','rs8','rs17','rs4')->where('rs3','K1#')->orderBy('rs4', 'DESC');
+                },
+
+            ])
+            ->whereBetween('rs3', [$dari, $sampai])
+            ->get();
+            $ee = $allbillrajal->map(function ($query) {
+                $query->setRelation('rstigalimax', $query->rstigalimax->take(1));
+                return $query;
+                // $kelas = $query->rstigalimax[0]->rs17;
+                // if($kelas === '3'){
+                //   $admin =  Rstigapuluhtarif::select()
+            });
+            $aa=$ee->map(function ($query) {
+                $admin = $query->rstigalimax[0]->rs17;
+                $administrasi=0;
+                $tarif = Rstigapuluhtarif::where('rs3', 'A1#')->first();
+                if($admin==="3"){
+                    $administrasi=$tarif->rs6 + $tarif->rs7;
+                }else if($admin==="2"){
+                    $administrasi=$tarif->rs8 + $tarif->rs9;
+                }else if($admin==="1" || $admin==="IC" || $admin==="ICC" || $admin==="NICU" || $admin==="IN"){
+                    $administrasi=$tarif->rs10 + $tarif->rs11;
+                }else if($admin==="Utama"){
+                    $administrasi=$tarif->rs12+$tarif->rs13;
+                }else if($admin==="VIP"){
+                    $administrasi=$tarif->rs14+$tarif->rs15;
+                }else if($admin==="VVIP"){
+                    $administrasi= $tarif->rs16+ $tarif->rs17;
+                }
+
+                $query['admin']=$administrasi;
+                return $query;
+            });
+            return new JsonResponse($aa);
         }
     }
 }

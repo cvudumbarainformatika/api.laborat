@@ -12,6 +12,7 @@ use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Penjaminan\GruopingRajal;
 use App\Models\Simrs\Penjaminan\Klaimrajal;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
@@ -140,7 +141,7 @@ class Allbillrajal extends Model
         return $this->hasMany(Kwitansilog::class, 'noreg', 'rs1');
     }
 
-    public function pendapatanallbpjs()
+    public function pendapatanallbpjsx()
     {
         return $this->hasMany(Klaimrajal::class, 'noreg', 'rs1');
     }
@@ -288,6 +289,11 @@ class Allbillrajal extends Model
     public function biayamaterai()
     {
         return $this->hasMany(Biayamaterai::class, 'rs1','rs1');
+    }
+
+    public function pendapatanallbpjs()
+    {
+        return $this->hasMany(GruopingRajal::class, 'noreg', 'rs1');
     }
 
 }

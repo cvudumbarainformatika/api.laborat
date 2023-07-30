@@ -2,7 +2,9 @@
 
 namespace App\Models\Simrs\Ranap;
 
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Dokter;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +32,20 @@ class Kunjunganranap extends Model
     public function reldokter()
     {
         return $this->hasOne(Dokter::class, 'rs1', 'rs10');
+    }
+
+    public function masterpasien()
+    {
+        return $this->hasOne(Mpasien::class, 'rs1', 'rs2');
+    }
+
+    public function rstigalimax()
+    {
+        return $this->hasMany(Rstigalimax::class, 'rs1', 'rs1');
+    }
+    public function rstigalimaxx()
+    {
+        return $this->hasMany(Rstigalimax::class, 'rs1', 'rs1')->take(2);
     }
 
 }
