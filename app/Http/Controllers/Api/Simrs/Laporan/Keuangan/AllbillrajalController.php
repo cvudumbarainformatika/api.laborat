@@ -109,10 +109,10 @@ class AllbillrajalController extends Controller
                 'tindakaneeg' => function($tindakaneeg){
                     $tindakaneeg->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL024');
                 },
-                'apotekrajalpolilalu:rs1,rs2,rs3,rs4,rs6,rs8,rs10',
-                'apotekracikanrajal.relasihederracikan:rs1,rs2,rs8',
-                'apotekracikanrajal.racikanrinci:rs1,rs2',
-                'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
+                // 'apotekrajalpolilalu:rs1,rs2,rs3,rs4,rs6,rs8,rs10',
+                // 'apotekracikanrajal.relasihederracikan:rs1,rs2,rs8',
+                // 'apotekracikanrajal.racikanrinci:rs1,rs2',
+                // 'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
                 ])
                 ->whereBetween('rs3', [$dari, $sampai])
                 ->where('rs8','!=','POL014')->where('rs8','!=','PEN004')->where('rs8','!=','PEN005')
