@@ -62,7 +62,7 @@ class DaftarrajalController extends Controller
                 'rs39' => $request->suku,
                 'rs55' => $request->noteleponhp,
                 'bahasa' => $request->bahasa,
-                'noidentitaslain' => $request->nomoridentitaslain,
+                'noidentitaslain' => $request->nomoridentitaslain ? $request->nomoridentitaslain : '',
                 'namaibu' => $request->namaibukandung,
                 'kodepos' => $request->kodepos,
                 'kd_negara' => $request->negara,
