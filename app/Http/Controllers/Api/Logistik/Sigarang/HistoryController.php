@@ -118,6 +118,8 @@ class HistoryController extends Controller
                     $filterRuangan = $permintaan->whereIn('kode_ruang', $only);
                 } else if ($pegawai->role_id === 4) {
                     $filterRuangan = $permintaan->where('status', '>=', 4);
+                } else {
+                    $filterRuangan = $permintaan;
                 }
             } else {
                 $filterRuangan = $permintaan;
