@@ -272,6 +272,124 @@ class AllbillrajalController extends Controller
                     ->join('rs24','rs24.rs4','=','rs54.rs15')
                     ->groupBy('rs24.rs4','rs54.rs2','rs54.rs4');;
                 },
+                'kamaroperasiigd' => function($kamaroperasiigd){
+                    $kamaroperasiigd->select('rs226.rs1','rs226.rs5','rs226.rs6','rs226.rs7','rs226.rs8')
+                    ->join('rs24','rs24.rs4','=','rs226.rs15')
+                    ->groupBy('rs24.rs4','rs226.rs2','rs226.rs4');;
+                },
+                'tindakanoperasi' => function($tindakanoperasi){
+                    $tindakanoperasi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASI');
+                },
+                'tindakanoperasiigd' => function($tindakanoperasiigd){
+                    $tindakanoperasiigd->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASIIRD');
+                },
+                'tindakanfisioterapi' => function($tindakanfisioterapi){
+                    $tindakanfisioterapi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','FISIO');
+                },
+                'tindakanfisioterapi' => function($tindakanfisioterapi){
+                    $tindakanfisioterapi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','PEN005');
+                },
+                'tindakananastesidiluarokdanicu' => function($tindakananastesidiluarokdanicu){
+                    $tindakananastesidiluarokdanicu->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','PEN012')->where('rs25','!=','POL014');
+                },
+                'tindakancardio' => function($tindakancardio){
+                    $tindakancardio->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL026');
+                },
+                'tindakaneeg' => function($tindakaneeg){
+                    $tindakaneeg->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL024');
+                },
+                'psikologtransumum',
+                'bdrs' => function($bdrs){
+                    $bdrs->select('rs1','rs12','rs13')->where('rs14','!=','POL014');
+                },
+                'penunjangkeluar:noreg,harga_sarana,harga_pelayanan,jumlah',
+                'apotekranap' => function($apotekranap){
+                    $apotekranap->select('rs1','rs6','rs8','rs10')->where('rs20','!=','POL014')->where('lunas','!=','1')
+                    ->where('rs25','CENTRAL');
+                },
+                'apotekranaplalu' => function($apotekranaplalu){
+                    $apotekranaplalu->select('rs1','rs6','rs8','rs10')->where('rs20','!=','POL014')->where('lunas','!=','1')
+                    ->where('rs25','CENTRAL');
+                },
+                'apotekranapracikanheder' => function($apotekranapracikanheder){
+                    $apotekranapracikanheder->select('rs1','rs8')->where('lunas','!=','1')->where('rs19','CENTRAL')->Where('rs18','!=','IGD');
+                },
+                'apotekranapracikanrinci:rs1,rs5,rs7',
+                'apotekranapracikanhederlalu' => function($apotekranapracikanhederlalu){
+                    $apotekranapracikanhederlalu->select('rs1','rs8')->where('lunas','!=','1')->where('rs19','CENTRAL')->Where('rs18','!=','IGD');
+                },
+                'apotekranapracikanrincilalu:rs1,rs5,rs7',
+                'kamaroperasiibsx' => function($kamaroperasiibsx){
+                    $kamaroperasiibsx->select('rs1','rs5','rs6','rs7','rs8')
+                    ->where('rs15','POL014');
+                },
+                'tindakanoperasix' => function($tindakanoperasix){
+                    $tindakanoperasix->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASI2');
+                },
+                'apotekranapx' => function($apotekranap){
+                    $apotekranap->select('rs1','rs6','rs8','rs10')->where('rs20','!=','POL014')->where('lunas','!=','1')
+                    ->where('rs24','IRD')->where('rs25','CENTRAL')->orWhere('rs25','IGD');
+                },
+                'apotekranaplalux' => function($apotekranaplalux){
+                    $apotekranaplalux->select('rs1','rs6','rs8','rs10')->where('rs20','!=','POL014')->where('lunas','!=','1')
+                    ->where('rs24','IRD')->where('rs25','CENTRAL')->orWhere('rs25','IGD');
+                },
+                'apotekranapracikanhederx' => function($apotekranapracikanhederx){
+                    $apotekranapracikanhederx->select('rs1','rs8')->where('lunas','!=','1')
+                    ->where('rs18','IRD')->where('rs19','CENTRAL')->orWhere('rs18','IGD');
+                },
+                'apotekranapracikanrincix:rs1,rs5,rs7',
+                'apotekranapracikanhederlalux' => function($apotekranapracikanhederlalux){
+                    $apotekranapracikanhederlalux->select('rs1','rs8')->where('lunas','!=','1')
+                    ->where('rs18','IRD')->where('rs19','CENTRAL')->orWhere('rs18','IGD');
+                },
+                'apotekranapracikanrincilalux:rs1,rs5,rs7',
+                'ambulan' => function($ambulan){
+                    $ambulan->select('rs1','rs2','rs15','rs16','rs17','rs18','rs23','rs26','rs30')->where('rs20','!=','POL014');
+                },
+
+                //------------------igd-------------//
+
+                'rstigalimaxxx' => function($rstigalimaxxx){
+                    $rstigalimaxxx->select ('rs1','rs6','rs7')->where('rs3','A2#');
+                },
+                'irdtindakan' => function($irdtindakan){
+                    $irdtindakan->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL014');
+                },
+                'laborat' => function($laborat){
+                    $laborat->select('rs1','rs2','rs3','rs4','rs5','rs6','rs13','rs23')->where('rs23','POL014')->where('rs18','!=','')
+                    ->where('rs23','!=','1');
+                },
+                'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                'transradiologi' => function($transradiologi){
+                    $transradiologi->select('rs1','rs6','rs8','rs24')->where('rs26','POL014');
+                },
+                'irdtindakanoperasix' => function($irdtindakanoperasix){
+                    $irdtindakanoperasix->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASIIRD2');
+                },
+                'irdkamaroperasiigd' => function($irdkamaroperasiigd){
+                    $irdkamaroperasiigd->select('rs226.rs1','rs226.rs5','rs226.rs6','rs226.rs7','rs226.rs8')
+                    ->where('rs226.rs15','POL014');
+                },
+                'irdbdrs' => function($irdbdrs){
+                    $irdbdrs->select('rs1','rs12','rs13')->where('rs14','POL014');
+                },
+                'irdbiayamaterai' => function($irdbiayamaterai){
+                    $irdbiayamaterai->select('rs1','rs5')->where('rs7','IRD');
+                },
+                'irdambulan' => function($irdambulan){
+                    $irdambulan->select('rs1','rs2','rs15','rs16','rs17','rs18','rs23','rs26','rs30')->where('rs20','POL014');
+                },
+                'irdtindakanhd' => function($irdtindakanhd){
+                    $irdtindakanhd->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','PEN005')->where('rs25','POL014');
+                },
+                'irdtindakananastesidiluarokdanicu' => function($irdtindakananastesidiluarokdanicu){
+                    $irdtindakananastesidiluarokdanicu->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','PEN012')->where('rs25','POL014');
+                },
+                'irdtindakanfisioterapi' => function($irdtindakanfisioterapi){
+                    $irdtindakanfisioterapi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','fisioterapi')->where('rs25','POL014');
+                },
+                'groupingranap:noreg,cbg_tarif,procedure_tarif,prosthesis_tarif,investigation_tarif,drug_tarif,acute_tarif,chronic_tarif'
             ])
             ->whereBetween('rs4', [$dari, $sampai])
             ->get();
