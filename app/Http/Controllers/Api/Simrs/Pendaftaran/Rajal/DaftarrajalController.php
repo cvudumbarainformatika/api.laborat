@@ -28,10 +28,32 @@ class DaftarrajalController extends Controller
 
     public static function simpanMpasien($request)
     {
+        $gelardepan = '';
+        $gelarbelakang = '';
+        $nik = '';
+        $nomoridentitaslain = '';
+        if($request->gelardepan === '' && $request->gelardepan=== null)
+        {
+            $gelardepan = '';
+        }
+        $gelardepan = $request->gelardepan;
+        if($request->gelarbelakang === '' && $request->gelarbelakang=== null)
+        {
+            $gelarbelakang = '';
+        }
+        $gelarbelakang = $request->gelarbelakang;
+
+        if($request->nik !== '' && $request->nik !== null)
+        {
+            $nik = $request->nik;
+            $nomoridentitaslain = '';
+        }
+        $nik = '';
+        $nomoridentitaslain = $request->nomoridentitaslain;
+
         $request->validate([
             'norm' => 'required|string|max:6|min:6',
             'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
-            'nik' => 'string|max:16|min:16',
             'tgllahir' => 'required|date_format:Y-m-d'
         ]);
         $masterpasien = Mpasien::updateOrCreate(
@@ -51,7 +73,7 @@ class DaftarrajalController extends Controller
                 'kd_propinsi' => $request->kodepropinsi,
                 'rs11' => $request->kabupatenkota,
                 'kd_kota' => $request->kodekabupatenkota,
-                'rs49' => $request->nik,
+                'rs49' => $nik,
                 'rs37' => $request->templahir,
                 'rs16' => $request->tgllahir,
                 'rs17' => $request->kelamin,
@@ -62,7 +84,7 @@ class DaftarrajalController extends Controller
                 'rs39' => $request->suku,
                 'rs55' => $request->noteleponhp,
                 'bahasa' => $request->bahasa,
-                'noidentitaslain' => $request->nomoridentitaslain,
+                'noidentitaslain' => $nomoridentitaslain,
                 'namaibu' => $request->namaibukandung,
                 'kodepos' => $request->kodepos,
                 'kd_negara' => $request->negara,
@@ -80,8 +102,8 @@ class DaftarrajalController extends Controller
                 'flag_pernikahan' => $request->statuspernikahan,
                 'rs46' => $request->nokabpjs,
                 'rs40' => $request->barulama,
-                'gelardepan' => $request->gelardepan,
-                'gelarbelakang' => $request->gelarbelakang
+                'gelardepan' => $gelardepan,
+                'gelarbelakang' => $gelarbelakang
             ]
         );
         return $masterpasien;

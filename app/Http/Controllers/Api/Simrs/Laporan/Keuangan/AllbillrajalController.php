@@ -214,9 +214,66 @@ class AllbillrajalController extends Controller
                 'rstigalimax' => function($rstigalimax){
                     $rstigalimax->select('rs1','rs8','rs17','rs4')->where('rs3','K1#')->orderBy('rs4', 'DESC');
                 },
-
+                'akomodasikamar' => function($akomodasikamar){
+                    $akomodasikamar -> select('rs1','rs7','rs14')->where('rs3','K1#');
+                },
+                'biayamaterai' => function($biayamaterai){
+                    $biayamaterai->select('rs1','rs5')->where('rs7','!=','IRD');
+                },
+                'tindakandokter' => function($tindakandokterperawat){
+                    $tindakandokterperawat->select('rs73.rs1','rs73.rs2','rs73.rs7','rs73.rs13','rs73.rs5','rs73.rs22')
+                    ->join('rs24','rs24.rs4','=', 'rs73.rs22')
+                    ->join('rs21','rs21.rs1','=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                    ->where('rs21.rs13','1')
+                    ->groupBy('rs24.rs4','rs73.rs2','rs73.rs4');
+                    //->where('rs73.rs22','POL014');
+                },
+                'visiteumum' => function($visiteumum){
+                    $visiteumum->select('rs1','rs4','rs5');
+                },
+                'tindakanperawat' => function($tindakanperawat){
+                    $tindakanperawat->select('rs73.rs1','rs73.rs2','rs73.rs7','rs73.rs13','rs73.rs5','rs73.rs22')
+                    ->join('rs24','rs24.rs4','=', 'rs73.rs22')
+                    ->join('rs21','rs21.rs1','=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                    ->where('rs21.rs13','!=','1')
+                    ->groupBy('rs24.rs4','rs73.rs2','rs73.rs4');
+                    //->where('rs73.rs22','POL014');
+                },
+                'asuhangizi' => function($asuhangizi){
+                    $asuhangizi->select('rs1','rs4','rs5')->where('rs3','K00013');
+                },
+                'makanpasien' => function($makanpasien){
+                    $makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003','K00004');
+                },
+                'oksigen' => function($oksigen){
+                    $oksigen->select('rs1','rs4','rs5');
+                },
+                'keperawatan' => function($keperawatan){
+                    $keperawatan->select('rs1','rs4','rs5');
+                },
+                'laborat' => function($laborat){
+                    $laborat->select('rs51.rs1','rs51.rs2','rs51.rs3','rs51.rs4','rs51.rs5','rs51.rs6','rs51.rs13','rs51.rs23')
+                    ->join('rs24','rs24.rs4','=','rs51.rs23')
+                    ->where('rs18','!=','')
+                    ->where('rs23','!=','1')
+                    ->groupBy('rs24.rs4','rs51.rs2','rs51.rs4');
+                },
+                'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                'transradiologi' => function($transradiologi){
+                    $transradiologi->select('rs48.rs1','rs48.rs6','rs48.rs8','rs48.rs24')
+                    ->join('rs24','rs24.rs4','=','rs48.rs23')
+                    ->groupBy('rs24.rs4','rs48.rs2','rs48.rs4');
+                },
+                'tindakanendoscopy' => function($tindakanendoscopy){
+                    $tindakanendoscopy->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL031');
+                },
+                'kamaroperasiibs' => function($kamaroperasiibs){
+                    $kamaroperasiibs->select('rs54.rs1','rs54.rs5','rs54.rs6','rs54.rs7','rs54.rs8')
+                    ->join('rs24','rs24.rs4','=','rs54.rs15')
+                    ->groupBy('rs24.rs4','rs54.rs2','rs54.rs4');;
+                },
             ])
-            ->whereBetween('rs3', [$dari, $sampai])
+            ->whereBetween('rs4', [$dari, $sampai])
             ->get();
             $ee = $allbillrajal->map(function ($query) {
                 $query->setRelation('rstigalimax', $query->rstigalimax->take(1));
@@ -225,10 +282,11 @@ class AllbillrajalController extends Controller
                 // if($kelas === '3'){
                 //   $admin =  Rstigapuluhtarif::select()
             });
-            $aa=$ee->map(function ($query) {
+            $tarif = Rstigapuluhtarif::where('rs3', 'A1#')->first();
+            $aa=$ee->map(function ($query) use ($tarif){
                 $admin = $query->rstigalimax[0]->rs17;
                 $administrasi=0;
-                $tarif = Rstigapuluhtarif::where('rs3', 'A1#')->first();
+
                 if($admin==="3"){
                     $administrasi=$tarif->rs6 + $tarif->rs7;
                 }else if($admin==="2"){
