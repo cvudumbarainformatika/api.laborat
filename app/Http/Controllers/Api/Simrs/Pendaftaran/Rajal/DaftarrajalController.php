@@ -32,6 +32,8 @@ class DaftarrajalController extends Controller
         $gelarbelakang = '';
         $nik = '';
         $nomoridentitaslain = '';
+        $noteleponrumah = '';
+        $nokabpjs = '';
         if($request->gelardepan === '' || $request->gelardepan=== null)
         {
             $gelardepan = '';
@@ -53,6 +55,20 @@ class DaftarrajalController extends Controller
         }else{
             $nik = '';
             $nomoridentitaslain = $request->nomoridentitaslain;
+        }
+
+        if($request->noteleponrumah !== '' || $request->noteleponrumah !== null)
+        {
+            $noteleponrumah = '';
+        }else{
+            $noteleponrumah = $request->noteleponrumah;
+        }
+
+        if($request->nokabpjs !== '' || $request->nokabpjs !== null)
+        {
+            $nokabpjs = '';
+        }else{
+            $nokabpjs = $request->nokabpjs;
         }
 
 
@@ -101,11 +117,11 @@ class DaftarrajalController extends Controller
                 'kodeposdom' => $request->kodeposdomisili,
                 'kd_prov_dom' => $request->kodepropinsidomisili,
                 'kd_negara_dom' => $request->negaradomisili,
-                'noteleponrumah' => $request->noteleponrumah,
+                'noteleponrumah' => $noteleponrumah,
                 'kd_pendidikan' => $request->kodependidikan,
                 'kd_pekerjaan' => $request->pekerjaan,
                 'flag_pernikahan' => $request->statuspernikahan,
-                'rs46' => $request->nokabpjs,
+                'rs46' => $nokabpjs,
                 'rs40' => $request->barulama,
                 'gelardepan' => $gelardepan,
                 'gelarbelakang' => $gelarbelakang
