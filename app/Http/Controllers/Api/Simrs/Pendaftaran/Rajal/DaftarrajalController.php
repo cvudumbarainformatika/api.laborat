@@ -32,24 +32,29 @@ class DaftarrajalController extends Controller
         $gelarbelakang = '';
         $nik = '';
         $nomoridentitaslain = '';
-        if($request->gelardepan === '' && $request->gelardepan=== null)
+        if($request->gelardepan === '' || $request->gelardepan=== null)
         {
             $gelardepan = '';
+        }else{
+            $gelardepan = $request->gelardepan;
         }
-        $gelardepan = $request->gelardepan;
-        if($request->gelarbelakang === '' && $request->gelarbelakang=== null)
+
+        if($request->gelarbelakang === '' || $request->gelarbelakang=== null)
         {
             $gelarbelakang = '';
+        }else{
+             $gelarbelakang = $request->gelarbelakang;
         }
-        $gelarbelakang = $request->gelarbelakang;
 
-        if($request->nik !== '' && $request->nik !== null)
+        if($request->nik !== '' || $request->nik !== null)
         {
             $nik = $request->nik;
             $nomoridentitaslain = '';
+        }else{
+            $nik = '';
+            $nomoridentitaslain = $request->nomoridentitaslain;
         }
-        $nik = '';
-        $nomoridentitaslain = $request->nomoridentitaslain;
+
 
         $request->validate([
             'norm' => 'required|string|max:6|min:6',
