@@ -212,7 +212,7 @@ class AllbillrajalController extends Controller
                 'relmasterruangranap:rs1,rs2',
                 'relsistembayar:rs1,rs2',
                 'rstigalimax' => function($rstigalimax){
-                    $rstigalimax->select('rs1','rs8','rs17','rs4')->where('rs3','K1#')->orderBy('rs4', 'DESC');
+                    $rstigalimax->select('rs1','rs8','rs17','rs14')->where('rs3','K1#')->orderBy('rs4', 'DESC');
                 },
                 'akomodasikamar' => function($akomodasikamar){
                     $akomodasikamar -> select('rs1','rs7','rs14')->where('rs3','K1#');
