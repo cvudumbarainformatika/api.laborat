@@ -285,7 +285,7 @@ class Bridbpjscontroller extends Controller
                     "jnsPelayanan" => "2",
                     "jnsPengajuan" => $request->jenispengajuan,
                     "keterangan" => $request->keterangan,
-                    "user" => auth()->user()->nama
+                    "user" => auth()->user()->pegawai_id
                 ]
             ]
         ];
