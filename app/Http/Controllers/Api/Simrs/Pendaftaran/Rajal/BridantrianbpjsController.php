@@ -219,6 +219,7 @@ class BridantrianbpjsController extends Controller
 
     public static function updateAkhirWaktuTungguAdmisi($input)
     {
+        $waktu = '';
         $taskid = '2';
         $kodebooking = $input->noreg;
         $user_id = auth()->user()->pegawai_id;
@@ -231,9 +232,15 @@ class BridantrianbpjsController extends Controller
             // return new JsonResponse($kodebooking);
         }
         $tgl = date('Y-m-d');
-        $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl)->get();
-        $waktu_ambil_tiket = $logantrian[0]->tgl;
-        $waktu = strtotime($waktu_ambil_tiket) * 1000;
+        $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl);
+        $wewwew = $logantrian->count();
+        If($wewwew > 0)
+        {
+            $cariwew = $logantrian->get();
+            $waktu_ambil_tiket = $cariwew[0]->tgl;
+            $waktu = strtotime($waktu_ambil_tiket) * 1000;
+        }
+
 
         Bpjsrespontime::create(
             [
