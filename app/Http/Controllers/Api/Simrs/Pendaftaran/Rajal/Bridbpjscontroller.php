@@ -279,32 +279,33 @@ class Bridbpjscontroller extends Controller
     {
         $data = [
             "request" => [
-               "t_sep" => [
-                  "noKartu" => $request->noka,
-                  "tglSep" => DateHelper::getDateTime(),
-                  "jnsPelayanan" => "2",
-                  "jnsPengajuan" => $request->jenispengajuan,
-                  "keterangan" => $request->keterangan,
-                  "user" => auth()->user()->pegawai_id
-               ]
+                "t_sep" => [
+                    "noKartu" => $request->noka,
+                    "tglSep" => DateHelper::getDate(),
+                    "jnsPelayanan" => "2",
+                    "jnsPengajuan" => $request->jenispengajuan,
+                    "keterangan" => $request->keterangan,
+                    "user" => auth()->user()->nama
+                ]
             ]
         ];
         $kontrol = BridgingbpjsHelper::post_url('vclaim', '/Sep/pengajuanSEP', $data);
         $xxx = $kontrol['metadata']['code'];
         if ($xxx === 200 || $xxx === '200') {
-            $simpanpengajuansep = PengajuanSep::firstOrCreate(['rs1' => $request->noreg],
-            [
-                'rs2' => $request->norm,
-			    'rs3' => $request->noka,
-			    'rs4' => $request->keterangan,
-			    'rs5' => $request->tglsep,
-			    'rs6' => DateHelper::getDateTime(),
-			    'rs7' => auth()->user()->pegawai_id,
-			    'rs9' => 2,
-			    'jnsPengajuan' => $request->jnspengajuan
-            ]);
-            if(!$simpanpengajuansep)
-            {
+            $simpanpengajuansep = PengajuanSep::firstOrCreate(
+                ['rs1' => $request->noreg],
+                [
+                    'rs2' => $request->norm,
+                    'rs3' => $request->noka,
+                    'rs4' => $request->keterangan,
+                    'rs5' => $request->tglsep,
+                    'rs6' => DateHelper::getDateTime(),
+                    'rs7' => auth()->user()->pegawai_id,
+                    'rs9' => 2,
+                    'jnsPengajuan' => $request->jnspengajuan
+                ]
+            );
+            if (!$simpanpengajuansep) {
                 return new JsonResponse(['message' => 'data gagal disimpan ke server SIMRS'], 500);
             }
             return new JsonResponse(['message' => 'OK'], 200);
