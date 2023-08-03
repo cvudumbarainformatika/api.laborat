@@ -7,6 +7,7 @@ use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
@@ -1931,5 +1932,13 @@ class AutogenController extends Controller
         }
 
         return $result == 0;
+    }
+
+    public function getkarciscontoller()
+    {
+        $kd_poli = 'POL012';
+        $flag = 'Baru';
+        $getkarcis = FormatingHelper::getKarcisPoli($kd_poli,$flag);
+        return new JsonResponse($getkarcis);
     }
 }
