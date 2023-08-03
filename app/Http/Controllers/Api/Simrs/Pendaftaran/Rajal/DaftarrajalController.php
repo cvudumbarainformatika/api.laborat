@@ -405,12 +405,12 @@ class DaftarrajalController extends Controller
 
     public function daftarkunjunganpasienbpjs()
     {
-        if (request('tgl') === '' || request('tgl') === null) {
+        if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = request('tgl') . ' 00:00:00';
-            $tglx = request('tgl') . ' 23:59:59';
+            $tgl = request('to') . ' 00:00:00';
+            $tglx = request('from') . ' 23:59:59';
         }
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1', // iki tak munculne maneh gawe relasi with
