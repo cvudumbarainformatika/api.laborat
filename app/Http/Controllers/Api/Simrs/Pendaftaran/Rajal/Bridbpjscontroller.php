@@ -287,7 +287,7 @@ class Bridbpjscontroller extends Controller
             "request" => [
                 "t_sep" => [
                     "noKartu" => $request->noka,
-                    "tglSep" => DateHelper::getDateTime(),
+                    "tglSep" => DateHelper::getDate(),
                     "jnsPelayanan" => "2",
                     "jnsPengajuan" => $request->jenispengajuan,
                     "keterangan" => $request->keterangan,

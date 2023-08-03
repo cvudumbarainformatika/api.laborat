@@ -34,40 +34,35 @@ class DaftarrajalController extends Controller
         $nomoridentitaslain = '';
         $noteleponrumah = '';
         $nokabpjs = '';
-        if($request->gelardepan === '' || $request->gelardepan=== null)
-        {
+        if ($request->gelardepan === '' || $request->gelardepan === null) {
             $gelardepan = '';
-        }else{
+        } else {
             $gelardepan = $request->gelardepan;
         }
 
-        if($request->gelarbelakang === '' || $request->gelarbelakang=== null)
-        {
+        if ($request->gelarbelakang === '' || $request->gelarbelakang === null) {
             $gelarbelakang = '';
-        }else{
-             $gelarbelakang = $request->gelarbelakang;
+        } else {
+            $gelarbelakang = $request->gelarbelakang;
         }
 
-        if($request->nik !== '' || $request->nik !== null)
-        {
-            $nik = $request->nik;
-            $nomoridentitaslain = '';
-        }else{
+        if ($request->nik === '' || $request->nik === null) {
             $nik = '';
             $nomoridentitaslain = $request->nomoridentitaslain;
+        } else {
+            $nik = $request->nik;
+            $nomoridentitaslain = '';
         }
 
-        if($request->noteleponrumah !== '' || $request->noteleponrumah !== null)
-        {
+        if ($request->noteleponrumah === '' || $request->noteleponrumah === null) {
             $noteleponrumah = '';
-        }else{
+        } else {
             $noteleponrumah = $request->noteleponrumah;
         }
 
-        if($request->nokabpjs !== '' || $request->nokabpjs !== null)
-        {
+        if ($request->nokabpjs === '' || $request->nokabpjs === null) {
             $nokabpjs = '';
-        }else{
+        } else {
             $nokabpjs = $request->nokabpjs;
         }
 
@@ -410,12 +405,12 @@ class DaftarrajalController extends Controller
 
     public function daftarkunjunganpasienbpjs()
     {
-        if (request('tgl') === '' || request('tgl') === null) {
+        if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = request('tgl') . ' 00:00:00';
-            $tglx = request('tgl') . ' 23:59:59';
+            $tgl = request('to') . ' 00:00:00';
+            $tglx = request('from') . ' 23:59:59';
         }
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1', // iki tak munculne maneh gawe relasi with

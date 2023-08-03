@@ -46,6 +46,8 @@ Route::get('/autogen/http-res-bpjs', [AutogenController::class, 'httpRespBpjs'])
 Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
 
+Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller']);
+
 
 
 Route::get('/print/page', [PrintController::class, 'index']);
