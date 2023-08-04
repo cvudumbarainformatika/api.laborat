@@ -233,6 +233,12 @@ class Bridbpjscontroller extends Controller
         $kontrol = BridgingbpjsHelper::post_url('vclaim', '/RencanaKontrol/insert', $data);
         return $kontrol;
     }
+    public function cekSuratKontrol()
+    {
+        $suratKontrol = '1327R0010823K000371';
+        $kontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . $suratKontrol);
+        return $kontrol;
+    }
 
     public function createSPRI()
     {

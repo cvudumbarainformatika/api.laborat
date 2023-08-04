@@ -140,19 +140,21 @@ class AutogenController extends Controller
         // ]);
 
         // return $input->noreg;
-        $d = Carbon::now();
-        $a = $d->getPreciseTimestamp(3);
-        $simpanbpjsrespontime = Bpjsrespontime::create(
-            [
-                'kodebooking' => '$kodebooking',
-                'noreg' => '$input',
-                'taskid' => '2',
-                'waktu' => $a,
-                'user_id' => '$user_id'
-            ]
-        );
+        // $d = Carbon::now();
+        // $a = $d->getPreciseTimestamp(3);
+        // $simpanbpjsrespontime = Bpjsrespontime::create(
+        //     [
+        //         'kodebooking' => '$kodebooking',
+        //         'noreg' => '$input',
+        //         'taskid' => '2',
+        //         'waktu' => $a,
+        //         'user_id' => '$user_id'
+        //     ]
+        // );
 
-        return response()->json($simpanbpjsrespontime);
+        // return response()->json($simpanbpjsrespontime);
+        $controller = new Bridbpjscontroller();
+        return $controller->cekSuratKontrol();
     }
 
     public function coba()
