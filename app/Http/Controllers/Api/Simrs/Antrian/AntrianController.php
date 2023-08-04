@@ -40,7 +40,7 @@ class AntrianController extends Controller
                 $simpan = Logantrian::create([
                     'unit_antrian' => $unitantrian->loket,
                     'tgl' => date('Y-m-d H:i:s'),
-                    'user_id' => $userid,
+                    'user_id' => $userid->id,
                     'loket' => $unitantrian->loket,
                     'nomor' => $query->data->nomor,
                     'kdunit' => $unitantrian->pelayanan_id,
@@ -83,7 +83,7 @@ class AntrianController extends Controller
                 $simpan = Logantrian::create([
                     'unit_antrian' => $unitantrian->loket,
                     'tgl' => date('Y-m-d H:i:s'),
-                    'user_id' => $userid,
+                    'user_id' => $userid->id,
                     'loket' => $unitantrian->loket,
                     'nomor' => $query->data->nomor,
                     'kdunit' => $unitantrian->pelayanan_id,
