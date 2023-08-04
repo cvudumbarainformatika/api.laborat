@@ -8,6 +8,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianbatal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Unitantrianbpjs;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
@@ -34,7 +35,23 @@ class AntrianController extends Controller
                 'http_errors' => false
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
-            return $query;
+            if($query->status === '200')
+            {
+                $simpan = Logantrian::create([
+                    'unit_antrian' => $unitantrian->loket,
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'user_id' => $userid,
+                    'loket' => $unitantrian->loket,
+                    'nomor' => $query->data->nomor,
+                    'kdunit' => $unitantrian->pelayanan_id,
+                ]);
+                if(!$simpan)
+                {
+                    return new JsonResponse(['message' => 'gagal'], 500);
+                }
+                return ($query);
+            }
+            return new JsonResponse(['message' => 'gagal'], 410);
         }else if($jenis === 'recall')
         {
             $myReq["layanan"] = $unitantrian->pelayanan_id;
@@ -61,7 +78,23 @@ class AntrianController extends Controller
                 'http_errors' => false
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
-            return $query;
+            if($query->status === '200')
+            {
+                $simpan = Logantrian::create([
+                    'unit_antrian' => $unitantrian->loket,
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'user_id' => $userid,
+                    'loket' => $unitantrian->loket,
+                    'nomor' => $query->data->nomor,
+                    'kdunit' => $unitantrian->pelayanan_id,
+                ]);
+                if(!$simpan)
+                {
+                    return new JsonResponse(['message' => 'gagal'], 500);
+                }
+                return ($query);
+            }
+            return new JsonResponse(['message' => 'gagal'], 410);
         }else{
             $myReq["layanan"] = 3;
             $myReq["loket"] = $unitantrian->loket_id;
