@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Antrian;
 
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianbatal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
@@ -16,15 +17,18 @@ class AntrianController extends Controller
 {
     public function call_layanan_ruang()
     {
+        $jenis = request('jenis');
+        $userid = Pegawai::find(auth()->user()->pegawai_id);
+        $unitantrian = Unitantrianbpjs::where('ruang','TPPRJ')->where('loket_id',$userid->kode_ruang)->first();
+    //  return($unitantrian->pelayanan_id);
 
-        $myReq["layanan"] = '1';
-        $myReq["loket"] = '1';
-        $myReq["id_ruang"] = '1';
+        $myReq["layanan"] = $unitantrian->pelayanan_id;
+        $myReq["loket"] = $unitantrian->loket_id;
+        $myReq["id_ruang"] =$unitantrian->ruang_id;
         $myReq["user_id"] = "a1";
-        $myReq["nomor"] = 'A069';
 
         //$myVars=json_encode($myReq);
-        $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolrecall_layanan_ruang', [
+        $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolcall_layanan_ruang', [
             'form_params' => $myReq,
             'http_errors' => false
         ]);
