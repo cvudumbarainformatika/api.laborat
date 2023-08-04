@@ -21,19 +21,63 @@ class AntrianController extends Controller
         $userid = Pegawai::find(auth()->user()->pegawai_id);
         $unitantrian = Unitantrianbpjs::where('ruang','TPPRJ')->where('loket_id',$userid->kode_ruang)->first();
     //  return($unitantrian->pelayanan_id);
+        if($jenis === 'call')
+        {
+            $myReq["layanan"] = $unitantrian->pelayanan_id;
+            $myReq["loket"] = $unitantrian->loket_id;
+            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["user_id"] = "a1";
 
-        $myReq["layanan"] = $unitantrian->pelayanan_id;
-        $myReq["loket"] = $unitantrian->loket_id;
-        $myReq["id_ruang"] =$unitantrian->ruang_id;
-        $myReq["user_id"] = "a1";
+            //$myVars=json_encode($myReq);
+            $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolcall_layanan_ruang', [
+                'form_params' => $myReq,
+                'http_errors' => false
+            ]);
+            $query = json_decode($url->getBody()->getContents(), false);
+            return $query;
+        }else if($jenis === 'recall')
+        {
+            $myReq["layanan"] = $unitantrian->pelayanan_id;
+            $myReq["loket"] = $unitantrian->loket_id;
+            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["user_id"] = "a1";
 
-        //$myVars=json_encode($myReq);
-        $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolcall_layanan_ruang', [
-            'form_params' => $myReq,
-            'http_errors' => false
-        ]);
-        $query = json_decode($url->getBody()->getContents(), false);
-        return $query;
+            $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolrecall_layanan_ruang', [
+                'form_params' => $myReq,
+                'http_errors' => false
+            ]);
+            $query = json_decode($url->getBody()->getContents(), false);
+            return $query;
+        }else if($jenis === 'call lansia')
+        {
+            $myReq["layanan"] = 3;
+            $myReq["loket"] = $unitantrian->loket_id;
+            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["user_id"] = "a1";
+
+            //$myVars=json_encode($myReq);
+            $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolcall_layanan_ruang', [
+                'form_params' => $myReq,
+                'http_errors' => false
+            ]);
+            $query = json_decode($url->getBody()->getContents(), false);
+            return $query;
+        }else{
+            $myReq["layanan"] = 3;
+            $myReq["loket"] = $unitantrian->loket_id;
+            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["user_id"] = "a1";
+
+            $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolrecall_layanan_ruang', [
+                'form_params' => $myReq,
+                'http_errors' => false
+            ]);
+            $query = json_decode($url->getBody()->getContents(), false);
+            return $query;
+        }
+
+
+
     }
 
     public static function ambilnoantrian($request, $input)
