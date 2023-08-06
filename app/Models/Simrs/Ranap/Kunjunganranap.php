@@ -20,6 +20,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
+use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Oksigen\Oksigen;
 use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
@@ -66,12 +67,12 @@ class Kunjunganranap extends Model
     }
     public function rstigalimaxx()
     {
-        return $this->hasMany(Rstigalimax::class, 'rs1', 'rs1')->take(2);
+        return $this->hasMany(Rstigalimax::class, 'rs1', 'rs1');
     }
 
     public function akomodasikamar()
     {
-        return $this->hasMany(Rstigalimax::class, 'rs1', 'rs1')->take(2);
+        return $this->hasMany(Rstigalimax::class, 'rs1', 'rs1');
     }
 
     public function biayamaterai()
@@ -111,7 +112,7 @@ class Kunjunganranap extends Model
 
     public function keperawatan()
     {
-        return $this->hasMany(Oksigen::class, 'rs1','rs1');
+        return $this->hasMany(Keperawatan::class, 'rs1','rs1');
     }
 
     public function laborat()
