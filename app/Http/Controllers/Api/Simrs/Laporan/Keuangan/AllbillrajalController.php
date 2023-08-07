@@ -356,13 +356,13 @@ class AllbillrajalController extends Controller
                 'irdtindakan' => function($irdtindakan){
                     $irdtindakan->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','POL014');
                 },
-                'laborat' => function($laborat){
-                    $laborat->select('rs1','rs2','rs3','rs4','rs5','rs6','rs13','rs23')->where('rs23','POL014')->where('rs18','!=','')
+                'laboratdiird' => function($laboratdiird){
+                    $laboratdiird->select('rs1','rs2','rs3','rs4','rs5','rs6','rs13','rs23')->where('rs23','POL014')->where('rs18','!=','')
                     ->where('rs23','!=','1');
                 },
-                'laborat.pemeriksaanlab:rs1,rs2,rs21',
-                'transradiologi' => function($transradiologi){
-                    $transradiologi->select('rs1','rs6','rs8','rs24')->where('rs26','POL014');
+                'laboratdiird.pemeriksaanlab:rs1,rs2,rs21',
+                'transradiologidiird' => function($transradiologidiird){
+                    $transradiologidiird->select('rs1','rs6','rs8','rs24')->where('rs26','POL014');
                 },
                 'irdtindakanoperasix' => function($irdtindakanoperasix){
                     $irdtindakanoperasix->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASIIRD2');
