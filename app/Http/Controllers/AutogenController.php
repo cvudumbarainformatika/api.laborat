@@ -1751,26 +1751,42 @@ class AutogenController extends Controller
 
         // return new JsonResponse(['month' => $month, 'recent' => $recent]);
 
-        $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
-        $today = request('tahun') ? $tanggal : date('Y-m-d');
-        // $today = date('2023-08-01');
-        $yesterday = date('Y-m-d', strtotime('-1 days'));
-        // $lastDay = date('Y-m-t', strtotime($today));
-        $firstDay = date('Y-m-01', strtotime($today));
-        $dToday = date_create($today);
-        $dLastDay = date_create($firstDay);
-        $diff = date_diff($dToday, $dLastDay);
+        // $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
+        // $today = request('tahun') ? $tanggal : date('Y-m-d');
+        // // $today = date('2023-08-01');
+        // $yesterday = date('Y-m-d', strtotime('-1 days'));
+        // // $lastDay = date('Y-m-t', strtotime($today));
+        // $firstDay = date('Y-m-01', strtotime($today));
+        // $dToday = date_create($today);
+        // $dLastDay = date_create($firstDay);
+        // $diff = date_diff($dToday, $dLastDay);
 
-        return new JsonResponse([
-            'tanggal' => $tanggal,
-            'today' => $today,
-            'yesterday' => $yesterday,
-            // 'lastDay' => $lastDay,
-            'firstDay' => $firstDay,
-            'dToday' => $dToday,
-            'dLastDay' => $dLastDay,
-            'diff' => $diff,
-        ]);
+        // return new JsonResponse([
+        //     'tanggal' => $tanggal,
+        //     'today' => $today,
+        //     'yesterday' => $yesterday,
+        //     // 'lastDay' => $lastDay,
+        //     'firstDay' => $firstDay,
+        //     'dToday' => $dToday,
+        //     'dLastDay' => $dLastDay,
+        //     'diff' => $diff,
+        // ]);
+        // $sep = '1327R0010523V004291';
+        // $tgl = DateHelper::getDateTime();
+        // $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        // // return $a;
+
+        // Bpjs_http_respon::create(
+        //     [
+        //         'method' => 'POST',
+        //         'noreg' => 'noreg',
+        //         'request' => $sep,
+        //         'respon' => $a,
+        //         'url' => '/SEP',
+        //         'tgl' => $tgl
+        //     ]
+        // );
+        // return new JsonResponse('sudah lagi');
     }
 
     public function wawanpost(Request $request)
@@ -1940,7 +1956,7 @@ class AutogenController extends Controller
     {
         $kd_poli = 'POL012';
         $flag = 'Baru';
-        $getkarcis = FormatingHelper::getKarcisPoli($kd_poli,$flag);
+        $getkarcis = FormatingHelper::getKarcisPoli($kd_poli, $flag);
         return new JsonResponse($getkarcis);
     }
 }

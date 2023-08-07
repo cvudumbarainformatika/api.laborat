@@ -70,6 +70,7 @@ class BridantrianbpjsController extends Controller
                 "kuotanonjkn" => $kuotanonjkn,
                 "keterangan" => "Peserta harap 30 menit lebih awal guna pencatatan administrasi."
             ];
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $ambilantrian = BridgingbpjsHelper::post_url(
             'antrean',
             'antrean/add',
@@ -83,7 +84,7 @@ class BridantrianbpjsController extends Controller
                 'request' => $data,
                 'respon' => $ambilantrian,
                 'url' => '/antrean/add',
-                'tgl' => DateHelper::getDateTime()
+                'tgl' => $tgltobpjshttpres
             ]
         );
         //return $ambilantrian;
@@ -91,6 +92,7 @@ class BridantrianbpjsController extends Controller
 
     public function batalantrian()
     {
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "kodebooking" => "48426/07/2023/J",
             "keterangan" => "testing ws",
@@ -106,7 +108,7 @@ class BridantrianbpjsController extends Controller
                 'request' => $data,
                 'respon' => $batalantrian,
                 'url' => 'antrean/batal',
-                'tgl' => DateHelper::getDateTime()
+                'tgl' => $tgltobpjshttpres
             ]
         );
         return ($batalantrian);
@@ -131,9 +133,11 @@ class BridantrianbpjsController extends Controller
                 'noreg' => $input->noreg,
                 'taskid' => $x,
                 'waktu' => $waktu,
+                'created_at' => DateHelper::getDateTime(),
                 'user_id' => $user_id
             ]
         );
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "kodebooking" => $kodebooking,
             "taskid" => $x,
@@ -151,7 +155,7 @@ class BridantrianbpjsController extends Controller
                 'request' => $data,
                 'respon' => $updatewaktuantrian,
                 'url' => 'antrean/updatewaktu',
-                'tgl' => DateHelper::getDateTime()
+                'tgl' => $tgltobpjshttpres
             ]
         );
     }
@@ -197,6 +201,7 @@ class BridantrianbpjsController extends Controller
                 "taskid" => $taskid,
                 'waktu' => $waktu
             ];
+            $tgltobpjshttpres = DateHelper::getDateTime();
             $updatewaktuantrian = BridgingbpjsHelper::post_url(
                 'antrean',
                 'antrean/updatewaktu',
@@ -209,7 +214,7 @@ class BridantrianbpjsController extends Controller
                     'request' => $data,
                     'respon' => $updatewaktuantrian,
                     'url' => 'antrean/updatewaktu',
-                    'tgl' => DateHelper::getDateTime()
+                    'tgl' => $tgltobpjshttpres
                 ]
             );
         }
@@ -234,8 +239,7 @@ class BridantrianbpjsController extends Controller
         $tgl = date('Y-m-d');
         $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl);
         $wewwew = $logantrian->count();
-        If($wewwew > 0)
-        {
+        if ($wewwew > 0) {
             $cariwew = $logantrian->get();
             $waktu_ambil_tiket = $cariwew[0]->tgl;
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
@@ -248,6 +252,7 @@ class BridantrianbpjsController extends Controller
                 'noreg' => $input->noreg,
                 'taskid' => $taskid,
                 'waktu' => $waktu,
+                'created_at' => DateHelper::getDateTime(),
                 'user_id' => $user_id
             ]
         );
@@ -257,6 +262,7 @@ class BridantrianbpjsController extends Controller
             "taskid" => $taskid,
             'waktu' => $waktu
         ];
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $updatewaktuantrian = BridgingbpjsHelper::post_url(
             'antrean',
             'antrean/updatewaktu',
@@ -269,7 +275,7 @@ class BridantrianbpjsController extends Controller
                 'request' => $data,
                 'respon' => $updatewaktuantrian,
                 'url' => 'antrean/updatewaktu',
-                'tgl' => DateHelper::getDateTime()
+                'tgl' => $tgltobpjshttpres
             ]
         );
     }
