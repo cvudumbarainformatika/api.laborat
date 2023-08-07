@@ -131,6 +131,7 @@ class BridantrianbpjsController extends Controller
                 'noreg' => $input->noreg,
                 'taskid' => $x,
                 'waktu' => $waktu,
+                'created_at' => DateHelper::getDateTime(),
                 'user_id' => $user_id
             ]
         );
@@ -234,8 +235,7 @@ class BridantrianbpjsController extends Controller
         $tgl = date('Y-m-d');
         $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl);
         $wewwew = $logantrian->count();
-        If($wewwew > 0)
-        {
+        if ($wewwew > 0) {
             $cariwew = $logantrian->get();
             $waktu_ambil_tiket = $cariwew[0]->tgl;
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
@@ -248,6 +248,7 @@ class BridantrianbpjsController extends Controller
                 'noreg' => $input->noreg,
                 'taskid' => $taskid,
                 'waktu' => $waktu,
+                'created_at' => DateHelper::getDateTime(),
                 'user_id' => $user_id
             ]
         );
