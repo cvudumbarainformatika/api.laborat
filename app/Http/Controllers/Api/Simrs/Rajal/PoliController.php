@@ -13,12 +13,12 @@ class PoliController extends Controller
 {
     public function kunjunganpoli()
     {
-        if (request('tgl') === '' || request('tgl') === null) {
+        if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = request('tgl') . ' 00:00:00';
-            $tglx = request('tgl') . ' 23:59:59';
+            $tgl = request('to') . ' 00:00:00';
+            $tglx = request('from') . ' 23:59:59';
         }
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
@@ -69,8 +69,8 @@ class PoliController extends Controller
             })
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
             ->orderby('rs17.rs3', 'DESC')
-           // ->paginate(request('per_page'))
-           ->get();
+            ->paginate(request('per_page'));
+        // ->get();
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
