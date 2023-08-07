@@ -76,7 +76,9 @@ class PrintController extends Controller
                 'dokter',
                 'pasien_kunjungan_poli',
                 'pasien_kunjungan_rawat_inap',
-                'pemeriksaan_laborat'
+                'pemeriksaan_laborat' => function ($fn) {
+                    $fn->orderBy('tampilanurut');
+                }
             ])
             ->get();
 
