@@ -261,7 +261,7 @@ class AllbillrajalController extends Controller
                 'laborat.pemeriksaanlab:rs1,rs2,rs21',
                 'transradiologi' => function($transradiologi){
                     $transradiologi->select('rs48.rs1','rs48.rs6','rs48.rs8','rs48.rs24')
-                    ->join('rs24','rs24.rs4','=','rs48.rs23')
+                    ->join('rs24','rs24.rs4','=','rs48.rs26')
                     ->groupBy('rs24.rs4','rs48.rs2','rs48.rs4');
                 },
                 'tindakanendoscopy' => function($tindakanendoscopy){
@@ -326,24 +326,6 @@ class AllbillrajalController extends Controller
                 'tindakanoperasix' => function($tindakanoperasix){
                     $tindakanoperasix->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','OPERASI2');
                 },
-                'apotekranapx' => function($apotekranap){
-                    $apotekranap->select('rs1','rs6','rs8','rs10')->where('rs20','!=','POL014')->where('lunas','!=','1')
-                    ->where('rs24','IRD')->where('rs25','CENTRAL')->orWhere('rs25','IGD');
-                },
-                'apotekranaplalux' => function($apotekranaplalux){
-                    $apotekranaplalux->select('rs1','rs6','rs8','rs10')->where('rs20','!=','POL014')->where('lunas','!=','1')
-                    ->where('rs24','IRD')->where('rs25','CENTRAL')->orWhere('rs25','IGD');
-                },
-                'apotekranapracikanhederx' => function($apotekranapracikanhederx){
-                    $apotekranapracikanhederx->select('rs1','rs8')->where('lunas','!=','1')
-                    ->where('rs18','IRD')->where('rs19','CENTRAL')->orWhere('rs18','IGD');
-                },
-                'apotekranapracikanrincix:rs1,rs5,rs7',
-                'apotekranapracikanhederlalux' => function($apotekranapracikanhederlalux){
-                    $apotekranapracikanhederlalux->select('rs1','rs8')->where('lunas','!=','1')
-                    ->where('rs18','IRD')->where('rs19','CENTRAL')->orWhere('rs18','IGD');
-                },
-                'apotekranapracikanrincilalux:rs1,rs5,rs7',
                 'ambulan' => function($ambulan){
                     $ambulan->select('rs1','rs2','rs15','rs16','rs17','rs18','rs23','rs26','rs30')->where('rs20','!=','POL014');
                 },
@@ -389,6 +371,24 @@ class AllbillrajalController extends Controller
                 'irdtindakanfisioterapi' => function($irdtindakanfisioterapi){
                     $irdtindakanfisioterapi->select('rs1','rs2','rs7','rs13','rs5')->where('rs22','fisioterapi')->where('rs25','POL014');
                 },
+                'apotekranapx' => function($apotekranap){
+                    $apotekranap->select('rs1','rs6','rs8','rs10')->where('rs20','POL014')->where('lunas','!=','1')
+                    ->where('rs24','IRD')->where('rs25','CENTRAL')->orWhere('rs25','IGD');
+                },
+                'apotekranaplalux' => function($apotekranaplalux){
+                    $apotekranaplalux->select('rs1','rs6','rs8','rs10')->where('rs20','POL014')->where('lunas','!=','1')
+                    ->where('rs24','IRD')->where('rs25','CENTRAL')->orWhere('rs25','IGD');
+                },
+                'apotekranapracikanhederx' => function($apotekranapracikanhederx){
+                    $apotekranapracikanhederx->select('rs1','rs8')->where('lunas','!=','1')
+                    ->where('rs18','IRD')->where('rs19','CENTRAL')->orWhere('rs18','IGD');
+                },
+                'apotekranapracikanrincix:rs1,rs5,rs7',
+                'apotekranapracikanhederlalux' => function($apotekranapracikanhederlalux){
+                    $apotekranapracikanhederlalux->select('rs1','rs8')->where('lunas','!=','1')
+                    ->where('rs18','IRD')->where('rs19','CENTRAL')->orWhere('rs18','IGD');
+                },
+                'apotekranapracikanrincilalux:rs1,rs5,rs7',
                 'groupingranap:noreg,cbg_tarif,procedure_tarif,prosthesis_tarif,investigation_tarif,drug_tarif,acute_tarif,chronic_tarif'
             ])
             ->whereBetween('rs4', [$dari, $sampai])
