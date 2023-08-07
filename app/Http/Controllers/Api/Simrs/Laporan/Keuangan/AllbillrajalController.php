@@ -236,7 +236,7 @@ class AllbillrajalController extends Controller
                     ->join('rs24','rs24.rs4','=', 'rs73.rs22')
                     ->join('rs21','rs21.rs1','=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
                     ->where('rs21.rs13','!=','1')
-                    ->groupBy('rs24.rs4','rs73.rs2','rs73.rs4');
+                    ->groupBy('rs24.rs4','rs73.rs2','rs73.rs4','rs73.id');
                     //->where('rs73.rs22','POL014');
                 },
                 'asuhangizi' => function($asuhangizi){
