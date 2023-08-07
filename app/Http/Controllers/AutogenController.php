@@ -1772,6 +1772,7 @@ class AutogenController extends Controller
         //     'diff' => $diff,
         // ]);
         // $sep = '1327R0010523V004291';
+        // $tgl = DateHelper::getDateTime();
         // $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
         // // return $a;
 
@@ -1782,10 +1783,10 @@ class AutogenController extends Controller
         //         'request' => $sep,
         //         'respon' => $a,
         //         'url' => '/SEP',
-        //         'tgl' => DateHelper::getDateTime()
+        //         'tgl' => $tgl
         //     ]
         // );
-        // return new JsonResponse('sudah');
+        // return new JsonResponse('sudah lagi');
     }
 
     public function wawanpost(Request $request)
