@@ -113,7 +113,7 @@ class Bridbpjscontroller extends Controller
 
         // return new JsonResponse($data);
 
-
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $createsep = BridgingbpjsHelper::post_url(
             'vclaim',
             'SEP/2.0/insert',
@@ -127,7 +127,7 @@ class Bridbpjscontroller extends Controller
                 'request' => $data,
                 'respon' => $createsep,
                 'url' => '/SEP/2.0/insert',
-                'tgl' => DateHelper::getDateTime()
+                'tgl' => $tgltobpjshttpres
             ]
         );
 
