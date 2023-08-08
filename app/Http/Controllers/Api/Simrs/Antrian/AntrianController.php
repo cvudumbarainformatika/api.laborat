@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Antrian;
 
+use App\Events\ChatMessageEvent;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
@@ -20,13 +21,12 @@ class AntrianController extends Controller
     {
         $jenis = request('jenis');
         $userid = Pegawai::find(auth()->user()->pegawai_id);
-        $unitantrian = Unitantrianbpjs::where('ruang','TPPRJ')->where('loket_id',$userid->kode_ruang)->first();
-    //  return($unitantrian->pelayanan_id);
-        if($jenis === 'call')
-        {
+        $unitantrian = Unitantrianbpjs::where('ruang', 'TPPRJ')->where('loket_id', $userid->kode_ruang)->first();
+        //  return($unitantrian->pelayanan_id);
+        if ($jenis === 'call') {
             $myReq["layanan"] = $unitantrian->pelayanan_id;
             $myReq["loket"] = $unitantrian->loket_id;
-            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["id_ruang"] = $unitantrian->ruang_id;
             $myReq["user_id"] = "a1";
 
             //$myVars=json_encode($myReq);
@@ -35,8 +35,7 @@ class AntrianController extends Controller
                 'http_errors' => false
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
-            if($query->status === '200')
-            {
+            if ($query->status === '200') {
                 $simpan = Logantrian::create([
                     'unit_antrian' => $unitantrian->loket,
                     'tgl' => date('Y-m-d H:i:s'),
@@ -45,18 +44,20 @@ class AntrianController extends Controller
                     'nomor' => $query->data->nomor,
                     'kdunit' => $unitantrian->pelayanan_id,
                 ]);
-                if(!$simpan)
-                {
+                if (!$simpan) {
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
+
+                // $message = ['nomorAntrian' => $query->data->nomor,];
+                // event(new ChatMessageEvent($message, auth()->user()));
+
                 return ($query);
             }
             return new JsonResponse(['message' => 'gagal'], 410);
-        }else if($jenis === 'recall')
-        {
+        } else if ($jenis === 'recall') {
             $myReq["layanan"] = $unitantrian->pelayanan_id;
             $myReq["loket"] = $unitantrian->loket_id;
-            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["id_ruang"] = $unitantrian->ruang_id;
             $myReq["user_id"] = "a1";
 
             $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolrecall_layanan_ruang', [
@@ -64,12 +65,15 @@ class AntrianController extends Controller
                 'http_errors' => false
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
+
+            // $message = ['nomorAntrianLansia' => $query->data->nomor,];
+            // event(new ChatMessageEvent($message, auth()->user()));
+
             return $query;
-        }else if($jenis === 'call lansia')
-        {
+        } else if ($jenis === 'call lansia') {
             $myReq["layanan"] = 3;
             $myReq["loket"] = $unitantrian->loket_id;
-            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["id_ruang"] = $unitantrian->ruang_id;
             $myReq["user_id"] = "a1";
 
             //$myVars=json_encode($myReq);
@@ -78,8 +82,7 @@ class AntrianController extends Controller
                 'http_errors' => false
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
-            if($query->status === '200')
-            {
+            if ($query->status === '200') {
                 $simpan = Logantrian::create([
                     'unit_antrian' => $unitantrian->loket,
                     'tgl' => date('Y-m-d H:i:s'),
@@ -88,17 +91,18 @@ class AntrianController extends Controller
                     'nomor' => $query->data->nomor,
                     'kdunit' => $unitantrian->pelayanan_id,
                 ]);
-                if(!$simpan)
-                {
+                if (!$simpan) {
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
+                // $message = ['nomorAntrianLansia' => $query->data->nomor,];
+                // event(new ChatMessageEvent($message, auth()->user()));
                 return ($query);
             }
             return new JsonResponse(['message' => 'gagal'], 410);
-        }else{
+        } else {
             $myReq["layanan"] = 3;
             $myReq["loket"] = $unitantrian->loket_id;
-            $myReq["id_ruang"] =$unitantrian->ruang_id;
+            $myReq["id_ruang"] = $unitantrian->ruang_id;
             $myReq["user_id"] = "a1";
 
             $url = (new Client())->post('http://192.168.160.100:2000/api/api' . '/tombolrecall_layanan_ruang', [
@@ -108,9 +112,6 @@ class AntrianController extends Controller
             $query = json_decode($url->getBody()->getContents(), false);
             return $query;
         }
-
-
-
     }
 
     public static function ambilnoantrian($request, $input)

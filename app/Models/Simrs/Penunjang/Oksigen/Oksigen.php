@@ -17,7 +17,8 @@ class Oksigen extends Model
     {
         $harga1 = $this->rs4;
         $harga2 = $this->rs5;
-        $subtotal = $harga1+$harga2;
+        $harga3 = $this->rs6;
+        $subtotal = ($harga1+$harga2)*$harga3;
         return ($subtotal);
     }
 }

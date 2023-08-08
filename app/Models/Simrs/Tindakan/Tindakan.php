@@ -15,10 +15,13 @@ class Tindakan extends Model
 
     public function getSubtotalAttribute()
     {
-        $harga1 = $this->rs7;
-        $harga2 = $this->rs13;
-        $jumlah = $this->rs5;
-        $subtotal = ($harga1+$harga2)*$jumlah;
+        $harga1 = (int) $this->rs7 ? $this->rs7 : 0;
+        $harga2 = (int)  $this->rs13 ? $this->rs13 : 0;
+        $jumlah = (int) $this->rs5 ? $this->rs5 : 1;
+
+        $hargatotal = $harga1 + $harga2;
+        $subtotal = $hargatotal*$jumlah;
+       //$subtotal = ($harga1+$harga2)*$jumlah;
         return ($subtotal);
     }
 
