@@ -246,7 +246,7 @@ class AllbillrajalController extends Controller
                     $makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003')->orWhere('rs3','K00004');
                 },
                 'oksigen' => function($oksigen){
-                    $oksigen->select('rs1','rs4','rs5');
+                    $oksigen->select('rs1','rs4','rs5','rs6');
                 },
                 'keperawatan' => function($keperawatan){
                     $keperawatan->select('rs1','rs4','rs5');
