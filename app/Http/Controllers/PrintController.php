@@ -7,6 +7,7 @@ use App\Models\TransaksiLaborat;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
@@ -64,8 +65,30 @@ class PrintController extends Controller
     {
         $header = $this->print_header();
         $details = TransaksiLaborat::query()
-            ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs29,rs4, (rs6 + rs7) as biaya, rs5 as jumlah,((rs6 + rs7)* rs5) as subtotal,rs27 as flag, metode,tat')
-            ->where('rs2', $q)
+            // ->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs29,rs4, (rs6 + rs7) as biaya, rs5 as jumlah,((rs6 + rs7)* rs5) as subtotal,rs27 as flag, metode,tat')
+            ->select(
+                'rs51.rs1',
+                'rs51.rs2',
+                'rs51.rs3 as tanggal',
+                'rs51.rs20',
+                'rs51.rs8',
+                'rs51.rs23',
+                'rs51.rs18',
+                'rs51.rs21',
+                'rs51.rs29',
+                'rs51.rs4',
+                'rs51.rs5 as jumlah',
+                'rs51.rs27 as flag',
+                'rs51.metode',
+                'rs51.tat',
+                'rs49.tampilanurut as urut',
+                'rs49.rs21 as group',
+                DB::raw('rs51.rs6 + rs51.rs7 as biaya'),
+                DB::raw('(rs51.rs6 + rs51.rs7)* rs51.rs5  as subtotal'),
+            )
+            ->leftjoin('rs49', 'rs49.rs1', '=', 'rs51.rs4')
+            ->where('rs51.rs2', $q)
+            ->where('rs49.hidden', '!=', '1')
             ->with([
                 'kunjungan_poli',
                 'kunjungan_rawat_inap',
@@ -76,11 +99,9 @@ class PrintController extends Controller
                 'dokter',
                 'pasien_kunjungan_poli',
                 'pasien_kunjungan_rawat_inap',
-                'pemeriksaan_laborat' => function ($fn) {
-                    $fn->orderBy('tampilanurut');
-                }
+                'pemeriksaan_laborat'
             ])
-            ->get();
+            ->get()->sortBy('urut')->values();
 
         $data = array(
             'jenis' => $jns,
