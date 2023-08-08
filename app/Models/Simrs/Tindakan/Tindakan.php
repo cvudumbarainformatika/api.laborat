@@ -15,9 +15,9 @@ class Tindakan extends Model
 
     public function getSubtotalAttribute()
     {
-        $harga1 = $this->rs7;
-        $harga2 = $this->rs13;
-        $jumlah = $this->rs5;
+        $harga1 = $this->rs7 ? $this->rs7 : 0;
+        $harga2 = $this->rs13 ? $this->rs13 : 0;
+        $jumlah = $this->rs5 ? $this->rs5 : 1;
         $subtotal = ($harga1+$harga2)*$jumlah;
         return ($subtotal);
     }

@@ -243,7 +243,8 @@ class AllbillrajalController extends Controller
                     $asuhangizi->select('rs1','rs4','rs5')->where('rs3','K00013');
                 },
                 'makanpasien' => function($makanpasien){
-                    $makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003')->orWhere('rs3','K00004');
+                   $makanpasien->select('rs1','rs4','rs5')->whereIn('rs3',['K00003','K00004']);
+                   //$makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003')->orWhere('rs3','K00004');
                 },
                 'oksigen' => function($oksigen){
                     $oksigen->select('rs1','rs4','rs5','rs6');
