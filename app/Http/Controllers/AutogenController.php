@@ -1796,13 +1796,15 @@ class AutogenController extends Controller
         // $data = JadwalController::toMatch2($request->id, $request);
         $antrian = $request->antrian ? $request->antrian : '1';
         $pesan = $request->pesan ? $request->pesan : 'tidak ada';
-        $url = $request->pesan ? $request->pesan : 'url';
+        $url = $request->url ? $request->url : 'url';
+        $task = $request->task ? $request->task : '1';
         $message = [
             'metadata' => [
                 'code' => $antrian,
                 'message' => $pesan
             ],
-            'url' => $url
+            'url' => $url,
+            'task' => $task,
         ];
         event(new AntreanEvent($message));
 
