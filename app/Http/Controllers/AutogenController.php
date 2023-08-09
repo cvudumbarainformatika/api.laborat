@@ -1796,6 +1796,7 @@ class AutogenController extends Controller
         // $data = JadwalController::toMatch2($request->id, $request);
         $message = ['nomorAntrian' => '45',];
         event(new AntreanEvent($message));
+        event(new ChatMessageEvent($message, auth()->user()));
 
         return new JsonResponse($request->all());
 
