@@ -1794,9 +1794,10 @@ class AutogenController extends Controller
     public function wawanpost(Request $request)
     {
         // $data = JadwalController::toMatch2($request->id, $request);
-        $message = ['nomorAntrian' => '45',];
+        $antrian = request('antrian') ? request('antrian') : '1';
+        $message = ['nomorAntrian' => $antrian,];
         event(new AntreanEvent($message));
-        event(new ChatMessageEvent($message, auth()->user()));
+
 
         return new JsonResponse($request->all());
 
