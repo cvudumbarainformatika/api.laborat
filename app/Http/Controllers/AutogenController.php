@@ -1798,6 +1798,9 @@ class AutogenController extends Controller
         $message = ['nomorAntrian' => $antrian,];
         event(new AntreanEvent($message));
 
+        $message = ['nomorAntrianLansia' => $antrian,];
+        event(new AntreanEvent($message));
+
 
         return new JsonResponse($request->all());
 
