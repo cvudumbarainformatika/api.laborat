@@ -93,6 +93,7 @@ class BridantrianbpjsController extends Controller
         //     $ambilantrian,
         //     'url' => 'antrean/add',
         //     'task' => 0,
+        // 'user' => auth()->user()->id
         // ];
         // event(new AntreanEvent($message));
         //return $ambilantrian;
@@ -170,6 +171,7 @@ class BridantrianbpjsController extends Controller
         //     $updatewaktuantrian,
         //     'url' => 'antrean/updatewaktu',
         //     'task' => $x,
+        // 'user' => auth()->user()->id
         // ];
         // event(new AntreanEvent($message));
     }
@@ -236,6 +238,7 @@ class BridantrianbpjsController extends Controller
         //     $updatewaktuantrian,
         //     'url' => 'antrean/updatewaktu',
         //     'task' => $taskid,
+        // 'user' => auth()->user()->id
         // ];
         // event(new AntreanEvent($message));
         //  return($updatewaktuantrian);
@@ -301,6 +304,7 @@ class BridantrianbpjsController extends Controller
         //     $updatewaktuantrian,
         //     'url' => 'antrean/updatewaktu',
         //     'task' => $taskid,
+        // 'user' => auth()->user()->id
         // ];
         // event(new AntreanEvent($message));
     }
