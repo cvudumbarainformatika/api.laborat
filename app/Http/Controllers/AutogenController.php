@@ -1805,6 +1805,7 @@ class AutogenController extends Controller
             ],
             'url' => $url,
             'task' => $task,
+            'user' => auth()->user()
         ];
         event(new AntreanEvent($message));
 
