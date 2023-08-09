@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AntreanEvent;
+use App\Events\ChatMessageEvent;
 use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
@@ -1791,9 +1793,12 @@ class AutogenController extends Controller
 
     public function wawanpost(Request $request)
     {
-        $data = JadwalController::toMatch2($request->id, $request);
+        // $data = JadwalController::toMatch2($request->id, $request);
+        $message = ['nomorAntrian' => '45',];
+        event(new AntreanEvent($message));
 
-        return new JsonResponse($data);
+        return new JsonResponse($request->all());
+
         // $ip2 = $_SERVER['REMOTE_ADDR'];
         // $ip = request()->ip();
         // return new JsonResponse([
