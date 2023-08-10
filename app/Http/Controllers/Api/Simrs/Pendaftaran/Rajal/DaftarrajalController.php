@@ -482,7 +482,7 @@ class DaftarrajalController extends Controller
             $tgl = request('tgl');
             $tglx = request('tgl');
         }
-        $antrianmjkn = Mjknantrian::select(
+        $antrianmjkn = Bpjsantrian::select(
             'bpjs_antrian.kodebooking',
             'bpjs_antrian.nomorantrean',
             'bpjs_antrian.nomorkartu',
