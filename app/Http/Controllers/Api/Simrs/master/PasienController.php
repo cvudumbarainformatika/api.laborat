@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\Simrs\Master;
 
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\DaftarrajalController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpasienx;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PasienController extends Controller
@@ -47,6 +49,12 @@ class PasienController extends Controller
 
     // }
 
+    public function simpanMaster(Request $request)
+    {
+        $data = DaftarrajalController::simpanMpasien($request);
+        return new JsonResponse($data);
+    }
+
     public function Pasien()
     {
         $query = Mpasien::pasien()->get();
@@ -87,10 +95,10 @@ class PasienController extends Controller
             ->limit(20);
 
         $queryx = Mpasienx::pasienx()->filter(request(['q']))
-             ->limit(20)
-             ->union($query)
-             ->get();
-            //->paginate(request('per_page'));
+            ->limit(20)
+            ->union($query)
+            ->get();
+        //->paginate(request('per_page'));
         return new JsonResponse($queryx);
     }
 }

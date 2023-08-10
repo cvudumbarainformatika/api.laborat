@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Antrian;
 
+use App\Events\AntreanEvent;
 use App\Events\ChatMessageEvent;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
@@ -48,8 +49,8 @@ class AntrianController extends Controller
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
 
-                // $message = ['nomorAntrian' => $query->data->nomor,];
-                // event(new ChatMessageEvent($message, auth()->user()));
+                $message = ['nomorAntrian' => $query->data->nomor,];
+                event(new AntreanEvent($message));
 
                 return ($query);
             }
@@ -94,8 +95,8 @@ class AntrianController extends Controller
                 if (!$simpan) {
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
-                // $message = ['nomorAntrianLansia' => $query->data->nomor,];
-                // event(new ChatMessageEvent($message, auth()->user()));
+                $message = ['nomorAntrianLansia' => $query->data->nomor,];
+                event(new AntreanEvent($message));
                 return ($query);
             }
             return new JsonResponse(['message' => 'gagal'], 410);

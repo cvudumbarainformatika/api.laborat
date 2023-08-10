@@ -166,7 +166,7 @@ class Bridbpjscontroller extends Controller
                     'penjaminlaka' => '',
                     'users' => auth()->user()->pegawai_id,
                     'notelepon' => $request->noteleponhp,
-                    'tgl_entery' => DateHelper::getDateTime(),
+                    'tgl_entery' => $tgltobpjshttpres,
                     'noDpjp' => $request->noDpjp ? $request->noDpjp : '',
                     'tgl_kejadian_laka' => $request->tglKecelakaan,
                     'keterangan' => $keterangan,

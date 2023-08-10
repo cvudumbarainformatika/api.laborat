@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
+use App\Events\AntreanEvent;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
@@ -87,6 +88,14 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
+
+        // $message = [
+        //     $ambilantrian,
+        //     'url' => 'antrean/add',
+        //     'task' => 0,
+        // 'user' => auth()->user()->id
+        // ];
+        // event(new AntreanEvent($message));
         //return $ambilantrian;
     }
 
@@ -158,6 +167,13 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
+        // $message = [
+        //     $updatewaktuantrian,
+        //     'url' => 'antrean/updatewaktu',
+        //     'task' => $x,
+        // 'user' => auth()->user()->id
+        // ];
+        // event(new AntreanEvent($message));
     }
 
     public static function updateMulaiWaktuTungguAdmisi($request, $input)
@@ -218,7 +234,13 @@ class BridantrianbpjsController extends Controller
                 ]
             );
         }
-
+        // $message = [
+        //     $updatewaktuantrian,
+        //     'url' => 'antrean/updatewaktu',
+        //     'task' => $taskid,
+        // 'user' => auth()->user()->id
+        // ];
+        // event(new AntreanEvent($message));
         //  return($updatewaktuantrian);
     }
 
@@ -278,5 +300,12 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
+        // $message = [
+        //     $updatewaktuantrian,
+        //     'url' => 'antrean/updatewaktu',
+        //     'task' => $taskid,
+        // 'user' => auth()->user()->id
+        // ];
+        // event(new AntreanEvent($message));
     }
 }
