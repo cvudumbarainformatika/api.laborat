@@ -12,17 +12,16 @@ class AgamaControllerar extends Controller
     public function index()
     {
         $data = Magama::query()
-            ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
-            ->where('flag', '<>', '1')
-            ->get();
+        ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
+        ->where('flag','<>','1')
+        ->get();
 
         return new JsonResponse($data);
     }
 
     public function store(Request $request)
     {
-        $simpan = Magama::updateOrCreate(
-            ['rs1' => $request->kode],
+        $simpan = Magama::updateOrCreate(['rs1' =>$request->kode],
             [
                 'rs2' => $request->agama,
                 'kodemap' => $request->kodemaping,
@@ -30,11 +29,10 @@ class AgamaControllerar extends Controller
             ]
         );
 
-        if (!$simpan) {
+        if(!$simpan){
             return new JsonResponse(['message' => 'TIDAK TERSIMPAN...!!'], 500);
         }
 
         return new JsonResponse(['message' => 'BERHASIL DISIMPAN', $simpan], 200);
-        //oooo8
     }
 }
