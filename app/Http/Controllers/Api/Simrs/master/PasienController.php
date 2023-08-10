@@ -52,6 +52,7 @@ class PasienController extends Controller
     public function simpanMaster(Request $request)
     {
         $data = DaftarrajalController::simpanMpasien($request);
+
         return new JsonResponse($data);
     }
 
