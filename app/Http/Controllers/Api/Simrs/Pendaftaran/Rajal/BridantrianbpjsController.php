@@ -91,7 +91,7 @@ class BridantrianbpjsController extends Controller
 
         if ($ambilantrian) {
             $message = [
-                $ambilantrian,
+                'kode' => $ambilantrian,
                 'url' => 'antrean/add',
                 'task' => 0,
                 'user' => auth()->user()->id
@@ -171,7 +171,7 @@ class BridantrianbpjsController extends Controller
         );
         if ($updatewaktuantrian) {
             $message = [
-                $updatewaktuantrian,
+                'kode' => $updatewaktuantrian,
                 'url' => 'antrean/updatewaktu',
                 'task' => $x,
                 'user' => auth()->user()->id
@@ -240,7 +240,7 @@ class BridantrianbpjsController extends Controller
         }
         if ($updatewaktuantrian) {
             $message = [
-                $updatewaktuantrian,
+                'kode' => $updatewaktuantrian,
                 'url' => 'antrean/updatewaktu',
                 'task' => $taskid,
                 'user' => auth()->user()->id
@@ -308,7 +308,7 @@ class BridantrianbpjsController extends Controller
         );
         if ($updatewaktuantrian) {
             $message = [
-                $updatewaktuantrian,
+                'kode' => $updatewaktuantrian,
                 'url' => 'antrean/updatewaktu',
                 'task' => $taskid,
                 'user' => auth()->user()->id
