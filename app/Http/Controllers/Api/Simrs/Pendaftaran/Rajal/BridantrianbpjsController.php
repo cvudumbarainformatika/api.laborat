@@ -237,15 +237,15 @@ class BridantrianbpjsController extends Controller
                     'tgl' => $tgltobpjshttpres
                 ]
             );
-        }
-        if ($updatewaktuantrian) {
-            $message = [
-                'kode' => $updatewaktuantrian,
-                'url' => 'antrean/updatewaktu',
-                'task' => $taskid,
-                'user' => auth()->user()->id
-            ];
-            event(new AntreanEvent($message));
+            if ($updatewaktuantrian) {
+                $message = [
+                    'kode' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'task' => $taskid,
+                    'user' => auth()->user()->id
+                ];
+                event(new AntreanEvent($message));
+            }
         }
         //  return($updatewaktuantrian);
     }
