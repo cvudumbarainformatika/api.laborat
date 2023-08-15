@@ -63,7 +63,7 @@ class PemesananController extends Controller
         //}
         DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
         $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
-        $wew = $x[0]->rencblobat;
+        $wew = $x[0]->pemesanan;
         $nopemesanan = FormatingHelper::pemesananobat($wew, 'PES-BOBAT');
 
         $simpanpemesananheder = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)->update([
@@ -85,7 +85,7 @@ class PemesananController extends Controller
         {
             return new JsonResponse(['message' => 'GAGAL DISIMPAN'], 500);
         }
-        return new JsonResponse(['message' => 'OK', $simpanpenerimaanrinci], 200);
+        return new JsonResponse(['message' => 'OK', $nopemesanan], 200);
     }
 
     public function listpemesanan()
