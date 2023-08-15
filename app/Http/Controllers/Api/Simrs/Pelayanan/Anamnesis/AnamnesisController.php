@@ -7,7 +7,7 @@ use App\Models\Simrs\Anamnesis\Anamnesis as AnamnesisAnamnesis;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class Anamnesis extends Controller
+class AnamnesisController extends Controller
 {
     public function simpananamnesis(Request $request)
     {
@@ -15,9 +15,10 @@ class Anamnesis extends Controller
         [
             'rs2' => $request->norm,
             'rs3' => date('Y-m-d H:i:s'),
-            'rs4' => $request->riwayatpenyakit,
-            'rs5' => $request->riwayatalergi,
-            'rs6' => $request->riwayatpengobatan,
+            'rs4' => $request->keluhanutama,
+            'riwayatpenyakit' => $request->riwayatpenyakit,
+            'riwayatalergi' => $request->riwayatalergi,
+            'riwayatpengobatan' => $request->riwayatpengobatan,
         ]);
         if(!$simpananamnesis)
         {
