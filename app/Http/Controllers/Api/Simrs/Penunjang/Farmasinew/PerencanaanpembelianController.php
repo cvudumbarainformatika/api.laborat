@@ -123,7 +123,7 @@ class PerencanaanpembelianController extends Controller
 
     public function listrencanabeli()
     {
-        $rencanabeli = RencanabeliH::where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+        $rencanabeli = RencanabeliH::with('rincian')->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
                         ->orderBy('tgl')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }
