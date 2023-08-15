@@ -93,11 +93,17 @@ class PasienController extends Controller
         //   ->paginate(request('per_page'));
 
         $query = Mpasien::pasien()->filter(request(['q']))
-            ->limit(20);
+            ->limit(20)
+            ->get();
+
+        if(count($query) > 0)
+        {
+            return new JsonResponse($query);
+        }
 
         $queryx = Mpasienx::pasienx()->filter(request(['q']))
             ->limit(20)
-            ->union($query)
+           // ->union($query)
             ->get();
         //->paginate(request('per_page'));
         return new JsonResponse($queryx);
