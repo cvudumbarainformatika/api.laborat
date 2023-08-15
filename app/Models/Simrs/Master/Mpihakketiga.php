@@ -10,5 +10,5 @@ class Mpihakketiga extends Model
     use HasFactory;
     protected $table = 'pihak_ketiga';
     protected $guarded = ['id'];
-    protected $connection = 'farmasi';
+    protected $connection = 'siasik';
 }

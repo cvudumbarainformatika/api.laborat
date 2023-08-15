@@ -90,9 +90,10 @@ class PemesananController extends Controller
 
     public function listpemesanan()
     {
-        $listpemesanan = PemesananHeder::with('pihakketiga')
-        ->where('')
-        ->get();
+        $listpemesanan = RencanabeliH::select('nopemesanan','tglpemesanan','kodepbf')
+        ->with('pihakketiga')
+        ->where('nopemesanan','!=','')
+        ->orderBy('tglpemesanan')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
 }
