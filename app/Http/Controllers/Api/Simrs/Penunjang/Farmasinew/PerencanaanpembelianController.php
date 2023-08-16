@@ -127,4 +127,15 @@ class PerencanaanpembelianController extends Controller
                         ->orderBy('tgl')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }
+
+    public function kuncirencana(Request $request)
+    {
+       $kunci = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)
+       ->update(['flag' => 1]);
+       if(!$kunci)
+       {
+            return new JsonResponse(['message' => 'gagal mengupdate data'], 500);
+       }
+            return new JsonResponse(['message' => 'ok'], 200);
+    }
 }
