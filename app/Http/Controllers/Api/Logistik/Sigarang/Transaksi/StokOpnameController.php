@@ -525,10 +525,10 @@ class StokOpnameController extends Controller
                     // 'kode_rs' => $key->kode_rs,
                     // 'kode_ruang' => $key->kode_ruang,
                     // 'no_penerimaan' => $key->no_penerimaan,
-                    'harga' => $key->harga,
+                    'harga' => $key->harga !== '' ? $key->harga : 0,
                     'sisa_stok' => $key->sisa_stok,
-                    'satuan' => $key->satuan !== null ? $key->satuan : 'Belum ada satuan',
-                    'kode_satuan' => $key->kode_satuan !== null ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
+                    'satuan' => $key->satuan !== '' ? $key->satuan : 'Belum ada satuan',
+                    'kode_satuan' => $key->kode_satuan !== '' ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
                 ]);
 
                 // $anu = MonthlyStokUpdate::find($data->id);

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\RecentStokUpdate;
+use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,16 +78,44 @@ class DistribusiController extends Controller
             'id' => 'required',
             'no_distribusi' => 'required',
         ]);
-        $permintaanruangan = Permintaanruangan::with('details')->find($request->id);
 
-        foreach ($permintaanruangan->details as $key => $detail) {
-            // if (!$detail['jumlah_disetujui']) {
-            //     return new JsonResponse(['message' => 'periksa kembali jumlah disetujui'], 422);
-            // }
+        $det = DetailPermintaanruangan::where('permintaanruangan_id', $request->id)->get();
+        foreach ($det as $key => $detail) {
+
             if (!$detail['tujuan']) {
                 return new JsonResponse(['message' => 'periksa data ruangan yang melakukan permintaan'], 422);
             }
+
+            // check stok masih cukup atau tidak
+            $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
+                ->where('kode_rs', $detail['kode_rs'])
+                ->where('sisa_stok', '>', 0)
+                ->with('barang')
+                ->get();
+
+            $sisaStok = collect($dari)->sum('sisa_stok');
+            $disetujui = $detail['jumlah_disetujui'];
+
+            if ($disetujui > 0) {
+                if (count($dari) === 0) {
+                    $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
+                    $pesan = 'stok ' .  $barang->nama . ' tidak ada';
+                    $status = 410;
+
+                    return new JsonResponse(['status' => $status, 'message' => $pesan,], 410);
+                }
+
+                if ($sisaStok < $disetujui) {
+                    $barang = $dari[$key]['barang']['nama'];
+                    $pesan = 'stok ' .  $barang . ' tidak mencukupi';
+                    $status = 410;
+
+                    return new JsonResponse(['status' => $status, 'message' => $pesan,], 410);
+                }
+            }
         }
+        $permintaanruangan = Permintaanruangan::find($request->id);
+        // $permintaanruangan = Permintaanruangan::with('details')->find($request->id);
         // return new JsonResponse($permintaanruangan);
         // $permintaanruangan = Permintaanruangan::find($request->id);
         try {

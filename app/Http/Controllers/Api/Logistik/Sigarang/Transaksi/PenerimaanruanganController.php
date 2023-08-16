@@ -125,38 +125,33 @@ class PenerimaanruanganController extends Controller
 
         // check stok masih cukup atau tidak
         //
+        // foreach ($permintaanruangan->details as $key => $detail) {
+        //     $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
+        //         ->where('kode_rs', $detail['kode_rs'])
+        //         ->where('sisa_stok', '>', 0)
+        //         ->with('barang')
+        //         ->get();
+
+        //     $sisaStok = collect($dari)->sum('sisa_stok');
+        //     $disetujui = $detail['jumlah_disetujui'];
 
 
-        foreach ($permintaanruangan->details as $key => $detail) {
-            $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
-                ->where('kode_rs', $detail['kode_rs'])
-                ->where('sisa_stok', '>', 0)
-                ->with('barang')
-                ->get();
+        //     if (count($dari) === 0) {
+        //         $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
+        //         $pesan = 'stok ' .  $barang->nama . ' tidak ada';
+        //         $status = 410;
 
-            $sisaStok = collect($dari)->sum('sisa_stok');
-            // $jumlahDistribusi = $detail['jumlah_distribusi'];
-            $jumlahDistribusi = $detail['jumlah_disetujui'];
+        //         return ['status' => $status, 'message' => $pesan,];
+        //     }
 
-            // return ['status' => 500, 'message' => $detail, 'key' => $key];
-            // kembali jika ada jumlah stok yang kurang dari jumnlah distribusi
+        //     if ($sisaStok < $disetujui) {
+        //         $barang = $dari[$key]['barang']['nama'];
+        //         $pesan = 'stok ' .  $barang . ' tidak mencukupi';
+        //         $status = 410;
 
-            if (count($dari) === 0) {
-                $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
-                $pesan = 'stok ' .  $barang->nama . ' tidak ada';
-                $status = 410;
-
-                return ['status' => $status, 'message' => $pesan,];
-            }
-
-            if ($sisaStok < $jumlahDistribusi) {
-                $barang = $dari[$key]['barang']['nama'];
-                $pesan = 'stok ' .  $barang . ' tidak mencukupi';
-                $status = 410;
-
-                return ['status' => $status, 'message' => $pesan,];
-            }
-        }
+        //         return ['status' => $status, 'message' => $pesan,];
+        //     }
+        // }
         // return [
         //     'sisaStok' => $sisaStok,
         //     'jumlahDistribusi' => $jumlahDistribusi,
@@ -191,7 +186,8 @@ class PenerimaanruanganController extends Controller
         );
 
         // detail barang + update recent stok ruangan dan depo
-        foreach ($permintaanruangan->details as $detail) {
+        $det = DetailPermintaanruangan::where('permintaanruangan_id', $request->id)->get();
+        foreach ($det as $detail) {
 
             $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
                 ->where('kode_rs', $detail['kode_rs'])
@@ -201,71 +197,70 @@ class PenerimaanruanganController extends Controller
 
             $sisaStok = collect($dari)->sum('sisa_stok');
             $index = 0;
-            // $jumlahDistribusi = $detail['jumlah_distribusi'];
             $jumlahDistribusi = $detail['jumlah_disetujui'];
 
-            // masukkan detail sesuai order FIFO
-            $masuk = $jumlahDistribusi;
-            do {
-                $ada = $dari[$index]->sisa_stok;
-                if ($ada < $masuk) {
-                    $sisa = $masuk - $ada;
+            if ($jumlahDistribusi > 0) {
+                // masukkan detail sesuai order FIFO
+                $masuk = $jumlahDistribusi;
+                do {
+                    $ada = $dari[$index]->sisa_stok;
+                    if ($ada < $masuk) {
+                        $sisa = $masuk - $ada;
 
-                    RecentStokUpdate::create([
-                        'kode_rs' => $detail['kode_rs'],
-                        'kode_ruang' => $detail['tujuan'],
-                        'sisa_stok' => $ada,
-                        'harga' => $dari[$index]->harga,
-                        'no_penerimaan' => $dari[$index]->no_penerimaan,
-                    ]);
-                    $dari[$index]->update([
-                        'sisa_stok' => 0
-                    ]);
-                    $penerimaanruangan->details()->create([
-                        'no_penerimaan' => $dari[$index]->no_penerimaan,
-                        'jumlah' => $ada,
-                        // 'no_distribusi' => $permintaanruangan->no_distribusi,
-                        'no_distribusi' => $request->no_distribusi,
-                        'kode_rs' => $detail['kode_rs'],
-                        'kode_satuan' => $detail['kode_satuan'],
-                    ]);
-                    $detailPermintaan = DetailPermintaanruangan::find($detail['id']);
-                    $detailPermintaan->update([
-                        'no_penerimaan' => $dari[$index]->no_penerimaan,
-                    ]);
-                    $index = $index + 1;
-                    $masuk = $sisa;
-                    $loop = true;
-                } else {
-                    $sisa = $ada - $masuk;
+                        RecentStokUpdate::create([
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_ruang' => $detail['tujuan'],
+                            'sisa_stok' => $ada,
+                            'harga' => $dari[$index]->harga,
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                        ]);
+                        $dari[$index]->update([
+                            'sisa_stok' => 0
+                        ]);
+                        $penerimaanruangan->details()->create([
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                            'jumlah' => $ada,
+                            'no_distribusi' => $request->no_distribusi,
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_satuan' => $detail['kode_satuan'],
+                        ]);
+                        $detailPermintaan = DetailPermintaanruangan::find($detail['id']);
+                        $detailPermintaan->update([
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                        ]);
+                        $index = $index + 1;
+                        $masuk = $sisa;
+                        $loop = true;
+                    } else {
+                        $sisa = $ada - $masuk;
 
-                    RecentStokUpdate::create([
-                        'kode_rs' => $detail['kode_rs'],
-                        'kode_ruang' => $detail['tujuan'],
-                        'sisa_stok' => $masuk,
-                        'harga' => $dari[$index]->harga,
-                        'no_penerimaan' => $dari[$index]->no_penerimaan,
-                    ]);
+                        RecentStokUpdate::create([
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_ruang' => $detail['tujuan'],
+                            'sisa_stok' => $masuk,
+                            'harga' => $dari[$index]->harga,
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                        ]);
 
-                    $dari[$index]->update([
-                        'sisa_stok' => $sisa
-                    ]);
+                        $dari[$index]->update([
+                            'sisa_stok' => $sisa
+                        ]);
 
-                    $penerimaanruangan->details()->create([
-                        'no_penerimaan' => $dari[$index]->no_penerimaan,
-                        'jumlah' => $masuk,
-                        // 'no_distribusi' => $permintaanruangan->no_distribusi,
-                        'no_distribusi' => $request->no_distribusi,
-                        'kode_rs' => $detail['kode_rs'],
-                        'kode_satuan' => $detail['kode_satuan'],
-                    ]);
-                    $detailPermintaan = DetailPermintaanruangan::find($detail['id']);
-                    $detailPermintaan->update([
-                        'no_penerimaan' => $dari[$index]->no_penerimaan,
-                    ]);
-                    $loop = false;
-                }
-            } while ($loop);
+                        $penerimaanruangan->details()->create([
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                            'jumlah' => $masuk,
+                            'no_distribusi' => $request->no_distribusi,
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_satuan' => $detail['kode_satuan'],
+                        ]);
+                        $detailPermintaan = DetailPermintaanruangan::find($detail['id']);
+                        $detailPermintaan->update([
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                        ]);
+                        $loop = false;
+                    }
+                } while ($loop);
+            }
         }
         return [
             'status' => 201

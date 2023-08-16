@@ -148,7 +148,7 @@ class KartustokController extends Controller
                         'detail_permintaanruangans.kode_satuan',
                         'permintaanruangans.id',
                         'permintaanruangans.no_distribusi',
-                        'permintaanruangans.tanggal',
+                        'permintaanruangans.tanggal_distribusi as tanggal',
                         'permintaanruangans.kode_pengguna',
                         'permintaanruangans.kode_ruang',
                         'detail_permintaanruangans.jumlah_distribusi as jumlah',
@@ -156,8 +156,8 @@ class KartustokController extends Controller
                     )
                         ->where('permintaanruangans.status', '=', '7')
                         ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
-                        ->whereMonth('permintaanruangans.tanggal', $bln)
-                        ->whereYear('permintaanruangans.tanggal', $thn)
+                        ->whereMonth('permintaanruangans.tanggal_distribusi', $bln)
+                        ->whereYear('permintaanruangans.tanggal_distribusi', $thn)
                         ->with([
                             'masterdepo:kode,nama',
                             'ruangan:kode,uraian'
@@ -230,6 +230,7 @@ class KartustokController extends Controller
                         'permintaanruangans.dari'
                     )
                         ->where('permintaanruangans.status', '=', '7')
+                        ->where('permintaanruangans.kode_ruang', $kd_ruangan)
                         ->whereMonth('permintaanruangans.tanggal', $bln)
                         ->whereYear('permintaanruangans.tanggal', $thn)->with(['masterdepo:kode,nama']);
                 },
@@ -242,6 +243,7 @@ class KartustokController extends Controller
                         'details_pemakaianruangans.jumlah',
                         'details_pemakaianruangans.no_penerimaan'
                     )
+                        ->where('pemakaianruangans.kode_ruang', $kd_ruangan)
                         ->whereMonth('pemakaianruangans.tanggal', $bln)
                         ->whereYear('pemakaianruangans.tanggal', $thn)->with(['ruanganmaster:kode,uraian']);
                 },
