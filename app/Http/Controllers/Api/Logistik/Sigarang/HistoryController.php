@@ -58,18 +58,9 @@ class HistoryController extends Controller
             */
         } else if ($nama === 'Penerimaan') {
 
-            // if (request('q')) {
-            //     $penerimaan->where('nomor', 'LIKE', '%' . request('q') . '%')
-            //         ->orWhere('no_penerimaan', 'LIKE', '%' . request('q') . '%');
-            // }
-            // if (request('kontrak')) {
-            //     $penerimaan->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
-            // }
-            // if (request('from')) {
-            //     $penerimaan->whereBetween('tanggal', [request('from'), request('to')]);
-            // }
+
             $penerimaan->when(request('q'), function ($search) {
-                $search->where('no_permintaan', 'LIKE', '%' . request('q') . '%');
+                $search->where('nomor', 'LIKE', '%' . request('q') . '%');
             })
                 ->when(request('from'), function ($w) {
                     $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
@@ -87,7 +78,7 @@ class HistoryController extends Controller
         } else if ($nama === 'Gudang') {
 
             $penerimaan->when(request('q'), function ($search) {
-                $search->where('no_permintaan', 'LIKE', '%' . request('q') . '%');
+                $search->where('nomor', 'LIKE', '%' . request('q') . '%');
             })
                 ->when(request('from'), function ($w) {
                     $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
@@ -130,13 +121,6 @@ class HistoryController extends Controller
                 ->when(request('from'), function ($w) {
                     $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
                 });
-
-            // if (request('q')) {
-            //     $filterRuangan->where('no_permintaan', 'LIKE', '%' . request('q') . '%');
-            // }
-            // if (request('from')) {
-            //     $filterRuangan->whereBetween('tanggal', [request('from'), request('to')]);
-            // }
             $data = $filterRuangan->filter(request(['q']))
                 ->with([
                     'details.barangrs.barang108',
