@@ -45,6 +45,8 @@ class BridantrianbpjsController extends Controller
 
         $pasienbaru = $request->barulama == 'lama' ? 1 : 0;
 
+        $referensi = ($request->nosuratkontrol === null || $request->nosuratkontrol === '') ?  $request->norujukan : $request->nosuratkontrol;
+
         $data =
             [
                 "kodebooking" => $noreg,
@@ -61,7 +63,7 @@ class BridantrianbpjsController extends Controller
                 "namadokter" => $request->namadokter,
                 "jampraktek" => $request->jampraktek,
                 "jeniskunjungan" => $request->id_kunjungan,
-                "nomorreferensi" => $request->norujukan,
+                "nomorreferensi" => $referensi,
                 "nomorantrean" => $request->noantrian,
                 "angkaantrean" => $request->angkaantrean,
                 "estimasidilayani" => $estimasidilayani,
