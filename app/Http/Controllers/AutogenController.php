@@ -1789,6 +1789,50 @@ class AutogenController extends Controller
         //     ]
         // );
         // return new JsonResponse('sudah lagi');
+        // $noreg = "60192/08/2023/J";
+        // $data = [
+        //     "kodebooking" => "60192\/08\/2023\/J",
+        //     "jenispasien" => "JKN",
+        //     "nomorkartu" => "0000112197227",
+        //     "nik" => "3513176312900003",
+        //     "nohp" => "082332922520",
+        //     "kodepoli" => "BDM",
+        //     "namapoli" => "GIGI BEDAH MULUT",
+        //     "pasienbaru" => 0,
+        //     "norm" => "253555",
+        //     "tanggalperiksa" => "2023-08-18",
+        //     "kodedokter" => "427875",
+        //     "namadokter" => '',
+        //     "jampraktek" => '',
+        //     "jeniskunjungan" => 1,
+        //     "nomorreferensi" => "132822020823P000243",
+        //     "nomorantrean" => "B071",
+        //     "angkaantrean" => 71,
+        //     "estimasidilayani" => 1692292200000,
+        //     "sisakuotajkn" => 15,
+        //     "kuotajkn" => 16,
+        //     "sisakuotanonjkn" => 3,
+        //     "kuotanonjkn" => 4,
+        //     "keterangan" => "Peserta harap 30 menit lebih awal guna pencatatan administrasi."
+        // ];
+        // $tgltobpjshttpres = DateHelper::getDateTime();
+        // $ambilantrian = BridgingbpjsHelper::post_url(
+        //     'antrean',
+        //     'antrean/add',
+        //     $data
+        // );
+
+        // $simpanbpjshttprespon = Bpjs_http_respon::create(
+        //     [
+        //         'noreg' => $noreg,
+        //         'method' => 'POST',
+        //         'request' => $data,
+        //         'respon' => $ambilantrian,
+        //         'url' => '/antrean/add',
+        //         'tgl' => $tgltobpjshttpres
+        //     ]
+        // );
+        // return new JsonResponse($simpanbpjshttprespon);
     }
 
     public function wawanpost(Request $request)
@@ -1798,11 +1842,12 @@ class AutogenController extends Controller
         $pesan = $request->pesan ? $request->pesan : 'tidak ada';
         $url = $request->url ? $request->url : 'url';
         $task = $request->task ? $request->task : '1';
+        $metadata['metadata'] =  [
+            'code' => $antrian,
+            'message' => $pesan
+        ];
         $message = [
-            'metadata' => [
-                'code' => $antrian,
-                'message' => $pesan
-            ],
+            'kode' => $metadata,
             'url' => $url,
             'task' => $task,
             'user' => auth()->user()->id
