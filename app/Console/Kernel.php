@@ -21,11 +21,7 @@ class Kernel extends ConsoleKernel
             $opname = new StokOpnameController;
             $data = $opname->storeMonthly();
             info($data);
-        })->dailyAt('00:30');;
-        $schedule->call(function () {
-
-            info('nyoba');
-        })->everyMinute();
+        })->dailyAt('00:30');
     }
 
     /**
