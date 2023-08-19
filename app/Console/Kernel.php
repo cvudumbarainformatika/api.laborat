@@ -22,10 +22,10 @@ class Kernel extends ConsoleKernel
             $data = $opname->storeMonthly();
             info($data);
         })->dailyAt('00:30');;
-        $schedule->call(function () {
+        // $schedule->call(function () {
 
-            info('nyoba');
-        })->everyMinute();
+        //     info('nyoba');
+        // })->everyMinute();
     }
 
     /**
