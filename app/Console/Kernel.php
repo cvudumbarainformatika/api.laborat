@@ -18,10 +18,17 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->call(function () {
+            info('mulai stok opname');
             $opname = new StokOpnameController;
             $data = $opname->storeMonthly();
             info($data);
-        })->dailyAt('00:30');;
+        })->dailyAt('00:30');
+        // $schedule->call(function () {
+        //     info('mulai');
+        //     $opname = new StokOpnameController;
+        //     $data = $opname->storeCoba();
+        //     info($data);
+        // })->hourlyAt(16);
         // $schedule->call(function () {
 
         //     info('nyoba');
