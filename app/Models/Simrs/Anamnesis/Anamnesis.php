@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Models\Simrs\Master;
+namespace App\Models\Simrs\Anamnesis;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Mpihakketiga extends Model
+class Anamnesis extends Model
 {
     use HasFactory;
-    protected $table = 'pihak_ketiga';
+    protected $table = 'rs209';
     protected $guarded = ['id'];
-    protected $connection = 'siasik';
 }

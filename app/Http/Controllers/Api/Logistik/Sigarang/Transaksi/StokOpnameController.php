@@ -520,15 +520,15 @@ class StokOpnameController extends Controller
                     'kode_rs' => $key->kode_rs,
                     'kode_ruang' => $key->kode_ruang,
                     'no_penerimaan' => $key->no_penerimaan,
+                    'sisa_stok' => $key->sisa_stok,
+                    'harga' => $key->harga !== '' ? $key->harga : 0,
                 ], [
                     // 'tanggal' => $tanggal,
                     // 'kode_rs' => $key->kode_rs,
                     // 'kode_ruang' => $key->kode_ruang,
                     // 'no_penerimaan' => $key->no_penerimaan,
-                    'harga' => $key->harga,
-                    'sisa_stok' => $key->sisa_stok,
-                    'satuan' => $key->satuan !== null ? $key->satuan : 'Belum ada satuan',
-                    'kode_satuan' => $key->kode_satuan !== null ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
+                    'satuan' => $key->satuan !== '' ? $key->satuan : 'Belum ada satuan',
+                    'kode_satuan' => $key->kode_satuan !== '' ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
                 ]);
 
                 // $anu = MonthlyStokUpdate::find($data->id);
@@ -548,8 +548,8 @@ class StokOpnameController extends Controller
             // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
-                // 'fisik' => $fisik,
-                // 'total' => $total,
+                'recent' => count($recent),
+                'total' => count($total),
             ], 201);
 
             //end if
@@ -561,6 +561,85 @@ class StokOpnameController extends Controller
         ], 410);
         // return new JsonResponse(['message' => 'Anda tidak terdaftar sebagai petugas Depo'], 422);
     }
+    // public function storeCoba()
+    // {
+
+    //     $tanggal = request('tahun') . '-' . request('bulan') . '-' . date('d');
+    //     // $today = request('tahun') ? $tanggal : date('Y-m-d');
+    //     $yesterday = date('Y-m-d', strtotime('-1 days'));
+    //     $today = date('2023-09-01');
+    //     // $lastDay = date('Y-m-t', strtotime($today));
+    //     $lastDay = date('Y-m-01', strtotime($today));
+    //     $dToday = date_create($today);
+    //     $dLastDay = date_create($lastDay);
+    //     $diff = date_diff($dToday, $dLastDay);
+
+    //     // return new JsonResponse([
+    //     //     'today' => $today,
+    //     //     'last day' => $lastDay,
+    //     //     'diff' => $diff,
+    //     //     'request' => request()->all(),
+    //     //     // 'recent' => $recent,
+    //     //     // 'awal' => $dataAwal,
+    //     // ], 410);
+
+    //     if ($diff->d === 0 && $diff->m === 0) {
+    //         // ambil data barang yang ada stoknya di tabel sekarang
+    //         $recent = RecentStokUpdate::where('sisa_stok', '>', 0)
+    //             // ->where('kode_ruang', 'like', '%Gd-%')
+    //             ->with('barang')
+    //             ->get();
+
+    //         $total = [];
+    //         $fisik = [];
+    //         $tanggal = $yesterday . ' 23:59:59';
+    //         foreach ($recent as $key) {
+    //             $data = MonthlyStokUpdate::updateOrCreate([
+    //                 'tanggal' => $tanggal,
+    //                 'kode_rs' => $key->kode_rs,
+    //                 'kode_ruang' => $key->kode_ruang,
+    //                 'no_penerimaan' => $key->no_penerimaan,
+    //                 'sisa_stok' => $key->sisa_stok,
+    //                 'harga' => $key->harga !== '' ? $key->harga : 0,
+    //             ], [
+    //                 // 'tanggal' => $tanggal,
+    //                 // 'kode_rs' => $key->kode_rs,
+    //                 // 'kode_ruang' => $key->kode_ruang,
+    //                 // 'no_penerimaan' => $key->no_penerimaan,
+    //                 'satuan' => $key->satuan !== '' ? $key->satuan : 'Belum ada satuan',
+    //                 'kode_satuan' => $key->kode_satuan !== '' ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
+    //             ]);
+
+    //             // $anu = MonthlyStokUpdate::find($data->id);
+
+    //             // if ($anu->stok_fisik == 0) {
+    //             //     $anu->update([
+    //             //         'stok_fisik' => $key->sisa_stok
+    //             //     ]);
+    //             //     array_push($fisik, $anu);
+    //             // }
+    //             array_push($total, $data);
+    //         }
+
+    //         if (count($recent) !== count($total)) {
+    //             return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
+    //         }
+    //         // return new JsonResponse(['message' => 'data berhasil disimpan'], 201);
+    //         return new JsonResponse([
+    //             'message' => 'data berhasil disimpan',
+    //             'recent' => count($recent),
+    //             'total' => count($total),
+    //         ], 201);
+
+    //         //end if
+    //     }
+
+    //     return new JsonResponse([
+    //         'message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan',
+    //         'hari ini' => $yesterday
+    //     ], 410);
+    //     // return new JsonResponse(['message' => 'Anda tidak terdaftar sebagai petugas Depo'], 422);
+    // }
 
     public function autoFisik()
     {

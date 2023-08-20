@@ -45,6 +45,8 @@ class BridantrianbpjsController extends Controller
 
         $pasienbaru = $request->barulama == 'lama' ? 1 : 0;
 
+        $referensi = ($request->nosuratkontrol === null || $request->nosuratkontrol === '') ?  $request->norujukan : $request->nosuratkontrol;
+
         $data =
             [
                 "kodebooking" => $noreg,
@@ -58,10 +60,10 @@ class BridantrianbpjsController extends Controller
                 "norm" => $request->norm,
                 "tanggalperiksa" => $request->tglsep,
                 "kodedokter" => $request->dpjp,
-                "namadokter" => $request->namadokter,
-                "jampraktek" => $request->jampraktek,
+                "namadokter" => $request->namadokter ? $request->namadokter : '',
+                "jampraktek" => $request->jampraktek ? $request->jampraktek : '',
                 "jeniskunjungan" => $request->id_kunjungan,
-                "nomorreferensi" => $request->norujukan,
+                "nomorreferensi" => $referensi,
                 "nomorantrean" => $request->noantrian,
                 "angkaantrean" => $request->angkaantrean,
                 "estimasidilayani" => $estimasidilayani,
@@ -89,13 +91,15 @@ class BridantrianbpjsController extends Controller
             ]
         );
 
-        // $message = [
-        //     $ambilantrian,
-        //     'url' => 'antrean/add',
-        //     'task' => 0,
-        // 'user' => auth()->user()->id
-        // ];
-        // event(new AntreanEvent($message));
+        if ($ambilantrian) {
+            $message = [
+                'kode' => $ambilantrian,
+                'url' => 'antrean/add',
+                'task' => 0,
+                'user' => auth()->user()->id
+            ];
+            event(new AntreanEvent($message));
+        }
         //return $ambilantrian;
     }
 
@@ -167,13 +171,15 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        // $message = [
-        //     $updatewaktuantrian,
-        //     'url' => 'antrean/updatewaktu',
-        //     'task' => $x,
-        // 'user' => auth()->user()->id
-        // ];
-        // event(new AntreanEvent($message));
+        if ($updatewaktuantrian) {
+            $message = [
+                'kode' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'task' => $x,
+                'user' => auth()->user()->id
+            ];
+            event(new AntreanEvent($message));
+        }
     }
 
     public static function updateMulaiWaktuTungguAdmisi($request, $input)
@@ -233,14 +239,16 @@ class BridantrianbpjsController extends Controller
                     'tgl' => $tgltobpjshttpres
                 ]
             );
+            if ($updatewaktuantrian) {
+                $message = [
+                    'kode' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'task' => $taskid,
+                    'user' => auth()->user()->id
+                ];
+                event(new AntreanEvent($message));
+            }
         }
-        // $message = [
-        //     $updatewaktuantrian,
-        //     'url' => 'antrean/updatewaktu',
-        //     'task' => $taskid,
-        // 'user' => auth()->user()->id
-        // ];
-        // event(new AntreanEvent($message));
         //  return($updatewaktuantrian);
     }
 
@@ -300,12 +308,14 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        // $message = [
-        //     $updatewaktuantrian,
-        //     'url' => 'antrean/updatewaktu',
-        //     'task' => $taskid,
-        // 'user' => auth()->user()->id
-        // ];
-        // event(new AntreanEvent($message));
+        if ($updatewaktuantrian) {
+            $message = [
+                'kode' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'task' => $taskid,
+                'user' => auth()->user()->id
+            ];
+            event(new AntreanEvent($message));
+        }
     }
 }

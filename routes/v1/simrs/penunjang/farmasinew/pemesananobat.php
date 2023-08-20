@@ -13,6 +13,6 @@ Route::group([
 ], function () {
     Route::get('/dialogrencanabeli', [DialogrencanapemesananController::class, 'dialogrencanabeli']);
     Route::get('/dialogrencanabeli_rinci', [DialogrencanapemesananController::class, 'dialogrencanabeli_rinci']);
-    Route::post('/simpanpemesanan', [DialogrencanapemesananController::class, 'simpan']);
+    Route::post('/simpanpemesanan', [PemesananPemesananController::class, 'simpan']);
     Route::get('/listpemesanan', [PemesananPemesananController::class, 'listpemesanan']);
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Master\Mpihakketiga;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,5 +17,10 @@ class RencanabeliH extends Model
     public function rincian()
     {
         return $this->hasMany(RencanabeliR::class, 'no_rencbeliobat', 'no_rencbeliobat');
+    }
+
+    public function pihakketiga()
+    {
+        return $this->hasOne(Mpihakketiga::class, 'kode', 'kodepbf');
     }
 }
