@@ -70,8 +70,14 @@ class PoliController extends Controller
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
+        // ->simplePaginate(request('per_page'));
         // ->get();
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
+    }
+
+    public function save_pemeriksaanfisik(Request $request)
+    {
+        return new JsonResponse($request->all());
     }
 }

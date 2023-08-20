@@ -101,14 +101,14 @@ class AutogenController extends Controller
         // }
         // echo '<br>';
 
-        // $tanggalperiksa = '2023-05-30';
-        // $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
-        //     'form_params' => [
-        //         'tanggal' => $tanggalperiksa
-        //     ],
-        //     'http_errors' => true
-        // ]);
-        // $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
+        $tanggalperiksa = '2023-08-15';
+        $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
+            'form_params' => [
+                'tanggal' => $tanggalperiksa
+            ],
+            'http_errors' => true
+        ]);
+        $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
 
         // $col = collect($antrianLogByTgl->data);
         // $layanan = '4';
@@ -155,8 +155,8 @@ class AutogenController extends Controller
         // );
 
         // return response()->json($simpanbpjsrespontime);
-        $controller = new Bridbpjscontroller();
-        return $controller->cekSuratKontrol();
+        // $controller = new Bridbpjscontroller();
+        return $antrianLogByTgl;
     }
 
     public function coba()

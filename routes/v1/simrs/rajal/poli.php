@@ -8,11 +8,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/rajal/poli'
 ], function () {
-   // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
+    // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
     Route::get('/kunjunganpoli', [RajalPoliController::class, 'kunjunganpoli']);
+    Route::post('/save-pemeriksaanfisik', [RajalPoliController::class, 'save_pemeriksaanfisik']);
 });
-
-
-
-
-
