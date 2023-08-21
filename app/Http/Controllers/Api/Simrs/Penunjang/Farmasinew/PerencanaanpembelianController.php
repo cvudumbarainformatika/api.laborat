@@ -16,29 +16,44 @@ class PerencanaanpembelianController extends Controller
 {
     public function perencanaanpembelian()
     {
-        $perencanaapembelianobat = Mobatnew::select('kd_obat','nama_obat')->with(
+        $perencanaapembelianobat = Mobatnew::select('kd_obat', 'nama_obat')->with(
             [
-                'stokrealgudang' => function($stokrealgudang)
-                {
+                'stokrealgudang' => function ($stokrealgudang) {
                     $stokrealgudang->select(
-                        'stokreal.kdobat',DB::raw('sum(stokreal.jumlah) as jumlah'
-                        ))
+                        'stokreal.kdobat',
+                        DB::raw(
+                            'sum(stokreal.jumlah) as jumlah'
+                        )
+                    )
                         ->whereIn(
-                            'stokreal.kdruang',['Gd-03010100','Gd-03010101']
+                            'stokreal.kdruang',
+                            ['Gd-03010100', 'Gd-03010101']
                         )
                         ->groupBy('stokreal.kdobat');
                 },
-                'stokrealallrs' => function($stokrealallrs)
-                {
+                'stokrealallrs' => function ($stokrealallrs) {
                     $stokrealallrs->select(
-                        'stokreal.kdobat',DB::raw('sum(stokreal.jumlah) as jumlah'
-                        ))->groupBy('stokreal.kdobat');
+                        'stokreal.kdobat',
+                        DB::raw(
+                            'sum(stokreal.jumlah) as jumlah'
+                        )
+                    )->groupBy('stokreal.kdobat');
                 },
-                'stokmaxrs' => function($stokmaxrs)
-                {
+                'stokmaxrs' => function ($stokmaxrs) {
                     $stokmaxrs->select(
-                        'min_max_ruang.kd_obat',DB::raw('sum(min_max_ruang.max) as jumlah'
-                        ))->groupBy('min_max_ruang.kd_obat');
+                        'min_max_ruang.kd_obat',
+                        DB::raw(
+                            'sum(min_max_ruang.max) as jumlah'
+                        )
+                    )->groupBy('min_max_ruang.kd_obat');
+                },
+                'sudahdirencanakan' => function ($sudahdirencanakan) {
+                    $sudahdirencanakan->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlahdpesan) as jumlah'
+                        )
+                    )->groupBy('kdobat');
                 }
             ]
         )->get();
@@ -48,8 +63,7 @@ class PerencanaanpembelianController extends Controller
 
     public function simpanrencanabeliobat(Request $request)
     {    //return($request->norencanabeliobat);
-        if($request->norencanabeliobat === '' || $request->norencanabeliobat === null)
-        {
+        if ($request->norencanabeliobat === '' || $request->norencanabeliobat === null) {
             //return('wew');
             DB::connection('farmasi')->select('call rencana_beliobat(@nomor)');
             $x = DB::connection('farmasi')->table('conter')->select('rencblobat')->get();
@@ -57,34 +71,34 @@ class PerencanaanpembelianController extends Controller
             $norencanabeliobat = FormatingHelper::norencanabeliobat($wew, 'REN-BOBAT');
             //return('wew');
             $simpanheder = RencanabeliH::create(
-            [
-                'no_rencbeliobat' => $norencanabeliobat,
-                'tgl' => date('Y-m-d'),
-                'user' => auth()->user()->pegawai_id
-            ]);
+                [
+                    'no_rencbeliobat' => $norencanabeliobat,
+                    'tgl' => date('Y-m-d'),
+                    'user' => auth()->user()->pegawai_id
+                ]
+            );
 
-            if(!$simpanheder)
-            {
+            if (!$simpanheder) {
                 return new JsonResponse(['message' => 'not ok'], 500);
             }
 
             $simpanrinci = RencanabeliR::create(
-            [
-                'no_rencbeliobat' => $norencanabeliobat,
-                'kdobat' => $request->kdobat,
-                'stok_real_gudang' => $request->stok_real_gudang,
-                'stok_real_rs'  => $request->stok_real_rs,
-                'stok_max_rs'  => $request->stok_max_rs,
-                'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                'tgl_stok'  => $request->tgl_stok,
-                'pabrikan'  => $request->pabrikan,
-                'pbf'  => $request->pbf,
-                'jumlahdpesan'  => $request->jumlahdpesan,
-                'user'  => auth()->user()->pegawai_id
-            ]);
+                [
+                    'no_rencbeliobat' => $norencanabeliobat,
+                    'kdobat' => $request->kdobat,
+                    'stok_real_gudang' => $request->stok_real_gudang,
+                    'stok_real_rs'  => $request->stok_real_rs,
+                    'stok_max_rs'  => $request->stok_max_rs,
+                    'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
+                    'tgl_stok'  => $request->tgl_stok,
+                    'pabrikan'  => $request->pabrikan,
+                    'pbf'  => $request->pbf,
+                    'jumlahdpesan'  => $request->jumlahdpesan,
+                    'user'  => auth()->user()->pegawai_id
+                ]
+            );
 
-            if(!$simpanrinci)
-            {
+            if (!$simpanrinci) {
                 return new JsonResponse(['message' => 'not ok'], 500);
             }
 
@@ -94,9 +108,12 @@ class PerencanaanpembelianController extends Controller
                     'notrans' => $norencanabeliobat,
                     'heder' => $simpanheder,
                     'rinci' => $simpanrinci
-                ], 200);
+                ],
+                200
+            );
         }
-        $simpanrinci = RencanabeliR::updateOrCreate(['no_rencbeliobat' => $request->norencanabeliobat,'kdobat' => $request->kdobat],
+        $simpanrinci = RencanabeliR::updateOrCreate(
+            ['no_rencbeliobat' => $request->norencanabeliobat, 'kdobat' => $request->kdobat],
             [
                 'stok_real_gudang' => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
@@ -107,35 +124,36 @@ class PerencanaanpembelianController extends Controller
                 'pbf'  => $request->pbf,
                 'jumlahdpesan'  => $request->jumlahdpesan,
                 'user'  => auth()->user()->pegawai_id
-            ]);
+            ]
+        );
 
-            if(!$simpanrinci)
-            {
-                return new JsonResponse(['message' => 'not ok'], 500);
-            }
+        if (!$simpanrinci) {
+            return new JsonResponse(['message' => 'not ok'], 500);
+        }
 
         return new JsonResponse(
             [
                 'message' => 'ok',
                 'rinci' => $simpanrinci
-            ], 200);
+            ],
+            200
+        );
     }
 
     public function listrencanabeli()
     {
         $rencanabeli = RencanabeliH::with('rincian')->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
-                        ->orderBy('tgl')->paginate(request('per_page'));
+            ->orderBy('tgl')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }
 
     public function kuncirencana(Request $request)
     {
-       $kunci = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)
-       ->update(['flag' => 1]);
-       if(!$kunci)
-       {
+        $kunci = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)
+            ->update(['flag' => 1]);
+        if (!$kunci) {
             return new JsonResponse(['message' => 'gagal mengupdate data'], 500);
-       }
-            return new JsonResponse(['message' => 'ok'], 200);
+        }
+        return new JsonResponse(['message' => 'ok'], 200);
     }
 }

@@ -22,14 +22,16 @@ class Mobatnew extends Model
         ]);
     }
 
-    public function scopeFilter($cari,array $reqs)
+    public function scopeFilter($cari, array $reqs)
     {
-        $cari->when($reqs['q'] ?? false,
-        function($data, $query){
-            return $data->where('kd_obat', 'LIKE', '%' . $query . '%')
-                ->orWhere('nama_obat', 'LIKE', '%' . $query . '%')
-                ->orderBy('nama_obat');
-        });
+        $cari->when(
+            $reqs['q'] ?? false,
+            function ($data, $query) {
+                return $data->where('kd_obat', 'LIKE', '%' . $query . '%')
+                    ->orWhere('nama_obat', 'LIKE', '%' . $query . '%')
+                    ->orderBy('nama_obat');
+            }
+        );
     }
 
     public function mkelasterapi()
@@ -49,6 +51,11 @@ class Mobatnew extends Model
 
     public function stokmaxrs()
     {
-        return $this->hasMany(Mminmaxobat::class,'kd_obat', 'kd_obat');
+        return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kd_obat');
+    }
+
+    public function perencanaanrinci()
+    {
+        return $this->hasMany(RencanabeliR::class, 'kdobat', 'kd_obat');
     }
 }
