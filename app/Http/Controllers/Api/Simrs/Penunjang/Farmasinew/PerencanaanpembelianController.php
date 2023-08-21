@@ -47,8 +47,8 @@ class PerencanaanpembelianController extends Controller
                         )
                     )->groupBy('min_max_ruang.kd_obat');
                 },
-                'sudahdirencanakan' => function ($sudahdirencanakan) {
-                    $sudahdirencanakan->select(
+                'perencanaanrinci' => function ($perencanaanrinci) {
+                    $perencanaanrinci->select(
                         'kdobat',
                         DB::raw(
                             'sum(jumlahdpesan) as jumlah'
