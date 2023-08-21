@@ -116,7 +116,7 @@ class PemesananController extends Controller
             $jumlaha = $cekjumlaha + $request->jumlahdpesan;
 
             if ($jumlaha > $request->jumlah_bisa_dibeli) {
-                return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI']);
+                return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
             } else if ($jumlaha == $request->jumlah_bisa_dibeli) {
                 $simpanrinci = PemesananRinci::create([
                     'nopemesanan' => $request->nopemesanan,
