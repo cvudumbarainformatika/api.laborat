@@ -72,6 +72,7 @@ class PoliController extends Controller
             ->with(['taskid' => function ($q) {
                 $q->orderBy('taskid', 'DESC');
             }])
+            ->with('anamnesis')
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
         // ->simplePaginate(request('per_page'));

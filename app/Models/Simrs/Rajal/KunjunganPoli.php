@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Rajal;
 
+use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -61,5 +62,10 @@ class KunjunganPoli extends Model
     public function taskid()
     {
         return $this->hasMany(Taskidantrian::class, 'noreg', 'rs1');
+    }
+
+    public function anamnesis()
+    {
+        return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
     }
 }
