@@ -203,7 +203,9 @@ class BridantrianbpjsController extends Controller
             $waktu_ambil_tiket = $antrianlog[0]->waktu_ambil_tiket;
             if ($booking_type === 'b') {
                 $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->get();
-                $waktu_ambil_tiket = $logantrian[0]->tgl;
+                if (count($logantrian) > 0) {
+                    $waktu_ambil_tiket = $logantrian[0]->tgl;
+                }
             }
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
 
