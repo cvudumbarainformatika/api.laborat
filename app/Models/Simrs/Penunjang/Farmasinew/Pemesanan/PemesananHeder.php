@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PemesananHeder extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
     protected $table = 'pemesanan_h';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
@@ -17,5 +17,10 @@ class PemesananHeder extends Model
     public function pihakketiga()
     {
         return $this->hasOne(Mpihakketiga::class, 'kode', 'kdpbf');
+    }
+
+    public function rinci()
+    {
+        return $this->hasMany(PemesananRinci::class, 'nopemesanan', 'nopemesanan');
     }
 }

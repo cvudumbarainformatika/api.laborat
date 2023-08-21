@@ -205,10 +205,13 @@ class PemesananController extends Controller
 
     public function listpemesanan()
     {
-        $listpemesanan = RencanabeliH::select('nopemesanan', 'tglpemesanan', 'kodepbf')
-            ->with('pihakketiga')
-            ->where('nopemesanan', '!=', '')
-            ->orderBy('tglpemesanan')->paginate(request('per_page'));
+        // $listpemesanan = RencanabeliH::select('nopemesanan', 'tglpemesanan', 'kodepbf')
+        //     ->with('pihakketiga')
+        //     ->where('nopemesanan', '!=', '')
+        //     ->orderBy('tglpemesanan')->paginate(request('per_page'));
+
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf')
+            ->with('pihakketiga', 'rinci')->orderBy('tgl_pemesanan')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
 }
