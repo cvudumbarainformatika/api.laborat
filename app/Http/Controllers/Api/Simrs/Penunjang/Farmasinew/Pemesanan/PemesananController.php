@@ -19,7 +19,22 @@ class PemesananController extends Controller
         if ($request->nopemesanan === '' || $request->nopemesanan === null) {
             if ($request->jumlahdpesan > $request->jumlah_bisa_dibeli) {
                 return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI']);
+                $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
+                    ->where('kdobat', $request->kdobat)
+                    ->sum('jumlahdpesan');
+                $jumlaha = $cekjumlaha + $request->jumlahdpesan;
+                if ($jumlaha > $request->jumlah_bisa_dibeli) {
+                    return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
+                }
             } else if ($request->jumlahdpesan === $request->jumlah_bisa_dibeli) {
+                $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
+                    ->where('kdobat', $request->kdobat)
+                    ->sum('jumlahdpesan');
+                $jumlaha = $cekjumlaha + $request->jumlahdpesan;
+                if ($jumlaha > $request->jumlah_bisa_dibeli) {
+                    return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
+                }
+
                 DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
                 $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
                 $wew = $x[0]->pemesanan;
@@ -66,6 +81,13 @@ class PemesananController extends Controller
                     200
                 );
             } else {
+                $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
+                    ->where('kdobat', $request->kdobat)
+                    ->sum('jumlahdpesan');
+                $jumlaha = $cekjumlaha + $request->jumlahdpesan;
+                if ($jumlaha > $request->jumlah_bisa_dibeli) {
+                    return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
+                }
                 DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
                 $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
                 $wew = $x[0]->pemesanan;
