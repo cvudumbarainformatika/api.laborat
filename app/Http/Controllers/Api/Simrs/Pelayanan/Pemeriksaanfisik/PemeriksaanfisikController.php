@@ -29,6 +29,7 @@ class PemeriksaanfisikController extends Controller
         );
 
 
-        return new JsonResponse($simpanperiksaan);
+
+        return new JsonResponse($request->all());
     }
 }
