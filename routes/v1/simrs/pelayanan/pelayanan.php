@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -9,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/pelayanan'
 ], function () {
     Route::post('/simpananamnesis', [AnamnesisController::class, 'simpananamnesis']);
+    Route::post('/simpanpemeriksaanfisik', [PemeriksaanfisikController::class, 'simpan']);
 });
