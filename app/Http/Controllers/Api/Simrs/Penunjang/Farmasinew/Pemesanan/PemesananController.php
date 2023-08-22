@@ -232,7 +232,7 @@ class PemesananController extends Controller
         //     ->where('nopemesanan', '!=', '')
         //     ->orderBy('tglpemesanan')->paginate(request('per_page'));
 
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf')
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag')
             ->with('pihakketiga', 'rinci')->orderBy('tgl_pemesanan')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }

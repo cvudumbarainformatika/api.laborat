@@ -17,4 +17,5 @@ Route::group([
     Route::post('/simpanpemesanan', [PemesananPemesananController::class, 'simpan']);
     Route::get('/listpemesanan', [PemesananPemesananController::class, 'listpemesanan']);
     Route::get('/pihakketiga', [PihakketigaController::class, 'pihakketiga']);
+    Route::post('/kuncipemesanan', [PemesananPemesananController::class, 'kuncipemesanan']);
 });
