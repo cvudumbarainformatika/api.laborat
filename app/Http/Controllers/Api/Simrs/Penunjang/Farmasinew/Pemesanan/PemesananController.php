@@ -236,4 +236,13 @@ class PemesananController extends Controller
             ->with('pihakketiga', 'rinci')->orderBy('tgl_pemesanan')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
+
+    public function kuncipemesanan(Request $request)
+    {
+        $kuncipemesanan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->update(['flag' => '1']);
+        if (!$kuncipemesanan) {
+            return new JsonResponse(['message' => 'not ok'], 500);
+        }
+        return new JsonResponse(['message' => 'ok'], 200);
+    }
 }
