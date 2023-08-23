@@ -233,7 +233,12 @@ class PemesananController extends Controller
         //     ->orderBy('tglpemesanan')->paginate(request('per_page'));
 
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag')
-            ->with('pihakketiga', 'rinci')->orderBy('tgl_pemesanan')->paginate(request('per_page'));
+            ->with(
+                'pihakketiga',
+                'rinci',
+                'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
+            )
+            ->orderBy('tgl_pemesanan')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
 
