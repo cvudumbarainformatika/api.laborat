@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::post('/simpananamnesis', [AnamnesisController::class, 'simpananamnesis']);
     Route::post('/simpanpemeriksaanfisik', [PemeriksaanfisikController::class, 'simpan']);
+    Route::post('/simpangambar', [PemeriksaanfisikController::class, 'simpangambar']);
 });

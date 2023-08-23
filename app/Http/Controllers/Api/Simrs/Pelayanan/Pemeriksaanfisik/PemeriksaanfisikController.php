@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PemeriksaanfisikController extends Controller
 {
@@ -31,5 +33,26 @@ class PemeriksaanfisikController extends Controller
 
 
         return new JsonResponse($request->all());
+    }
+
+    public function simpangambar(Request $request)
+    {
+        $image = $request->image;
+
+        $name = date('YmdHis');
+        $noreg = str_replace('/', '-', $request->noreg);
+        $folderPath = "pemeriksaan_fisik/" . $noreg . '/';
+
+        $image_parts = explode(";base64,", $image);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+        $file = $folderPath . $name . '.' . $image_type;
+
+        $imageName = $name . '.' . $image_type;
+        // Storage::delete('public/pemeriksaan_fisik/' . $noreg . '/' . $imageName);
+        $wew = Storage::disk('public')->put('pemeriksaan_fisik/' . $noreg . '/' . $imageName, $image_base64);
+
+        return $file;
     }
 }
