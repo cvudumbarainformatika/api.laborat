@@ -236,7 +236,7 @@ class PemesananController extends Controller
             ->with(
                 'pihakketiga',
                 'rinci',
-                'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
+                'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
             )
             ->orderBy('tgl_pemesanan')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
