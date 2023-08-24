@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisikdetail;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisiksubdetail;
+use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,10 +16,13 @@ class PemeriksaanfisikController extends Controller
 {
     public function simpan(Request $request)
     {
+
+        $noreg = $request->noreg;
+        $norm = $request->norm;
         $simpanperiksaan = Pemeriksaanfisik::create(
             [
-                'rs1' => $request->noreg,
-                'rs2' => $request->norm,
+                'rs1' => $noreg,
+                'rs2' => $norm,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->denyutjantung,
                 'pernapasan' => $request->pernapasan,
@@ -27,12 +33,55 @@ class PemeriksaanfisikController extends Controller
                 'sosialekonomi' => $request->sosialekonomi,
                 'spiritual' => $request->spiritual,
                 'user'  => auth()->user()->pegawai_id,
+                'ruangan' => $request->spiritual,
             ]
         );
 
+        if (!$simpanperiksaan) {
+            return new JsonResponse(['message' => 'not ok'], 500);
+        }
 
+        $data = $request->anatomys;
+        foreach ($data as $key => $value) {
+            $simpanpemeriksaandetail = Pemeriksaanfisikdetail::create(
+                [
+                    'noreg' => $noreg,
+                    'norm' => $norm,
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'nama' => $value['nama'],
+                    'keterangan' => $value['ket'],
+                    'user'  => auth()->user()->pegawai_id,
+                ]
+            );
+        };
 
-        return new JsonResponse($request->all());
+        $data = $request->details;
+        foreach ($data as $key => $value) {
+            $simpanpemeriksaandetail = Pemeriksaanfisiksubdetail::create(
+                [
+                    'noreg' => $noreg,
+                    'norm' => $norm,
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'anatomy' => $value['anatomy'],
+                    'ket' => $value['ket'],
+                    'ketebalan' => $value['ketebalan'],
+                    'noreg' => $value['noreg'],
+                    'norm' => $value['norm'],
+                    'panjang' => $value['panjang'],
+                    'penanda' => $value['penanda'],
+                    'templategambar' => $value['templategambar'],
+                    'templateindex' => $value['templateindex'],
+                    'templatemenu' => $value['templatemenu'],
+                    'warna' => $value['warna'],
+                    'templateindex' => $value['templateindex'],
+                    'x' => $value['x'],
+                    'y' => $value['y'],
+                    'user'  => auth()->user()->pegawai_id,
+                ]
+            );
+        };
+
+        return new JsonResponse(['message' => 'ok'], 200);
     }
 
     public function simpangambar(Request $request)
@@ -52,6 +101,15 @@ class PemeriksaanfisikController extends Controller
         $imageName = $name . '.' . $image_type;
         // Storage::delete('public/pemeriksaan_fisik/' . $noreg . '/' . $imageName);
         $wew = Storage::disk('public')->put('pemeriksaan_fisik/' . $noreg . '/' . $imageName, $image_base64);
+
+        $simpangambar = Simpangambarpemeriksaanfisik::create(
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'keterangan' => $request->noketeranganrm,
+                'gambar' => $file,
+            ]
+        );
 
         return $file;
     }
