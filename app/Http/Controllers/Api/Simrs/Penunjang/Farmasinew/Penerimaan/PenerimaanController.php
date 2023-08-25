@@ -59,6 +59,7 @@ class PenerimaanController extends Controller
                     'batasbayar' => $request->batasbayar,
                     'user' => auth()->user()->pegawai_id,
                     'gudang' => $request->nopenerimaa,
+                    'total_faktur_pbf' => $request->total_faktur_pbf,
                 ]
             );
             if (!$simpanheder) {
@@ -70,7 +71,7 @@ class PenerimaanController extends Controller
                     'kdobat' => $request->kdobat,
                     'no_batch' => $request->no_batch,
                     'tgl_exp' => $request->tgl_exp,
-                    'saruan_bsr' => $request->saruan_bsr,
+                    'satuan_bsr' => $request->saruan_bsr,
                     'satuan_kcl' => $request->satuan_kcl,
                     'isi' => $request->isi,
                     'harga' => $request->harga,
@@ -81,9 +82,9 @@ class PenerimaanController extends Controller
                     'ppn_rp' => $request->ppn_rp,
                     'harga_netto' => $request->harga_netto,
                     'jml_pesan' => $request->jml_pesan,
+                    'jml_terima' => $request->jml_terima,
                     'jml_terima_lalu' => $request->jml_terima_lalu,
                     'jml_all_penerimaan' => $request->jml_all_penerimaan,
-                    'total_faktur_pbf' => $request->total_faktur_pbf,
                     'subtotal' => $request->subtotal,
                 ]
             );
