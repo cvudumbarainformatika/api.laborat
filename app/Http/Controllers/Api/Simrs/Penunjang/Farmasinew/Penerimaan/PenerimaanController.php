@@ -16,11 +16,15 @@ class PenerimaanController extends Controller
     public function listpemesananfix()
     {
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf')
-            ->with(
+            ->with([
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
                 'rinci:nopemesanan,kdobat,jumlahdpesan',
-                'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
-            )
+                'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi',
+                'penerimaan' => function ($penerimaan) {
+                    $penerimaan->select('nopemesanan', 'jml_terima')->where('nopemesanan', request('nopemesanan'))
+                        ->where('kdobat', request('nopemesanan'));
+                },
+            ])
             ->where('flag', '1')
             ->get();
         return new JsonResponse($listpemesanan);
