@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Master\DiagnosaController;
-use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware' => 'auth:api',
