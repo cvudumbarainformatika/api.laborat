@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
+namespace App\Models\Simrs\Penunjang\Farmasinew\Stok;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PenerimaanRinci extends Model
+class Stokrel extends Model
 {
     use HasFactory;
-    protected $table = 'penerimaan_r';
+    protected $table = 'stokreal';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 }

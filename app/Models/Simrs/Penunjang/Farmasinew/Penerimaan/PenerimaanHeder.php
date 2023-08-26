@@ -11,4 +11,5 @@ class PenerimaanHeder extends Model
     use HasFactory, SoftDeletes;
     protected $table = 'penerimaan_h';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

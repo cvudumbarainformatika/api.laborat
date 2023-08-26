@@ -16,7 +16,14 @@ class PerencanaanpembelianController extends Controller
 {
     public function perencanaanpembelian()
     {
-        $perencanaapembelianobat = Mobatnew::select('kd_obat', 'nama_obat')->with(
+        $perencanaapembelianobat = Mobatnew::select(
+            'kd_obat',
+            'nama_obat',
+            'status_generik',
+            'status_fornas',
+            'status_forkid',
+            'sistembayar'
+        )->with(
             [
                 'stokrealgudang' => function ($stokrealgudang) {
                     $stokrealgudang->select(

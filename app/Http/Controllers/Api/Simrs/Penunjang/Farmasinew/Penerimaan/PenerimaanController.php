@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Penerimaan;
 
 use App\Helpers\FormatingHelper;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -46,7 +47,7 @@ class PenerimaanController extends Controller
             $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
             $wew = $x[0]->$colom;
             $nopenerimaan = FormatingHelper::penerimaanobat($wew, $lebel);
-            $simpanheder = PenerimaanHeder::firstCreate(
+            $simpanheder = PenerimaanHeder::firstOrCreate(
                 ['nopenerimaan' => $nopenerimaan],
                 [
                     'nopemesanan' => $request->nopemesanan,
@@ -58,7 +59,7 @@ class PenerimaanController extends Controller
                     'tglsurat' => $request->tglsurat,
                     'batasbayar' => $request->batasbayar,
                     'user' => auth()->user()->pegawai_id,
-                    'gudang' => $request->nopenerimaa,
+                    'gudang' => $request->kdruang,
                     'total_faktur_pbf' => $request->total_faktur_pbf,
                 ]
             );
@@ -82,12 +83,22 @@ class PenerimaanController extends Controller
                     'ppn_rp' => $request->ppn_rp,
                     'harga_netto' => $request->harga_netto,
                     'jml_pesan' => $request->jml_pesan,
-                    'jml_terima' => $request->jml_terima,
+                    'jml_terima' => $request->jumlah,
                     'jml_terima_lalu' => $request->jml_terima_lalu,
                     'jml_all_penerimaan' => $request->jml_all_penerimaan,
                     'subtotal' => $request->subtotal,
                 ]
             );
+            if (!$simpanrinci) {
+                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
+            $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
+            if ($stokrealsimpan !== 200) {
+                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
             return new JsonResponse([$simpanheder, $simpanrinci]);
         } else {
             $simpanrinci = PenerimaanRinci::create(
@@ -107,12 +118,24 @@ class PenerimaanController extends Controller
                     'ppn_rp' => $request->ppn_rp,
                     'harga_netto' => $request->harga_netto,
                     'jml_pesan' => $request->jml_pesan,
+                    'jml_terima' => $request->jumlah,
                     'jml_terima_lalu' => $request->jml_terima_lalu,
                     'jml_all_penerimaan' => $request->jml_all_penerimaan,
                     'total_faktur_pbf' => $request->total_faktur_pbf,
                     'subtotal' => $request->subtotal,
                 ]
             );
+            if (!$simpanrinci) {
+                PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
+            $stokrealsimpan = StokrealController::stokreal($request->nopenerimaan, $request);
+            return ($stokrealsimpan);
+            if ($stokrealsimpan !== 200) {
+                PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
+                PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
             return new JsonResponse($simpanrinci);
         }
     }
