@@ -28,11 +28,14 @@ class PemesananHeder extends Model
 
     public function penerimaan()
     {
-        return $this->hasManyThrough(
-            PenerimaanHeder::class,
-            PenerimaanRinci::class,
-            'nopenerimaan',
-            'nopenerimaan'
-        );
+        // return $this->hasManyThrough(
+        //     PenerimaanHeder::class,
+        //     PenerimaanRinci::class,
+        //     'nopenerimaan',
+        //     'nopenerimaan',
+        //     'nopemesanan',
+        //     'nopenerimaan',
+        // );
+        return $this->hasMany(PenerimaanHeder::class, 'nopemesanan', 'nopemesanan');
     }
 }

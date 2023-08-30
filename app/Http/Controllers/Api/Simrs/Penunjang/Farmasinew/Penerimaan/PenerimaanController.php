@@ -21,9 +21,10 @@ class PenerimaanController extends Controller
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
                 'rinci:nopemesanan,kdobat,jumlahdpesan',
                 'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,satuan_b,satuan_k,kekuatan_dosis,volumesediaan,kelas_terapi',
+                //'penerimaan'
                 'penerimaan' => function ($penerimaan) {
-                    $penerimaan->select('nopemesanan', 'jml_terima')->where('nopemesanan', request('nopemesanan'))
-                        ->where('kdobat', request('nopemesanan'));
+                    //$penerimaan->select('nopemesanan', 'penerimaan.penerimaanrinci:nopemesanan,kdobat,jml_terima');
+                    $penerimaan->select('nopenerimaan', 'nopemesanan')->with('penerimaanrinci:kdobat,nopenerimaan,jml_terima');
                 },
             ])
             ->where('flag', '1')
@@ -140,5 +141,13 @@ class PenerimaanController extends Controller
             }
             return new JsonResponse(['rinci' => $simpanrinci]);
         }
+    }
+
+    public function listepenerimaan()
+    {
+        $listpenerimaan = PenerimaanHeder::paginate(request('per_page'))
+            ->get();
+
+        return new JsonResponse($listpenerimaan);
     }
 }

@@ -12,4 +12,9 @@ class PenerimaanHeder extends Model
     protected $table = 'penerimaan_h';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
+
+    public function penerimaanrinci()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'nopenerimaan', 'nopenerimaan');
+    }
 }
