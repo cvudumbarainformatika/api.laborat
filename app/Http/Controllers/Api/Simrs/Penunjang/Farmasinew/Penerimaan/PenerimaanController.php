@@ -20,7 +20,7 @@ class PenerimaanController extends Controller
             ->with([
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
                 'rinci:nopemesanan,kdobat,jumlahdpesan',
-                'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi',
+                'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,satuan_b,satuan_k,kekuatan_dosis,volumesediaan,kelas_terapi',
                 'penerimaan' => function ($penerimaan) {
                     $penerimaan->select('nopemesanan', 'jml_terima')->where('nopemesanan', request('nopemesanan'))
                         ->where('kdobat', request('nopemesanan'));
@@ -72,7 +72,7 @@ class PenerimaanController extends Controller
                     'kdobat' => $request->kdobat,
                     'no_batch' => $request->no_batch,
                     'tgl_exp' => $request->tgl_exp,
-                    'satuan_bsr' => $request->saruan_bsr,
+                    'satuan_bsr' => $request->satuan_bsr,
                     'satuan_kcl' => $request->satuan_kcl,
                     'isi' => $request->isi,
                     'harga' => $request->harga,
@@ -99,7 +99,10 @@ class PenerimaanController extends Controller
                 PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
                 return new JsonResponse(['message' => 'not ok'], 500);
             }
-            return new JsonResponse([$simpanheder, $simpanrinci]);
+            return new JsonResponse([
+                'heder' => $simpanheder,
+                'rinci' => $simpanrinci
+            ]);
         } else {
             $simpanrinci = PenerimaanRinci::create(
                 [
@@ -107,7 +110,7 @@ class PenerimaanController extends Controller
                     'kdobat' => $request->kdobat,
                     'no_batch' => $request->no_batch,
                     'tgl_exp' => $request->tgl_exp,
-                    'saruan_bsr' => $request->saruan_bsr,
+                    'satuan_bsr' => $request->satuan_bsr,
                     'satuan_kcl' => $request->satuan_kcl,
                     'isi' => $request->isi,
                     'harga' => $request->harga,
@@ -136,7 +139,7 @@ class PenerimaanController extends Controller
                 PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
                 return new JsonResponse(['message' => 'not ok'], 500);
             }
-            return new JsonResponse($simpanrinci);
+            return new JsonResponse(['rinci' => $simpanrinci]);
         }
     }
 }
