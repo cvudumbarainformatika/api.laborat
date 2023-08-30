@@ -8,7 +8,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/farmasinew/penerimaan'
 ], function () {
-    // Route::get('/dialogpemesananobat', [PenerimaanController::class, 'listpemesananfix']);
+    Route::get('/listepenerimaan', [PenerimaanController::class, 'listepenerimaan']);
     Route::get('/dialogpemesananobat', [PenerimaanController::class, 'listpemesananfix']);
     Route::post('/simpan', [PenerimaanController::class, 'simpanpenerimaan']);
 });

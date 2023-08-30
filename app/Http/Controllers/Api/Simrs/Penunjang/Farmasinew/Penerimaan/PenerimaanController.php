@@ -145,8 +145,9 @@ class PenerimaanController extends Controller
 
     public function listepenerimaan()
     {
-        $listpenerimaan = PenerimaanHeder::paginate(request('per_page'))
-            ->get();
+        $listpenerimaan = PenerimaanHeder::select('penerimaan_h.nopenerimaan')
+            ->leftjoin('pihak_ketiga', 'pihak_ketiga.kode', 'penerimaan_h.kdpbf')
+            ->paginate(request('per_page'));
 
         return new JsonResponse($listpenerimaan);
     }

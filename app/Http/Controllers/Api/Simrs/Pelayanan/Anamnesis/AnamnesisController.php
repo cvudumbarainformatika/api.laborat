@@ -11,19 +11,23 @@ class AnamnesisController extends Controller
 {
     public function simpananamnesis(Request $request)
     {
-        $simpananamnesis = AnamnesisAnamnesis::firstOrCreate(['rs1' => $request->noreg],
-        [
-            'rs2' => $request->norm,
-            'rs3' => date('Y-m-d H:i:s'),
-            'rs4' => $request->keluhanutama,
-            'riwayatpenyakit' => $request->riwayatpenyakit,
-            'riwayatalergi' => $request->riwayatalergi,
-            'riwayatpengobatan' => $request->riwayatpengobatan,
-        ]);
-        if(!$simpananamnesis)
-        {
+        $simpananamnesis = AnamnesisAnamnesis::Create(
+            ['rs1' => $request->noreg],
+            [
+                'rs2' => $request->norm,
+                'rs3' => date('Y-m-d H:i:s'),
+                'rs4' => $request->keluhanutama,
+                'riwayatpenyakit' => $request->riwayatpenyakit,
+                'riwayatalergi' => $request->riwayatalergi,
+                'riwayatpengobatan' => $request->riwayatpengobatan,
+            ]
+        );
+        if (!$simpananamnesis) {
             return new JsonResponse(['message' => 'GAGAL DISIMPAN'], 500);
         }
-        return new JsonResponse(['message' => 'BERHASIL DISIMPAN', $simpananamnesis], 200);
+        return new JsonResponse([
+            'message' => 'BERHASIL DISIMPAN',
+            'result' => $simpananamnesis
+        ], 200);
     }
 }
