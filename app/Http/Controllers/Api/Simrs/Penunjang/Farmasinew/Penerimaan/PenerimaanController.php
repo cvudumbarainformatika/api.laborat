@@ -133,7 +133,6 @@ class PenerimaanController extends Controller
                 return new JsonResponse(['message' => 'Data Heder Gagal Disimpan...!!!'], 500);
             }
             $stokrealsimpan = StokrealController::stokreal($request->nopenerimaan, $request);
-            ($stokrealsimpan[0]['message']);
             if ($stokrealsimpan !== 200) {
                 PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
                 PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
