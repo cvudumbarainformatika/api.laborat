@@ -238,7 +238,7 @@ class PemesananController extends Controller
                 'rinci',
                 'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
             )
-            ->orderBy('tgl_pemesanan')->paginate(request('per_page'));
+            ->orderBy('tgl_pemesanan', 'desc')->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
 
