@@ -11,15 +11,16 @@ class AnamnesisController extends Controller
 {
     public function simpananamnesis(Request $request)
     {
-        $simpananamnesis = AnamnesisAnamnesis::Create(
-            ['rs1' => $request->noreg],
+        $simpananamnesis = AnamnesisAnamnesis::create(
             [
+                'rs1' => $request->noreg,
                 'rs2' => $request->norm,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->keluhanutama,
                 'riwayatpenyakit' => $request->riwayatpenyakit,
                 'riwayatalergi' => $request->riwayatalergi,
                 'riwayatpengobatan' => $request->riwayatpengobatan,
+                'user'  => auth()->user()->pegawai_id,
             ]
         );
         if (!$simpananamnesis) {

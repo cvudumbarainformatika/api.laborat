@@ -145,10 +145,23 @@ class PenerimaanController extends Controller
 
     public function listepenerimaan()
     {
-        $listpenerimaan = PenerimaanHeder::select('penerimaan_h.nopenerimaan')
-            ->leftjoin('pihak_ketiga', 'pihak_ketiga.kode', 'penerimaan_h.kdpbf')
-            ->paginate(request('per_page'));
 
+        $listpenerimaan = PenerimaanHeder::select(
+            'penerimaan_h.nopenerimaan as nopenerimaan',
+            'penerimaan_h.nopemesanan',
+            'penerimaan_h.tglpenerimaan',
+            'penerimaan_h.kdpbf',
+            'siasik.pihak_ketiga.nama',
+            'penerimaan_h.pengirim',
+            'penerimaan_h.jenissurat',
+            'penerimaan_h.nomorsurat',
+            'penerimaan_h.tglsurat',
+            'penerimaan_h.batasbayar',
+            'penerimaan_h.total_faktur_pbf',
+        )
+            ->leftjoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
+            ->where('gudang',)
+            ->paginate(request('per_page'));
         return new JsonResponse($listpenerimaan);
     }
 }
