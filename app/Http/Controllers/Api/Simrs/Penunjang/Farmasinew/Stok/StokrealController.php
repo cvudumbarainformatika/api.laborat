@@ -19,7 +19,7 @@ class StokrealController extends Controller
                 'kdruang' => $request->kdruang
             ],
             [
-                'tglpenerimaan' => $request->tglpenerimaan,
+                'tglpenerimaan' => $request->tanggal,
                 'jumlah' => $request->jumlah,
                 'harga' => $request->harga_kcl
             ]
