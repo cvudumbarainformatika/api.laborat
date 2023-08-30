@@ -91,13 +91,13 @@ class PenerimaanController extends Controller
             );
             if (!$simpanrinci) {
                 PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
-                return new JsonResponse(['message' => 'not ok'], 500);
+                return new JsonResponse(['message' => 'Data Heder Gagal Disimpan...!!!'], 500);
             }
             $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
             if ($stokrealsimpan !== 200) {
                 PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
                 PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
-                return new JsonResponse(['message' => 'not ok'], 500);
+                return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
             }
             return new JsonResponse([
                 'heder' => $simpanheder,
@@ -130,14 +130,14 @@ class PenerimaanController extends Controller
             );
             if (!$simpanrinci) {
                 PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
-                return new JsonResponse(['message' => 'not ok'], 500);
+                return new JsonResponse(['message' => 'Data Heder Gagal Disimpan...!!!'], 500);
             }
             $stokrealsimpan = StokrealController::stokreal($request->nopenerimaan, $request);
             return ($stokrealsimpan);
             if ($stokrealsimpan !== 200) {
                 PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
                 PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
-                return new JsonResponse(['message' => 'not ok'], 500);
+                return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
             }
             return new JsonResponse(['rinci' => $simpanrinci]);
         }
