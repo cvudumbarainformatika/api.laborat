@@ -46,4 +46,17 @@ class AnamnesisController extends Controller
             'result' => $simpananamnesis
         ], 200);
     }
+
+    public function hapusanamnesis(Request $request)
+    {
+        $cari = AnamnesisAnamnesis::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+        }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 501);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
 }

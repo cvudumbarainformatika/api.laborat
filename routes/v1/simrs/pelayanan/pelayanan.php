@@ -11,6 +11,8 @@ Route::group([
     'prefix' => 'simrs/pelayanan'
 ], function () {
     Route::post('/simpananamnesis', [AnamnesisController::class, 'simpananamnesis']);
+    Route::post('/hapusanamnesis', [AnamnesisController::class, 'hapusanamnesis']);
+
     Route::post('/simpanpemeriksaanfisik', [PemeriksaanfisikController::class, 'simpan']);
     Route::post('/simpangambar', [PemeriksaanfisikController::class, 'simpangambar']);
 
