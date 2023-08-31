@@ -57,4 +57,9 @@ class DiagnosatransController extends Controller
         }
         return new JsonResponse(['message' => 'Diagnosa Berhasil Disimpan...!!!'], 200);
     }
+
+    public function hapusdiagnosa(Request $request)
+    {
+        //$cari = ;
+    }
 }
