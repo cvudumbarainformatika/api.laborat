@@ -61,4 +61,19 @@ class AnamnesisController extends Controller
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
+
+    public function historyanamnesis()
+    {
+        $history = AnamnesisAnamnesis::select(
+            'rs3 as tgl',
+            'rs4 as keluhanutama',
+            'riwayatpenyakit',
+            'riwayatalergi',
+            'keteranganalergi',
+            'riwayatpengobatan'
+        )
+            ->where('rs2', request('norm'))
+            ->get();
+        return new JsonResponse($history);
+    }
 }
