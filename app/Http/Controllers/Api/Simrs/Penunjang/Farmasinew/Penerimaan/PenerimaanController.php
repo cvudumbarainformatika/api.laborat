@@ -126,7 +126,6 @@ class PenerimaanController extends Controller
                     'jml_terima' => $request->jumlah,
                     'jml_terima_lalu' => $request->jml_terima_lalu,
                     'jml_all_penerimaan' => $request->jml_all_penerimaan,
-                    'total_faktur_pbf' => $request->total_faktur_pbf,
                     'subtotal' => $request->subtotal,
                 ]
             );
