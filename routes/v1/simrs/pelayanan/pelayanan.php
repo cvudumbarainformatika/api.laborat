@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
-use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\ListdiagnosaController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,7 +18,8 @@ Route::group([
     Route::post('/simpanpemeriksaanfisik', [PemeriksaanfisikController::class, 'simpan']);
     Route::post('/simpangambar', [PemeriksaanfisikController::class, 'simpangambar']);
 
-    Route::get('/listdiagnosa', [ListdiagnosaController::class, 'listdiagnosa']);
+    Route::post('/simpandiagnosa', [DiagnosatransController::class, 'simpandiagnosa']);
+    Route::get('/listdiagnosa', [DiagnosatransController::class, 'listdiagnosa']);
 
     Route::post('/ewseklaimrajal_newclaim', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);
 });

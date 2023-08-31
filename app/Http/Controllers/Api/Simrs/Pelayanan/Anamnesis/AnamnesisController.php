@@ -73,6 +73,7 @@ class AnamnesisController extends Controller
             'riwayatpengobatan'
         )
             ->where('rs2', request('norm'))
+            ->orderBy('rs3', 'Desc')
             ->get();
         return new JsonResponse($history);
     }
