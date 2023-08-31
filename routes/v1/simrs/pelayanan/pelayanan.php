@@ -18,6 +18,7 @@ Route::group([
     Route::post('/simpanpemeriksaanfisik', [PemeriksaanfisikController::class, 'simpan']);
     Route::post('/simpangambar', [PemeriksaanfisikController::class, 'simpangambar']);
 
+    Route::post('/hapusdiagnosa', [DiagnosatransController::class, 'hapusdiagnosa']);
     Route::post('/simpandiagnosa', [DiagnosatransController::class, 'simpandiagnosa']);
     Route::get('/listdiagnosa', [DiagnosatransController::class, 'listdiagnosa']);
 

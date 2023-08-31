@@ -60,6 +60,14 @@ class DiagnosatransController extends Controller
 
     public function hapusdiagnosa(Request $request)
     {
-        //$cari = ;
+        $cari = Diagnosa::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+        }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 501);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 }
