@@ -18,4 +18,9 @@ class PemesananRinci extends Model
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
     }
+
+    public function pemesananheder()
+    {
+        return $this->hasOne(PemesananHeder::class, 'nopemesanan', 'nopemesanan');
+    }
 }

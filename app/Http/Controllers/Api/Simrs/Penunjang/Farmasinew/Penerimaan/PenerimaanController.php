@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use Illuminate\Http\JsonResponse;
@@ -101,7 +102,19 @@ class PenerimaanController extends Controller
                 PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
                 return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
             }
+
+            $jumlahpesan = PemesananRinci::select('jumlahdpesan')
+                ->with(['pemesananheder'])
+                ->where('nopemesanan', $request->nopemesanan)
+                ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
+
+            if ($jumlahpesan === $request->jml_all_penerimaan) {
+                PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
+                    ->update(['flag' => '1']);
+            }
+
             return new JsonResponse([
+                'message' => 'ok',
                 'heder' => $simpanheder,
                 'rinci' => $simpanrinci
             ]);
@@ -138,6 +151,15 @@ class PenerimaanController extends Controller
                 PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
                 PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->first()->delete();
                 return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
+            }
+            $jumlahpesan = PemesananRinci::select('jumlahdpesan')
+                ->with(['pemesananheder'])
+                ->where('nopemesanan', $request->nopemesanan)
+                ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
+
+            if ($jumlahpesan === $request->jml_all_penerimaan) {
+                PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
+                    ->update(['flag' => '1']);
             }
             return new JsonResponse(['rinci' => $simpanrinci]);
         }
