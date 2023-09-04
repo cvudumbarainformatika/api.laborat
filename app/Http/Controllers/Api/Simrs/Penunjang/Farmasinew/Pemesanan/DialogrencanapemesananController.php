@@ -32,7 +32,10 @@ class DialogrencanapemesananController extends Controller
             ->leftjoin('pemesanan_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'pemesanan_r.noperencanaan')
             ->where('perencana_pebelian_h.flag', '1')->where('perencana_pebelian_r.flag', '')
             ->where('new_masterobat.nama_obat', 'Like', '%' . request('namaobat') . '%')
-            ->orderBy('perencana_pebelian_h.tgl')->paginate(request('per_page'));
+            ->groupby('noperencanaan', 'kdobat')
+            ->orderBy('perencana_pebelian_h.tgl')->get();
+
+
         return new JsonResponse($rencanabeli);
     }
 
