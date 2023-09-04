@@ -7,6 +7,7 @@ use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
@@ -67,5 +68,9 @@ class KunjunganPoli extends Model
     public function anamnesis()
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
+    }
+    public function gambars()
+    {
+        return $this->hasMany(Simpangambarpemeriksaanfisik::class, 'noreg', 'rs1');
     }
 }

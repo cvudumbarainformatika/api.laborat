@@ -106,11 +106,17 @@ class PemeriksaanfisikController extends Controller
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
-                'keterangan' => $request->noketeranganrm,
+                'keterangan' => $request->keterangan,
                 'gambar' => $file,
             ]
         );
 
-        return $file;
+        return new JsonResponse(
+            [
+                'message' => 'BERHASIL DISIMPAN',
+                'result' => $simpangambar
+            ],
+            200
+        );
     }
 }
