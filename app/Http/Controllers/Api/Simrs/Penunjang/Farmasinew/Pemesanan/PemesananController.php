@@ -198,31 +198,6 @@ class PemesananController extends Controller
                 );
             }
         }
-        // DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
-        // $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
-        // $wew = $x[0]->pemesanan;
-        // $nopemesanan = FormatingHelper::pemesananobat($wew, 'PES-BOBAT');
-
-        // $simpanpemesananheder = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)->update([
-        //     'nopemesanan' => $nopemesanan,
-        //     'tglpemesanan' => date('Y-m-d H:i:s'),
-        //     'kodepbf' => $request->kodepbf,
-        //     'userpemesanan' => auth()->user()->pegawai_id
-        // ]);
-
-        // if(!$simpanpemesananheder)
-        // {
-        //     return new JsonResponse(['message' => 'GAGAL DISIMPAN'], 500);
-        // }
-        // $simpanpenerimaanrinci = RencanabeliR::where('no_rencbeliobat', $request->no_rencbeliobat)->update([
-        //     'nopemesanan' => $nopemesanan,
-        // ]);
-
-        // if(!$simpanpenerimaanrinci)
-        // {
-        //     return new JsonResponse(['message' => 'GAGAL DISIMPAN'], 500);
-        // }
-        // return new JsonResponse(['message' => 'OK', $nopemesanan], 200);
     }
 
     public function listpemesanan()
