@@ -108,7 +108,7 @@ class PenerimaanController extends Controller
                 ->where('nopemesanan', $request->nopemesanan)
                 ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
 
-            if ($jumlahpesan === $request->jml_all_penerimaan) {
+            if ((int) $jumlahpesan === $request->jml_all_penerimaan) {
                 PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                     ->update(['flag' => '1']);
             }
@@ -157,7 +157,7 @@ class PenerimaanController extends Controller
                 ->where('nopemesanan', $request->nopemesanan)
                 ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
 
-            if ($jumlahpesan === $request->jml_all_penerimaan) {
+            if ((int) $jumlahpesan  === $request->jml_all_penerimaan) {
                 PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                     ->update(['flag' => '1']);
             }
