@@ -27,7 +27,7 @@ class DistribusiLangsungController extends Controller
             ->where('status', 1)
             ->first();
         if (!$distribute) {
-            return new JsonResponse(['data' => $distribute]);
+            return new JsonResponse(['data' => []]);
         }
         $data = RecentStokUpdate::leftJoin(
             'penerimaans',
