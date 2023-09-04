@@ -26,9 +26,9 @@ class DistribusiLangsungController extends Controller
         $distribute = DistribusiLangsung::where('reff', request('reff'))
             ->where('status', 1)
             ->first();
-        if (!$distribute) {
-            return new JsonResponse(['data' => $distribute]);
-        }
+        // if (!$distribute) {
+        //     return new JsonResponse(['data' => []]);
+        // }
         $data = RecentStokUpdate::leftJoin(
             'penerimaans',
             'recent_stok_updates.no_penerimaan',
