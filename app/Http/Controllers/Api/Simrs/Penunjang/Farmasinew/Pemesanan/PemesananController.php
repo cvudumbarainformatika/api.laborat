@@ -21,15 +21,8 @@ class PemesananController extends Controller
                 ->where('kdobat', $request->kdobat)
                 ->sum('jumlahdpesan');
             $jumlaha = $cekjumlaha + $request->jumlahdpesan;
-            if ($request->jumlahdpesan > $request->jumlah_bisa_dibeli) {
+            if ($jumlaha > $request->jumlah_bisa_dibeli) {
                 return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI']);
-                $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-                    ->where('kdobat', $request->kdobat)
-                    ->sum('jumlahdpesan');
-                $jumlaha = $cekjumlaha + $request->jumlahdpesan;
-                if ($jumlaha > $request->jumlah_bisa_dibeli) {
-                    return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
-                }
             } else if ($jumlaha === $request->jumlah_bisa_dibeli) {
                 $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
                     ->where('kdobat', $request->kdobat)
