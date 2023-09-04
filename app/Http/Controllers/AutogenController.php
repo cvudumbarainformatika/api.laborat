@@ -59,6 +59,7 @@ use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
@@ -1833,6 +1834,18 @@ class AutogenController extends Controller
         //     ]
         // );
         // return new JsonResponse($simpanbpjshttprespon);
+
+        $data = Mobatnew::with([
+            'perencanaanrinci' => function ($perencanaanrinci) {
+                $perencanaanrinci->select(
+                    'kdobat',
+                    DB::raw(
+                        'sum(jumlahdpesan) as jumlah'
+                    )
+                )->where('flag', '')->groupBy('kdobat');
+            }
+        ])->get();
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
