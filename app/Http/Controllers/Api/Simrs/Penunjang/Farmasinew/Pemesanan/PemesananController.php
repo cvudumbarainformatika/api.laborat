@@ -16,11 +16,11 @@ class PemesananController extends Controller
 {
     public function simpan(Request $request)
     {
-        $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-            ->where('kdobat', $request->kdobat)
-            ->sum('jumlahdpesan');
-        $jumlaha = $cekjumlaha + $request->jumlahdpesan;
         if ($request->nopemesanan === '' || $request->nopemesanan === null) {
+            $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
+                ->where('kdobat', $request->kdobat)
+                ->sum('jumlahdpesan');
+            $jumlaha = $cekjumlaha + $request->jumlahdpesan;
             if ($request->jumlahdpesan > $request->jumlah_bisa_dibeli) {
                 return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI']);
                 $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
