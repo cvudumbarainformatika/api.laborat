@@ -34,7 +34,7 @@ class DialogrencanapemesananController extends Controller
             ->leftjoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
             ->where('perencana_pebelian_h.flag', '1')->where('perencana_pebelian_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
-            ->groupby('pemesanan_r.noperencanaan', 'pemesanan_r.kdobat')
+            ->groupby('perencana_pebelian_h.no_rencbeliobat', 'pemesanan_r.kdobat')
             ->orderBy('perencana_pebelian_h.tgl')->get();
 
         // $rencanabeli = RencanabeliH::with(
