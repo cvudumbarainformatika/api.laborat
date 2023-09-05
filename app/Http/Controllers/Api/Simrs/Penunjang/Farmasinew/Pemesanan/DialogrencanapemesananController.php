@@ -35,7 +35,25 @@ class DialogrencanapemesananController extends Controller
         //     ->groupby('new_masterobat.kd_obat', ',perencana_pebelian_h.no_rencbeliobat')
         //     ->orderBy('perencana_pebelian_h.tgl')->get();
 
-        $rencanabeli = RencanabeliH::with('rincian', 'rincian.mobat')->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+        $rencanabeli = RencanabeliH::with([
+            'rincian',
+            'rincian.mobat',
+            'rincian' => function ($anu) {
+                $anu->leftjoin('pemesanan_r', function ($join) {
+                    $join->select(
+                        'pemesanan_r.jumlahdpesan as jumlahDipesan',
+                        'pemesanan_r.noperencanaan',
+                        'pemesanan_r.kdobat as kode',
+                        'perencana_pebelian_r.kdobat',
+                        'perencana_pebelian_r.no_rencbeliobat',
+                        'perencana_pebelian_r.flag',
+                        'perencana_pebelian_r.jumlahdpesan',
+                    );
+                    $join->on('pemesanan_r.noperencanaan', '=', 'perencana_pebelian_r.no_rencbeliobat')
+                        ->on('pemesanan_r.kdobat', '=', 'perencana_pebelian_r.kdobat');
+                });
+            },
+        ])->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')
             ->get();
 
@@ -46,5 +64,31 @@ class DialogrencanapemesananController extends Controller
     {
         $rencanabelirinci = RencanabeliR::with(['mobat'])->where('no_rencbeliobat', request('norencanabeliobat'))->get();
         return new JsonResponse($rencanabelirinci);
+    }
+    public function anu()
+    {
+        $rencanabeli = RencanabeliH::with([
+            'rincian',
+            'rincian.mobat',
+            'rincian' => function ($anu) {
+                $anu->leftjoin('pemesanan_r', function ($join) {
+                    $join->select(
+                        'pemesanan_r.jumlahdpesan as jumlahDipesan',
+                        'pemesanan_r.noperencanaan',
+                        'pemesanan_r.kdobat as kode',
+                        'perencana_pebelian_r.kdobat',
+                        'perencana_pebelian_r.no_rencbeliobat',
+                        'perencana_pebelian_r.flag',
+                        'perencana_pebelian_r.jumlahdpesan',
+                    );
+                    $join->on('pemesanan_r.noperencanaan', '=', 'perencana_pebelian_r.no_rencbeliobat')
+                        ->on('pemesanan_r.kdobat', '=', 'perencana_pebelian_r.kdobat');
+                });
+            },
+        ])->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+            ->orderBy('tgl', 'desc')
+            ->get();
+
+        return new JsonResponse($rencanabeli);
     }
 }
