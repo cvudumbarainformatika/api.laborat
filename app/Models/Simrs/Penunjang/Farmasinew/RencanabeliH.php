@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,5 +24,10 @@ class RencanabeliH extends Model
     public function pihakketiga()
     {
         return $this->hasOne(Mpihakketiga::class, 'kode', 'kodepbf');
+    }
+
+    public function pemesananrinci()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'noperencanaan', 'no_rencbeliobat');
     }
 }
