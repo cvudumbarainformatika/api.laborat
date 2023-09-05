@@ -60,6 +60,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
@@ -1835,17 +1836,40 @@ class AutogenController extends Controller
         // );
         // return new JsonResponse($simpanbpjshttprespon);
 
-        $data = Mobatnew::with([
-            'perencanaanrinci' => function ($perencanaanrinci) {
-                $perencanaanrinci->select(
-                    'kdobat',
-                    DB::raw(
-                        'sum(jumlahdpesan) as jumlah'
-                    )
-                )->where('flag', '')->groupBy('kdobat');
-            }
-        ])->get();
-        return new JsonResponse($data);
+        // $data = Mobatnew::with([
+        //     'perencanaanrinci' => function ($perencanaanrinci) {
+        //         $perencanaanrinci->select(
+        //             'kdobat',
+        //             DB::raw(
+        //                 'sum(jumlahdpesan) as jumlah'
+        //             )
+        //         )->where('flag', '')->groupBy('kdobat');
+        //     }
+        // ])->get();
+        // return new JsonResponse($data);
+        $rencanabeli = RencanabeliH::with([
+            'rincian',
+            'rincian.mobat',
+            'rincian' => function ($anu) {
+                $anu->leftjoin('pemesanan_r', function ($join) {
+                    $join->select(
+                        'pemesanan_r.jumlahdpesan as jumlahDipesan',
+                        'pemesanan_r.noperencanaan',
+                        'pemesanan_r.kdobat as kode',
+                        'perencana_pebelian_r.kdobat',
+                        'perencana_pebelian_r.no_rencbeliobat',
+                        'perencana_pebelian_r.flag',
+                        'perencana_pebelian_r.jumlahdpesan',
+                    );
+                    $join->on('pemesanan_r.noperencanaan', '=', 'perencana_pebelian_r.no_rencbeliobat')
+                        ->on('pemesanan_r.kdobat', '=', 'perencana_pebelian_r.kdobat');
+                });
+            },
+        ])->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+            ->orderBy('tgl', 'desc')
+            ->get();
+
+        return new JsonResponse($rencanabeli);
     }
 
     public function wawanpost(Request $request)
