@@ -20,7 +20,7 @@ class DialogrencanapemesananController extends Controller
             'perencana_pebelian_r.stok_real_gudang as stokgudang',
             'perencana_pebelian_r.stok_real_rs as stokrs',
             'perencana_pebelian_r.stok_max_rs as stomaxkrs',
-            'perencana_pebelian_r.jumlah_bisa_dibeli as jumlahdipesan',
+            'perencana_pebelian_r.jumlah_bisa_dibeli',
             'perencana_pebelian_r.jumlahdirencanakan as jumlahdipesandiperencanaan',
             'new_masterobat.nama_obat as namaobat',
             'new_masterobat.status_generik as status_generik',

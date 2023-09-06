@@ -68,7 +68,7 @@ class ObatnewController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mobatnew::wherefirst(['kd_obat' => $request->kd_obat]);
+        $cari = Mobatnew::find($request->id);
         if ($cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
