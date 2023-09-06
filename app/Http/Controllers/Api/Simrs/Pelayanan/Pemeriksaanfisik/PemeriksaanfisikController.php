@@ -94,6 +94,22 @@ class PemeriksaanfisikController extends Controller
         );
     }
 
+    public function hapuspemeriksaanfisik(Request $request)
+    {
+        $cari = Pemeriksaanfisik::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+        }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 501);
+        }
+
+        Pemeriksaanfisikdetail::where('rs236_id', $request->id)->delete();
+        Pemeriksaanfisiksubdetail::where('rs236_id', $request->id)->delete();
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
+
     public function simpangambar(Request $request)
     {
         $image = $request->image;
@@ -128,5 +144,20 @@ class PemeriksaanfisikController extends Controller
             ],
             200
         );
+    }
+
+    public function hapusgambar(Request $request)
+    {
+        $filename = $request->nama;
+        $cari = Simpangambarpemeriksaanfisik::where('gambar', $filename)->first();
+        if (!$cari) {
+            return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+        }
+        Storage::delete('public/' . $filename);
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 501);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 }
