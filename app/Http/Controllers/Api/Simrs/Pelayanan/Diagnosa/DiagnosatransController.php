@@ -31,7 +31,7 @@ class DiagnosatransController extends Controller
                     'rs7' => $request->kasus,
                     'rs8'  => auth()->user()->pegawai_id,
                     'rs9' => $request->dtd,
-                    'rs10' => $request->kddokter,
+                    'rs10' => '',
                     'rs12' => date('Y-m-d'),
                     'rs13' => $request->ruangan
                 ]
@@ -46,7 +46,7 @@ class DiagnosatransController extends Controller
                     'rs7' => $request->kasus,
                     'rs8'  => auth()->user()->pegawai_id,
                     'rs9' => $request->dtd,
-                    'rs10' => $request->kddokter,
+                    'rs10' => '',
                     'rs12' => date('Y-m-d'),
                     'rs13' => $request->ruangan
                 ]
