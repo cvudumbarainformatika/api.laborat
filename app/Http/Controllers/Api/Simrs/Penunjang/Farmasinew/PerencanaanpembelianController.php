@@ -101,7 +101,7 @@ class PerencanaanpembelianController extends Controller
                     'tgl_stok'  => $request->tgl_stok,
                     'pabrikan'  => $request->pabrikan,
                     'pbf'  => $request->pbf,
-                    'jumlahdpesan'  => $request->jumlahdpesan,
+                    'jumlahdirencanakan'  => $request->jumlahdpesan,
                     'user'  => auth()->user()->pegawai_id
                 ]
             );
@@ -130,7 +130,7 @@ class PerencanaanpembelianController extends Controller
                 'tgl_stok'  => $request->tgl_stok,
                 'pabrikan'  => $request->pabrikan,
                 'pbf'  => $request->pbf,
-                'jumlahdpesan'  => $request->jumlahdpesan,
+                'jumlahdirencanakan'  => $request->jumlahdpesan,
                 'user'  => auth()->user()->pegawai_id
             ]
         );
