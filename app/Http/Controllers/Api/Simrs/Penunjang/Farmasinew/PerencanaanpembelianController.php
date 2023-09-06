@@ -70,7 +70,13 @@ class PerencanaanpembelianController extends Controller
     }
 
     public function simpanrencanabeliobat(Request $request)
-    {    //return($request->norencanabeliobat);
+    {
+        $cekflag = RencanabeliR::select('flag')->where('kdobat', $request->kdobat)->first();
+        $flag = $cekflag->flag;
+        if ($flag === '') {
+            return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!']);
+        }
+
         if ($request->norencanabeliobat === '' || $request->norencanabeliobat === null) {
             //return('wew');
             DB::connection('farmasi')->select('call rencana_beliobat(@nomor)');
