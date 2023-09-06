@@ -15,9 +15,15 @@ class ListstokgudangController extends Controller
         $idpegawai = auth()->user()->pegawai_id;
         $kodegudang = Pegawai::find($idpegawai);
 
-        $stokgudang = Stokrel::with(['masterobat'])
-            ->where('flag', '')
-            ->get();
+        if ($kodegudang->kode_ruang !== '') {
+            $stokgudang = Stokrel::with(['masterobat'])
+                ->where('flag', '')->where('kdruang', $kodegudang)
+                ->get();
+        } else {
+            $stokgudang = Stokrel::with(['masterobat'])
+                ->where('flag', '')
+                ->get();
+        }
         return new JsonResponse($stokgudang);
     }
 }
