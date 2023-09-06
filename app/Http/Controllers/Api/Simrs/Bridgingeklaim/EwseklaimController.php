@@ -19,6 +19,7 @@ class EwseklaimController extends Controller
         $tgl_masuk = $request->tgl_masuk;
         $berat_lahir = $request->berat_lahir;
 
+
         $querys_new_klaim = array(
             "metadata" => array(
                 "method" => "new_claim"
