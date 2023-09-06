@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,4 +12,9 @@ class PenerimaanRinci extends Model
     protected $table = 'penerimaan_r';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
+
+    public function masterobat()
+    {
+        return $this->hasOne(Mobatnew::class, 'kdobat', 'kd_obat');
+    }
 }

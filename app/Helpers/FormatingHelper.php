@@ -129,4 +129,14 @@ class FormatingHelper
         }
         return $has . $n . "/" . date("m") . "/" . date("Y") . "/" . $kode;
     }
+
+    public static function notatindakan($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 4 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return date("y") . date("m") . date("d") . "/" . $has . $n . $kode;
+    }
 }
