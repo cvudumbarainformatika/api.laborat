@@ -10,4 +10,13 @@ class Pemeriksaanfisik extends Model
     use HasFactory;
     protected $table = 'rs236';
     protected $guarded = ['id'];
+
+    public function anatomys()
+    {
+        return $this->hasMany(Pemeriksaanfisikdetail::class, 'rs236_id', 'id');
+    }
+    public function detailgambars()
+    {
+        return $this->hasMany(Pemeriksaanfisiksubdetail::class, 'rs236_id', 'id');
+    }
 }
