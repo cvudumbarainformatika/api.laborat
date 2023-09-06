@@ -16,8 +16,21 @@ class PemesananController extends Controller
 {
     public function simpan(Request $request)
     {
-        if ($request->nopemesanan === '' || $request->nopemesanan === null) {
+        $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
+            ->where('kdobat', $request->kdobat)
+            ->sum('jumlahdpesan');
+        $jumlaha = $cekjumlaha + $request->jumlahdpesan;
 
+        if ($jumlaha > $request->jumlahdirencanakan) {
+            return new JsonResponse(['message' => 'Maaf jumlah yang anda pesan melebihi jumlah yg di rencankan...!!!'], 500);
+        }
+
+        if ($jumlaha === $request->jumlahdirencanakan) {
+            RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
+                ->update(['flag' => '1']);
+        }
+
+        if ($request->nopemesanan === '' || $request->nopemesanan === null) {
 
             DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
             $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
@@ -52,9 +65,6 @@ class PemesananController extends Controller
                 return new JsonResponse(['message' => 'not ok'], 500);
             }
 
-            // $wew = RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
-            //     ->update(['flag' => '1']);
-
             return new JsonResponse(
                 [
                     'message' => 'ok',
@@ -65,11 +75,6 @@ class PemesananController extends Controller
                 200
             );
         } else {
-            // $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-            //     ->where('kdobat', $request->kdobat)
-            //     ->sum('jumlahdpesan');
-            // $jumlaha = $cekjumlaha + $request->jumlahdpesan;
-
 
             $simpanrinci = PemesananRinci::create([
                 'nopemesanan' => $request->nopemesanan,
@@ -87,9 +92,6 @@ class PemesananController extends Controller
             if (!$simpanrinci) {
                 return new JsonResponse(['message' => 'not ok'], 500);
             }
-
-            // $wew = RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
-            //     ->update(['flag' => '1']);
 
             return new JsonResponse(
                 [
