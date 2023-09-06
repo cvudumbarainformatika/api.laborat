@@ -15,6 +15,6 @@ class PenerimaanRinci extends Model
 
     public function masterobat()
     {
-        return $this->hasOne(Mobatnew::class, 'kdobat', 'kd_obat');
+        return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
     }
 }
