@@ -211,7 +211,7 @@ class PenerimaanController extends Controller
                 'penerimaan_h.total_faktur_pbf',
             )
                 ->leftjoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
-                ->where('gudang', $kodegudang)
+                ->where('gudang', $kodegudang->kode_ruang)
                 ->where('penerimaan_h.nopenerimaan', 'Like', '%' . request('cari') . '%')
                 ->orWhere('penerimaan_h.nopemesanan', 'Like', '%' . request('cari') . '%')
                 ->orWhere('penerimaan_h.tglpenerimaan', 'Like', '%' . request('cari') . '%')

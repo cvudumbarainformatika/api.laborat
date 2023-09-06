@@ -17,7 +17,7 @@ class ListstokgudangController extends Controller
 
         if ($kodegudang->kode_ruang !== '') {
             $stokgudang = Stokrel::with(['masterobat'])
-                ->where('flag', '')->where('kdruang', $kodegudang)
+                ->where('flag', '')->where('kdruang', $kodegudang->kode_ruang)
                 ->get();
         } else {
             $stokgudang = Stokrel::with(['masterobat'])
