@@ -56,6 +56,7 @@ use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
@@ -105,14 +106,14 @@ class AutogenController extends Controller
         // }
         // echo '<br>';
 
-        $tanggalperiksa = '2023-08-15';
-        $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
-            'form_params' => [
-                'tanggal' => $tanggalperiksa
-            ],
-            'http_errors' => true
-        ]);
-        $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
+        // $tanggalperiksa = '2023-08-15';
+        // $reqAntrianLogByTgl = (new Client())->post(env('ANTRIAN_ADDRESS') . '/get_list_antrian_tanggal', [
+        //     'form_params' => [
+        //         'tanggal' => $tanggalperiksa
+        //     ],
+        //     'http_errors' => true
+        // ]);
+        // $antrianLogByTgl = json_decode($reqAntrianLogByTgl->getBody()->getContents());
 
         // $col = collect($antrianLogByTgl->data);
         // $layanan = '4';
@@ -160,7 +161,12 @@ class AutogenController extends Controller
 
         // return response()->json($simpanbpjsrespontime);
         // $controller = new Bridbpjscontroller();
-        return $antrianLogByTgl;
+        // return $antrianLogByTgl;
+        $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs2 as dtd', 'rs4 as keterangan')
+            ->where('rs1', 'Like', '%' . request('diagnosa') . '%')
+            ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
+            ->get();
+        return new JsonResponse($listdiagnosa);
     }
 
     public function coba()
