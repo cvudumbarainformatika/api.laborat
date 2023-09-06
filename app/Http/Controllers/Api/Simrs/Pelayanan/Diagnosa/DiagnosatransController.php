@@ -12,7 +12,7 @@ class DiagnosatransController extends Controller
 {
     public function listdiagnosa()
     {
-        $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs4 as keterangan')
+        $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs2 as dtd', 'rs4 as keterangan')
             ->where('rs1', 'Like', '%' . request('diagnosa') . '%')
             ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
             ->get();
