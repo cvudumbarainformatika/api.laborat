@@ -58,7 +58,7 @@ class PerencanaanpembelianController extends Controller
                     $perencanaanrinci->select(
                         'kdobat',
                         DB::raw(
-                            'sum(jumlahdpesan) as jumlah'
+                            'sum(jumlahdirencanakan) as jumlah'
                         )
                     )->where('flag', '')
                         ->groupBy('kdobat');
