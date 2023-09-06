@@ -17,183 +17,89 @@ class PemesananController extends Controller
     public function simpan(Request $request)
     {
         if ($request->nopemesanan === '' || $request->nopemesanan === null) {
-            $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-                ->where('kdobat', $request->kdobat)
-                ->sum('jumlahdpesan');
-            $jumlaha = $cekjumlaha + $request->jumlahdpesan;
-            if ($jumlaha > $request->jumlah_bisa_dibeli) {
-                return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI']);
-            } else if ($jumlaha === $request->jumlah_bisa_dibeli) {
-                $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-                    ->where('kdobat', $request->kdobat)
-                    ->sum('jumlahdpesan');
-                $jumlaha = $cekjumlaha + $request->jumlahdpesan;
-                if ($jumlaha > $request->jumlah_bisa_dibeli) {
-                    return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
-                }
 
-                DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
-                $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
-                $wew = $x[0]->pemesanan;
-                $nopemesanan = FormatingHelper::pemesananobat($wew, 'PES-BOBAT');
 
-                $simpanheder = PemesananHeder::create([
-                    'nopemesanan' => $nopemesanan,
-                    'tgl_pemesanan' => date('Y-m-d H:i:s'),
-                    'kdpbf' => $request->kdpbf,
-                    'user' => auth()->user()->pegawai_id
-                ]);
+            DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
+            $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
+            $wew = $x[0]->pemesanan;
+            $nopemesanan = FormatingHelper::pemesananobat($wew, 'PES-BOBAT');
 
-                if (!$simpanheder) {
-                    return new JsonResponse(['message' => 'not ok'], 500);
-                }
+            $simpanheder = PemesananHeder::create([
+                'nopemesanan' => $nopemesanan,
+                'tgl_pemesanan' => date('Y-m-d H:i:s'),
+                'kdpbf' => $request->kdpbf,
+                'user' => auth()->user()->pegawai_id
+            ]);
 
-                $simpanrinci = PemesananRinci::create([
-                    'nopemesanan' => $nopemesanan,
-                    'noperencanaan' => $request->noperencanaan,
-                    'kdobat'  => $request->kdobat,
-                    'stok_real_gudang'  => $request->stok_real_gudang,
-                    'stok_real_rs'  => $request->stok_real_rs,
-                    'stok_max_rs'  => $request->stok_max_rs,
-                    'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                    'tgl_stok'  => $request->tgl_stok,
-                    'jumlahdpesan'  => $request->jumlahdpesan,
-                    'user'  => auth()->user()->pegawai_id,
-                ]);
-
-                if (!$simpanrinci) {
-                    return new JsonResponse(['message' => 'not ok'], 500);
-                }
-
-                $wew = RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
-                    ->update(['flag' => '1']);
-
-                return new JsonResponse(
-                    [
-                        'message' => 'ok',
-                        'notrans' => $nopemesanan,
-                        'heder' => $simpanheder,
-                        'rinci' => $simpanrinci
-                    ],
-                    200
-                );
-            } else {
-                $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-                    ->where('kdobat', $request->kdobat)
-                    ->sum('jumlahdpesan');
-                $jumlaha = $cekjumlaha + $request->jumlahdpesan;
-                if ($jumlaha > $request->jumlah_bisa_dibeli) {
-                    return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
-                }
-                DB::connection('farmasi')->select('call pemesanan_obat(@nomor)');
-                $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
-                $wew = $x[0]->pemesanan;
-                $nopemesanan = FormatingHelper::pemesananobat($wew, 'PES-BOBAT');
-
-                $simpanheder = PemesananHeder::create([
-                    'nopemesanan' => $nopemesanan,
-                    'tgl_pemesanan' => date('Y-m-d H:i:s'),
-                    'kdpbf' => $request->kdpbf,
-                    'user' => auth()->user()->pegawai_id
-                ]);
-
-                if (!$simpanheder) {
-                    return new JsonResponse(['message' => 'not ok'], 500);
-                }
-
-                $simpanrinci = PemesananRinci::create([
-                    'nopemesanan' => $nopemesanan,
-                    'noperencanaan' => $request->noperencanaan,
-                    'kdobat'  => $request->kdobat,
-                    'stok_real_gudang'  => $request->stok_real_gudang,
-                    'stok_real_rs'  => $request->stok_real_rs,
-                    'stok_max_rs'  => $request->stok_max_rs,
-                    'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                    'tgl_stok'  => $request->tgl_stok,
-                    'jumlahdpesan'  => $request->jumlahdpesan,
-                    'user'  => auth()->user()->pegawai_id,
-                ]);
-
-                if (!$simpanrinci) {
-                    return new JsonResponse(['message' => 'not ok'], 500);
-                }
-
-                return new JsonResponse(
-                    [
-                        'message' => 'ok',
-                        'notrans' => $nopemesanan,
-                        'heder' => $simpanheder,
-                        'rinci' => $simpanrinci
-                    ],
-                    200
-                );
+            if (!$simpanheder) {
+                return new JsonResponse(['message' => 'not ok'], 500);
             }
+
+            $simpanrinci = PemesananRinci::create([
+                'nopemesanan' => $nopemesanan,
+                'noperencanaan' => $request->noperencanaan,
+                'kdobat'  => $request->kdobat,
+                'stok_real_gudang'  => $request->stok_real_gudang,
+                'stok_real_rs'  => $request->stok_real_rs,
+                'stok_max_rs'  => $request->stok_max_rs,
+                'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
+                'tgl_stok'  => $request->tgl_stok,
+                'jumlahdpesan'  => $request->jumlahdpesan,
+                'user'  => auth()->user()->pegawai_id,
+            ]);
+
+            if (!$simpanrinci) {
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
+
+            // $wew = RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
+            //     ->update(['flag' => '1']);
+
+            return new JsonResponse(
+                [
+                    'message' => 'ok',
+                    'notrans' => $nopemesanan,
+                    'heder' => $simpanheder,
+                    'rinci' => $simpanrinci
+                ],
+                200
+            );
         } else {
-            $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
-                ->where('kdobat', $request->kdobat)
-                ->sum('jumlahdpesan');
-            $jumlaha = $cekjumlaha + $request->jumlahdpesan;
+            // $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
+            //     ->where('kdobat', $request->kdobat)
+            //     ->sum('jumlahdpesan');
+            // $jumlaha = $cekjumlaha + $request->jumlahdpesan;
 
-            if ($jumlaha > $request->jumlah_bisa_dibeli) {
-                return new JsonResponse(['message' => 'MAAF JUMLAH PESANAN LEBIH DARI JUMLAH YANG BISA DIBELI'], 500);
-            } else if ($jumlaha == $request->jumlah_bisa_dibeli) {
-                $simpanrinci = PemesananRinci::create([
-                    'nopemesanan' => $request->nopemesanan,
-                    'noperencanaan' => $request->noperencanaan,
-                    'kdobat'  => $request->kdobat,
-                    'stok_real_gudang'  => $request->stok_real_gudang,
-                    'stok_real_rs'  => $request->stok_real_rs,
-                    'stok_max_rs'  => $request->stok_max_rs,
-                    'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                    'tgl_stok'  => $request->tgl_stok,
-                    'jumlahdpesan'  => $request->jumlahdpesan,
-                    'user'  => auth()->user()->pegawai_id,
-                ]);
 
-                if (!$simpanrinci) {
-                    return new JsonResponse(['message' => 'not ok'], 500);
-                }
+            $simpanrinci = PemesananRinci::create([
+                'nopemesanan' => $request->nopemesanan,
+                'noperencanaan' => $request->noperencanaan,
+                'kdobat'  => $request->kdobat,
+                'stok_real_gudang'  => $request->stok_real_gudang,
+                'stok_real_rs'  => $request->stok_real_rs,
+                'stok_max_rs'  => $request->stok_max_rs,
+                'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
+                'tgl_stok'  => $request->tgl_stok,
+                'jumlahdpesan'  => $request->jumlahdpesan,
+                'user'  => auth()->user()->pegawai_id,
+            ]);
 
-                $wew = RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
-                    ->update(['flag' => '1']);
-
-                return new JsonResponse(
-                    [
-                        'message' => 'ok',
-                        'notrans' => $request->nopemesanan,
-                        //    'heder' => $simpanheder,
-                        'rinci' => $simpanrinci
-                    ],
-                    200
-                );
-            } else {
-                $simpanrinci = PemesananRinci::create([
-                    'nopemesanan' => $request->nopemesanan,
-                    'noperencanaan' => $request->noperencanaan,
-                    'kdobat'  => $request->kdobat,
-                    'stok_real_gudang'  => $request->stok_real_gudang,
-                    'stok_real_rs'  => $request->stok_real_rs,
-                    'stok_max_rs'  => $request->stok_max_rs,
-                    'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                    'tgl_stok'  => $request->tgl_stok,
-                    'jumlahdpesan'  => $request->jumlahdpesan,
-                    'user'  => auth()->user()->pegawai_id,
-                ]);
-
-                if (!$simpanrinci) {
-                    return new JsonResponse(['message' => 'not ok'], 500);
-                }
-
-                return new JsonResponse(
-                    [
-                        'message' => 'ok',
-                        'notrans' => $request->nopemesanan,
-                        //    'heder' => $simpanheder,
-                        'rinci' => $simpanrinci
-                    ],
-                    200
-                );
+            if (!$simpanrinci) {
+                return new JsonResponse(['message' => 'not ok'], 500);
             }
+
+            // $wew = RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
+            //     ->update(['flag' => '1']);
+
+            return new JsonResponse(
+                [
+                    'message' => 'ok',
+                    'notrans' => $request->nopemesanan,
+                    //    'heder' => $simpanheder,
+                    'rinci' => $simpanrinci
+                ],
+                200
+            );
         }
     }
 

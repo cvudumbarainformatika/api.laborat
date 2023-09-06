@@ -58,7 +58,7 @@ class PerencanaanpembelianController extends Controller
                     $perencanaanrinci->select(
                         'kdobat',
                         DB::raw(
-                            'sum(jumlahdpesan) as jumlah'
+                            'sum(jumlahdirencanakan) as jumlah'
                         )
                     )->where('flag', '')
                         ->groupBy('kdobat');
@@ -101,7 +101,7 @@ class PerencanaanpembelianController extends Controller
                     'tgl_stok'  => $request->tgl_stok,
                     'pabrikan'  => $request->pabrikan,
                     'pbf'  => $request->pbf,
-                    'jumlahdpesan'  => $request->jumlahdpesan,
+                    'jumlahdirencanakan'  => $request->jumlahdpesan,
                     'user'  => auth()->user()->pegawai_id
                 ]
             );
@@ -130,7 +130,7 @@ class PerencanaanpembelianController extends Controller
                 'tgl_stok'  => $request->tgl_stok,
                 'pabrikan'  => $request->pabrikan,
                 'pbf'  => $request->pbf,
-                'jumlahdpesan'  => $request->jumlahdpesan,
+                'jumlahdirencanakan'  => $request->jumlahdpesan,
                 'user'  => auth()->user()->pegawai_id
             ]
         );

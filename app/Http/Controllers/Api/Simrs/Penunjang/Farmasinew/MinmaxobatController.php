@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Gudang;
 use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
@@ -31,11 +32,18 @@ class MinmaxobatController extends Controller
     public function caribynamaobat()
     {
         $id = Mruangan::where('uraian', 'LIKE', '%' . request('r') . '%')->pluck('kode');
-        $qwerty = Mminmaxobat::with(['obat:kd_obat,nama_obat as namaobat', 'ruanganx:kode,uraian as namaruangan'])
+        $gd = Gudang::where('gudang', '<>', '')->where('nama', 'LIKE', '%' . request('r') . '%')->pluck('kode');
+
+        $qwerty = Mminmaxobat::with([
+            'obat:kd_obat,nama_obat as namaobat',
+            'ruanganx:kode,uraian as namaruangan',
+            'gudang:kode,nama as namaruangan'
+        ])
             ->whereHas('obat', function ($e) {
                 $e->where('new_masterobat.nama_obat', 'LIKE', '%' . request('o') . '%');
             })
             ->whereIn('kd_ruang', $id)
+            ->orWhereIn('kd_ruang',  $gd)
             ->paginate(request('per_page'));
         return new JsonResponse($qwerty, 200);
     }
