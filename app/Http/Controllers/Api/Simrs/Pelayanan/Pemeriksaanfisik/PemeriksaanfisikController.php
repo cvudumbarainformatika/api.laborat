@@ -25,6 +25,7 @@ class PemeriksaanfisikController extends Controller
                 'rs2' => $norm,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->denyutjantung,
+                'tingkatkesadaran' => $request->tingkatkesadaran,
                 'pernapasan' => $request->pernapasan,
                 'sistole' => $request->sistole,
                 'diastole' => $request->diastole,
@@ -45,6 +46,7 @@ class PemeriksaanfisikController extends Controller
         foreach ($data as $key => $value) {
             $simpanpemeriksaandetail = Pemeriksaanfisikdetail::create(
                 [
+                    'rs236_id' => $simpanperiksaan->id,
                     'noreg' => $noreg,
                     'norm' => $norm,
                     'tgl' => date('Y-m-d H:i:s'),
@@ -59,6 +61,7 @@ class PemeriksaanfisikController extends Controller
         foreach ($data as $key => $value) {
             $simpanpemeriksaandetail = Pemeriksaanfisiksubdetail::create(
                 [
+                    'rs236_id' => $simpanperiksaan->id,
                     'noreg' => $noreg,
                     'norm' => $norm,
                     'tgl' => date('Y-m-d H:i:s'),
@@ -81,7 +84,14 @@ class PemeriksaanfisikController extends Controller
             );
         };
 
-        return new JsonResponse(['message' => 'ok'], 200);
+        $pemeriksaan = $simpanperiksaan->load(['anatomys', 'detailgambars']);
+        return new JsonResponse(
+            [
+                'message' => 'BERHASIL DISIMPAN',
+                'result' => $pemeriksaan
+            ],
+            200
+        );
     }
 
     public function simpangambar(Request $request)
