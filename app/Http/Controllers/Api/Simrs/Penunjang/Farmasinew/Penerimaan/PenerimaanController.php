@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -222,5 +223,11 @@ class PenerimaanController extends Controller
                 ->paginate(request('per_page'));
             return new JsonResponse($listpenerimaan);
         }
+    }
+
+    public function kuncipenerimaan(Request $request)
+    {
+        Stokrel::where('nopenerimaan', $request->nopenerimaan)
+            ->update(['flag' => '']);
     }
 }

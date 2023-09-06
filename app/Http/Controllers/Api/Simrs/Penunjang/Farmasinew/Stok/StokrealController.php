@@ -21,7 +21,9 @@ class StokrealController extends Controller
             [
                 'tglpenerimaan' => $request->tglpenerimaan,
                 'jumlah' => $request->jumlah,
-                'harga' => $request->harga_kcl
+                'harga' => $request->harga_kcl,
+                'tglexp' => $request->tgl_exp,
+                'flag' => 1
             ]
         );
         if (!$simpanstokreal) {

@@ -13,4 +13,5 @@ Route::group([
     Route::get('/dialogpemesananobat', [PenerimaanController::class, 'listpemesananfix']);
     Route::get('/stokgudang', [ListstokgudangController::class, 'stokgudang']);
     Route::post('/simpan', [PenerimaanController::class, 'simpanpenerimaan']);
+    Route::post('/kuncipenerimaan', [PenerimaanController::class, 'kuncipenerimaan']);
 });
