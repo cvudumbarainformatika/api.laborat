@@ -16,7 +16,9 @@ Route::group([
     Route::get('/historyanamnesis', [AnamnesisController::class, 'historyanamnesis']);
 
     Route::post('/simpanpemeriksaanfisik', [PemeriksaanfisikController::class, 'simpan']);
+    Route::post('/hapuspemeriksaanfisik', [PemeriksaanfisikController::class, 'hapuspemeriksaanfisik']);
     Route::post('/simpangambar', [PemeriksaanfisikController::class, 'simpangambar']);
+    Route::post('/hapusgambar', [PemeriksaanfisikController::class, 'hapusgambar']);
 
     Route::post('/hapusdiagnosa', [DiagnosatransController::class, 'hapusdiagnosa']);
     Route::post('/simpandiagnosa', [DiagnosatransController::class, 'simpandiagnosa']);
