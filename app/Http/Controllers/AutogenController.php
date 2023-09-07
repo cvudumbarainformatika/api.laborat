@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
+use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
 use App\Models\Antrean\Booking;
@@ -162,11 +163,14 @@ class AutogenController extends Controller
         // return response()->json($simpanbpjsrespontime);
         // $controller = new Bridbpjscontroller();
         // return $antrianLogByTgl;
-        $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs2 as dtd', 'rs4 as keterangan')
-            ->where('rs1', 'Like', '%' . request('diagnosa') . '%')
-            ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
-            ->get();
-        return new JsonResponse($listdiagnosa);
+        // $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs2 as dtd', 'rs4 as keterangan')
+        //     ->where('rs1', 'Like', '%' . request('diagnosa') . '%')
+        //     ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
+        //     ->get();
+        // 53539/08/2023/J
+        $noreg = '53422/07/2023/J';
+        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($noreg);
+        return new JsonResponse($inacbg);
     }
 
     public function coba()
