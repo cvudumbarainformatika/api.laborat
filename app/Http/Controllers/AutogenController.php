@@ -168,7 +168,7 @@ class AutogenController extends Controller
         //     ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
         //     ->get();
         // 53539/08/2023/J
-        $noreg = '53422/07/2023/J';
+        $noreg = '53539/08/2023/J';
         $inacbg = EwseklaimController::ewseklaimrajal_newclaim($noreg);
         return new JsonResponse($inacbg);
     }

@@ -17,8 +17,13 @@ class EwseklaimController extends Controller
     {
         //$noreg = $noreg;
         $carirajal = KunjunganPoli::select('rs2', 'rs3', 'rs25')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
-            ->where('rs1', $noreg)
+            ->where('rs1', '=', $noreg)
             ->where('rs14', 'Like', '%BPJS%')->get();
+        // ->get();
+        // return $carirajal;
+        if (count($carirajal) === 0) {
+            return 'Tidak Ada Kunjungan di NOREG tsb';
+        }
         $norm = $carirajal[0]['rs2'];
         $hakkelas = $carirajal[0]['rs25'];
         $namapasien = $carirajal[0]['masterpasien']['rs2'];
@@ -35,9 +40,8 @@ class EwseklaimController extends Controller
         } else {
             $gender = '';
         }
-
         $klaimrajal = KlaimrajalEws::where('noreg', $noreg)->count();
-
+        // return $klaimrajal;
         if ($klaimrajal === 0) {
             $querys_new_klaim = array(
                 "metadata" => array(
@@ -53,10 +57,11 @@ class EwseklaimController extends Controller
                 )
             );
             $response_new_klaim = BridgingeklaimHelper::curl_func($querys_new_klaim);
+            // return  $response_new_klaim;
             $response_new_klaim_code = $response_new_klaim["metadata"]["code"];
             $response_new_klaim_message = $response_new_klaim["metadata"]["message"];
 
-            if ($response_new_klaim_code === '200') {
+            if ($response_new_klaim_code === '200' || $response_new_klaim_code === 200) {
                 KlaimrajalEws::create(['noreg' => $noreg]);
 
                 $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas);
@@ -69,7 +74,7 @@ class EwseklaimController extends Controller
             return ($response_new_klaim_message);
         }
         $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas);
-        if ($setclaimdata["metadata"]["code"] == "200") {
+        if ($setclaimdata["metadata"]["code"] == "200" || $setclaimdata["metadata"]["code"] == 200) {
             $grouper = self::ews_grouper($noreg);
             return ($grouper);
         }
@@ -179,6 +184,7 @@ class EwseklaimController extends Controller
                         'cob_cd' => '',
                         'coder_nik' => '123123123123',
                         'users_update' => auth()->user()->pegawai_id,
+                        // 'users_update' => 4,
                         'tgl_update' => date("Y-m-d H:i:s"),
                         'konsulke' => '',
                         'status_klaim' => 'Tersimpan'
@@ -190,6 +196,7 @@ class EwseklaimController extends Controller
             [
                 'nosep' => $noreg,
                 'users_grouping' => auth()->user()->pegawai_id,
+                // 'users_grouping' => 4,
                 'tgl_grouping' => date("Y-m-d H:i:s")
             ]
         );
@@ -210,10 +217,10 @@ class EwseklaimController extends Controller
             )
         );
         $responsesx = BridgingeklaimHelper::curl_func($querysx);
-        //return $responsesx["response"];
+        // return $responsesx;
         $cbg_code = $responsesx["response"]["cbg"]["code"];
         $cbg_desc = $responsesx["response"]["cbg"]["description"];
-        $cbg_tarif = $responsesx["response"]["cbg"]["tariff"];
+        $cbg_tarif = $responsesx["response"]["cbg"]["tariff"] ?? 0;
         //$special_cmg_option = $responsesx["special_cmg_option"];
         //return $cbg_code;
         $procedure_code = "";
@@ -250,7 +257,7 @@ class EwseklaimController extends Controller
             $responsesxx = BridgingeklaimHelper::curl_func($querysxx);
             $cbg_code = $responsesxx["response"]["cbg"]["code"];
             $cbg_desc = $responsesxx["response"]["cbg"]["description"];
-            $cbg_tarif = $responsesxx["response"]["cbg"]["tariff"];
+            $cbg_tarif = $responsesxx["response"]["cbg"]["tariff"] ?? 0;
             if (isset($responsesxx["response"]["special_cmg"])) {
                 foreach ($responsesxx["response"]["special_cmg"] as $special_cmg_arrx) {
                     if ($special_cmg_arrx["type"] == "Special Procedure") {
