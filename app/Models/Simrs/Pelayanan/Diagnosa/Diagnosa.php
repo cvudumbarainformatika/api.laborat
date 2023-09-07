@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Pelayanan\Diagnosa;
 
+use App\Models\Simrs\Master\Diagnosa_m;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,6 +15,6 @@ class Diagnosa extends Model
 
     public function masterdiagnosa()
     {
-        return $this->hasOne(Diagnosa::class, 'rs1', 'rs3');
+        return $this->hasOne(Diagnosa_m::class, 'rs1', 'rs3');
     }
 }

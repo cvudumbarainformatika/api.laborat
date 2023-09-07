@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Bridgingeklaim;
 
 use App\Helpers\BridgingeklaimHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Ews\GroupingRajalEws;
 use App\Models\Simrs\Ews\KlaimrajalEws;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -184,6 +185,16 @@ class EwseklaimController extends Controller
                     ]
                 );
         }
+        $groupingrajal = GroupingRajalEws::updateOrCreate(
+            ['noreg' => $noreg],
+            [
+                'nosep' => $noreg,
+                'users_grouping' => auth()->user()->pegawai_id,
+                'tgl_grouping' => date("Y-m-d H:i:s")
+            ]
+        );
+        $grouper = self::ews_grouper($noreg);
+        return ($grouper);
         return ($response_set_claim_data);
     }
 
@@ -199,7 +210,7 @@ class EwseklaimController extends Controller
             )
         );
         $responsesx = BridgingeklaimHelper::curl_func($querysx);
-        //  return $responsesx;
+        return $responsesx;
         $cbg_code = $responsesx["response"]["cbg"]["code"];
         $cbg_desc = $responsesx["response"]["cbg"]["description"];
         $cbg_tarif = $responsesx["response"]["cbg"]["tariff"];
