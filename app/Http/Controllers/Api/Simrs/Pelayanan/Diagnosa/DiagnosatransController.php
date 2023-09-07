@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa;
 
+use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
@@ -57,10 +58,13 @@ class DiagnosatransController extends Controller
         if (!$simpandiagnosa) {
             return new JsonResponse(['message' => 'Diagnosa Gagal Disimpan...!!!'], 500);
         }
+
+        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(
             [
                 'message' => 'Diagnosa Berhasil Disimpan...!!!',
-                'result' => $simpandiagnosa
+                'result' => $simpandiagnosa,
+                'inacbg' => $inacbg,
             ],
             200
         );

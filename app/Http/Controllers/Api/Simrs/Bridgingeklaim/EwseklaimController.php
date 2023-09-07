@@ -229,14 +229,76 @@ class EwseklaimController extends Controller
         $drug_desc = "";
         $drug_tarif = "";
         $opt_cmg = "";
-        return ($responsesx);
-        // return [
-        //     'metadata' => $responsesx["metadata"],
-        //     'cbg_code' => $cbg_code,
-        //     'cbg_desc' => $cbg_desc,
-        //     'cbg_tarif' => $cbg_tarif,
-        //     //'special_cmg_option' => $special_cmg_option,
-        // ];
+        // return ($responsesx);
+        if (isset($responsesx["special_cmg_option"]) ?? null) {
+            $opt_cmg = json_encode($responsesx["special_cmg_option"]);
+            $special_cmg = "";
+            foreach ($responsesx["special_cmg_option"] as $special_cmg_arr) {
+                $special_cmg .= $special_cmg_arr["code"] . "#";
+            }
+            $special_cmg = substr($special_cmg, 0, -1);
+            $querysxx = array(
+                "metadata" => array(
+                    "method" => "grouper",
+                    "stage" => "2"
+                ),
+                "data" => array(
+                    "nomor_sep" => $noreg,
+                    "special_cmg" => $special_cmg
+                )
+            );
+            $responsesxx = BridgingeklaimHelper::curl_func($querysxx);
+            $cbg_code = $responsesxx["response"]["cbg"]["code"];
+            $cbg_desc = $responsesxx["response"]["cbg"]["description"];
+            $cbg_tarif = $responsesxx["response"]["cbg"]["tariff"];
+            if (isset($responsesxx["response"]["special_cmg"])) {
+                foreach ($responsesxx["response"]["special_cmg"] as $special_cmg_arrx) {
+                    if ($special_cmg_arrx["type"] == "Special Procedure") {
+                        $procedure_code = $special_cmg_arrx["code"];
+                        $procedure_desc = $special_cmg_arrx["description"];
+                        $procedure_tarif = $special_cmg_arrx["tariff"];
+                    } elseif ($special_cmg_arrx["type"] == "Special Prosthesis") {
+                        $prosthesis_code = $special_cmg_arrx["code"];
+                        $prosthesis_desc = $special_cmg_arrx["description"];
+                        $prosthesis_tarif = $special_cmg_arrx["tariff"];
+                    } elseif ($special_cmg_arrx["type"] == "Special Investigation") {
+                        $investigation_code = $special_cmg_arrx["code"];
+                        $investigation_desc = $special_cmg_arrx["description"];
+                        $investigation_tarif = $special_cmg_arrx["tariff"];
+                    } elseif ($special_cmg_arrx["type"] == "Special Drug") {
+                        $drug_code = $special_cmg_arrx["code"];
+                        $drug_desc = $special_cmg_arrx["description"];
+                        $drug_tarif = $special_cmg_arrx["tariff"];
+                    }
+                }
+            }
+            KlaimrajalEws::where(['noreg' => $noreg])
+                ->update(
+                    [
+                        'cbg_code' => $cbg_code,
+                        'cbg_desc' => $cbg_desc,
+                        'cbg_tarif' => $cbg_tarif,
+                        'opt_cmg' => $opt_cmg,
+                        'tgl_update' => date("Y-m-d H:i:s"),
+                        'users_update' => auth()->user()->pegawai_id,
+                        'procedure_code' => $procedure_code,
+                        'procedure_desc' => $procedure_desc,
+                        'procedure_tarif' => $procedure_tarif,
+                        'prosthesis_code' => $prosthesis_code,
+                        'prosthesis_desc' => $prosthesis_desc,
+                        'prosthesis_tarif' => $prosthesis_tarif,
+                        'investigation_code' => $investigation_code,
+                        'investigation_desc' => $investigation_desc,
+                        'investigation_tarif' => $investigation_tarif,
+                        'drug_code' => $drug_code,
+                        'drug_desc' => $drug_desc,
+                        'drug_tarif' => $drug_tarif
+                    ]
+                );
+            return $responsesxx;
+        } else {
+            return $responsesx;
+        }
     }
 
     public static function caridiagnosa($noreg)
