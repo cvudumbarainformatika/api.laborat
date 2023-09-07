@@ -13,8 +13,8 @@ class AllbillrajalperpoliController extends Controller
     public function allbillperlopi()
     {
         //  $sampai = request('tglsampai') .' 23:59:59';
-        $dari = request('tgldari') .' 00:00:00';
-        $sampai = request('tglsampai') .' 23:59:59';
+        $dari = request('tgldari') . ' 00:00:00';
+        $sampai = request('tglsampai') . ' 23:59:59';
         // $query = Allbillrajal::select('rs1','rs2','rs3','rs8','rs9')->with([
         //     'relmpoli'
         // ])
@@ -80,7 +80,7 @@ class AllbillrajalperpoliController extends Controller
                     'visiteumum:rs1,rs4,rs5',
                     'psikologtransumum:rs1,rs2,rs3,rs5,rs6,rs7,rs13',
                     'pendapatanumum:noreg,norm,tgl,total,batal',
-                    'pendapatanallbpjs:noreg,konsultasi,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
+                    'pendapatanallbpjs:noreg,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
                 )
                     ->whereBetween('rs3', [$dari, $sampai])
                     ->where('rs8', '!=', 'POL014')->where('rs8', '!=', 'PEN004')->where('rs8', '!=', 'PEN005')

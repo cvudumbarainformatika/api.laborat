@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 class EwseklaimController extends Controller
 {
-    public function ewseklaimrajal_newclaim(Request $request)
+    public static function ewseklaimrajal_newclaim(Request $request)
     {
         $noreg = $request->noreg;
         $carirajal = KunjunganPoli::select('rs2', 'rs3', 'rs25')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
@@ -195,7 +195,7 @@ class EwseklaimController extends Controller
         );
         $grouper = self::ews_grouper($noreg);
         return ($grouper);
-        return ($response_set_claim_data);
+        //return ($response_set_claim_data);
     }
 
     public static function ews_grouper($noreg)
@@ -210,11 +210,12 @@ class EwseklaimController extends Controller
             )
         );
         $responsesx = BridgingeklaimHelper::curl_func($querysx);
-        return $responsesx;
+        //return $responsesx["response"];
         $cbg_code = $responsesx["response"]["cbg"]["code"];
         $cbg_desc = $responsesx["response"]["cbg"]["description"];
         $cbg_tarif = $responsesx["response"]["cbg"]["tariff"];
-        $special_cmg_option = $responsesx["special_cmg_option"];
+        //$special_cmg_option = $responsesx["special_cmg_option"];
+        //return $cbg_code;
         $procedure_code = "";
         $procedure_desc = "";
         $procedure_tarif = "";
@@ -228,13 +229,14 @@ class EwseklaimController extends Controller
         $drug_desc = "";
         $drug_tarif = "";
         $opt_cmg = "";
-        // return ($responsesx);
-        return new JsonResponse([
-            'cbg_code' => $cbg_code,
-            'cbg_desc' => $cbg_desc,
-            'cbg_tarif' => $cbg_tarif,
-            'special_cmg_option' => $special_cmg_option,
-        ]);
+        return ($responsesx);
+        // return [
+        //     'metadata' => $responsesx["metadata"],
+        //     'cbg_code' => $cbg_code,
+        //     'cbg_desc' => $cbg_desc,
+        //     'cbg_tarif' => $cbg_tarif,
+        //     //'special_cmg_option' => $special_cmg_option,
+        // ];
     }
 
     public static function caridiagnosa($noreg)
