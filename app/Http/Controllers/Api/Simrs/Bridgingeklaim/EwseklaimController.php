@@ -58,7 +58,7 @@ class EwseklaimController extends Controller
             if ($response_new_klaim_code === '200') {
                 KlaimrajalEws::create(['noreg' => $noreg]);
 
-                $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir);
+                $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas);
                 if ($setclaimdata["metadata"]["code"] == "200") {
                     $grouper = self::ews_grouper($noreg);
                     return ($grouper);
@@ -67,14 +67,14 @@ class EwseklaimController extends Controller
 
             return ($response_new_klaim_message);
         }
-        $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir);
+        $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas);
         if ($setclaimdata["metadata"]["code"] == "200") {
             $grouper = self::ews_grouper($noreg);
             return ($grouper);
         }
     }
 
-    public static function ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir)
+    public static function ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas)
     {
 
         $diagnosa = self::caridiagnosa($noreg);
@@ -136,7 +136,53 @@ class EwseklaimController extends Controller
 
         $response_set_claim_data = BridgingeklaimHelper::curl_func($querys_set_claim_data);
         if ($response_set_claim_data["metadata"]["code"] == "200") {
-            KlaimrajalEws::where(['noreg' => $noreg, 'delete_status' => '']);
+            KlaimrajalEws::where(['noreg' => $noreg, 'delete_status' => ''])
+                ->update(
+                    [
+                        'kelas_rawat' => $hakkelas,
+                        'adl_sub_acute' => '',
+                        'adl_chronic' => '',
+                        'icu_indikator' => '',
+                        'icu_los' => '',
+                        'ventilator_hour' => '',
+                        'upgrade_class_ind' => '',
+                        'upgrade_class_class' => '',
+                        'upgrade_class_los' => '',
+                        'add_payment_pct' => '',
+                        'birth_weight' => '',
+                        'discharge_status' => '1',
+                        'diagnosas' => $diagnosa,
+                        'procedures' => '".$prosedur."',
+                        'prosedur_non_bedah' => '0',
+                        'prosedur_bedah' => '0',
+                        'konsultasi' => '0',
+                        'tenaga_ahli' => '0',
+                        'keperawatan' => '0',
+                        'penunjang' => '0',
+                        'radiologi' => '0',
+                        'pelayanan_darah' => '0',
+                        'rehabilitasi' => '0',
+                        'kamar' => '0',
+                        'rawat_intensif' => '0',
+                        'obat' => '0',
+                        'alkes' => '0',
+                        'laboratorium' => '0',
+                        'kd_dokter' => '',
+                        'bmhp' => '0',
+                        'sewa_alat' => '0',
+                        'tarif_poli_eks' => '0',
+                        'nama_dokter' => '',
+                        'kode_tarif' => 'CP',
+                        'payor_id' => '3',
+                        'payor_cd' => 'JKN',
+                        'cob_cd' => '',
+                        'coder_nik' => '123123123123',
+                        'users_update' => auth()->user()->pegawai_id,
+                        'tgl_update' => date("Y-m-d H:i:s"),
+                        'konsulke' => '',
+                        'status_klaim' => 'Tersimpan'
+                    ]
+                );
         }
         return ($response_set_claim_data);
     }
