@@ -57,7 +57,13 @@ class DiagnosatransController extends Controller
         if (!$simpandiagnosa) {
             return new JsonResponse(['message' => 'Diagnosa Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['message' => 'Diagnosa Berhasil Disimpan...!!!'], 200);
+        return new JsonResponse(
+            [
+                'message' => 'Diagnosa Berhasil Disimpan...!!!',
+                'result' => $simpandiagnosa
+            ],
+            200
+        );
     }
 
     public function hapusdiagnosa(Request $request)

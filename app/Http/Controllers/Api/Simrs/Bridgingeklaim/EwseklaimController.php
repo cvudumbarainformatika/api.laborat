@@ -136,7 +136,7 @@ class EwseklaimController extends Controller
 
         $response_set_claim_data = BridgingeklaimHelper::curl_func($querys_set_claim_data);
         if ($response_set_claim_data["metadata"]["code"] == "200") {
-            KlaimrajalEws::where(['noreg' => $noreg]);
+            KlaimrajalEws::where(['noreg' => $noreg, 'delete_status' => '']);
         }
         return ($response_set_claim_data);
     }
