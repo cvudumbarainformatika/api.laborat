@@ -29,4 +29,5 @@ Route::group([
     Route::post('/simpantindakanpoli', [TindakanController::class, 'simpantindakanpoli']);
 
     Route::post('/ewseklaimrajal_newclaim', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);
+    Route::get('/caridiagnosa', [EwseklaimController::class, 'caridiagnosa']);
 });

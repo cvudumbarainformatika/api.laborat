@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api\Simrs\Bridgingeklaim;
 
 use App\Helpers\BridgingeklaimHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Ews\KlaimrajalEws;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,44 +15,58 @@ class EwseklaimController extends Controller
     public function ewseklaimrajal_newclaim(Request $request)
     {
         $noreg = $request->noreg;
-        $norm = $request->norm;
-        $namapasien = $request->namapasien;
-        $tgl_lahir = $request->tgl_lahir;
-        $gender = $request->gender;
-        $tgl_masuk = $request->tgl_masuk;
-        $berat_lahir = $request->berat_lahir;
+        $carirajal = KunjunganPoli::select('rs2', 'rs3')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
+            ->where('rs1', $noreg)->get();
+        $norm = $carirajal[0]['rs2'];
+        $namapasien = $carirajal[0]['masterpasien']['rs2'];
+        $tgl_lahir = $carirajal[0]['masterpasien']['rs16'];
+        $gender = $carirajal[0]['masterpasien']['rs17'];
+        $tgl_masuk = $carirajal[0]['rs3'];
+        $berat_lahir = $carirajal[0]['masterpasien']['berat_lahir'];
 
+        $klaimrajal = KlaimrajalEws::where('noreg', $noreg)->count();
 
-        $querys_new_klaim = array(
-            "metadata" => array(
-                "method" => "new_claim"
-            ),
-            "data" => array(
-                "nomor_kartu" => $norm,
-                "nomor_sep" => $noreg,
-                "nomor_rm" => $norm,
-                "nama_pasien" => $namapasien,
-                "tgl_lahir" =>  $tgl_lahir . ' 02:00:00',
-                "gender" => $gender,
-            )
-        );
-        $response_new_klaim = BridgingeklaimHelper::curl_func($querys_new_klaim);
-        $response_new_klaim_code = $response_new_klaim["metadata"]["code"];
-        $response_new_klaim_message = $response_new_klaim["metadata"]["message"];
+        if ($klaimrajal === 0) {
+            $querys_new_klaim = array(
+                "metadata" => array(
+                    "method" => "new_claim"
+                ),
+                "data" => array(
+                    "nomor_kartu" => $norm,
+                    "nomor_sep" => $noreg,
+                    "nomor_rm" => $norm,
+                    "nama_pasien" => $namapasien,
+                    "tgl_lahir" =>  $tgl_lahir . ' 02:00:00',
+                    "gender" => $gender,
+                )
+            );
+            $response_new_klaim = BridgingeklaimHelper::curl_func($querys_new_klaim);
+            $response_new_klaim_code = $response_new_klaim["metadata"]["code"];
+            $response_new_klaim_message = $response_new_klaim["metadata"]["message"];
 
-        if ($response_new_klaim_code == '200') {
-            $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir);
-            if ($setclaimdata["metadata"]["code"] == "200") {
-                $grouper = self::ews_grouper($noreg);
-                return ($grouper);
+            if ($response_new_klaim_code === '200') {
+                KlaimrajalEws::create(['noreg' => $noreg]);
+
+                $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir);
+                if ($setclaimdata["metadata"]["code"] == "200") {
+                    $grouper = self::ews_grouper($noreg);
+                    return ($grouper);
+                }
             }
-        }
 
-        return ($response_new_klaim_message);
+            return ($response_new_klaim_message);
+        }
+        $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir);
+        if ($setclaimdata["metadata"]["code"] == "200") {
+            $grouper = self::ews_grouper($noreg);
+            return ($grouper);
+        }
     }
 
     public static function ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir)
     {
+
+        $diagnosa = self::caridiagnosa($noreg);
         $querys_set_claim_data = array(
             "metadata" => array(
                 "method" => "set_claim_data",
@@ -73,7 +90,8 @@ class EwseklaimController extends Controller
                 "add_payment_pct" => '',
                 "birth_weight" => $berat_lahir,
                 "discharge_status" => 1,
-                "diagnosa" => "S71.0#A00.1",
+                "diagnosa" => $diagnosa,
+                // "diagnosa" => "S71.0#A00.1",
                 "procedure" => "81.52#88.38",
                 "tarif_rs" => array(
                     "prosedur_non_bedah" => 0,
@@ -121,6 +139,7 @@ class EwseklaimController extends Controller
             )
         );
         $responsesx = BridgingeklaimHelper::curl_func($querysx);
+        return $responsesx;
         $cbg_code = $responsesx["response"]["cbg"]["code"];
         $cbg_desc = $responsesx["response"]["cbg"]["description"];
         $cbg_tarif = $responsesx["response"]["cbg"]["tariff"];
@@ -145,5 +164,16 @@ class EwseklaimController extends Controller
             'cbg_tarif' => $cbg_tarif,
             'special_cmg_option' => $special_cmg_option,
         ]);
+    }
+
+    public static function caridiagnosa($noreg)
+    {
+        $cari = Diagnosa::select('rs3')->where('rs1', $noreg)->get();
+        foreach ($cari as $val) {
+            $wew[] = $val['rs3'] . '#';
+            $xxx = implode(',', $wew);
+            $diagnosa = str_replace(',', '', $xxx);
+        }
+        return $diagnosa;
     }
 }

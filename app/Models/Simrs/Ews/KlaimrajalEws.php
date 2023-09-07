@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Models\Simrs\Pelayanan\Diagnosa;
+namespace App\Models\Simrs\Ews;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Diagnosa extends Model
+class KlaimrajalEws extends Model
 {
     use HasFactory;
-    protected $table = 'rs101';
+    protected $table = 'klaim_trans_rajal';
     protected $guarded = ['id'];
     public $timestamps = false;
 }
