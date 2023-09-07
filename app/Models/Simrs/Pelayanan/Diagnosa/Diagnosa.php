@@ -11,4 +11,9 @@ class Diagnosa extends Model
     protected $table = 'rs101';
     protected $guarded = ['id'];
     public $timestamps = false;
+
+    public function masterdiagnosa()
+    {
+        return $this->hasOne(Diagnosa::class, 'rs1', 'rs3');
+    }
 }
