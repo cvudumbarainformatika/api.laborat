@@ -15,14 +15,25 @@ class EwseklaimController extends Controller
     public function ewseklaimrajal_newclaim(Request $request)
     {
         $noreg = $request->noreg;
-        $carirajal = KunjunganPoli::select('rs2', 'rs3')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
-            ->where('rs1', $noreg)->get();
+        $carirajal = KunjunganPoli::select('rs2', 'rs3', 'rs25')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
+            ->where('rs1', $noreg)
+            ->where('rs14', 'Like', '%BPJS%')->get();
         $norm = $carirajal[0]['rs2'];
+        $hakkelas = $carirajal[0]['rs25'];
         $namapasien = $carirajal[0]['masterpasien']['rs2'];
         $tgl_lahir = $carirajal[0]['masterpasien']['rs16'];
-        $gender = $carirajal[0]['masterpasien']['rs17'];
+        $kelamin = $carirajal[0]['masterpasien']['rs17'];
         $tgl_masuk = $carirajal[0]['rs3'];
-        $berat_lahir = $carirajal[0]['masterpasien']['berat_lahir'];
+        $berat_lahirs = $carirajal[0]['masterpasien']['berat_lahir'];
+        $berat_lahir = str_replace('.', '', $berat_lahirs);
+
+        if ($kelamin == 'Perempuan') {
+            $gender = '2';
+        } elseif ($kelamin == 'Laki-laki') {
+            $gender = '1';
+        } else {
+            $gender = '';
+        }
 
         $klaimrajal = KlaimrajalEws::where('noreg', $noreg)->count();
 
@@ -124,6 +135,9 @@ class EwseklaimController extends Controller
         );
 
         $response_set_claim_data = BridgingeklaimHelper::curl_func($querys_set_claim_data);
+        if ($response_set_claim_data["metadata"]["code"] == "200") {
+            KlaimrajalEws::where(['noreg' => $noreg]);
+        }
         return ($response_set_claim_data);
     }
 
@@ -139,7 +153,7 @@ class EwseklaimController extends Controller
             )
         );
         $responsesx = BridgingeklaimHelper::curl_func($querysx);
-        return $responsesx;
+        //  return $responsesx;
         $cbg_code = $responsesx["response"]["cbg"]["code"];
         $cbg_desc = $responsesx["response"]["cbg"]["description"];
         $cbg_tarif = $responsesx["response"]["cbg"]["tariff"];

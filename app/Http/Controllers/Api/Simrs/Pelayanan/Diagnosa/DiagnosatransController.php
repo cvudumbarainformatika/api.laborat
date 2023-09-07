@@ -28,9 +28,10 @@ class DiagnosatransController extends Controller
                     'rs2' => $request->norm,
                     'rs3' => $request->kddiagnosa,
                     'rs4' => $request->tipediagnosa,
+                    'rs6' => $request->keterangan ?? '',
                     'rs7' => $request->kasus,
                     'rs8'  => auth()->user()->pegawai_id,
-                    'rs9' => $request->dtd,
+                    'rs9' => $request->dtd ?? '',
                     'rs10' => '',
                     'rs12' => date('Y-m-d'),
                     'rs13' => $request->ruangan
@@ -43,9 +44,10 @@ class DiagnosatransController extends Controller
                     'rs2' => $request->norm,
                     'rs3' => $request->kddiagnosa,
                     'rs4' => $request->tipediagnosa,
+                    'rs6' => $request->keterangan ?? '',
                     'rs7' => $request->kasus,
                     'rs8'  => auth()->user()->pegawai_id,
-                    'rs9' => $request->dtd,
+                    'rs9' => $request->dtd ?? '',
                     'rs10' => '',
                     'rs12' => date('Y-m-d'),
                     'rs13' => $request->ruangan
