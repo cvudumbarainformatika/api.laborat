@@ -73,7 +73,7 @@ class PerencanaanpembelianController extends Controller
     {
         $cekflag = RencanabeliR::select('flag')->where('kdobat', $request->kdobat)->first();
         $flag = $cekflag->flag;
-        if ($flag === '') {
+        if ($flag === '' || $flag === null) {
             return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
         }
 
