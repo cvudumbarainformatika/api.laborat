@@ -318,4 +318,10 @@ class EwseklaimController extends Controller
         }
         return $diagnosa;
     }
+
+    public function carisimulasi()
+    {
+        $noreg = request('noreg');
+        return self::ewseklaimrajal_newclaim($noreg);
+    }
 }
