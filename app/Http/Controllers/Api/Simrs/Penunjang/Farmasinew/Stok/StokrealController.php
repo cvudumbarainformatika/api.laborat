@@ -16,14 +16,16 @@ class StokrealController extends Controller
             [
                 'nopenerimaan' => $nopenerimaan,
                 'kdobat' => $request->kdobat,
-                'kdruang' => $request->kdruang
+                'kdruang' => $request->kdruang,
+                'nobatch' => $request->no_batch,
+                'tglexp' => $request->tgl_exp,
+                'harga' => $request->harga_kcl
             ],
             [
                 'tglpenerimaan' => $request->tglpenerimaan,
                 'jumlah' => $request->jumlah,
-                'harga' => $request->harga_kcl,
-                'tglexp' => $request->tgl_exp,
                 'flag' => 1
+
             ]
         );
         if (!$simpanstokreal) {

@@ -227,7 +227,17 @@ class PenerimaanController extends Controller
 
     public function kuncipenerimaan(Request $request)
     {
-        Stokrel::where('nopenerimaan', $request->nopenerimaan)
+        $masukstok = Stokrel::where('nopenerimaan', $request->nopenerimaan)
             ->update(['flag' => '']);
+        if (!$masukstok) {
+            return new JsonResponse(['message' => 'Stok Tidak Terupdate,mohon segera cek Data Stok Anda...!!!'], 500);
+        }
+
+        $kuncipenerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
+            ->update('kunci', '1');
+        if (!$kuncipenerimaan) {
+            return new JsonResponse(['message' => 'Gagal Mengunci Penerimaan,Cek Lagi Data Yang Anda Input...!!!'], 500);
+        }
+        return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci, Dan Stok Sudah Bertambah...!!!'], 200);
     }
 }
