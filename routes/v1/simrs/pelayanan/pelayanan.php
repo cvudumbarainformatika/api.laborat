@@ -31,4 +31,6 @@ Route::group([
     Route::post('/ewseklaimrajal_newclaim', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);
     Route::get('/caridiagnosa', [EwseklaimController::class, 'caridiagnosa']);
     Route::get('/carisimulasi', [EwseklaimController::class, 'carisimulasi']);
+
+    Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
