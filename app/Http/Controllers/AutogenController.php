@@ -59,6 +59,7 @@ use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
 use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Master\Mruangan;
+use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
@@ -168,9 +169,19 @@ class AutogenController extends Controller
         //     ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
         //     ->get();
         // 53539/08/2023/J
-        $noreg = '53539/08/2023/J';
-        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($noreg);
-        return new JsonResponse($inacbg);
+        // $noreg = '53539/08/2023/J';
+        // $inacbg = EwseklaimController::ewseklaimrajal_newclaim($noreg);
+        // return new JsonResponse($inacbg);
+        $dialogtindakanpoli = Mtindakan::select(
+            'rs1 as kdtindakan',
+            'rs2 as tindakan',
+            'rs8 as sarana',
+            'rs9 as pelayanan',
+            DB::raw('rs8 +rs9 as tarif')
+        )
+            ->where('rs2', 'Like', request('tindakan'))
+            ->get();
+        return new JsonResponse($dialogtindakanpoli);
     }
 
     public function coba()
