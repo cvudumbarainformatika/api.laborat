@@ -80,6 +80,7 @@ class DiagnosatransController extends Controller
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
+        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 }
