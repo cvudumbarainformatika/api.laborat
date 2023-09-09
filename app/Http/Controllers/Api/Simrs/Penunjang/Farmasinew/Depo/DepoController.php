@@ -29,7 +29,7 @@ class DepoController extends Controller
             ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
-        return $stokgudang;
+        return new JsonResponse(['obat' => $stokgudang]);
     }
 
     public function simpanpermintaandepo(Request $request)
