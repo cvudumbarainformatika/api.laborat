@@ -10,4 +10,5 @@ class Permintaandeporinci extends Model
     use HasFactory;
     protected $table = 'permintaan_r';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

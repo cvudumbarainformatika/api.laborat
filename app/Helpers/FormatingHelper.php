@@ -139,4 +139,14 @@ class FormatingHelper
         }
         return date("y") . date("m") . date("d") . "/" . $has . $n . $kode;
     }
+
+    public static function permintaandepo($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 9 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return date("y") . date("m") . date("d") . "/" . $has . $n . $kode;
+    }
 }
