@@ -193,7 +193,7 @@ class PenerimaanController extends Controller
                 ->orWhere('penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')
                 ->orWhere('penerimaan_h.jenissurat', 'Like', '%' . request('cari') . '%')
                 ->orWhere('penerimaan_h.nomorsurat', 'Like', '%' . request('cari') . '%')
-                ->with(['penerimaanrinci', 'penerimaanrinci.masterobat'])
+                ->with(['penerimaanrinci', 'penerimaanrinci.masterobat'])->orderBy('tglpenerimaan', 'desc')
                 ->paginate(request('per_page'));
             return new JsonResponse($listpenerimaan);
         } else {
@@ -219,7 +219,7 @@ class PenerimaanController extends Controller
                 ->orWhere('penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')
                 ->orWhere('penerimaan_h.jenissurat', 'Like', '%' . request('cari') . '%')
                 ->orWhere('penerimaan_h.nomorsurat', 'Like', '%' . request('cari') . '%')
-                ->with(['penerimaanrinci', 'penerimaanrinci.masterobat'])
+                ->with(['penerimaanrinci', 'penerimaanrinci.masterobat'])->orderBy('tglpenerimaan', 'desc')
                 ->paginate(request('per_page'));
             return new JsonResponse($listpenerimaan);
         }
