@@ -234,7 +234,7 @@ class PenerimaanController extends Controller
         }
 
         $kuncipenerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
-            ->update(['kunci', '1']);
+            ->update(['kunci' => '1']);
         if (!$kuncipenerimaan) {
             return new JsonResponse(['message' => 'Gagal Mengunci Penerimaan,Cek Lagi Data Yang Anda Input...!!!'], 500);
         }
