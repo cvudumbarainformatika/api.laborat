@@ -71,9 +71,8 @@ class PerencanaanpembelianController extends Controller
 
     public function simpanrencanabeliobat(Request $request)
     {
-        $cekflag = RencanabeliR::select('flag')->where('kdobat', $request->kdobat)->first();
-        $flag = $cekflag->flag;
-        if ($flag === '' || $flag === null) {
+        $cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
+        if ($cekflag > 0) {
             return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
         }
 
