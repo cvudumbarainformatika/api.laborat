@@ -36,7 +36,7 @@ class TindakanController extends Controller
         $simpantindakan = Tindakan::create(
             [
                 'rs1' => $request->noreg,
-                'rs2' => $notatindakan,
+                'rs2' => $request->nota ?? $notatindakan,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->kdtindakan,
                 'rs5' => $request->jmltindakan,
@@ -54,7 +54,15 @@ class TindakanController extends Controller
         if (!$simpantindakan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+
+
+        return new JsonResponse(
+            [
+                'message' => 'Tindakan Berhasil Disimpan.',
+                'result' => $simpantindakan,
+            ],
+            200
+        );
     }
 
     public function hapustindakanpoli(Request $request)
@@ -68,5 +76,12 @@ class TindakanController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
+
+    public function notatindakan()
+    {
+        $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
     }
 }
