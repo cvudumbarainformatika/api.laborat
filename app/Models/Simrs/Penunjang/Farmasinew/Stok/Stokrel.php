@@ -23,4 +23,14 @@ class Stokrel extends Model
     {
         return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kdobat');
     }
+
+    public function permintaanobatheder()
+    {
+        return $this->hasManyThrough(
+            Permintaandepoheder::class,
+            Permintaandeporinci::class,
+            'no_permintaan',
+            'no_permintaan'
+        );
+    }
 }
