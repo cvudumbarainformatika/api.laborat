@@ -84,6 +84,16 @@ class DepoController extends Controller
 
     public function simpanpermintaandepo(Request $request)
     {
+        $stokreal = Stokrel::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
+        $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
+            ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+            ->where('permintaan_h.flag', '')->where('kdobat', $request->kdobat)->where('tujuan', $request->tujuan)
+            ->groupby('kdobat')->get();
+        $stokalokasi = (int) $stokreal->stok - (int) $allpermintaan[0]->allpermintaan;
+        if ($request->jumlah_minta > $stokalokasi) {
+            return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak mencukupi...!!!'], 500);
+        }
+
         if ($request->nopermintaan === '' || $request->nopermintaan === null) {
             DB::connection('farmasi')->select('call permintaandepo(@nomor) ');
             $x = DB::connection('farmasi')->table('conter')->select('permintaandepo')->get();
