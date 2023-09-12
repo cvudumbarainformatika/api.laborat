@@ -15,6 +15,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Rekom\Rekomdpjp;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -82,5 +83,9 @@ class KunjunganPoli extends Model
     public function diagnosa()
     {
         return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
+    }
+    public function tindakan()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 }

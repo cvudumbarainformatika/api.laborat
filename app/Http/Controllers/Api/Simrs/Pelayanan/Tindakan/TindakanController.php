@@ -33,16 +33,17 @@ class TindakanController extends Controller
         $wew = $x[0]->rs14;
         $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
 
-        $simpantindakan = Tindakan::create(
+        $simpantindakan = Tindakan::firstOrNew(
+            ['rs8' => auth()->user()->pegawai_id, 'rs2' => $request->nota ?? $notatindakan, 'rs1' => $request->noreg, 'rs4' => $request->kdtindakan],
             [
-                'rs1' => $request->noreg,
-                'rs2' => $request->nota ?? $notatindakan,
+                // 'rs1' => $request->noreg,
+                // 'rs2' => $request->nota ?? $notatindakan,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->kdtindakan,
-                'rs5' => $request->jmltindakan,
+                // 'rs5' => $request->jmltindakan,
                 'rs6' => $request->hargasarana,
                 'rs7' => $request->hargasarana,
-                'rs8' => auth()->user()->pegawai_id,
+                // 'rs8' => auth()->user()->pegawai_id,
                 'rs9' => auth()->user()->pegawai_id,
                 'rs13' => $request->hargapelayanan,
                 'rs14' => $request->hargapelayanan,
@@ -55,11 +56,16 @@ class TindakanController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
+        $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
+        $simpantindakan->save();
 
+        $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
                 'result' => $simpantindakan,
+                'nota' => $nota
             ],
             200
         );
@@ -72,10 +78,12 @@ class TindakanController extends Controller
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
         $hapus = $cari->delete();
+        $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
-        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
 
     public function notatindakan()
