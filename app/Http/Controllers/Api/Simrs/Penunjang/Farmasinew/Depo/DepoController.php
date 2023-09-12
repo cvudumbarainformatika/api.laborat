@@ -22,28 +22,8 @@ class DepoController extends Controller
                 'stokreal.*',
                 'new_masterobat.*',
                 DB::raw('sum(stokreal.jumlah) as  jumlah'),
-                DB::raw('sum(permintaan_r.jumlah_minta) as stokalokasi'),
-                'new_masterobat.nama_obat as nama_obat'
-            )->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-                ->leftjoin('permintaan_r', 'new_masterobat.kd_obat', '=', 'permintaan_r.kdobat')
-                ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                ->where('permintaan_h.flag', '')
-                ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
-                ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
-                ->get();
-            return new JsonResponse(['obat' => $stokgudang]);
-        } else {
-            $stokgudang = Stokrel::select(
-                'stokreal.*',
-                'new_masterobat.*',
-                DB::raw('sum(stokreal.jumlah) as  jumlah'),
-                //  DB::raw('sum(permintaan_r.jumlah_minta) as stokalokasi'),
                 'new_masterobat.nama_obat as nama_obat'
             )->with([
-                //'permintaanobatrinci.permintaanobatheder',
-                // 'ambulan' => function($ambulan){
-                //     $ambulan->select('rs1','rs2','rs15','rs16','rs17','rs18','rs23','rs26','rs30')->where('rs20','!=','POL014');
-                // },
                 'permintaanobatrinci' => function ($permintaanobatrinci) {
                     $permintaanobatrinci->select(
                         'permintaan_r.kdobat',
@@ -65,11 +45,39 @@ class DepoController extends Controller
                 $xxx['stokalokasi'] = $stokalokasi;
                 return $xxx;
             });
-
-            //return $stokgudang[0]['stokalokasi'];
-            // $stokalokasi = $stokgudang[0]->jumlah;
             return new JsonResponse(
-                ['stok' => $datastok]
+                ['obat' => $datastok]
+            );
+        } else {
+            $stokgudang = Stokrel::select(
+                'stokreal.*',
+                'new_masterobat.*',
+                DB::raw('sum(stokreal.jumlah) as  jumlah'),
+                'new_masterobat.nama_obat as nama_obat'
+            )->with([
+                'permintaanobatrinci' => function ($permintaanobatrinci) {
+                    $permintaanobatrinci->select(
+                        'permintaan_r.kdobat',
+                        DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                    )
+                        ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                        ->where('permintaan_h.flag', '');
+                }
+            ])
+                ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+                ->where('stokreal.kdruang', $gudang)
+                ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
+                ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+                ->get();
+            $datastok = $stokgudang->map(function ($xxx) {
+                $stolreal = $xxx->jumlah;
+                $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
+                $stokalokasi = (int) $stolreal - (int) $permintaantotal;
+                $xxx['stokalokasi'] = $stokalokasi;
+                return $xxx;
+            });
+            return new JsonResponse(
+                ['obat' => $datastok]
             );
         }
     }
