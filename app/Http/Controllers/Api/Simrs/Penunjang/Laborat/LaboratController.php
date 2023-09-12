@@ -11,39 +11,41 @@ class LaboratController extends Controller
     public function listmasterpemeriksaanpoli()
     {
         $cito = request('cito');
-        $kodepoli = request('kodepoli');
         if ($cito == 1) {
-            if ($kodepoli === 'POL022') {
-                $listmasterpemeriksaanpoli = MasterLaborat::select('rs1', 'rs2', 'rs3', 'rs4', 'rs21', 'nilainormal', 'satuan')->where('rs25', '1')
-                    ->where('rs1', '!=', 'LAB126')
-                    ->where('hidden', '!=', '1')
-                    ->groupBy('rs21')->orderBy('rs2')->get();
+            $listmasterpemeriksaanpoli = MasterLaborat::select(
+                'rs1 as kode',
+                'rs2 as pemeriksaan',
+                'rs3 as hargasaranapoliumum',
+                'rs4 as hargapelayananpoliumum',
+                'rs5 as hargasaranapolispesialis',
+                'rs6 as hargapelayananpolispesialis',
+                'rs21 as gruper',
+                'nilainormal',
+                'satuan'
+            )->where('rs25', '1')
+                ->where('rs1', '!=', 'LAB126')
+                ->where('hidden', '!=', '1')
+                ->orderBy('rs2')->get();
 
-                return $listmasterpemeriksaanpoli;
-            } else {
-                $listmasterpemeriksaanpoli = MasterLaborat::select('rs1', 'rs2', 'rs5', 'rs6', 'rs21', 'nilainormal', 'satuan')->where('rs25', '1')
-                    ->where('rs1', '!=', 'LAB126')
-                    ->where('hidden', '!=', '1')
-                    ->groupBy('rs21')->orderBy('rs2')->get();
-
-                return $listmasterpemeriksaanpoli;
-            }
-
-            //return $listmasterpemeriksaanpoli[0]->rs21;
+            return $listmasterpemeriksaanpoli;
         } else {
-            if ($kodepoli === 'POL022') {
-                $listmasterpemeriksaanpoli = MasterLaborat::select('rs1', 'rs2', 'rs3', 'rs4', 'rs21', 'nilainormal', 'satuan')->where('rs25', '1')->orwhere('rs25', '')
-                    ->where('rs1', '!=', 'LAB126')
-                    ->where('hidden', '!=', '1')
-                    ->groupBy('rs21')->orderBy('rs2')->get();
-                return $listmasterpemeriksaanpoli[0]->rs21;
-            } else {
-                $listmasterpemeriksaanpoli = MasterLaborat::select('rs1', 'rs2', 'rs5', 'rs6', 'rs21', 'nilainormal', 'satuan')->where('rs25', '1')->orwhere('rs25', '')
-                    ->where('rs1', '!=', 'LAB126')
-                    ->where('hidden', '!=', '1')
-                    ->groupBy('rs21')->orderBy('rs2')->get();
-                return $listmasterpemeriksaanpoli[0]->rs21;
-            }
+
+            $listmasterpemeriksaanpoli = MasterLaborat::select(
+                'rs1 as kode',
+                'rs2 as pemeriksaan',
+                'rs3 as hargasaranapoliumum',
+                'rs4 as hargapelayananpoliumum',
+                'rs5 as hargasaranapolispesialis',
+                'rs6 as hargapelayananpolispesialis',
+                'rs21 as gruper',
+                'nilainormal',
+                'satuan'
+            )->where('rs25', '1')->orwhere('rs25', '')
+                ->where('rs1', '!=', 'LAB126')
+                ->where('hidden', '!=', '1')
+                ->orderBy('rs2')->get();
+
+            return $listmasterpemeriksaanpoli;
         }
     }
 }
