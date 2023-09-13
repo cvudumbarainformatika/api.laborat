@@ -9,7 +9,8 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/farmasinew'
 ], function () {
-   // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
+    // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
     Route::get('/carilistminmaxbyobat', [MinmaxobatController::class, 'caribynamaobat']);
     Route::post('/minmaxobat', [MinmaxobatController::class, 'simpan']);
+    Route::post('/simpanminta', [MinmaxobatController::class, 'simpan']); // smentara
 });
