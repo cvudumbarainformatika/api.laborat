@@ -49,8 +49,8 @@ class AntrianController extends Controller
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
 
-                // $message = ['nomorAntrian' => $query->data->nomor,];
-                // event(new AntreanEvent($message));
+                $message = ['nomorAntrian' => $query->data->nomor,];
+                event(new AntreanEvent($message));
 
                 return ($query);
             }
@@ -95,8 +95,8 @@ class AntrianController extends Controller
                 if (!$simpan) {
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
-                // $message = ['nomorAntrianLansia' => $query->data->nomor,];
-                // event(new AntreanEvent($message));
+                $message = ['nomorAntrianLansia' => $query->data->nomor,];
+                event(new AntreanEvent($message));
                 return ($query);
             }
             return new JsonResponse(['message' => 'gagal'], 410);

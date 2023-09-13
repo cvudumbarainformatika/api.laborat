@@ -91,16 +91,15 @@ class BridantrianbpjsController extends Controller
             ]
         );
 
-        // if ($ambilantrian) {
-        //     $message = [
-        //         'kode' => $ambilantrian,
-        //         'url' => 'antrean/add',
-        //         'task' => 0,
-        //         'user' => auth()->user()->id
-        //     ];
-        //     event(new AntreanEvent($message));
-        // }
-
+        if ($ambilantrian) {
+            $message = [
+                'kode' => $ambilantrian,
+                'url' => 'antrean/add',
+                'task' => 0,
+                'user' => auth()->user()->id
+            ];
+            event(new AntreanEvent($message));
+        }
         //return $ambilantrian;
     }
 
@@ -172,15 +171,15 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        // if ($updatewaktuantrian) {
-        //     $message = [
-        //         'kode' => $updatewaktuantrian,
-        //         'url' => 'antrean/updatewaktu',
-        //         'task' => $x,
-        //         'user' => auth()->user()->id
-        //     ];
-        //     event(new AntreanEvent($message));
-        // }
+        if ($updatewaktuantrian) {
+            $message = [
+                'kode' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'task' => $x,
+                'user' => auth()->user()->id
+            ];
+            event(new AntreanEvent($message));
+        }
     }
 
     public static function updateMulaiWaktuTungguAdmisi($request, $input)
@@ -242,15 +241,15 @@ class BridantrianbpjsController extends Controller
                     'tgl' => $tgltobpjshttpres
                 ]
             );
-            // if ($updatewaktuantrian) {
-            //     $message = [
-            //         'kode' => $updatewaktuantrian,
-            //         'url' => 'antrean/updatewaktu',
-            //         'task' => $taskid,
-            //         'user' => auth()->user()->id
-            //     ];
-            //     event(new AntreanEvent($message));
-            // }
+            if ($updatewaktuantrian) {
+                $message = [
+                    'kode' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'task' => $taskid,
+                    'user' => auth()->user()->id
+                ];
+                event(new AntreanEvent($message));
+            }
         }
         //  return($updatewaktuantrian);
     }
@@ -311,14 +310,14 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        // if ($updatewaktuantrian) {
-        //     $message = [
-        //         'kode' => $updatewaktuantrian,
-        //         'url' => 'antrean/updatewaktu',
-        //         'task' => $taskid,
-        //         'user' => auth()->user()->id
-        //     ];
-        //     event(new AntreanEvent($message));
-        // }
+        if ($updatewaktuantrian) {
+            $message = [
+                'kode' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'task' => $taskid,
+                'user' => auth()->user()->id
+            ];
+            event(new AntreanEvent($message));
+        }
     }
 }
