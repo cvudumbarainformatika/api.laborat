@@ -6,8 +6,11 @@ use App\Helpers\BridgingeklaimHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Ews\GroupingRajalEws;
 use App\Models\Simrs\Ews\KlaimrajalEws;
+use App\Models\Simrs\Ews\MapingProcedure;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Rajal\WaktupulangPoli;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,11 +22,18 @@ class EwseklaimController extends Controller
         $carirajal = KunjunganPoli::select('rs2', 'rs3', 'rs25')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
             ->where('rs1', '=', $noreg)
             ->where('rs14', 'Like', '%BPJS%')->get();
-        // ->get();
-        // return $carirajal;
         if (count($carirajal) === 0) {
             return 'Tidak Ada Kunjungan di NOREG tsb';
         }
+
+        $rs141 = WaktupulangPoli::select('tgl')->where('rs1', '=', $noreg)->get();
+        $tglplng = '';
+        if (count($rs141) === 0) {
+            $tglplng = date('Y-m-d H:i:s');
+        } else {
+            $tglplng = $rs141[0]['tgl'];
+        }
+
         $norm = $carirajal[0]['rs2'];
         $hakkelas = $carirajal[0]['rs25'];
         $namapasien = $carirajal[0]['masterpasien']['rs2'];
@@ -64,7 +74,7 @@ class EwseklaimController extends Controller
             if ($response_new_klaim_code === '200' || $response_new_klaim_code === 200) {
                 KlaimrajalEws::create(['noreg' => $noreg]);
 
-                $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas);
+                $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas, $tglplng);
                 if ($setclaimdata["metadata"]["code"] == "200") {
                     $grouper = self::ews_grouper($noreg);
                     return ($grouper);
@@ -73,17 +83,18 @@ class EwseklaimController extends Controller
 
             return ($response_new_klaim_message);
         }
-        $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas);
+        $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas, $tglplng);
         if ($setclaimdata["metadata"]["code"] == "200" || $setclaimdata["metadata"]["code"] == 200) {
             $grouper = self::ews_grouper($noreg);
             return ($grouper);
         }
     }
 
-    public static function ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas)
+    public static function ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas, $tglplng)
     {
 
         $diagnosa = self::caridiagnosa($noreg);
+        $tindakan = self::cariprocedure($noreg);
         $querys_set_claim_data = array(
             "metadata" => array(
                 "method" => "set_claim_data",
@@ -93,7 +104,8 @@ class EwseklaimController extends Controller
                 "nomor_sep" => $noreg,
                 "nomor_kartu" => $norm,
                 "tgl_masuk" => $tgl_masuk,
-                "tgl_pulang" => date("Y-m-d H:i:s"),
+                "tgl_pulang" => $tglplng,
+                "cara_masuk" => '',
                 "jenis_rawat" => 2,
                 "kelas_rawat" => 3,
                 "adl_sub_acute" => '',
@@ -108,10 +120,11 @@ class EwseklaimController extends Controller
                 "birth_weight" => $berat_lahir,
                 "discharge_status" => 1,
                 "diagnosa" => $diagnosa,
-                // "diagnosa" => "S71.0#A00.1",
-                "procedure" => "81.52#88.38",
+                //"diagnosa" => "I21.0",
+                "procedure" => $tindakan,
+                //"procedure" => "",
                 "tarif_rs" => array(
-                    "prosedur_non_bedah" => 0,
+                    "prosedur_non_bedah" => 150000,
                     "prosedur_bedah" => 0,
                     "konsultasi" => 0,
                     "tenaga_ahli" => 0,
@@ -158,7 +171,7 @@ class EwseklaimController extends Controller
                         'birth_weight' => '',
                         'discharge_status' => '1',
                         'diagnosas' => $diagnosa,
-                        'procedures' => '".$prosedur."',
+                        'procedures' => $tindakan,
                         'prosedur_non_bedah' => '0',
                         'prosedur_bedah' => '0',
                         'konsultasi' => '0',
@@ -317,6 +330,22 @@ class EwseklaimController extends Controller
             $diagnosa = str_replace(',', '', $xxx);
         }
         return $diagnosa;
+    }
+
+    public static function cariprocedure()
+    {
+
+        $cari = Tindakan::select('rs4')->with('maapingprocedure:kdMaster,icd9')
+            ->where('rs1', '53539/08/2023/J')->get();
+        if (count($cari) == 0) {
+            $icd9 = '';
+        }
+        foreach ($cari as $val) {
+            $wew[] = $val['maapingprocedure']['icd9'] ?? null;
+            $icd9 = implode('#', $wew) ?? null;
+            return $icd9;
+        }
+        return $icd9;
     }
 
     public function carisimulasi()

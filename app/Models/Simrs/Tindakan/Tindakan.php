@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Tindakan;
 
+use App\Models\Simrs\Ews\MapingProcedure;
+use App\Models\Simrs\Master\Mtindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,9 +22,18 @@ class Tindakan extends Model
         $jumlah = (int) $this->rs5 ? $this->rs5 : 1;
 
         $hargatotal = $harga1 + $harga2;
-        $subtotal = $hargatotal*$jumlah;
-       //$subtotal = ($harga1+$harga2)*$jumlah;
+        $subtotal = $hargatotal * $jumlah;
+        //$subtotal = ($harga1+$harga2)*$jumlah;
         return ($subtotal);
     }
 
+    public function maapingprocedure()
+    {
+        return $this->hasOne(MapingProcedure::class, 'kdMaster', 'rs4');
+    }
+
+    public function mastertindakan()
+    {
+        return $this->hasOne(Mtindakan::class, 'rs1', 'rs4');
+    }
 }

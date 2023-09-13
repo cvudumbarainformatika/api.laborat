@@ -72,6 +72,10 @@ class PoliController extends Controller
             ->with([
                 'anamnesis',
                 'gambars',
+                'tindakan' => function ($t) {
+                    $t->with('mastertindakan:rs1,rs2')
+                        ->orderBy('id', 'DESC');
+                },
                 'diagnosa' => function ($d) {
                     $d->with('masterdiagnosa');
                 },

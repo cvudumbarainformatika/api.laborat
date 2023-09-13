@@ -10,4 +10,10 @@ class Permintaandeporinci extends Model
     use HasFactory;
     protected $table = 'permintaan_r';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
+
+    public function permintaanobatheder()
+    {
+        return $this->hasOne(Permintaandepoheder::class, 'no_permintaan', 'no_permintaan');
+    }
 }
