@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\Logistik\Sigarang\Laporan;
+namespace App\Http\Controllers\Api\Simrs\Laporan\Sigarang;
 
-use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\PenerimaanController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LaporanPenerimaanController extends Controller
 {
