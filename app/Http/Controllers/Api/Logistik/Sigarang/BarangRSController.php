@@ -29,7 +29,7 @@ class BarangRSController extends Controller
 
     public function countIndex()
     {
-        $data = BarangRS::count();
+        $data = BarangRS::withTrashed()->count();
         return new JsonResponse($data + 1, 200);
     }
 
