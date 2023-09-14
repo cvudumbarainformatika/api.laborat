@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
+use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Gudang\TransaksiGudang;
 use App\Models\Sigarang\Transaksi\Pemakaianruangan\Pemakaianruangan;
@@ -120,6 +121,10 @@ class HistoryController extends Controller
             })
                 ->when(request('from'), function ($w) {
                     $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+                })
+                ->when(request('ruang'), function ($w) {
+                    $ru = Ruang::select('kode')->where('uraian', 'LIKE', '%' . request('ruang') . '%')->get();
+                    $w->whereIn('kode_ruang', $ru);
                 });
             $data = $filterRuangan->filter(request(['q']))
                 ->with([
