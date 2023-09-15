@@ -118,13 +118,20 @@ class BarangRSController extends Controller
     public function destroy(Request $request)
     {
 
-        // $auth = auth()->user()->id;
+        $auth = auth()->user()->id;
         $id = $request->id;
 
         $data = BarangRS::find($id);
         $maping = MapingBarangDepo::where('kode_rs', $data->kode)->first();
-        $del = $data->delete();
-        $hapus = $maping->delete();
+        $del = null;
+        $hapus = null;
+        if ($data) {
+            $data->update(['deleted_by' => $auth]);
+            $del = $data->delete();
+        }
+        if ($maping) {
+            $hapus = $maping->delete();
+        }
 
         if (!$del && !$hapus) {
             return response()->json([
@@ -132,8 +139,8 @@ class BarangRSController extends Controller
             ], 500);
         } else if ($del && !$hapus) {
             return response()->json([
-                'message' => 'Error on Delete Maping data Depo'
-            ], 500);
+                'message' => 'Maping data Depo Not Found'
+            ], 200);
         } else if (!$del && $hapus) {
             return response()->json([
                 'message' => 'Error on Delete Data barang'
