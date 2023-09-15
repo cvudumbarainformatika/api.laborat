@@ -78,4 +78,20 @@ class PembayaranController extends Controller
         }
         return new JsonResponse($anu);
     }
+    public function listBayar()
+    {
+
+        $data = Penerimaan::with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
+            ->whereNotNull('tanggal_bast')
+            ->whereNotNull('tanggal_pembayaran')
+            ->when(request('q'), function ($query) {
+                $query->where('nomor', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('no_penerimaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
+            })
+            ->orderBy('tanggal_pembayaran', 'desc')
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
 }

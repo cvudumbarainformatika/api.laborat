@@ -132,8 +132,15 @@ class BastController extends Controller
     public function listBast()
     {
 
-        $data = Penerimaan::with('details', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
-            ->where('nilai_tagihan', '>', 0)
+        $data = Penerimaan::with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
+            ->whereNotNull('tanggal_bast')
+            ->whereNull('tanggal_pembayaran')
+            ->when(request('q'), function ($query) {
+                $query->where('nomor', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('no_penerimaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
+            })
+            ->orderBy('tanggal_bast', 'desc')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
