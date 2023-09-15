@@ -6,6 +6,7 @@ use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Supplier;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -39,6 +40,19 @@ class Penerimaan extends Model
     {
         return $this->hasMany(RecentStokUpdate::class, 'no_penerimaan', 'no_penerimaan');
     }
+    public function dibuat()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
+    }
+    public function dibast()
+    {
+        return $this->belongsTo(User::class, 'bast_by', 'id');
+    }
+    public function dibayar()
+    {
+        return $this->belongsTo(User::class, 'pembayaran_by', 'id');
+    }
+
 
     public function scopeFilter($search, array $reqs)
     {

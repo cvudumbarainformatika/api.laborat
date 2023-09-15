@@ -62,6 +62,7 @@ class PembayaranController extends Controller
     public function simpanBayar(Request $request)
     {
         $anu = [];
+        $id = auth()->user()->id;
         foreach ($request->penerimaans as $terima) {
             $temp = Penerimaan::find($terima['id']);
             if ($temp) {
@@ -70,6 +71,7 @@ class PembayaranController extends Controller
                     'no_kwitansi' => $request->no_kwitansi,
                     'no_pembayaran' => $request->no_pembayaran,
                     'tanggal_pembayaran' => $request->tanggal_pembayaran,
+                    'pembayaran_by' => $id,
                 ]);
                 array_push($anu, $temp);
             }
