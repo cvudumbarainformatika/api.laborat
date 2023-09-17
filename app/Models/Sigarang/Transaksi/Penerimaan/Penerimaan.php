@@ -3,6 +3,7 @@
 namespace App\Models\Sigarang\Transaksi\Penerimaan;
 
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Supplier;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
@@ -42,7 +43,7 @@ class Penerimaan extends Model
     }
     public function dibuat()
     {
-        return $this->belongsTo(User::class, 'created_by', 'id');
+        return $this->belongsTo(Pegawai::class, 'created_by', 'id');
     }
     public function dibast()
     {
