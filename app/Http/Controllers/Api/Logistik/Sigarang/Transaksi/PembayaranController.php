@@ -62,6 +62,7 @@ class PembayaranController extends Controller
     public function simpanBayar(Request $request)
     {
         $anu = [];
+        $id = auth()->user()->id;
         foreach ($request->penerimaans as $terima) {
             $temp = Penerimaan::find($terima['id']);
             if ($temp) {
@@ -70,10 +71,27 @@ class PembayaranController extends Controller
                     'no_kwitansi' => $request->no_kwitansi,
                     'no_pembayaran' => $request->no_pembayaran,
                     'tanggal_pembayaran' => $request->tanggal_pembayaran,
+                    'pembayaran_by' => $id,
                 ]);
                 array_push($anu, $temp);
             }
         }
         return new JsonResponse($anu);
+    }
+    public function listBayar()
+    {
+
+        $data = Penerimaan::with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
+            ->whereNotNull('tanggal_bast')
+            ->whereNotNull('tanggal_pembayaran')
+            ->when(request('q'), function ($query) {
+                $query->where('nomor', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('no_penerimaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kontrak', 'LIKE', '%' . request('q') . '%');
+            })
+            ->orderBy('tanggal_pembayaran', 'desc')
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
     }
 }

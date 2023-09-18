@@ -1893,25 +1893,30 @@ class AutogenController extends Controller
         //     ->get();
 
         // return new JsonResponse($rencanabeli);
-        $id = Mruangan::where('uraian', 'LIKE', '%' . request('r') . '%')->pluck('kode');
-        $gd = Gudang::where('gudang', '<>', '')->where('nama', 'LIKE', '%' . request('r') . '%')->pluck('kode');
+        // $id = Mruangan::where('uraian', 'LIKE', '%' . request('r') . '%')->pluck('kode');
+        // $gd = Gudang::where('gudang', '<>', '')->where('nama', 'LIKE', '%' . request('r') . '%')->pluck('kode');
         // return new JsonResponse($gd);
         // array_push($id, $gd);
         // $ruang = array_merge($id, $gd);
         // return new JsonResponse($id);
 
-        $qwerty = Mminmaxobat::with([
-            'obat:kd_obat,nama_obat as namaobat',
-            'ruanganx:kode,uraian as namaruangan',
-            'gudang:kode,nama as namaruangan'
-        ])
-            ->whereHas('obat', function ($e) {
-                $e->where('new_masterobat.nama_obat', 'LIKE', '%' . request('o') . '%');
-            })
-            ->whereIn('kd_ruang',  $id)
-            ->orWhereIn('kd_ruang',  $gd)
-            ->paginate(request('per_page'));
-        return new JsonResponse($qwerty, 200);
+        // $qwerty = Mminmaxobat::with([
+        //     'obat:kd_obat,nama_obat as namaobat',
+        //     'ruanganx:kode,uraian as namaruangan',
+        //     'gudang:kode,nama as namaruangan'
+        // ])
+        //     ->whereHas('obat', function ($e) {
+        //         $e->where('new_masterobat.nama_obat', 'LIKE', '%' . request('o') . '%');
+        //     })
+        //     ->whereIn('kd_ruang',  $id)
+        //     ->orWhereIn('kd_ruang',  $gd)
+        //     ->paginate(request('per_page'));
+        // return new JsonResponse($qwerty, 200);
+        $data = Penerimaan::with('details')
+            ->where('nilai_tagihan', '>', 0)
+            ->get();
+
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
