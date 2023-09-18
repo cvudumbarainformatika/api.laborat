@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Laborat;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\MasterLaborat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LaboratController extends Controller
 {
@@ -53,6 +55,10 @@ class LaboratController extends Controller
     public function simpanpermintaanlaborat(Request $request)
     {
         if ($request->nota == '' || $request->nota == null) {
+            DB::select('call nota_permintaanlab(@nomor)');
+            $x = DB::table('rs1')->select('rs28')->get();
+            $wew = $x[0]->rs28;
+            $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'T-RJ');
             $simpanpermintaanlaborat = LaboratMeta::create(
                 [
                     'noreg' => $request->noreg,

@@ -13,8 +13,8 @@ class LaporanPenerimaanController extends Controller
 {
     public function lappenerimaan()
     {
-        $tgl = '2023-03-13';
-        $tglx = '2023-03-15';
+        $tgl = request('tgl');
+        $tglx = request('tglx');
         $rek50 = Rekening50::select(
             'rekening50s.kode as kode',
             'rekening50s.uraian as uraian50',
