@@ -58,12 +58,13 @@ class LaboratController extends Controller
             DB::select('call nota_permintaanlab(@nomor)');
             $x = DB::table('rs1')->select('rs28')->get();
             $wew = $x[0]->rs28;
-            $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'T-RJ');
+            $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'J-LAB');
+
             $simpanpermintaanlaborat = LaboratMeta::create(
                 [
                     'noreg' => $request->noreg,
                     'norm' => $request->norm,
-                    'nota' => $request->nota,
+                    'nota' => $notapermintaanlab,
                     'jenis_laborat' => $request->jenis_laborat,
                     'tgl_order' => date('Y-m-d H:i:s'),
                     'puasa_pasien' => $request->puasa_pasien,
@@ -89,6 +90,8 @@ class LaboratController extends Controller
                     'petugas_penganalisa' => auth()->user()->pegawai_id,
                 ]
             );
+
+            return $simpanpermintaanlaborat;
         }
     }
 }
