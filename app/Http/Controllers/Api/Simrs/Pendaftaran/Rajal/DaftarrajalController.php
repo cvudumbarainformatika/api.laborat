@@ -28,6 +28,7 @@ class DaftarrajalController extends Controller
 
     public static function simpanMpasien($request)
     {
+
         $gelardepan = '';
         $gelarbelakang = '';
         $nik = '';
@@ -127,6 +128,15 @@ class DaftarrajalController extends Controller
 
     public static function simpankunjunganpoli(Request $request)
     {
+        if ($request->barulama === 'baru') {
+            $data = Mpasien::where('rs1', $request->norm)->first();
+            if ($data) {
+                return new JsonResponse([
+                    'message' => 'Nomor RM Sudah ada',
+                    'data' => $data
+                ], 410);
+            }
+        }
         $masterpasien = self::simpanMpasien($request);
         if (!$masterpasien) {
             return new JsonResponse(['message' => 'DATA MASTER PASIEN GAGAL DISIMPAN/DIUPDATE'], 500);
