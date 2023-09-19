@@ -51,6 +51,15 @@ class PasienController extends Controller
 
     public function simpanMaster(Request $request)
     {
+        if ($request->barulama === 'baru') {
+            $data = Mpasien::where('rs1', $request->norm)->first();
+            if ($data) {
+                return new JsonResponse([
+                    'message' => 'Nomor RM Sudah ada',
+                    'data' => $data
+                ], 410);
+            }
+        }
         $data = DaftarrajalController::simpanMpasien($request);
 
         return new JsonResponse($data);
@@ -96,14 +105,13 @@ class PasienController extends Controller
             ->limit(20)
             ->get();
 
-        if(count($query) > 0)
-        {
+        if (count($query) > 0) {
             return new JsonResponse($query);
         }
 
         $queryx = Mpasienx::pasienx()->filter(request(['q']))
             ->limit(20)
-           // ->union($query)
+            // ->union($query)
             ->get();
         //->paginate(request('per_page'));
         return new JsonResponse($queryx);
