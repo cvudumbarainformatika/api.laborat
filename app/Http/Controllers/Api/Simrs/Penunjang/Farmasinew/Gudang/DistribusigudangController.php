@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class DistribusigudangController extends Controller
         $gudang = request('kdgudang');
         $nopermintaan = request('no_permintaan');
         if ($gudang === '' || $gudang === null) {
-            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci')
+            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->where('flag', '1')
                 ->orderBY('tgl_permintaan', 'desc')
@@ -22,7 +23,7 @@ class DistribusigudangController extends Controller
             return new JsonResponse($listpermintaandepo);
         } else {
 
-            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci')
+            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->where('tujuan', $gudang)
                 ->where('flag', '1')
@@ -30,5 +31,22 @@ class DistribusigudangController extends Controller
                 ->get();
             return new JsonResponse($listpermintaandepo);
         }
+    }
+
+    public function verifpermintaanobat(Request $request)
+    {
+        if ($request->jumlah_diverif > $request->jumlah_minta) {
+            return new JsonResponse(['message' => 'Maaf Jumlah Yang Diminta Tidak Sebanyak Itu....']);
+        }
+        $verifobat = Permintaandeporinci::where('id', $request->id)->update(
+            [
+                'jumlah_diverif' => $request->jumlah_diverif,
+                'tgl_verif' => date('Y-m-d H:i:s')
+            ]
+        );
+        if (!$verifobat) {
+            return new JsonResponse(['message' => 'Maaf Anda Gagal Memverif,Moho Periksa Kembali Data Anda...!!!'], 500);
+        }
+        return new JsonResponse(['message' => 'Permintaan Obat Behasil Diverif...!!!'], 200);
     }
 }
