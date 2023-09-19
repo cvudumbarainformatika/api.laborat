@@ -159,14 +159,14 @@ class DepoController extends Controller
         $depo = request('kddepo');
         $nopermintaan = request('no_permintaan');
         if ($depo === '' || $depo === null) {
-            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci')
+            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->orderBY('tgl_permintaan', 'desc')
                 ->get();
             return new JsonResponse($listpermintaandepo);
         } else {
 
-            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci')
+            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->where('dari', $depo)
                 ->orderBY('tgl_permintaan', 'desc')
