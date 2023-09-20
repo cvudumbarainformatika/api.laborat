@@ -57,12 +57,32 @@ class DistribusigudangController extends Controller
         $verifobat = Permintaandeporinci::where('id', $request->id)->update(
             [
                 'jumlah_diverif' => $request->jumlah_diverif,
-                'tgl_verif' => date('Y-m-d H:i:s')
+                'tgl_verif' => date('Y-m-d H:i:s'),
+                'user_verif' => auth()->user()->pegawai_id
             ]
         );
         if (!$verifobat) {
             return new JsonResponse(['message' => 'Maaf Anda Gagal Memverif,Moho Periksa Kembali Data Anda...!!!'], 500);
         }
         return new JsonResponse(['message' => 'Permintaan Obat Behasil Diverif...!!!'], 200);
+    }
+
+    public function rencanadistribusikedepo(Request $request)
+    {
+        $jenisdistribusi = $request->jenisdistribusi;
+        $gudang = request('kdgudang');
+        $listrencanadistribusi = Permintaandeporinci::with(
+            [
+                'permintaanobatheder' => function ($permintaanobatheder) use ($gudang) {
+                    $permintaanobatheder->when($gudang, function ($xxx) use ($gudang) {
+                        $xxx->where('tujuan', $gudang)->where('flag', '1');
+                    });
+                },
+                'masterobat'
+            ]
+        )->where('flag_distribusi', '')
+            ->where('user_verif', '!=', '')
+            ->get();
+        return new JsonResponse($listrencanadistribusi);
     }
 }

@@ -10,4 +10,5 @@ Route::group([
 ], function () {
     Route::get('/listpermintaandepo', [DistribusigudangController::class, 'listpermintaandepo']);
     Route::post('/verifpermintaanobat', [DistribusigudangController::class, 'verifpermintaanobat']);
+    Route::get('/rencanadistribusikedepo', [DistribusigudangController::class, 'rencanadistribusikedepo']);
 });
