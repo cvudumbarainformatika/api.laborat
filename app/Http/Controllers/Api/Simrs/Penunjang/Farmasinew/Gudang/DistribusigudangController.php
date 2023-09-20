@@ -33,7 +33,13 @@ class DistribusigudangController extends Controller
             return new JsonResponse($listpermintaandepo);
         } else {
 
-            $listpermintaandepo = Permintaandepoheder::with(['permintaanrinci.masterobat', 'user:id,nip,nama'])
+            $listpermintaandepo = Permintaandepoheder::with([
+                'permintaanrinci.masterobat', 'user:id,nip,nama',
+                'permintaanrinci.stokreal' => function ($stokdendiri) {
+                    $stokdendiri->select('kdobat', 'kdobat', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
+                        ->groupBy('kdruang');
+                }
+            ])
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->where('tujuan', $gudang)
                 ->where('flag', '1')
