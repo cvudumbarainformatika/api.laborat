@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ class DistribusigudangController extends Controller
     {
         $gudang = request('kdgudang');
         $nopermintaan = request('no_permintaan');
+        $flag = request('flag');
         if ($gudang === '' || $gudang === null) {
             $listpermintaandepo = Permintaandepoheder::with(
                 [
@@ -27,7 +29,10 @@ class DistribusigudangController extends Controller
                 ]
             )
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
-                ->where('flag', '1')
+                ->where('flag', '!=', '')
+                ->when($flag, function ($wew) use ($flag) {
+                    $wew->where('flag', $flag);
+                })
                 ->orderBY('tgl_permintaan', 'desc')
                 ->get();
             return new JsonResponse($listpermintaandepo);
@@ -62,14 +67,14 @@ class DistribusigudangController extends Controller
             ]
         );
         if (!$verifobat) {
-            return new JsonResponse(['message' => 'Maaf Anda Gagal Memverif,Moho Periksa Kembali Data Anda...!!!'], 500);
+            return new JsonResponse(['message' => 'Maaf Anda Gagal Memverif,Mohon Periksa Kembali Data Anda...!!!'], 500);
         }
         return new JsonResponse(['message' => 'Permintaan Obat Behasil Diverif...!!!'], 200);
     }
 
-    public function rencanadistribusikedepo(Request $request)
+    public function rencanadistribusikedepo()
     {
-        $jenisdistribusi = $request->jenisdistribusi;
+        $jenisdistribusi = request('jenisdistribusi');
         $gudang = request('kdgudang');
         $listrencanadistribusi = Permintaandeporinci::with(
             [
@@ -87,5 +92,21 @@ class DistribusigudangController extends Controller
             })
             ->get();
         return new JsonResponse($listrencanadistribusi);
+    }
+
+    public function simpandistribusidepo(Request $request)
+    {
+        $simpandistribusidepo = Permintaandeporinci::where('id', $request->id)->update(
+            [
+                'flag_distribusi' => '1',
+                'tgl_distribusi' => date('Y-m-d H:i:s'),
+                'user_distribusi' => auth()->user()->pegawai_id
+            ]
+        );
+        if (!$simpandistribusidepo) {
+            return new JsonResponse(['message' => 'Maaf Anda Gagal Mendistribusikan Obat,Mohon Periksa Kembali Data Anda...!!!'], 500);
+        }
+        //  $stok = Stokrel::where()
+        return new JsonResponse(['message' => ' Obat Behasil Didistribusikan...!!!'], 200);
     }
 }
