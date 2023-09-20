@@ -41,7 +41,7 @@ class DistribusigudangController extends Controller
             $listpermintaandepo = Permintaandepoheder::with([
                 'permintaanrinci.masterobat', 'user:id,nip,nama',
                 'permintaanrinci.stokreal' => function ($stokdendiri) {
-                    $stokdendiri->select('kdobat', 'kdobat', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
+                    $stokdendiri->select('kdobat', 'kdruang', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
                         ->groupBy('kdruang');
                 }
             ])
