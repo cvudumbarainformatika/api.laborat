@@ -82,6 +82,9 @@ class DistribusigudangController extends Controller
             ]
         )->where('flag_distribusi', '')
             ->where('user_verif', '!=', '')
+            ->when($jenisdistribusi, function ($wew) use ($jenisdistribusi) {
+                $wew->where('status_obat', $jenisdistribusi);
+            })
             ->get();
         return new JsonResponse($listrencanadistribusi);
     }
