@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
@@ -23,7 +24,7 @@ class DistribusigudangController extends Controller
                     'permintaanrinci.masterobat',
                     'user:id,nip,nama',
                     'permintaanrinci.stokreal' => function ($stokdendiri) {
-                        $stokdendiri->select('kdobat', 'kdobat', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
+                        $stokdendiri->select('kdobat', 'kdruang', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
                             ->groupBy('kdruang');
                     }
                 ]
@@ -34,7 +35,7 @@ class DistribusigudangController extends Controller
                     $wew->where('flag', $flag);
                 })
                 ->orderBY('tgl_permintaan', 'desc')
-                ->get();
+                ->paginate(request('per_page'));
             return new JsonResponse($listpermintaandepo);
         } else {
 
@@ -47,9 +48,12 @@ class DistribusigudangController extends Controller
             ])
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->where('tujuan', $gudang)
-                ->where('flag', '1')
+                ->where('flag', '!=', '')
+                ->when($flag, function ($wew) use ($flag) {
+                    $wew->where('flag', $flag);
+                })
                 ->orderBY('tgl_permintaan', 'desc')
-                ->get();
+                ->paginate(request('per_page'));
             return new JsonResponse($listpermintaandepo);
         }
     }
@@ -96,17 +100,18 @@ class DistribusigudangController extends Controller
 
     public function simpandistribusidepo(Request $request)
     {
-        $simpandistribusidepo = Permintaandeporinci::where('id', $request->id)->update(
-            [
-                'flag_distribusi' => '1',
-                'tgl_distribusi' => date('Y-m-d H:i:s'),
-                'user_distribusi' => auth()->user()->pegawai_id
-            ]
-        );
-        if (!$simpandistribusidepo) {
-            return new JsonResponse(['message' => 'Maaf Anda Gagal Mendistribusikan Obat,Mohon Periksa Kembali Data Anda...!!!'], 500);
-        }
-        //  $stok = Stokrel::where()
+        // $simpandistribusidepo = Permintaandeporinci::where('id', $request->id)->update(
+        //     [
+        //         'flag_distribusi' => '1',
+        //         'tgl_distribusi' => date('Y-m-d H:i:s'),
+        //         'user_distribusi' => auth()->user()->pegawai_id
+        //     ]
+        // );
+        // if (!$simpandistribusidepo) {
+        //     return new JsonResponse(['message' => 'Maaf Anda Gagal Mendistribusikan Obat,Mohon Periksa Kembali Data Anda...!!!'], 500);
+        // }
+        $stok = StokrealController::updatestokgudangdandepo($request);
+        return $stok;
         return new JsonResponse(['message' => ' Obat Behasil Didistribusikan...!!!'], 200);
     }
 }
