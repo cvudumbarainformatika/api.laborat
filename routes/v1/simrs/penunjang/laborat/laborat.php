@@ -9,5 +9,5 @@ Route::group([
     'prefix' => 'simrs/penunjang/laborat'
 ], function () {
     Route::get('/dialoglaboratpoli', [LaboratController::class, 'listmasterpemeriksaanpoli']);
-    Route::get('/simpanpermintaanlaborat', [LaboratController::class, 'simpanpermintaanlaborat']);
+    Route::post('/simpanpermintaanlaborat', [LaboratController::class, 'simpanpermintaanlaborat']);
 });
