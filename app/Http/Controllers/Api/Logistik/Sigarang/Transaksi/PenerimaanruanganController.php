@@ -166,7 +166,7 @@ class PenerimaanruanganController extends Controller
 
         // buat penerimaan
 
-        $tmpreff = explode('-', $permintaanruangan->reff);
+        $tmpreff = explode('-', $permintaanruangan->reff); // ganti dari no permintaan ke n penerimaan
         $reff = 'TRMR-' . $tmpreff[1];
         $tanggal = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
 
