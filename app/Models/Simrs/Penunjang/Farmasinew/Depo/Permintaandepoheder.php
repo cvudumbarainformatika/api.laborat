@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,5 +17,10 @@ class Permintaandepoheder extends Model
     public function permintaanrinci()
     {
         return $this->hasMany(Permintaandeporinci::class, 'no_permintaan', 'no_permintaan');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(Pegawai::class, 'id', 'user');
     }
 }
