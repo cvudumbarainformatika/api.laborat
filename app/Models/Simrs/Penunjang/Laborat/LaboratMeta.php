@@ -10,4 +10,9 @@ class LaboratMeta extends Model
     use HasFactory;
     protected $table = 'rs51_meta';
     protected $guarded = ['id'];
+
+    public function details()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs2', 'nota');
+    }
 }
