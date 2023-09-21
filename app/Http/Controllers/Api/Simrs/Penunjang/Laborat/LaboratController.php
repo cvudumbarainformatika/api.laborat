@@ -62,7 +62,7 @@ class LaboratController extends Controller
         $wew = $x[0]->rs28;
         $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'J-LAB');
 
-        $simpanpermintaanlaborat = LaboratMeta::firstOrNew(
+        $simpanpermintaanlaborat = LaboratMeta::firstOrCreate(
             ['nota' => $request->nota ?? $notapermintaanlab, 'noreg' => $request->noreg, 'norm' => $request->norm],
             [
 
@@ -95,7 +95,7 @@ class LaboratController extends Controller
 
         $data = $request->details;
         foreach ($data as $key => $value) {
-            $simpanpemeriksaan = Laboratpemeriksaan::firstOrNew(
+            $simpanpemeriksaan = Laboratpemeriksaan::firstOrCreate(
                 ['rs2' => $request->nota ?? $notapermintaanlab, 'rs1' => $request->noreg, 'rs4' => $value['kode']],
                 [
 
