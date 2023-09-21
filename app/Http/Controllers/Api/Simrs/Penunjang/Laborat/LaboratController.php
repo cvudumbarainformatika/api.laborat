@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Laborat;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
+use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Laborat\MasterLaborat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -90,6 +91,35 @@ class LaboratController extends Controller
                     'petugas_penganalisa' => auth()->user()->pegawai_id,
                 ]
             );
+
+            $data = $request->details;
+            foreach ($data as $key => $value) {
+                $simpanpemeriksaan = Laboratpemeriksaan::create(
+                    [
+                        'rs1' => $value['noreg'],
+                        'rs2' => $notapermintaanlab,
+                        'rs3' => date('Y-m-d H:i:s'),
+                        'rs4' => $value['kdlab'],
+                        'rs5' => $value['jml_laborat'],
+                        'rs6' => $value['hargasarana'],
+                        'rs7' => $value['hargasarana'],
+                        'rs8' => auth()->user()->pegawai_id,
+                        'rs9' => auth()->user()->pegawai_id,
+                        //'rs10' => $value['hargapelayanan'],
+                        // 'rs11' => $value['penanda'],
+                        'rs12' => $value['flagcito'],
+                        'rs13' => $value['hargapelayanan'],
+                        'rs14' => $value['hargapelayanan'],
+                        // 'rs15' => $value['warna'],
+                        //'rs16' => $value['unit_pengirim'],
+                        // 'rs17' => $value['kd_sistembayar'],
+                        // 'rs18' => $value['y'],
+                        //'rs19'  => auth()->user()->pegawai_id,
+                        'rs23'  => $value['unit_pengirim'],
+                        'rs24'  => $value['kd_sistembayar']
+                    ]
+                );
+            };
 
             return $simpanpermintaanlaborat;
         }
