@@ -109,7 +109,7 @@ class LaboratController extends Controller
                     'rs9' => auth()->user()->pegawai_id,
                     //'rs10' => $value['hargapelayanan'],
                     // 'rs11' => $value['penanda'],
-                    'rs12' => $request->prioritas_pemeriksaan,
+                    'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
                     'rs13' => $request->biaya_layanan, //$value['hargapelayanan'],
                     'rs14' => $request->biaya_layanan, //$value['hargapelayanan'],
                     // 'rs15' => $value['warna'],
