@@ -133,12 +133,19 @@ class LaboratController extends Controller
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
-                'result' => $simpanpermintaanlaborat->load(['details']),
+                'result' => $simpanpermintaanlaborat->load(['details.pemeriksaanlab']),
                 'nota' => $nota
             ],
             200
         );
         // return $simpanpermintaanlaborat;
         // }
+    }
+
+    public function getnota()
+    {
+        $nota = LaboratMeta::select('nota')->where('noreg', request('noreg'))
+            ->groupBy('nota')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
     }
 }
