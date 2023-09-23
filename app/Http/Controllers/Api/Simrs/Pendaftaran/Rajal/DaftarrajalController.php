@@ -271,6 +271,7 @@ class DaftarrajalController extends Controller
                 'noreg' => $input->noreg
             ], 200);
         }
+
         $id = $bpjsantrian->id;
         $nomorantrean = $bpjsantrian->nomorantrean;
         $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
@@ -278,6 +279,7 @@ class DaftarrajalController extends Controller
             'noreg' => $input->noreg,
             'checkin' => date('Y-m-d H:i:s')
         ]);
+
 
         if ($request->barulama === 'baru') {
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
@@ -301,6 +303,7 @@ class DaftarrajalController extends Controller
                 ]
             );
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
+            BridantrianbpjsController::updateWaktu($input, 3);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
                 'antrian' => $cetakantrian,
