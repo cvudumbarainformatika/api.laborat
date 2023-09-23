@@ -102,23 +102,16 @@ class LaboratController extends Controller
 
                     'rs3' => date('Y-m-d H:i:s'),
 
-                    'rs5' => $request->jumlah, //$value['jml_laborat'],
-                    'rs6' => $request->biaya_sarana, //$value['hargasarana'],
-                    'rs7' => $request->biaya_sarana, //$value['hargasarana'],
+                    'rs5' => $request->jumlah,
+                    'rs6' => $request->biaya_sarana,
+                    'rs7' => $request->biaya_sarana,
                     'rs8' => auth()->user()->pegawai_id,
                     'rs9' => auth()->user()->pegawai_id,
-                    //'rs10' => $value['hargapelayanan'],
-                    // 'rs11' => $value['penanda'],
                     'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
-                    'rs13' => $request->biaya_layanan, //$value['hargapelayanan'],
-                    'rs14' => $request->biaya_layanan, //$value['hargapelayanan'],
-                    // 'rs15' => $value['warna'],
-                    //'rs16' => $value['unit_pengirim'],
-                    // 'rs17' => $value['kd_sistembayar'],
-                    // 'rs18' => $value['y'],
-                    //'rs19'  => auth()->user()->pegawai_id,
-                    'rs23'  => $request->unit_pengirim, //$value['unit_pengirim'],
-                    'rs24'  => $request->kdsistembayar //$value['kd_sistembayar']
+                    'rs13' => $request->biaya_layanan,
+                    'rs14' => $request->biaya_layanan,
+                    'rs23'  => $request->unit_pengirim,
+                    'rs24'  => $request->kdsistembayar
                 ]
             );
         };

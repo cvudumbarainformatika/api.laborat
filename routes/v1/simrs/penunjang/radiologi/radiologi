@@ -1,0 +1,14 @@
+<?php
+
+use App\Http\Controllers\Api\Simrs\Penunjang\Radiologi\RadiologiController;
+use Illuminate\Support\Facades\Route;
+
+Route::group([
+    'middleware' => 'auth:api',
+    // 'middleware' => 'jwt.verify',
+    'prefix' => 'simrs/penunjang/laborat'
+], function () {
+    Route::get('/listmasterpemeriksaanradiologi', [RadiologiController::class, 'listmasterpemeriksaanradiologi']);
+    Route::get('/jenispermintaanradiologi', [RadiologiController::class, 'jenispermintaanradiologi']);
+    Route::get('/listpermintaanradiologirinci', [RadiologiController::class, 'listpermintaanradiologirinci']);
+});
