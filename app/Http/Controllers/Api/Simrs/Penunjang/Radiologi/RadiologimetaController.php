@@ -39,27 +39,29 @@ class RadiologimetaController extends Controller
         $wew = $x[0]->rs41;
         $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
 
-        $simpanpermintaanradiologi = Transpermintaanradiologi::updateOrCreate(
+        $simpanpermintaanradiologi = Transpermintaanradiologi::create(
+            // [
+            //     'rs1' => $request->noreg,
+            //     'rs2' => $request->nota ?? $notapermintaanradio,
+            // ],
             [
                 'rs1' => $request->noreg,
                 'rs2' => $request->nota ?? $notapermintaanradio,
-            ],
-            [
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->permintaan,
                 'rs7' => $request->keterangan,
-                'rs8' => $request->kodedokter,
+                'rs8' => auth()->user()->pegawai_id, //$request->kodedokter
                 'rs9' => '1',
                 'rs10' => $request->kodepoli,
                 'rs11' => auth()->user()->pegawai_id,
                 'rs13' => $request->kd_ruang,
-                'rs14' => $request->kd_akun,
+                'rs14' => auth()->user()->pegawai_id, //$request->kd_akun
                 'rs15' => $request->tpemeriksaan,
-                'cito' => $request->cito,
-                'jenis_pemeriksaan' => $request->jenis_pemeriksaan,
-                'kddokterpengirim' => $request->kddokterpengirim,
-                'faskespengirim' => $request->faskespengirim,
-                'unitpengirim' => $request->unitpengirim,
+                'cito' => $request->cito === 'Iya' ? 'Cito' : '',
+                'jenis_pemeriksaan' => '',
+                'kddokterpengirim' => '',
+                'faskespengirim' => '',
+                'unitpengirim' => '',
                 'diagnosakerja' => $request->diagnosakerja,
                 'catatanpermintaan' => $request->catatanpermintaan,
                 'metodepenyampaianhasil' => $request->metodepenyampaianhasil,
