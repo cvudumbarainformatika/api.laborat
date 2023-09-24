@@ -69,6 +69,21 @@ class RadiologimetaController extends Controller
                 'statuskehamilan' => $request->statuskehamilan,
             ]
         );
-        return ($simpanpermintaanradiologi);
+
+        if (!$simpanpermintaanradiologi) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
+        // return ($simpanpermintaanradiologi);
+        // $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
+        //     ->groupBy('nota')->orderBy('id', 'DESC')->get();
+
+        return new JsonResponse(
+            [
+                'message' => 'Berhasil Order Ke Radiologi',
+                'result' => $simpanpermintaanradiologi,
+                'nota' => '$nota'
+            ],
+            200
+        );
     }
 }
