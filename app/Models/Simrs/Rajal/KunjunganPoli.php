@@ -15,6 +15,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
+use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -92,5 +93,9 @@ class KunjunganPoli extends Model
     public function laborats()
     {
         return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');
+    }
+    public function radiologi()
+    {
+        return $this->hasMany(Transpermintaanradiologi::class, 'rs1', 'rs1');
     }
 }

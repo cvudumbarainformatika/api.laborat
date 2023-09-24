@@ -62,11 +62,11 @@ class RadiologimetaController extends Controller
                 'kddokterpengirim' => '',
                 'faskespengirim' => '',
                 'unitpengirim' => '',
-                'diagnosakerja' => $request->diagnosakerja,
-                'catatanpermintaan' => $request->catatanpermintaan,
-                'metodepenyampaianhasil' => $request->metodepenyampaianhasil,
-                'statusalergipasien' => $request->statusalergipasien,
-                'statuskehamilan' => $request->statuskehamilan,
+                'diagnosakerja' => $request->diagnosakerja ?? '',
+                'catatanpermintaan' => $request->catatanpermintaan ?? '',
+                'metodepenyampaianhasil' => $request->metodepenyampaianhasil ?? '',
+                'statusalergipasien' => $request->statusalergipasien ?? '',
+                'statuskehamilan' => $request->statuskehamilan ?? '',
             ]
         );
 
@@ -74,16 +74,38 @@ class RadiologimetaController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
         // return ($simpanpermintaanradiologi);
-        // $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
-        //     ->groupBy('nota')->orderBy('id', 'DESC')->get();
+        $nota = Transpermintaanradiologi::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
         return new JsonResponse(
             [
                 'message' => 'Berhasil Order Ke Radiologi',
                 'result' => $simpanpermintaanradiologi,
-                'nota' => '$nota'
+                'nota' => $nota
             ],
             200
         );
+    }
+
+    public function getnota()
+    {
+        $nota = Transpermintaanradiologi::select('rs2 as nota')->where('rs1', request('noreg'))
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
+
+    public function hapusradiologi(Request $request)
+    {
+        $cari = Transpermintaanradiologi::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        $nota = Transpermintaanradiologi::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
 }

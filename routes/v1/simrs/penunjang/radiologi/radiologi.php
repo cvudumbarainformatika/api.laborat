@@ -12,5 +12,7 @@ Route::group([
     Route::get('/listmasterpemeriksaanradiologi', [RadiologimetaController::class, 'listmasterpemeriksaanradiologi']);
     Route::get('/jenispermintaanradiologi', [RadiologimetaController::class, 'jenispermintaanradiologi']);
     Route::get('/listpermintaanradiologirinci', [RadiologimetaController::class, 'listpermintaanradiologirinci']);
+    Route::get('/getnota', [RadiologimetaController::class, 'getnota']);
     Route::post('/simpanpermintaanradiologi', [RadiologimetaController::class, 'simpanpermintaanradiologi']);
+    Route::post('/hapusradiologi', [RadiologimetaController::class, 'hapusradiologi']);
 });
