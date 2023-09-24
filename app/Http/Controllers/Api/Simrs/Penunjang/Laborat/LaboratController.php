@@ -56,17 +56,18 @@ class LaboratController extends Controller
 
     public function simpanpermintaanlaborat(Request $request)
     {
+        // return $request->all();
         // if ($request->nota == '' || $request->nota == null) {
         DB::select('call nota_permintaanlab(@nomor)');
         $x = DB::table('rs1')->select('rs28')->get();
         $wew = $x[0]->rs28;
         $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'J-LAB');
 
-        $simpanpermintaanlaborat = LaboratMeta::firstOrCreate(
-            ['nota' => $request->nota ?? $notapermintaanlab, 'noreg' => $request->noreg, 'norm' => $request->norm],
+        $simpanpermintaanlaborat = LaboratMeta::create(
+            // ['nota' => $request->nota ?? $notapermintaanlab, 'noreg' => $request->noreg, 'norm' => $request->norm],
             [
 
-
+                'nota' => $request->nota ?? $notapermintaanlab, 'noreg' => $request->noreg, 'norm' => $request->norm,
                 'jenis_laborat' => $request->jenis_laborat,
                 'tgl_order' => date('Y-m-d H:i:s'),
                 'puasa_pasien' => $request->puasa_pasien,
@@ -93,13 +94,19 @@ class LaboratController extends Controller
             ]
         );
 
+
+
+        if (!$simpanpermintaanlaborat) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
+
         $data = $request->details;
         foreach ($data as $key => $value) {
-            $simpanpemeriksaan = Laboratpemeriksaan::firstOrCreate(
-                ['rs2' => $request->nota ?? $notapermintaanlab, 'rs1' => $request->noreg, 'rs4' => $value['kode']],
+            Laboratpemeriksaan::create(
+                // ['rs2' => $request->nota ?? $notapermintaanlab, 'rs1' => $request->noreg, 'rs4' => $value['kode']],
                 [
 
-
+                    'rs2' => $simpanpermintaanlaborat->nota, 'rs1' => $request->noreg, 'rs4' => $value['kode'],
                     'rs3' => date('Y-m-d H:i:s'),
 
                     'rs5' => $request->jumlah,
@@ -116,16 +123,12 @@ class LaboratController extends Controller
             );
         };
 
-        if (!$simpanpermintaanlaborat) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        }
-
         $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
 
         return new JsonResponse(
             [
-                'message' => 'Tindakan Berhasil Disimpan.',
+                'message' => 'Berhasil Order Ke Laborat',
                 'result' => $simpanpermintaanlaborat->load(['details.pemeriksaanlab']),
                 'nota' => $nota
             ],
@@ -140,5 +143,21 @@ class LaboratController extends Controller
         $nota = LaboratMeta::select('nota')->where('noreg', request('noreg'))
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+
+    public function hapuspermintaanlaborat(Request $request)
+    {
+        $cari = LaboratMeta::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        }
+        $hapusdetail = Laboratpemeriksaan::where('rs2', '=', $cari->nota)->delete();
+        $hapus = $cari->delete();
+        $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
+            ->groupBy('nota')->orderBy('id', 'DESC')->get();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
 }
