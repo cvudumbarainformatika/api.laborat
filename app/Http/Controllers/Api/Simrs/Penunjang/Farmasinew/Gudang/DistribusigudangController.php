@@ -94,7 +94,7 @@ class DistribusigudangController extends Controller
             ->when($jenisdistribusi, function ($wew) use ($jenisdistribusi) {
                 $wew->where('status_obat', $jenisdistribusi);
             })
-            ->get();
+            ->paginate(request('per_page'));
         return new JsonResponse($listrencanadistribusi);
     }
 

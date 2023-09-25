@@ -29,12 +29,25 @@ class DistribusiLangsungController extends Controller
         // if (!$distribute) {
         //     return new JsonResponse(['data' => []]);
         // }
-        $data = RecentStokUpdate::leftJoin(
-            'penerimaans',
-            'recent_stok_updates.no_penerimaan',
-            '=',
-            'penerimaans.no_penerimaan'
+        $data = RecentStokUpdate::select(
+            'barang_r_s.nama',
+            'barang_r_s.kode',
+            'barang_r_s.kode_satuan',
+            'recent_stok_updates.id',
+            'recent_stok_updates.kode_rs',
+            'recent_stok_updates.kode_ruang',
+            'recent_stok_updates.sisa_stok',
+            'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
+            'penerimaans.no_penerimaan',
+            'penerimaans.tanggal',
+            'satuans.nama as satuan',
         )
+            ->join(
+                'penerimaans',
+                'recent_stok_updates.no_penerimaan',
+                '=',
+                'penerimaans.no_penerimaan'
+            )
             ->where('recent_stok_updates.kode_ruang', $ruang)
             ->where('recent_stok_updates.sisa_stok', '>', 0)
             ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
@@ -48,19 +61,6 @@ class DistribusiLangsungController extends Controller
             })
             ->where('barang_r_s.tipe', request('tipe'))
             ->orderBy('penerimaans.tanggal', 'ASC')
-            ->select(
-                'barang_r_s.nama',
-                'barang_r_s.kode',
-                'barang_r_s.kode_satuan',
-                'recent_stok_updates.id',
-                'recent_stok_updates.kode_rs',
-                'recent_stok_updates.kode_ruang',
-                'recent_stok_updates.sisa_stok',
-                'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
-                'penerimaans.no_penerimaan',
-                'penerimaans.tanggal',
-                'satuans.nama as satuan',
-            )
             ->with([
                 'detailDistribusiLangsung' => function ($detail) {
                     $detail->select(
