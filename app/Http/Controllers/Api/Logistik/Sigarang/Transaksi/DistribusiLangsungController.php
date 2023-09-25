@@ -30,19 +30,19 @@ class DistribusiLangsungController extends Controller
         //     return new JsonResponse(['data' => []]);
         // }
         $data = RecentStokUpdate::select(
-                'barang_r_s.nama',
-                'barang_r_s.kode',
-                'barang_r_s.kode_satuan',
-                'recent_stok_updates.id',
-                'recent_stok_updates.kode_rs',
-                'recent_stok_updates.kode_ruang',
-                'recent_stok_updates.sisa_stok',
-                'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
-                'penerimaans.no_penerimaan',
-                'penerimaans.tanggal',
-                'satuans.nama as satuan',
-            )
-            ->leftJoin(
+            'barang_r_s.nama',
+            'barang_r_s.kode',
+            'barang_r_s.kode_satuan',
+            'recent_stok_updates.id',
+            'recent_stok_updates.kode_rs',
+            'recent_stok_updates.kode_ruang',
+            'recent_stok_updates.sisa_stok',
+            'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
+            'penerimaans.no_penerimaan',
+            'penerimaans.tanggal',
+            'satuans.nama as satuan',
+        )
+            ->join(
                 'penerimaans',
                 'recent_stok_updates.no_penerimaan',
                 '=',
