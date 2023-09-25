@@ -79,6 +79,9 @@ class PoliController extends Controller
                 'radiologi' => function ($t) {
                     $t->orderBy('id', 'DESC');
                 },
+                'penunjanglain' => function ($t) {
+                    $t->orderBy('id', 'DESC');
+                },
                 'tindakan' => function ($t) {
                     $t->with('mastertindakan:rs1,rs2')
                         ->orderBy('id', 'DESC');
