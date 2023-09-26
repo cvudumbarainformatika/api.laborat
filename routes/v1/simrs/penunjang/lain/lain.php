@@ -11,4 +11,5 @@ Route::group([
     Route::get('/penunjanglain', [LainController::class, 'penunjanglain']);
     Route::get('/getnota', [LainController::class, 'getnota']);
     Route::post('/simpanpenunjanglain', [LainController::class, 'simpanpenunjanglain']);
+    Route::post('/hapuspermintaan', [LainController::class, 'hapuspermintaan']);
 });
