@@ -25,13 +25,13 @@ class LainController extends Controller
         DB::select('call nota_permintaanpara(@nomor)');
         $x = DB::table('rs1')->select('rs48')->get();
         $wew = $x[0]->rs48;
-        $notaP = FormatingHelper::formatallpermintaan($wew, 'G-LAI');
+        $notaP = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAI');
 
-        $simpan = Lain::updateOrCreate(
-            ['id' => $request->id],
+        $simpan = Lain::firstOrNew(
+            ['rs2' => $notaP],
             [
                 'rs1' => $request->noreg,
-                'rs2' => $request->nota ?? $notaP,
+                // 'rs2' => $request->nota ?? $notaP,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => '',
                 'rs7' => $request->keterangan,
@@ -54,7 +54,7 @@ class LainController extends Controller
         return new JsonResponse(
             [
                 'message' => 'Permintaan Berhasil !',
-                'result' => $simpan,
+                'result' => $simpan->load('masterpenunjang'),
                 'nota' => $nota
             ],
             200
@@ -66,5 +66,20 @@ class LainController extends Controller
         $nota = Lain::select('rs2 as nota')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+
+    public function hapuspermintaan(Request $request)
+    {
+        $cari = Lain::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        $nota = Lain::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
 }

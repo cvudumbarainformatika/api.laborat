@@ -80,7 +80,7 @@ class PoliController extends Controller
                     $t->orderBy('id', 'DESC');
                 },
                 'penunjanglain' => function ($t) {
-                    $t->orderBy('id', 'DESC');
+                    $t->with('masterpenunjang')->orderBy('id', 'DESC');
                 },
                 'tindakan' => function ($t) {
                     $t->with('mastertindakan:rs1,rs2')
