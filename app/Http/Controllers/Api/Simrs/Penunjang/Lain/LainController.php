@@ -27,11 +27,11 @@ class LainController extends Controller
         $wew = $x[0]->rs48;
         $notaP = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAI');
 
-        $simpan = Lain::firstOrNew(
-            ['rs2' => $notaP],
+        $simpan = Lain::create(
+            // ['rs2' => $notaP],
             [
                 'rs1' => $request->noreg,
-                // 'rs2' => $request->nota ?? $notaP,
+                'rs2' => $notaP,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => '',
                 'rs7' => $request->keterangan,
