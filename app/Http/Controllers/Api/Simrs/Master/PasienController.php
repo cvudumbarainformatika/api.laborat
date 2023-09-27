@@ -77,11 +77,10 @@ class PasienController extends Controller
             ->orWhere('rs46', $cari)
             ->first();
         if ($data) {
-
             return new JsonResponse([
                 'data' => $data,
-                'message' => $cek . ' sudah ada'
-            ], 422);
+                'message' => 'Data Found'
+            ], 410);
         }
     }
 
