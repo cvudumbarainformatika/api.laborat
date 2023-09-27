@@ -1959,7 +1959,7 @@ class AutogenController extends Controller
             ->where('barang_r_s.tipe', request('tipe'))
             ->orderBy('penerimaans.tanggal', 'ASC')
             ->with([
-                'detailDistribusiLangsung' => function ($detail) {
+                'detaildistribusilangsung' => function ($detail) {
                     $detail->select(
                         'detail_distribusi_langsungs.*',
                         'distribusi_langsungs.*',

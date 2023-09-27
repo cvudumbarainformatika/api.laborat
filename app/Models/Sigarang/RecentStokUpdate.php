@@ -37,7 +37,7 @@ class RecentStokUpdate extends Model
     {
         return $this->belongsTo(Pengguna::class, 'kode_ruang', 'kode');
     }
-    public function detailDistribusiLangsung()
+    public function detaildistribusilangsung()
     {
         return $this->hasMany(DetailDistribusiLangsung::class, 'kode_rs', 'kode_rs');
     }
