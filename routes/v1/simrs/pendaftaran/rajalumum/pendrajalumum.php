@@ -14,7 +14,8 @@ Route::group([
 
     //simpan rs17  ==> rajalumumsimpan
     Route::post('/simpandaftar', [DaftarrajalController::class, 'simpankunjunganpoli']);
-    Route::get('/masterpasien', [PasienController::class,'listpasien']);
+    Route::get('/masterpasien', [PasienController::class, 'listpasien']);
+    Route::get('/cek-data-pasien', [PasienController::class, 'cekDataPasien']);
     Route::get('/historypasien', [HistorypasienController::class, 'historykunjunganpasien']);
 
     Route::get('/kunjunganpasienbpjs', [DaftarrajalController::class, 'daftarkunjunganpasienbpjs']);
@@ -22,7 +23,4 @@ Route::group([
     Route::get('/caripasien', [PasienController::class, 'caripasien']);
 
     Route::get('/umum/kunjunganpasienumum', [DaftarrajalController::class, 'daftarkunjunganpasienumum']);
-
-
-
 });

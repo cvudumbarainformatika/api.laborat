@@ -65,6 +65,26 @@ class PasienController extends Controller
         return new JsonResponse($data);
     }
 
+    public function cekDataPasien()
+    {
+        // 'rs1' => $request->norm
+        // 'rs49' => $nik,
+        // 'rs46' => $nokabpjs,
+        $cek = request('cek');
+        $cari = request('q');
+        $data = Mpasien::where('rs1', $cari)
+            ->orWhere('rs49', $cari)
+            ->orWhere('rs46', $cari)
+            ->first();
+        if ($data) {
+
+            return new JsonResponse([
+                'data' => $data,
+                'message' => $cek . ' sudah ada'
+            ], 422);
+        }
+    }
+
     public function Pasien()
     {
         $query = Mpasien::pasien()->get();
