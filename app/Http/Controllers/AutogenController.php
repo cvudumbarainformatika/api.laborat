@@ -1918,7 +1918,7 @@ class AutogenController extends Controller
         $penerimaan = Penerimaan::select('no_penerimaan')->get();
         $penerimaan->append('count');
 
-        return new JsonResponse($penerimaan);
+        // return new JsonResponse($penerimaan);
 
         $paginate = request('per_page') ? request('per_page') : 10;
         $ruang = 'Gd-02010102';
