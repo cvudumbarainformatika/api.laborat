@@ -1949,7 +1949,7 @@ class AutogenController extends Controller
                 'penerimaans.tanggal',
                 'satuans.nama as satuan',
             )
-            ->where('penerimaans.no_penerimaan', '000.3.2/02.0/0000020/BAST-GIZI/1.02.2.14.0.00.03.0301/II/2023')
+            ->where('recent_stok_updates.no_penerimaan', 'DPGIZI_00002X/JAN/2023')
 
             ->where('recent_stok_updates.kode_ruang', $ruang)
             ->where('recent_stok_updates.sisa_stok', '>', 0)
