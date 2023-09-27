@@ -1912,11 +1912,13 @@ class AutogenController extends Controller
         //     ->orWhereIn('kd_ruang',  $gd)
         //     ->paginate(request('per_page'));
         // return new JsonResponse($qwerty, 200);
-        //     $data = Penerimaan::with('details')
-        //         ->where('nilai_tagihan', '>', 0)
-        //         ->get();
+        // $data = Penerimaan::with('details')
+        //     ->where('nilai_tagihan', '>', 0)
+        //     ->get();
+        $penerimaan = Penerimaan::select('no_penerimaan')->get();
+        $penerimaan->append('count');
 
-        //     return new JsonResponse($data);
+        return new JsonResponse($penerimaan);
 
         $paginate = request('per_page') ? request('per_page') : 10;
         $ruang = 'Gd-02010102';
@@ -1926,27 +1928,29 @@ class AutogenController extends Controller
         // if (!$distribute) {
         // return new JsonResponse(['data' => $distribute]);
         // }
-        $data = RecentStokUpdate::select(
-            'barang_r_s.nama',
-            'barang_r_s.kode',
-            'barang_r_s.kode_satuan',
-            'recent_stok_updates.id',
-            'recent_stok_updates.kode_rs',
-            'recent_stok_updates.kode_ruang',
-            'recent_stok_updates.sisa_stok',
-            'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
-            'penerimaans.no_penerimaan',
-            'penerimaans.tanggal',
-            'satuans.nama as satuan',
+        $data = RecentStokUpdate::leftJoin(
+            'penerimaans',
+            'recent_stok_updates.no_penerimaan',
+            '=',
+            'penerimaans.no_penerimaan'
         )
-            ->join(
-                'penerimaans',
-                'recent_stok_updates.no_penerimaan',
-                '=',
-                'penerimaans.no_penerimaan'
-            )
             ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
             ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
+            ->select(
+                'barang_r_s.nama',
+                'barang_r_s.kode',
+                'barang_r_s.kode_satuan',
+                'recent_stok_updates.id',
+                'recent_stok_updates.kode_rs',
+                'recent_stok_updates.kode_ruang',
+                'recent_stok_updates.sisa_stok',
+                'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
+                'penerimaans.no_penerimaan',
+                'penerimaans.tanggal',
+                'satuans.nama as satuan',
+            )
+            ->where('penerimaans.no_penerimaan', '000.3.2/02.0/0000020/BAST-GIZI/1.02.2.14.0.00.03.0301/II/2023')
+
             ->where('recent_stok_updates.kode_ruang', $ruang)
             ->where('recent_stok_updates.sisa_stok', '>', 0)
             ->when(request('q'), function ($search) {
@@ -1957,6 +1961,7 @@ class AutogenController extends Controller
                     ->where('barang_r_s.tipe', request('tipe'));
             })
             ->where('barang_r_s.tipe', request('tipe'))
+            ->orderBy('recent_stok_updates.id', 'ASC')
             // ->orderBy('penerimaans.tanggal', 'ASC')
             // ->with([
             //     'detaildistribusilangsung' => function ($detail) {
@@ -1978,6 +1983,7 @@ class AutogenController extends Controller
         $anu = collect($data);
         $balik['data'] = $anu->only('data');
         $balik['meta'] = $anu->except('data');
+        $balik['penerimaan'] = $penerimaan;
         $balik['transaksi'] = $distribute;
 
         return new JsonResponse($balik);

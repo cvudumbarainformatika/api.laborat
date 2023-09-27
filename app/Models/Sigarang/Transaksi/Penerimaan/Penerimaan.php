@@ -10,12 +10,20 @@ use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Penerimaan extends Model
 {
     use HasFactory;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
+
+    public function getCountAttribute()
+    {
+        $data = count(DB::connection('sigarang')->table('penerimaans')->where('no_penerimaan', $this->no_penerimaan)->get());
+        return $data;
+    }
+
 
     public function perusahaan()
     {
