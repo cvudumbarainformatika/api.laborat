@@ -1924,7 +1924,7 @@ class AutogenController extends Controller
             ->where('status', 1)
             ->first();
         // if (!$distribute) {
-        //     return new JsonResponse(['data' => []]);
+        return new JsonResponse(['data' => $distribute]);
         // }
         $data = RecentStokUpdate::select(
             'barang_r_s.nama',
