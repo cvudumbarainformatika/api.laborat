@@ -1945,10 +1945,10 @@ class AutogenController extends Controller
                 '=',
                 'penerimaans.no_penerimaan'
             )
-            ->where('recent_stok_updates.kode_ruang', $ruang)
-            ->where('recent_stok_updates.sisa_stok', '>', 0)
             ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
             ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
+            ->where('recent_stok_updates.kode_ruang', $ruang)
+            ->where('recent_stok_updates.sisa_stok', '>', 0)
             ->when(request('q'), function ($search) {
                 $search->where(function ($anu) {
                     $anu->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
