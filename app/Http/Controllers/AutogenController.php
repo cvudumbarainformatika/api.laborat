@@ -1912,11 +1912,73 @@ class AutogenController extends Controller
         //     ->orWhereIn('kd_ruang',  $gd)
         //     ->paginate(request('per_page'));
         // return new JsonResponse($qwerty, 200);
-        $data = Penerimaan::with('details')
-            ->where('nilai_tagihan', '>', 0)
-            ->get();
+        //     $data = Penerimaan::with('details')
+        //         ->where('nilai_tagihan', '>', 0)
+        //         ->get();
 
-        return new JsonResponse($data);
+        //     return new JsonResponse($data);
+
+        $paginate = request('per_page') ? request('per_page') : 10;
+        $ruang = 'Gd-02010102';
+        $distribute = DistribusiLangsung::where('reff', request('reff'))
+            ->where('status', 1)
+            ->first();
+        // if (!$distribute) {
+        //     return new JsonResponse(['data' => []]);
+        // }
+        $data = RecentStokUpdate::select(
+            'barang_r_s.nama',
+            'barang_r_s.kode',
+            'barang_r_s.kode_satuan',
+            'recent_stok_updates.id',
+            'recent_stok_updates.kode_rs',
+            'recent_stok_updates.kode_ruang',
+            'recent_stok_updates.sisa_stok',
+            'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
+            'penerimaans.no_penerimaan',
+            'penerimaans.tanggal',
+            'satuans.nama as satuan',
+        )
+            ->join(
+                'penerimaans',
+                'recent_stok_updates.no_penerimaan',
+                '=',
+                'penerimaans.no_penerimaan'
+            )
+            ->where('recent_stok_updates.kode_ruang', $ruang)
+            ->where('recent_stok_updates.sisa_stok', '>', 0)
+            ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
+            ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
+            ->when(request('q'), function ($search) {
+                $search->where(function ($anu) {
+                    $anu->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
+                })
+                    ->where('barang_r_s.tipe', request('tipe'));
+            })
+            ->where('barang_r_s.tipe', request('tipe'))
+            ->orderBy('penerimaans.tanggal', 'ASC')
+            ->with([
+                'detailDistribusiLangsung' => function ($detail) {
+                    $detail->select(
+                        'detail_distribusi_langsungs.*',
+                        'distribusi_langsungs.*',
+                    )
+                        ->join('distribusi_langsungs', function ($langsung) {
+                            $langsung->on('detail_distribusi_langsungs.distribusi_langsung_id', '=', 'distribusi_langsungs.id')
+                                ->where('status', '=', 1)
+                                ->where('reff', request('reff'));
+                        });
+                }
+            ])
+            ->paginate($paginate);
+
+        $anu = collect($data);
+        $balik['data'] = $anu->only('data');
+        $balik['meta'] = $anu->except('data');
+        $balik['transaksi'] = $distribute;
+
+        return new JsonResponse($balik);
     }
 
     public function wawanpost(Request $request)
