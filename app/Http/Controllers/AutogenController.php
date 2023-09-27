@@ -1977,9 +1977,9 @@ class AutogenController extends Controller
         //     }
         // ])
         $data = RecentStokUpdate::select(
-            // 'barang_r_s.nama',
-            // 'barang_r_s.kode',
-            // 'barang_r_s.kode_satuan',
+            'barang_r_s.nama',
+            'barang_r_s.kode',
+            'barang_r_s.kode_satuan',
             'recent_stok_updates.id',
             'recent_stok_updates.kode_rs',
             'recent_stok_updates.kode_ruang',
@@ -1989,6 +1989,7 @@ class AutogenController extends Controller
             'penerimaans.tanggal',
             // 'satuans.nama as satuan',
         )->leftjoin('penerimaans', 'recent_stok_updates.no_penerimaan', '=', 'penerimaans.no_penerimaan')
+            ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
             ->paginate($paginate);
 
 
