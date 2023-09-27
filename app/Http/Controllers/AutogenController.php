@@ -1935,16 +1935,16 @@ class AutogenController extends Controller
             'recent_stok_updates.kode_ruang',
             'recent_stok_updates.sisa_stok',
             'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
-            // 'penerimaans.no_penerimaan',
-            // 'penerimaans.tanggal',
+            'penerimaans.no_penerimaan',
+            'penerimaans.tanggal',
             'satuans.nama as satuan',
         )
-            // ->join(
-            //     'penerimaans',
-            //     'recent_stok_updates.no_penerimaan',
-            //     '=',
-            //     'penerimaans.no_penerimaan'
-            // )
+            ->join(
+                'penerimaans',
+                'recent_stok_updates.no_penerimaan',
+                '=',
+                'penerimaans.no_penerimaan'
+            )
             ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
             ->join('satuans', 'satuans.kode', '=', 'barang_r_s.kode_satuan')
             ->where('recent_stok_updates.kode_ruang', $ruang)
