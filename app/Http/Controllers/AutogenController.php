@@ -1924,7 +1924,7 @@ class AutogenController extends Controller
             ->where('status', 1)
             ->first();
         // if (!$distribute) {
-        return new JsonResponse(['data' => $distribute]);
+        // return new JsonResponse(['data' => $distribute]);
         // }
         $data = RecentStokUpdate::select(
             'barang_r_s.nama',
@@ -1973,6 +1973,8 @@ class AutogenController extends Controller
             ])
             ->paginate($paginate);
 
+
+        return new JsonResponse(['data' => $data]);
         $anu = collect($data);
         $balik['data'] = $anu->only('data');
         $balik['meta'] = $anu->except('data');
