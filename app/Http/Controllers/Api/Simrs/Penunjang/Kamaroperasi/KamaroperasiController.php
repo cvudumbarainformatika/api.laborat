@@ -17,22 +17,22 @@ class KamaroperasiController extends Controller
         DB::select('call nota_tindakan(@nomor)');
         $x = DB::table('rs1')->select('rs27')->get();
         $wew = $x[0]->rs27;
-        $notapermintaanok = FormatingHelper::notatindakan($wew, '/POK-RJ');
+        $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-RJ');
 
-        $requestoperasi = PermintaanOperasi::updateOrCreate(
+        $requestoperasi = PermintaanOperasi::create(
             [
                 'rs1' => $request->noreg,
-                'rs2' => $request->nota ?? $notapermintaanok,
-                'rs3' => date('Y-m-d H:i:s')
-            ],
-            [
+                'rs2' => $notapermintaanok,
+                'rs3' => date('Y-m-d H:i:s'),
+                // ],
+                // [
                 'rs4' => $request->permintaan,
                 'rs8' => auth()->user()->pegawai_id,
                 'rs9' => '1',
                 'rs10' => $request->kodepoli,
                 'rs11' => auth()->user()->pegawai_id,
                 'rs13' => $request->kodepoli,
-                'rs14' => $request->kd_akun
+                'rs14' => auth()->user()->pegawai_id
             ]
         );
 
@@ -66,7 +66,7 @@ class KamaroperasiController extends Controller
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
-        $hapusdetail = PermintaanOperasi::where('rs2', '=', $cari->nota)->delete();
+        // $hapusdetail = PermintaanOperasi::where('rs2', '=', $cari->nota)->delete();
         $hapus = $cari->delete();
         $nota = PermintaanOperasi::select('rs2')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();

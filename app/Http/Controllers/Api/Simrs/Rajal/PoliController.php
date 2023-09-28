@@ -93,6 +93,9 @@ class PoliController extends Controller
                     $a->with(['anatomys', 'detailgambars'])
                         ->orderBy('id', 'DESC');
                 },
+                'ok' => function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
                 'taskid' => function ($q) {
                     $q->orderBy('taskid', 'DESC');
                 }
