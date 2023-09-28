@@ -22,6 +22,7 @@ class PerencanaanpembelianController extends Controller
             'status_generik',
             'status_fornas',
             'status_forkid',
+            'satuan_k',
             'sistembayar'
         )->with(
             [

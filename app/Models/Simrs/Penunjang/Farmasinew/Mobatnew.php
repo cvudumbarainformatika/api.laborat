@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Mobatnew extends Model
 {
     use HasFactory;
-    use SoftDeletes;
+    //   use SoftDeletes;
     protected $table = 'new_masterobat';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
@@ -27,7 +27,8 @@ class Mobatnew extends Model
         $cari->when(
             $reqs['q'] ?? false,
             function ($data, $query) {
-                return $data->where('kd_obat', 'LIKE', '%' . $query . '%')
+                return $data->where('flag', '')
+                    ->where('kd_obat', 'LIKE', '%' . $query . '%')
                     ->orWhere('nama_obat', 'LIKE', '%' . $query . '%')
                     ->orderBy('nama_obat');
             }

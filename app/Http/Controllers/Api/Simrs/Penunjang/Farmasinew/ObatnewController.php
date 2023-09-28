@@ -68,11 +68,8 @@ class ObatnewController extends Controller
 
     public function hapus(Request $request)
     {
-        $cari = Mobatnew::find($request->id);
-        if (!$cari) {
-            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
-        }
-        $hapus = $cari->delete();
+        $hapus = Mobatnew::find($request->id)->update(['flag' => '1']);
+
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
@@ -81,10 +78,14 @@ class ObatnewController extends Controller
 
     public function list()
     {
-        $list = Mobatnew::where('nama_obat', 'Like', '%' . request('nama_obat') . '%')
-            ->orWhere('merk', 'Like', '%' . request('merk') . '%')
-            ->orWhere('kandungan', 'Like', '%' . request('kandungan') . '%')
-            ->with('mkelasterapi')
+
+        $list = Mobatnew::with('mkelasterapi')
+            ->where(function ($list) {
+                $list->where('nama_obat', 'Like', '%' . request('q') . '%')
+                    ->orWhere('merk', 'Like', '%' . request('q') . '%')
+                    ->orWhere('kandungan', 'Like', '%' . request('q') . '%');
+            })->orderBy('id', 'desc')
+            ->where('flag', '')
             ->get();
 
         return new JsonResponse($list);
@@ -92,8 +93,14 @@ class ObatnewController extends Controller
 
     public function cariobat()
     {
-        $query = Mobatnew::mobat()->filter(request(['q']))
-            ->limit(50)
+
+        $query = Mobatnew::select(
+            'kd_obat as kodeobat',
+            'nama_obat as namaobat'
+        )->where('flag', '')
+            ->where(function ($list) {
+                $list->where('nama_obat', 'Like', '%' . request('q') . '%');
+            })->orderBy('nama_obat')
             ->get();
         return new JsonResponse($query);
     }
@@ -105,6 +112,6 @@ class ObatnewController extends Controller
             return new JsonResponse(['message' => 'Tidak ada data yang bisa dihapus'], 422);
         }
         $data->delete();
-        return new JsonResponse(['message' => 'Kelas Terapi dihapus']);
+        return new JsonResponse(['message' => 'Kelas Terapi dihapus'], 200);
     }
 }

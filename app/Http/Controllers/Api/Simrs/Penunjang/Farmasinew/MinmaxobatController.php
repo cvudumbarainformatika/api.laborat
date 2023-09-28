@@ -35,7 +35,7 @@ class MinmaxobatController extends Controller
         $gd = Gudang::where('gudang', '<>', '')->where('nama', 'LIKE', '%' . request('r') . '%')->pluck('kode');
 
         $qwerty = Mminmaxobat::with([
-            'obat:kd_obat,nama_obat as namaobat',
+            'obat:kd_obat,nama_obat as namaobat,satuan_k',
             'ruanganx:kode,uraian as namaruangan',
             'gudang:kode,nama as namaruangan'
         ])
