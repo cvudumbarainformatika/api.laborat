@@ -2,12 +2,14 @@
 
 namespace App\Models\Simrs\Ranap;
 
+use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
@@ -24,6 +26,7 @@ use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Oksigen\Oksigen;
 use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
+use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
@@ -77,12 +80,12 @@ class Kunjunganranap extends Model
 
     public function biayamaterai()
     {
-        return $this->hasMany(Biayamaterai::class, 'rs1','rs1');
+        return $this->hasMany(Biayamaterai::class, 'rs1', 'rs1');
     }
 
     public function tindakandokter()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function visiteumum()
@@ -92,27 +95,27 @@ class Kunjunganranap extends Model
 
     public function tindakanperawat()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function asuhangizi()
     {
-        return $this->hasMany(AsuhanGizi::class, 'rs1','rs1');
+        return $this->hasMany(AsuhanGizi::class, 'rs1', 'rs1');
     }
 
     public function makanpasien()
     {
-        return $this->hasMany(AsuhanGizi::class, 'rs1','rs1');
+        return $this->hasMany(AsuhanGizi::class, 'rs1', 'rs1');
     }
 
     public function oksigen()
     {
-        return $this->hasMany(Oksigen::class, 'rs1','rs1');
+        return $this->hasMany(Oksigen::class, 'rs1', 'rs1');
     }
 
     public function keperawatan()
     {
-        return $this->hasMany(Keperawatan::class, 'rs1','rs1');
+        return $this->hasMany(Keperawatan::class, 'rs1', 'rs1');
     }
 
     public function laborat()
@@ -127,62 +130,62 @@ class Kunjunganranap extends Model
 
     public function tindakanendoscopy()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function kamaroperasiibs()
     {
-        return $this->hasMany(Kamaroperasi::class, 'rs1','rs1');
+        return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
     }
 
     public function tindakanoperasi()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function tindakanoperasiigd()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function kamaroperasiibsx()
     {
-        return $this->hasMany(Kamaroperasi::class, 'rs1','rs1');
+        return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
     }
 
     public function tindakanoperasix()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function kamaroperasiigd()
     {
-        return $this->hasMany(Kamaroperasiigd::class, 'rs1','rs1');
+        return $this->hasMany(Kamaroperasiigd::class, 'rs1', 'rs1');
     }
 
     public function tindakanfisioterapi()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function tindakanhd()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function tindakananastesidiluarokdanicu()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function tindakancardio()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function tindakaneeg()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function psikologtransumum()
@@ -192,72 +195,72 @@ class Kunjunganranap extends Model
 
     public function bdrs()
     {
-        return $this->hasMany(Bdrstrans::class, 'rs1','rs1');
+        return $this->hasMany(Bdrstrans::class, 'rs1', 'rs1');
     }
 
     public function penunjangkeluar()
     {
-        return $this->hasMany(PenunjangKeluar::class, 'noreg','rs1');
+        return $this->hasMany(PenunjangKeluar::class, 'noreg', 'rs1');
     }
 
     public function apotekranap()
     {
-        return $this->hasMany(Apotekranap::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranap::class, 'rs1', 'rs1');
     }
 
     public function apotekranaplalu()
     {
-        return $this->hasMany(Apotekranaplalu::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranaplalu::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanheder()
     {
-        return $this->hasMany(Apotekranapracikanheder::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranapracikanheder::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanrinci()
     {
-        return $this->hasMany(Apotekranapracikanrinci::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranapracikanrinci::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanhederlalu()
     {
-        return $this->hasMany(Apotekranaplaluracikanheder::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranaplaluracikanheder::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanrincilalu()
     {
-        return $this->hasMany(Apotekranaplaluracikanrinci::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranaplaluracikanrinci::class, 'rs1', 'rs1');
     }
 
     public function apotekranapx()
     {
-        return $this->hasMany(Apotekranap::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranap::class, 'rs1', 'rs1');
     }
 
     public function apotekranaplalux()
     {
-        return $this->hasMany(Apotekranaplalu::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranaplalu::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanhederx()
     {
-        return $this->hasMany(Apotekranapracikanheder::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranapracikanheder::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanrincix()
     {
-        return $this->hasMany(Apotekranapracikanrinci::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranapracikanrinci::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanhederlalux()
     {
-        return $this->hasMany(Apotekranaplaluracikanheder::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranaplaluracikanheder::class, 'rs1', 'rs1');
     }
 
     public function apotekranapracikanrincilalux()
     {
-        return $this->hasMany(Apotekranaplaluracikanrinci::class, 'rs1','rs1');
+        return $this->hasMany(Apotekranaplaluracikanrinci::class, 'rs1', 'rs1');
     }
 
     public function rstigalimaxxx()
@@ -267,7 +270,7 @@ class Kunjunganranap extends Model
 
     public function irdtindakan()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function irdlaborat()
@@ -282,52 +285,52 @@ class Kunjunganranap extends Model
 
     public function irdtindakanoperasix()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function irdkamaroperasiigd()
     {
-        return $this->hasMany(Kamaroperasiigd::class, 'rs1','rs1');
+        return $this->hasMany(Kamaroperasiigd::class, 'rs1', 'rs1');
     }
 
     public function irdbdrs()
     {
-        return $this->hasMany(Bdrstrans::class, 'rs1','rs1');
+        return $this->hasMany(Bdrstrans::class, 'rs1', 'rs1');
     }
 
     public function irdbiayamaterai()
     {
-        return $this->hasMany(Biayamaterai::class, 'rs1','rs1');
+        return $this->hasMany(Biayamaterai::class, 'rs1', 'rs1');
     }
 
     public function ambulan()
     {
-        return $this->hasMany(Ambulan::class, 'rs1','rs1');
+        return $this->hasMany(Ambulan::class, 'rs1', 'rs1');
     }
 
     public function irdambulan()
     {
-        return $this->hasMany(Ambulan::class, 'rs1','rs1');
+        return $this->hasMany(Ambulan::class, 'rs1', 'rs1');
     }
 
     public function irdtindakanhd()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function irdtindakananastesidiluarokdanicu()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function irdtindakanfisioterapi()
     {
-        return $this->hasMany(Tindakan::class, 'rs1','rs1');
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 
     public function groupingranap()
     {
-        return $this->hasMany(GroupingRanap::class, 'noreg','rs1');
+        return $this->hasMany(GroupingRanap::class, 'noreg', 'rs1');
     }
 
     public function laboratdiird()
@@ -340,4 +343,28 @@ class Kunjunganranap extends Model
         return $this->hasMany(Transradiologi::class, 'rs1', 'rs1');
     }
 
+    public function anamnesis()
+    {
+        return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
+    }
+
+    public function diagnosa()
+    {
+        return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
+    }
+
+    public function tindakan()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+
+    public function radiologi()
+    {
+        return $this->hasMany(Transpermintaanradiologi::class, 'rs1', 'rs1');
+    }
+
+    public function hasilradiologi()
+    {
+        return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
 }

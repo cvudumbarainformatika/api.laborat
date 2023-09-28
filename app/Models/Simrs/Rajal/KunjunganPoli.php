@@ -103,4 +103,9 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Lain::class, 'rs1', 'rs1');
     }
+
+    public function hasilradiologi()
+    {
+        return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
 }
