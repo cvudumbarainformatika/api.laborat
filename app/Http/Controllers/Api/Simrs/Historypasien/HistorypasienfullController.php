@@ -14,11 +14,6 @@ class HistorypasienfullController extends Controller
     public function historypasienfull()
     {
         $norm = request('norm');
-        // $history = Mpasien::select('rs15.rs1 as norm', 'rs15.rs2 as nama', 'rs15.rs17 as kelamin', 'rs17.rs1 as noreg', 'rs23.rs1 as noregx')
-        //     ->leftjoin('rs17', 'rs15.rs1', '=', 'rs17.rs2')
-        //     ->leftjoin('rs23', 'rs15.rs1', '=', 'rs23.rs2')
-        //     ->where('rs15.rs1', $norm)
-        //     ->get();
         $historyx = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs2 as norm',
@@ -56,7 +51,6 @@ class HistorypasienfullController extends Controller
             )
             ->orderby('tanggal')
             ->paginate(request('per_page'));
-        //->get();
         return new JsonResponse($history);
     }
 }
