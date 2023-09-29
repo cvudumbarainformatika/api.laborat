@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
+use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -33,6 +34,9 @@ Route::group([
     Route::post('/ewseklaimrajal_newclaim', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);
     Route::get('/caridiagnosa', [EwseklaimController::class, 'caridiagnosa']);
     Route::get('/carisimulasi', [EwseklaimController::class, 'carisimulasi']);
+
+    Route::get('/mpalningrajal', [PlaningController::class, 'mpalningrajal']);
+    Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
