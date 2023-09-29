@@ -22,7 +22,14 @@ class PlaningController extends Controller
     {
         if ($request->planing == 'Konsultasi') {
             $simpanplaningpasien = self::simpankonsulantarpoli($request);
-            return ($simpanplaningpasien);
+            if ($simpanplaningpasien == 500) {
+                return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+            }
+            $simpanakhir = self::simpanakhir($request);
+            if ($simpanakhir == 500) {
+                return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+            }
+            return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
         }
     }
 
@@ -30,8 +37,7 @@ class PlaningController extends Controller
     {
         $cek = Listkonsulantarpoli::where('noreg_lama', $request->noreg_lama)->where('flag', '')->count();
         if ($cek > 0) {
-            return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
-            //500;
+            return 500;
         }
         $simpankonsulantarpoli = Listkonsulantarpoli::firstOrCreate(
             [
@@ -48,20 +54,7 @@ class PlaningController extends Controller
         );
 
         if (!$simpankonsulantarpoli) {
-            return new JsonResponse(['message' => 'Maaf, Gagal Mengkonsulkan Pasien Ini, Cek Lagi Data Yang Dimasukkan...!!!'], 500);
-        }
-
-        $simpanakhir = WaktupulangPoli::firstOrCreate(
-            [
-                'rs1' => $request->noreg,
-                'rs2' => $request->norm,
-                'rs3' => $request->kdpoli_tujuan,
-                'rs4' => $request->planing
-            ]
-        );
-
-        if (!$simpanakhir) {
-            return new JsonResponse(['message' => 'Maaf, Gagal Mengkonsulkan Pasien Ini, Cek Lagi Data Yang Dimasukkan...!!!'], 500);
+            return 500;
         }
 
         $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
@@ -72,8 +65,25 @@ class PlaningController extends Controller
                 ]
             );
         if (!$updatekunjungan) {
-            return new JsonResponse(['message' => 'Maaf, Gagal Mengkonsulkan Pasien Ini, Cek Lagi Data Yang Dimasukkan...!!!'], 500);
+            return 500;
         }
-        return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
+        return 200;
+    }
+
+    public static function simpanakhir($request)
+    {
+        $simpanakhir = WaktupulangPoli::firstOrCreate(
+            [
+                'rs1' => $request->noreg,
+                'rs2' => $request->norm,
+                'rs3' => $request->kdpoli_tujuan,
+                'rs4' => $request->planing
+            ]
+        );
+
+        if (!$simpanakhir) {
+            return 500;
+        }
+        return 200;
     }
 }
