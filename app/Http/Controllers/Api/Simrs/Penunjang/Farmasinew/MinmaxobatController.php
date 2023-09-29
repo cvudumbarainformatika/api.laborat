@@ -7,6 +7,7 @@ use App\Models\Sigarang\Gudang;
 use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,5 +47,35 @@ class MinmaxobatController extends Controller
             ->orWhereIn('kd_ruang',  $gd)
             ->paginate(request('per_page'));
         return new JsonResponse($qwerty, 200);
+    }
+
+    public function caribyruang()
+    {
+        $query = Mobatnew::select(
+            'kd_obat',
+            'nama_obat as namaobat',
+            'satuan_k'
+        )
+            ->where('flag', '')
+            ->where(function ($list) {
+                $list->where('nama_obat', 'Like', '%' . request('q') . '%');
+            })
+            ->orderBy('nama_obat')
+            ->with(['stokmaxrs' => function ($anu) {
+                $anu->when(request('kd_ruang'), function ($q) {
+                    $q->whereKdRuang(request('kd_ruang'));
+                });
+            }])
+            ->get();
+        return new JsonResponse($query);
+        // $qwerty = Mminmaxobat::with([
+        //     'obat:kd_obat,nama_obat as namaobat,satuan_k',
+        //     'ruanganx:kode,uraian as namaruangan',
+        //     'gudang:kode,nama as namaruangan'
+        // ])
+        //     ->whereKdRuang(request('kd_ruang'))
+        //     ->get();
+        // ->paginate(request('per_page'));
+        // return new JsonResponse($qwerty, 200);
     }
 }

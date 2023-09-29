@@ -13,4 +13,5 @@ Route::group([
     Route::get('/carilistminmaxbyobat', [MinmaxobatController::class, 'caribynamaobat']);
     Route::post('/minmaxobat', [MinmaxobatController::class, 'simpan']);
     Route::post('/simpanminta', [MinmaxobatController::class, 'simpan']); // smentara
+    Route::get('/carilistminmaxbyruang', [MinmaxobatController::class, 'caribyruang']);
 });
