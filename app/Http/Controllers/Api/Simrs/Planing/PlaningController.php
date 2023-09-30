@@ -52,6 +52,12 @@ class PlaningController extends Controller
             } else {
                 return $createrujukan;
             }
+        } else {
+            $simpanakhir = self::simpanakhir($request);
+            if ($simpanakhir == 500) {
+                return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+            }
+            return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
         }
     }
 
