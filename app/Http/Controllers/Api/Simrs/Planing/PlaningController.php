@@ -30,6 +30,28 @@ class PlaningController extends Controller
                 return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
             }
             return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
+        } elseif ($request->planing == 'Rumah Sakit Lain') {
+            $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
+            if ($createrujukan == 500) {
+                return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+            } elseif ($createrujukan == 200) {
+                $simpanakhir = self::simpanakhir($request);
+                if ($simpanakhir == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                }
+                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
+                    ->update(
+                        [
+                            'rs19' => 1,
+                        ]
+                    );
+                if (!$updatekunjungan) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                }
+                return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
+            } else {
+                return $createrujukan;
+            }
         }
     }
 
@@ -77,7 +99,8 @@ class PlaningController extends Controller
                 'rs1' => $request->noreg,
                 'rs2' => $request->norm,
                 'rs3' => $request->kdpoli_tujuan,
-                'rs4' => $request->planing
+                'rs4' => $request->planing,
+                'user' => auth()->user()->pegawai_id
             ]
         );
 
