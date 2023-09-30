@@ -49,7 +49,7 @@ class HistorypasienfullController extends Controller
                     'hasilradiologi'
                 ]
             )
-            ->orderby('tanggal')
+            ->orderby('tanggal', 'DESC')
             ->paginate(request('per_page'));
         return new JsonResponse($history);
     }
