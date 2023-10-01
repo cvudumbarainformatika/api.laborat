@@ -76,7 +76,7 @@ class BillingbynoregController extends Controller
         $pelayananrm = (int) isset($pelayananrm[0]->subtotal) ? $pelayananrm[0]->subtotal : 0;
         $kartuidentitas = (int) isset($kartuidentitas[0]->subtotal) ? $kartuidentitas[0]->subtotal : 0;
         $poliklinik = (int) isset($poliklinik[0]->subtotal) ? $poliklinik[0]->subtotal : 0;
-        $tindakanx = $tindakan->sum('subtotal');
+        $tindakanx = (int) $tindakan->sum('subtotal');
 
         $totalall =  $pelayananrm + $kartuidentitas + $poliklinik + $tindakanx + $laborat + $radiologi + $onedaycare
             + $fisioterapi + $hd + $penunjanglain
