@@ -92,4 +92,6 @@ class TindakanController extends Controller
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
+
+    //public static function
 }

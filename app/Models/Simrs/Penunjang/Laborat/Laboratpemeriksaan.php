@@ -16,7 +16,7 @@ class Laboratpemeriksaan extends Model
 
     public function pemeriksaanlab()
     {
-        return $this->belongsTo(Mpemeriksaanlab::class, 'rs4','rs1');
+        return $this->belongsTo(Mpemeriksaanlab::class, 'rs4', 'rs1');
     }
 
     public function getSubtotalAttribute()
@@ -24,7 +24,7 @@ class Laboratpemeriksaan extends Model
         $harga1 = (int) $this->rs6;
         $harga2 = (int) $this->rs13;
         $jumlah = (int) $this->rs5;
-        $biaya = $harga1+$harga2;
-        return ($biaya*$jumlah);
+        $biaya = $harga1 + $harga2;
+        return ($biaya * $jumlah);
     }
 }
