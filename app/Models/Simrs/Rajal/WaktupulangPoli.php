@@ -10,5 +10,4 @@ class WaktupulangPoli extends Model
     use HasFactory;
     protected $table = 'rs141';
     protected $guarded = ['id'];
-    public $timestamps = false;
 }
