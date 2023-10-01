@@ -88,7 +88,7 @@ class BillingbynoregController extends Controller
                 'kartuidentitas' => $kartuidentitas,
                 'poliklinik' => $poliklinik,
                 'konsulantarpoli' => isset($konsulantarpoli[0]->subtotal) ? $konsulantarpoli[0]->subtotal : 0,
-                'tindakan' => $tindakanx, //isset($tindakanrinci) ?  $tindakanrinci : '',
+                'tindakan' => isset($tindakanrinci) ?  $tindakanrinci : '',
                 //        'visite' => isset($visite) ?  $visite : 0,
                 'laborat' => isset($laborat) ?  $laborat : 0,
                 'radiologi' => isset($radiologi) ?  $radiologi : 0,

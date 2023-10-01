@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Planing;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Planing\Mplaning;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
@@ -12,6 +13,13 @@ use Illuminate\Http\Request;
 
 class PlaningController extends Controller
 {
+    public function mpoli()
+    {
+        $mpoli = Mpoli::where('rs5', 1)
+            ->where('rs4', 'Poliklinik')
+            ->get();
+        return new JsonResponse($mpoli);
+    }
     public function mpalningrajal()
     {
         $mplanrajal = Mplaning::where('hidden', '!=', '1')->where('unit', 'RJ')->get();

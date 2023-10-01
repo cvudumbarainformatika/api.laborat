@@ -36,6 +36,7 @@ Route::group([
     Route::get('/carisimulasi', [EwseklaimController::class, 'carisimulasi']);
 
     Route::get('/mpalningrajal', [PlaningController::class, 'mpalningrajal']);
+    Route::get('/mpoli', [PlaningController::class, 'mpoli']);
     Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
