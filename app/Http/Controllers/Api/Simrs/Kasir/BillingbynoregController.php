@@ -60,18 +60,48 @@ class BillingbynoregController extends Controller
                 'subtotal' => $tindakanx->subtotal,
             ];
         });
-        $visite = DetailbillingbynoregController::visite($noreg);
+        //    $visite = DetailbillingbynoregController::visite($noreg);
         $laborat = DetailbillingbynoregController::laborat($noreg);
+        $radiologi = DetailbillingbynoregController::radiologi($noreg);
+        $onedaycare = DetailbillingbynoregController::onedaycare($noreg);
+        $fisioterapi = DetailbillingbynoregController::fisioterapi($noreg);
+        $hd = DetailbillingbynoregController::hd($noreg);
+        $penunjanglain = DetailbillingbynoregController::penunjanglain($noreg);
+        $psikologi = DetailbillingbynoregController::psikologi($noreg);
+        $cardio = DetailbillingbynoregController::cardio($noreg);
+        $eeg = DetailbillingbynoregController::eeg($noreg);
+        $endoscopy = DetailbillingbynoregController::endoscopy($noreg);
+        $obat = DetailbillingbynoregController::farmasi($noreg);
+
+        $pelayananrm = (int) isset($pelayananrm[0]->subtotal) ? $pelayananrm[0]->subtotal : 0;
+        $kartuidentitas = (int) isset($kartuidentitas[0]->subtotal) ? $kartuidentitas[0]->subtotal : 0;
+        $poliklinik = (int) isset($poliklinik[0]->subtotal) ? $poliklinik[0]->subtotal : 0;
+        $tindakanx = $tindakan->sum('subtotal');
+
+        $totalall =  $pelayananrm + $kartuidentitas + $poliklinik + $tindakanx + $laborat + $radiologi + $onedaycare
+            + $fisioterapi + $hd + $penunjanglain
+            + $psikologi + $cardio + $eeg + $endoscopy + $obat;
         return new JsonResponse(
             [
                 'heder' => $query,
-                'pelayananrm' => isset($pelayananrm[0]->subtotal) ? $pelayananrm[0]->subtotal : 0,
-                'kartuidentitas' => isset($kartuidentitas[0]->subtotal) ? $kartuidentitas[0]->subtotal : 0,
-                'poliklinik' => isset($poliklinik[0]->subtotal) ? $poliklinik[0]->subtotal : 0,
+                'pelayananrm' => $pelayananrm,
+                'kartuidentitas' => $kartuidentitas,
+                'poliklinik' => $poliklinik,
                 'konsulantarpoli' => isset($konsulantarpoli[0]->subtotal) ? $konsulantarpoli[0]->subtotal : 0,
-                'tindakan' => isset($tindakanrinci) ?  $tindakanrinci : '',
-                'visite' => isset($visite) ?  $visite : 0,
+                'tindakan' => $tindakanx, //isset($tindakanrinci) ?  $tindakanrinci : '',
+                //        'visite' => isset($visite) ?  $visite : 0,
                 'laborat' => isset($laborat) ?  $laborat : 0,
+                'radiologi' => isset($radiologi) ?  $radiologi : 0,
+                'onedaycare' => isset($onedaycare) ?  $onedaycare : 0,
+                'fisioterapi' => isset($fisioterapi) ?  $fisioterapi : 0,
+                'hd' => isset($hd) ?  $hd : 0,
+                'penunjanglain' => isset($penunjanglain) ?  $penunjanglain : 0,
+                'psikologi' => isset($psikologi) ?  $psikologi : 0,
+                'cardio' => isset($cardio) ?  $cardio : 0,
+                'eeg' => isset($eeg) ?  $eeg : 0,
+                'endoscopy' => isset($endoscopy) ?  $endoscopy : 0,
+                'obat' => isset($obat) ?  $obat : 0,
+                'totalall' => isset($totalall) ?  $totalall : 0,
             ]
         );
     }
