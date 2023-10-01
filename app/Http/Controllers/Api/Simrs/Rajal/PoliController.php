@@ -20,6 +20,8 @@ class PoliController extends Controller
             $tgl = request('to') . ' 00:00:00';
             $tglx = request('from') . ' 23:59:59';
         }
+
+        $status = request('status') ?? '';
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs1 as noreg',
@@ -58,6 +60,11 @@ class PoliController extends Controller
             ->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')
             ->where('rs9.rs9', '=', 'BPJS')
+            ->where(function ($sts) use ($status) {
+                if ($status !== 'all') {
+                    $sts->where('rs17.rs19', '=', $status);
+                }
+            })
             ->where(function ($query) {
                 $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
@@ -69,6 +76,7 @@ class PoliController extends Controller
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
+
             ->with([
                 'anamnesis',
                 'gambars',
