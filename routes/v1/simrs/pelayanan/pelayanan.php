@@ -40,6 +40,7 @@ Route::group([
     Route::get('/mpoli', [PlaningController::class, 'mpoli']);
     Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
+    Route::get('/polibpjs', [BridbpjsplanController::class, 'polibpjs']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
