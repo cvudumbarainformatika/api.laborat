@@ -49,6 +49,7 @@ class PoliController extends Controller
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
             'rs222.rs8 as sep',
+            'rs222.rs5 as norujukan',
             'rs17.rs19 as status'
         )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
