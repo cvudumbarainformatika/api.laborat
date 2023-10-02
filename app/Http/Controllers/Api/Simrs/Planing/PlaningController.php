@@ -93,16 +93,19 @@ class PlaningController extends Controller
             return 500;
         }
 
-        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
-            ->update(
-                [
-                    'rs19' => 1,
-                    'rs24' => 1
-                ]
-            );
-        if (!$updatekunjungan) {
-            return 500;
-        }
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg_lama)->first();
+        $updatekunjungan->rs19 = '1';
+        $updatekunjungan->rs24 = '1';
+        $updatekunjungan->save();
+        // ->update(
+        //     [
+        //         'rs19' => 1,
+        //         'rs24' => 1
+        //     ]
+        // );
+        // if (!$updatekunjungan) {
+        //     return 500;
+        // }
         return 200;
     }
 
@@ -114,6 +117,7 @@ class PlaningController extends Controller
                 'rs2' => $request->norm,
                 'rs3' => $request->kdpoli_tujuan,
                 'rs4' => $request->planing,
+                'tgl' => date('Y-m-d H:i:s'),
                 'user' => auth()->user()->pegawai_id
             ]
         );
