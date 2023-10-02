@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
+use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,7 @@ Route::group([
     Route::get('/mpalningrajal', [PlaningController::class, 'mpalningrajal']);
     Route::get('/mpoli', [PlaningController::class, 'mpoli']);
     Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
+    Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });

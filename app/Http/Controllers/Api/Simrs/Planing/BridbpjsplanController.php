@@ -115,4 +115,12 @@ class BridbpjsplanController extends Controller
         );
         return $deleterujukan;
     }
+
+    public function faskes()
+    {
+        $namafaskes = request('namafaskes');
+        $jnsfaskes = request('jnsfaskes');
+        $faskes = BridgingbpjsHelper::get_url('vclaim', '/referensi/faskes/' . $namafaskes . '/' . $jnsfaskes);
+        return $faskes;
+    }
 }
