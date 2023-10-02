@@ -606,6 +606,7 @@ class DaftarrajalController extends Controller
         $listkonsulantarpoli = Listkonsulantarpoli::select(
             'listkonsulanpoli.noreg_lama as noreg_lama',
             'rs15.rs2 as nama',
+            'listkonsulanpoli.flag as flag',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
