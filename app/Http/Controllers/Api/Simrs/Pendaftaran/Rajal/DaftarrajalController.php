@@ -16,6 +16,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
+use App\Models\Simrs\Rajal\Listkonsulantarpoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -598,5 +599,33 @@ class DaftarrajalController extends Controller
             ->paginate(request('per_page'));
 
         return new JsonResponse($daftarkunjunganpasienumum);
+    }
+
+    public function listkonsulantarpoli()
+    {
+        $listkonsulantarpoli = Listkonsulantarpoli::select(
+            'listkonsulanpoli.noreg_lama as noreg_lama',
+            'rs15.rs2 as nama',
+            'listkonsulanpoli.flag as flag',
+            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            'rs15.rs16 as tgllahir',
+            'rs15.rs17 as kelamin',
+            'rs15.rs19 as pendidikan',
+            'rs15.rs22 as agama',
+            'rs15.rs37 as templahir',
+            'rs15.rs39 as suku',
+            'rs15.rs40 as jenispasien',
+            'rs15.rs46 as noka',
+            'rs15.rs49 as nktp',
+            'rs15.rs55 as nohp',
+            'rs222.rs8 as seprajal'
+        )->leftjoin('rs15', 'rs15.rs1', '=', 'listkonsulanpoli.norm')
+            ->leftjoin('rs222', 'rs222.rs1', '=', 'listkonsulanpoli.noreg_lama')
+            ->get();
+        return new JsonResponse($listkonsulantarpoli);
     }
 }
