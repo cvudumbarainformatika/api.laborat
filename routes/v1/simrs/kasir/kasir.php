@@ -11,4 +11,6 @@ Route::group([
 ], function () {
     Route::get('/rajal/kunjunganpoli', [KasirrajalController::class, 'kunjunganpoli']);
     Route::get('/rajal/billbynoreg', [BillingbynoregController::class, 'billbynoregrajal']);
+
+    Route::get('/rajal/tagihanpergolongan', [KasirrajalController::class, 'tagihanpergolongan']);
 });
