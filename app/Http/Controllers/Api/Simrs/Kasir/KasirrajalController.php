@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Kasir;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -94,6 +95,10 @@ class KasirrajalController extends Controller
 
     public function tagihanpergolongan()
     {
-        // if(request('golongan') == 'karcis')
+        $layanan = ['RM#', 'K1#', 'K2#'];
+        $noreg = request('noreg');
+        if (request('golongan') == 'karcis') {
+            $karcis = Rstigalimax::where('rs', $noreg)->whereIn('rs3', $layanan)->get();
+        }
     }
 }
