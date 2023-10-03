@@ -11,4 +11,5 @@ Route::group([
     // Route::get('/listminmaxobat', [MinmaxobatController::class, 'listminmaxobat']);
     Route::get('/kunjunganpoli', [RajalPoliController::class, 'kunjunganpoli']);
     Route::post('/save-pemeriksaanfisik', [RajalPoliController::class, 'save_pemeriksaanfisik']);
+    Route::post('/flagfinish', [RajalPoliController::class, 'flagfinish']);
 });

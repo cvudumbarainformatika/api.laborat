@@ -121,4 +121,12 @@ class PoliController extends Controller
     {
         return new JsonResponse($request->all());
     }
+
+    public function flagfinish(Request $request)
+    {
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $updatekunjungan->rs19 = '1';
+        $updatekunjungan->rs24 = '1';
+        $updatekunjungan->save();
+    }
 }
