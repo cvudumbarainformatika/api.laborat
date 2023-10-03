@@ -93,10 +93,10 @@ class PlaningController extends Controller
             return 500;
         }
 
-        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg_lama)->first();
-        $updatekunjungan->rs19 = '1';
-        $updatekunjungan->rs24 = '1';
-        $updatekunjungan->save();
+        // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg_lama)->first();
+        // $updatekunjungan->rs19 = '1';
+        // $updatekunjungan->rs24 = '1';
+        // $updatekunjungan->save();
         // ->update(
         //     [
         //         'rs19' => 1,

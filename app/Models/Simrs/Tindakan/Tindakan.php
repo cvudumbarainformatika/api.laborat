@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Tindakan;
 
 use App\Models\Simrs\Ews\MapingProcedure;
+use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Mtindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,5 +36,10 @@ class Tindakan extends Model
     public function mastertindakan()
     {
         return $this->hasOne(Mtindakan::class, 'rs1', 'rs4');
+    }
+
+    public function mpoli()
+    {
+        return $this->hasOne(Mpoli::class, 'rs1', 'rs22');
     }
 }
