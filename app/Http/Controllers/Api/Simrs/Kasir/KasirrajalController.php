@@ -91,4 +91,9 @@ class KasirrajalController extends Controller
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
+
+    public function tagihanpergolongan()
+    {
+        // if(request('golongan') == 'karcis')
+    }
 }

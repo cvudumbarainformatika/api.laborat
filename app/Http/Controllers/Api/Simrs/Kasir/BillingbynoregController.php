@@ -37,6 +37,12 @@ class BillingbynoregController extends Controller
         $fisioterapi = DetailbillingbynoregController::fisioterapi($noreg);
         $hd = DetailbillingbynoregController::hd($noreg);
         $penunjanglain = DetailbillingbynoregController::penunjanglain($noreg);
+        // $penunjanglainrinci = $penunjanglain->map(function ($penunjanglainx, $kunci) {
+        //     return [
+        //         'namatindakan' => $penunjanglainx->keterangan,
+        //         'subtotal' => $penunjanglainx->subtotal,
+        //     ];
+        // });
         $psikologi = DetailbillingbynoregController::psikologi($noreg);
         $cardio = DetailbillingbynoregController::cardio($noreg);
         $eeg = DetailbillingbynoregController::eeg($noreg);
@@ -65,7 +71,8 @@ class BillingbynoregController extends Controller
                 'onedaycare' => isset($onedaycare) ?  $onedaycare : 0,
                 'fisioterapi' => isset($fisioterapi) ?  $fisioterapi : 0,
                 'hd' => isset($hd) ?  $hd : 0,
-                'penunjanglain' => isset($penunjanglain) ?  $penunjanglain : 0,
+                // 'penunjanglain' => isset($penunjanglain) ?  $penunjanglain : 0,
+                'penunjanglain' => $penunjanglain,
                 'psikologi' => isset($psikologi) ?  $psikologi : 0,
                 'cardio' => isset($cardio) ?  $cardio : 0,
                 'eeg' => isset($eeg) ?  $eeg : 0,
