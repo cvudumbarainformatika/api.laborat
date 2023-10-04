@@ -32,10 +32,10 @@ class AnamnesisController extends Controller
                     'rs2' => $request->norm,
                     'rs3' => date('Y-m-d H:i:s'),
                     'rs4' => $request->keluhanutama,
-                    'riwayatpenyakit' => $request->riwayatpenyakit,
-                    'riwayatalergi' => $request->riwayatalergi,
-                    'keteranganalergi' => $request->keteranganalergi,
-                    'riwayatpengobatan' => $request->riwayatpengobatan,
+                    'riwayatpenyakit' => $request->riwayatpenyakit ?? '',
+                    'riwayatalergi' => $request->riwayatalergi ?? '',
+                    'keteranganalergi' => $request->keteranganalergi ?? '',
+                    'riwayatpengobatan' => $request->riwayatpengobatan ?? '',
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
