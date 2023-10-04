@@ -332,8 +332,8 @@ class Bridbpjscontroller extends Controller
         // return new JsonResponse(['message' => $responBpjs]);
         // cari history pelayanan pasien
         $tgltobpjshttpres = DateHelper::getDateTime();
-        // $tglCari = date('Y-m-d');
-        $tglCari = date('2023-10-03');
+        $tglCari = date('Y-m-d');
+        // $tglCari = date('2023-10-03');
         // cek history
         $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . $request->noka . '/tglMulai/' . $tglCari . '/tglAkhir/' . $tglCari);
         $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
