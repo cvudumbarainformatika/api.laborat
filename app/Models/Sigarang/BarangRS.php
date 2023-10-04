@@ -158,7 +158,7 @@ class BarangRS extends Model
 
     public function rincianpenerimaan()
     {
-        return $this->hasMany(DetailPenerimaan::class, 'kode_50', 'kode');
+        return $this->hasMany(DetailPenerimaan::class, 'kode_rs', 'kode');
     }
 
     public function scopeFilter($search, array $reqs)
