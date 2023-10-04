@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\PengajuanSep;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
@@ -180,7 +181,7 @@ class Bridbpjscontroller extends Controller
                     'kecamatan' => $request->kecamatankecelakaan,
                     'kodedokterdpjp' => $request->dpjp,
                     'dokterdpjp' => $request->namadokter,
-                    'kodeasalrujuk' => $request->ppkRujukan,
+                    'kodeasalperujuk' => $request->ppkRujukan,
                     'namaasalperujuk' => $request->namappkRujukan,
                     'Dinsos' => $dinsos,
                     'prolanisPRB' => $prolanisPRB,
@@ -317,5 +318,234 @@ class Bridbpjscontroller extends Controller
             return new JsonResponse(['message' => 'OK'], 200);
         }
         return $kontrol;
+    }
+
+    public function reCreateSep(Request $request)
+    {
+        // cek
+        // $responBpjs = Bpjs_http_respon::where(function ($a) use ($request) {
+        //     $a->whereNoreg($request->noreg)
+        //         ->orWhere('request', 'LIKE', '%' . $request->norm . '%');
+        // })
+        //     ->where('url', 'LIKE', '%SEP/2.0/insert%')
+        //     ->first();
+        // return new JsonResponse(['message' => $responBpjs]);
+        // cari history pelayanan pasien
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $tglCari = date('Y-m-d');
+        // $tglCari = date('2023-10-03');
+        // cek history
+        $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . $request->noka . '/tglMulai/' . $tglCari . '/tglAkhir/' . $tglCari);
+        $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
+        $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
+        // return new JsonResponse(['message' => $history['result']->histori[0]]);
+        // ambil master pasien
+
+        // jika tidak ada history
+        if (!$sep) {
+            $responBpjs = Bpjs_http_respon::where(function ($a) use ($request) {
+                $a->whereNoreg($request->noreg)
+                    ->orWhere('request', 'LIKE', '%' . $request->norm . '%');
+            })
+                ->where('url', 'LIKE', '%SEP/2.0/insert%')
+                ->first();
+            if (!$responBpjs) {
+                return new JsonResponse(['message' => 'Data Pengajuan SEP sebeumnya tidak ditemukan'], 410);
+            }
+            $createsep = BridgingbpjsHelper::post_url(
+                'vclaim',
+                'SEP/2.0/insert',
+                $responBpjs->request
+            );
+            $xxx = $createsep['metadata']['code'];
+            if ($xxx === 200 || $xxx === '200') {
+                // cek history
+                $history2 = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . $request->noka . '/tglMulai/' . $tglCari . '/tglAkhir/' . $tglCari);
+                $sep2 = $history2['metadata']['code'] === '200' ? $history2['result']->histori[0]->noSep : null;
+
+                if (!$sep2) {
+                    return new JsonResponse(['message' => 'Data SEP untuk Nomor Kartu ini tidak ditemukan'], 410);
+                }
+                $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep2);
+                $dataInfo = $infoSep['result'];
+                $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep2, $unit);
+                return new JsonResponse(['data' => $data, 'message' => 'Data Berhasil disimpan']);
+            } else {
+                return new JsonResponse(['message' => 'Pembuatan SEP dengan data yang pernah diajukan gagal'], 410);
+            }
+        }
+        $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        $dataInfo = $infoSep['result'];
+        // return new JsonResponse(['message' => $dataInfo]);
+        $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep, $unit);
+        return new JsonResponse(['data' => $data, 'message' => 'Data Berhasil disimpan']);
+        // $sep = $history['result']->histori[0]->noSep;
+        // cari di bppjs http respon
+        return new JsonResponse([
+            // 'res bpjs' => $createsep,
+            // 'history' => $history,
+            'tgl cari' => $tglCari,
+            'sep' => $sep,
+            // 'pasien' => $pasien,
+            // 'http res' => $responBpjs,
+            'info Sep' => $infoSep,
+            'dataInfo' => $dataInfo,
+            'req' => $request->all(),
+            'data' => $data,
+            // 'kontrol' => $kontrol,
+            // 'rujukanPcare' => $rujukanPcare,
+        ]);
+    }
+    public function getNesData($dataInfo, $request, $tgltobpjshttpres, $sep, $unit)
+    {
+        $pasien = Mpasien::select('rs55')->where('rs1', $request->norm)->first();
+        $kontrol = '';
+        $rujukanPcare = '';
+        $tglrujukan = '';
+        $namadiagnosa = '';
+        $namappkRujukan = '';
+        $ppkRujukan = '';
+        $namappkRujukan = '';
+        $dinsos = '';
+        $prolanisPRB = '';
+        $noSKTM = '';
+        $jenis_kunjungan = '';
+        $kelasRawat = $dataInfo->kelasRawat;
+        $rujukan = $dataInfo->noRujukan;
+        $suratKontrol = $dataInfo->kontrol->noSurat ?? null;
+        if ($suratKontrol) {
+            $kontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . $suratKontrol);
+            if ($kontrol['metadata']['code'] === '200') {
+                $temp = $kontrol['result']->sep;
+                $tglrujukan = $temp->provPerujuk->tglRujukan;
+                $namadiagnosa = $temp->diagnosa;
+                $namappkRujukan = $temp->provPerujuk->nmProviderPerujuk;
+                $ppkRujukan = $temp->provPerujuk->kdProviderPerujuk;
+                $jenis_kunjungan = 'Kontrol';
+            }
+        }
+        if ($rujukan) {
+            $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $rujukan);
+            if ($rujukanPcare['metadata']['code'] === '200') {
+                $temp = $rujukanPcare['result']->rujukan;
+                $tglrujukan = $temp->tglKunjungan;
+                $namadiagnosa = $temp->diagnosa->kode . ' - ' . $temp->diagnosa->nama;
+                $namappkRujukan = $temp->provPerujuk->nama;
+                $ppkRujukan = $temp->provPerujuk->kode;
+                $dinsos = $temp->peserta->informasi->dinsos;
+                $prolanisPRB = $temp->peserta->informasi->prolanisPRB;
+                $noSKTM = $temp->peserta->informasi->noSKTM;
+                $kelasRawat = $temp->peserta->hakKelas->keterangan;
+                $jenis_kunjungan = $suratKontrol ? 'Kontrol' : 'Rujukan FKTP';
+            }
+        }
+
+        $data = (object) [
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'poliBpjs' => $dataInfo->poli,
+            'kodesistembayar' => $request->kodesistembayar,
+            'norujukan' => $dataInfo->noRujukan,
+            'tglrujukan' => $tglrujukan, // cek no rujukan dahulu
+            'namadiagnosa' => $namadiagnosa, // cek no rujukan dahulu
+            'namappkRujukan' => $namappkRujukan, // cek no rujukan dahulu
+            'ppkRujukan' => $ppkRujukan,
+            'dinsos' => $dinsos,
+            'prolanisPRB' => $prolanisPRB,
+            'noSKTM' => $noSKTM,
+            'jenis_kunjungan' => $jenis_kunjungan,
+            'nosep' => $sep,
+            'catatan' => $dataInfo->catatan,
+            'jenispeserta' => $dataInfo->peserta->jnsPeserta,
+            'tglkunjungan' => $request->tgl_kunjungan ?? $tgltobpjshttpres,
+            'noka' => $request->noka,
+            'nama' => $request->nama,
+            'tgllahir' => $request->tgllahir,
+            'kelamin' => $request->kelamin ? substr($request->kelamin, 0, 1) : '',
+            'jnspelayanan' => '2',
+            'kelas' => $kelasRawat,
+            'lakalantas' => $dataInfo->lokasiKejadian->lokasi ?? '',
+            'noteleponhp' => $pasien->rs55, // ambil data pasien dulu
+            'tgltobpjshttpres' => $tgltobpjshttpres,
+            'noDpjp' => $dataInfo->dpjp->kdDPJP ?? '',
+            // 'noDpjp' => '',
+            'tglKecelakaan' => $dataInfo->lokasiKejadian->tglKejadian ?? '',
+            'keterangan' => $dataInfo->lokasiKejadian->ketKejadian ?? '',
+            'suplesi' => '',
+            'nosepsuplesi' => '',
+            'kodepropinsikecelakaan' => $dataInfo->lokasiKejadian->kdProp ?? '',
+            'propinsikecelakaan' => '',
+            'kodekabupatenkecelakaan' => $dataInfo->lokasiKejadian->kdKab ?? '',
+            'kabupatenkecelakaan' => '',
+            'kodekecamatankecelakaan' => $dataInfo->lokasiKejadian->kdKec ?? '',
+            'kecamatankecelakaan' => '',
+            'dpjp' => $dataInfo->dpjp->kdDPJP ?? '',
+            'namadokter' => $dataInfo->dpjp->nmDPJP ?? '',
+            'tujuankunjungan' => $dataInfo->tujuanKunj->kode ?? '',
+            'flagprocedure' => $dataInfo->flagProcedure->kode ?? '',
+            'kdPenunjang' => $dataInfo->kdPenunjang->kode ?? '',
+            'assesmentPel' => $dataInfo->assestmenPel->kode ?? '',
+            'kdUnit' => $unit
+        ];
+
+        // return $data->noreg;
+        $toIns = $this->insertToSepRajal($data);
+        return ['ins' => $toIns, 'data' => $data];
+    }
+    public function insertToSepRajal($data)
+    {
+        $insertsep = Seprajal::firstOrCreate(
+            ['rs1' => $data->noreg],
+            [
+                'rs2' => $data->norm,
+                'rs3' => $data->poliBpjs,
+                'rs4' => $data->kodesistembayar,
+                'rs5' => $data->norujukan,
+                'rs6' => $data->tglrujukan,
+                'rs7' => $data->namadiagnosa,
+                'rs8' => $data->nosep,
+                'rs9' => $data->catatan,
+                'rs10' => $data->namappkRujukan,
+                'rs11' => $data->jenispeserta,
+                'rs12' => $data->tglkunjungan ?? date('Y-m-d H:i:s'),
+                'rs13' => $data->noka,
+                'rs14' => $data->nama,
+                'rs15' => $data->tgllahir,
+                'rs16' => $data->kelamin,
+                'rs17' => $data->jnspelayanan === '2' ? 'Rawat Jalan' : 'Rawat Inap',
+                'rs18' => $data->kelas,
+                'laka' => $data->lakalantas,
+                'lokasilaka' => $data->lakalantas,
+                'penjaminlaka' => '',
+                'users' => auth()->user()->pegawai_id,
+                'notelepon' => $data->noteleponhp,
+                'tgl_entery' => $data->tgltobpjshttpres,
+                'noDpjp' => $data->noDpjp ?? '',
+                'tgl_kejadian_laka' => $data->tglKecelakaan,
+                'keterangan' => $data->keterangan,
+                'suplesi' => $data->suplesi,
+                'nosuplesi' => $data->nosepsuplesi,
+                'kdpropinsi' => $data->kodepropinsikecelakaan,
+                'propinsi' => $data->propinsikecelakaan,
+                'kdkabupaten' => $data->kodekabupatenkecelakaan,
+                'kabupaten' => $data->kabupatenkecelakaan,
+                'kdkecamatan' => $data->kodekecamatankecelakaan,
+                'kecamatan' => $data->kecamatankecelakaan,
+                'kodedokterdpjp' => $data->dpjp,
+                'dokterdpjp' => $data->namadokter,
+                'kodeasalperujuk' => $data->ppkRujukan,
+                'namaasalperujuk' => $data->namappkRujukan,
+                'Dinsos' => $data->dinsos,
+                'prolanisPRB' => $data->prolanisPRB,
+                'noSKTM' => $data->noSKTM,
+                'jeniskunjungan' => $data->jenis_kunjungan,
+                'tujuanKunj' => $data->tujuankunjungan,
+                'flagProcedure' => $data->flagprocedure,
+                'kdPenunjang' => $data->kdPenunjang,
+                'assesmentPel' => $data->assesmentPel,
+                'kdUnit' => $data->kdUnit
+            ]
+        );
+        return $insertsep;
     }
 }

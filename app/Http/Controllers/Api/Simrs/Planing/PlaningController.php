@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Planing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Mplaning;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
@@ -60,9 +61,17 @@ class PlaningController extends Controller
 
                 $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
+
+                return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
             } else {
                 return $createrujukan;
             }
+        } elseif ($request->planing == 'Rawat Inap') {
+            $simpanop = self::jadwaloperasi($request);
+            if ($simpanop == 500) {
+                return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+            }
+            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
         } else {
             $simpanakhir = self::simpanakhir($request);
             if ($simpanakhir == 500) {
@@ -131,6 +140,7 @@ class PlaningController extends Controller
         return 200;
     }
 
+<<<<<<< HEAD
     public function hapusplaningpasien(Request $request)
     {
         $cari = WaktupulangPoli::find($request->id);
@@ -145,5 +155,36 @@ class PlaningController extends Controller
         }
 
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+=======
+    public static function jadwaloperasi($request)
+    {
+        $simpan = JadwaloperasiController::firstOrCreate(
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'nopermintaan' => $request->nopermintaan,
+                'kodebooking' => $request->norekodebookingg,
+                'tanggaloperasi' => $request->tanggaloperasi,
+                'jenistindakan' => $request->jenistindakan,
+                'icd9' => $request->icd9,
+                'kodepoli' => $request->kodepoli,
+                'namapoli' => $request->namapoli,
+                'lastupdate' => $request->lastupdate,
+                'userid' => auth()->user()->pegawai_id,
+                'kdruang' => $request->kdruang,
+                'tglupdate' => $request->tglupdate,
+                'kddokter' => $request->kddokter,
+                'dokter' => $request->dokter,
+                'kdruangtujuan' => $request->kdruangtujuan,
+                'kontakpasien' => $request->kontakpasien,
+                'jenisoperasi' => $request->kddokter,
+                'terlaksana' => 0
+            ]
+        );
+        if (!$simpan) {
+            return 500;
+        }
+        return 200;
+>>>>>>> dcdaabb5e26b7ea15236dbc151f82c28a7e7b654
     }
 }

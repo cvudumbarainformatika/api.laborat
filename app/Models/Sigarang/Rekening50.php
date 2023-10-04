@@ -24,4 +24,8 @@ class Rekening50 extends Model
     {
         return $this->hasMany(DetailPenerimaan::class, 'kode_50', 'kode');
     }
+    public function barangrs()
+    {
+        return $this->hasMany(BarangRS::class, 'kode_50', 'kode');
+    }
 }

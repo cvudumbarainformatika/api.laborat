@@ -21,9 +21,9 @@ class Seprajal extends Model
 
     public function getNorefAttribute()
     {
-        if ($this->noDpjp === '') {
-            $noref = $this->rs5;
-        }
-        return $noref;
+        // if ($this->noDpjp === '') {
+        //     $noref = $this->rs5;
+        // }
+        return $this->noDpjp ?? $this->rs5;
     }
 }

@@ -156,6 +156,11 @@ class BarangRS extends Model
         );
     }
 
+    public function rincianpenerimaan()
+    {
+        return $this->hasMany(DetailPenerimaan::class, 'kode_rs', 'kode');
+    }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {

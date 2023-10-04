@@ -18,19 +18,35 @@ class LaporanPenerimaanController extends Controller
         $rek50 = Rekening50::select(
             'rekening50s.kode as kode',
             'rekening50s.uraian as uraian50',
-        )->with(['rincianpenerimaan' => function ($rincianpenerimaan) use ($tgl, $tglx) {
-            $rincianpenerimaan->select(
-                'kode_50',
-                DB::raw('sum(detail_penerimaans.qty*detail_penerimaans.harga) as subtotal'),
-                'detail_penerimaans.kode_108 as kode_108',
-                'detail_penerimaans.uraian_108 as uraian_108',
-                'detail_penerimaans.kode_rs as kode_rs',
-                'detail_penerimaans.nama_barang as nama_barang'
-            )
-                ->join('penerimaans', 'penerimaans.id', '=', 'detail_penerimaans.penerimaan_id')
-                ->whereBetween('penerimaans.tanggal', [$tgl, $tglx])
-                ->groupBy('detail_penerimaans.kode_rs');
-        }])
+        )->with([
+            'barangrs' => function ($rincianpenerimaan) use ($tgl, $tglx) {
+                $rincianpenerimaan->select(
+                    'barang_r_s.kode_50',
+                    // 'detail_penerimaans.kode_108 as kode_108',
+                    // 'detail_penerimaans.uraian_108 as uraian_108',
+                    // 'detail_penerimaans.nama_barang as nama_barang'
+                    // 'detail_penerimaans.penerimaan_id',
+                    'penerimaans.tanggal',
+                    'detail_penerimaans.kode_rs',
+                    'barang_r_s.kode_108 as kode_108',
+                    'barang_r_s.uraian_108 as uraian_108',
+                    'barang_r_s.kode',
+                    'barang_r_s.nama as nama_barang',
+                    DB::raw('sum(detail_penerimaans.qty*detail_penerimaans.harga) as subtotal'),
+                )
+                    ->join('detail_penerimaans', function ($detail) {
+                        $detail->on('barang_r_s.kode', '=', 'detail_penerimaans.kode_rs')
+                            ->join('penerimaans', 'penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
+                        // ->join('penerimaans', function ($trm) {
+                        //     $trm->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id')
+                        //         ->whereBetween('penerimaans.tanggal', [request('tgl'), request('tglx')]);
+                        //     });
+                        // ->whereBetween('penerimaans.tanggal', [request('tgl'), request('tglx')]);
+                    })
+                    ->whereBetween('penerimaans.tanggal', [request('tgl') . ' 00:00:00', request('tglx') . ' 23:59:59'])
+                    ->groupBy('detail_penerimaans.kode_rs');
+            }
+        ])
 
             ->Where('rekening50s.jenis', '02')->where('rekening50s.objek', '01')
             ->get();

@@ -1920,11 +1920,11 @@ class AutogenController extends Controller
 
         // return new JsonResponse($penerimaan);
 
-        $paginate = request('per_page') ? request('per_page') : 10;
-        $ruang = 'Gd-02010102';
-        $distribute = DistribusiLangsung::where('reff', request('reff'))
-            ->where('status', 1)
-            ->first();
+        // $paginate = request('per_page') ? request('per_page') : 10;
+        // $ruang = 'Gd-02010102';
+        // $distribute = DistribusiLangsung::where('reff', request('reff'))
+        //     ->where('status', 1)
+        //     ->first();
         // if (!$distribute) {
         // return new JsonResponse(['data' => $distribute]);
         // }
@@ -1976,31 +1976,33 @@ class AutogenController extends Controller
         //             });
         //     }
         // ])
-        $data = RecentStokUpdate::select(
-            'barang_r_s.nama',
-            'barang_r_s.kode',
-            'barang_r_s.kode_satuan',
-            'recent_stok_updates.id',
-            'recent_stok_updates.kode_rs',
-            'recent_stok_updates.kode_ruang',
-            'recent_stok_updates.sisa_stok',
-            'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
-            'penerimaans.no_penerimaan',
-            'penerimaans.tanggal',
-            // 'satuans.nama as satuan',
-        )->leftjoin('penerimaans', 'recent_stok_updates.no_penerimaan', '=', 'penerimaans.no_penerimaan')
-            ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
-            ->paginate($paginate);
+        // $data = RecentStokUpdate::select(
+        //     'barang_r_s.nama',
+        //     'barang_r_s.kode',
+        //     'barang_r_s.kode_satuan',
+        //     'recent_stok_updates.id',
+        //     'recent_stok_updates.kode_rs',
+        //     'recent_stok_updates.kode_ruang',
+        //     'recent_stok_updates.sisa_stok',
+        //     'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
+        //     'penerimaans.no_penerimaan',
+        //     'penerimaans.tanggal',
+        //     // 'satuans.nama as satuan',
+        // )->leftjoin('penerimaans', 'recent_stok_updates.no_penerimaan', '=', 'penerimaans.no_penerimaan')
+        //     ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
+        //     ->paginate($paginate);
 
 
-        return new JsonResponse(['data' => $data]);
-        $anu = collect($data);
-        $balik['data'] = $anu->only('data');
-        $balik['meta'] = $anu->except('data');
-        $balik['penerimaan'] = $penerimaan;
-        $balik['transaksi'] = $distribute;
+        // return new JsonResponse(['data' => $data]);
+        // $anu = collect($data);
+        // $balik['data'] = $anu->only('data');
+        // $balik['meta'] = $anu->except('data');
+        // $balik['penerimaan'] = $penerimaan;
+        // $balik['transaksi'] = $distribute;
 
-        return new JsonResponse($balik);
+        // return new JsonResponse($balik);
+        $anu = substr("Perempuan", 0, 1);
+        return new JsonResponse($anu);
     }
 
     public function wawanpost(Request $request)
