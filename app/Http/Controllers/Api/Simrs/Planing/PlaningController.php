@@ -140,22 +140,6 @@ class PlaningController extends Controller
         return 200;
     }
 
-<<<<<<< HEAD
-    public function hapusplaningpasien(Request $request)
-    {
-        $cari = WaktupulangPoli::find($request->id);
-        if (!$cari) {
-            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
-        }
-
-        Listkonsulantarpoli::where('noreg_lama', $cari->rs1)->delete();
-        $hapus = $cari->delete();
-        if (!$hapus) {
-            return new JsonResponse(['message' => 'gagal dihapus'], 500);
-        }
-
-        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
-=======
     public static function jadwaloperasi($request)
     {
         $simpan = JadwaloperasiController::firstOrCreate(
@@ -185,6 +169,21 @@ class PlaningController extends Controller
             return 500;
         }
         return 200;
->>>>>>> dcdaabb5e26b7ea15236dbc151f82c28a7e7b654
+    }
+
+    public function hapusplaningpasien(Request $request)
+    {
+        $cari = WaktupulangPoli::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        }
+
+        Listkonsulantarpoli::where('noreg_lama', $cari->rs1)->delete();
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 }
