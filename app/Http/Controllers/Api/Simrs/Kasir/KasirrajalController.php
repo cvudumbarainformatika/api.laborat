@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Kasir;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
@@ -98,7 +99,35 @@ class KasirrajalController extends Controller
         $layanan = ['RM#', 'K1#', 'K2#'];
         $noreg = request('noreg');
         if (request('golongan') == 'karcis') {
-            $karcis = Rstigalimax::where('rs', $noreg)->whereIn('rs3', $layanan)->get();
+            $karcis = Pembayaran::where('rs1', $noreg)->whereIn('rs3', $layanan)->get();
+            $tagihanpergolongan = $karcis->map(function ($karcisx, $kunci) {
+                return [
+                    'namatindakan' => $karcisx->rs6,
+                    'subtotal' => $karcisx->rs7 + $karcisx->rs11,
+                ];
+            });
+            $karcis = $karcis->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $tagihanpergolongan,
+                    'Subtotal' => $karcis
+                ]
+            );
+        } elseif (request('golongan') == 'konsulantarpoli') {
+            $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
+            $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
+                return [
+                    'namatindakan' => $konsul->rs6,
+                    'subtotal' => $konsul->rs7 + $konsul->rs11,
+                ];
+            });
+            $konsul = $konsul->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $konsulantarpoli,
+                    'Subtotal' => $konsul
+                ]
+            );
         }
     }
 }
