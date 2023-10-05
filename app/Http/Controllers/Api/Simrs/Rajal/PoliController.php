@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Rajal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -134,5 +135,17 @@ class PoliController extends Controller
         $updatekunjungan->rs19 = '1';
         $updatekunjungan->rs24 = '1';
         $updatekunjungan->save();
+    }
+
+    public function terimapasien(Request $request)
+    {
+        $ceksep = Seprajal::where('rs1', $request->noreg)->count();
+        if ($ceksep > 0) {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        }
+        return new JsonResponse(['message' => 'Belum Ada SEP untuk Pasien Ini Di Database SIMRS, Harap Hubungi Bagian Pendaftaran Untuk Mengupdate SEP...!!!'], 500);
     }
 }

@@ -12,4 +12,5 @@ Route::group([
     Route::get('/kunjunganpoli', [RajalPoliController::class, 'kunjunganpoli']);
     Route::post('/save-pemeriksaanfisik', [RajalPoliController::class, 'save_pemeriksaanfisik']);
     Route::post('/flagfinish', [RajalPoliController::class, 'flagfinish']);
+    Route::post('/terimapasien', [RajalPoliController::class, 'terimapasien']);
 });
