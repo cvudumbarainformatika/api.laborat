@@ -130,4 +130,25 @@ class BridbpjsplanController extends Controller
         $poli = BridgingbpjsHelper::get_url('vclaim', '/referensi/poli/' . $namapoli);
         return $poli;
     }
+
+    public static function createspri($request)
+    {
+        $data = [
+            "request" =>
+            [
+                "noKartu" => $request->noka,
+                "kodeDokter" => $request->kodedokterdpjp,
+                "poliKontrol" => $request->kdunit,
+                "tglRencanaKontrol" => $request->tglrencanakontrol,
+                "user" => auth()->user()->pegawai_id
+            ]
+        ];
+
+        $createspri = BridgingbpjsHelper::post_url(
+            'vclaim',
+            'RencanaKontrol/InsertSPRI',
+            $data
+        );
+        return $createspri;
+    }
 }

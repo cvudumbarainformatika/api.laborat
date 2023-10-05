@@ -36,6 +36,7 @@ class AnamnesisController extends Controller
                     'riwayatalergi' => $request->riwayatalergi ?? '',
                     'keteranganalergi' => $request->keteranganalergi ?? '',
                     'riwayatpengobatan' => $request->riwayatpengobatan ?? '',
+                    'riwayatpenyakitsekarang' => $request->riwayatpenyakitsekarang ?? '',
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
