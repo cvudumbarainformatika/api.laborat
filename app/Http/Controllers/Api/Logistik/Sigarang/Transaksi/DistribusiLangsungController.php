@@ -24,7 +24,7 @@ class DistribusiLangsungController extends Controller
         $paginate = request('per_page') ? request('per_page') : 10;
         $ruang = 'Gd-02010102';
         $distribute = DistribusiLangsung::where('reff', request('reff'))
-            ->where('status', 1)
+            ->where('status', 2)
             ->first();
         // if (!$distribute) {
         //     return new JsonResponse(['data' => []]);
@@ -37,17 +37,18 @@ class DistribusiLangsungController extends Controller
             'recent_stok_updates.kode_rs',
             'recent_stok_updates.kode_ruang',
             'recent_stok_updates.sisa_stok',
-            'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
-            'penerimaans.no_penerimaan',
-            'penerimaans.tanggal',
+            // 'recent_stok_updates.no_penerimaan as no_penerimaan_stok',
+            // 'penerimaans.no_penerimaan',
+            // 'penerimaans.tanggal',
             'satuans.nama as satuan',
+            DB::raw('sum(recent_stok_updates.sisa_stok) as total_stok')
         )
-            ->join(
-                'penerimaans',
-                'recent_stok_updates.no_penerimaan',
-                '=',
-                'penerimaans.no_penerimaan'
-            )
+            // ->join(
+            //     'penerimaans',
+            //     'recent_stok_updates.no_penerimaan',
+            //     '=',
+            //     'penerimaans.no_penerimaan'
+            // )
             ->where('recent_stok_updates.kode_ruang', $ruang)
             ->where('recent_stok_updates.sisa_stok', '>', 0)
             ->join('barang_r_s', 'recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
@@ -60,7 +61,7 @@ class DistribusiLangsungController extends Controller
                     ->where('barang_r_s.tipe', request('tipe'));
             })
             ->where('barang_r_s.tipe', request('tipe'))
-            ->orderBy('penerimaans.tanggal', 'ASC')
+            // ->orderBy('penerimaans.tanggal', 'ASC')
             ->with([
                 'detailDistribusiLangsung' => function ($detail) {
                     $detail->select(
@@ -74,6 +75,7 @@ class DistribusiLangsungController extends Controller
                         });
                 }
             ])
+            ->groupBy('recent_stok_updates.kode_rs')
             ->paginate($paginate);
 
         $anu = collect($data);
@@ -187,8 +189,147 @@ class DistribusiLangsungController extends Controller
     }
 
 
+    public function storeFifo(Request $request)
+    {
+        $valid = Validator::make($request->all(), [
+            'reff' => 'required',
+            'kode_rs' => 'required',
+            'jumlah' => 'required',
+            'status' => 'required',
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+        // cek no distribusi start
+        // cek dulu reff nya ada atau tidak
+        $adaReff = DistribusiLangsung::whereReff($request->reff)->first();
+        // jika tidak ada berarti transaksi dengan header baru
+        if (!$adaReff) {
+            $noDist = DistribusiLangsung::whereNoDistribusi($request->no_distribusi)->first();
+            if ($noDist) {
+                return new JsonResponse(['message' => 'Nomor distribusi sudah ada'], 410);
+            }
+        }
+        // cek no distribusi end
+        // cek di stok
+        $recent = RecentStokUpdate::where('kode_rs', $request->kode_rs)
+            ->where('kode_ruang', 'Gd-02010102')
+            ->where('sisa_stok', '>', 0)
+            ->get();
+        $sisaStok = collect($recent)->sum('sisa_stok');
+        if ($request->jumlah > $sisaStok) {
+            return new JsonResponse(['message' => 'Sisa Stok tidak mencukupi, sisa stok hanya ' . $sisaStok], 410);
+        }
+        // return new JsonResponse([
+        //     'data' => $request->all(),
+        //     'recent' => $recent,
+        //     'sisa stok' => $sisaStok,
+        //     'message' => 'balikin'
+        // ]);
+        // buat transaksi
+        $pesan = '';
+        try {
+            DB::beginTransaction();
+            // buat transaksi distribusi
+            $distribusi = DistribusiLangsung::updateOrCreate(
+                [
+                    'reff' => $request->reff
+                ],
+                $request->all()
+            );
+            $jumlah = $request->jumlah;
+            $index = 0;
+            $masuk = $jumlah;
+            do {
+                $ada = $recent[$index]->sisa_stok;
+                if ($ada < $masuk) {
+                    $sisa = $masuk - $ada;
+
+                    $distribusi->details()->create(
+                        [
+                            'kode_rs' => $request->kode_rs,
+                            'no_penerimaan' => $recent[$index]->no_penerimaan,
+                            'kode_satuan' => $request->kode_satuan,
+                            'besar_kecil' => $request->besar_kecil ?? '',
+                            'isi' => $request->isi ?? '',
+                            'jumlah' => $ada
+                        ]
+                    );
+
+                    RecentStokUpdate::create(
+                        [
+                            'kode_rs' => $request->kode_rs,
+                            'kode_ruang' => $request->ruang_tujuan,
+                            'no_penerimaan' => $recent[$index]->no_penerimaan,
+                            'sisa_stok' => $ada,
+                            'harga' => $recent[$index]->harga,
+                        ]
+                    );
+                    $recent[$index]->update([
+                        'sisa_stok' => 0
+                    ]);
+                    $index = $index + 1;
+                    $masuk = $sisa;
+                    $loop = true;
+                } else {
+                    $sisa = $ada - $masuk;
+
+                    $distribusi->details()->create(
+                        [
+                            'kode_rs' => $request->kode_rs,
+                            'no_penerimaan' => $recent[$index]->no_penerimaan,
+                            'kode_satuan' => $request->kode_satuan,
+                            'besar_kecil' => $request->besar_kecil ?? '',
+                            'isi' => $request->isi ?? '',
+                            'jumlah' => $masuk
+                        ]
+                    );
+                    RecentStokUpdate::create(
+                        [
+                            'kode_rs' => $request->kode_rs,
+                            'kode_ruang' => $request->ruang_tujuan,
+                            'no_penerimaan' => $recent[$index]->no_penerimaan,
+                            'sisa_stok' => $masuk,
+                            'harga' => $recent[$index]->harga,
+
+                        ]
+                    );
+                    $recent[$index]->update([
+                        'sisa_stok' => $sisa
+                    ]);
+                    $loop = false;
+                }
+            } while ($loop);
+
+            DB::commit();
+
+            $last = RecentStokUpdate::where('kode_rs', $request->kode_rs)
+                ->where('kode_ruang', 'Gd-02010102')
+                ->where('sisa_stok', '>', 0)
+                ->get();
+            $lastStok = collect($last)->sum('sisa_stok');
+            return new JsonResponse([
+                'message' => 'Sudah di dsitribusikan, stok sudah berkurang',
+                'distribusi' => $distribusi,
+                'stok_update' => $lastStok,
+                // 'gudang' => $gudang,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'ada kesalahan',
+                'error' => $e,
+                'distribusi' => $distribusi['id'],
+                'pesan' => $pesan,
+            ], 500);
+        }
+        // kurangi stok by fifo
+
+    }
     public function store(Request $request)
     {
+        // sekalian langsung di distribusikan dan langsng mengurangi stok by fifo
+
         // ini belum termasuk fifo
         $pesan = '';
         try {
@@ -312,19 +453,27 @@ class DistribusiLangsungController extends Controller
 
     public function habiskanBahanBasah(Request $request)
     {
+        $valid = Validator::make($request->all(), [
+            'reff' => 'required',
+            'status' => 'required',
+        ]);
+        if ($valid->fails()) {
+            return new JsonResponse($valid->errors(), 422);
+        }
+        // cek no distribusi start
+        // cek dulu reff nya ada atau tidak
+        $adaReff = DistribusiLangsung::whereReff($request->reff)->first();
+        // jika tidak ada berarti transaksi dengan header baru
+        if (!$adaReff) {
+            $noDist = DistribusiLangsung::whereNoDistribusi($request->no_distribusi)->first();
+            if ($noDist) {
+                return new JsonResponse(['message' => 'Nomor distribusi sudah ada'], 410);
+            }
+        }
+        // cek no distribusi end
         try {
             DB::beginTransaction();
 
-            $valid = Validator::make($request->all(), ['reff' => 'required']);
-            if ($valid->fails()) {
-                return new JsonResponse($valid->errors(), 422);
-            }
-            $distribusi = DistribusiLangsung::updateOrCreate(
-                [
-                    'reff' => $request->reff
-                ],
-                $request->all()
-            );
             $ruang = 'Gd-02010102';
             $data = BarangRS::
                 // join where has recent stok > 0
@@ -356,26 +505,45 @@ class DistribusiLangsungController extends Controller
                 ->whereIn('kode_rs', $to)
                 ->get();
 
+
+            $distribusi = DistribusiLangsung::updateOrCreate(
+                [
+                    'reff' => $request->reff
+                ],
+                $request->all()
+            );
             foreach ($stok as $dipakai) {
-                $distribusi->details()->updateOrCreate(
+
+                $distribusi->details()->create(
                     [
-                        'kode_rs' => $dipakai->kode_rs
-                    ],
-                    [
-                        'no_permintaan' => $dipakai->no_permintaan,
+                        'kode_rs' => $dipakai->kode_rs,
+                        'no_penerimaan' => $dipakai->no_penerimaan,
                         'kode_satuan' => $dipakai->kode_satuan,
                         'jumlah' => $dipakai->sisa_stok,
+                    ]
+                );
+                RecentStokUpdate::create(
+                    [
+                        'kode_rs' => $dipakai->kode_rs,
+                        'kode_ruang' => $request->ruang_tujuan,
+                        'no_penerimaan' => $dipakai->no_penerimaan,
+                        'sisa_stok' => $dipakai->sisa_stok,
+                        'kode_satuan' => $dipakai->kode_satuan,
+                        'satuan' => $dipakai->satuan,
+                        'harga' => $dipakai->harga,
+
                     ]
                 );
                 $dipakai->update([
                     'sisa_stok' => 0
                 ]);
             }
-            $distribusi->update([
-                'status' => 2
-            ]);
+            // $distribusi->update([
+            //     'status' => 2
+            // ]);
             DB::commit();
             return new JsonResponse([
+                'req' => $request->all(),
                 'data' => $data,
                 'stok' => $stok,
                 'to' => $to,
@@ -385,7 +553,7 @@ class DistribusiLangsungController extends Controller
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e,
-                'distribusi' => $distribusi['id'],
+                // 'distribusi' => $distribusi['id'],
             ], 500);
         }
     }

@@ -15,6 +15,7 @@ Route::group([
     Route::get('/get-barang-with-transaksi', [DistribusiLangsungController::class, 'getDataBarangWithTransaksi']);
     Route::get('/get-transaksi-with-barang', [DistribusiLangsungController::class, 'getDataTransaksiWithBarang']);
     Route::post('/basah', [DistribusiLangsungController::class, 'habiskanBahanBasah']);
-    Route::post('/store', [DistribusiLangsungController::class, 'store']);
+    // Route::post('/store', [DistribusiLangsungController::class, 'store']);
+    Route::post('/store', [DistribusiLangsungController::class, 'storeFifo']);
     Route::post('/selesai', [DistribusiLangsungController::class, 'selesai']);
 });
