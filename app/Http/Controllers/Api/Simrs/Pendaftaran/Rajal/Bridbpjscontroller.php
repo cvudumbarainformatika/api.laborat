@@ -405,7 +405,6 @@ class Bridbpjscontroller extends Controller
         $kontrol = '';
         $rujukanPcare = '';
         $tglrujukan = '';
-        $namadiagnosa = '';
         $namappkRujukan = '';
         $ppkRujukan = '';
         $namappkRujukan = '';
@@ -421,7 +420,7 @@ class Bridbpjscontroller extends Controller
             if ($kontrol['metadata']['code'] === '200') {
                 $temp = $kontrol['result']->sep;
                 $tglrujukan = $temp->provPerujuk->tglRujukan;
-                $namadiagnosa = $infoHis->diagnosa ?? $temp->diagnosa;
+                // $namadiagnosa = $infoHis->diagnosa ?? $temp->diagnosa;
                 $namappkRujukan = $temp->provPerujuk->nmProviderPerujuk;
                 $ppkRujukan = $temp->provPerujuk->kdProviderPerujuk;
                 $jenis_kunjungan = 'Kontrol';
@@ -432,7 +431,7 @@ class Bridbpjscontroller extends Controller
             if ($rujukanPcare['metadata']['code'] === '200') {
                 $temp = $rujukanPcare['result']->rujukan;
                 $tglrujukan = $temp->tglKunjungan;
-                $namadiagnosa = $infoHis->diagnosa ?? ($temp->diagnosa ?? $temp->diagnosa->kode . ' - ' . $temp->diagnosa->nama);
+                // $namadiagnosa = $infoHis->diagnosa ?? ($temp->diagnosa ?? $temp->diagnosa->kode . ' - ' . $temp->diagnosa->nama);
                 $namappkRujukan = $temp->provPerujuk->nama;
                 $ppkRujukan = $temp->provPerujuk->kode;
                 $dinsos = $temp->peserta->informasi->dinsos;
@@ -450,7 +449,7 @@ class Bridbpjscontroller extends Controller
             'kodesistembayar' => $request->kodesistembayar,
             'norujukan' => $dataInfo->noRujukan,
             'tglrujukan' => $tglrujukan, // cek no rujukan dahulu
-            'namadiagnosa' => $namadiagnosa, // cek no rujukan dahulu
+            'namadiagnosa' => $infoHis->diagnosa,
             'namappkRujukan' => $namappkRujukan, // cek no rujukan dahulu
             'ppkRujukan' => $ppkRujukan,
             'dinsos' => $dinsos,
