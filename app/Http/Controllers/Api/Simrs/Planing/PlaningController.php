@@ -62,15 +62,15 @@ class PlaningController extends Controller
                 if ($simpanakhir == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!',], 500);
                 }
-                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
-                    ->update(
-                        [
-                            'rs19' => 1,
-                        ]
-                    );
-                if (!$updatekunjungan) {
-                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
-                }
+                // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
+                //     ->update(
+                //         [
+                //             'rs19' => 1,
+                //         ]
+                //     );
+                // if (!$updatekunjungan) {
+                //     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                // }
 
                 $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
