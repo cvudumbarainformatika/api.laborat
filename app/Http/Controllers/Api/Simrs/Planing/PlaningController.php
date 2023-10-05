@@ -41,7 +41,8 @@ class PlaningController extends Controller
             if ($simpanakhir == 500) {
                 return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
             }
-            return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
+            $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+            return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!', 'result' => $data->load('masterpoli')], 200);
         } elseif ($request->planing == 'Rumah Sakit Lain') {
             if ($sistembayar == '1') {
                 $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
@@ -59,8 +60,21 @@ class PlaningController extends Controller
             } else {
                 $simpanakhir = self::simpanakhir($request);
                 if ($simpanakhir == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!',], 500);
+                }
+                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
+                    ->update(
+                        [
+                            'rs19' => 1,
+                        ]
+                    );
+                if (!$updatekunjungan) {
                     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                 }
+
+                $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
+
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
             }
         } elseif ($request->planing == 'Rawat Inap') {
@@ -100,7 +114,7 @@ class PlaningController extends Controller
                 'tgl_rencana_konsul' => $request->tgl_rencana_konsul,
                 'kdpoli_asal' => $request->kdpoli_asal,
                 'kdpoli_tujuan' => $request->kdpoli_tujuan,
-                'kddokter_asal' => $request->kddokter_asal
+                'kddokter_asal' => $request->kddokter_asal ?? ''
             ]
         );
 
@@ -126,7 +140,7 @@ class PlaningController extends Controller
 
     public static function simpanakhir($request)
     {
-        $simpanakhir = WaktupulangPoli::firstOrCreate(
+        $simpanakhir = WaktupulangPoli::create(
             [
                 'rs1' => $request->noreg,
                 'rs2' => $request->norm,
@@ -172,5 +186,21 @@ class PlaningController extends Controller
             return 500;
         }
         return 200;
+    }
+
+    public function hapusplaningpasien(Request $request)
+    {
+        $cari = WaktupulangPoli::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        }
+
+        Listkonsulantarpoli::where('noreg_lama', $cari->rs1)->delete();
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 }
