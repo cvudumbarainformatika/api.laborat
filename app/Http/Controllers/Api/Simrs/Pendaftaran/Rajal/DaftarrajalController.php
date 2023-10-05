@@ -121,7 +121,9 @@ class DaftarrajalController extends Controller
                 'rs46' => $nokabpjs,
                 'rs40' => $request->barulama,
                 'gelardepan' => $gelardepan,
-                'gelarbelakang' => $gelarbelakang
+                'gelarbelakang' => $gelarbelakang,
+                'bacatulis' => $request->bacatulis,
+                'kdhambatan' => $request->kdhambatan
             ]
         );
         return $masterpasien;
