@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Planing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Mplaning;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -29,6 +30,8 @@ class PlaningController extends Controller
 
     public function simpanplaningpasien(Request $request)
     {
+        $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
+
         if ($request->planing == 'Konsultasi') {
             $simpanplaningpasien = self::simpankonsulantarpoli($request);
             if ($simpanplaningpasien == 500) {
@@ -40,25 +43,38 @@ class PlaningController extends Controller
             }
             return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
         } elseif ($request->planing == 'Rumah Sakit Lain') {
-            $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
-            if ($createrujukan == 500) {
-                return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
-            } elseif ($createrujukan == 200) {
+            if ($sistembayar == '1') {
+                $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
+                if ($createrujukan == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                } elseif ($createrujukan == 200) {
+                    $simpanakhir = self::simpanakhir($request);
+                    if ($simpanakhir == 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                    }
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
+                } else {
+                    return $createrujukan;
+                }
+            } else {
                 $simpanakhir = self::simpanakhir($request);
                 if ($simpanakhir == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                 }
-
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
-            } else {
-                return $createrujukan;
             }
         } elseif ($request->planing == 'Rawat Inap') {
-            $simpanop = self::jadwaloperasi($request);
-            if ($simpanop == 500) {
-                return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+            if ($request->status == 'Operasi' && $sistembayar == '1') {
+                $createspri = BridbpjsplanController::createspri($request);
+                $xxx = $createspri['metadata']['code'];
+                if ($xxx === 200 || $xxx === '200') {
+                }
+                $simpanop = self::jadwaloperasi($request);
+                if ($simpanop == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                }
+                return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
             }
-            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
         } else {
             $simpanakhir = self::simpanakhir($request);
             if ($simpanakhir == 500) {
