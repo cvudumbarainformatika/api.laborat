@@ -488,7 +488,7 @@ class Bridbpjscontroller extends Controller
             'flagprocedure' => $dataInfo->flagProcedure->kode ?? '',
             'kdPenunjang' => $dataInfo->kdPenunjang->kode ?? '',
             'assesmentPel' => $dataInfo->assestmenPel->kode ?? '',
-            'kd$infoHis' => $infoHis->poliTujSep
+            'kdUnit' => $infoHis->poliTujSep
         ];
 
         // return $data->noreg;
