@@ -2001,7 +2001,9 @@ class AutogenController extends Controller
         // $balik['transaksi'] = $distribute;
 
         // return new JsonResponse($balik);
-        $anu = substr("Perempuan", 0, 1);
+        // $anu = substr("2023-10-05 10:23:59", 0, 11);
+        $date = date_create('2023-10-05 10:23:59');
+        $anu = date_format($date, 'Y-m-d');
         return new JsonResponse($anu);
     }
 
