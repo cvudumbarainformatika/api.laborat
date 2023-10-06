@@ -17,6 +17,6 @@ class Dokter extends Model
 
     public function dokter()
     {
-        return $this->hasMany(KunjunganPoli::class,'rs1','rs9');
+        return $this->hasMany(KunjunganPoli::class, 'rs1', 'rs9');
     }
 }
