@@ -2002,8 +2002,13 @@ class AutogenController extends Controller
 
         // return new JsonResponse($balik);
         // $anu = substr("2023-10-05 10:23:59", 0, 11);
+        // $date = date_create('2023-10-05 10:23:59');
         $date = date_create('2023-10-05 10:23:59');
         $anu = date_format($date, 'Y-m-d');
+        $comp = $anu !== date('Y-m-d');
+        return new JsonResponse([
+            'date comp' => $comp
+        ]);
         $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0000113088497' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
         $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
 

@@ -346,6 +346,10 @@ class Bridbpjscontroller extends Controller
 
         // jika tidak ada history
         if (!$sep) {
+            // cek tanggal
+            if (($tglCari !== date('Y-m-d'))) {
+                return new JsonResponse(['message' => 'History SEP tidak ditemukan, tidak Bisa mengajukan SEP untuk tgl sebelum hari ini'], 410);
+            }
             $responBpjs = Bpjs_http_respon::where(function ($a) use ($request) {
                 $a->whereNoreg($request->noreg)
                     ->orWhere('request', 'LIKE', '%' . $request->norm . '%');
