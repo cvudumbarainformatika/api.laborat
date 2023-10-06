@@ -18,6 +18,10 @@ class DistribusiLangsung extends Model
     {
         return $this->belongsTo(Ruang::class, 'kode_depo', 'kode');
     }
+    public function tujuan()
+    {
+        return $this->belongsTo(Ruang::class, 'ruang_tujuan', 'kode');
+    }
 
     public function pegawai()
     {

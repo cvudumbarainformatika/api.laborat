@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 
 class DistribusiLangsungController extends Controller
 {
+
     // ambil barang berdasarkan transaksi
     public function getDataTransaksiWithBarang()
     {
@@ -70,7 +71,7 @@ class DistribusiLangsungController extends Controller
                     )
                         ->join('distribusi_langsungs', function ($langsung) {
                             $langsung->on('detail_distribusi_langsungs.distribusi_langsung_id', '=', 'distribusi_langsungs.id')
-                                ->where('status', '=', 1)
+                                ->where('status', '=', 2)
                                 ->where('reff', request('reff'));
                         });
                 }
@@ -143,6 +144,13 @@ class DistribusiLangsungController extends Controller
     public function index()
     {
         $data = DistribusiLangsung::latest('id')
+            ->with([
+                'details' => function ($a) {
+                    $a->selectRaw('* ,ROUND(sum(jumlah),3) as total')
+                        ->groupBy('kode_rs', 'distribusi_langsung_id');
+                },
+                'pegawai', 'tujuan', 'details.barang.satuan'
+            ])
             ->paginate(request('per_page'));
         $collect = collect($data);
         $balik = $collect->only('data');

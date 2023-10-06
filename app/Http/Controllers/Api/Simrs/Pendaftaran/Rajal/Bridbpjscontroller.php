@@ -332,17 +332,24 @@ class Bridbpjscontroller extends Controller
         // return new JsonResponse(['message' => $responBpjs]);
         // cari history pelayanan pasien
         $tgltobpjshttpres = DateHelper::getDateTime();
-        $tglCari = date('Y-m-d');
+        $tgl = $request->tgl_kunjungan ?? date('Y-m-d');
+        $date = date_create($tgl);
+        $tglCari = date_format($date, 'Y-m-d');
         // $tglCari = date('2023-10-03');
         // cek history
         $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . $request->noka . '/tglMulai/' . $tglCari . '/tglAkhir/' . $tglCari);
         $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
         $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
+        $infoHis = $history['metadata']['code'] === '200' ? $history['result']->histori[0] : '';
         // return new JsonResponse(['message' => $history['result']->histori[0]]);
         // ambil master pasien
 
         // jika tidak ada history
         if (!$sep) {
+            // cek tanggal
+            if (($tglCari !== date('Y-m-d'))) {
+                return new JsonResponse(['message' => 'History SEP tidak ditemukan, tidak Bisa mengajukan SEP untuk tgl sebelum hari ini'], 410);
+            }
             $responBpjs = Bpjs_http_respon::where(function ($a) use ($request) {
                 $a->whereNoreg($request->noreg)
                     ->orWhere('request', 'LIKE', '%' . $request->norm . '%');
@@ -368,7 +375,7 @@ class Bridbpjscontroller extends Controller
                 }
                 $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep2);
                 $dataInfo = $infoSep['result'];
-                $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep2, $unit);
+                $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep2, $infoHis);
                 return new JsonResponse(['data' => $data, 'message' => 'Data Berhasil disimpan']);
             } else {
                 return new JsonResponse(['message' => 'Pembuatan SEP dengan data yang pernah diajukan gagal'], 410);
@@ -377,7 +384,7 @@ class Bridbpjscontroller extends Controller
         $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
         $dataInfo = $infoSep['result'];
         // return new JsonResponse(['message' => $dataInfo]);
-        $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep, $unit);
+        $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep, $infoHis);
         return new JsonResponse(['data' => $data, 'message' => 'Data Berhasil disimpan']);
         // $sep = $history['result']->histori[0]->noSep;
         // cari di bppjs http respon
@@ -396,13 +403,12 @@ class Bridbpjscontroller extends Controller
             // 'rujukanPcare' => $rujukanPcare,
         ]);
     }
-    public function getNesData($dataInfo, $request, $tgltobpjshttpres, $sep, $unit)
+    public function getNesData($dataInfo, $request, $tgltobpjshttpres, $sep, $infoHis)
     {
         $pasien = Mpasien::select('rs55')->where('rs1', $request->norm)->first();
         $kontrol = '';
         $rujukanPcare = '';
         $tglrujukan = '';
-        $namadiagnosa = '';
         $namappkRujukan = '';
         $ppkRujukan = '';
         $namappkRujukan = '';
@@ -418,7 +424,7 @@ class Bridbpjscontroller extends Controller
             if ($kontrol['metadata']['code'] === '200') {
                 $temp = $kontrol['result']->sep;
                 $tglrujukan = $temp->provPerujuk->tglRujukan;
-                $namadiagnosa = $temp->diagnosa;
+                // $namadiagnosa = $infoHis->diagnosa ?? $temp->diagnosa;
                 $namappkRujukan = $temp->provPerujuk->nmProviderPerujuk;
                 $ppkRujukan = $temp->provPerujuk->kdProviderPerujuk;
                 $jenis_kunjungan = 'Kontrol';
@@ -429,7 +435,7 @@ class Bridbpjscontroller extends Controller
             if ($rujukanPcare['metadata']['code'] === '200') {
                 $temp = $rujukanPcare['result']->rujukan;
                 $tglrujukan = $temp->tglKunjungan;
-                $namadiagnosa = $temp->diagnosa->kode . ' - ' . $temp->diagnosa->nama;
+                // $namadiagnosa = $infoHis->diagnosa ?? ($temp->diagnosa ?? $temp->diagnosa->kode . ' - ' . $temp->diagnosa->nama);
                 $namappkRujukan = $temp->provPerujuk->nama;
                 $ppkRujukan = $temp->provPerujuk->kode;
                 $dinsos = $temp->peserta->informasi->dinsos;
@@ -447,7 +453,7 @@ class Bridbpjscontroller extends Controller
             'kodesistembayar' => $request->kodesistembayar,
             'norujukan' => $dataInfo->noRujukan,
             'tglrujukan' => $tglrujukan, // cek no rujukan dahulu
-            'namadiagnosa' => $namadiagnosa, // cek no rujukan dahulu
+            'namadiagnosa' => $infoHis->diagnosa,
             'namappkRujukan' => $namappkRujukan, // cek no rujukan dahulu
             'ppkRujukan' => $ppkRujukan,
             'dinsos' => $dinsos,
@@ -485,7 +491,7 @@ class Bridbpjscontroller extends Controller
             'flagprocedure' => $dataInfo->flagProcedure->kode ?? '',
             'kdPenunjang' => $dataInfo->kdPenunjang->kode ?? '',
             'assesmentPel' => $dataInfo->assestmenPel->kode ?? '',
-            'kdUnit' => $unit
+            'kdUnit' => $infoHis->poliTujSep
         ];
 
         // return $data->noreg;
