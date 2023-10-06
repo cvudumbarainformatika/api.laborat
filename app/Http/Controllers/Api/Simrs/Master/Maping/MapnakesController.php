@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Http\Controllers\Api\Simrs\Master\Maping;
+
+use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Simrs\Master\Mnakes;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class MapnakesController extends Controller
+{
+    public function listnakes()
+    {
+        $listnakes = Mnakes::select('rs1 as kode', 'rs2 as nama', 'rs10 as Spesialis', 'rs13 as kdgroupnakes', 'rs17 as kdruangan')
+            ->where('rs18', '')->where('rs1', '!=', '')
+            ->where('rs2', 'like', '%' . request('nama') . '%')
+            ->get();
+        return new JsonResponse($listnakes);
+    }
+
+    public function pegawaisimpeg()
+    {
+        $pegawaisimpeg = Mpegawaisimpeg::where('aktif', 'AKTIF')
+            ->where('nama', 'like', '%' . request('nama') . '%')
+            ->get();
+        return new JsonResponse($pegawaisimpeg);
+    }
+
+    public function simpanmaping(Request $request)
+    {
+        $simpanmaping = Mpegawaisimpeg::where('nip', $request->nip)->first();
+        $simpanmaping->kdpegsimrs = $request->kdpegsimrs;
+        $simpanmaping->statusspesialis = $request->statusspesialis;
+        $simpanmaping->kdgroupnakes = $request->kdgroupnakes;
+        $simpanmaping->kdruangansim = $request->kdruangansim;
+        $simpanmaping->save();
+        return new JsonResponse(['message' => 'ok'], 200);
+    }
+}
