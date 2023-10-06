@@ -35,6 +35,12 @@ class MapnakesController extends Controller
         $simpanmaping->kdgroupnakes = $request->kdgroupnakes;
         $simpanmaping->kdruangansim = $request->kdruangansim;
         $simpanmaping->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $simpanmaping
+            ],
+            200
+        );
     }
 }
