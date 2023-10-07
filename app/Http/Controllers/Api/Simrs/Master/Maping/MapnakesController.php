@@ -30,17 +30,25 @@ class MapnakesController extends Controller
     public function simpanmaping(Request $request)
     {
         $simpanmaping = Mpegawaisimpeg::where('nip', $request->nip)->first();
-        $simpanmaping->kdpegsimrs = $request->kdpegsimrs;
-        $simpanmaping->statusspesialis = $request->statusspesialis;
-        $simpanmaping->kdgroupnakes = $request->kdgroupnakes;
-        $simpanmaping->kdruangansim = $request->kdruangansim;
+        $simpanmaping->kdpegsimrs = $request->kdpegsimrs ?? '';
+        $simpanmaping->statusspesialis = $request->statusspesialis ?? '';
+        $simpanmaping->kdgroupnakes = $request->kdgroupnakes ?? '';
+        $simpanmaping->kdruangansim = $request->kdruangansim ?? '';
         $simpanmaping->save();
+
+        $collect = Mpegawaisimpeg::select('kdpegsimrs')->whereNotNull('kdpegsimrs')->where('kdpegsimrs', '!=', '')->get();
         return new JsonResponse(
             [
                 'message' => 'ok',
-                'result' => $simpanmaping
+                'result' => $collect
             ],
             200
         );
+    }
+
+    public function datatermaping()
+    {
+        $collect = Mpegawaisimpeg::select('kdpegsimrs')->whereNotNull('kdpegsimrs')->where('kdpegsimrs', '!=', '')->get();
+        return new JsonResponse($collect);
     }
 }
