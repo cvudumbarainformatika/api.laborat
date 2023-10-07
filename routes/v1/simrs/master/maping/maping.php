@@ -11,5 +11,6 @@ Route::group([
 ], function () {
     Route::get('/listnakes', [MapnakesController::class, 'listnakes']);
     Route::get('/pegawaisimpeg', [MapnakesController::class, 'pegawaisimpeg']);
+    Route::get('/datatermaping', [MapnakesController::class, 'datatermaping']);
     Route::post('/simpanmaping', [MapnakesController::class, 'simpanmaping']);
 });
