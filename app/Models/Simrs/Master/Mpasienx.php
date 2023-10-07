@@ -77,9 +77,10 @@ class Mpasienx extends Model
             'kd_negara_dom as negaradomisili',
             'noteleponrumah as noteleponrumah',
             'flag_pernikahan as statuspernikahan',
-
             'gelardepan as gelardepan',
-            'gelarbelakang as gelarbelakang'
+            'gelarbelakang as gelarbelakang',
+            'bacatulis as bacatulis',
+            'kdhambatan as kdhambatan'
         ]);
     }
 

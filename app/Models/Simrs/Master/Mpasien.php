@@ -90,7 +90,9 @@ class Mpasien extends Model
             'noteleponrumah as noteleponrumah',
             'flag_pernikahan as statuspernikahan',
             'gelardepan as gelardepan',
-            'gelarbelakang as gelarbelakang'
+            'gelarbelakang as gelarbelakang',
+            'bacatulis as bacatulis',
+            'kdhambatan as kdhambatan'
         ]);
     }
 
