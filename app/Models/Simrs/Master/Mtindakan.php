@@ -10,7 +10,8 @@ class Mtindakan extends Model
 {
     use HasFactory;
     protected $table = 'rs30';
-    protected $guarded = ['id'];
+    protected $guarded = ['idx'];
+    public $timestamps = false;
 
     public function maapingprocedure()
     {

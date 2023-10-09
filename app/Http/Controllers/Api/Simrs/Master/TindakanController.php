@@ -46,17 +46,17 @@ class TindakanController extends Controller
 
     public function simpanmastertindakan(Request $request)
     {
-        $ceknama = Mtindakan::where('rs2', 'like', '%' . $request->nmtindakan . '%')->count();
-        if ($ceknama > 0) {
-            return new JsonResponse(['message' => 'Maaf Tindakan Sudah Ada...!!!']);
+        $ceknama = Mtindakan::where('rs2', 'like', '%' . $request->nmtindkan . '%')->count();
+        if ($ceknama > 0 && $request->flag === 'baru') {
+            return new JsonResponse(['message' => 'Maaf Tindakan Sudah Ada...!!!'], 410);
         }
 
         $simpantindakan = Mtindakan::updateOrCreate(
             [
-                'rs1' => $request->kdtindakan
+                'rs1' => $request->kodetindakan
             ],
             [
-                'rs2' => $request->nmtidakan,
+                'rs2' => $request->nmtindkan,
                 'rs3' => 'T1#',
                 'rs8' => $request->js3,
                 'rs9' => $request->jp3,
@@ -79,7 +79,7 @@ class TindakanController extends Controller
             ]
         );
         if (!$simpantindakan) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!']);
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 410);
         }
         return new JsonResponse($simpantindakan);
     }
