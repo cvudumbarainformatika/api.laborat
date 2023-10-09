@@ -48,6 +48,7 @@ class TindakanController extends Controller
         $simpantindakan = Mtindakan::updateOrCreate(
             [
                 ''
-            ])
+            ]
+        );
     }
 }
