@@ -65,29 +65,6 @@ class KasirrajalController extends Controller
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
-            ->with([
-                'laborats' => function ($t) {
-                    $t->with('details.pemeriksaanlab')
-                        ->orderBy('id', 'DESC');
-                },
-                'radiologi' => function ($t) {
-                    $t->orderBy('id', 'DESC');
-                },
-                'penunjanglain' => function ($t) {
-                    $t->with('masterpenunjang')->orderBy('id', 'DESC');
-                },
-                'tindakan' => function ($t) {
-                    $t->with('mastertindakan:rs1,rs2')
-                        ->orderBy('id', 'DESC');
-                },
-                'diagnosa' => function ($d) {
-                    $d->with('masterdiagnosa');
-                },
-                'pemeriksaanfisik' => function ($a) {
-                    $a->with(['anatomys', 'detailgambars'])
-                        ->orderBy('id', 'DESC');
-                }
-            ])
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
 

@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Rajal;
 
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -117,5 +118,10 @@ class KunjunganPoli extends Model
     public function planning()
     {
         return $this->hasMany(WaktupulangPoli::class, 'rs1', 'rs1');
+    }
+
+    public function edukasi()
+    {
+        return $this->hasMany(Transedukasi::class, 'rs1', 'rs1');
     }
 }
