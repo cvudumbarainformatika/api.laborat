@@ -33,7 +33,7 @@ class TindakanController extends Controller
             'rs23 as jsvvip',
             'rs24 as jpvvip',
             DB::raw('rs23+rs24 as tarifvvip')
-        )
+        )->where('rs2', 'like', '%' . request('nmtindakan') . '%')
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
     }
