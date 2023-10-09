@@ -47,8 +47,34 @@ class TindakanController extends Controller
 
         $simpantindakan = Mtindakan::updateOrCreate(
             [
-                ''
+                'rs1' => $request->kdtindakan
+            ],
+            [
+                'rs2' => $request->nmtidakan,
+                'rs3' => 'T1#',
+                'rs8' => $request->js3,
+                'rs9' => $request->jp3,
+                'rs10' => $request->habispake3,
+                'rs11' => $request->js2,
+                'rs12' => $request->jp2,
+                'rs13' => $request->habispake2,
+                'rs14' => $request->js1,
+                'rs15' => $request->jp1,
+                'rs16' => $request->habispake1,
+                'rs17' => $request->jsutama,
+                'rs18' => $request->jputama,
+                'rs19' => $request->habispakeutama,
+                'rs20' => $request->jsvip,
+                'rs21' => $request->jpvip,
+                'rs22' => $request->habisvip,
+                'rs23' => $request->jsvvip,
+                'rs24' => $request->jpvvip,
+                'rs25' => $request->habispakevvip
             ]
         );
+        if (!$simpantindakan) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!']);
+        }
+        return new JsonResponse($simpantindakan);
     }
 }
