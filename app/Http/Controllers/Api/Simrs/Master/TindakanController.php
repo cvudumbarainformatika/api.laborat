@@ -21,7 +21,7 @@ class TindakanController extends Controller
             DB::raw('rs8+rs9 as tarif3'),
             'rs11 as js2',
             'rs12 as jp2',
-            'rs13 as habispake3',
+            'rs13 as habispake2',
             DB::raw('rs11+rs12 as tarif2'),
             'rs14 as js1',
             'rs15 as jp1',
