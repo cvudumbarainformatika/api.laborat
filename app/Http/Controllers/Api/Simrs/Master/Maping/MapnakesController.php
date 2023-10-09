@@ -21,8 +21,9 @@ class MapnakesController extends Controller
 
     public function pegawaisimpeg()
     {
-        $pegawaisimpeg = Mpegawaisimpeg::where('aktif', 'AKTIF')
-            ->where('nama', 'like', '%' . request('nama') . '%')
+        $pegawaisimpeg = Mpegawaisimpeg::select('id', 'nip', 'nik', 'nama', 'kelamin', 'foto', 'kdpegsimrs')
+            ->where('aktif', 'AKTIF')
+            // ->where('nama', 'like', '%' . request('nama') . '%')
             ->get();
         return new JsonResponse($pegawaisimpeg);
     }
