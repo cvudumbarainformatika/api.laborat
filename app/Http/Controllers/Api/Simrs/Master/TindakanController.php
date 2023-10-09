@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Simrs\Tindakan\Tindakan;
+use App\Models\Simrs\Master\Mtindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -11,7 +11,7 @@ class TindakanController extends Controller
 {
     public function listtindakan()
     {
-        $listtindakan = Tindakan::select(
+        $listtindakan = Mtindakan::select(
             'rs1 as kodetindakan',
             'rs2 as nmtindkan',
             'rs8 as js3',
