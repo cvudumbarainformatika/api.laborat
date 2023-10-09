@@ -26,14 +26,28 @@ class TindakanController extends Controller
             DB::raw('rs14+rs15 as tarif1'),
             'rs17 as jsutama',
             'rs18 as jputama',
-            DB::raw('rs17+rs18 as tarifvip'),
+            DB::raw('rs17+rs18 as tarifutama'),
             'rs20 as jsvip',
             'rs21 as jpvip',
-            DB::raw('rs11+rs12 as tarifvvip'),
+            DB::raw('rs20+rs21 as tarifvip'),
             'rs23 as jsvvip',
-            'rs24 as jpvvip'
+            'rs24 as jpvvip',
+            DB::raw('rs23+rs24 as tarifvvip')
         )
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
+    }
+
+    public function simpanmastertindakan(Request $request)
+    {
+        $ceknama = Mtindakan::where('rs2', 'like', '%' . $request->nmtindakan . '%')->count();
+        if ($ceknama > 0) {
+            return new JsonResponse(['message' => 'Maaf Tindakan Sudah Ada...!!!']);
+        }
+
+        $simpantindakan = Mtindakan::updateOrCreate(
+            [
+                ''
+            ])
     }
 }
