@@ -46,14 +46,27 @@ class TindakanController extends Controller
 
     public function simpanmastertindakan(Request $request)
     {
-        $ceknama = Mtindakan::where('rs2', 'like', '%' . $request->nmtindakan . '%')->count();
+        $ceknama = Mtindakan::where('rs2', $request->nmtindakan)->count();
         if ($ceknama > 0) {
             return new JsonResponse(['message' => 'Maaf Tindakan Sudah Ada...!!!']);
         }
+        if ($request->kdtindakan == '' || $request->kdtindakan == null) {
+            $cektotal = Mtindakan::count();
+            $akhir = (int) $cektotal + (int) 1;
 
+            $has = null;
+            $lbr = strlen($akhir);
+            for ($i = 1; $i <= 4 - $lbr; $i++) {
+                $has = $has . "0";
+            }
+
+            $kdtindakan = 'TB' . $has . $akhir;
+        } else {
+            $kdtindakan = $request->kdtindakan;
+        }
         $simpantindakan = Mtindakan::updateOrCreate(
             [
-                'rs1' => $request->kdtindakan
+                'rs1' => $kdtindakan
             ],
             [
                 'rs2' => $request->nmtidakan,
