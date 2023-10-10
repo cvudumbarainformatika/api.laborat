@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Simrs\Laporan\Sigarang;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\MonthlyStokUpdate;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Rekening50;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
@@ -74,5 +76,64 @@ class LaporanPenerimaanController extends Controller
         //     ->get();
 
         // return new JsonResponse($judulsatu);
+    }
+
+    public function lappersediaan()
+    {
+        $date = date_create(request('tahun') . '-' . request('bulan'));
+        $anu = date_format($date, 'Y-m');
+        $comp = $anu === date('Y-m');
+        if ($comp) {
+            $result = RecentStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
+                ->where('sisa_stok', '>', 0)
+                ->where('kode_ruang', 'LIKE', '%Gd-%')
+                ->when(request('kode_ruang'), function ($anu) {
+                    $anu->whereKodeRuang(request('kode_ruang'));
+                })
+                ->when(request('kode_rs'), function ($anu) {
+                    $anu->whereKodeRs(request('kode_rs'));
+                })
+                ->with(
+                    'barang:kode,nama',
+                    'penerimaan:id,no_penerimaan',
+                    'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi'
+                );
+            // ->with('penerimaan.details')
+            if (request('kode_ruang')) {
+                $result->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan');
+            } else {
+                $result->groupBy('kode_rs', 'no_penerimaan');
+            }
+            $data = $result->paginate(request('per_page'));
+
+            return new JsonResponse($data);
+        }
+
+        $from = request('tahun') . '-' . request('bulan') . '-01 00:00:00';
+        $to = request('tahun') . '-' . request('bulan') . '-31 23:59:59';
+        $result = MonthlyStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
+            ->where('sisa_stok', '>', 0)
+            ->where('kode_ruang', 'LIKE', '%Gd-%')
+            ->whereBetween('tanggal', [$from, $to])
+            ->when(request('kode_ruang'), function ($anu) {
+                $anu->whereKodeRuang(request('kode_ruang'));
+            })
+            ->when(request('kode_rs'), function ($anu) {
+                $anu->whereKodeRs(request('kode_rs'));
+            })
+            ->with(
+                'barang:kode,nama',
+                'penerimaan:id,no_penerimaan',
+                'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi'
+            );
+        // ->with('penerimaan.details')
+        if (request('kode_ruang')) {
+            $result->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan');
+        } else {
+            $result->groupBy('kode_rs', 'no_penerimaan');
+        }
+        $data = $result->paginate(request('per_page'));
+
+        return new JsonResponse($data);
     }
 }

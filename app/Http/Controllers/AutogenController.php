@@ -2064,7 +2064,11 @@ class AutogenController extends Controller
             ->when(request('kode_rs'), function ($anu) {
                 $anu->whereKodeRs(request('kode_rs'));
             })
-            ->with('penerimaan:id,no_penerimaan', 'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi')
+            ->with(
+                'barang:kode,nama',
+                'penerimaan:id,no_penerimaan',
+                'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi'
+            )
             // ->with('penerimaan.details')
             ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
             ->paginate(request('per_page'));

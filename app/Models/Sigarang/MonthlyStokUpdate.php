@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,6 +20,10 @@ class MonthlyStokUpdate extends Model
     public function barang()
     {
         return $this->belongsTo(BarangRS::class, 'kode_rs', 'kode')->withTrashed();
+    }
+    public function penerimaan()
+    {
+        return $this->belongsTo(Penerimaan::class, 'no_penerimaan', 'no_penerimaan');
     }
     public function depo()
     {
