@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Rajal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -152,8 +153,26 @@ class PoliController extends Controller
         return new JsonResponse(['message' => 'Belum Ada SEP untuk Pasien Ini Di Database SIMRS, Harap Hubungi Bagian Pendaftaran Untuk Mengupdate SEP...!!!'], 500);
     }
 
+    public function listdokter()
+    {
+        $listdokter = Mpegawaisimpeg::select('kdpegsimrs', 'nama')
+            ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
+            ->get();
+
+        return new JsonResponse($listdokter);
+    }
+
     public function gantidpjp(Request $request)
     {
-        $carikunjungan = KunjunganPoli::where('noreg', $request->noreg)->first();
+        $carikunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $carikunjungan->rs9 = $request->kdpegsimrs;
+        $carikunjungan->save();
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $carikunjungan->load('datasimpeg'),
+            ],
+            200
+        );
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Rajal;
 
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Master\Dokter;
@@ -23,6 +24,7 @@ use App\Models\Simrs\Rekom\Rekomdpjp;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 
 class KunjunganPoli extends Model
 {
@@ -123,5 +125,10 @@ class KunjunganPoli extends Model
     public function edukasi()
     {
         return $this->hasMany(Transedukasi::class, 'rs1', 'rs1');
+    }
+
+    public function datasimpeg()
+    {
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
     }
 }

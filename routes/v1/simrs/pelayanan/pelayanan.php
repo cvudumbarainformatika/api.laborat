@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikCo
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
 use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
+use App\Http\Controllers\Api\Simrs\Rajal\PoliController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -47,7 +48,8 @@ Route::group([
     Route::post('/simpanedukasi', [EdukasiController::class, 'simpanedukasi']);
     Route::post('/hapusedukasi', [EdukasiController::class, 'hapusedukasi']);
 
-    Route::post('/hapusedukasi', [PoliC::class, 'hapusedukasi']);
+    Route::get('/listdokter', [PoliController::class, 'listdokter']);
+    Route::post('/gantidpjp', [PoliController::class, 'gantidpjp']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
