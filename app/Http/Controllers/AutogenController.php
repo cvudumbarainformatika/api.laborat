@@ -172,16 +172,34 @@ class AutogenController extends Controller
         // $noreg = '53539/08/2023/J';
         // $inacbg = EwseklaimController::ewseklaimrajal_newclaim($noreg);
         // return new JsonResponse($inacbg);
-        $dialogtindakanpoli = Mtindakan::select(
-            'rs1 as kdtindakan',
-            'rs2 as tindakan',
-            'rs8 as sarana',
-            'rs9 as pelayanan',
-            DB::raw('rs8 +rs9 as tarif')
-        )
-            ->where('rs2', 'Like', request('tindakan'))
-            ->get();
-        return new JsonResponse($dialogtindakanpoli);
+        // $dialogtindakanpoli = Mtindakan::select(
+        //     'rs1 as kdtindakan',
+        //     'rs2 as tindakan',
+        //     'rs8 as sarana',
+        //     'rs9 as pelayanan',
+        //     DB::raw('rs8 +rs9 as tarif')
+        // )
+        //     ->where('rs2', 'Like', request('tindakan'))
+        //     ->get();
+        // return new JsonResponse($dialogtindakanpoli);
+        // $data = [
+        //     "request" => [
+        //         "t_rujukan" => [
+        //             "noRujukan" => "0301R0011117B000015",
+        //             "user" => "Coba Ws"
+        //         ]
+        //     ]
+        // ];
+
+        // $deleterujukan = BridgingbpjsHelper::post_url(
+        //         'vclaim',
+        //         'Rujukan/2.0/delete',
+        //         $data
+        //     );
+        // return $deleterujukan;
+
+        // return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/Keluar/List/tglMulai/2023-10-10/tglAkhir/2023-10-10');
+        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/List/Peserta/0000113076191');
     }
 
     public function coba()
