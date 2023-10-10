@@ -47,5 +47,7 @@ Route::group([
     Route::post('/simpanedukasi', [EdukasiController::class, 'simpanedukasi']);
     Route::post('/hapusedukasi', [EdukasiController::class, 'hapusedukasi']);
 
+    Route::post('/hapusedukasi', [PoliC::class, 'hapusedukasi']);
+
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
