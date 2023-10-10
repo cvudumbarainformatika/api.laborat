@@ -53,9 +53,9 @@ class PlaningController extends Controller
                     if ($simpanakhir == 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 200);
                 } else {
-                    return $createrujukan;
+                    return new JsonResponse(['message' => 'Maaf, Ada yang salah , Harap Ulangi'], 500);
                 }
             } else {
                 $simpanakhir = self::simpanakhir($request);

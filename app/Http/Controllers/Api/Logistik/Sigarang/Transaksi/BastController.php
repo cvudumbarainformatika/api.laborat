@@ -38,7 +38,7 @@ class BastController extends Controller
         $data = Penerimaan::select('kontrak')
             ->where('kode_perusahaan', request('kode_perusahaan'))
             ->where(function ($a) {
-                $a->where('tanggal_bast', null)
+                $a->whereNull('tanggal_bast')
                     ->orWhere('nilai_tagihan', '<=', 0);
             })
             ->distinct('kontrak')
@@ -71,7 +71,7 @@ class BastController extends Controller
             ->with([
                 'details',
                 'penerimaan' => function ($anu) {
-                    $anu->with('details')->where('tanggal_bast', null)
+                    $anu->with('details')->whereNull('tanggal_bast')
                         ->orWhere('nilai_tagihan', '<=', 0);
                 }
             ])
@@ -104,13 +104,14 @@ class BastController extends Controller
                             'harga_kontrak' => $det['harga_kontrak'],
                             'harga_jadi' => $det['harga_jadi'],
                             'ppn' => $det['ppn'],
+                            'sub_total' => $det['sub_total'],
                         ]);
                         $stok = RecentStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
                             ->where('kode_rs', $detail['kode_rs'])
                             ->get();
                         if (count($stok) >= 0) {
                             foreach ($stok as $key) {
-                                $key->update(['harga' => $det['harga_kontrak']]);
+                                $key->update(['harga' => $det['harga_jadi']]);
                             }
                         }
                     }
@@ -148,14 +149,14 @@ class BastController extends Controller
     public function listBastByKwitansi()
     {
 
-        $result = Penerimaan::where('no_kwitansi', '<>', '')
+        $result = Penerimaan::where('no_bast', '<>', '')
             // ->whereNull('tanggal_pembayaran')
             ->with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
-            ->orderBy('no_kwitansi')
+            ->orderBy('no_bast')
             // ->get();
             ->paginate(request('per_page'));
 
-        $groupedResult = $result->groupBy('no_kwitansi')->map(function ($group) {
+        $groupedResult = $result->groupBy('no_bast')->map(function ($group) {
             return $group->map(function ($item) {
                 return $item;
             });
@@ -165,7 +166,7 @@ class BastController extends Controller
         $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
             $total = $items->sum('total');
             return [
-                'no_kwitansi' => $kwitansi,
+                'no_bast' => $kwitansi,
                 'totalSemua' => $total,
                 'tanggal' => $items[0]->tanggal_bast,
                 'dibuat' => $items[0]->dibuat,
