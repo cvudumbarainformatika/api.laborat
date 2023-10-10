@@ -48,7 +48,7 @@ class TindakanController extends Controller
     {
         $ceknama = Mtindakan::where('rs2', $request->nmtindakan)->count();
         if ($ceknama > 0) {
-            return new JsonResponse(['message' => 'Maaf Tindakan Sudah Ada...!!!']);
+            return new JsonResponse(['message' => 'Maaf Tindakan Sudah Ada...!!!'], 500);
         }
         if ($request->kdtindakan == '' || $request->kdtindakan == null) {
             $cektotal = Mtindakan::count();
@@ -69,7 +69,7 @@ class TindakanController extends Controller
                 'rs1' => $kdtindakan
             ],
             [
-                'rs2' => $request->nmtidakan,
+                'rs2' => $request->nmtindkan,
                 'rs3' => 'T1#',
                 'rs8' => $request->js3,
                 'rs9' => $request->jp3,
@@ -92,7 +92,7 @@ class TindakanController extends Controller
             ]
         );
         if (!$simpantindakan) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!']);
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 410);
         }
         return new JsonResponse($simpantindakan);
     }
