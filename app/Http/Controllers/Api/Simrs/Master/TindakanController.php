@@ -13,8 +13,8 @@ class TindakanController extends Controller
     public function listtindakan()
     {
         $listtindakan = Mtindakan::select(
-            'rs1 as kodetindakan',
-            'rs2 as nmtindkan',
+            'rs1 as kdtindakan',
+            'rs2 as nmtindakan',
             'rs8 as js3',
             'rs9 as jp3',
             'rs10 as habispake3',
@@ -69,7 +69,7 @@ class TindakanController extends Controller
                 'rs1' => $kdtindakan
             ],
             [
-                'rs2' => $request->nmtindkan,
+                'rs2' => $request->nmtindakan,
                 'rs3' => 'T1#',
                 'rs8' => $request->js3,
                 'rs9' => $request->jp3,
@@ -85,7 +85,7 @@ class TindakanController extends Controller
                 'rs19' => $request->habispakeutama,
                 'rs20' => $request->jsvip,
                 'rs21' => $request->jpvip,
-                'rs22' => $request->habisvip,
+                'rs22' => $request->habispakevip,
                 'rs23' => $request->jsvvip,
                 'rs24' => $request->jpvvip,
                 'rs25' => $request->habispakevvip
@@ -102,5 +102,6 @@ class TindakanController extends Controller
         $caritindakan = Mtindakan::where('rs1', $request->kdtindakan)->first();
         $caritindakan->hidden = '1';
         $caritindakan->save();
+        return new JsonResponse(['message' => 'ok'], 200);
     }
 }

@@ -151,4 +151,9 @@ class PoliController extends Controller
         }
         return new JsonResponse(['message' => 'Belum Ada SEP untuk Pasien Ini Di Database SIMRS, Harap Hubungi Bagian Pendaftaran Untuk Mengupdate SEP...!!!'], 500);
     }
+
+    public function gantidpjp(Request $request)
+    {
+        $carikunjungan = KunjunganPoli::where('noreg', $request->noreg)->first();
+    }
 }

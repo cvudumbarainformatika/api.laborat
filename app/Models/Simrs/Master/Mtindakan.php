@@ -11,6 +11,8 @@ class Mtindakan extends Model
     use HasFactory;
     protected $table = 'rs30';
     protected $guarded = ['id'];
+    // public $primarykey = 'rs1';
+    // protected $keyType = 'string';
 
     public function maapingprocedure()
     {
