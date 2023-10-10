@@ -15,5 +15,6 @@ Route::group(
         Route::get('/ambil-no-bayar', [PembayaranController::class, 'ambilNoBayar']);
         Route::post('/simpan-bayar', [PembayaranController::class, 'simpanBayar']);
         Route::get('/list-bayar', [PembayaranController::class, 'listBayar']);
+        // Route::get('/list-bayar', [PembayaranController::class, 'listBayarByKwitansi']);
     }
 );

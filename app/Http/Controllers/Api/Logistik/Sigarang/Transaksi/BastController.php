@@ -145,6 +145,40 @@ class BastController extends Controller
 
         return new JsonResponse($data);
     }
+    public function listBastByKwitansi()
+    {
+
+        $result = Penerimaan::where('no_kwitansi', '<>', '')
+            // ->whereNull('tanggal_pembayaran')
+            ->with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
+            ->orderBy('no_kwitansi')
+            // ->get();
+            ->paginate(request('per_page'));
+
+        $groupedResult = $result->groupBy('no_kwitansi')->map(function ($group) {
+            return $group->map(function ($item) {
+                return $item;
+            });
+        });
+
+        // Convert the result to the desired format
+        $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
+            $total = $items->sum('total');
+            return [
+                'no_kwitansi' => $kwitansi,
+                'totalSemua' => $total,
+                'tanggal' => $items[0]->tanggal_bast,
+                'dibuat' => $items[0]->dibuat,
+                'dibast' => $items[0]->dibast,
+                'penerimaan' => $items,
+            ];
+        })->values();
+        $anu = collect($result);
+        return new JsonResponse([
+            'data' => $formattedResult,
+            'meta' => $anu->except('data'),
+        ]);
+    }
     public function jumlahNomorBast()
     {
         // $data = penerimaan::where('nomor', request('nomor'))->get();
