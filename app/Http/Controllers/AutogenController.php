@@ -2033,28 +2033,44 @@ class AutogenController extends Controller
         //     'kontrol' => $kontrol,
         //     'rujukanPcare' => $rujukanPcare,
         // ]);
-        $result = Penerimaan::where('no_kwitansi', '<>', '')
-            ->with('details')
-            ->orderBy('no_kwitansi')
-            ->get();
+        // $result = Penerimaan::where('no_kwitansi', '<>', '')
+        //     ->with('details')
+        //     ->orderBy('no_kwitansi')
+        //     ->get();
 
-        $groupedResult = $result->groupBy('no_kwitansi')->map(function ($group) {
-            return $group->map(function ($item) {
-                return $item;
-            });
-        });
+        // $groupedResult = $result->groupBy('no_kwitansi')->map(function ($group) {
+        //     return $group->map(function ($item) {
+        //         return $item;
+        //     });
+        // });
 
-        // Convert the result to the desired format
-        $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
-            $total = $items->sum('total');
-            return [
-                'kwitansi' => $kwitansi,
-                'totalSemua' => $total,
-                'penerimaan' => $items,
-            ];
-        })->values();
+        // // Convert the result to the desired format
+        // $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
+        //     $total = $items->sum('total');
+        //     return [
+        //         'kwitansi' => $kwitansi,
+        //         'totalSemua' => $total,
+        //         'penerimaan' => $items,
+        //     ];
+        // })->values();
 
-        return response()->json($formattedResult);
+        // return response()->json($formattedResult);
+        $result = RecentStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
+            ->where('sisa_stok', '>', 0)
+            ->where('kode_ruang', 'LIKE', '%Gd-%')
+            ->when(request('kode_ruang'), function ($anu) {
+                $anu->whereKodeRuang(request('kode_ruang'));
+            })
+            ->when(request('kode_rs'), function ($anu) {
+                $anu->whereKodeRs(request('kode_rs'));
+            })
+            ->with('penerimaan:id,no_penerimaan', 'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi')
+            // ->with('penerimaan.details')
+            ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
+            ->paginate(request('per_page'));
+
+        $data = $result;
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)
