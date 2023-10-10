@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/listtindakan', [TindakanController::class, 'listtindakan']);
     Route::post('/simpanmastertindakan', [TindakanController::class, 'simpanmastertindakan']);
+    Route::post('/hapusmastertindakan', [TindakanController::class, 'hidden']);
 });

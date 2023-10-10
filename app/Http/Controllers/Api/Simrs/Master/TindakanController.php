@@ -96,4 +96,11 @@ class TindakanController extends Controller
         }
         return new JsonResponse($simpantindakan);
     }
+
+    public function hidden(Request $request)
+    {
+        $caritindakan = Mtindakan::where('rs1', $request->kdtindakan)->first();
+        $caritindakan->hidden = '1';
+        $caritindakan->save();
+    }
 }
