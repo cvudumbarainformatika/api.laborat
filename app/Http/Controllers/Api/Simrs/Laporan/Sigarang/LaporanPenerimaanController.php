@@ -93,29 +93,43 @@ class LaporanPenerimaanController extends Controller
         $to = request('tahun') . '-' . request('bulan') . '-31 23:59:59';
         $fromA = $prev . '-01 00:00:00';
         $toA = $prev . '-31 23:59:59';
-        if ($comp) {
-
-            $recent = RecentStokUpdate::select('kode_rs')->where('kode_ruang', 'LIKE', '%Gd%')->where('sisa_stok', '>', 0)->distinct()->orderBy('kode_rs', 'ASC')->get();
-        } else {
-            $recent = MonthlyStokUpdate::select('kode_rs')->distinct()->where('kode_ruang', 'LIKE', '%Gd%')->where('sisa_stok', '>', 0)->whereBetween('tanggal', [$from, $to])->orderBy('kode_rs', 'ASC')->get();
-        }
-        $trx = DetailPenerimaan::select('kode_rs')->distinct()
-            ->leftJoin('penerimaans', function ($p) {
-                $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
-            })
-            ->whereBetween('penerimaans.tanggal', [$from, $to])
-            ->orderBy('kode_rs', 'ASC')
-            ->get();
-        $col = collect($recent);
-        foreach ($trx as $key) {
-            $temp = $col->where('kode_rs', $key->kode_rs)->all();
-            if (count($temp) <= 0) {
-                $col->push($key);
-                // return new JsonResponse($key);
-            }
-            // return new JsonResponse(count($temp));
-        }
         $depo = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103'];
+        if ($comp) {
+            $recent = RecentStokUpdate::select('kode_rs')
+                ->when(!request('kode_ruang'), function ($anu) use ($depo) {
+                    $anu->whereIn('kode_ruang', $depo);
+                })
+                ->when(request('kode_ruang'), function ($anu) {
+                    $anu->whereKodeRuang(request('kode_ruang'));
+                })
+                ->where('sisa_stok', '>', 0)->distinct()->orderBy('kode_rs', 'ASC')->get();
+        } else {
+            $recent = MonthlyStokUpdate::select('kode_rs')->distinct()
+                ->when(!request('kode_ruang'), function ($anu) use ($depo) {
+                    $anu->whereIn('kode_ruang', $depo);
+                })
+                ->when(request('kode_ruang'), function ($anu) {
+                    $anu->whereKodeRuang(request('kode_ruang'));
+                })
+                ->where('sisa_stok', '>', 0)->whereBetween('tanggal', [$from, $to])->orderBy('kode_rs', 'ASC')->get();
+        }
+        $col = collect($recent);
+        // $trx = DetailPenerimaan::select('kode_rs')->distinct()
+        //     ->leftJoin('penerimaans', function ($p) {
+        //         $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
+        //     })
+        //     ->whereBetween('penerimaans.tanggal', [$from, $to])
+        //     ->orderBy('kode_rs', 'ASC')
+        //     ->get();
+        // foreach ($trx as $key) {
+        //     $temp = $col->where('kode_rs', $key->kode_rs)->all();
+        //     if (count($temp) <= 0) {
+        //         $col->push($key);
+        //         // return new JsonResponse($key);
+        //     }
+        //     // return new JsonResponse(count($temp));
+        // }
+
         $barang = BarangRS::select('kode', 'nama', 'kode_satuan')
             ->whereIn('kode', $col)
             ->filter(request(['q']))
@@ -123,31 +137,44 @@ class LaporanPenerimaanController extends Controller
                 'satuan:kode,nama',
                 'monthly' => function ($m) use ($from, $to, $depo) {
                     $m->select('tanggal', 'harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
+                        ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->with('depo')
                         ->whereBetween('tanggal', [$from, $to])
-                        ->whereIn('kode_ruang', $depo)
+                        ->when(!request('kode_ruang'), function ($anu) use ($depo) {
+                            $anu->whereIn('kode_ruang', $depo);
+                        })
                         ->when(request('kode_ruang'), function ($anu) {
                             $anu->whereKodeRuang(request('kode_ruang'));
-                        });
-                },
-                'stok_awal' => function ($m) use ($fromA, $toA, $depo) {
-                    $m->select('tanggal', 'harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
-                        ->with('depo')
-                        ->whereBetween('tanggal', [$fromA, $toA])
-                        ->whereIn('kode_ruang', $depo)
-                        ->when(request('kode_ruang'), function ($anu) {
-                            $anu->whereKodeRuang(request('kode_ruang'));
-                        });
+                        })
+                        ->groupBy('kode_rs', 'kode_ruang', 'harga');
                 },
                 'recent' => function ($m) use ($depo) {
-                    $m->select('harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
+                    $m->select('harga', 'kode_rs', 'kode_ruang', 'sisa_stok', 'no_penerimaan')
+                        ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->with('depo')
                         ->where('sisa_stok', '>', 0)
-                        ->whereIn('kode_ruang', $depo)
+                        ->when(!request('kode_ruang'), function ($anu) use ($depo) {
+                            $anu->whereIn('kode_ruang', $depo);
+                        })
                         ->when(request('kode_ruang'), function ($anu) {
                             $anu->whereKodeRuang(request('kode_ruang'));
-                        });
+                        })
+                        ->groupBy('kode_rs', 'kode_ruang', 'harga');
                 },
+
+                // 'stok_awal' => function ($m) use ($fromA, $toA, $depo) {
+                //     $m->select('tanggal', 'harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
+                //         ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                //         ->with('depo')
+                //         ->whereBetween('tanggal', [$fromA, $toA])
+                //         ->when(!request('kode_ruang'), function ($anu) use ($depo) {
+                //             $anu->whereIn('kode_ruang', $depo);
+                //         })
+                //         ->when(request('kode_ruang'), function ($anu) {
+                //             $anu->whereKodeRuang(request('kode_ruang'));
+                //         })
+                //         ->groupBy('kode_rs', 'kode_ruang', 'harga');
+                // },
                 // 'detailPenerimaan' => function ($m) use ($from, $to) {
                 //     $m->select(
                 //         'harga',
