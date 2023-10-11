@@ -47,6 +47,8 @@ Route::group([
 
     Route::post('/simpanedukasi', [EdukasiController::class, 'simpanedukasi']);
     Route::post('/hapusedukasi', [EdukasiController::class, 'hapusedukasi']);
+    Route::get('/mpenerimaedukasi', [EdukasiController::class, 'mpenerimaedukasi']);
+    Route::get('/mkebutuhanedukasi', [EdukasiController::class, 'mkebutuhanedukasi']);
 
     Route::get('/listdokter', [PoliController::class, 'listdokter']);
     Route::post('/gantidpjp', [PoliController::class, 'gantidpjp']);

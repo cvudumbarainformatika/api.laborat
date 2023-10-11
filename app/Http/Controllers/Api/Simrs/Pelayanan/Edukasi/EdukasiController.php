@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Edukasi\Mkebutuhanedukasi;
+use App\Models\Simrs\Edukasi\Mpenerimaedukasi;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -54,5 +56,17 @@ class EdukasiController extends Controller
             ],
             200
         );
+    }
+
+    public function mpenerimaedukasi()
+    {
+        $lispenerimaedukasi = Mpenerimaedukasi::all();
+        return new JsonResponse($lispenerimaedukasi);
+    }
+
+    public function mkebutuhanedukasi()
+    {
+        $mkebutuhanedukasi = Mkebutuhanedukasi::all();
+        return new JsonResponse($mkebutuhanedukasi);
     }
 }
