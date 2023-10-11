@@ -51,5 +51,7 @@ Route::group([
     Route::get('/listdokter', [PoliController::class, 'listdokter']);
     Route::post('/gantidpjp', [PoliController::class, 'gantidpjp']);
 
+    Route::get('/bridbpjslistrujukan', [BridbpjsplanController::class, 'bridbpjslistrujukan']);
+
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });

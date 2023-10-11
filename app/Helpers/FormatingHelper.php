@@ -159,4 +159,14 @@ class FormatingHelper
         }
         return date("y") . date("m") . date("d") . "/" . $has . $n . $kode;
     }
+
+    public static function karcisrj($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 7 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $kode . date("Y") . "-" . $has . $n;
+    }
 }

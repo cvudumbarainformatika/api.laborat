@@ -332,11 +332,11 @@ class EwseklaimController extends Controller
         return $diagnosa;
     }
 
-    public static function cariprocedure()
+    public static function cariprocedure($noreg)
     {
 
         $cari = Tindakan::select('rs4')->with('maapingprocedure:kdMaster,icd9')
-            ->where('rs1', '53539/08/2023/J')->get();
+            ->where('rs1', $noreg)->get();
         if (count($cari) == 0) {
             $icd9 = '';
         }
