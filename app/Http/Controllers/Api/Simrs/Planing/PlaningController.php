@@ -7,6 +7,7 @@ use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Mplaning;
+use App\Models\Simrs\Planing\Transrujukan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
@@ -31,7 +32,7 @@ class PlaningController extends Controller
     public function simpanplaningpasien(Request $request)
     {
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
-
+        $groupsistembayar = $sistembayar->groups;
         if ($request->planing == 'Konsultasi') {
             $simpanplaningpasien = self::simpankonsulantarpoli($request);
             if ($simpanplaningpasien == 500) {
@@ -44,7 +45,7 @@ class PlaningController extends Controller
             $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
             return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!', 'result' => $data->load('masterpoli')], 200);
         } elseif ($request->planing == 'Rumah Sakit Lain') {
-            if ($sistembayar == '1') {
+            if ($groupsistembayar == '1') {
                 $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
                 if ($createrujukan == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
@@ -53,7 +54,11 @@ class PlaningController extends Controller
                     if ($simpanakhir == 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
+                    $data = Transrujukan::with(
+                        ['masterpasien', 'relmpoli', 'relmpolix']
+                    )
+                        ->where('rs1', $request->noreg)->first();
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
                 } else {
                     return $createrujukan;
                 }
@@ -62,20 +67,16 @@ class PlaningController extends Controller
                 if ($simpanakhir == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!',], 500);
                 }
-                // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)
-                //     ->update(
-                //         [
-                //             'rs19' => 1,
-                //         ]
-                //     );
-                // if (!$updatekunjungan) {
-                //     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
-                // }
+                $simpanrujukanumum = self::simpanrujukanumum($request);
+                if ($simpanrujukanumum == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan...!!!',], 500);
+                }
 
-                $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                $data = Transrujukan::with(
+                    ['masterpasien', 'relmpoli', 'relmpolix']
+                )
+                    ->where('rs1', $request->noreg)->first();
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
-
-                return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 500);
             }
         } elseif ($request->planing == 'Rawat Inap') {
             if ($request->status == 'Operasi' && $sistembayar == '1') {
@@ -142,10 +143,11 @@ class PlaningController extends Controller
     {
         $simpanakhir = WaktupulangPoli::create(
             [
-                'rs1' => $request->noreg,
-                'rs2' => $request->norm,
-                'rs3' => $request->kdpoli_tujuan,
-                'rs4' => $request->planing,
+                'rs1' => $request->noreg ?? '',
+                'rs2' => $request->norm ?? '',
+                'rs3' => $request->kdpoli_tujuan ?? '',
+                'rs4' => $request->planing ?? '',
+                // 'rs5' => $request->kdpoli_asal ?? '',
                 'tgl' => date('Y-m-d H:i:s'),
                 'user' => auth()->user()->pegawai_id
             ]
@@ -202,5 +204,40 @@ class PlaningController extends Controller
         }
 
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
+
+    public static function simpanrujukanumum($request)
+    {
+        $simpanrujukan = Transrujukan::create(
+            [
+                'rs1' => $request->noreg,
+                'rs2' => $request->norm,
+                //    'rs3' => $norujukan,
+                // 'rs4' => $request->nosep,
+                'rs5' => $request->tglrujukan,
+                'rs6' => $request->ppkdirujuk,
+                'rs7' => $request->ppkdirujukx,
+                'rs8' => $request->jenispelayanan,
+                'rs9' => $request->catatan,
+                'rs10' => $request->diagnosarujukan,
+                'rs11' => $request->tiperujukan,
+                'rs12' => $request->kodepoli,
+                'rs13' => date('Y-m-d H:i:s'),
+                'rs14' => auth()->user()->pegawai_id,
+                //   'rs15' => $request->noka,
+                'rs16' => $request->nama,
+                'rs17' => $request->kelamin,
+                'tglRencanaKunjungan' => $request->tglrencanakunjungan,
+                'diagnosa' => $request->diagnosa,
+                'poli' => $request->kodepoli,
+                //    'tipefaskes' => $request->tipefaskes,
+                'polix' => $request->polirujukan
+            ]
+        );
+
+        if (!$simpanrujukan) {
+            return 500;
+        }
+        return 200;
     }
 }
