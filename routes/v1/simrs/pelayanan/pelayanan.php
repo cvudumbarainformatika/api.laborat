@@ -3,10 +3,12 @@
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi\EdukasiController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
 use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
+use App\Http\Controllers\Api\Simrs\Rajal\PoliController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -42,6 +44,16 @@ Route::group([
     Route::post('/hapusplaningpasien', [PlaningController::class, 'hapusplaningpasien']);
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
     Route::get('/polibpjs', [BridbpjsplanController::class, 'polibpjs']);
+
+    Route::post('/simpanedukasi', [EdukasiController::class, 'simpanedukasi']);
+    Route::post('/hapusedukasi', [EdukasiController::class, 'hapusedukasi']);
+    Route::get('/mpenerimaedukasi', [EdukasiController::class, 'mpenerimaedukasi']);
+    Route::get('/mkebutuhanedukasi', [EdukasiController::class, 'mkebutuhanedukasi']);
+
+    Route::get('/listdokter', [PoliController::class, 'listdokter']);
+    Route::post('/gantidpjp', [PoliController::class, 'gantidpjp']);
+
+    Route::get('/bridbpjslistrujukan', [BridbpjsplanController::class, 'bridbpjslistrujukan']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });

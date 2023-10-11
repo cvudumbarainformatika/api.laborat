@@ -151,4 +151,10 @@ class BridbpjsplanController extends Controller
         );
         return $createspri;
     }
+
+    public function bridbpjslistrujukan()
+    {
+        $listrujukan = BridgingbpjsHelper::get_url('vclaim', '/Rujukan/Keluar/List/tglMulai/2023-10-10/tglAkhir/2023-10-10');
+        return $listrujukan;
+    }
 }

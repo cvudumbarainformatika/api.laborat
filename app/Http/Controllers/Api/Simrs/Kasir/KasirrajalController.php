@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Api\Simrs\Kasir;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Karcis;
+use App\Models\Simrs\Kasir\Kwitansidetail;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -27,6 +30,8 @@ class KasirrajalController extends Controller
             'rs21.rs2 as dokter',
             'rs17.rs14 as kodesistembayar',
             'rs9.rs2 as sistembayar',
+            'rs9.groups as groupssistembayar',
+            'rs15.rs3 as sapaan',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
@@ -65,29 +70,6 @@ class KasirrajalController extends Controller
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
-            ->with([
-                'laborats' => function ($t) {
-                    $t->with('details.pemeriksaanlab')
-                        ->orderBy('id', 'DESC');
-                },
-                'radiologi' => function ($t) {
-                    $t->orderBy('id', 'DESC');
-                },
-                'penunjanglain' => function ($t) {
-                    $t->with('masterpenunjang')->orderBy('id', 'DESC');
-                },
-                'tindakan' => function ($t) {
-                    $t->with('mastertindakan:rs1,rs2')
-                        ->orderBy('id', 'DESC');
-                },
-                'diagnosa' => function ($d) {
-                    $d->with('masterdiagnosa');
-                },
-                'pemeriksaanfisik' => function ($a) {
-                    $a->with(['anatomys', 'detailgambars'])
-                        ->orderBy('id', 'DESC');
-                }
-            ])
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
 
@@ -96,7 +78,7 @@ class KasirrajalController extends Controller
 
     public function tagihanpergolongan()
     {
-        $layanan = ['RM#', 'K1#', 'K2#'];
+        $layanan = ['RM#', 'K1#', 'K2#', 'K3#', 'K4#', 'K5#', 'K6#'];
         $noreg = request('noreg');
         if (request('golongan') == 'karcis') {
             $karcis = Pembayaran::where('rs1', $noreg)->whereIn('rs3', $layanan)->get();
@@ -128,6 +110,77 @@ class KasirrajalController extends Controller
                     'Subtotal' => $konsul
                 ]
             );
+        }
+    }
+
+    public function pembayaran(Request $request)
+    {
+        if (str_contains($request->groupssistembayar, '1')) {
+            return 'wew';
+        } else {
+            if ($request->jenispembayaran == 'Karcis') {
+                $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
+                if ($cek > 0) {
+                    return new JsonResponse(['message' => 'Maaf Karcis Sudah tercetak...!!!'], 500);
+                }
+                DB::select('call karcisrj(@nomor)');
+                $x = DB::table('rs1')->select('karcisrj')->get();
+                $wew = $x[0]->karcisrj;
+                $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+
+                $simpankarcis = Karcis::firstOrCreate(
+                    [
+
+                        'nokarcis' => $nokarcis
+                    ],
+                    [
+                        'noreg' => $request->noreg,
+                        'norm' => $request->norm,
+                        'tgl' => $request->tgl_kunjungan,
+                        'nama' => $request->nama,
+                        'sapaan' => $request->sapaan,
+                        'kelamin' => $request->kelamin,
+                        'poli' => $request->poli,
+                        'sistembayar' => $request->sistembayar,
+                        'total' => $request->total,
+                        'rinci' => $request->rinci,
+                        'tglx' => date('Y-m-d H:i:s'),
+                        'users' => auth()->user()->pegawai_id
+                    ]
+                );
+                if (!$simpankarcis) {
+                    return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
+                }
+
+                $x = ['RM#', 'K2#', 'K1#', 'K3#', 'K4#', 'K5#', 'K6#'];
+                $cariid = Pembayaran::select('id', 'rs6', DB::raw('rs7+rs11 as jml'))->whereIn('rs3', $x)->where('rs1', $request->noreg)->get();
+                foreach ($cariid as $val) {
+                    //$wew[] = $val['jml'];
+                    $simpandetail = Kwitansidetail::create(
+                        [
+                            'no_pembayaran' => '-',
+                            'no_kwitansi' => $nokarcis,
+                            'id_trans' => $val['id'],
+                            'noreg' => $request->noreg,
+                            'pelayanan' => 'RAJAL',
+                            'jenis' => $val['rs6'],
+                            'unit' => $request->kodepoli,
+                            'jml' => $val['jml']
+                        ]
+                    );
+                }
+                if (!$simpandetail) {
+                    return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
+                }
+                return new JsonResponse(
+                    [
+                        'message' => 'Data Berhasil Disimpan',
+                        'result' => $simpankarcis
+                    ],
+                    200
+                );
+            }
+            return 'UMUM';
         }
     }
 }

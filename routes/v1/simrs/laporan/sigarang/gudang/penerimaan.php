@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/laporan/sigarang'
 ], function () {
     Route::get('/lappenerimaan', [LaporanPenerimaanController::class, 'lappenerimaan']);
+    Route::get('/lappersediaan', [LaporanPenerimaanController::class, 'lappersediaan']);
 });

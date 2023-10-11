@@ -172,16 +172,34 @@ class AutogenController extends Controller
         // $noreg = '53539/08/2023/J';
         // $inacbg = EwseklaimController::ewseklaimrajal_newclaim($noreg);
         // return new JsonResponse($inacbg);
-        $dialogtindakanpoli = Mtindakan::select(
-            'rs1 as kdtindakan',
-            'rs2 as tindakan',
-            'rs8 as sarana',
-            'rs9 as pelayanan',
-            DB::raw('rs8 +rs9 as tarif')
-        )
-            ->where('rs2', 'Like', request('tindakan'))
-            ->get();
-        return new JsonResponse($dialogtindakanpoli);
+        // $dialogtindakanpoli = Mtindakan::select(
+        //     'rs1 as kdtindakan',
+        //     'rs2 as tindakan',
+        //     'rs8 as sarana',
+        //     'rs9 as pelayanan',
+        //     DB::raw('rs8 +rs9 as tarif')
+        // )
+        //     ->where('rs2', 'Like', request('tindakan'))
+        //     ->get();
+        // return new JsonResponse($dialogtindakanpoli);
+        // $data = [
+        //     "request" => [
+        //         "t_rujukan" => [
+        //             "noRujukan" => "0301R0011117B000015",
+        //             "user" => "Coba Ws"
+        //         ]
+        //     ]
+        // ];
+
+        // $deleterujukan = BridgingbpjsHelper::post_url(
+        //         'vclaim',
+        //         'Rujukan/2.0/delete',
+        //         $data
+        //     );
+        // return $deleterujukan;
+
+        // return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/Keluar/List/tglMulai/2023-10-10/tglAkhir/2023-10-10');
+        return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/List/Peserta/0000113076191');
     }
 
     public function coba()
@@ -2003,36 +2021,78 @@ class AutogenController extends Controller
         // return new JsonResponse($balik);
         // $anu = substr("2023-10-05 10:23:59", 0, 11);
         // $date = date_create('2023-10-05 10:23:59');
-        $date = date_create('2023-10-05 10:23:59');
-        $anu = date_format($date, 'Y-m-d');
-        $comp = $anu !== date('Y-m-d');
-        return new JsonResponse([
-            'date comp' => $comp
-        ]);
-        $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0000113088497' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
-        $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
+        // $date = date_create('2023-10-05 10:23:59');
+        // $anu = date_format($date, 'Y-m-d');
+        // $comp = $anu !== date('Y-m-d');
+        // return new JsonResponse([
+        //     'date comp' => $comp
+        // ]);
+        // $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0000113088497' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
+        // $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
 
-        $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
-        $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
-        $kontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . "1327R0011023K000206");
-        $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . "1327R0010923V008304");
+        // $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
+        // $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        // $kontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . "1327R0011023K000206");
+        // $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . "1327R0010923V008304");
 
-        $history2 = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0000112357664' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
-        $sep2 = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
+        // $history2 = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0000112357664' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
+        // $sep2 = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
 
-        $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
-        $infoSep2 = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
-        $kontrol2 = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . "1327R0011023K000206");
-        $rujukanPcare2 = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . "1327R0010923V008304");
+        // $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
+        // $infoSep2 = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        // $kontrol2 = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . "1327R0011023K000206");
+        // $rujukanPcare2 = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . "1327R0010923V008304");
 
-        return new JsonResponse([
-            'his' => $history,
-            'info' => $infoSep,
-            'his2' => $history2,
-            'info2' => $infoSep2,
-            'kontrol' => $kontrol,
-            'rujukanPcare' => $rujukanPcare,
-        ]);
+        // return new JsonResponse([
+        //     'his' => $history,
+        //     'info' => $infoSep,
+        //     'his2' => $history2,
+        //     'info2' => $infoSep2,
+        //     'kontrol' => $kontrol,
+        //     'rujukanPcare' => $rujukanPcare,
+        // ]);
+        // $result = Penerimaan::where('no_kwitansi', '<>', '')
+        //     ->with('details')
+        //     ->orderBy('no_kwitansi')
+        //     ->get();
+
+        // $groupedResult = $result->groupBy('no_kwitansi')->map(function ($group) {
+        //     return $group->map(function ($item) {
+        //         return $item;
+        //     });
+        // });
+
+        // // Convert the result to the desired format
+        // $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
+        //     $total = $items->sum('total');
+        //     return [
+        //         'kwitansi' => $kwitansi,
+        //         'totalSemua' => $total,
+        //         'penerimaan' => $items,
+        //     ];
+        // })->values();
+
+        // return response()->json($formattedResult);
+        $result = RecentStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
+            ->where('sisa_stok', '>', 0)
+            ->where('kode_ruang', 'LIKE', '%Gd-%')
+            ->when(request('kode_ruang'), function ($anu) {
+                $anu->whereKodeRuang(request('kode_ruang'));
+            })
+            ->when(request('kode_rs'), function ($anu) {
+                $anu->whereKodeRs(request('kode_rs'));
+            })
+            ->with(
+                'barang:kode,nama',
+                'penerimaan:id,no_penerimaan',
+                'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi'
+            )
+            // ->with('penerimaan.details')
+            ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
+            ->paginate(request('per_page'));
+
+        $data = $result;
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)

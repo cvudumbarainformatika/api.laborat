@@ -13,4 +13,5 @@ Route::group([
     Route::get('/rajal/billbynoreg', [BillingbynoregController::class, 'billbynoregrajal']);
 
     Route::get('/rajal/tagihanpergolongan', [KasirrajalController::class, 'tagihanpergolongan']);
+    Route::post('/rajal/pembayaran', [KasirrajalController::class, 'pembayaran']);
 });

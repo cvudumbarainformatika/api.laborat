@@ -94,4 +94,30 @@ class PembayaranController extends Controller
 
         return new JsonResponse($data);
     }
+    public function listBayarByKwitansi()
+    {
+
+        $result = Penerimaan::where('no_pembayaran', '<>', '')
+            ->with('details')
+            ->orderBy('no_pembayaran')
+            ->get();
+
+        $groupedResult = $result->groupBy('no_pembayaran')->map(function ($group) {
+            return $group->map(function ($item) {
+                return $item;
+            });
+        });
+
+        // Convert the result to the desired format
+        $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
+            $total = $items->sum('total');
+            return [
+                'kwitansi' => $kwitansi,
+                'totalSemua' => $total,
+                'penerimaan' => $items,
+            ];
+        })->values();
+
+        return new JsonResponse($formattedResult);
+    }
 }

@@ -14,5 +14,6 @@ Route::group([
     // Route::get('/nomor-pemesanan', [BastController::class, 'cariPemesanan']);
     Route::get('/pemesanan', [BastController::class, 'ambilPemesanan']);
     Route::post('/simpan-bast', [BastController::class, 'simpanBast']);
-    Route::get('/list-bast', [BastController::class, 'listBast']);
+    // Route::get('/list-bast', [BastController::class, 'listBast']);
+    Route::get('/list-bast', [BastController::class, 'listBastByKwitansi']);
 });

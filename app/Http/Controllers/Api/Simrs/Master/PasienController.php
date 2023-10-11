@@ -135,4 +135,27 @@ class PasienController extends Controller
         //->paginate(request('per_page'));
         return new JsonResponse($queryx);
     }
+    public function caripasienbyrm()
+    {
+        // $query = Mpasien::pasien()->filter(request(['q']))
+        //     ->orderBy('rs2')
+        //     ->limit(20)
+        //     ->get();
+        //   ->paginate(request('per_page'));
+
+        $query = Mpasien::pasien()->where('rs1', request(['q']))
+            ->limit(20)
+            ->get();
+
+        if (count($query) > 0) {
+            return new JsonResponse($query);
+        }
+
+        $queryx = Mpasienx::pasienx()->where('rs1', request(['q']))
+            ->limit(20)
+            // ->union($query)
+            ->get();
+        //->paginate(request('per_page'));
+        return new JsonResponse($queryx);
+    }
 }
