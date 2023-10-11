@@ -83,16 +83,22 @@ class LaporanPenerimaanController extends Controller
     public function lappersediaan()
     {
         $date = date_create(request('tahun') . '-' . request('bulan'));
+        $date2 = date_create(request('tahun') . '-' . request('bulan'));
+        $anu = date_format($date2, 'Y-m');
+        $comp = $anu === date('Y-m');
         $temp = date_modify($date, '-1 months');
-        $anu = date_format($date, 'Y-m');
-        $prev = date_format($temp, 'Y-m');;
-        // return new JsonResponse($prev);
+        $prev = date_format($temp, 'Y-m');
+        // return new JsonResponse([$anu, $comp]);
         $from = request('tahun') . '-' . request('bulan') . '-01 00:00:00';
         $to = request('tahun') . '-' . request('bulan') . '-31 23:59:59';
         $fromA = $prev . '-01 00:00:00';
         $toA = $prev . '-31 23:59:59';
+        if ($comp) {
 
-        $recent = RecentStokUpdate::select('kode_rs')->distinct()->orderBy('kode_rs', 'ASC')->get();
+            $recent = RecentStokUpdate::select('kode_rs')->where('kode_ruang', 'LIKE', '%Gd%')->where('sisa_stok', '>', 0)->distinct()->orderBy('kode_rs', 'ASC')->get();
+        } else {
+            $recent = MonthlyStokUpdate::select('kode_rs')->distinct()->where('kode_ruang', 'LIKE', '%Gd%')->where('sisa_stok', '>', 0)->whereBetween('tanggal', [$from, $to])->orderBy('kode_rs', 'ASC')->get();
+        }
         $trx = DetailPenerimaan::select('kode_rs')->distinct()
             ->leftJoin('penerimaans', function ($p) {
                 $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
@@ -117,92 +123,96 @@ class LaporanPenerimaanController extends Controller
                 'satuan:kode,nama',
                 'monthly' => function ($m) use ($from, $to, $depo) {
                     $m->select('tanggal', 'harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
+                        ->with('depo')
                         ->whereBetween('tanggal', [$from, $to])
                         ->whereIn('kode_ruang', $depo)
-                        ->when(request('kode_ruang'), function ($anu) use ($depo) {
+                        ->when(request('kode_ruang'), function ($anu) {
                             $anu->whereKodeRuang(request('kode_ruang'));
                         });
                 },
                 'stok_awal' => function ($m) use ($fromA, $toA, $depo) {
                     $m->select('tanggal', 'harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
+                        ->with('depo')
                         ->whereBetween('tanggal', [$fromA, $toA])
                         ->whereIn('kode_ruang', $depo)
-                        ->when(request('kode_ruang'), function ($anu) use ($depo) {
+                        ->when(request('kode_ruang'), function ($anu) {
                             $anu->whereKodeRuang(request('kode_ruang'));
                         });
                 },
                 'recent' => function ($m) use ($depo) {
                     $m->select('harga', 'kode_rs', 'kode_ruang', 'sisa_stok')
+                        ->with('depo')
                         ->where('sisa_stok', '>', 0)
                         ->whereIn('kode_ruang', $depo)
-                        ->when(request('kode_ruang'), function ($anu) use ($depo) {
+                        ->when(request('kode_ruang'), function ($anu) {
                             $anu->whereKodeRuang(request('kode_ruang'));
                         });
                 },
-                'detailPenerimaan' => function ($m) use ($from, $to) {
-                    $m->select(
-                        'harga',
-                        'harga_jadi',
-                        'harga_kontrak',
-                        'isi',
-                        'qty',
-                        'kode_rs',
-                        'diskon',
-                        'penerimaan_id',
-                        'ppn'
-                    )
-                        ->leftJoin('penerimaans', function ($p) {
-                            $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
-                        })
-                        ->whereBetween('penerimaans.tanggal', [$from, $to])
-                        ->where('status', 2);
-                },
-                'detailDistribusiDepo' => function ($m) use ($from, $to) {
-                    $m->select(
-                        'jumlah',
-                        'kode_rs',
-                        'isi',
-                        'distribusi_depo_id',
-                    )
-                        ->leftJoin('distribusi_depos', function ($p) {
-                            $p->on('distribusi_depos.id', '=', 'detail_distribusi_depos.distribusi_depo_id');
-                        })
-                        ->whereBetween('distribusi_depos.tanggal', [$from, $to])
-                        ->where('status', 2);
-                },
-                'detailDistribusiLangsung' => function ($m) use ($from, $to) {
-                    $m->select(
-                        'jumlah',
-                        'kode_rs',
-                        'isi',
-                        'distribusi_langsung_id',
-                    )
-                        ->leftJoin('distribusi_langsungs', function ($p) {
-                            $p->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
-                        })
-                        ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
-                        ->where('status', 2);
-                },
-                'detailPermintaanruangan' => function ($m) use ($from, $to) {
-                    $m->select(
-                        'jumlah_distribusi',
-                        'kode_rs',
-                        'isi',
-                        'permintaanruangan_id',
-                    )
-                        ->leftJoin('permintaanruangans', function ($p) {
-                            $p->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
-                        })
-                        ->whereBetween('permintaanruangans.tanggal', [$from, $to])
-                        ->where('status', 7);
-                },
+                // 'detailPenerimaan' => function ($m) use ($from, $to) {
+                //     $m->select(
+                //         'harga',
+                //         'harga_jadi',
+                //         'harga_kontrak',
+                //         'isi',
+                //         'qty',
+                //         'kode_rs',
+                //         'diskon',
+                //         'penerimaan_id',
+                //         'ppn'
+                //     )
+                //         ->leftJoin('penerimaans', function ($p) {
+                //             $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
+                //         })
+                //         ->whereBetween('penerimaans.tanggal', [$from, $to])
+                //         ->where('status', 2);
+                // },
+                // 'detailDistribusiDepo' => function ($m) use ($from, $to) {
+                //     $m->select(
+                //         'jumlah',
+                //         'kode_rs',
+                //         'isi',
+                //         'distribusi_depo_id',
+                //     )
+                //         ->leftJoin('distribusi_depos', function ($p) {
+                //             $p->on('distribusi_depos.id', '=', 'detail_distribusi_depos.distribusi_depo_id');
+                //         })
+                //         ->whereBetween('distribusi_depos.tanggal', [$from, $to])
+                //         ->where('status', 2);
+                // },
+                // 'detailDistribusiLangsung' => function ($m) use ($from, $to) {
+                //     $m->select(
+                //         'jumlah',
+                //         'kode_rs',
+                //         'isi',
+                //         'distribusi_langsung_id',
+                //     )
+                //         ->leftJoin('distribusi_langsungs', function ($p) {
+                //             $p->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
+                //         })
+                //         ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
+                //         ->where('status', 2);
+                // },
+                // 'detailPermintaanruangan' => function ($m) use ($from, $to) {
+                //     $m->select(
+                //         'jumlah_distribusi',
+                //         'kode_rs',
+                //         'isi',
+                //         'permintaanruangan_id',
+                //     )
+                //         ->leftJoin('permintaanruangans', function ($p) {
+                //             $p->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
+                //         })
+                //         ->whereBetween('permintaanruangans.tanggal', [$from, $to])
+                //         ->where('status', 7);
+                // },
             ]);
 
 
-        $data = $barang->paginate(request('per_page'));
+        // $data = $barang->paginate(request('per_page'));
+        $data = $barang->get();
 
         return new JsonResponse($data);
-        // $comp = $anu === date('Y-m');
+        //
         // if ($comp) {
         //     $result = RecentStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
         //         ->where('sisa_stok', '>', 0)
