@@ -62,6 +62,7 @@ class AnamnesisController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+        // return new JsonResponse($cari, 200);
     }
 
     public function historyanamnesis()
