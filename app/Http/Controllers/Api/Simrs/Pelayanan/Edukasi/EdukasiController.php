@@ -37,7 +37,7 @@ class EdukasiController extends Controller
                 'message' => 'Data Berhasil Disimpan...!!!',
                 'result' => $simpanedukasi
             ],
-            500
+            200
         );
     }
 

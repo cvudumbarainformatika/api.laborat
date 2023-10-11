@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
@@ -111,6 +112,14 @@ class BastController extends Controller
                             ->get();
                         if (count($stok) >= 0) {
                             foreach ($stok as $key) {
+                                $key->update(['harga' => $det['harga_jadi']]);
+                            }
+                        }
+                        $month = MonthlyStokUpdate::where('no_penerimaan', $penerimaan['no_penerimaan'])
+                            ->where('kode_rs', $detail['kode_rs'])
+                            ->get();
+                        if (count($month) >= 0) {
+                            foreach ($month as $key) {
                                 $key->update(['harga' => $det['harga_jadi']]);
                             }
                         }
