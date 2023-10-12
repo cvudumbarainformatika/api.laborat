@@ -60,8 +60,9 @@ class BridbpjsplanController extends Controller
         );
 
         $xxx = $bridcretaerujukan['metadata']['code'];
-        $norujukan = $bridcretaerujukan['response']['rujukan']['noRujukan'];
+
         if ($xxx === 200 || $xxx === '200') {
+            $norujukan = $bridcretaerujukan['response']['rujukan']['noRujukan'];
             $simpanrujukan = Transrujukan::create(
                 [
                     'rs1' => $request->noreg,
@@ -75,7 +76,7 @@ class BridbpjsplanController extends Controller
                     'rs9' => $request->catatan,
                     'rs10' => $request->diagnosarujukan,
                     'rs11' => $request->tiperujukan,
-                    'rs12' => $request->kdpoliasal,
+                    'rs12' => $request->kodepoli,
                     'rs13' => date('Y-m-d H:i:s'),
                     'rs14' => auth()->user()->pegawai_id,
                     'rs15' => $request->noka,
@@ -83,11 +84,12 @@ class BridbpjsplanController extends Controller
                     'rs17' => $request->kelamin,
                     'tglRencanaKunjungan' => $request->tglrencanakunjungan,
                     'diagnosa' => $request->diagnosa,
-                    'poli' => $request->kdpoliasal,
+                    'poli' => $request->kodepoli,
                     'tipefaskes' => $request->tipefaskes,
                     'polix' => $request->polirujukan
                 ]
             );
+
             if (!$simpanrujukan) {
                 return 500;
             }
