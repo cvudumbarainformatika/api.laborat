@@ -295,6 +295,47 @@ class LaporanPenerimaanController extends Controller
 
     public function lapPenerimaanGudang()
     {
-        return new JsonResponse(request()->all());
+        $data = Penerimaan::select(
+            'penerimaans.tanggal',
+            'penerimaans.no_penerimaan',
+            'penerimaans.status',
+            'penerimaans.surat_jalan',
+            'penerimaans.faktur',
+            'penerimaans.kode_perusahaan',
+            'detail_penerimaans.kode_rs',
+            'detail_penerimaans.harga_jadi as harga',
+            'detail_penerimaans.ppn',
+            'detail_penerimaans.sub_total',
+            'detail_penerimaans.qty',
+            'barang_r_s.nama',
+            'satuans.nama as satuan',
+            'recent_stok_updates.sisa_stok',
+        )
+            ->leftJoin('detail_penerimaans', function ($p) {
+                $p->on('detail_penerimaans.penerimaan_id', '=', 'penerimaans.id')
+                    ->leftJoin('barang_r_s', function ($b) {
+                        $b->on('detail_penerimaans.kode_rs', '=', 'barang_r_s.kode')
+                            ->leftJoin('satuans', function ($s) {
+                                $s->on('satuans.kode', '=', 'barang_r_s.kode_satuan');
+                            });
+                    });
+                // ->leftJoin('recent_stok_updates', function ($s) {
+                //     $s->on('recent_stok_updates.kode_rs', '=', 'detail_penerimaans.kode_rs');
+                // });
+            })
+            ->leftJoin('recent_stok_updates', function ($s) {
+                $s->on('recent_stok_updates.no_penerimaan', '=', 'penerimaans.no_penerimaan')
+                    ->on('recent_stok_updates.kode_rs', '=', 'detail_penerimaans.kode_rs');
+            })
+            ->where('recent_stok_updates.kode_ruang', 'Gd-02010100')
+            ->when(request('q'), function ($q) {
+                $q->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%');
+            })
+            ->whereBetween('penerimaans.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->with('perusahaan')
+            ->orderBy('penerimaans.tanggal', 'ASC')
+            ->paginate(request('per_page'));
+        return new JsonResponse($data);
     }
 }
