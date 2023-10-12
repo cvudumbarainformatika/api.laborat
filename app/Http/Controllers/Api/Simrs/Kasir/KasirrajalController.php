@@ -9,6 +9,7 @@ use App\Models\Simrs\Kasir\Karcis;
 use App\Models\Simrs\Kasir\Kwitansidetail;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Kasir\Tagihannontunai;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,102 +122,106 @@ class KasirrajalController extends Controller
         } else {
             if ($request->jenispembayaran == 'karcis') {
                 if ($request->carabayar == 'qris') {
-                }
-                $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
-                if ($cek > 0) {
-                    return new JsonResponse(['message' => 'Maaf Karcis Sudah tercetak...!!!'], 500);
-                }
-                DB::select('call karcisrj(@nomor)');
-                $x = DB::table('rs1')->select('karcisrj')->get();
-                $wew = $x[0]->karcisrj;
-                $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+                    $qris = bridgingbankjatimHelper::createqris($request);
+                    $xxx = $qris->responsCode;
+                    if ($xxx == '00') {
+                        DB::select('call karcisrj(@nomor)');
+                        $x = DB::table('rs1')->select('karcisrj')->get();
+                        $wew = $x[0]->karcisrj;
+                        $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+                        $total = $request->total;
+                        $bj = 0.4;
+                        $totalall = (int) $total + (int) ($total * $bj / 100);
+                        $status = '';
+                        if ($qris->status == '1') {
+                            $status = 'true';
+                        }
+                        $simpanqris = Tagihannontunai::create(
+                            [
+                                'rs1' => $request->noreg,
+                                'rs2' => $request->nama,
+                                'rs3' => $request->norm,
+                                'rs4' => $nokarcis,
+                                'rs5' => date('Y-m-d H:i:s'),
+                                'rs6' =>  date('Y-m-d'),
+                                'rs7' => auth()->user()->pegawai_id,
+                                'rs8' => $total,
+                                'rs9' => $total,
+                                'rs10' => 'KASIR RAJAL',
+                                'rs11' => 'KARCIS',
+                                'rs13' => $status,
+                                'rs15' => $qris->qrValue,
+                                'rs16' => $qris->nmid,
+                                'rs17' => $qris->invoice_number,
+                                'rs18' => $bj,
+                                'rs19' => $totalall,
+                            ]
+                        );
+                        return new JsonResponse($qris);
+                    }
+                } else {
+                    $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
+                    if ($cek > 0) {
+                        return new JsonResponse(['message' => 'Maaf Karcis Sudah tercetak...!!!'], 500);
+                    }
+                    DB::select('call karcisrj(@nomor)');
+                    $x = DB::table('rs1')->select('karcisrj')->get();
+                    $wew = $x[0]->karcisrj;
+                    $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
 
-                $simpankarcis = Karcis::firstOrCreate(
-                    [
-
-                        'nokarcis' => $nokarcis
-                    ],
-                    [
-                        'noreg' => $request->noreg,
-                        'norm' => $request->norm,
-                        'tgl' => $request->tgl_kunjungan,
-                        'nama' => $request->nama,
-                        'sapaan' => $request->sapaan,
-                        'kelamin' => $request->kelamin,
-                        'poli' => $request->poli,
-                        'sistembayar' => $request->sistembayar,
-                        'total' => $request->total,
-                        'rinci' => $request->rinci,
-                        'tglx' => date('Y-m-d H:i:s'),
-                        'users' => auth()->user()->pegawai_id
-                    ]
-                );
-                if (!$simpankarcis) {
-                    return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
-                }
-
-                $x = ['RM#', 'K2#', 'K1#', 'K3#', 'K4#', 'K5#', 'K6#'];
-                $cariid = Pembayaran::select('id', 'rs6', DB::raw('rs7+rs11 as jml'))->whereIn('rs3', $x)->where('rs1', $request->noreg)->get();
-                foreach ($cariid as $val) {
-                    //$wew[] = $val['jml'];
-                    $simpandetail = Kwitansidetail::create(
+                    $simpankarcis = Karcis::firstOrCreate(
                         [
-                            'no_pembayaran' => '-',
-                            'no_kwitansi' => $nokarcis,
-                            'id_trans' => $val['id'],
+
+                            'nokarcis' => $nokarcis
+                        ],
+                        [
                             'noreg' => $request->noreg,
-                            'pelayanan' => 'RAJAL',
-                            'jenis' => $val['rs6'],
-                            'unit' => $request->kodepoli,
-                            'jml' => $val['jml']
+                            'norm' => $request->norm,
+                            'tgl' => $request->tgl_kunjungan,
+                            'nama' => $request->nama,
+                            'sapaan' => $request->sapaan,
+                            'kelamin' => $request->kelamin,
+                            'poli' => $request->poli,
+                            'sistembayar' => $request->sistembayar,
+                            'total' => $request->total,
+                            'rinci' => $request->rinci,
+                            'tglx' => date('Y-m-d H:i:s'),
+                            'users' => auth()->user()->pegawai_id
                         ]
                     );
+                    if (!$simpankarcis) {
+                        return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
+                    }
+
+                    $x = ['RM#', 'K2#', 'K1#', 'K3#', 'K4#', 'K5#', 'K6#'];
+                    $cariid = Pembayaran::select('id', 'rs6', DB::raw('rs7+rs11 as jml'))->whereIn('rs3', $x)->where('rs1', $request->noreg)->get();
+                    foreach ($cariid as $val) {
+                        //$wew[] = $val['jml'];
+                        $simpandetail = Kwitansidetail::create(
+                            [
+                                'no_pembayaran' => '-',
+                                'no_kwitansi' => $nokarcis,
+                                'id_trans' => $val['id'],
+                                'noreg' => $request->noreg,
+                                'pelayanan' => 'RAJAL',
+                                'jenis' => $val['rs6'],
+                                'unit' => $request->kodepoli,
+                                'jml' => $val['jml']
+                            ]
+                        );
+                    }
+                    if (!$simpandetail) {
+                        return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
+                    }
+                    return new JsonResponse(
+                        [
+                            'message' => 'Data Berhasil Disimpan',
+                            'result' => $simpankarcis
+                        ],
+                        200
+                    );
                 }
-                if (!$simpandetail) {
-                    return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
-                }
-                return new JsonResponse(
-                    [
-                        'message' => 'Data Berhasil Disimpan',
-                        'result' => $simpankarcis
-                    ],
-                    200
-                );
             }
         }
-    }
-
-    public static function createqris($request)
-    {
-        $tglsekarang = date('y-m-d');
-        $billNumber_tampung = $request->nota;
-        $terminalUser_tampung = 'U012001';
-        $merchanthashkey = '8M9R0BZE21';
-        $total = $request->total;
-        $bj = $_GET['bj'];
-        $totalall = $_GET['totalall'];
-
-        $merchantPan = '9360011400000396828';
-        $hashcodeKey = hash("sha256", $merchantPan . '' . $billNumber_tampung . '' . $terminalUser_tampung . '' . $merchanthashkey);
-        $billNumber = $billNumber_tampung;
-        $purposetrx = $_GET['noreg'];
-        $storelabel = 'RSUD DR M SALEH';
-        $customerlabel = 'PUBLIC';
-        $terminalUser = $terminalUser_tampung;
-        $expiredDate = date('Y-m-d 23:59:59');;
-        $amount = $totalall;
-        $data = [
-            'merchantPan' => $merchantPan,
-            'hashcodeKey' => $hashcodeKey,
-            'billNumber' => $billNumber,
-            'purposetrx' => $purposetrx,
-            'storelabel' => $storelabel,
-            'customerlabel' => $customerlabel,
-            'terminalUser' => $terminalUser,
-            'expiredDate' => $expiredDate,
-            'amount' => $amount
-        ];
-
-        $reqjatim = bridgingbankjatimHelper::cretaeqris('POST', $data);
     }
 }
