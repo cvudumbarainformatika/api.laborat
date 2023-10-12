@@ -79,16 +79,16 @@ class PlaningController extends Controller
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
             }
         } elseif ($request->planing == 'Rawat Inap') {
-            if ($request->status == 'Operasi' && $sistembayar == '1') {
+            if ($request->status == 'Operasi' && $groupsistembayar == '1') {
                 $createspri = BridbpjsplanController::createspri($request);
                 $xxx = $createspri['metadata']['code'];
                 if ($xxx === 200 || $xxx === '200') {
+                    $simpanop = self::jadwaloperasi($request);
+                    if ($simpanop == 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                    }
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
                 }
-                $simpanop = self::jadwaloperasi($request);
-                if ($simpanop == 500) {
-                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
-                }
-                return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
             }
         } else {
             $simpanakhir = self::simpanakhir($request);

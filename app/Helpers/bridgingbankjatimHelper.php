@@ -8,81 +8,41 @@ use LZCompressor\LZString;
 class bridgingbankjatimHelper
 {
 
-    public static function cretaeqris(string $name, $param)
+    public static function cretaeqris(string $method, $myvars)
     {
-        $base_url = 'https://jatimva.bankjatim.co.id/MC/Qris/Dynamic';
+        $url = 'https://jatimva.bankjatim.co.id/MC/Qris/Dynamic';
 
-        $url = $base_url . $service_name . '/' . $param;
-        return $url;
-    }
+        $session = curl_init($url);
+        $arrheader =  array(
+            //'Accept: application/json',
+            'Content-Type: application/json',
+        );
 
+        curl_setopt($session, CURLOPT_URL, $url);
+        curl_setopt($session, CURLOPT_HTTPHEADER, $arrheader);
+        curl_setopt($session, CURLOPT_VERBOSE, true);
 
-    public static function get_url(string $name, $param)
-    {
-
-        $url = self::ws_url($name, $param);
-        //  $url = self::ws_url_dev($name, $param);
-
-
-        $sign = self::getSignature($name);
-        $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
-
-        $header = self::getHeader($sign);
-        $response = Http::withHeaders($header)->get($url);
-
-        $data = json_decode($response, true);
-        // return $data;
-        if (!$data) {
-            return response()->json([
-                'code' => 500,
-                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
-            ], 500);
+        if ($method == 'POST') {
+            curl_setopt($session, CURLOPT_POST, true);
+            curl_setopt($session, CURLOPT_POSTFIELDS, $myvars);
         }
 
-
-
-        $res['metadata'] = '';
-        $res['result'] = 'Tidak ditemukan';
-
-        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
-
-        // if (!$data["response"]) {
-        //     return $res;
-        // }
-        $nilairespon = $data["response"] ?? false;
-        if (!$nilairespon) {
-            return $res;
+        if ($method == 'PUT') {
+            curl_setopt($session, CURLOPT_CUSTOMREQUEST, "PUT");
+            curl_setopt($session, CURLOPT_POSTFIELDS, $myvars);
         }
-        $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
-        $res['result'] = json_decode($hasilakhir);
-        if (!$hasilakhir) {
-            return response()->json($data);
+
+        if ($method == 'GET') {
+            curl_setopt($session, CURLOPT_CUSTOMREQUEST, "GET");
+            curl_setopt($session, CURLOPT_POSTFIELDS, $myvars);
         }
-        return $res;
-    }
+        if ($method == 'DELETE') {
+            curl_setopt($session, CURLOPT_CUSTOMREQUEST, "DELETE");
+            curl_setopt($session, CURLOPT_POSTFIELDS, $myvars);
+        }
 
-
-    public static function stringDecrypt($key, $string)
-    {
-        // $key = $sign['xconsid'] . $sign['secret_key'] . $time;
-        $encrypt_method = 'AES-256-CBC';
-        $key_hash = hex2bin(hash('sha256', $key));
-        $iv = substr(hex2bin(hash('sha256', $key)), 0, 16);
-        $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key_hash, OPENSSL_RAW_DATA, $iv);
-        return $output;
-    }
-
-    public static function decompress($string)
-    {
-        return LZString::decompressFromEncodedURIComponent($string);
-    }
-
-    public static function metaData($code = 200, $msg = 'ok', $value = null)
-    {
-        $metadata = ['code' => $code, 'message' => $msg];
-        $res['metadata'] = $metadata;
-        $res['result'] = $value;
-
-        return response()->json($res);
+        curl_setopt($session, CURLOPT_RETURNTRANSFER, TRUE);
+        $response = curl_exec($session);
+        return $response;
     }
 }

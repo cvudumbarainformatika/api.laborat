@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Kasir;
 
+use App\Helpers\bridgingbankjatimHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Karcis;
@@ -118,7 +119,9 @@ class KasirrajalController extends Controller
         if (str_contains($request->groupssistembayar, '1')) {
             return 'wew';
         } else {
-            if ($request->jenispembayaran == 'Karcis') {
+            if ($request->jenispembayaran == 'karcis') {
+                if ($request->carabayar == 'qris') {
+                }
                 $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
                 if ($cek > 0) {
                     return new JsonResponse(['message' => 'Maaf Karcis Sudah tercetak...!!!'], 500);
@@ -180,7 +183,40 @@ class KasirrajalController extends Controller
                     200
                 );
             }
-            return 'UMUM';
         }
+    }
+
+    public static function createqris($request)
+    {
+        $tglsekarang = date('y-m-d');
+        $billNumber_tampung = $request->nota;
+        $terminalUser_tampung = 'U012001';
+        $merchanthashkey = '8M9R0BZE21';
+        $total = $request->total;
+        $bj = $_GET['bj'];
+        $totalall = $_GET['totalall'];
+
+        $merchantPan = '9360011400000396828';
+        $hashcodeKey = hash("sha256", $merchantPan . '' . $billNumber_tampung . '' . $terminalUser_tampung . '' . $merchanthashkey);
+        $billNumber = $billNumber_tampung;
+        $purposetrx = $_GET['noreg'];
+        $storelabel = 'RSUD DR M SALEH';
+        $customerlabel = 'PUBLIC';
+        $terminalUser = $terminalUser_tampung;
+        $expiredDate = date('Y-m-d 23:59:59');;
+        $amount = $totalall;
+        $data = [
+            'merchantPan' => $merchantPan,
+            'hashcodeKey' => $hashcodeKey,
+            'billNumber' => $billNumber,
+            'purposetrx' => $purposetrx,
+            'storelabel' => $storelabel,
+            'customerlabel' => $customerlabel,
+            'terminalUser' => $terminalUser,
+            'expiredDate' => $expiredDate,
+            'amount' => $amount
+        ];
+
+        $reqjatim = bridgingbankjatimHelper::cretaeqris('POST', $data);
     }
 }
