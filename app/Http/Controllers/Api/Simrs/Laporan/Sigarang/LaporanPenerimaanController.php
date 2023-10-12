@@ -292,4 +292,9 @@ class LaporanPenerimaanController extends Controller
 
         // return new JsonResponse($data);
     }
+
+    public function lapPenerimaanGudang()
+    {
+        return new JsonResponse(request()->all());
+    }
 }
