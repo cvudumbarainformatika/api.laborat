@@ -335,6 +335,7 @@ class LaporanPenerimaanController extends Controller
             ->whereBetween('penerimaans.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->with('perusahaan')
             ->orderBy('penerimaans.tanggal', 'ASC')
+            ->orderBy('penerimaans.no_penerimaan', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
