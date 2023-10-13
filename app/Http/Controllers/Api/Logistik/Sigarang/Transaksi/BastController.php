@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Sigarang\MonthlyStokUpdate;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
@@ -17,10 +18,22 @@ class BastController extends Controller
 {
     public function cariPerusahaan()
     {
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
         // ambil data kode perusahaan, masing2 satu aja
-        $raw = Penerimaan::selectRaw('kode_perusahaan')
-            ->where('tanggal_bast', null)
-            ->orWhere('nilai_tagihan', '<=', 0)
+        $raw = Penerimaan::select(
+            'penerimaans.kode_perusahaan'
+        )
+            ->leftJoin('pemesanans', function ($q) {
+                $q->on('pemesanans.nomor', '=', 'penerimaans.nomor');
+            })
+            ->when($pegawai->role_id !== 1, function ($q) use ($user) {
+                $q->where('pemesanans.created_by', $user->pegawai_id);
+            })
+            ->where(function ($q) {
+                $q->where('penerimaans.tanggal_bast', null)
+                    ->orWhere('penerimaans.nilai_tagihan', '<=', 0);
+            })
             ->distinct()->get();
 
         // map ke bentuk array
@@ -36,13 +49,21 @@ class BastController extends Controller
 
     public function cariKontrak()
     {
-        $data = Penerimaan::select('kontrak')
-            ->where('kode_perusahaan', request('kode_perusahaan'))
-            ->where(function ($a) {
-                $a->whereNull('tanggal_bast')
-                    ->orWhere('nilai_tagihan', '<=', 0);
+        $user = auth()->user();
+        $pegawai = Pegawai::find($user->pegawai_id);
+        $data = Penerimaan::select('penerimaans.kontrak')
+            ->leftJoin('pemesanans', function ($q) {
+                $q->on('pemesanans.nomor', '=', 'penerimaans.nomor');
             })
-            ->distinct('kontrak')
+            ->when($pegawai->role_id !== 1, function ($q) use ($user) {
+                $q->where('pemesanans.created_by', $user->pegawai_id);
+            })
+            ->where('pemesanans.kode_perusahaan', request('kode_perusahaan'))
+            ->where(function ($a) {
+                $a->whereNull('penerimaans.tanggal_bast')
+                    ->orWhere('penerimaans.nilai_tagihan', '<=', 0);
+            })
+            ->distinct('penerimaans.kontrak')
             ->get();
 
         return new JsonResponse($data);
