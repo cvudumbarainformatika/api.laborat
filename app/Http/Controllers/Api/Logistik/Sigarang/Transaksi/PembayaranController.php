@@ -62,7 +62,7 @@ class PembayaranController extends Controller
     public function simpanBayar(Request $request)
     {
         $anu = [];
-        $id = auth()->user()->id;
+        $id = auth()->user()->pegawai_id;
         foreach ($request->penerimaans as $terima) {
             $temp = Penerimaan::find($terima['id']);
             if ($temp) {
