@@ -83,7 +83,7 @@ class BastController extends Controller
 
     public function simpanBast(Request $request)
     {
-        $id = auth()->user()->id;
+        $id = auth()->user()->pegawai_id;
         try {
             DB::beginTransaction();
             $berubah = [];

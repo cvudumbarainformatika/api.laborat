@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/lappenerimaan', [LaporanPenerimaanController::class, 'lappenerimaan']);
     Route::get('/lappersediaan', [LaporanPenerimaanController::class, 'lappersediaan']);
+    Route::get('/lappenerimaan-gudang', [LaporanPenerimaanController::class, 'lapPenerimaanGudang']);
 });
