@@ -10,7 +10,10 @@ use App\Models\Simrs\Kasir\Kwitansidetail;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Kasir\Tagihannontunai;
+use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +85,7 @@ class KasirrajalController extends Controller
     {
         $layanan = ['RM#', 'K1#', 'K2#', 'K3#', 'K4#', 'K5#', 'K6#'];
         $noreg = request('noreg');
+        $nota = request('nota');
         if (request('golongan') == 'karcis') {
             $karcis = Pembayaran::where('rs1', $noreg)->whereIn('rs3', $layanan)->get();
             $tagihanpergolongan = $karcis->map(function ($karcisx, $kunci) {
@@ -110,6 +114,74 @@ class KasirrajalController extends Controller
                 [
                     'Pelayanan' => $konsulantarpoli,
                     'Subtotal' => $konsul
+                ]
+            );
+        } elseif (request('golongan') == 'tindakan') {
+            $tindakan = Tindakan::select(
+                'rs30.rs2 as tindakan',
+                DB::raw('(rs73.rs7+rs73.rs13)*rs73.rs5 as subtotalx')
+            )
+                ->join('rs30', 'rs73.rs4', 'rs30.rs1')->where('rs73.rs1', $noreg)
+                ->where('rs73.rs2', $nota)->where('rs73.rs22', '!=', 'OPERASI')
+                ->get();
+            $subtotal = $tindakan->map(function ($tindakan, $kunci) {
+                return [
+                    'subtotal' => $tindakan->subtotalx,
+                ];
+            });
+            $total = $subtotal->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $tindakan,
+                    'Subtotal' => $total
+                ]
+            );
+        } elseif (request('golongan') == 'laborat') {
+            $laboratx = Laboratpemeriksaan::select(
+                'rs49.rs2 as keterangan',
+                DB::raw('(rs51.rs6+rs51.rs13) as subtotalx')
+            )->join('rs49', 'rs49.rs1', 'rs51.rs4')
+                ->where('rs51.rs1', $noreg)->where('rs51.rs2', $nota)
+                ->where('rs49.rs21', '');
+
+            $laborat = Laboratpemeriksaan::select(
+                'rs49.rs21 as keterangan',
+                DB::raw('(rs51.rs6+rs51.rs13) as subtotalx')
+            )->join('rs49', 'rs49.rs1', 'rs51.rs4')
+                ->where('rs51.rs1', $noreg)->where('rs51.rs2', $nota)
+                ->where('rs49.rs21', '!=', '')
+                ->groupBy('rs49.rs21')
+                ->union($laboratx)
+                ->get();
+            $subtotal = $laborat->map(function ($laborat, $kunci) {
+                return [
+                    'subtotal' => $laborat->subtotalx,
+                ];
+            });
+            $total = $subtotal->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $laborat,
+                    'Subtotal' => $total
+                ]
+            );
+        } elseif (request('golongan') == 'radiologi') {
+            $radiologi = Transradiologi::select(
+                DB::raw('concat(rs47.rs2,rs47.rs3) as keterangan'),
+                DB::raw('((rs48.rs6+rs48.rs8)*rs48.rs24) as subtotalx')
+            )->join('rs47', 'rs47.rs1', 'rs48.rs4')
+                ->where('rs48.rs1', $noreg)->where('rs48.rs2', $nota)
+                ->get();
+            $subtotal = $radiologi->map(function ($radiologi, $kunci) {
+                return [
+                    'subtotal' => $radiologi->subtotalx,
+                ];
+            });
+            $total = $subtotal->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $radiologi,
+                    'Subtotal' => $total
                 ]
             );
         }
