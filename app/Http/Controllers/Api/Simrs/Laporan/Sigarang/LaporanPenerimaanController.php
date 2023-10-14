@@ -7,6 +7,7 @@ use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Rekening50;
+use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
@@ -324,10 +325,10 @@ class LaporanPenerimaanController extends Controller
                 // });
             })
             ->leftJoin('recent_stok_updates', function ($s) {
-                $s->on('recent_stok_updates.no_penerimaan', '=', 'penerimaans.no_penerimaan')
-                    ->on('recent_stok_updates.kode_rs', '=', 'detail_penerimaans.kode_rs');
+                $s->on('penerimaans.no_penerimaan', '=', 'recent_stok_updates.no_penerimaan')
+                    ->on('detail_penerimaans.kode_rs', '=', 'recent_stok_updates.kode_rs')
+                    ->where('recent_stok_updates.kode_ruang', 'Gd-02010100');
             })
-            ->where('recent_stok_updates.kode_ruang', 'Gd-02010100')
             ->when(request('q'), function ($q) {
                 $q->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%');
@@ -336,6 +337,65 @@ class LaporanPenerimaanController extends Controller
             ->with('perusahaan')
             ->orderBy('penerimaans.tanggal', 'ASC')
             ->orderBy('penerimaans.no_penerimaan', 'ASC')
+            ->paginate(request('per_page'));
+        return new JsonResponse($data);
+    }
+    public function lapPenerimaanDepo()
+    {
+        $data = DistribusiDepo::select(
+            'distribusi_depos.tanggal',
+            'distribusi_depos.no_distribusi',
+            'distribusi_depos.status',
+            'detail_distribusi_depos.no_penerimaan',
+            'detail_distribusi_depos.kode_rs',
+            'detail_distribusi_depos.jumlah as qty',
+            'barang_r_s.nama',
+            'satuans.nama as satuan',
+            'recent_stok_updates.harga',
+            'recent_stok_updates.sisa_stok',
+            DB::raw('detail_distribusi_depos.jumlah * recent_stok_updates.harga as sub_total')
+        )
+            ->leftJoin('detail_distribusi_depos', function ($p) {
+                $p->on('detail_distribusi_depos.distribusi_depo_id', '=', 'distribusi_depos.id')
+                    ->leftJoin('barang_r_s', function ($b) {
+                        $b->on('detail_distribusi_depos.kode_rs', '=', 'barang_r_s.kode')
+                            ->leftJoin('satuans', function ($s) {
+                                $s->on('satuans.kode', '=', 'barang_r_s.kode_satuan');
+                            });
+                    })
+                    // ->leftJoin('recent_stok_updates', function ($s) {
+                    //     $s->on('recent_stok_updates.kode_rs', '=', 'detail_distribusi_depos.kode_rs');
+                    // });
+                    ->leftJoin('recent_stok_updates', function ($s) {
+                        $s->on('recent_stok_updates.no_penerimaan', '=', 'detail_distribusi_depos.no_penerimaan')
+                            ->on('recent_stok_updates.kode_rs', '=', 'detail_distribusi_depos.kode_rs')
+                            ->when(request('kode_ruang'), function ($q) {
+                                $depo = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103'];
+                                if (request('kode_ruang') === 'all') {
+                                    $q->whereIn('recent_stok_updates.kode_ruang', $depo);
+                                } else {
+                                    $q->whereIn('recent_stok_updates.kode_ruang', request('kode_ruang'));
+                                }
+                            });
+                    });
+            })
+            ->when(request('q'), function ($q) {
+                $q->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%');
+            })
+            ->when(request('kode_ruang'), function ($q) {
+                $depo = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103'];
+                if (request('kode_ruang') === 'all') {
+                    $q->whereIn('distribusi_depos.kode_depo', $depo);
+                } else {
+                    $q->whereIn('distribusi_depos.kode_depo', request('kode_ruang'));
+                }
+            })
+            ->whereBetween('distribusi_depos.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where('status', 2)
+            ->with('depo:nama')
+            ->orderBy('distribusi_depos.tanggal', 'ASC')
+            ->orderBy('distribusi_depos.no_distribusi', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }

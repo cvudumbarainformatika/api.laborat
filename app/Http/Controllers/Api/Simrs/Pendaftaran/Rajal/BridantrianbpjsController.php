@@ -146,11 +146,11 @@ class BridantrianbpjsController extends Controller
                 'noreg' => $input->noreg,
                 'taskid' => $x,
                 'waktu' => $waktu,
-                'created_at' => DateHelper::getDateTime(),
+                'created_at' =>  date('Y-m-d H:i:s'),
                 'user_id' => $user_id
             ]
         );
-        $tgltobpjshttpres = DateHelper::getDateTime();
+        $tgltobpjshttpres = date('Y-m-d H:i:s');
         $data = [
             "kodebooking" => $kodebooking,
             "taskid" => $x,
@@ -284,7 +284,7 @@ class BridantrianbpjsController extends Controller
                 'noreg' => $input->noreg,
                 'taskid' => $taskid,
                 'waktu' => $waktu,
-                'created_at' => DateHelper::getDateTime(),
+                'created_at' =>  date('Y-m-d H:i:s'),
                 'user_id' => $user_id
             ]
         );
@@ -294,7 +294,7 @@ class BridantrianbpjsController extends Controller
             "taskid" => $taskid,
             'waktu' => $waktu
         ];
-        $tgltobpjshttpres = DateHelper::getDateTime();
+        $tgltobpjshttpres =  date('Y-m-d H:i:s');
         $updatewaktuantrian = BridgingbpjsHelper::post_url(
             'antrean',
             'antrean/updatewaktu',

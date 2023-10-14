@@ -256,6 +256,9 @@ class DaftarrajalController extends Controller
         //$bpjs_antrian = self::bpjs_antrian($request,$input);
         $tgl = Carbon::now()->format('Y-m-d');
         $noantrian = $request->noantrian;
+
+
+        //  PASIEN MJKN ======================================================================================
         $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')->where('nomorantrean', '=', $noantrian)
             ->whereDate('tanggalperiksa', '=', $tgl)->first();
         if (!$bpjsantrian) {
