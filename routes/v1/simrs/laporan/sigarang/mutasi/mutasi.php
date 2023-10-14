@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Laporan\Sigarang\LaporanHutangController;
+use App\Http\Controllers\Api\Simrs\Laporan\Sigarang\LaporanMutasiGudangController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -9,5 +9,5 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/laporan/sigarang'
 ], function () {
-    Route::get('/laphutang', [LaporanHutangController::class, 'lapHutang']);
+    Route::get('/lap-mutasi', [LaporanMutasiGudangController::class, 'lapMutasi']);
 });
