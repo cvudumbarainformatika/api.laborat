@@ -59,6 +59,35 @@ class KasirrajalController extends Controller
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+            ->with(
+                [
+                    'tindakan' => function ($tindakan) {
+                        $tindakan->select('rs73.rs1', 'rs73.rs2 as nota')
+                            ->where('rs73.rs22', '!=', 'OPERASI')
+                            ->groupBy('rs73.rs2');
+                    },
+                    'laborat' => function ($laborat) {
+                        $laborat->select('rs51.rs1', 'rs51.rs2 as nota')
+                            ->groupBy('rs51.rs2');
+                    },
+                    'transradiologi' => function ($transradiologi) {
+                        $transradiologi->select('rs48.rs1', 'rs48.rs2 as nota')
+                            ->groupBy('rs48.rs2');
+                    },
+                    'apotekrajal' => function ($apotekrajal) {
+                        $apotekrajal->select('rs90.rs1', 'rs90.rs2 as nota')
+                            ->groupBy('rs90.rs2');
+                    },
+                    'apotekrajalpolilalu' => function ($apotekrajalpolilalu) {
+                        $apotekrajalpolilalu->select('rs162.rs1', 'rs162.rs2 as nota')
+                            ->groupBy('rs162.rs2');
+                    },
+                    'apotekracikanrajal' => function ($apotekracikanrajal) {
+                        $apotekracikanrajal->select('rs163.rs1', 'rs163.rs2 as nota')
+                            ->groupBy('rs163.rs2');
+                    }
+                ]
+            )
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->whereDate('rs17.rs3', $tgl)
             //->where('rs19.rs4', '=', 'Poliklinik')

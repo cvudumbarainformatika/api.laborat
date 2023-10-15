@@ -15,11 +15,16 @@ use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
+use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
+use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -130,5 +135,35 @@ class KunjunganPoli extends Model
     public function datasimpeg()
     {
         return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
+    }
+
+    public function laborat()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
+    public function transradiologi()
+    {
+        return $this->hasMany(Transradiologi::class, 'rs1', 'rs1');
+    }
+
+    public function apotekrajalpolilalu()
+    {
+        return $this->hasMany(Apotekrajallalu::class, 'rs1', 'rs1');
+    }
+
+    public function apotekrajal()
+    {
+        return $this->hasMany(Apotekrajal::class, 'rs1', 'rs1');
+    }
+
+    public function apotekracikanrajal()
+    {
+        return $this->hasManyThrough(
+            Apotekrajalracikanrincilalu::class,
+            Apotekrajalracikanhedlalu::class,
+            'rs1',
+            'rs1'
+        );
     }
 }
