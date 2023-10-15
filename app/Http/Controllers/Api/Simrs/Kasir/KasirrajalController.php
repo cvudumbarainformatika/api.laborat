@@ -144,21 +144,21 @@ class KasirrajalController extends Controller
                     'Subtotal' => $karcis
                 ]
             );
-        } elseif (request('golongan') == 'konsulantarpoli') {
-            $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
-            $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
-                return [
-                    'namatindakan' => $konsul->rs6,
-                    'subtotal' => $konsul->rs7 + $konsul->rs11,
-                ];
-            });
-            $konsul = $konsul->sum('subtotal');
-            return new JsonResponse(
-                [
-                    'Pelayanan' => $konsulantarpoli,
-                    'Subtotal' => $konsul
-                ]
-            );
+            // } elseif (request('golongan') == 'konsulantarpoli') {
+            //     $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
+            //     $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
+            //         return [
+            //             'namatindakan' => $konsul->rs6,
+            //             'subtotal' => $konsul->rs7 + $konsul->rs11,
+            //         ];
+            //     });
+            //     $konsul = $konsul->sum('subtotal');
+            //     return new JsonResponse(
+            //         [
+            //             'Pelayanan' => $konsulantarpoli,
+            //             'Subtotal' => $konsul
+            //         ]
+            //     );
         } elseif (request('golongan') == 'tindakan') {
             $tindakan = Tindakan::select(
                 'rs30.rs2 as tindakan',
@@ -276,43 +276,9 @@ class KasirrajalController extends Controller
         } else {
             if ($request->jenispembayaran == 'karcis') {
                 if ($request->carabayar == 'qris') {
-                    $qris = bridgingbankjatimHelper::createqris($request);
-                    $xxx = $qris->responsCode;
-                    if ($xxx == '00') {
-                        DB::select('call karcisrj(@nomor)');
-                        $x = DB::table('rs1')->select('karcisrj')->get();
-                        $wew = $x[0]->karcisrj;
-                        $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
-                        $total = $request->total;
-                        $bj = 0.4;
-                        $totalall = (int) $total + (int) ($total * $bj / 100);
-                        $status = '';
-                        if ($qris->status == '1') {
-                            $status = 'true';
-                        }
-                        $simpanqris = Tagihannontunai::create(
-                            [
-                                'rs1' => $request->noreg,
-                                'rs2' => $request->nama,
-                                'rs3' => $request->norm,
-                                'rs4' => $nokarcis,
-                                'rs5' => date('Y-m-d H:i:s'),
-                                'rs6' =>  date('Y-m-d'),
-                                'rs7' => auth()->user()->pegawai_id,
-                                'rs8' => $total,
-                                'rs9' => $total,
-                                'rs10' => 'KASIR RAJAL',
-                                'rs11' => 'KARCIS',
-                                'rs13' => $status,
-                                'rs15' => $qris->qrValue,
-                                'rs16' => $qris->nmid,
-                                'rs17' => $qris->invoice_number,
-                                'rs18' => $bj,
-                                'rs19' => $totalall,
-                            ]
-                        );
-                        return new JsonResponse($qris);
-                    }
+                    $bayarqris = self::pembayaranqris($request);
+                    if ($bayarqris == 500)
+                        return new JsonResponse($bayarqris);
                 } else {
                     $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
                     if ($cek > 0) {
@@ -376,6 +342,52 @@ class KasirrajalController extends Controller
                     );
                 }
             }
+        }
+    }
+
+    public static function pembayaranqris($request)
+    {
+        $qris = bridgingbankjatimHelper::createqris($request);
+        $xxx = $qris->responsCode;
+        if ($xxx == '00') {
+            DB::select('call karcisrj(@nomor)');
+            $x = DB::table('rs1')->select('karcisrj')->get();
+            $wew = $x[0]->karcisrj;
+            $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+            $total = $request->total;
+            $bj = 0.4;
+            $totalall = (int) $total + (int) ($total * $bj / 100);
+            $status = '';
+            if ($qris->status == '1') {
+                $status = 'true';
+            }
+            $simpanqris = Tagihannontunai::create(
+                [
+                    'rs1' => $request->noreg,
+                    'rs2' => $request->nama,
+                    'rs3' => $request->norm,
+                    'rs4' => $nokarcis,
+                    'rs5' => date('Y-m-d H:i:s'),
+                    'rs6' =>  date('Y-m-d'),
+                    'rs7' => auth()->user()->pegawai_id,
+                    'rs8' => $total,
+                    'rs9' => $total,
+                    'rs10' => 'KASIR RAJAL',
+                    'rs11' => 'KARCIS',
+                    'rs13' => $status,
+                    'rs15' => $qris->qrValue,
+                    'rs16' => $qris->nmid,
+                    'rs17' => $qris->invoice_number,
+                    'rs18' => $bj,
+                    'rs19' => $totalall,
+                ]
+            );
+            if (!$simpanqris) {
+                return 500;
+            }
+            return 200;
+        } else {
+            return $qris;
         }
     }
 }
