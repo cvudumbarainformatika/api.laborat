@@ -17,8 +17,11 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
+use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
@@ -157,7 +160,7 @@ class KunjunganPoli extends Model
         return $this->hasMany(Apotekrajal::class, 'rs1', 'rs1');
     }
 
-    public function apotekracikanrajal()
+    public function apotekracikanrajallalu()
     {
         return $this->hasManyThrough(
             Apotekrajalracikanrincilalu::class,
@@ -165,5 +168,25 @@ class KunjunganPoli extends Model
             'rs1',
             'rs1'
         );
+    }
+
+    public function apotekracikanrajal()
+    {
+        return $this->hasManyThrough(
+            Apotekrajalracikanrinci::class,
+            Apotekrajalracikanheder::class,
+            'rs1',
+            'rs1'
+        );
+    }
+
+    public function kamaroperasi()
+    {
+        return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
+    }
+
+    public function tindakanoperasi()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 }

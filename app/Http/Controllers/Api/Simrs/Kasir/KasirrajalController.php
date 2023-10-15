@@ -10,6 +10,7 @@ use App\Models\Simrs\Kasir\Kwitansidetail;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Kasir\Tagihannontunai;
+use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -83,8 +84,21 @@ class KasirrajalController extends Controller
                             ->groupBy('rs162.rs2');
                     },
                     'apotekracikanrajal' => function ($apotekracikanrajal) {
+                        $apotekracikanrajal->select('rs91.rs1', 'rs91.rs2 as nota')
+                            ->groupBy('rs91.rs2');
+                    },
+                    'apotekracikanrajallalu' => function ($apotekracikanrajal) {
                         $apotekracikanrajal->select('rs163.rs1', 'rs163.rs2 as nota')
                             ->groupBy('rs163.rs2');
+                    },
+                    'kamaroperasi' => function ($kamaroperasi) {
+                        $kamaroperasi->select('rs54.rs1', 'rs54.rs2 as nota')
+                            ->groupBy('rs54.rs2');
+                    },
+                    'tindakanoperasi' => function ($tindakanoperasi) {
+                        $tindakanoperasi->select('rs73.rs1', 'rs73.rs2 as nota')
+                            ->where('rs73.rs22',  'OPERASI')
+                            ->groupBy('rs73.rs2');
                     }
                 ]
             )
@@ -210,6 +224,45 @@ class KasirrajalController extends Controller
             return new JsonResponse(
                 [
                     'Pelayanan' => $radiologi,
+                    'Subtotal' => $total
+                ]
+            );
+        } elseif (request('golongan') == 'operasibesar') {
+            $operasibesar = Kamaroperasi::select(
+                'rs53.rs2 as keterangan',
+                DB::raw('((rs54.rs5+rs54.rs6+rs54.rs7)*rs54.rs8) as subtotalx')
+            )->join('rs53', 'rs53.rs1', 'rs54.rs4')
+                ->where('rs54.rs1', $noreg)->where('rs54.rs2', $nota)
+                ->get();
+            $subtotal = $operasibesar->map(function ($operasibesar, $kunci) {
+                return [
+                    'subtotal' => $operasibesar->subtotalx,
+                ];
+            });
+            $total = $subtotal->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $operasibesar,
+                    'Subtotal' => $total
+                ]
+            );
+        } elseif (request('golongan') == 'operasikecil') {
+            $operasikecil = Tindakan::select(
+                'rs30.rs2 as tindakan',
+                DB::raw('(rs73.rs7+rs73.rs13)*rs73.rs5 as subtotalx')
+            )
+                ->join('rs30', 'rs73.rs4', 'rs30.rs1')->where('rs73.rs1', $noreg)
+                ->where('rs73.rs2', $nota)->where('rs73.rs22', 'OPERASI')
+                ->get();
+            $subtotal = $operasikecil->map(function ($operasikecil, $kunci) {
+                return [
+                    'subtotal' => $operasikecil->subtotalx,
+                ];
+            });
+            $total = $subtotal->sum('subtotal');
+            return new JsonResponse(
+                [
+                    'Pelayanan' => $operasikecil,
                     'Subtotal' => $total
                 ]
             );
