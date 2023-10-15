@@ -190,8 +190,10 @@ class LaporanPenerimaanController extends Controller
                     ->where('recent_stok_updates.kode_ruang', 'Gd-02010100');
             })
             ->when(request('q'), function ($q) {
-                $q->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%');
+                $q->where(function ($a) {
+                    $a->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%');
+                });
             })
             ->whereBetween('penerimaans.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->with('perusahaan')

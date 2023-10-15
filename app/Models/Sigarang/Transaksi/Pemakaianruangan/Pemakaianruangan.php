@@ -4,6 +4,7 @@ namespace App\Models\Sigarang\Transaksi\Pemakaianruangan;
 
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\PenggunaRuang;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -48,6 +49,10 @@ class Pemakaianruangan extends Model
     public function ruanganmaster()
     {
         return $this->belongsTo(Ruang::class, 'kode_ruang', 'kode');
+    }
+    public function recentstok()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'kode_ruang', 'kode_ruang');
     }
 
 
