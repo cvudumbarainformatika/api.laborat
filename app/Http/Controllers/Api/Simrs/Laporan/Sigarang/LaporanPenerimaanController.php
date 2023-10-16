@@ -236,7 +236,7 @@ class LaporanPenerimaanController extends Controller
                                 if (request('kode_ruang') === 'all') {
                                     $q->whereIn('recent_stok_updates.kode_ruang', $depo);
                                 } else {
-                                    $q->whereIn('recent_stok_updates.kode_ruang', request('kode_ruang'));
+                                    $q->where('recent_stok_updates.kode_ruang', request('kode_ruang'));
                                 }
                             });
                     });
@@ -250,12 +250,13 @@ class LaporanPenerimaanController extends Controller
                 if (request('kode_ruang') === 'all') {
                     $q->whereIn('distribusi_depos.kode_depo', $depo);
                 } else {
-                    $q->whereIn('distribusi_depos.kode_depo', request('kode_ruang'));
+                    $q->where('distribusi_depos.kode_depo', request('kode_ruang'));
                 }
             })
             ->whereBetween('distribusi_depos.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->where('status', 2)
             ->with('depo:nama')
+            ->orderBy('distribusi_depos.tanggal', 'ASC')
             ->orderBy('distribusi_depos.tanggal', 'ASC')
             ->orderBy('distribusi_depos.no_distribusi', 'ASC')
             ->paginate(request('per_page'));

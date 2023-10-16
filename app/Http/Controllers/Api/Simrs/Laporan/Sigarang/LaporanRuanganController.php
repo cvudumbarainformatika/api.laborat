@@ -110,9 +110,9 @@ class LaporanRuanganController extends Controller
                 'detail_permintaanruangans.tujuan',
                 'distribusi_langsungs.ruang_tujuan'
             )
-            ->orderBy('barang_r_s.nama', 'ASC')
-            // ->orderBy('permintaanruangans.tanggal', 'ASC')
-            // ->orderBy('distribusi_langsungs.tanggal', 'ASC')
+            ->orderBy('ruangs.uraian', 'ASC')
+            ->orderBy('permintaanruangans.tanggal', 'ASC')
+            ->orderBy('distribusi_langsungs.tanggal', 'ASC')
             ->withTrashed()
             // ->get();
             ->paginate(request('per_page'));

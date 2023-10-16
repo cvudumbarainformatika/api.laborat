@@ -100,7 +100,6 @@ class LaporanMutasiGudangController extends Controller
                         ->leftJoin('pemakaianruangans', function ($p) {
                             $p->on('pemakaianruangans.id', '=', 'details_pemakaianruangans.pemakaianruangan_id');
                         })
-                        // ->hargastok()
                         ->whereBetween('pemakaianruangans.tanggal', [$from, $to])
                         ->where('pemakaianruangans.status', '>', 1);
                 },
@@ -108,7 +107,7 @@ class LaporanMutasiGudangController extends Controller
             ]);
 
 
-        $data = $barang->withTrashed()->get();
+        $data = $barang->orderBy('kode_108', 'ASC')->withTrashed()->get();
 
         return new JsonResponse($data);
     }
