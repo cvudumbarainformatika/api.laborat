@@ -313,7 +313,7 @@ class KasirrajalController extends Controller
             if ($request->jenispembayaran == 'karcis') {
                 if ($request->carabayar == 'qris') {
                     $bayarqris = self::pembayaranqris($request, $nokarcis);
-                    if ($bayarqris == 500) {
+                    if ($bayarqris == '500') {
                         return new JsonResponse(['message' => 'Qris Gagal disimpan di DB RS...!!!']);
                     } else {
                         $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
