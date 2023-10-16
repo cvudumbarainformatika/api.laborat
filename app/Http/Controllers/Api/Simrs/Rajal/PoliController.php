@@ -31,7 +31,9 @@ class PoliController extends Controller
             'rs17.rs3 as tgl_kunjungan',
             'rs17.rs8 as kodepoli',
             'rs19.rs2 as poli',
+            'rs19.rs6 as kodepolibpjs',
             'rs17.rs9 as kodedokter',
+            'master_poli_bpjs.nama as polibpjs',
             'rs21.rs2 as dokter',
             'rs17.rs14 as kodesistembayar',
             'rs9.rs2 as sistembayar',
@@ -62,6 +64,7 @@ class PoliController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
+            ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')

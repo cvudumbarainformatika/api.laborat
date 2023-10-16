@@ -7,6 +7,7 @@ use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Mplaning;
+use App\Models\Simrs\Planing\Simpanspri;
 use App\Models\Simrs\Planing\Transrujukan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
@@ -79,23 +80,62 @@ class PlaningController extends Controller
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
             }
         } elseif ($request->planing == 'Rawat Inap') {
-            if ($request->status == 'Operasi' && $groupsistembayar == '1') {
-                $createspri = BridbpjsplanController::createspri($request);
-                $xxx = $createspri['metadata']['code'];
-                if ($xxx === 200 || $xxx === '200') {
+            if ($request->status == 'Operasi') {
+                if ($groupsistembayar == '1') {
+                    $createspri = BridbpjsplanController::createspri($request);
+                    $nospri = $createspri['response']['noSPRI'];
+                    $xxx = $createspri['metadata']['code'];
+                    if ($xxx === 200 || $xxx === '200') {
+                        $simpanop = self::jadwaloperasi($request);
+                        if ($simpanop == 500) {
+                            return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                        }
+                        $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                        if ($simpanspri === 500) {
+                            return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                        }
+                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                    }
+                } else {
+                    $nospri = $request->noreg;
                     $simpanop = self::jadwaloperasi($request);
+                    // return $simpanop;
                     if ($simpanop == 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                    }
+                    $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                    if ($simpanspri === 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                    }
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                }
+            } else {
+                if ($groupsistembayar == '1') {
+                    $createspri = BridbpjsplanController::createspri($request);
+                    $nospri = $createspri['response']['noSPRI'];
+                    $xxx = $createspri['metadata']['code'];
+                    if ($xxx === 200 || $xxx === '200') {
+                        $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                        if ($simpanspri === 500) {
+                            return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
+                        }
+                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                    }
+                } else {
+                    $nospri = $request->noreg;
+                    $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                    if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
                     return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
                 }
             }
         } else {
-            $simpanakhir = self::simpanakhir($request);
-            if ($simpanakhir == 500) {
-                return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
-            }
-            return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
+            // $simpanakhir = self::simpanakhir($request);
+            // if ($simpanakhir == 500) {
+            //     return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+            // }
+            // return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!'], 200);
         }
     }
 
@@ -161,18 +201,21 @@ class PlaningController extends Controller
 
     public static function jadwaloperasi($request)
     {
+        $conter = JadwaloperasiController::count();
+        $kodebooking = "JO/" . ($conter + 1) . "/" . date("d/m/Y");
         $simpan = JadwaloperasiController::firstOrCreate(
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
-                'nopermintaan' => $request->nopermintaan,
-                'kodebooking' => $request->norekodebookingg,
+                //    'nopermintaan' => $request->nopermintaan,
+                'kodebooking' => $kodebooking,
                 'tanggaloperasi' => $request->tanggaloperasi,
                 'jenistindakan' => $request->jenistindakan,
                 'icd9' => $request->icd9,
-                'kodepoli' => $request->kodepoli,
-                'namapoli' => $request->namapoli,
-                'lastupdate' => $request->lastupdate,
+                'kodepoli' => $request->kodepolibpjs,
+                'namapoli' => $request->polibpjs,
+                'lastupdate' => time(),
+                'ket' => $request->keterangan,
                 'userid' => auth()->user()->pegawai_id,
                 'kdruang' => $request->kdruang,
                 'tglupdate' => $request->tglupdate,
@@ -236,6 +279,32 @@ class PlaningController extends Controller
         );
 
         if (!$simpanrujukan) {
+            return 500;
+        }
+        return 200;
+    }
+
+    public static function simpanspri($request, $groupsistembayar, $nospri)
+    {
+        $simpanspri = Simpanspri::firstOrCreate(
+            [
+                'noSuratKontrol' => $nospri
+            ],
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->noreg,
+                'kodeDokter' => $request->kddokter,
+                'poliKontrol' => $request->kodepolibpjs,
+                'tglRencanaKontrol' => $request->tglrencanakunjungan,
+                'namaDokter' => $request->dokter,
+                'noKartu' => $request->noka,
+                'nama' => $request->nama,
+                'kelamin' => $request->kelamin,
+                'tglLahir' => $request->tgllahir,
+                'user_id' => auth()->user()->pegawai_id
+            ]
+        );
+        if (!$simpanspri) {
             return 500;
         }
         return 200;
