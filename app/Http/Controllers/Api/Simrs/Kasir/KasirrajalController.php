@@ -367,7 +367,7 @@ class KasirrajalController extends Controller
                             ]
                         );
                     } else {
-                        return new JsonResponse($bayarqris);
+                        return new JsonResponse(['result' => $bayarqris]);
                     }
                 }
             }
