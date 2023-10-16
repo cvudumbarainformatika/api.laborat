@@ -42,21 +42,21 @@ class LaporanMutasiGudangController extends Controller
             ->with([
                 'satuan:kode,nama',
                 'monthly' => function ($m) use ($from, $to) {
-                    $m->select('tanggal', 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang', 'sisa_stok as totalStok')
+                    $m->select('tanggal', 'sisa_stok as totalStok', 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->whereBetween('tanggal', [$from, $to]);
                     // ->groupBy('kode_rs', 'harga');
                 },
                 'recent' => function ($m) {
-                    $m->select('harga', 'kode_rs', 'kode_ruang', 'sisa_stok as totalStok', 'no_penerimaan')
+                    $m->select('sisa_stok as totalStok', 'harga', 'kode_rs', 'kode_ruang',  'no_penerimaan')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->where('sisa_stok', '>', 0);
                     // ->groupBy('kode_rs', 'harga', 'kode_ruang');
                 },
                 'stok_awal' => function ($m) use ($fromA, $toA) {
-                    $m->select('tanggal', 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang', 'sisa_stok as totalStok')
+                    $m->select('tanggal', 'sisa_stok as totalStok', 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->whereBetween('tanggal', [$fromA, $toA]);
