@@ -26,6 +26,7 @@ class PoliController extends Controller
         $status = request('status') ?? '';
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
+            'rs17.rs9',
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs17.rs3 as tgl_kunjungan',
@@ -87,7 +88,7 @@ class PoliController extends Controller
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
 
             ->with([
-                'anamnesis',
+                'anamnesis', 'datasimpeg',
                 'gambars',
                 'laborats' => function ($t) {
                     $t->with('details.pemeriksaanlab')

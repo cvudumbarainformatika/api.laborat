@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Master\Maping;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simrs\Master\Mnakes;
@@ -51,5 +52,10 @@ class MapnakesController extends Controller
     {
         $collect = Mpegawaisimpeg::select('kdpegsimrs')->whereNotNull('kdpegsimrs')->where('kdpegsimrs', '!=', '')->get();
         return new JsonResponse($collect);
+    }
+
+    public function listdokterbpjs()
+    {
+        return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
     }
 }
