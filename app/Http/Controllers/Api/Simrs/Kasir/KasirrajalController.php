@@ -470,7 +470,7 @@ class KasirrajalController extends Controller
 
     public static function simpanpembayaranselainkarcis($request, $nokwitansi)
     {
-        $insertkwitansilog = Kwitansilog::firsOrCreate(
+        $insertkwitansilog = Kwitansilog::firstOrCreate(
             [
                 'nokwitansi' => $nokwitansi,
             ],
