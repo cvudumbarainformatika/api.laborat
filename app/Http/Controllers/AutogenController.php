@@ -258,21 +258,23 @@ class AutogenController extends Controller
 
         // $daftarkunjunganpasienbpjs = DB::connection('kepex')->table('pegawai')->limit(10)->get();
         // DB::enableQueryLog();
-        $daftarkunjunganpasienbpjs = KunjunganPoli::select(
-            'rs17.rs1 as noreg',
-            'rs17.rs9 as kodedokter',
-            'rs17.rs9'
-        )
-            ->where('rs17.rs9', "!=", '')
-            ->orderBy('rs17.rs3', 'DESC')
-            ->with('datasimpeg')
-            ->limit(10)
-            ->get();
+        // $daftarkunjunganpasienbpjs = KunjunganPoli::select(
+        //     'rs17.rs1 as noreg',
+        //     'rs17.rs9 as kodedokter',
+        //     'rs17.rs9'
+        // )
+        //     ->where('rs17.rs9', "!=", '')
+        //     ->orderBy('rs17.rs3', 'DESC')
+        //     ->with('datasimpeg')
+        //     ->limit(10)
+        //     ->get();
 
-        // dd(DB::getQueryLog());
+        // // dd(DB::getQueryLog());
 
-        return $daftarkunjunganpasienbpjs;
+        // return $daftarkunjunganpasienbpjs;
         // return date('Y-m-d H:i:s');
+
+        return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
     }
 
     public function coba()

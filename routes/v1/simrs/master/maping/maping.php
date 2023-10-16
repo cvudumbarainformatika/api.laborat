@@ -13,4 +13,7 @@ Route::group([
     Route::get('/pegawaisimpeg', [MapnakesController::class, 'pegawaisimpeg']);
     Route::get('/datatermaping', [MapnakesController::class, 'datatermaping']);
     Route::post('/simpanmaping', [MapnakesController::class, 'simpanmaping']);
+
+
+    Route::get('/listdokterbpjs', [MapnakesController::class, 'listdokterbpjs']);
 });
