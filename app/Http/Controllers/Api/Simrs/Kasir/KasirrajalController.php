@@ -350,7 +350,7 @@ class KasirrajalController extends Controller
             } else {
                 DB::select('call kwitansilog(@nomor)');
                 $x = DB::table('rs1')->select('rs47')->get();
-                $wew = $x[0]->karcisrj;
+                $wew = $x[0]->rs47;
                 $nokwitansi = FormatingHelper::karcisrj($wew, 'R-KJ1');
 
                 if ($request->carabayar === 'qris') {
