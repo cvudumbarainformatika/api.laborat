@@ -315,7 +315,7 @@ class KasirrajalController extends Controller
                     $bayarqris = self::pembayaranqris($request, $nokarcis);
                     if ($bayarqris == 500) {
                         return new JsonResponse(['message' => 'Qris Gagal disimpan di DB RS...!!!']);
-                    } elseif ($bayarqris == 200) {
+                    } else {
                         $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
                         if ($simpankarcis == 500) {
                             return new JsonResponse(['Data Gagal Disimpan...!!!'], 500);
@@ -323,11 +323,9 @@ class KasirrajalController extends Controller
                         return new JsonResponse(
                             [
                                 'message' => 'Qris Berhasil disimpan...!!!s',
-                                'result' => $simpankarcis
+                                'result' => $bayarqris
                             ]
                         );
-                    } else {
-                        return new JsonResponse($bayarqris);
                     }
                 } else {
                     $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
@@ -413,9 +411,9 @@ class KasirrajalController extends Controller
             if (!$simpanqris) {
                 return 500;
             }
-            return 200;
-        } else {
             return $qris;
+        } else {
+            return 500;
         }
     }
 
