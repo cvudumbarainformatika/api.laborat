@@ -332,7 +332,8 @@ class Bridbpjscontroller extends Controller
         // return new JsonResponse(['message' => $responBpjs]);
         // cari history pelayanan pasien
         $tgltobpjshttpres = DateHelper::getDateTime();
-        $tgl = $request->tgl_kunjungan ?? date('Y-m-d');
+        // $tgl = $request->tgl_kunjungan ?? date('Y-m-d');
+        $tgl = date('Y-m-d');
         $date = date_create($tgl);
         $tglCari = date_format($date, 'Y-m-d');
         // $tglCari = date('2023-10-03');
