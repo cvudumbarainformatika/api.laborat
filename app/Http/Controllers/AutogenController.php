@@ -2254,15 +2254,33 @@ class AutogenController extends Controller
                         // 'details_pemakaianruangans.jumlah as total',
                         'pemakaianruangans.tanggal',
                         'pemakaianruangans.kode_ruang',
-                    )->selectRaw('round(sum(jumlah),2) as total')
+                    )
+                        ->selectRaw('round(sum(jumlah),2) as total')
                         ->leftJoin('pemakaianruangans', function ($p) {
                             $p->on('pemakaianruangans.id', '=', 'details_pemakaianruangans.pemakaianruangan_id');
                         })
+                        // ->with([
+                        //     'barangrs' => function ($q) {
+                        //         $q->select('kode')
+                        //             ->with([
+                        //                 'hargastok' => function ($st) {
+                        //                     $st->select(
+                        //                         'recent_stok_updates.kode_rs',
+                        //                         'recent_stok_updates.no_penerimaan',
+                        //                         'recent_stok_updates.harga',
+                        //                     );
+                        //                 }
+                        //             ]);
+                        //     }
+                        // ])
+                        // ->with('recent')
                         // ->whereBetween('pemakaianruangans.tanggal', [$from, $to])
                         ->where('pemakaianruangans.status', '>', 1)
                         ->groupBy('details_pemakaianruangans.kode_rs', 'pemakaianruangans.kode_ruang')
                         ->orderBy('pemakaianruangans.tanggal', 'ASC');
                 },
+                // 'hargastok'
+
 
             ]);
 

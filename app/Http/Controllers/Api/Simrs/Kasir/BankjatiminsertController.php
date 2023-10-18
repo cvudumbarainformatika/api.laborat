@@ -28,7 +28,12 @@ class BankjatiminsertController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            $response = [
+                'responsCode' => '201',
+                'responsDesc' => $validator->errors()
+            ];
+            return new JsonResponse($response, 201);
+            // return response()->json($validator->errors(), 422);
         }
         $simpanpayment = Paymentbankjatim::firstOrCreate(
             [
@@ -62,8 +67,16 @@ class BankjatiminsertController extends Controller
             ]
         );
         if (!$simpanpembayaran) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 201);
+            $response = [
+                'responsCode' => '201',
+                'responsDesc' => 'Data Gagal Disimpan...!!!'
+            ];
+            return new JsonResponse($response, 201);
         }
-        return new JsonResponse(['message' => 'Success'], 200);
+        $response = [
+            'responsCode' => '00',
+            'responsDesc' => 'Success',
+        ];
+        return new JsonResponse($response, 200);
     }
 }
