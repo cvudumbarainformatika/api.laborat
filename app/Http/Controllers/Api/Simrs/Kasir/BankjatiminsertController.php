@@ -7,12 +7,13 @@ use App\Models\Simrs\Kasir\Paymentbankjatim;
 use App\Models\Simrs\Kasir\Pembayarannontunai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class BankjatiminsertController extends Controller
 {
     public function insertqrisbayar(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'billNumber' => 'required',
             'purposetrx' => 'required',
             'storelabel' => 'required',
@@ -25,6 +26,10 @@ class BankjatiminsertController extends Controller
             'invoice_number' => 'required',
             'transactionDate' => 'required'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
         $simpanpayment = Paymentbankjatim::firstOrCreate(
             [
                 'billNumber' => $request->billNumber
