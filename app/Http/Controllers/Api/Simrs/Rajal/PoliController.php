@@ -88,7 +88,7 @@ class PoliController extends Controller
             ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
 
             ->with([
-                'anamnesis', 'datasimpeg',
+                'anamnesis', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                 'gambars',
                 'laborats' => function ($t) {
                     $t->with('details.pemeriksaanlab')
@@ -174,7 +174,7 @@ class PoliController extends Controller
         return new JsonResponse(
             [
                 'message' => 'ok',
-                'result' => $carikunjungan->load('datasimpeg'),
+                'result' => $carikunjungan->load('datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp'),
             ],
             200
         );

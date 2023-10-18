@@ -22,7 +22,7 @@ class MapnakesController extends Controller
 
     public function pegawaisimpeg()
     {
-        $pegawaisimpeg = Mpegawaisimpeg::select('id', 'nip', 'nik', 'nama', 'kelamin', 'foto', 'kdpegsimrs')
+        $pegawaisimpeg = Mpegawaisimpeg::select('id', 'nip', 'nik', 'nama', 'kelamin', 'foto', 'kdpegsimrs', 'kddpjp')
             ->where('aktif', 'AKTIF')
             // ->where('nama', 'like', '%' . request('nama') . '%')
             ->get();
@@ -57,5 +57,25 @@ class MapnakesController extends Controller
     public function listdokterbpjs()
     {
         return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
+    }
+    public function simpanmapingbpjs(Request $request)
+    {
+        $simpanmaping = Mpegawaisimpeg::where('nip', $request->nip)->first();
+        $simpanmaping->kddpjp = $request->kddpjp ?? '';
+        $simpanmaping->save();
+
+        $collect = Mpegawaisimpeg::select('kddpjp')->whereNotNull('kddpjp')->where('kddpjp', '!=', '')->get();
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $collect
+            ],
+            200
+        );
+    }
+    public function datatermapingbpjs()
+    {
+        $collect = Mpegawaisimpeg::select('kddpjp')->whereNotNull('kddpjp')->where('kddpjp', '!=', '')->get();
+        return new JsonResponse($collect);
     }
 }
