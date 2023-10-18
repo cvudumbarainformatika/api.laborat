@@ -97,6 +97,7 @@ class LaporanRuanganController extends Controller
             })
             ->where(function ($q) use ($minta) {
                 $q->whereBetween('permintaanruangans.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+                    ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
                     ->whereIn('barang_r_s.kode', $minta);
             })
             ->orWhere(function ($q) use ($dist) {
@@ -110,9 +111,9 @@ class LaporanRuanganController extends Controller
                 'detail_permintaanruangans.tujuan',
                 'distribusi_langsungs.ruang_tujuan'
             )
-            ->orderBy('barang_r_s.nama', 'ASC')
-            // ->orderBy('permintaanruangans.tanggal', 'ASC')
-            // ->orderBy('distribusi_langsungs.tanggal', 'ASC')
+            ->orderBy('ruangs.uraian', 'ASC')
+            ->orderBy('permintaanruangans.tanggal', 'ASC')
+            ->orderBy('distribusi_langsungs.tanggal', 'ASC')
             ->withTrashed()
             // ->get();
             ->paginate(request('per_page'));

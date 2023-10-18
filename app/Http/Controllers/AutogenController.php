@@ -2148,25 +2148,127 @@ class AutogenController extends Controller
         // })->values();
 
         // return response()->json($formattedResult);
-        $result = RecentStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
-            ->where('sisa_stok', '>', 0)
-            ->where('kode_ruang', 'LIKE', '%Gd-%')
-            ->when(request('kode_ruang'), function ($anu) {
-                $anu->whereKodeRuang(request('kode_ruang'));
-            })
-            ->when(request('kode_rs'), function ($anu) {
-                $anu->whereKodeRs(request('kode_rs'));
-            })
-            ->with(
-                'barang:kode,nama',
-                'penerimaan:id,no_penerimaan',
-                'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi'
-            )
-            // ->with('penerimaan.details')
-            ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
-            ->paginate(request('per_page'));
+        // $result = RecentStokUpdate::selectRaw('*, (sisa_stok * harga) as subtotal, sum(sisa_stok * harga) as total, sum(sisa_stok) as totalStok')
+        //     ->where('sisa_stok', '>', 0)
+        //     ->where('kode_ruang', 'LIKE', '%Gd-%')
+        //     ->when(request('kode_ruang'), function ($anu) {
+        //         $anu->whereKodeRuang(request('kode_ruang'));
+        //     })
+        //     ->when(request('kode_rs'), function ($anu) {
+        //         $anu->whereKodeRs(request('kode_rs'));
+        //     })
+        //     ->with(
+        //         'barang:kode,nama',
+        //         'penerimaan:id,no_penerimaan',
+        //         'penerimaan.details:kode_rs,penerimaan_id,harga,harga_kontrak,diskon,ppn,harga_jadi'
+        //     )
+        //     // ->with('penerimaan.details')
+        //     ->groupBy('kode_rs', 'kode_ruang', 'no_penerimaan')
+        //     ->paginate(request('per_page'));
 
-        $data = $result;
+        // $data = $result;
+        // return new JsonResponse($data);
+        $barang = BarangRS::select('kode', 'nama', 'kode_satuan', 'kode_108', 'uraian_108')
+            ->whereIn('kode', ['RS-0982'])
+            ->filter(request(['q']))
+            ->with([
+                'satuan:kode,nama',
+                'monthly' => function ($m) {
+                    $m->select(
+                        'tanggal',
+                        // 'sisa_stok as totalStok',
+                        'harga',
+                        'no_penerimaan',
+                        'kode_rs',
+                        'kode_ruang'
+                    )
+                        ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                        // ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        ->whereBetween('tanggal', ['2023-01-01 00:00:00', '2023-12-31 23:59:59'])
+                        ->groupBy('kode_rs', 'tanggal')
+                        ->orderBy('tanggal', 'ASC');
+                },
+                'recent' => function ($m) {
+                    $m->select(
+                        // 'sisa_stok as totalStok',
+                        'harga',
+                        'kode_rs',
+                        'kode_ruang',
+                        'no_penerimaan'
+                    )
+                        ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                        // ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        ->where('sisa_stok', '>', 0)
+                        ->groupBy('kode_rs');
+                },
+                'stok_awal' => function ($m) {
+                    $m->select(
+                        'tanggal',
+                        //  'sisa_stok as totalStok',
+                        'harga',
+                        'no_penerimaan',
+                        'kode_rs',
+                        'kode_ruang'
+                    )
+                        ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                        ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        ->whereBetween('tanggal', ['2022-12-01 00:00:00', '2022-12-31 23:59:59'])
+                        ->groupBy('kode_rs', 'tanggal');
+                },
+                'detailPenerimaan' => function ($m) {
+                    $m->select(
+                        'detail_penerimaans.kode_rs',
+                        // 'detail_penerimaans.qty as total',
+                        'penerimaans.tanggal',
+                    )
+                        ->selectRaw('round(sum(qty),2) as total')
+                        // ->selectRaw('round(qty*harga_jadi,2) as totalRp')
+                        ->leftJoin(
+                            'penerimaans',
+                            function ($p) {
+                                $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
+                            }
+                        )
+                        // ->whereBetween('penerimaans.tanggal', [$fromN, $toN])
+                        ->where('penerimaans.status', '>', 1)
+                        ->groupBy('detail_penerimaans.kode_rs', 'penerimaans.tanggal');
+                },
+                'detailDistribusiLangsung' => function ($m) {
+                    $m->select(
+                        'distribusi_langsungs.ruang_tujuan',
+                        'detail_distribusi_langsungs.kode_rs',
+                        'detail_distribusi_langsungs.no_penerimaan',
+                        'detail_distribusi_langsungs.jumlah as total',
+                    )
+                        ->leftJoin('distribusi_langsungs', function ($p) {
+                            $p->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
+                        })
+                        // ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
+                        // ->with('recentstok')
+                        ->where('distribusi_langsungs.status', '>', 1);
+                },
+                'detailPemakaianruangan' => function ($m) {
+                    $m->select(
+                        'details_pemakaianruangans.kode_rs',
+                        'details_pemakaianruangans.no_penerimaan',
+                        // 'details_pemakaianruangans.jumlah as total',
+                        'pemakaianruangans.tanggal',
+                        'pemakaianruangans.kode_ruang',
+                    )->selectRaw('round(sum(jumlah),2) as total')
+                        ->leftJoin('pemakaianruangans', function ($p) {
+                            $p->on('pemakaianruangans.id', '=', 'details_pemakaianruangans.pemakaianruangan_id');
+                        })
+                        // ->whereBetween('pemakaianruangans.tanggal', [$from, $to])
+                        ->where('pemakaianruangans.status', '>', 1)
+                        ->groupBy('details_pemakaianruangans.kode_rs', 'pemakaianruangans.kode_ruang')
+                        ->orderBy('pemakaianruangans.tanggal', 'ASC');
+                },
+
+            ]);
+
+
+        $data = $barang->orderBy('kode_108', 'ASC')->withTrashed()->get();
+
         return new JsonResponse($data);
     }
 

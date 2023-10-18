@@ -44,7 +44,7 @@ class BankjatiminsertController extends Controller
             ]
         );
         if (!$simpanpayment) {
-            return new JsonResponse(['responsDesc' => 'Data Gagal Disimpan...!!!'], 201);
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 201);
         }
         $simpanpembayaran = Pembayarannontunai::firstOrCreate(
             [
@@ -57,8 +57,8 @@ class BankjatiminsertController extends Controller
             ]
         );
         if (!$simpanpembayaran) {
-            return new JsonResponse(['responsDesc' => 'Data Gagal Disimpan...!!!'], 201);
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 201);
         }
-        return new JsonResponse(['responsDesc' => 'Success'], 200);
+        return new JsonResponse(['message' => 'Success'], 200);
     }
 }
