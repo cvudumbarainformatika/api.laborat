@@ -55,7 +55,7 @@ class AuthController extends Controller
 
         $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
         $akses = 'all';
-        $allAccess = array('sa');
+        $allAccess = array('sa', 'coba');
 
         if (!in_array(auth()->user()->username, $allAccess)) {
             $akses = AksesUser::where('user_id', $me->id)->get();

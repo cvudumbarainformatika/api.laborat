@@ -52,6 +52,8 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        // $allAccess = array('sa@app.com', 'coba@app.com', '3574041305820002@app.com');
+
         if ($request->email === 'sa@app.com' || $request->email === '3574041305820002@app.com') {
             JWTAuth::factory()->setTTL(43200);
             $data = $request->only('email', 'password');
