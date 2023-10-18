@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 class Ruang extends Model
 {
     use HasFactory;
-    protected $connection = 'sigarang';
+    // protected $connection = 'sigarang'; dipindah ke kepegx server 11
+    protected $connection = 'kepex';
     protected $guarded = ['id'];
 
     public function namagedung()
