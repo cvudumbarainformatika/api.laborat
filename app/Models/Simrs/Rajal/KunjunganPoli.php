@@ -193,6 +193,6 @@ class KunjunganPoli extends Model
 
     public function antrian_ambil()
     {
-        return $this->hasMany(Antrianambil::class, 'rs1', 'noreg');
+        return $this->hasMany(Antrianambil::class, 'noreg', 'noreg');
     }
 }
