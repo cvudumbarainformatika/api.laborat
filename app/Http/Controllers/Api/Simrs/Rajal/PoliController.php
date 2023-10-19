@@ -148,6 +148,7 @@ class PoliController extends Controller
         $updatekunjungan->rs19 = '1';
         $updatekunjungan->rs24 = '1';
         $updatekunjungan->save();
+        return new JsonResponse(['message' => 'ok'], 200);
     }
 
     public function terimapasien(Request $request)
@@ -155,11 +156,11 @@ class PoliController extends Controller
         $ceksep = Seprajal::where('rs1', $request->noreg)->count();
         if ($ceksep > 0) {
             $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '';
+            $updatekunjungan->rs19 = '2';
             $updatekunjungan->save();
             return new JsonResponse(['message' => 'ok'], 200);
         }
-        return new JsonResponse(['message' => 'Belum Ada SEP untuk Pasien Ini Di Database SIMRS, Harap Hubungi Bagian Pendaftaran Untuk Mengupdate SEP...!!!'], 500);
+        return new JsonResponse([''], 500);
     }
 
     public function listdokter()
