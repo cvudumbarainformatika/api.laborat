@@ -2280,21 +2280,7 @@ class AutogenController extends Controller
                         ->leftJoin('pemakaianruangans', function ($p) {
                             $p->on('pemakaianruangans.id', '=', 'details_pemakaianruangans.pemakaianruangan_id');
                         })
-                        // ->with([
-                        //     'barangrs' => function ($q) {
-                        //         $q->select('kode')
-                        //             ->with([
-                        //                 'hargastok' => function ($st) {
-                        //                     $st->select(
-                        //                         'recent_stok_updates.kode_rs',
-                        //                         'recent_stok_updates.no_penerimaan',
-                        //                         'recent_stok_updates.harga',
-                        //                     );
-                        //                 }
-                        //             ]);
-                        //     }
-                        // ])
-                        // ->with('recent')
+
                         // ->whereBetween('pemakaianruangans.tanggal', [$from, $to])
                         ->where('pemakaianruangans.status', '>', 1)
                         ->groupBy('details_pemakaianruangans.kode_rs', 'pemakaianruangans.kode_ruang')
@@ -2307,7 +2293,11 @@ class AutogenController extends Controller
 
 
         $data = $barang->orderBy('kode_108', 'ASC')->withTrashed()->get();
-
+        foreach ($data as $barang) {
+            foreach ($barang->detailPemakaianruangan as $det) {
+                $det->append('harga');
+            }
+        }
         return new JsonResponse($data);
     }
 

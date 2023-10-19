@@ -113,6 +113,11 @@ class LaporanMutasiGudangController extends Controller
 
 
         $data = $barang->orderBy('kode_108', 'ASC')->withTrashed()->get();
+        foreach ($data as $barang) {
+            foreach ($barang->detailPemakaianruangan as $det) {
+                $det->append('harga');
+            }
+        }
 
         return new JsonResponse($data);
     }
