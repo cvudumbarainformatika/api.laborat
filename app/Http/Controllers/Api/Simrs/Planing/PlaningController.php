@@ -34,6 +34,7 @@ class PlaningController extends Controller
     {
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
         $groupsistembayar = $sistembayar->groups;
+        // $groupsistembayar = '1';
         if ($request->planing == 'Konsultasi') {
             $simpanplaningpasien = self::simpankonsulantarpoli($request);
             if ($simpanplaningpasien == 500) {

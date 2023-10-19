@@ -34,6 +34,7 @@ Route::get('/', function () {
 // Route::get('/opname', [StokOpnameController::class, 'storeMonthly']);
 
 Route::get('/autogen', [AutogenController::class, 'index']);
+Route::post('/autogen/create_coba', [AutogenController::class, 'create_coba']);
 Route::get('/autogen/coba', [AutogenController::class, 'coba']);
 Route::get('/autogen/gennoreg', [AutogenController::class, 'gennoreg']);
 Route::get('/autogen/coba-api', [AutogenController::class, 'coba_api']);
