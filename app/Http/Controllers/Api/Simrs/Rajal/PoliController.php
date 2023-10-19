@@ -124,6 +124,9 @@ class PoliController extends Controller
                 },
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
+                },
+                'antrian_ambil' => function ($o) {
+                    $o->where('pelayanan_id', request('kdpoli'));
                 }
             ])
             ->orderby('rs17.rs3', 'DESC')
