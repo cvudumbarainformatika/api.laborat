@@ -33,11 +33,13 @@ class PoliController extends Controller
             'rs17.rs8 as kodepoli',
             'rs19.rs2 as poli',
             'rs19.rs6 as kodepolibpjs',
+            'rs19.panggil_antrian as panggil_antrian',
             'rs17.rs9 as kodedokter',
             'master_poli_bpjs.nama as polibpjs',
             'rs21.rs2 as dokter',
             'rs17.rs14 as kodesistembayar',
             'rs9.rs2 as sistembayar',
+            'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
@@ -122,6 +124,9 @@ class PoliController extends Controller
                 },
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
+                },
+                'antrian_ambil' => function ($o) {
+                    $o->where('pelayanan_id', request('kdpoli'));
                 }
             ])
             ->orderby('rs17.rs3', 'DESC')
@@ -143,6 +148,7 @@ class PoliController extends Controller
         $updatekunjungan->rs19 = '1';
         $updatekunjungan->rs24 = '1';
         $updatekunjungan->save();
+        return new JsonResponse(['message' => 'ok'], 200);
     }
 
     public function terimapasien(Request $request)
@@ -150,11 +156,11 @@ class PoliController extends Controller
         $ceksep = Seprajal::where('rs1', $request->noreg)->count();
         if ($ceksep > 0) {
             $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '';
+            $updatekunjungan->rs19 = '2';
             $updatekunjungan->save();
             return new JsonResponse(['message' => 'ok'], 200);
         }
-        return new JsonResponse(['message' => 'Belum Ada SEP untuk Pasien Ini Di Database SIMRS, Harap Hubungi Bagian Pendaftaran Untuk Mengupdate SEP...!!!'], 500);
+        return new JsonResponse([''], 500);
     }
 
     public function listdokter()

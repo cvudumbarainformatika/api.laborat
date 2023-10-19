@@ -13,6 +13,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
@@ -188,5 +189,10 @@ class KunjunganPoli extends Model
     public function tindakanoperasi()
     {
         return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+
+    public function antrian_ambil()
+    {
+        return $this->hasMany(Antrianambil::class, 'noreg', 'noreg');
     }
 }
