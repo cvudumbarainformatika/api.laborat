@@ -387,7 +387,10 @@ class KasirrajalController extends Controller
             if ($qris->status == '1') {
                 $status = 'true';
             }
-            $simpanqris = Tagihannontunai::create(
+            $simpanqris = Tagihannontunai::firstOrCreate(
+                [
+                    'rs17' => $qris->invoice_number
+                ],
                 [
                     'rs1' => $request->noreg,
                     'rs2' => $request->nama,
@@ -403,7 +406,6 @@ class KasirrajalController extends Controller
                     'rs13' => $status,
                     'rs15' => $qris->qrValue,
                     'rs16' => $qris->nmid,
-                    'rs17' => $qris->invoice_number,
                     'rs18' => $bj,
                     'rs19' => $totalall,
                 ]

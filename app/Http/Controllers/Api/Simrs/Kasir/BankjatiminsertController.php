@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Kasir;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Paymentbankjatim;
 use App\Models\Simrs\Kasir\Pembayarannontunai;
+use App\Models\Simrs\Kasir\Tagihannontunai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -61,6 +62,7 @@ class BankjatiminsertController extends Controller
             ];
             return new JsonResponse($response, 200);
         }
+
         $simpanpembayaran = Pembayarannontunai::firstOrCreate(
             [
                 'rs1' => $request->billNumber
@@ -78,6 +80,9 @@ class BankjatiminsertController extends Controller
             ];
             return new JsonResponse($response, 200);
         }
+        $updatekunjungan = Tagihannontunai::where('rs17', $request->invoice_number)->first();
+        $updatekunjungan->rs12 = '2';
+        $updatekunjungan->save();
 
         if ($simpanpayment->wasRecentlyCreated) {
             $response = $simpanpayment;

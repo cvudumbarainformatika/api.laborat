@@ -45,7 +45,10 @@ class PlaningController extends Controller
                 return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
             }
             $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
-            return new JsonResponse(['message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!', 'result' => $data->load('masterpoli')], 200);
+            return new JsonResponse([
+                'message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!',
+                'result' => $data->load('masterpoli')
+            ], 200);
         } elseif ($request->planing == 'Rumah Sakit Lain') {
             if ($groupsistembayar == '1') {
                 $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
