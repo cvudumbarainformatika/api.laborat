@@ -33,3 +33,4 @@ Route::prefix('rest')->group(function () {
 // });
 
 Route::post('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
+Route::post('/autogen/create_post', [AutogenController::class, 'create_post']);
