@@ -83,6 +83,10 @@ class BarangRS extends Model
     {
         return $this->hasMany(DetailsPemakaianruangan::class, 'kode_rs', 'kode');
     }
+    public function detail_pemakaianruangan()
+    {
+        return $this->hasMany(DetailsPemakaianruangan::class, 'kode_rs', 'kode');
+    }
     public function monthly()
     {
         return $this->hasMany(MonthlyStokUpdate::class, 'kode_rs', 'kode');
@@ -112,6 +116,17 @@ class BarangRS extends Model
             'id',  // Kunci asing di tabel yang di tuju(heder)...
             'kode',  // Kunci lokal pada tabel master(barang)...
             'penerimaan_id', // Kunci lokal di tabel penghubung(detail)...
+        );
+    }
+    public function hargastok()
+    {
+        return $this->hasOneThrough(
+            RecentStokUpdate::class,
+            DetailsPemakaianruangan::class,
+            'kode_rs',  // Kunci asing di tabel yang menghubungkan(tabel detail)...
+            'no_penerimaan',  // Kunci asing di tabel yang di tuju(heder)...
+            'kode',  // Kunci lokal pada tabel master(barang)...
+            'no_penerimaan', // Kunci lokal di tabel penghubung(detail)...
         );
     }
 

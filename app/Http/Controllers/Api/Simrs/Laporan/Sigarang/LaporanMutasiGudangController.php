@@ -100,6 +100,11 @@ class LaporanMutasiGudangController extends Controller
                         ->leftJoin('pemakaianruangans', function ($p) {
                             $p->on('pemakaianruangans.id', '=', 'details_pemakaianruangans.pemakaianruangan_id');
                         })
+                        ->with([
+                            'barangrs' => function ($q) {
+                                $q->select('kode');
+                            }
+                        ])
                         ->whereBetween('pemakaianruangans.tanggal', [$from, $to])
                         ->where('pemakaianruangans.status', '>', 1);
                 },

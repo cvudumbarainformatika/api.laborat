@@ -7,12 +7,13 @@ use App\Models\Simrs\Kasir\Paymentbankjatim;
 use App\Models\Simrs\Kasir\Pembayarannontunai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class BankjatiminsertController extends Controller
 {
     public function insertqrisbayar(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'billNumber' => 'required',
             'purposetrx' => 'required',
             'storelabel' => 'required',
@@ -25,6 +26,15 @@ class BankjatiminsertController extends Controller
             'invoice_number' => 'required',
             'transactionDate' => 'required'
         ]);
+
+        if ($validator->fails()) {
+            $response = [
+                'responsCode' => '201',
+                'responsDesc' => $validator->errors()
+            ];
+            return new JsonResponse($response, 201);
+            // return response()->json($validator->errors(), 422);
+        }
         $simpanpayment = Paymentbankjatim::firstOrCreate(
             [
                 'billNumber' => $request->billNumber
@@ -57,8 +67,16 @@ class BankjatiminsertController extends Controller
             ]
         );
         if (!$simpanpembayaran) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 201);
+            $response = [
+                'responsCode' => '201',
+                'responsDesc' => 'Data Gagal Disimpan...!!!'
+            ];
+            return new JsonResponse($response, 201);
         }
-        return new JsonResponse(['message' => 'Success'], 200);
+        $response = [
+            'responsCode' => '00',
+            'responsDesc' => 'Success',
+        ];
+        return new JsonResponse($response, 200);
     }
 }
