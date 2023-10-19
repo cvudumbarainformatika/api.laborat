@@ -30,9 +30,10 @@ class BankjatiminsertController extends Controller
         if ($validator->fails()) {
             $response = [
                 'responsCode' => '201',
-                'responsDesc' => $validator->errors()
+                'responsDesc' => 'Missing some required data',
+                'error' => $validator->errors(),
             ];
-            return new JsonResponse($response, 201);
+            return new JsonResponse($response, 200);
             // return response()->json($validator->errors(), 422);
         }
         $simpanpayment = Paymentbankjatim::firstOrCreate(
@@ -54,7 +55,11 @@ class BankjatiminsertController extends Controller
             ]
         );
         if (!$simpanpayment) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 201);
+            $response = [
+                'responsCode' => '201',
+                'responsDesc' => 'Data Gagal Disimpan...!!!'
+            ];
+            return new JsonResponse($response, 200);
         }
         $simpanpembayaran = Pembayarannontunai::firstOrCreate(
             [
@@ -71,12 +76,23 @@ class BankjatiminsertController extends Controller
                 'responsCode' => '201',
                 'responsDesc' => 'Data Gagal Disimpan...!!!'
             ];
-            return new JsonResponse($response, 201);
+            return new JsonResponse($response, 200);
         }
-        $response = [
-            'responsCode' => '00',
-            'responsDesc' => 'Success',
-        ];
-        return new JsonResponse($response, 200);
+
+        if ($simpanpayment->wasRecentlyCreated) {
+            $response = $simpanpayment;
+            $response->responsCode = '00';
+            $response->responsDesc = 'Success';
+            unset($response->created_at);
+            unset($response->updated_at);
+            return new JsonResponse($response, 200);
+        } else {
+            $response = $simpanpayment;
+            $response->responsCode = '201';
+            $response->responsDesc = 'Data already exist';
+            unset($response->created_at);
+            unset($response->updated_at);
+            return new JsonResponse($response, 200);
+        }
     }
 }

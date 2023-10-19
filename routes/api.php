@@ -25,11 +25,12 @@ Route::prefix('v2')->group(function () {
 Route::prefix('v3')->group(function () {
     RouteHelper::includeRouteFiles(__DIR__ . '/v3'); // UNTUK MJKN
 });
-Route::prefix('rest')->group(function () {
-    RouteHelper::includeRouteFiles(__DIR__ . '/v3'); // UNTUK MJKN
-});
+// Route::prefix('rest')->group(function () {
+//     RouteHelper::includeRouteFiles(__DIR__ . '/rest');
+// });
 // Route::prefix('login')->group(function () {
 //     RouteHelper::includeRouteFiles(__DIR__ . '/login');
 // });
 
 Route::post('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
+Route::post('/autogen/create_post', [AutogenController::class, 'create_post']);
