@@ -12,6 +12,7 @@ use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
+use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
@@ -194,5 +195,10 @@ class KunjunganPoli extends Model
     public function antrian_ambil()
     {
         return $this->hasMany(Antrianambil::class, 'noreg', 'noreg');
+    }
+
+    public function pemeriksaankhususmata()
+    {
+        return $this->hasOne(Polimata::class, 'rs1', 'noreg');
     }
 }
