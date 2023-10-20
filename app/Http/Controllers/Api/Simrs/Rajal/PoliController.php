@@ -111,7 +111,7 @@ class PoliController extends Controller
                     $d->with('masterdiagnosa');
                 },
                 'pemeriksaanfisik' => function ($a) {
-                    $a->with(['anatomys', 'detailgambars'])
+                    $a->with(['anatomys', 'detailgambars', 'pemeriksaankhususmata'])
                         ->orderBy('id', 'DESC');
                 },
                 'ok' => function ($q) {
@@ -154,14 +154,14 @@ class PoliController extends Controller
 
     public function terimapasien(Request $request)
     {
-        $ceksep = Seprajal::where('rs1', $request->noreg)->count();
-        if ($ceksep > 0) {
-            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '2';
-            $updatekunjungan->save();
-            return new JsonResponse(['message' => 'ok'], 200);
-        }
-        return new JsonResponse([''], 500);
+        // $ceksep = Seprajal::where('rs1', $request->noreg)->count();
+        // if ($ceksep > 0) {
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $updatekunjungan->rs19 = '2';
+        $updatekunjungan->save();
+        return new JsonResponse(['message' => 'ok'], 200);
+        // }
+        //  return new JsonResponse([''], 500);
     }
 
     public function listdokter()
