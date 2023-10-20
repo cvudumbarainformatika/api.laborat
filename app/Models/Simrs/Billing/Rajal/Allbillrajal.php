@@ -298,6 +298,6 @@ class Allbillrajal extends Model
 
     public function klaimrajal()
     {
-        return $this->hasOne(Klaimrajal::class, 'noreg', 'noreg');
+        return $this->hasOne(Klaimrajal::class, 'noreg', 'rs1');
     }
 }
