@@ -199,6 +199,6 @@ class KunjunganPoli extends Model
 
     public function pemeriksaankhususmata()
     {
-        return $this->hasOne(Polimata::class, 'rs1', 'noreg');
+        return $this->hasOne(Polimata::class, 'noreg', 'rs1');
     }
 }
