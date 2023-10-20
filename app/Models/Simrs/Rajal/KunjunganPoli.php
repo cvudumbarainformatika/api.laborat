@@ -196,9 +196,4 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Antrianambil::class, 'noreg', 'noreg');
     }
-
-    public function pemeriksaankhususmata()
-    {
-        return $this->hasOne(Polimata::class, 'noreg', 'rs1');
-    }
 }
