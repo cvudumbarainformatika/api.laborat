@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Pemeriksaanfisik;
 
+use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
