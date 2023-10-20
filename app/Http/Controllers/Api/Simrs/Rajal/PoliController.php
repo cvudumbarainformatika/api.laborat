@@ -39,6 +39,7 @@ class PoliController extends Controller
             'rs21.rs2 as dokter',
             'rs17.rs14 as kodesistembayar',
             'rs9.rs2 as sistembayar',
+            'rs9.groups as groups',
             'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
