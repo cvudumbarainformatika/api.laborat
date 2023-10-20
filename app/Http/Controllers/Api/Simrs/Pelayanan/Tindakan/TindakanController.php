@@ -21,7 +21,7 @@ class TindakanController extends Controller
             'rs9 as pelayanan',
             DB::raw('rs8 +rs9 as tarif')
         )
-            ->where('rs2', 'Like', request('tindakan'))
+            ->where('rs2', 'Like', '%' . request('tindakan') . '%')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
     }
