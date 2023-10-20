@@ -50,7 +50,7 @@ class AntrianController extends Controller
                 }
 
                 $message = ['nomorAntrian' => $query->data->nomor,];
-                // event(new AntreanEvent($message));
+                event(new AntreanEvent($message));
 
                 return ($query);
             }
@@ -95,7 +95,7 @@ class AntrianController extends Controller
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
                 $message = ['nomorAntrianLansia' => $query->data->nomor,];
-                // event(new AntreanEvent($message));
+                event(new AntreanEvent($message));
                 return ($query);
             }
             return new JsonResponse(['message' => 'gagal'], 410);
