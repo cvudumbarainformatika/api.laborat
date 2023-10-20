@@ -11,6 +11,7 @@ use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
+use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranap;
@@ -366,5 +367,10 @@ class Kunjunganranap extends Model
     public function hasilradiologi()
     {
         return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
+
+    public function klaimranap()
+    {
+        return $this->hasOne(Klaimranap::class, 'noreg', 'noreg');
     }
 }
