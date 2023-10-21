@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Master\Icd9Controller;
 use App\Http\Controllers\Api\Simrs\Ranap\RuanganController;
 use Illuminate\Support\Facades\Route;
 
@@ -9,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/ranap/ruangan'
 ], function () {
     Route::get('/listruanganranap', [RuanganController::class, 'listruanganranap']);
+    Route::get('/mastericd9', [Icd9Controller::class, 'mastericd9']);
 });
