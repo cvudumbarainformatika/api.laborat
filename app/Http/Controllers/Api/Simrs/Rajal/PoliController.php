@@ -24,7 +24,6 @@ class PoliController extends Controller
         }
 
         $status = request('status') ?? '';
-        $status === '1' ? $status = '1' : $status = '';
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs9',
