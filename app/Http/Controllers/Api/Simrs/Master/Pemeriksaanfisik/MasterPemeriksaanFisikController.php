@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\Simrs\Master\Pemeriksaanfisik;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpemeriksaanfisik;
+use App\Models\Simrs\Master\Mtemplategambar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MasterPemeriksaanFisikController extends Controller
 {
@@ -13,7 +15,7 @@ class MasterPemeriksaanFisikController extends Controller
     {
 
         $data = Mpemeriksaanfisik::all();
-        return new JsonResponse($data, 200);
+        return new JsonResponse($data->load('gambars'), 200);
     }
 
     public function simpanmasterpemeriksaan(Request $request)
@@ -35,8 +37,48 @@ class MasterPemeriksaanFisikController extends Controller
             );
         }
 
+        return new JsonResponse(['message' => 'Berhasil disimpan', 'result' => $data->load('gambars')], 200);
+    }
 
+    public function uploads(Request $request)
+    {
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            if (!empty($files)) {
 
-        return new JsonResponse(['message' => 'Berhasil disimpan', 'result' => $data], 200);
+                for ($i = 0; $i < count($files); $i++) {
+                    $file = $files[$i];
+                    $originalname = $file->getClientOriginalName();
+                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->mpemeriksaanfisik_id . '.' . $file->getClientOriginalExtension();
+                    $data = Mtemplategambar::where('original', $originalname)->first();
+                    Storage::delete('public/templategambarpemeriksaanfisik/' . $originalname);
+                    $gallery = null;
+                    if ($data) {
+                        $gallery = $data;
+                    } else {
+                        $gallery = new Mtemplategambar();
+                    }
+                    $path = $file->storeAs('public/templategambarpemeriksaanfisik', $penamaan);
+                    $gallery->nama = $path;
+                    $gallery->url = 'templategambarpemeriksaanfisik/' . $penamaan;
+                    $gallery->original = $originalname;
+                    $gallery->mpemeriksaanfisik_id = $request->mpemeriksaanfisik_id;
+                    $gallery->save();
+                }
+                $res = Mpemeriksaanfisik::find($request->mpemeriksaanfisik_id);
+                return new JsonResponse(['message' => 'success', 'result' => $res->load('gambars')], 200);
+            }
+        }
+    }
+
+    public function deletetemplate(Request $request)
+    {
+        $template = Mtemplategambar::find($request->id);
+        Storage::delete('public/templategambarpemeriksaanfisik/' . $template->original);
+        $template->delete();
+
+        $res = Mpemeriksaanfisik::find($request->mpemeriksaanfisik_id);
+
+        return new JsonResponse(['message' => 'success', 'result' => $res->load('gambars')], 200);
     }
 }

@@ -5,14 +5,9 @@ namespace App\Models\Simrs\Master;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Mpemeriksaanfisik extends Model
+class Mtemplategambar extends Model
 {
     use HasFactory;
-    protected $table = 'mpemeriksaanfisik';
+    protected $table = 'mtemplategambar';
     protected $guarded = ['id'];
-
-    public function gambars()
-    {
-        return $this->hasMany(Mtemplategambar::class);
-    }
 }
