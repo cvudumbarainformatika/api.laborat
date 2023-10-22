@@ -371,6 +371,6 @@ class Kunjunganranap extends Model
 
     public function klaimranap()
     {
-        return $this->hasOne(Klaimranap::class, 'noreg', 'noreg');
+        return $this->hasOne(Klaimranap::class, 'noreg', 'rs1');
     }
 }
