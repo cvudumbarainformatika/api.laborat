@@ -75,7 +75,11 @@ class PoliController extends Controller
             //    ->where('rs9.rs9', '=', 'BPJS')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
-                    $sts->where('rs17.rs19', '=', $status);
+                    if ($status === '') {
+                        $sts->where('rs17.rs19', '!=', '1');
+                    } else {
+                        $sts->where('rs17.rs19', '=', $status);
+                    }
                 }
             })
             ->where(function ($query) {
