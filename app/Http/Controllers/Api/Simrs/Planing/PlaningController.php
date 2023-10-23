@@ -59,10 +59,11 @@ class PlaningController extends Controller
                     if ($simpanakhir == 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    $data = Transrujukan::with(
-                        ['masterpasien', 'relmpoli', 'relmpolix']
-                    )
-                        ->where('rs1', $request->noreg)->first();
+                    $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                    // $data = Transrujukan::with(
+                    //     ['masterpasien', 'relmpoli', 'relmpolix', 'rs141']
+                    // )
+                    //     ->where('rs1', $request->noreg)->first();
                     return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
                 } else {
                     return $createrujukan;
@@ -78,7 +79,7 @@ class PlaningController extends Controller
                 }
 
                 $data = Transrujukan::with(
-                    ['masterpasien', 'relmpoli', 'relmpolix']
+                    ['masterpasien', 'relmpoli', 'relmpolix', 'rs141']
                 )
                     ->where('rs1', $request->noreg)->first();
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
@@ -95,6 +96,9 @@ class PlaningController extends Controller
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
                         $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                        $simpanakhir = self::simpanakhir($request);
+                        $data = Simpanspri::with(['jadwaloperasi'])
+                            ->where('rs1', $request->noreg)->first();
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }

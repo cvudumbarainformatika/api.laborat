@@ -613,6 +613,7 @@ class DaftarrajalController extends Controller
     {
         $listkonsulantarpoli = Listkonsulantarpoli::select(
             'listkonsulanpoli.noreg_lama as noreg_lama',
+            'listkonsulanpoli.norm as norm',
             'rs15.rs2 as nama',
             'listkonsulanpoli.flag as flag',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
