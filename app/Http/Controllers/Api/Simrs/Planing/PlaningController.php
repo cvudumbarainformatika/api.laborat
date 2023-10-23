@@ -150,10 +150,15 @@ class PlaningController extends Controller
                 } else {
                     $nospri = $request->noreg;
                     $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                    $simpanakhir = self::simpanakhir($request);
+                    $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
                     if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpanspri], 200);
+                    return new JsonResponse([
+                        'message' => 'Data Berhasil Disimpan...!!!',
+                        'result' => $data->load('masterpoli')
+                    ], 200);
                 }
             }
         } else {
@@ -207,17 +212,31 @@ class PlaningController extends Controller
 
     public static function simpanakhir($request)
     {
-        $simpanakhir = WaktupulangPoli::create(
-            [
-                'rs1' => $request->noreg ?? '',
-                'rs2' => $request->norm ?? '',
-                'rs3' => $request->kdpoli_tujuan ?? '',
-                'rs4' => $request->planing ?? '',
-                // 'rs5' => $request->kdpoli_asal ?? '',
-                'tgl' => date('Y-m-d H:i:s'),
-                'user' => auth()->user()->pegawai_id
-            ]
-        );
+        if ($request->planing == 'Konsultasi') {
+            $simpanakhir = WaktupulangPoli::create(
+                [
+                    'rs1' => $request->noreg ?? '',
+                    'rs2' => $request->norm ?? '',
+                    'rs3' => $request->kdpoli_tujuan ?? '',
+                    'rs4' => $request->planing ?? '',
+                    // 'rs5' => $request->kdpoli_asal ?? '',
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'user' => auth()->user()->pegawai_id
+                ]
+            );
+        } else {
+            $simpanakhir = WaktupulangPoli::create(
+                [
+                    'rs1' => $request->noreg ?? '',
+                    'rs2' => $request->norm ?? '',
+                    'rs3' => $request->kdpoli_tujuan ?? '',
+                    'rs4' => $request->planing ?? '',
+                    'rs5' => $request->kdruangranap ?? '',
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'user' => auth()->user()->pegawai_id
+                ]
+            );
+        }
 
         if (!$simpanakhir) {
             return 500;
