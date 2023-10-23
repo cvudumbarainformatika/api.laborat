@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik_paru;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisikdetail;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisiksubdetail;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
+use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +18,8 @@ class PemeriksaanfisikController extends Controller
 {
     public function simpan(Request $request)
     {
+
+        // return $request->all();
 
         $noreg = $request->noreg;
         $norm = $request->norm;
@@ -35,8 +39,8 @@ class PemeriksaanfisikController extends Controller
                 'spiritual' => $request->spiritual,
                 'user'  => auth()->user()->pegawai_id,
                 'ruangan' => $request->spiritual,
-                'scorenyeri' => $request->scorenyeris,
-                'keteranganscorenyeri' => $request->keteranganscorenyeri,
+                'scorenyeri' => $request->skorenyeri ?? 0,
+                'keteranganscorenyeri' => $request->keteranganskorenyeri ?? '',
             ]
         );
 
@@ -86,7 +90,48 @@ class PemeriksaanfisikController extends Controller
             );
         };
 
-        $pemeriksaan = $simpanperiksaan->load(['anatomys', 'detailgambars']);
+        if ($request->has('mata')) {
+            foreach ($request->mata as $key => $value) {
+                Polimata::create(
+                    [
+                        'rs236_id' => $simpanperiksaan->id,
+                        'rs1' => $noreg,
+                        'rs2' => $norm,
+                        'rs3' => date('Y-m-d H:i:s'),
+                        'rs4' => $value['vodawal'],
+                        'rs5' => $value['vodrefraksi'] ?? '',
+                        'rs6' => $value['vodakhir'] ?? '',
+                        'rs7' => $value['vosawal'] ?? '',
+                        'rs8' => $value['vosrefraksi'] ?? '',
+                        'rs9' => $value['vosakhir'] ?? '',
+                        'rs10' => $value['tod'] ?? '',
+                        'rs11' => $value['tos'] ?? '',
+                        'rs12' => $value['fondosod'] ?? '',
+                        'rs13' => $value['fondosos'] ?? '',
+                        'user' => auth()->user()->pegawai_id
+                    ]
+                );
+            }
+        }
+        if ($request->has('paru')) {
+            foreach ($request->paru as $key => $value) {
+                Pemeriksaanfisik_paru::create(
+                    [
+                        'rs236_id' => $simpanperiksaan->id,
+                        'noreg' => $noreg,
+                        'norm' => $norm,
+                        'tgl' => date('Y-m-d H:i:s'),
+                        'inspeksi' => $value['inspeksi'],
+                        'palpasi' => $value['palpasi'] ?? '',
+                        'perkusi' => $value['perkusi'] ?? '',
+                        'auskultasi' => $value['auskultasi'] ?? '',
+                        'user' => auth()->user()->pegawai_id
+                    ]
+                );
+            }
+        }
+
+        $pemeriksaan = $simpanperiksaan->load(['anatomys', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu']);
         return new JsonResponse(
             [
                 'message' => 'BERHASIL DISIMPAN',

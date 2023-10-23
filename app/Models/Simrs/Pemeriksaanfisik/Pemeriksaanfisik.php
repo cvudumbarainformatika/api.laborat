@@ -22,6 +22,10 @@ class Pemeriksaanfisik extends Model
     }
     public function pemeriksaankhususmata()
     {
-        return $this->hasOne(Polimata::class, 'rs1', 'rs1');
+        return $this->hasMany(Polimata::class, 'rs236_id', 'rs1');
+    }
+    public function pemeriksaankhususparu()
+    {
+        return $this->hasMany(Pemeriksaanfisik_paru::class, 'rs236_id', 'rs1');
     }
 }
