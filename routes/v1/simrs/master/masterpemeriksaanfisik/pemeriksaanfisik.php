@@ -11,4 +11,6 @@ Route::group([
 ], function () {
     Route::post('/simpanmasterpemeriksaan', [MasterPemeriksaanFisikController::class, 'simpanmasterpemeriksaan']);
     Route::get('/data', [MasterPemeriksaanFisikController::class, 'index']);
+    Route::post('/uploads', [MasterPemeriksaanFisikController::class, 'uploads']);
+    Route::post('/deletetemplate', [MasterPemeriksaanFisikController::class, 'deletetemplate']);
 });
