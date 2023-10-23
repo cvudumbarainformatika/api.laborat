@@ -98,7 +98,7 @@ class PlaningController extends Controller
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
-                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpanop], 200);
                     }
                 } else {
                     $nospri = $request->noreg;
@@ -111,7 +111,7 @@ class PlaningController extends Controller
                     if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpanop], 200);
                 }
             } else {
                 if ($groupsistembayar == '1') {
@@ -123,7 +123,7 @@ class PlaningController extends Controller
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
-                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpanspri], 200);
                     }
                 } else {
                     $nospri = $request->noreg;
@@ -131,7 +131,7 @@ class PlaningController extends Controller
                     if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                    return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpanspri], 200);
                 }
             }
         } else {
