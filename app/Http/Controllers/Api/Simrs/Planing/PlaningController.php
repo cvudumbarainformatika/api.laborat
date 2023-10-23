@@ -229,9 +229,9 @@ class PlaningController extends Controller
                 [
                     'rs1' => $request->noreg ?? '',
                     'rs2' => $request->norm ?? '',
-                    'rs3' => $request->kdpoli_tujuan ?? '',
+                    'rs3' => $request->kdruang ?? '',
                     'rs4' => $request->planing ?? '',
-                    'rs5' => $request->kdruangranap ?? '',
+                    'rs5' => $request->kdruangtujuan ?? '',
                     'tgl' => date('Y-m-d H:i:s'),
                     'user' => auth()->user()->pegawai_id
                 ]
