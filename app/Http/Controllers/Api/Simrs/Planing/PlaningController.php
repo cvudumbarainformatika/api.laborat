@@ -32,6 +32,10 @@ class PlaningController extends Controller
 
     public function simpanplaningpasien(Request $request)
     {
+        $cek = WaktupulangPoli::where('rs1', $request->noreg)->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
+        }
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
         $groupsistembayar = $sistembayar->groups;
         // $groupsistembayar = '1';
