@@ -72,7 +72,7 @@ class TroubleController extends Controller
         // $data = $request->all();
         $date = $request->tanggal;
         $hari = date('l', strtotime($date));
-        $anu = JadwalAbsen::select('pegawai_id')
+        $anu = JadwalAbsen::select('user_id')
             // $anu = JadwalAbsen::query()
             ->whereIn('kategory_id', [1, 2])
             ->where('day', $hari);
@@ -86,16 +86,16 @@ class TroubleController extends Controller
                     ->orWhereBetween('pulang', [$request->mulai, $request->selesai]);
             });
         }
-        $idpeg = $anu->distinct('pegawai_id')
-            ->orderBy('pegawai_id', 'ASC')
+        $idpeg = $anu->distinct('user_id')
+            ->orderBy('user_id', 'ASC')
             // $idpeg = $anu->groupBy('masuk', 'pulang')
             ->get();
-        $user = User::whereIn('pegawai_id', $idpeg)->orderBy('id', 'ASC')->get();
-        foreach ($user as $key) {
-            // return new JsonResponse($key->id);
+        // $user = User::whereIn('pegawai_id', $idpeg)->orderBy('id', 'ASC')->get();
+        foreach ($idpeg as $key) {
+            // return new JsonResponse($key);
             Libur::updateOrCreate(
                 [
-                    'user_id' => $key->id,
+                    'user_id' => $key->user_id,
                     'tanggal' => $request->tanggal
                 ],
                 [
@@ -103,6 +103,7 @@ class TroubleController extends Controller
                     'alasan' => $request->alasan,
                 ]
             );
+            // return new JsonResponse(['message' => 'ada key nya']);
         }
         return new JsonResponse(['message' => 'Sudah dispen semua karyawan non-shift']);
     }
