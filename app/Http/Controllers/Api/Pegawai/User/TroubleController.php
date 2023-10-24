@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Pegawai\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +13,23 @@ class TroubleController extends Controller
 {
     public function index()
     {
-
+        $date = request('tanggal'); // Replace with your date
+        $hari = date('l', strtotime($date));
+        $anu = JadwalAbsen::select('pegawai_id')
+            ->where('kategory_id', '>=', 3)
+            ->where('day', $hari);
+        if (request('dispen_masuk') === 'true' && request('dispen_pulang') === 'false') {
+            $anu->whereBetween('masuk', [request('mulai'), request('selesai')]);
+        } else if (request('dispen_masuk') === 'false' && request('dispen_pulang') === 'true') {
+            $anu->whereBetween('pulang', [request('mulai'), request('selesai')]);
+        } else if (request('dispen_masuk') === 'true' && request('dispen_pulang') === 'false') {
+            $anu->where(function ($q) {
+                $q->whereBetween('masuk', [request('mulai'), request('selesai')])
+                    ->orWhereBetween('pulang', [request('mulai'), request('selesai')]);
+            });
+        }
+        $idpeg = $anu->distinct()
+            ->get();
         $data = Pegawai::where('aktif', '=', 'AKTIF')
             ->where(function ($query) {
                 $query->when(request('flag') ?? false, function ($search, $q) {
@@ -22,6 +39,7 @@ class TroubleController extends Controller
                     return $search->where('ruang', '=', $q);
                 });
             })
+            ->whereIn('id', $idpeg)
             ->filter(request(['q']))
             ->with(['ruangan', 'user'])
             ->paginate(request('per_page'));
