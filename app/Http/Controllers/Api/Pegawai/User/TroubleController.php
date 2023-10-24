@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\Libur;
 use App\Models\Sigarang\Pegawai;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -65,5 +66,44 @@ class TroubleController extends Controller
             );
         }
         return new JsonResponse($ids);
+    }
+    public function nonShift(Request $request)
+    {
+        // $data = $request->all();
+        $date = $request->tanggal;
+        $hari = date('l', strtotime($date));
+        $anu = JadwalAbsen::select('pegawai_id')
+            // $anu = JadwalAbsen::query()
+            ->whereIn('kategory_id', [1, 2])
+            ->where('day', $hari);
+        if ($request->dispen_masuk === 'true' && $request->dispen_pulang === 'false') {
+            $anu->whereBetween('masuk', [$request->mulai, $request->selesai]);
+        } else if ($request->dispen_masuk === 'false' && $request->dispen_pulang === 'true') {
+            $anu->whereBetween('pulang', [$request->mulai, $request->selesai]);
+        } else if ($request->dispen_masuk === 'true' && $request->dispen_pulang === 'false') {
+            $anu->where(function ($q) use ($request) {
+                $q->whereBetween('masuk', [$request->mulai, $request->selesai])
+                    ->orWhereBetween('pulang', [$request->mulai, $request->selesai]);
+            });
+        }
+        $idpeg = $anu->distinct('pegawai_id')
+            ->orderBy('pegawai_id', 'ASC')
+            // $idpeg = $anu->groupBy('masuk', 'pulang')
+            ->get();
+        $user = User::whereIn('pegawai_id', $idpeg)->orderBy('id', 'ASC')->get();
+        foreach ($user as $key) {
+            // return new JsonResponse($key->id);
+            Libur::updateOrCreate(
+                [
+                    'user_id' => $key->id,
+                    'tanggal' => $request->tanggal
+                ],
+                [
+                    'flag' => $request->flag,
+                    'alasan' => $request->alasan,
+                ]
+            );
+        }
+        return new JsonResponse(['message' => 'Sudah dispen semua karyawan non-shift']);
     }
 }

@@ -30,6 +30,7 @@ Route::group([
 ], function () {
     Route::get('/pegawai', [TroubleController::class, 'index']);
     Route::post('/store', [TroubleController::class, 'store']);
+    Route::post('/non-shift', [TroubleController::class, 'nonShift']);
 });
 Route::group([
     'middleware' => 'auth:api',
