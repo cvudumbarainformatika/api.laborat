@@ -34,6 +34,7 @@ class HistoryController extends Controller
         $nama = request('nama');
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
+        $idpegawai = Pegawai::select('id')->where('kode_ruang', $pegawai->kode_ruang)->get();
 
         // pemesanan
 
@@ -48,7 +49,8 @@ class HistoryController extends Controller
                 $pemesanan->whereBetween('tanggal', [request('from'), request('to')]);
             }
             if ($pegawai->role_id !== 1) {
-                $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
+
+                $pemesanan->whereIn('created_by', $idpegawai)->orWhere('created_by', 0);
             }
 
             $data = $pemesanan->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
@@ -204,6 +206,7 @@ class HistoryController extends Controller
             'data' => $apem,
             'meta' => $data,
             'req' => request()->all(),
+            'ids' => $idpegawai,
         ]);
     }
     public function allTransaction()
