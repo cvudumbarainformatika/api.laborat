@@ -49,8 +49,11 @@ class HistoryController extends Controller
                 $pemesanan->whereBetween('tanggal', [request('from'), request('to')]);
             }
             if ($pegawai->role_id !== 1) {
-
-                $pemesanan->whereIn('created_by', $idpegawai)->orWhere('created_by', 0);
+                if ($pegawai->kode_ruang === 'Gd-02010102') {
+                    $pemesanan->whereIn('created_by', $idpegawai)->orWhere('created_by', 0);
+                } else {
+                    $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
+                }
             }
 
             $data = $pemesanan->with('perusahaan', 'dibuat',  'details.barangrs.barang108', 'details.satuan')
