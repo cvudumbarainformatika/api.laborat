@@ -40,7 +40,8 @@ class DistribusiController extends Controller
                     if ($pegawai->role_id === 4) {
                         $wew->where('dari', $pegawai->kode_ruang);
                     }
-                    $wew->with('barangrs.mapingbarang.barang108', 'satuan', 'ruang');
+                    // $wew->with('barangrs.mapingbarang.barang108', 'satuan:id,nama', 'ruang:id,uraian');
+                    $wew->with('barangrs', 'satuan', 'ruang');
                 }
             ])
             ->filter(request(['q', 'r']))

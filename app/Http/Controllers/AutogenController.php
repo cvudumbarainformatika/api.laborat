@@ -2299,31 +2299,102 @@ class AutogenController extends Controller
         //     }
         // }
         // return new JsonResponse($data);
-        $date = '2023-10-24'; // Replace with your date
-        $hari = date('l', strtotime($date));
+        // $date = '2023-10-24'; // Replace with your date
+        // $hari = date('l', strtotime($date));
 
-        $anu = JadwalAbsen::select('pegawai_id', 'day', 'masuk', 'pulang', 'kategory_id')
-            ->where('kategory_id', '>=', 3)
-            ->where('day', '=', $hari);
-        if (request('dispen_masuk') === 'true' && request('dispen_pulang') === 'false') {
-            $anu->whereBetween('masuk', [request('mulai'), request('selesai')]);
-        } else if (request('dispen_masuk') === 'false' && request('dispen_pulang') === 'true') {
-            $anu->whereBetween('pulang', [request('mulai'), request('selesai')]);
-        } else if (request('dispen_masuk') === 'true' && request('dispen_pulang') === 'false') {
-            $anu->where(function ($q) {
-                $q->whereBetween('masuk', [request('mulai'), request('selesai')])
-                    ->orWhereBetween('pulang', [request('mulai'), request('selesai')]);
-            });
+        // $anu = JadwalAbsen::select('pegawai_id', 'day', 'masuk', 'pulang', 'kategory_id')
+        //     ->where('kategory_id', '>=', 3)
+        //     ->where('day', '=', $hari);
+        // if (request('dispen_masuk') === 'true' && request('dispen_pulang') === 'false') {
+        //     $anu->whereBetween('masuk', [request('mulai'), request('selesai')]);
+        // } else if (request('dispen_masuk') === 'false' && request('dispen_pulang') === 'true') {
+        //     $anu->whereBetween('pulang', [request('mulai'), request('selesai')]);
+        // } else if (request('dispen_masuk') === 'true' && request('dispen_pulang') === 'false') {
+        //     $anu->where(function ($q) {
+        //         $q->whereBetween('masuk', [request('mulai'), request('selesai')])
+        //             ->orWhereBetween('pulang', [request('mulai'), request('selesai')]);
+        //     });
+        // }
+        // $idpeg = $anu->distinct('pegawai_id')
+        //     ->orderBy('pegawai_id', 'ASC')
+        //     ->get();
+        // return new JsonResponse([
+        //     'hari' => $hari,
+        //     'dm' => request('dispen_masuk') === 'true',
+        //     'req' => request()->all(),
+        //     'data' => $idpeg,
+        // ]);
+        // $user = auth()->user();
+        // $pegawai = Pegawai::find($user->pegawai_id);
+        $p = Permintaanruangan::query();
+        // if ($pegawai->role_id === 4) {
+        //     $p->where('dari', $pegawai->kode_ruang);
+        // }
+        // $data = $p->where('status', '>=', 4)
+        //     ->where('status', '<=', 7)
+        //     ->orderBy(request('order_by'), request('sort'))
+        if (
+            request('status') && request('status') !== null
+        ) {
+            $p->where('status', '=', request('status'));
+        } else {
+            $p->where('status', '>=', 4)
+                ->where('status', '<=', 7);
         }
-        $idpeg = $anu->distinct('pegawai_id')
-            ->orderBy('pegawai_id', 'ASC')
-            ->get();
+        $data = $p->orderBy(request('order_by'), request('sort'))
+            // $data = $p
+            ->with([
+                // 'details.barangrs.mapingbarang.barang108', 'details.satuan',  'details.ruang',
+                'pj', 'pengguna', 'details' => function ($wew) {
+                    // if ($pegawai->role_id === 4) {
+                    //     $wew->where('dari', $pegawai->kode_ruang);
+                    // }
+                    $wew->with('barangrs.mapingbarang.barang108', 'satuan', 'ruang');
+                }
+            ])
+            ->filter(request(['q', 'r']))
+            ->paginate(request('per_page'));
+        // ->get();
+
+        foreach ($data as $key) {
+            foreach ($key->details as $detail) {
+                $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
+                $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])
+                    ->where('kode_ruang', $detail['tujuan'])
+                    ->first();
+                $detail['barangrs']->maxStok = $max ? $max->max_stok : 0;
+                $detail['barangrs']->alokasi = $temp ? $temp->alokasi : 0;
+                $detail['temp'] = $temp;
+                $detail['barangrs']->stokDepo = $temp ? $temp->stok : 0;
+                $detail['barangrs']->stokRuangan = $temp ? $temp->stokRuangan : 0;
+            }
+        }
+        // foreach ($data as $key) {
+        //     foreach ($key->details as $detail) {
+        //         $detail->append('stok_ruangan');
+        //         $detail->append('max_stok');
+        //         // $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
+        //         // $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])
+        //         //     ->where('kode_ruang', $detail['tujuan'])
+        //         //     ->first();
+        //         // $detail['barangrs']->maxStok = $max ? $max->max_stok : 0;
+        //         // $detail['barangrs']->alokasi = $temp ? $temp->alokasi : 0;
+        //         // $detail['temp'] = $temp;
+        //         // $detail['barangrs']->stokDepo = $temp ? $temp->stok : 0;
+        //         // $detail['barangrs']->stokRuangan = $temp ? $temp->stokRuangan : 0;
+        //     }
+        // }
+
+        // if (count($data)) {
+        //     foreach ($data as $key) {
+        //         $key->gudang = collect($key->details)->groupBy('dari');
+        //     }
+        // }
+        $collection = collect($data);
         return new JsonResponse([
-            'hari' => $hari,
-            'dm' => request('dispen_masuk') === 'true',
-            'req' => request()->all(),
-            'data' => $idpeg,
-        ]);
+            'data' => $collection->only('data'),
+            'meta' => $collection->except('data'),
+        ], 200);
     }
 
     public function wawanpost(Request $request)

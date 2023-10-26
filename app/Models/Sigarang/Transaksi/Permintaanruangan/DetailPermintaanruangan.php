@@ -5,6 +5,7 @@ namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 use App\Models\Sigarang\Barang108;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\MaxRuangan;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Satuan;
@@ -52,5 +53,23 @@ class DetailPermintaanruangan extends Model
     public function sisastok()
     {
         return $this->hasMany(RecentStokUpdate::class, 'kode_rs', 'kode_rs');
+    }
+
+    public function getStokRuanganAttribute()
+    {
+        $kode_ruangan = $this->tujuan;
+        $kode_rs = $this->kode_rs;
+        $data = RecentStokUpdate::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)->sum('sisa_stok');
+        return $data;
+    }
+    public function getMaxStokAttribute()
+    {
+        $kode_ruangan = $this->tujuan;
+        $kode_rs = $this->kode_rs;
+        $data = MaxRuangan::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)
+            ->first();
+        return $data ? $data->max_stok : 0;
     }
 }
