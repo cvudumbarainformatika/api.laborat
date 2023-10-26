@@ -2326,6 +2326,9 @@ class AutogenController extends Controller
         // ]);
         // $user = auth()->user();
         // $pegawai = Pegawai::find($user->pegawai_id);
+        $data = Gudang::get();
+        return new JsonResponse($data);
+
         $p = Permintaanruangan::query();
         // if ($pegawai->role_id === 4) {
         //     $p->where('dari', $pegawai->kode_ruang);
