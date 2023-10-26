@@ -55,12 +55,35 @@ class DetailPermintaanruangan extends Model
         return $this->hasMany(RecentStokUpdate::class, 'kode_rs', 'kode_rs');
     }
 
+    public function getAllMintaAttribute()
+    {
+        $kode = $this->kode_rs;
+        $idMint = Permintaanruangan::select('id')->whereIn('status', [4, 5, 6])->get();
+        $det = DetailPermintaanruangan::whereIn('permintaanruangan_id', $idMint)
+            ->where('kode_rs', $kode)->get();
+
+        $col = collect($det);
+        $gr = $col->map(function ($item) {
+            $jumsem = $item->jumlah_disetujui ? $item->jumlah_disetujui : $item->jumlah;
+            $item->alokasi = $jumsem;
+            return $item;
+        });
+        $sum = $gr->sum('alokasi');
+        return $sum;
+    }
     public function getStokRuanganAttribute()
     {
         $kode_ruangan = $this->tujuan;
         $kode_rs = $this->kode_rs;
-        $data = RecentStokUpdate::where('kode_rs', $kode_rs)
+        $stokRuangan = RecentStokUpdate::where('kode_rs', $kode_rs)
             ->where('kode_ruang', $kode_ruangan)->sum('sisa_stok');
+
+        $max = MaxRuangan::where('kode_rs', $kode_rs)
+            ->where('kode_ruang', $kode_ruangan)
+            ->first();
+
+        $data['stok_ruangan'] = $stokRuangan;
+        $data['max_stok'] =  $max ? $max->max_stok : 0;
         return $data;
     }
     public function getMaxStokAttribute()
