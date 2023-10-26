@@ -195,7 +195,11 @@ class AuthController extends Controller
     {
 
         // $akses = User::with('akses.aplikasi', 'akses.menu', 'akses.submenu')->find(auth()->user()->id);
-        $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.depo'])->find(auth()->user()->id);
+        $user = User::with(['pegawai.role', 'pegawai.ruang'])->find(auth()->user()->id);
+        $loadGudang = array(3, 4);
+        if (in_array($user->pegawai->role_id, $loadGudang)) {
+            $user->load('pegawai.depo:kode,nama');
+        }
 
         // $pegawai = Pegawai::with('ruang', 'depo', 'role')->find($akses->pegawai_id);
         // $submenu = Access::where('role_id', $pegawai->role_id)->with(['role', 'aplikasi', 'submenu.menu'])->get();
