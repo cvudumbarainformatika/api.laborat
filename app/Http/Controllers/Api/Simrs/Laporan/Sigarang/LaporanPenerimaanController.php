@@ -7,6 +7,7 @@ use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Rekening50;
+use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
 use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
@@ -199,6 +200,55 @@ class LaporanPenerimaanController extends Controller
             ->with('perusahaan')
             ->orderBy('penerimaans.tanggal', 'ASC')
             ->orderBy('penerimaans.no_penerimaan', 'ASC')
+            ->paginate(request('per_page'));
+        return new JsonResponse($data);
+    }
+    public function lapPenerimaanDepoNew()
+    {
+        $idDist = DistribusiDepo::select(
+            'id'
+        )
+
+            ->when(request('kode_ruang'), function ($q) {
+                $depo = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103'];
+                if (request('kode_ruang') === 'all') {
+                    $q->whereIn('distribusi_depos.kode_depo', $depo);
+                } else {
+                    $q->where('distribusi_depos.kode_depo', request('kode_ruang'));
+                }
+            })
+            ->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where('status', '>=', 2)
+            ->get();
+        $kodeB = DetailDistribusiDepo::select('kode_rs')->whereIn('distribusi_depo_id', $idDist)->distinct('kode_rs')->get();
+
+        $data = BarangRS::select('kode', 'nama', 'kode_satuan')
+            ->whereIn('kode', $kodeB)
+            ->filter(request(['q']))
+            ->with([
+                'satuan:kode,nama',
+                'detailDistribusiDepo' => function ($detDist) use ($idDist, $kodeB) {
+                    $detDist->select(
+                        'distribusi_depo_id',
+                        'kode_rs',
+                        'jumlah',
+                        'no_penerimaan',
+                    )
+                        ->whereIn('distribusi_depo_id', $idDist)
+                        ->with([
+                            'distribusi:id,tanggal,no_distribusi,status',
+                            'recent' => function ($re) use ($kodeB) {
+                                $re->select(
+                                    'no_penerimaan',
+                                    'kode_rs',
+                                    'harga'
+                                )
+                                    ->whereIn('kode_rs', $kodeB);
+                            }
+                        ]);
+                }
+            ])
+
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }

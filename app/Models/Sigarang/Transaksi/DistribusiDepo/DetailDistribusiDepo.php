@@ -4,6 +4,7 @@ namespace App\Models\Sigarang\Transaksi\DistribusiDepo;
 
 use App\Models\Sigarang\Barang108;
 use App\Models\Sigarang\BarangRS;
+use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Satuan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,5 +35,9 @@ class DetailDistribusiDepo extends Model
     public function distribusi()
     {
         return $this->belongsTo(DistribusiDepo::class, 'distribusi_depo_id');
+    }
+    public function recent()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'no_penerimaan', 'no_penerimaan');
     }
 }
