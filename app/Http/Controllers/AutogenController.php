@@ -2344,15 +2344,19 @@ class AutogenController extends Controller
             $p->where('status', '>=', 4)
                 ->where('status', '<=', 7);
         }
+
+        $per = $p->select('id')->paginate(request('per_page'));
+        $colId = collect($per)->only('data');
+        $perId = $colId['data'];
+        $det = DetailPermintaanruangan::select('kode_rs')->whereIn('permintaanruangan_id', $perId)->distinct('kode_rs')->get();
+
         $data = $p->orderBy(request('order_by'), request('sort'))
             ->with([
 
-                'pj', 'pengguna', 'details' => function ($wew) {
+                'pj', 'pengguna', 'details' => function ($wew) use ($det) {
                     // if ($pegawai->role_id === 4) {
                     //     $wew->where('dari', $pegawai->kode_ruang);
                     // }
-                    $depo = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103'];
-                    $gudang = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103', 'Gd-02010100'];
                     $wew->select(
                         'detail_permintaanruangans.id',
                         'detail_permintaanruangans.permintaanruangan_id',
@@ -2370,6 +2374,14 @@ class AutogenController extends Controller
                         ->with([
                             'satuan:kode,nama',
                             'ruang:kode,uraian',
+                            'maxruangan' => function ($ma) use ($det) {
+                                $ma->select(
+                                    'kode_rs',
+                                    'kode_ruang',
+                                    'max_stok',
+                                    'minta'
+                                )->whereIn('kode_rs', $det);
+                            },
                             'sisastok' => function ($s) {
                                 $s->select(
                                     'kode_rs',
@@ -2377,63 +2389,61 @@ class AutogenController extends Controller
                                     'sisa_stok',
                                 )
                                     ->selectRaw('sum(sisa_stok) as stok_total')
-                                    // ->whereNotIn('kode_ruang', $gudang)
                                     ->where('sisa_stok', '>', 0)
                                     ->groupBy('kode_rs', 'kode_ruang');
                             },
-                            'barangrs' => function ($anu) use ($depo) {
+                            'barangrs' => function ($anu) {
                                 $anu->select(
                                     'kode',
                                     'nama',
                                     'kode_satuan',
                                     'kode_depo'
                                 );
-                                // ->with([
-                                //     'recent' => function ($re) use ($depo) {
-                                //         $re->select(
-                                //             'kode_rs',
-                                //             'kode_ruang',
-                                //             'sisa_stok',
-                                //         )
-                                //             ->selectRaw('sum(sisa_stok) as stok_depo')
-                                //             ->whereIn('kode_ruang', $depo)
-                                //             ->where('sisa_stok', '>', 0)
-                                //             ->groupBy('kode_rs', 'kode_ruang');
-                                //     }
-                                // ]);
                             }
                         ]);
                 }
             ])
             ->filter(request(['q', 'r']))
             ->paginate(request('per_page'));
-        // ->get();
 
-        // foreach ($data as $key) {
-        //     foreach ($key->details as $detail) {
-        //         $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
-        //         $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])
-        //             ->where('kode_ruang', $detail['tujuan'])
-        //             ->first();
-        //         $detail['barangrs']->maxStok = $max ? $max->max_stok : 0;
-        //         $detail['barangrs']->alokasi = $temp ? $temp->alokasi : 0;
-        //         $detail['temp'] = $temp;
-        //         $detail['barangrs']->stokDepo = $temp ? $temp->stok : 0;
-        //         $detail['barangrs']->stokRuangan = $temp ? $temp->stokRuangan : 0;
-        //     }
-        // }
+
         foreach ($data as $key) {
             foreach ($key->details as $detail) {
                 $detail->append('all_minta');
-                // $temp = StockController::getDetailsStok($detail['kode_rs'], $detail['tujuan']);
-                // $max = MaxRuangan::where('kode_rs', $detail['kode_rs'])
-                //     ->where('kode_ruang', $detail['tujuan'])
-                //     ->first();
-                // $detail['barangrs']->maxStok = $max ? $max->max_stok : 0;
-                // $detail['barangrs']->alokasi = $temp ? $temp->alokasi : 0;
-                // $detail['temp'] = $temp;
-                // $detail['barangrs']->stokDepo = $temp ? $temp->stok : 0;
-                // $detail['barangrs']->stokRuangan = $temp ? $temp->stokRuangan : 0;
+                $sisastok = collect($detail['sisastok']);
+
+                $stokMe = $sisastok->where('kode_ruang', $detail['tujuan'])->all();
+                $stokR = 0;
+                foreach ($stokMe as $st) {
+                    $stokR = $st->stok_total;
+                }
+
+                $stokDe = $sisastok->where('kode_ruang', $detail['barangrs']->kode_depo)->all();
+                $stokD = 0;
+                foreach ($stokDe as $st) {
+                    $stokD = $st->stok_total;
+                }
+
+                $maxruangan = collect($detail['maxruangan']);
+                $maxRe = $maxruangan->where('kode_rs', $detail['kode_rs'])->all();
+                $maxR = 0;
+                $mintaR = 0;
+                foreach ($maxRe as $st) {
+                    $maxR = $st->max_stok;
+                    $mintaR = $st->minta;
+                }
+
+                $sum = $detail['all_minta'];
+                $alokasi = 0;
+                if ($stokD >= $sum) {
+                    $alokasi =  $stokD - $sum;
+                } else {
+                    $alokasi = 0;
+                }
+                $detail['barangrs']->maxStok = $maxR > 0 ? $maxR : $mintaR;
+                $detail['barangrs']->stokRuangan = $stokR;
+                $detail['barangrs']->stokDepo = $stokD;
+                $detail['barangrs']->alokasi = $alokasi;
             }
         }
 
@@ -2444,6 +2454,7 @@ class AutogenController extends Controller
         // }
         $collection = collect($data);
         return new JsonResponse([
+            // 'per' => $det,
             'data' => $collection->only('data'),
             'meta' => $collection->except('data'),
         ], 200);

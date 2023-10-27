@@ -54,6 +54,10 @@ class DetailPermintaanruangan extends Model
     {
         return $this->hasMany(RecentStokUpdate::class, 'kode_rs', 'kode_rs');
     }
+    public function maxruangan()
+    {
+        return $this->hasMany(MaxRuangan::class, 'kode_ruang', 'tujuan');
+    }
 
     public function getAllMintaAttribute()
     {
