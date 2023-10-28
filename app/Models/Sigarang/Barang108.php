@@ -11,6 +11,11 @@ class Barang108 extends Model
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
 
+    public function maping()
+    {
+        return $this->hasOne(Maping108To50::class, 'kode108', 'kode');
+    }
+
     public function scopeFilter($search, array $reqs)
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
