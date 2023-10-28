@@ -11,5 +11,6 @@ Route::group([
 ], function () {
     Route::get('ruangan/barang', [LaporanRuanganController::class, 'getBarang']);
     Route::get('pengeluaran-depo', [LaporanRuanganController::class, 'lapPengeluaranDepo']);
+    Route::get('pengeluaran-depo-new', [LaporanRuanganController::class, 'lapPengeluaranDepoNew']);
     Route::get('pemakaian-ruangan', [LaporanRuanganController::class, 'lapPemakaianRuangan']);
 });
