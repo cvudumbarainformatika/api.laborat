@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\Barang108Resource;
 use App\Models\Sigarang\Barang108;
+use App\Models\Sigarang\Maping108To50;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ class Barang108Controller extends Controller
         // $data = Barang108::paginate();
         $data = Barang108::latest('id')
             ->filter(request(['q']))
+            ->with('maping')
             ->paginate(request('per_page'));
         // return Barang108Resource::collection($data);
         $collect = collect($data);
@@ -29,6 +31,18 @@ class Barang108Controller extends Controller
     {
         $data = Barang108::latest('id')->filter(request(['q']))->get(); //paginate(request('per_page'));
         return Barang108Resource::collection($data);
+    }
+    public function maping108to50()
+    {
+        $data = Maping108To50::latest('id')
+            ->filter(request(['q']))
+            ->paginate(request('per_page'));
+        // return Barang108Resource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
     }
 
     public function store(Request $request)

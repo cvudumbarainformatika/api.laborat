@@ -67,7 +67,17 @@ class LiburController extends Controller
             return new JsonResponse(['message' => 'isi data yang belum terisi'], 422);
         }
         $path = '';
-        $data = Libur::create($request->all());
+        // $data = Libur::create($request->all());
+        $data = Libur::updateOrCreate(
+            [
+                'user_id' => $request->user_id,
+                'tanggal' => $request->tanggal
+            ],
+            [
+                'flag' => $request->flag,
+                'alasan' => $request->alasan,
+            ]
+        );
         if (!$data) {
             return new JsonResponse(['message' => 'Gagal menyimpan data', 'request' => $request->all()], 500);
         }
@@ -77,6 +87,43 @@ class LiburController extends Controller
             $data->update(['image' => $path]);
         }
 
+        return new JsonResponse(['message' => 'Berhasil menyimpan data', 'request' => $request->all()], 201);
+    }
+    public function storeMultiDate(Request $request)
+    {
+        // return new JsonResponse(['request' => $request->all()], 410);
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'tanggal' => 'required',
+            'flag' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return new JsonResponse(['message' => 'isi data yang belum terisi'], 422);
+        }
+        $path = '';
+        // $data = Libur::create($request->all());
+        $coll = $request->tanggal;
+        $tanggals = explode(',', $coll);
+        foreach ($tanggals as $tang) {
+            $data = Libur::updateOrCreate(
+                [
+                    'user_id' => $request->user_id,
+                    'tanggal' => $tang
+                ],
+                [
+                    'flag' => $request->flag,
+                    'alasan' => $request->alasan,
+                ]
+            );
+            if (!$data) {
+                return new JsonResponse(['message' => 'Gagal menyimpan data', 'request' => $request->all()], 500);
+            }
+            if ($request->has('gambar')) {
+                $path = $request->file('gambar')->store('image', 'public');
+                // array_merge($request, ['image' => $path]);
+                $data->update(['image' => $path]);
+            }
+        }
         return new JsonResponse(['message' => 'Berhasil menyimpan data', 'request' => $request->all()], 201);
     }
     public function ramadhan(Request $request)

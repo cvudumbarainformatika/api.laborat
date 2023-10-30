@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/laporan/sigarang'
 ], function () {
     Route::get('/lap-mutasi', [LaporanMutasiGudangController::class, 'lapMutasi']);
+    Route::get('/lap-mutasi-depo', [LaporanMutasiGudangController::class, 'lapMutasiDepo']);
 });
