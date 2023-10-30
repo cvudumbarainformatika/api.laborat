@@ -12,7 +12,7 @@ class DistribusiDepo extends Model
     use HasFactory;
     protected $connection = 'sigarang';
     protected $guarded = ['id'];
-    protected $appends = ['gudangasal'];
+    // protected $appends = ['gudangasal'];
 
     public function details()
     {

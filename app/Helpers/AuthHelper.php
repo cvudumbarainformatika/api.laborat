@@ -56,4 +56,9 @@ class AuthHelper
             'user' => $user
         ]);
     }
+
+    // public function ()
+    // {
+
+    // }
 }
