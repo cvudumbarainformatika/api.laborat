@@ -73,8 +73,9 @@ class PoliController extends Controller
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            ->where('rs17.rs8', $user->kdruangansim ?? '')
-            //    ->where('rs19.rs4', '=', 'Poliklinik')
+            // ->where('rs17.rs8', $user->kdruangansim ?? '')
+            ->where('rs19.rs4', '=', 'Poliklinik')
+            ->where('rs17.rs8', 'LIKE', '%' . $user->kdruangansim ?? '')
             ->where('rs17.rs8', '!=', 'POL014')
             //    ->where('rs9.rs9', '=', 'BPJS')
             ->where(function ($sts) use ($status) {
@@ -96,7 +97,7 @@ class PoliController extends Controller
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
-            ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
+            // ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
 
             ->with([
                 'anamnesis', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
