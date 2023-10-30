@@ -23,6 +23,11 @@ class AnamnesisController extends Controller
                     'keteranganalergi' => $request->keteranganalergi ?? '',
                     'riwayatpengobatan' => $request->riwayatpengobatan ?? '',
                     'riwayatpenyakitsekarang' => $request->riwayatpenyakitsekarang ?? '',
+                    'riwayatpenyakitkeluarga' => $request->riwayatpenyakitkeluarga ?? '',
+                    'skreeninggizi' => $request->skreeninggizi ?? 0,
+                    'asupanmakan' => $request->asupanmakan ?? 0,
+                    'kondisikhusus' => $request->kondisikhusus ?? '',
+                    'skor' => $request->skor ?? 0,
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
@@ -38,6 +43,11 @@ class AnamnesisController extends Controller
                     'keteranganalergi' => $request->keteranganalergi ?? '',
                     'riwayatpengobatan' => $request->riwayatpengobatan ?? '',
                     'riwayatpenyakitsekarang' => $request->riwayatpenyakitsekarang ?? '',
+                    'riwayatpenyakitkeluarga' => $request->riwayatpenyakitkeluarga ?? '',
+                    'skreeninggizi' => $request->skreeninggizi ?? 0,
+                    'asupanmakan' => $request->asupanmakan ?? 0,
+                    'kondisikhusus' => $request->kondisikhusus ?? '',
+                    'skor' => $request->skor ?? 0,
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
