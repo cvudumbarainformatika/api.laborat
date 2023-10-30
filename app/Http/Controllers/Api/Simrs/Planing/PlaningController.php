@@ -8,6 +8,7 @@ use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Mplaning;
 use App\Models\Simrs\Planing\Simpanspri;
+use App\Models\Simrs\Planing\Simpansuratkontrol;
 use App\Models\Simrs\Planing\Transrujukan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
@@ -145,17 +146,17 @@ class PlaningController extends Controller
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
                         $simpanakhir = self::simpanakhir($request);
-                        $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                        $data = Simpanspri::where('noreg', $request->noreg)->first();
                         return new JsonResponse([
                             'message' => 'Data Berhasil Disimpan...!!!',
-                            'result' => $data->load('masterpoli')
+                            'result' => $data
                         ], 200);
                     }
                 } else {
                     $nospri = $request->noreg;
                     $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
                     $simpanakhir = self::simpanakhir($request);
-                    $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                    $data = Simpanspri::where('noreg', $request->noreg)->first();
                     if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
@@ -166,7 +167,31 @@ class PlaningController extends Controller
                 }
             }
         } else {
-            // $simpan = BridbpjsplanController::insertsuratcontrol($request);
+            if ($groupsistembayar == '1') {
+                $simpan = BridbpjsplanController::insertsuratcontrol($request);
+                $nosuratkontrol = $simpan['response']['noSuratKontrol'];
+                $xxx = $simpan['metadata']['code'];
+                if ($xxx === 200 || $xxx === '200') {
+                    $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
+                    $simpanakhir = self::simpanakhir($request);
+                    $data = Simpansuratkontrol::where('noreg', $request->noreg)->firs();
+                    return new JsonResponse([
+                        'message' => 'Data Berhasil Disimpan...!!!',
+                        'result' => $data
+                    ], 200);
+                } else {
+                    return new JsonResponse($simpan);
+                }
+            } else {
+                $nosuratkontrol = $request->noreg;
+                $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
+                $simpanakhir = self::simpanakhir($request);
+                $data = Simpansuratkontrol::where('noreg', $request->noreg)->firs();
+                return new JsonResponse([
+                    'message' => 'Data Berhasil Disimpan...!!!',
+                    'result' => $data
+                ], 200);
+            }
         }
     }
 
@@ -350,6 +375,32 @@ class PlaningController extends Controller
             ]
         );
         if (!$simpanspri) {
+            return 500;
+        }
+        return 200;
+    }
+
+    public static function simpansuratkontrol($request, $nosuratkontrol)
+    {
+        $simpansuratkontrol = Simpansuratkontrol::firstOrCreate(
+            [
+                'noSuratKontrol' => $nosuratkontrol
+            ],
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->noreg,
+                'kodeDokter' => $request->kddokter,
+                'poliKontrol' => $request->kodepolibpjs,
+                'tglRencanaKontrol' => $request->tglrencanakunjungan,
+                'namaDokter' => $request->dokter,
+                'noKartu' => $request->noka,
+                'nama' => $request->nama,
+                'kelamin' => $request->kelamin,
+                'tglLahir' => $request->tgllahir,
+                'user_id' => auth()->user()->pegawai_id
+            ]
+        );
+        if (!$simpansuratkontrol) {
             return 500;
         }
         return 200;
