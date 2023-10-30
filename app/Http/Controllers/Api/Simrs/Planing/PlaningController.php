@@ -34,9 +34,9 @@ class PlaningController extends Controller
     public function simpanplaningpasien(Request $request)
     {
         $cek = WaktupulangPoli::where('rs1', $request->noreg)->count();
-        if ($cek > 0) {
-            return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
-        }
+        // if ($cek > 0) {
+        //     return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
+        // }
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
         $groupsistembayar = $sistembayar->groups;
         // $groupsistembayar = '1';
@@ -174,7 +174,7 @@ class PlaningController extends Controller
                 if ($xxx === 200 || $xxx === '200') {
                     $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
                     $simpanakhir = self::simpanakhir($request);
-                    $data = Simpansuratkontrol::where('noreg', $request->noreg)->firs();
+                    $data = Simpansuratkontrol::where('noreg', $request->noreg)->first();
                     return new JsonResponse([
                         'message' => 'Data Berhasil Disimpan...!!!',
                         'result' => $data
@@ -186,7 +186,7 @@ class PlaningController extends Controller
                 $nosuratkontrol = $request->noreg;
                 $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
                 $simpanakhir = self::simpanakhir($request);
-                $data = Simpansuratkontrol::where('noreg', $request->noreg)->firs();
+                $data = Simpansuratkontrol::where('noreg', $request->noreg)->first();
                 return new JsonResponse([
                     'message' => 'Data Berhasil Disimpan...!!!',
                     'result' => $data
@@ -237,7 +237,7 @@ class PlaningController extends Controller
 
     public static function simpanakhir($request)
     {
-        if ($request->planing == 'Konsultasi') {
+        if ($request->planing == 'Konsultasi' || $request->planing == 'Kontrol') {
             $simpanakhir = WaktupulangPoli::create(
                 [
                     'rs1' => $request->noreg ?? '',
@@ -362,7 +362,7 @@ class PlaningController extends Controller
             ],
             [
                 'noreg' => $request->noreg,
-                'norm' => $request->noreg,
+                'norm' => $request->norm,
                 'kodeDokter' => $request->kddokter,
                 'poliKontrol' => $request->kodepolibpjs,
                 'tglRencanaKontrol' => $request->tglrencanakunjungan,
@@ -388,7 +388,7 @@ class PlaningController extends Controller
             ],
             [
                 'noreg' => $request->noreg,
-                'norm' => $request->noreg,
+                'norm' => $request->norm,
                 'kodeDokter' => $request->kddokter,
                 'poliKontrol' => $request->kodepolibpjs,
                 'tglRencanaKontrol' => $request->tglrencanakunjungan,
