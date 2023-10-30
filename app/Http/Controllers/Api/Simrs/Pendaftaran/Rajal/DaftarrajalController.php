@@ -631,8 +631,13 @@ class DaftarrajalController extends Controller
             'rs15.rs46 as noka',
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
-            'rs222.rs8 as seprajal'
-        )->leftjoin('rs15', 'rs15.rs1', '=', 'listkonsulanpoli.norm')
+            'rs222.rs8 as seprajal',
+            'rs17.rs3 as tglmasuk',
+            'rs17.rs6 as asalrujukan',
+            'rs17.rs8 as kodepoli',
+            'rs17.rs14 as kodesistembayar'
+        )->leftjoin('rs15', 'rs15.rs1', 'listkonsulanpoli.norm')
+            ->leftjoin('rs17', 'rs17.rs1', 'listkonsulanpoli.noreg_lama')
             ->leftjoin('rs222', 'rs222.rs1', '=', 'listkonsulanpoli.noreg_lama')
             ->get();
         return new JsonResponse($listkonsulantarpoli);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Rajal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -15,6 +16,8 @@ class PoliController extends Controller
 {
     public function kunjunganpoli()
     {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+
         if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
@@ -70,7 +73,8 @@ class PoliController extends Controller
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            ->where('rs19.rs4', '=', 'Poliklinik')
+            ->where('rs17.rs8', $user->kdruangansim ?? '')
+            //    ->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')
             //    ->where('rs9.rs9', '=', 'BPJS')
             ->where(function ($sts) use ($status) {
