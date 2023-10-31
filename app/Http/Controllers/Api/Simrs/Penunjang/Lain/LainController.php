@@ -35,7 +35,8 @@ class LainController extends Controller
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => '',
                 'rs7' => $request->keterangan,
-                'rs8' => auth()->user()->pegawai_id, //kddokter
+                'rs8' => $request->kodedokter, //kddokter
+                'rs9' => 1,
                 'rs10' => $request->kodepoli,
                 'rs11' => auth()->user()->pegawai_id,
                 'rs13' => $request->kodepenunjang,
