@@ -140,9 +140,9 @@ class LaporanMutasiGudangController extends Controller
             $recent = RecentStokUpdate::select('kode_rs')
                 ->where('sisa_stok', '>', 0)
                 ->whereIn('kode_ruang', $kodeDepo)
-                ->distinct()->orderBy('kode_rs', 'ASC')->get();
+                ->distinct('kode_rs')->orderBy('kode_rs', 'ASC')->get();
         } else {
-            $recent = MonthlyStokUpdate::select('kode_rs')->distinct()
+            $recent = MonthlyStokUpdate::select('kode_rs')->distinct('kode_rs')
                 ->where('sisa_stok', '>', 0)
                 ->whereIn('kode_ruang', $kodeDepo)
                 ->whereBetween('tanggal', [$from, $to])->orderBy('kode_rs', 'ASC')->get();
@@ -231,7 +231,7 @@ class LaporanMutasiGudangController extends Controller
             ]);
 
 
-        $data = $barang->orderBy('kode_108', 'ASC')->withTrashed()->get();
+        $data = $barang->orderBy('kode_108', 'ASC')->get();
         // foreach ($data as $barang) {
         //     foreach ($barang->detailPemakaianruangan as $det) {
         //         $det->append('harga');
