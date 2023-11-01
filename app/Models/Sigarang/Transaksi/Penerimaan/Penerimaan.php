@@ -55,11 +55,11 @@ class Penerimaan extends Model
     }
     public function dibast()
     {
-        return $this->belongsTo(User::class, 'bast_by', 'id');
+        return $this->belongsTo(Pegawai::class, 'bast_by', 'id');
     }
     public function dibayar()
     {
-        return $this->belongsTo(User::class, 'pembayaran_by', 'id');
+        return $this->belongsTo(Pegawai::class, 'pembayaran_by', 'id');
     }
 
 
