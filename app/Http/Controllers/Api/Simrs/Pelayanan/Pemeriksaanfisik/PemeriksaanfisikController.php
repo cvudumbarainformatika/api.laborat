@@ -39,7 +39,7 @@ class PemeriksaanfisikController extends Controller
                 'spiritual' => $request->spiritual,
                 'user'  => auth()->user()->pegawai_id,
                 'ruangan' => $request->spiritual,
-                'scorenyeri' => $request->skorenyeri ?? 0,
+                'scorenyeri' => $request->skornyeri ?? 0,
                 'keteranganscorenyeri' => $request->keteranganskorenyeri ?? '',
             ]
         );
