@@ -178,7 +178,7 @@ class LaporanMutasiGudangController extends Controller
                         ->whereBetween('tanggal', [$fromA, $toA]);
                     // ->groupBy('kode_rs', 'harga', 'kode_ruang');
                 },
-                'detailDistribusiDepo' => function ($m) use ($fromN, $toN) {
+                'detailDistribusiDepo' => function ($m) use ($fromN, $toN, $col) {
                     $m->select(
                         'detail_distribusi_depos.kode_rs',
                         'detail_distribusi_depos.no_penerimaan',
@@ -189,10 +189,17 @@ class LaporanMutasiGudangController extends Controller
                         ->leftJoin('distribusi_depos', function ($p) {
                             $p->on('distribusi_depos.id', '=', 'detail_distribusi_depos.distribusi_depo_id');
                         })
+                        ->with([
+                            'recent' => function ($q) use ($col) {
+                                $q->select('kode_rs', 'kode_ruang', 'no_penerimaan', 'harga')
+                                    ->whereIn('kode_rs', $col)
+                                    ->groupBy('kode_rs', 'no_penerimaan');
+                            }
+                        ])
                         ->whereBetween('distribusi_depos.tanggal', [$fromN, $toN])
                         ->where('distribusi_depos.status', '>', 1);
                 },
-                'detailDistribusiLangsung' => function ($m) use ($from, $to) {
+                'detailDistribusiLangsung' => function ($m) use ($from, $to, $col) {
                     $m->select(
                         'distribusi_langsungs.ruang_tujuan',
                         'detail_distribusi_langsungs.kode_rs',
@@ -204,26 +211,37 @@ class LaporanMutasiGudangController extends Controller
                         })
                         ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
                         // ->with('recentstok')
+                        ->with([
+                            'stokruangan' => function ($q) use ($col) {
+                                $q->select('kode_rs', 'kode_ruang', 'no_penerimaan', 'harga')
+                                    ->whereIn('kode_rs', $col)
+                                    ->groupBy('kode_rs', 'no_penerimaan');
+                            }
+                        ])
                         ->where('distribusi_langsungs.status', '>', 1);
                 },
-                'detailPermintaanruangan' => function ($m) use ($from, $to) {
+                'detailPermintaanruangan' => function ($m) use ($from, $to, $col) {
 
                     $m->select(
                         'detail_permintaanruangans.kode_rs',
                         'detail_permintaanruangans.no_penerimaan',
+                        'detail_permintaanruangans.tujuan',
                         'detail_permintaanruangans.jumlah_distribusi as total',
                         'permintaanruangans.kode_ruang',
-                        'permintaanruangans.tanggal',
+                        'permintaanruangans.tanggal_verif as tanggal',
+                        'permintaanruangans.id',
                     )
                         ->leftJoin('permintaanruangans', function ($p) {
                             $p->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
                         })
-                        // ->with([
-                        //     'barangrs' => function ($q) {
-                        //         $q->select('kode');
-                        //     }
-                        // ])
-                        ->whereBetween('permintaanruangans.tanggal', [$from, $to])
+                        ->with([
+                            'stokruangan' => function ($q) use ($col) {
+                                $q->select('kode_rs', 'kode_ruang', 'no_penerimaan', 'harga')
+                                    ->whereIn('kode_rs', $col)
+                                    ->groupBy('kode_rs', 'no_penerimaan');
+                            }
+                        ])
+                        ->whereBetween('permintaanruangans.tanggal_verif', [$from, $to])
                         ->where('permintaanruangans.status', '>=', 7)
                         ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0);
                 },

@@ -30,6 +30,11 @@ class DetailDistribusiLangsung extends Model
         return $this->belongsTo(DistribusiLangsung::class);
     }
 
+    public function stokruangan()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'no_penerimaan', 'no_penerimaan');
+    }
+
     public function getHargaAttribute()
     {
         $no_penerimaan = $this->no_penerimaan;
