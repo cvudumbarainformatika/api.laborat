@@ -459,7 +459,7 @@ class PlaningController extends Controller
                 'unit' => $request->kodepoli,
                 'dpjp' => $request->kodedokter,
                 'tglMasaAktif' => $tglMasaAktif ?? null,
-                'tglKontrol' => $request->tglKontrol ?? null
+                'tglKontrol' => $request->tgl_rencana_konsul ?? null
             ]
         );
         if (!$simpan) {
