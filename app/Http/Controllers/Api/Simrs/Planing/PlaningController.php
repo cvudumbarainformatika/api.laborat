@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Planing;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
@@ -13,6 +14,7 @@ use App\Models\Simrs\Planing\Transrujukan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
+use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -39,21 +41,44 @@ class PlaningController extends Controller
         // }
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
         $groupsistembayar = $sistembayar->groups;
-        // $groupsistembayar = '1';
+
         if ($request->planing == 'Konsultasi') {
-            $simpanplaningpasien = self::simpankonsulantarpoli($request);
-            if ($simpanplaningpasien == 500) {
-                return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+            if ($request->kdSaran == '3') {
+                $simpanrekomdpjp = self::simpan_rekom_dpjp($request);
+                if ($simpanrekomdpjp === 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan...!!!'], 500);
+                }
+
+                $simpanplaningpasien = self::simpankonsulantarpoli($request);
+                if ($simpanplaningpasien == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+                }
+                $simpanakhir = self::simpanakhir($request);
+                if ($simpanakhir == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+                }
+                $data = Rekomdpjp::where('noreg', $request->noreg)->where('kdSaran', '3')->first();
+                return new JsonResponse([
+                    'message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!',
+                    'result' => $data->load('relmpoli')
+                ], 200);
+            } else {
+
+                $simpanrekomdpjp = self::simpan_rekom_dpjp($request);
+                if ($simpanrekomdpjp === 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan...!!!'], 500);
+                }
+
+                $simpanakhir = self::simpanakhir($request);
+                if ($simpanakhir == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+                }
+                $data = Rekomdpjp::where('noreg', $request->noreg)->where('kdSaran', '6')->first();
+                return new JsonResponse([
+                    'message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!',
+                    'result' => $data->load('relmpoli')
+                ], 200);
             }
-            $simpanakhir = self::simpanakhir($request);
-            if ($simpanakhir == 500) {
-                return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
-            }
-            $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
-            return new JsonResponse([
-                'message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!',
-                'result' => $data->load('masterpoli')
-            ], 200);
         } elseif ($request->planing == 'Rumah Sakit Lain') {
             if ($groupsistembayar == '1') {
                 $createrujukan = BridbpjsplanController::bridcretaerujukan($request);
@@ -211,7 +236,7 @@ class PlaningController extends Controller
                 'tgl_rencana_konsul' => $request->tgl_rencana_konsul,
                 'kdpoli_asal' => $request->kdpoli_asal,
                 'kdpoli_tujuan' => $request->kdpoli_tujuan,
-                'kddokter_asal' => $request->kddokter_asal ?? ''
+                'kddokter_asal' => $request->kddokter_asal
             ]
         );
 
@@ -401,6 +426,43 @@ class PlaningController extends Controller
             ]
         );
         if (!$simpansuratkontrol) {
+            return 500;
+        }
+        return 200;
+    }
+
+    public static function simpan_rekom_dpjp($request)
+    {
+        $nomordpjp = Mcounter::first();
+        $nomor = (int) $nomordpjp->rekom_dpjp + (int) 1;
+        $updateconter = Mcounter::first();
+        $updateconter->rekom_dpjp = $nomor;
+        $updateconter->save();
+        $tglMasaAktif = date("Y-m-d", strtotime("+90 day", strtotime(date("Y-m-d"))));
+        $saran = '';
+        if ($request->kdSaran === '3') {
+            $saran = 'Konsul Intern ke Poli';
+        } else {
+            $saran = 'Masih Memerlukan Kontrol di RS';
+        }
+
+        $simpan = Rekomdpjp::create(
+            [
+                'noDpjp' => $nomor,
+                'noRm' => $request->norm,
+                'noreg' => $request->noreg,
+                'kdSaran' => $request->kdSaran,
+                'saran' => $saran,
+                'ket' => $request->ket ?? '',
+                'tglInsert' => date('Y-m-d'),
+                'usersInsert' => auth()->user()->pegawai_id,
+                'unit' => $request->kodepoli,
+                'dpjp' => $request->kodedokter,
+                'tglMasaAktif' => $tglMasaAktif ?? null,
+                'tglKontrol' => $request->tglKontrol ?? null
+            ]
+        );
+        if (!$simpan) {
             return 500;
         }
         return 200;
