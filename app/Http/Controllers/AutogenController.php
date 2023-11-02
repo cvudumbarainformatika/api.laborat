@@ -2458,8 +2458,8 @@ class AutogenController extends Controller
         //     'data' => $collection->only('data'),
         //     'meta' => $collection->except('data'),
         // ], 200);
-        $tanggalPulang = '2023-07-25'; // yyyy-mm-dd
-        $jenisPelayanan = '1'; //Jenis Pelayanan (1. Inap 2. Jalan)
+        $tanggalPulang = '2023-09-25'; // yyyy-mm-dd
+        $jenisPelayanan = '2'; //Jenis Pelayanan (1. Inap 2. Jalan)
         $status = '3'; //Status Klaim (1. Proses Verifikasi 2. Pending Verifikasi 3. Klaim)
         $data = BridgingbpjsHelper::get_url('vclaim', '/Monitoring/Klaim/Tanggal/' . $tanggalPulang . '/JnsPelayanan/' . $jenisPelayanan . '/Status/' . $status);
 

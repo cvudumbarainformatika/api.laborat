@@ -63,7 +63,7 @@ class PlaningController extends Controller
             if ($request->planing == 'Konsultasi' || $request->planing == 'Kontrol') {
                 $col = collect($cek);
                 $renc = $col->where('rs4', $request->planing);
-                if (count($cek) > 2) {
+                if (count($cek) >= 2) {
                     return new JsonResponse(['message' => 'Maaf, Sudah ada data rencana Kontrol dan Konsultasi'], 500);
                 }
                 if (count($renc) > 0) {
