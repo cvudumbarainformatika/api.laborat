@@ -146,7 +146,7 @@ class KasirrajalController extends Controller
                 return new JsonResponse(
                     [
                         'flag' => 1,
-                        'Pelayanan' => 'Pelayanan Karcis',
+                        'Terbayar' => 'Pelayanan Karcis',
                         'Subtotal' => $pembayaran->total
                     ]
                 );
