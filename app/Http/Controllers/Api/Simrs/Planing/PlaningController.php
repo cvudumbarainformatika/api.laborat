@@ -33,12 +33,46 @@ class PlaningController extends Controller
         return new JsonResponse($mplanrajal);
     }
 
+    public function getRespPlanning($noreg)
+    {
+        $data = WaktupulangPoli::with([
+            'masterpoli',
+            'rekomdpjp',
+            'listkonsul',
+            'transrujukan',
+            'spri',
+            'kontrol',
+        ])->where('rs1', $noreg)->first();
+        return $data;
+    }
+    public function getAllRespPlanning($noreg)
+    {
+        $data = WaktupulangPoli::with([
+            'masterpoli',
+            'rekomdpjp',
+            'transrujukan',
+            'spri',
+            'kontrol',
+        ])->where('rs1', $noreg)->get();
+        return $data;
+    }
     public function simpanplaningpasien(Request $request)
     {
-        $cek = WaktupulangPoli::where('rs1', $request->noreg)->count();
-        // if ($cek > 0) {
-        //     return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
-        // }
+        $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
+        if (count($cek) > 0) {
+            if ($request->planing == 'Konsultasi' || $request->planing == 'Kontrol') {
+                $col = collect($cek);
+                $renc = $col->where('rs4', $request->planing);
+                if (count($cek) > 2) {
+                    return new JsonResponse(['message' => 'Maaf, Sudah ada data rencana Kontrol dan Konsultasi'], 500);
+                }
+                if (count($renc) > 0) {
+                    return new JsonResponse(['message' => 'Maaf, Sudah ada data ' . $request->planing], 500);
+                }
+            } else {
+                return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
+            }
+        }
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
         $groupsistembayar = $sistembayar->groups;
 
@@ -57,10 +91,10 @@ class PlaningController extends Controller
                 if ($simpanakhir == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
                 }
-                $data = Rekomdpjp::where('noreg', $request->noreg)->where('kdSaran', '3')->first();
+                $data = $this->getAllRespPlanning($request->noreg); // Rekomdpjp::where('noreg', $request->noreg)->where('kdSaran', '3')->first();
                 return new JsonResponse([
                     'message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!',
-                    'result' => $data->load('relmpoli')
+                    'result' => $data
                 ], 200);
             } else {
 
@@ -73,10 +107,10 @@ class PlaningController extends Controller
                 if ($simpanakhir == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
                 }
-                $data = Rekomdpjp::where('noreg', $request->noreg)->where('kdSaran', '6')->first();
+                $data = $this->getAllRespPlanning($request->noreg);
                 return new JsonResponse([
                     'message' => 'Berhasil Mengirim Data Ke List Konsulan TPPRJ Pasien Ini...!!!',
-                    'result' => $data->load('relmpoli')
+                    'result' => $data
                 ], 200);
             }
         } elseif ($request->planing == 'Rumah Sakit Lain') {
@@ -89,14 +123,10 @@ class PlaningController extends Controller
                     if ($simpanakhir == 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
-                    $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
-                    // $data = Transrujukan::with(
-                    //     ['masterpasien', 'relmpoli', 'relmpolix', 'rs141']
-                    // )
-                    //     ->where('rs1', $request->noreg)->first();
+                    $data = $this->getRespPlanning($request->noreg);
                     return new JsonResponse([
                         'message' => 'Data Berhasil Disimpan',
-                        'result' => $data->load('masterpoli')
+                        'result' => $data
                     ], 200);
                 } else {
                     return $createrujukan;
@@ -110,14 +140,14 @@ class PlaningController extends Controller
                 if ($simpanrujukanumum == 500) {
                     return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan...!!!',], 500);
                 }
-                $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                $data = $this->getRespPlanning($request->noreg);
                 // $data = Transrujukan::with(
                 //     ['masterpasien', 'relmpoli', 'relmpolix', 'rs141']
                 // )
                 //     ->where('rs1', $request->noreg)->first();
                 return new JsonResponse([
                     'message' => 'Data Berhasil Disimpan',
-                    'result' => $data->load('masterpoli')
+                    'result' => $data
                 ], 200);
             }
         } elseif ($request->planing == 'Rawat Inap') {
@@ -136,10 +166,10 @@ class PlaningController extends Controller
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
-                        $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                        $data = $this->getRespPlanning($request->noreg);
                         return new JsonResponse([
                             'message' => 'Data Berhasil Disimpan...!!!',
-                            'result' => $data->load('masterpoli')
+                            'result' => $data
                         ], 200);
                     }
                 } else {
@@ -154,10 +184,10 @@ class PlaningController extends Controller
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
                     $simpanakhir = self::simpanakhir($request);
-                    $data = WaktupulangPoli::where('rs1', $request->noreg)->first();
+                    $data = $this->getRespPlanning($request->noreg);
                     return new JsonResponse([
                         'message' => 'Data Berhasil Disimpan...!!!',
-                        'result' => $data->load('masterpoli')
+                        'result' => $data
                     ], 200);
                 }
             } else {
@@ -171,7 +201,7 @@ class PlaningController extends Controller
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
                         $simpanakhir = self::simpanakhir($request);
-                        $data = Simpanspri::where('noreg', $request->noreg)->first();
+                        $data = $this->getRespPlanning($request->noreg);
                         return new JsonResponse([
                             'message' => 'Data Berhasil Disimpan...!!!',
                             'result' => $data
@@ -181,13 +211,13 @@ class PlaningController extends Controller
                     $nospri = $request->noreg;
                     $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
                     $simpanakhir = self::simpanakhir($request);
-                    $data = Simpanspri::where('noreg', $request->noreg)->first();
+                    $data = $this->getRespPlanning($request->noreg);
                     if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
                     return new JsonResponse([
                         'message' => 'Data Berhasil Disimpan...!!!',
-                        'result' => $data->load('masterpoli')
+                        'result' => $data
                     ], 200);
                 }
             }
@@ -199,7 +229,7 @@ class PlaningController extends Controller
                 if ($xxx === 200 || $xxx === '200') {
                     $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
                     $simpanakhir = self::simpanakhir($request);
-                    $data = Simpansuratkontrol::where('noreg', $request->noreg)->first();
+                    $data = $this->getAllRespPlanning($request->noreg);
                     return new JsonResponse([
                         'message' => 'Data Berhasil Disimpan...!!!',
                         'result' => $data
@@ -211,7 +241,7 @@ class PlaningController extends Controller
                 $nosuratkontrol = $request->noreg;
                 $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
                 $simpanakhir = self::simpanakhir($request);
-                $data = Simpansuratkontrol::where('noreg', $request->noreg)->first();
+                $data = $this->getAllRespPlanning($request->noreg);
                 return new JsonResponse([
                     'message' => 'Data Berhasil Disimpan...!!!',
                     'result' => $data

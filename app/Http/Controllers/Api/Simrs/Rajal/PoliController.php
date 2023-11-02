@@ -130,7 +130,13 @@ class PoliController extends Controller
                     $q->orderBy('taskid', 'DESC');
                 },
                 'planning' => function ($p) {
-                    $p->with('masterpoli')->orderBy('id', 'DESC');
+                    $p->with(
+                        'masterpoli',
+                        'rekomdpjp',
+                        'transrujukan',
+                        'spri',
+                        'kontrol'
+                    )->orderBy('id', 'DESC');
                 },
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');

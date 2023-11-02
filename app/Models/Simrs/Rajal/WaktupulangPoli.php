@@ -4,6 +4,9 @@ namespace App\Models\Simrs\Rajal;
 
 use App\Models\Poli;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Planing\Simpanspri;
+use App\Models\Simrs\Planing\Transrujukan;
+use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,5 +24,25 @@ class WaktupulangPoli extends Model
     public function masterpasien()
     {
         return $this->hasOne(Mpasien::class, 'rs1', 'rs2');
+    }
+    public function rekomdpjp()
+    {
+        return $this->hasOne(Rekomdpjp::class, 'noreg', 'rs1');
+    }
+    public function listkonsul()
+    {
+        return $this->hasOne(Listkonsulantarpoli::class, 'noreg_lama', 'rs1');
+    }
+    public function transrujukan()
+    {
+        return $this->hasOne(Transrujukan::class, 'rs1', 'rs1');
+    }
+    public function spri()
+    {
+        return $this->hasOne(Simpanspri::class, 'noreg', 'rs1');
+    }
+    public function kontrol()
+    {
+        return $this->hasOne(Simpanspri::class, 'noreg', 'rs1');
     }
 }
