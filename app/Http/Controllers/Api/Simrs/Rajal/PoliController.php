@@ -160,11 +160,16 @@ class PoliController extends Controller
 
     public function flagfinish(Request $request)
     {
-        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $updatekunjungan->rs19 = '1';
-        $updatekunjungan->rs24 = '1';
-        $updatekunjungan->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if ($user->kdgroupnakes === 1) {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '1';
+            $updatekunjungan->rs24 = '1';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        } else {
+            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+        }
     }
 
     public function terimapasien(Request $request)
