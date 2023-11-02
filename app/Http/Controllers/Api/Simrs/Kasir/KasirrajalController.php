@@ -216,6 +216,7 @@ class KasirrajalController extends Controller
                 ];
             });
             $total = $subtotal->sum('subtotal');
+
             return new JsonResponse(
                 [
                     'Pelayanan' => $tindakan,
@@ -500,6 +501,8 @@ class KasirrajalController extends Controller
                 'tglx' => date('Y-M-d H:i:s'),
                 'userid' => auth()->user()->pegawai_id,
                 'nota' => $request->nota,
+                'carabayar' => $request->carabayar,
+                'jenispembayaran' => $request->jenispembayaran
             ]
         );
         if (!$insertkwitansilog) {
