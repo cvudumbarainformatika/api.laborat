@@ -10,6 +10,8 @@ use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Satuan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
