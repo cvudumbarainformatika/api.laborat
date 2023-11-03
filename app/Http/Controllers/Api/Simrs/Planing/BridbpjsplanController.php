@@ -84,7 +84,7 @@ class BridbpjsplanController extends Controller
                     'rs17' => $request->kelamin,
                     'tglRencanaKunjungan' => $request->tglrencanakunjungan,
                     'diagnosa' => $request->diagnosa,
-                    'poli' => $request->kodepoli,
+                    'poli' => $request->namapolirujukan,
                     'tipefaskes' => $request->tipefaskes,
                     'polix' => $request->polirujukan
                 ]

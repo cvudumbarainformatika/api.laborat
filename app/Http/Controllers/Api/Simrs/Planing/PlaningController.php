@@ -419,7 +419,7 @@ class PlaningController extends Controller
                 'rs17' => $request->kelamin,
                 'tglRencanaKunjungan' => $request->tglrencanakunjungan,
                 'diagnosa' => $request->diagnosa,
-                'poli' => $request->poli,
+                'poli' => $request->namapolirujukan,
                 //    'tipefaskes' => $request->tipefaskes,
                 'polix' => $request->polirujukan
             ]
