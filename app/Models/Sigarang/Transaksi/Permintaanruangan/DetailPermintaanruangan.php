@@ -6,6 +6,7 @@ use App\Models\Sigarang\Barang108;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\MaxRuangan;
+use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Ruang;
 use App\Models\Sigarang\Satuan;
@@ -58,6 +59,16 @@ class DetailPermintaanruangan extends Model
     {
         return $this->hasMany(MaxRuangan::class, 'kode_ruang', 'tujuan');
     }
+    public function stokruangan()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'no_penerimaan', 'no_penerimaan');
+    }
+    public function stokruanganmo()
+    {
+        return $this->hasMany(MonthlyStokUpdate::class, 'kode_ruang', 'tujuan');
+    }
+
+
 
     public function getAllMintaAttribute()
     {

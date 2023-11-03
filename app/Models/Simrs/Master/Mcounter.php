@@ -9,6 +9,7 @@ class Mcounter extends Model
 {
     use HasFactory;
     protected $table = 'rs1';
+    public $timestamps = false;
 
     public function counterwew($data)
     {

@@ -2329,135 +2329,141 @@ class AutogenController extends Controller
         // $data = Gudang::get();
         // return new JsonResponse($data);
 
-        $p = Permintaanruangan::query();
-        // if ($pegawai->role_id === 4) {
-        //     $p->where('dari', $pegawai->kode_ruang);
+        // $p = Permintaanruangan::query();
+        // // if ($pegawai->role_id === 4) {
+        // //     $p->where('dari', $pegawai->kode_ruang);
+        // // }
+        // // $data = $p->where('status', '>=', 4)
+        // //     ->where('status', '<=', 7)
+        // //     ->orderBy(request('order_by'), request('sort'))
+        // if (
+        //     request('status') && request('status') !== null
+        // ) {
+        //     $p->where('status', '=', request('status'));
+        // } else {
+        //     $p->where('status', '>=', 4)
+        //         ->where('status', '<=', 7);
         // }
-        // $data = $p->where('status', '>=', 4)
-        //     ->where('status', '<=', 7)
-        //     ->orderBy(request('order_by'), request('sort'))
-        if (
-            request('status') && request('status') !== null
-        ) {
-            $p->where('status', '=', request('status'));
-        } else {
-            $p->where('status', '>=', 4)
-                ->where('status', '<=', 7);
-        }
 
-        $per = $p->select('id')->paginate(request('per_page'));
-        $colId = collect($per)->only('data');
-        $perId = $colId['data'];
-        $det = DetailPermintaanruangan::select('kode_rs')->whereIn('permintaanruangan_id', $perId)->distinct('kode_rs')->get();
+        // $per = $p->select('id')->paginate(request('per_page'));
+        // $colId = collect($per)->only('data');
+        // $perId = $colId['data'];
+        // $det = DetailPermintaanruangan::select('kode_rs')->whereIn('permintaanruangan_id', $perId)->distinct('kode_rs')->get();
 
-        $data = $p->orderBy(request('order_by'), request('sort'))
-            ->with([
+        // $data = $p->orderBy(request('order_by'), request('sort'))
+        //     ->with([
 
-                'pj', 'pengguna', 'details' => function ($wew) use ($det) {
-                    // if ($pegawai->role_id === 4) {
-                    //     $wew->where('dari', $pegawai->kode_ruang);
-                    // }
-                    $wew->select(
-                        'detail_permintaanruangans.id',
-                        'detail_permintaanruangans.permintaanruangan_id',
-                        'detail_permintaanruangans.dari',
-                        'detail_permintaanruangans.tujuan',
-                        'detail_permintaanruangans.kode_rs',
-                        'detail_permintaanruangans.kode_satuan',
-                        'detail_permintaanruangans.jumlah',
-                        'detail_permintaanruangans.jumlah_disetujui',
-                        'detail_permintaanruangans.jumlah_distribusi',
-                        'detail_permintaanruangans.alasan',
+        //         'pj', 'pengguna', 'details' => function ($wew) use ($det) {
+        //             // if ($pegawai->role_id === 4) {
+        //             //     $wew->where('dari', $pegawai->kode_ruang);
+        //             // }
+        //             $wew->select(
+        //                 'detail_permintaanruangans.id',
+        //                 'detail_permintaanruangans.permintaanruangan_id',
+        //                 'detail_permintaanruangans.dari',
+        //                 'detail_permintaanruangans.tujuan',
+        //                 'detail_permintaanruangans.kode_rs',
+        //                 'detail_permintaanruangans.kode_satuan',
+        //                 'detail_permintaanruangans.jumlah',
+        //                 'detail_permintaanruangans.jumlah_disetujui',
+        //                 'detail_permintaanruangans.jumlah_distribusi',
+        //                 'detail_permintaanruangans.alasan',
 
-                    )
+        //             )
 
-                        ->with([
-                            'satuan:kode,nama',
-                            'ruang:kode,uraian',
-                            'maxruangan' => function ($ma) use ($det) {
-                                $ma->select(
-                                    'kode_rs',
-                                    'kode_ruang',
-                                    'max_stok',
-                                    'minta'
-                                )->whereIn('kode_rs', $det);
-                            },
-                            'sisastok' => function ($s) {
-                                $s->select(
-                                    'kode_rs',
-                                    'kode_ruang',
-                                    'sisa_stok',
-                                )
-                                    ->selectRaw('sum(sisa_stok) as stok_total')
-                                    ->where('sisa_stok', '>', 0)
-                                    ->groupBy('kode_rs', 'kode_ruang');
-                            },
-                            'barangrs' => function ($anu) {
-                                $anu->select(
-                                    'kode',
-                                    'nama',
-                                    'kode_satuan',
-                                    'kode_depo'
-                                );
-                            }
-                        ]);
-                }
-            ])
-            ->filter(request(['q', 'r']))
-            ->paginate(request('per_page'));
+        //                 ->with([
+        //                     'satuan:kode,nama',
+        //                     'ruang:kode,uraian',
+        //                     'maxruangan' => function ($ma) use ($det) {
+        //                         $ma->select(
+        //                             'kode_rs',
+        //                             'kode_ruang',
+        //                             'max_stok',
+        //                             'minta'
+        //                         )->whereIn('kode_rs', $det);
+        //                     },
+        //                     'sisastok' => function ($s) {
+        //                         $s->select(
+        //                             'kode_rs',
+        //                             'kode_ruang',
+        //                             'sisa_stok',
+        //                         )
+        //                             ->selectRaw('sum(sisa_stok) as stok_total')
+        //                             ->where('sisa_stok', '>', 0)
+        //                             ->groupBy('kode_rs', 'kode_ruang');
+        //                     },
+        //                     'barangrs' => function ($anu) {
+        //                         $anu->select(
+        //                             'kode',
+        //                             'nama',
+        //                             'kode_satuan',
+        //                             'kode_depo'
+        //                         );
+        //                     }
+        //                 ]);
+        //         }
+        //     ])
+        //     ->filter(request(['q', 'r']))
+        //     ->paginate(request('per_page'));
 
 
-        foreach ($data as $key) {
-            foreach ($key->details as $detail) {
-                $detail->append('all_minta');
-                $sisastok = collect($detail['sisastok']);
+        // foreach ($data as $key) {
+        //     foreach ($key->details as $detail) {
+        //         $detail->append('all_minta');
+        //         $sisastok = collect($detail['sisastok']);
 
-                $stokMe = $sisastok->where('kode_ruang', $detail['tujuan'])->all();
-                $stokR = 0;
-                foreach ($stokMe as $st) {
-                    $stokR = $st->stok_total;
-                }
+        //         $stokMe = $sisastok->where('kode_ruang', $detail['tujuan'])->all();
+        //         $stokR = 0;
+        //         foreach ($stokMe as $st) {
+        //             $stokR = $st->stok_total;
+        //         }
 
-                $stokDe = $sisastok->where('kode_ruang', $detail['barangrs']->kode_depo)->all();
-                $stokD = 0;
-                foreach ($stokDe as $st) {
-                    $stokD = $st->stok_total;
-                }
+        //         $stokDe = $sisastok->where('kode_ruang', $detail['barangrs']->kode_depo)->all();
+        //         $stokD = 0;
+        //         foreach ($stokDe as $st) {
+        //             $stokD = $st->stok_total;
+        //         }
 
-                $maxruangan = collect($detail['maxruangan']);
-                $maxRe = $maxruangan->where('kode_rs', $detail['kode_rs'])->all();
-                $maxR = 0;
-                $mintaR = 0;
-                foreach ($maxRe as $st) {
-                    $maxR = $st->max_stok;
-                    $mintaR = $st->minta;
-                }
+        //         $maxruangan = collect($detail['maxruangan']);
+        //         $maxRe = $maxruangan->where('kode_rs', $detail['kode_rs'])->all();
+        //         $maxR = 0;
+        //         $mintaR = 0;
+        //         foreach ($maxRe as $st) {
+        //             $maxR = $st->max_stok;
+        //             $mintaR = $st->minta;
+        //         }
 
-                $sum = $detail['all_minta'];
-                $alokasi = 0;
-                if ($stokD >= $sum) {
-                    $alokasi =  $stokD - $sum;
-                } else {
-                    $alokasi = 0;
-                }
-                $detail['barangrs']->maxStok = $maxR > 0 ? $maxR : $mintaR;
-                $detail['barangrs']->stokRuangan = $stokR;
-                $detail['barangrs']->stokDepo = $stokD;
-                $detail['barangrs']->alokasi = $alokasi;
-            }
-        }
-
-        // if (count($data)) {
-        //     foreach ($data as $key) {
-        //         $key->gudang = collect($key->details)->groupBy('dari');
+        //         $sum = $detail['all_minta'];
+        //         $alokasi = 0;
+        //         if ($stokD >= $sum) {
+        //             $alokasi =  $stokD - $sum;
+        //         } else {
+        //             $alokasi = 0;
+        //         }
+        //         $detail['barangrs']->maxStok = $maxR > 0 ? $maxR : $mintaR;
+        //         $detail['barangrs']->stokRuangan = $stokR;
+        //         $detail['barangrs']->stokDepo = $stokD;
+        //         $detail['barangrs']->alokasi = $alokasi;
         //     }
         // }
-        $collection = collect($data);
-        return new JsonResponse([
-            // 'per' => $det,
-            'data' => $collection->only('data'),
-            'meta' => $collection->except('data'),
-        ], 200);
+
+        // // if (count($data)) {
+        // //     foreach ($data as $key) {
+        // //         $key->gudang = collect($key->details)->groupBy('dari');
+        // //     }
+        // // }
+        // $collection = collect($data);
+        // return new JsonResponse([
+        //     // 'per' => $det,
+        //     'data' => $collection->only('data'),
+        //     'meta' => $collection->except('data'),
+        // ], 200);
+        $tanggalPulang = '2023-09-25'; // yyyy-mm-dd
+        $jenisPelayanan = '2'; //Jenis Pelayanan (1. Inap 2. Jalan)
+        $status = '3'; //Status Klaim (1. Proses Verifikasi 2. Pending Verifikasi 3. Klaim)
+        $data = BridgingbpjsHelper::get_url('vclaim', '/Monitoring/Klaim/Tanggal/' . $tanggalPulang . '/JnsPelayanan/' . $jenisPelayanan . '/Status/' . $status);
+
+        return new JsonResponse($data);
     }
 
     public function wawanpost(Request $request)

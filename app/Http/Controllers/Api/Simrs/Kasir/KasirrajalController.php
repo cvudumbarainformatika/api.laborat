@@ -140,12 +140,25 @@ class KasirrajalController extends Controller
                 ];
             });
             $karcis = $karcis->sum('subtotal');
-            return new JsonResponse(
-                [
-                    'Pelayanan' => $tagihanpergolongan,
-                    'Subtotal' => $karcis
-                ]
-            );
+            $pembayaran = Karcis::where('noreg', $noreg)->first();
+            $cek = Karcis::where('noreg', $noreg)->where('batal', '')->count();
+            if ($cek > 0) {
+                return new JsonResponse(
+                    [
+                        'flag' => 1,
+                        'Terbayar' => 'Pelayanan Karcis',
+                        'Subtotal' => $pembayaran->total
+                    ]
+                );
+            } else {
+                return new JsonResponse(
+                    [
+                        'flag' => 0,
+                        'Pelayanan' => $tagihanpergolongan,
+                        'Subtotal' => $karcis
+                    ]
+                );
+            }
             // } elseif (request('golongan') == 'konsulantarpoli') {
             //     $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
             //     $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
@@ -203,6 +216,7 @@ class KasirrajalController extends Controller
                 ];
             });
             $total = $subtotal->sum('subtotal');
+
             return new JsonResponse(
                 [
                     'Pelayanan' => $tindakan,
@@ -437,6 +451,7 @@ class KasirrajalController extends Controller
                 'sistembayar' => $request->sistembayar,
                 'total' => $request->total,
                 'rinci' => $request->rinci,
+                'carabayar' => $request->carabayar,
                 'tglx' => date('Y-m-d H:i:s'),
                 'users' => auth()->user()->pegawai_id
             ]
@@ -486,6 +501,8 @@ class KasirrajalController extends Controller
                 'tglx' => date('Y-M-d H:i:s'),
                 'userid' => auth()->user()->pegawai_id,
                 'nota' => $request->nota,
+                'carabayar' => $request->carabayar,
+                'jenispembayaran' => $request->jenispembayaran
             ]
         );
         if (!$insertkwitansilog) {

@@ -133,7 +133,15 @@ class PoliController extends Controller
                     $q->orderBy('taskid', 'DESC');
                 },
                 'planning' => function ($p) {
-                    $p->with('masterpoli')->orderBy('id', 'DESC');
+                    $p->with(
+                        'masterpoli',
+                        'rekomdpjp',
+                        'transrujukan',
+                        'listkonsul',
+                        'spri',
+                        'ranap',
+                        'kontrol'
+                    )->orderBy('id', 'DESC');
                 },
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
@@ -157,22 +165,28 @@ class PoliController extends Controller
 
     public function flagfinish(Request $request)
     {
-        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $updatekunjungan->rs19 = '1';
-        $updatekunjungan->rs24 = '1';
-        $updatekunjungan->save();
-        return new JsonResponse(['message' => 'ok'], 200);
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if ($user->kdgroupnakes === 1) {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '1';
+            $updatekunjungan->rs24 = '1';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        } else {
+            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+        }
     }
 
     public function terimapasien(Request $request)
     {
-        // $ceksep = Seprajal::where('rs1', $request->noreg)->count();
-        // if ($ceksep > 0) {
-        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $updatekunjungan->rs19 = '2';
-        $updatekunjungan->save();
-        return new JsonResponse(['message' => 'ok'], 200);
-        // }
+        $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $flag = $cekx->rs19;
+        if ($flag === '') {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '2';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        }
         //  return new JsonResponse([''], 500);
     }
 

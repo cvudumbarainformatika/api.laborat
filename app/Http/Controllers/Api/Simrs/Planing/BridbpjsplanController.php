@@ -84,7 +84,7 @@ class BridbpjsplanController extends Controller
                     'rs17' => $request->kelamin,
                     'tglRencanaKunjungan' => $request->tglrencanakunjungan,
                     'diagnosa' => $request->diagnosa,
-                    'poli' => $request->kodepoli,
+                    'poli' => $request->namapolirujukan,
                     'tipefaskes' => $request->tipefaskes,
                     'polix' => $request->polirujukan
                 ]
@@ -158,5 +158,26 @@ class BridbpjsplanController extends Controller
     {
         $listrujukan = BridgingbpjsHelper::get_url('vclaim', '/Rujukan/Keluar/List/tglMulai/2023-10-10/tglAkhir/2023-10-10');
         return $listrujukan;
+    }
+
+    public static function insertsuratcontrol($request)
+    {
+        $data = [
+            "request" =>
+            [
+                "noSEP" => $request->nosep,
+                "kodeDokter" => $request->kodedokterdpjp,
+                "poliKontrol" => $request->kdunit,
+                "tglRencanaKontrol" => $request->tglrencanakontrol,
+                "user" => auth()->user()->pegawai_id
+            ]
+        ];
+
+        $insernokontrol = BridgingbpjsHelper::post_url(
+            'vclaim',
+            'RencanaKontrol/insert',
+            $data
+        );
+        return $insernokontrol;
     }
 }
