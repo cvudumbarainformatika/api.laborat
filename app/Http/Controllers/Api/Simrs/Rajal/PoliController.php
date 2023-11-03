@@ -18,6 +18,9 @@ class PoliController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
 
+        $ruangan = $user->kdruangansim ?? '';
+
+
         if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
@@ -75,7 +78,7 @@ class PoliController extends Controller
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', $user->kdruangansim ?? '')
             ->where('rs19.rs4', '=', 'Poliklinik')
-            ->where('rs17.rs8', 'LIKE', '%' . $user->kdruangansim ?? '')
+            ->where('rs17.rs8', 'LIKE', '%' . $ruangan)
             ->where('rs17.rs8', '!=', 'POL014')
             //    ->where('rs9.rs9', '=', 'BPJS')
             ->where(function ($sts) use ($status) {

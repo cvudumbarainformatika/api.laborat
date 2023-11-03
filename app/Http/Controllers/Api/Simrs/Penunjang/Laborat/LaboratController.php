@@ -138,6 +138,11 @@ class LaboratController extends Controller
         // }
     }
 
+    public function simpanpermintaanlaboratbaru(Request $request)
+    {
+        return $request->all();
+    }
+
     public function getnota()
     {
         $nota = LaboratMeta::select('nota')->where('noreg', request('noreg'))
