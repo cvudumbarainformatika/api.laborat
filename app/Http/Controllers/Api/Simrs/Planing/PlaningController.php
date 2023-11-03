@@ -406,7 +406,7 @@ class PlaningController extends Controller
                 // 'rs4' => $request->nosep,
                 'rs5' => $request->tglrujukan,
                 'rs6' => $request->ppkdirujuk,
-                'rs7' => $request->ppkdirujukx,
+                'rs7' => $request->namappkdirujuk,
                 'rs8' => $request->jenispelayanan,
                 'rs9' => $request->catatan,
                 'rs10' => $request->diagnosarujukan,
@@ -419,7 +419,7 @@ class PlaningController extends Controller
                 'rs17' => $request->kelamin,
                 'tglRencanaKunjungan' => $request->tglrencanakunjungan,
                 'diagnosa' => $request->diagnosa,
-                'poli' => $request->kodepoli,
+                'poli' => $request->poli,
                 //    'tipefaskes' => $request->tipefaskes,
                 'polix' => $request->polirujukan
             ]
