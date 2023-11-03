@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Rajal;
 use App\Models\Poli;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Planing\Simpanspri;
+use App\Models\Simrs\Planing\Simpansuratkontrol;
 use App\Models\Simrs\Planing\Transrujukan;
 use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\Simrs\Rekom\Rekomdpjp;
@@ -44,7 +45,7 @@ class WaktupulangPoli extends Model
     }
     public function kontrol()
     {
-        return $this->hasOne(Simpanspri::class, 'noreg', 'rs1');
+        return $this->hasOne(Simpansuratkontrol::class, 'noreg', 'rs1');
     }
     public function ranap()
     {

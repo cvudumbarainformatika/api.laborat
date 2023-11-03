@@ -134,6 +134,7 @@ class PoliController extends Controller
                         'masterpoli',
                         'rekomdpjp',
                         'transrujukan',
+                        'listkonsul',
                         'spri',
                         'ranap',
                         'kontrol'

@@ -37,6 +37,7 @@ class PlaningController extends Controller
     {
         $data = WaktupulangPoli::with([
             'masterpoli',
+            'listkonsul',
             'rekomdpjp',
             'listkonsul',
             'transrujukan',
@@ -50,6 +51,7 @@ class PlaningController extends Controller
     {
         $data = WaktupulangPoli::with([
             'masterpoli',
+            'listkonsul',
             'rekomdpjp',
             'transrujukan',
             'spri',
@@ -233,7 +235,7 @@ class PlaningController extends Controller
                 $nosuratkontrol = $simpan['response']['noSuratKontrol'];
                 $xxx = $simpan['metadata']['code'];
                 if ($xxx === 200 || $xxx === '200') {
-                    $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
+                    $simpanspri = self::simpansuratkontrol($request, $nosuratkontrol);
                     $simpanakhir = self::simpanakhir($request);
                     $data = self::getAllRespPlanning($request->noreg);
                     return new JsonResponse([
@@ -246,7 +248,7 @@ class PlaningController extends Controller
                 }
             } else {
                 $nosuratkontrol = $request->noreg;
-                $simpanspri = self::simpansuratkontrol($request, $groupsistembayar, $nosuratkontrol);
+                $simpanspri = self::simpansuratkontrol($request, $nosuratkontrol);
                 $simpanakhir = self::simpanakhir($request);
                 $data = self::getAllRespPlanning($request->noreg);
                 return new JsonResponse([
@@ -373,7 +375,19 @@ class PlaningController extends Controller
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
 
-        Listkonsulantarpoli::where('noreg_lama', $cari->rs1)->delete();
+        if ($request->plan === 'Konsultasi') {
+            Listkonsulantarpoli::where('noreg_lama', $cari->rs1)->delete();
+            Rekomdpjp::where('noreg', $cari->rs1)->delete();
+        }
+        if ($request->plan === 'Kontrol') {
+            Simpansuratkontrol::where('noreg', $cari->rs1)->delete();
+        }
+        if ($request->plan === 'Rawat Inap') {
+            Simpanspri::where('noreg', $cari->rs1)->delete();
+        }
+        if ($request->plan === 'Rumah Sakit Lain') {
+            Transrujukan::where('rs1', $cari->rs1)->delete();
+        }
         $hapus = $cari->delete();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
