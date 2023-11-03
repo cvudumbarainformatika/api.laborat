@@ -6,6 +6,7 @@ use App\Models\Poli;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Planing\Simpanspri;
 use App\Models\Simrs\Planing\Transrujukan;
+use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,5 +45,9 @@ class WaktupulangPoli extends Model
     public function kontrol()
     {
         return $this->hasOne(Simpanspri::class, 'noreg', 'rs1');
+    }
+    public function ranap()
+    {
+        return $this->hasOne(Mruangranap::class, 'rs4', 'rs5');
     }
 }

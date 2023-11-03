@@ -135,6 +135,7 @@ class PoliController extends Controller
                         'rekomdpjp',
                         'transrujukan',
                         'spri',
+                        'ranap',
                         'kontrol'
                     )->orderBy('id', 'DESC');
                 },
