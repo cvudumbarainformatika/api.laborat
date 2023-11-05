@@ -177,10 +177,10 @@ class PemeriksaanfisikController extends Controller
 
         $simpangambar = Simpangambarpemeriksaanfisik::create(
             [
-                'noreg' => $request->noreg,
-                'norm' => $request->norm,
-                'keterangan' => $request->keterangan,
-                'gambar' => $file,
+                'noreg' => $request->noreg ?? '',
+                'norm' => $request->norm ?? '',
+                'keterangan' => $request->keterangan ?? '',
+                'gambar' => $file ?? '',
             ]
         );
 
