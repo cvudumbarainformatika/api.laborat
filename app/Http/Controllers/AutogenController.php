@@ -275,7 +275,7 @@ class AutogenController extends Controller
         // return date('Y-m-d H:i:s');
 
         // return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
-        return $request->all();
+        return '$request->all()';
     }
 
     public function create_post(Request $request)

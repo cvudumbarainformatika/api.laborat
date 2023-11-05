@@ -75,6 +75,7 @@ class Kernel extends HttpKernel
         'jwt.refresh' => \Tymon\JWTAuth\Http\Middleware\RefreshToken::class,
         'lis.verify' => \App\Http\Middleware\LisMiddleware::class,
         'jkn.auth' => \App\Http\Middleware\JknMiddleware::class,
-        'block.ip' => \App\Http\Middleware\BlockIpMiddleware::class
+        'block.ip' => \App\Http\Middleware\BlockIpMiddleware::class,
+        'cors' => \App\Http\Middleware\Cors::class,
     ];
 }
