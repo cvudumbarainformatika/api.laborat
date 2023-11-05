@@ -64,7 +64,7 @@ class MasterPemeriksaanFisikController extends Controller
                     $type = pathinfo($target, PATHINFO_EXTENSION);
                     $data = file_get_contents($target);
                     $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                    // $base64 = 'data:' . mime_content_type($target) . ';base64,' . base64_encode($target);
+                    // $base64 = 'data:' . mime_content_type($target) . ';base64,' . base64_encode($target); //ini baru
 
 
 
