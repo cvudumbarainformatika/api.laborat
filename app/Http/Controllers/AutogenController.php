@@ -276,13 +276,7 @@ class AutogenController extends Controller
         // return date('Y-m-d H:i:s');
 
         // return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
-        $path = storage_path() . "/app/public/templategambarpemeriksaanfisik/20231022130650.jpg";
-        // dd(file_get_contents($path));
-        $type = pathinfo($path, PATHINFO_EXTENSION);
-        $data = file_get_contents($path);
-        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        // $base64 = base64_encode($path);
-        return new JsonResponse($base64);
+        return '$request->all()';
     }
 
     public function create_post(Request $request)
