@@ -21,7 +21,6 @@
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
-
     RewriteEngine On
 
     # Handle Authorization Header
@@ -42,4 +41,7 @@
 </IfModule>
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> c1cde053783ef8df305b3c9141f2a9d92397ec93

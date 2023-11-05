@@ -5,6 +5,8 @@ namespace App\Models\Sigarang\Transaksi\Permintaanruangan;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Pengguna;
 use App\Models\Sigarang\Ruang;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
+use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +20,10 @@ class Permintaanruangan extends Model
     public function details()
     {
         return $this->hasMany(DetailPermintaanruangan::class);
+    }
+    public function penerimaan()
+    {
+        return $this->hasMany(DetailsPenerimaanruangan::class, 'no_distribusi', 'no_distribusi');
     }
 
     public function pj()

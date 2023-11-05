@@ -52,6 +52,7 @@ class MasterPemeriksaanFisikController extends Controller
                     $penamaan = date('YmdHis') . '-' . $i . '-' . $request->mpemeriksaanfisik_id . '.' . $file->getClientOriginalExtension();
                     $data = Mtemplategambar::where('original', $originalname)->first();
                     Storage::delete('public/templategambarpemeriksaanfisik/' . $originalname);
+
                     $gallery = null;
                     if ($data) {
                         $gallery = $data;
@@ -59,10 +60,19 @@ class MasterPemeriksaanFisikController extends Controller
                         $gallery = new Mtemplategambar();
                     }
                     $path = $file->storeAs('public/templategambarpemeriksaanfisik', $penamaan);
+                    $target = storage_path() . "/app/public/templategambarpemeriksaanfisik/" . $penamaan;
+                    $type = pathinfo($target, PATHINFO_EXTENSION);
+                    $data = file_get_contents($target);
+                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    // $base64 = 'data:' . mime_content_type($target) . ';base64,' . base64_encode($target);
+
+
+
                     $gallery->nama = $path;
                     $gallery->url = 'templategambarpemeriksaanfisik/' . $penamaan;
                     $gallery->original = $originalname;
                     $gallery->mpemeriksaanfisik_id = $request->mpemeriksaanfisik_id;
+                    $gallery->image = $base64;
                     $gallery->save();
                 }
                 $res = Mpemeriksaanfisik::find($request->mpemeriksaanfisik_id);
