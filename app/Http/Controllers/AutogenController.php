@@ -75,6 +75,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
@@ -275,7 +276,13 @@ class AutogenController extends Controller
         // return date('Y-m-d H:i:s');
 
         // return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
-        return $request->all();
+        $path = storage_path() . "/app/public/templategambarpemeriksaanfisik/20231022130650.jpg";
+        // dd(file_get_contents($path));
+        $type = pathinfo($path, PATHINFO_EXTENSION);
+        $data = file_get_contents($path);
+        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        // $base64 = base64_encode($path);
+        return new JsonResponse($base64);
     }
 
     public function create_post(Request $request)

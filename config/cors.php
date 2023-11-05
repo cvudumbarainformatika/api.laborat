@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'geni/*', 'sanctum/csrf-cookie', 'api'],
+    'paths' => ['api/*', 'geni/*', 'sanctum/csrf-cookie', 'api', '/templategambarpemeriksaanfisik/*', 'http:localhost:9000'],
 
     'allowed_methods' => ['*'],
 

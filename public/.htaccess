@@ -2,7 +2,6 @@
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
-
     RewriteEngine On
 
     # Handle Authorization Header
@@ -20,3 +19,5 @@
     RewriteRule ^ index.php [L]
     # RewriteRule ^(.*)$ index.php?/$1 [L]
 </IfModule>
+
+
