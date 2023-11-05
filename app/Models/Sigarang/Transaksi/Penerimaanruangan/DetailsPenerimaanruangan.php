@@ -37,4 +37,8 @@ class DetailsPenerimaanruangan extends Model
     {
         return $this->belongsTo(Penerimaanruangan::class);
     }
+    public function stokruangan()
+    {
+        return $this->hasMany(RecentStokUpdate::class, 'no_penerimaan', 'no_penerimaan');
+    }
 }

@@ -227,6 +227,7 @@ class LaporanMutasiGudangController extends Controller
                         'detail_permintaanruangans.no_penerimaan',
                         'detail_permintaanruangans.tujuan',
                         'detail_permintaanruangans.jumlah_distribusi as total',
+                        'detail_permintaanruangans.permintaanruangan_id',
                         'permintaanruangans.kode_ruang',
                         'permintaanruangans.tanggal_verif as tanggal',
                         'permintaanruangans.id',
@@ -235,16 +236,28 @@ class LaporanMutasiGudangController extends Controller
                             $p->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
                         })
                         ->with([
-                            'stokruangan' => function ($q) use ($col) {
-                                $q->select('kode_rs', 'kode_ruang', 'no_penerimaan', 'harga')
-                                    ->whereIn('kode_rs', $col)
-                                    ->groupBy('kode_rs', 'no_penerimaan');
+
+                            'permintaanruangan' => function ($per) use ($col) {
+                                $per->select('id', 'no_distribusi')
+                                    ->with([
+                                        'penerimaan' => function ($anu) use ($col) {
+                                            $anu->select('id', 'kode_rs', 'no_distribusi', 'no_penerimaan', 'jumlah')
+                                                ->with([
+                                                    'stokruangan' => function ($q) use ($col) {
+                                                        $q->select('kode_rs', 'kode_ruang', 'no_penerimaan', 'harga')
+                                                            ->whereIn('kode_rs', $col)
+                                                            ->groupBy('kode_rs', 'no_penerimaan');
+                                                    },
+                                                ]);
+                                        }
+                                    ]);
                             }
                         ])
                         ->whereBetween('permintaanruangans.tanggal_verif', [$from, $to])
                         ->where('permintaanruangans.status', '>=', 7)
                         ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0);
                 },
+
 
             ]);
 
