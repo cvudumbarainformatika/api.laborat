@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -168,5 +169,19 @@ class FormatingHelper
             $has = $has . "0";
         }
         return $kode . date("Y") . "-" . $has . $n;
+    }
+
+    public static function session_user()
+    {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $kdpegsimrs = $user->kdpegsimrs;
+        return $kdpegsimrs;
+    }
+
+    public static function session_ruangan()
+    {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $kdruang = $user->kdruangansim;
+        return $kdruang;
     }
 }

@@ -44,7 +44,7 @@ class TindakanController extends Controller
                 'rs6' => $request->hargasarana,
                 'rs7' => $request->hargasarana,
                 // 'rs8' => auth()->user()->pegawai_id,
-                'rs9' => auth()->user()->pegawai_id,
+                'rs9' => FormatingHelper::session_user(), //auth()->user()->pegawai_id,
                 'rs13' => $request->hargapelayanan,
                 'rs14' => $request->hargapelayanan,
                 // 'rs15' => $request->noreg,
