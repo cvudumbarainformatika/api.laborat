@@ -80,7 +80,7 @@ class PoliController extends Controller
                 ->whereBetween('rs17.rs3', [$tgl, $tglx])
                 // ->where('rs17.rs8', $user->kdruangansim ?? '')
                 ->where('rs19.rs4', '=', 'Poliklinik')
-                ->whereIn('rs17.rs8', '=', $kodepoli)
+                ->whereIn('rs17.rs8', '=', [$kodepoli])
                 ->where('rs17.rs8', '!=', 'POL014')
                 //    ->where('rs9.rs9', '=', 'BPJS')
                 ->where(function ($sts) use ($status) {
