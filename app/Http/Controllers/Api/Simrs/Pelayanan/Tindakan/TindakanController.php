@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
+use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,6 +92,17 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+
+    public function dialogoperasi()
+    {
+        $dialogoperasi = Masteroperasi::select(
+            'rs1 as kdtindakan',
+            'rs2 as tindakan',
+        )
+            ->where('rs2', 'Like', '%' . request('tindakan') . '%')
+            ->get();
+        return new JsonResponse($dialogoperasi);
     }
 
     //public static function
