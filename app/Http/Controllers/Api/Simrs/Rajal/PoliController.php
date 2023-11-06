@@ -28,7 +28,7 @@ class PoliController extends Controller
             $tglx = request('from') . ' 23:59:59';
         }
 
-        if ($ruangan === 'POL015') {
+        if ($ruangan === 'POL023') {
             $kodepoli = ['POL015', 'POL023', 'POL038', 'POL039', 'POL040'];
 
             $status = request('status') ?? '';
