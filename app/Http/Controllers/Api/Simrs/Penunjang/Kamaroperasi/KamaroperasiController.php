@@ -15,8 +15,8 @@ class KamaroperasiController extends Controller
     public function permintaanoperasi(Request $request)
     {
         DB::select('call nota_tindakan(@nomor)');
-        $x = DB::table('rs1')->select('rs27')->get();
-        $wew = $x[0]->rs27;
+        $x = DB::table('rs1')->select('rs14')->get();
+        $wew = $x[0]->rs14;
         $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-RJ');
 
         $requestoperasi = PermintaanOperasi::create(
@@ -68,7 +68,7 @@ class KamaroperasiController extends Controller
         }
         // $hapusdetail = PermintaanOperasi::where('rs2', '=', $cari->nota)->delete();
         $hapus = $cari->delete();
-        $nota = PermintaanOperasi::select('rs2')->where('rs1', $request->noreg)
+        $nota = PermintaanOperasi::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);

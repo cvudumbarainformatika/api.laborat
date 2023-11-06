@@ -179,8 +179,8 @@ class PemeriksaanfisikController extends Controller
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
-                'keterangan' => $request->keterangan,
-                'gambar' => $file,
+                'keterangan' => $request->keterangan ?? '',
+                'gambar' => $file ?? '',
             ]
         );
 
