@@ -12,7 +12,7 @@ class AnamnesisController extends Controller
     public function simpananamnesis(Request $request)
     {
         if ($request->has('id')) {
-            $simpananamnesis = AnamnesisAnamnesis::where('id', $request->id)->update(
+            $hasil = AnamnesisAnamnesis::where('id', $request->id)->update(
                 [
                     'rs1' => $request->noreg,
                     'rs2' => $request->norm,
@@ -31,6 +31,11 @@ class AnamnesisController extends Controller
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
+            if ($hasil === 1) {
+                $simpananamnesis = AnamnesisAnamnesis::where('id', $request->id)->first();
+            } else {
+                $simpananamnesis = null;
+            }
         } else {
             $simpananamnesis = AnamnesisAnamnesis::create(
                 [
