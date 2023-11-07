@@ -218,4 +218,40 @@ class BridbpjsplanController extends Controller
         );
         return $insernokontrol;
     }
+    public static function hapussuratcontrol($request, $nosurat)
+    {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "request" =>
+            [
+                "t_suratkontrol" => [
+                    "noSuratKontrol" => $nosurat,
+                    "user" => $use
+                ]
+            ]
+        ];
+
+        $insernokontrol = BridgingbpjsHelper::post_url(
+            'vclaim',
+            'RencanaKontrol/Delete',
+            $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $insernokontrol,
+                'url' => '/RencanaKontrol/delete',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+        return $insernokontrol;
+    }
 }
