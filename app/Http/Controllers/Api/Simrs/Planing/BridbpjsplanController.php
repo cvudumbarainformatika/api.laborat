@@ -16,7 +16,7 @@ class BridbpjsplanController extends Controller
         // menghindari lengt user bpjs yang minta minimal 3 karakter
         $data = auth()->user()->pegawai_id;
         $len = strlen($data);
-        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
 
         $data = [
             "request" => [
@@ -143,7 +143,7 @@ class BridbpjsplanController extends Controller
         // menghindari lengt user bpjs yang minta minimal 3 karakter
         $data = auth()->user()->pegawai_id;
         $len = strlen($data);
-        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
 
         $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
@@ -186,7 +186,7 @@ class BridbpjsplanController extends Controller
         // menghindari lengt user bpjs yang minta minimal 3 karakter
         $data = auth()->user()->pegawai_id;
         $len = strlen($data);
-        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
 
         $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
