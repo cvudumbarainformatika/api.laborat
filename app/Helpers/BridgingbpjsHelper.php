@@ -10,8 +10,8 @@ class BridgingbpjsHelper
 
     public static function ws_url(string $name, $param)
     {
-        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-        //$base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        //$base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
         $service_name = 'vclaim-rest';
         if ($name === 'antrean') {
             $service_name = 'antreanrs';
@@ -260,5 +260,40 @@ class BridgingbpjsHelper
         $res['result'] = $value;
 
         return response()->json($res);
+    }
+
+    public static function put_url(string $name, $param, $post)
+    {
+        $url = self::ws_url($name, $param);
+        // $url = self::ws_url_dev($name, $param);
+
+        $sign = self::getSignature($name);
+        $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
+
+        $header = self::getHeader($sign);
+        $response = Http::withHeaders($header)->put($url, $post);
+        // return ($response);
+        $data = json_decode($response, true);
+        // return $data;
+        if (!$data) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
+            ], 500);
+        }
+
+
+
+        $res['metadata'] = '';
+        $res['response'] = '';
+
+        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+        $res['response'] =  $data['response'];
+
+        $nilairespon = $data["response"] ?? false;
+        if (!$nilairespon) {
+            return $res;
+        }
+        return $res;
     }
 }
