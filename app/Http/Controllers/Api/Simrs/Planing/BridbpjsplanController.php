@@ -194,7 +194,7 @@ class BridbpjsplanController extends Controller
             [
                 "noSEP" => $request->nosep,
                 "kodeDokter" => $request->kodedokterdpjp,
-                "poliKontrol" => $request->kdunit,
+                "poliKontrol" => $request->kodepolibpjs,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
                 "user" => $use
             ]

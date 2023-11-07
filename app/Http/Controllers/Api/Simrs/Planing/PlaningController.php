@@ -466,7 +466,7 @@ class PlaningController extends Controller
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
-                'kodeDokter' => $request->kddokter,
+                'kodeDokter' => $request->kodedokterdpjp,
                 'poliKontrol' => $request->kodepolibpjs,
                 'tglRencanaKontrol' => $request->tglrencanakunjungan,
                 'namaDokter' => $request->dokter,
