@@ -58,6 +58,7 @@ Route::group([
     Route::post('/pemeriksaanmatakhusus', [PemeriksaankhususMataController::class, 'pemeriksaanmatakhusus']);
 
     Route::get('/bridbpjslistrujukan', [BridbpjsplanController::class, 'bridbpjslistrujukan']);
+    Route::get('/icare', [PoliController::class, 'icare']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
