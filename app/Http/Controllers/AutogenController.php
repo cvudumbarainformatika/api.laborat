@@ -330,7 +330,7 @@ class AutogenController extends Controller
             ]
         ];
 
-        $insernokontrol = BridgingbpjsHelper::post_url(
+        $insernokontrol = BridgingbpjsHelper::delete_url(
             'vclaim',
             'RencanaKontrol/Delete',
             $data
