@@ -162,7 +162,7 @@ class PlaningController extends Controller
             if ($request->status == 'Operasi') {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::createspri($request);
-                    $nospri = $createspri['response']['noSPRI'];
+                    $nospri = $createspri['response']->noSPRI;
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
                         $simpanop = self::jadwaloperasi($request);
@@ -201,7 +201,7 @@ class PlaningController extends Controller
             } else {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::createspri($request);
-                    $nospri = $createspri['response']['noSPRI'];
+                    $nospri = $createspri['response']->noSPRI;
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
                         $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
@@ -232,8 +232,10 @@ class PlaningController extends Controller
         } else {
             if ($groupsistembayar == '1') {
                 $simpan = BridbpjsplanController::insertsuratcontrol($request);
-                $nosuratkontrol = $simpan['response']['noSuratKontrol'];
+                // return new JsonResponse(['sim' => $simpan]);
+                $nosuratkontrol = $simpan['response']->noSuratKontrol;
                 $xxx = $simpan['metadata']['code'];
+
                 if ($xxx === 200 || $xxx === '200') {
                     $simpanspri = self::simpansuratkontrol($request, $nosuratkontrol);
                     $simpanakhir = self::simpanakhir($request);
@@ -380,7 +382,11 @@ class PlaningController extends Controller
             Rekomdpjp::where('noreg', $cari->rs1)->delete();
         }
         if ($request->plan === 'Kontrol') {
-            Simpansuratkontrol::where('noreg', $cari->rs1)->delete();
+            $data = Simpansuratkontrol::where('noreg', $cari->rs1)->first();
+            if ($data) {
+                BridbpjsplanController::hapussuratcontrol($request, $data->noSuratKontrol);
+                $data->delete();
+            }
         }
         if ($request->plan === 'Rawat Inap') {
             Simpanspri::where('noreg', $cari->rs1)->delete();
@@ -466,7 +472,7 @@ class PlaningController extends Controller
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
-                'kodeDokter' => $request->kddokter,
+                'kodeDokter' => $request->kodedokterdpjp,
                 'poliKontrol' => $request->kodepolibpjs,
                 'tglRencanaKontrol' => $request->tglrencanakunjungan,
                 'namaDokter' => $request->dokter,
