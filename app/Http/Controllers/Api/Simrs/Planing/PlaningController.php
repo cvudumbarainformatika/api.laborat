@@ -232,9 +232,9 @@ class PlaningController extends Controller
         } else {
             if ($groupsistembayar == '1') {
                 $simpan = BridbpjsplanController::insertsuratcontrol($request);
-                return new JsonResponse(['sim' => $simpan]);
+                // return new JsonResponse(['sim' => $simpan]);
                 $nosuratkontrol = $simpan['response']->noSuratKontrol;
-                $xxx = $simpan['metadata']['code'];
+                $xxx = $simpan['metadata']->code;
 
                 if ($xxx === 200 || $xxx === '200') {
                     $simpanspri = self::simpansuratkontrol($request, $nosuratkontrol);
