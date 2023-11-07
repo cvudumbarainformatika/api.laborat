@@ -31,6 +31,7 @@ Route::group([
     Route::get('/listdiagnosa', [DiagnosatransController::class, 'listdiagnosa']);
 
     Route::get('/dialogtindakanpoli', [TindakanController::class, 'dialogtindakanpoli']);
+    Route::get('/dialogoperasi', [TindakanController::class, 'dialogoperasi']);
     Route::get('/notatindakan', [TindakanController::class, 'notatindakan']);
     Route::post('/simpantindakanpoli', [TindakanController::class, 'simpantindakanpoli']);
     Route::post('/hapustindakanpoli', [TindakanController::class, 'hapustindakanpoli']);
@@ -57,6 +58,7 @@ Route::group([
     Route::post('/pemeriksaanmatakhusus', [PemeriksaankhususMataController::class, 'pemeriksaanmatakhusus']);
 
     Route::get('/bridbpjslistrujukan', [BridbpjsplanController::class, 'bridbpjslistrujukan']);
+    Route::get('/icare', [PoliController::class, 'icare']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });

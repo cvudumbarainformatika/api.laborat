@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
+use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class TindakanController extends Controller
         $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
 
         $simpantindakan = Tindakan::firstOrNew(
-            ['rs8' => auth()->user()->pegawai_id, 'rs2' => $request->nota ?? $notatindakan, 'rs1' => $request->noreg, 'rs4' => $request->kdtindakan],
+            ['rs8' => FormatingHelper::session_user(), 'rs2' => $request->nota ?? $notatindakan, 'rs1' => $request->noreg, 'rs4' => $request->kdtindakan],
             [
                 // 'rs1' => $request->noreg,
                 // 'rs2' => $request->nota ?? $notatindakan,
@@ -44,7 +45,7 @@ class TindakanController extends Controller
                 'rs6' => $request->hargasarana,
                 'rs7' => $request->hargasarana,
                 // 'rs8' => auth()->user()->pegawai_id,
-                'rs9' => auth()->user()->pegawai_id,
+                'rs9' => FormatingHelper::session_user(), //auth()->user()->pegawai_id,
                 'rs13' => $request->hargapelayanan,
                 'rs14' => $request->hargapelayanan,
                 // 'rs15' => $request->noreg,
@@ -91,6 +92,17 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+
+    public function dialogoperasi()
+    {
+        $dialogoperasi = Masteroperasi::select(
+            'rs1 as kdtindakan',
+            'rs2 as tindakan',
+        )
+            ->where('rs2', 'Like', '%' . request('tindakan') . '%')
+            ->get();
+        return new JsonResponse($dialogoperasi);
     }
 
     //public static function

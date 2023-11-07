@@ -10,8 +10,8 @@ class BridgingbpjsHelper
 
     public static function ws_url(string $name, $param)
     {
-        //$base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-        $base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
+        $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
+        //$base_url = 'https://apijkn.bpjs-kesehatan.go.id/';
         $service_name = 'vclaim-rest';
         if ($name === 'antrean') {
             $service_name = 'antreanrs';
@@ -21,6 +21,8 @@ class BridgingbpjsHelper
             $service_name = 'apotek-rest';
         } else if ($name === 'vclaim') {
             $service_name = 'vclaim-rest';
+        } else if ($name === 'icare') {
+            $service_name = 'ihs-dev';
         } else {
             $service_name = 'vclaim-rest';
         }
@@ -41,6 +43,8 @@ class BridgingbpjsHelper
             $service_name = 'pcare-rest-dev';
         } else if ($name === 'vclaim') {
             $service_name = 'vclaim-rest-dev';
+        } else if ($name === 'icare') {
+            $service_name = 'ihs_dev';
         } else {
             $service_name = 'vclaim-rest-dev';
         }
@@ -104,9 +108,9 @@ class BridgingbpjsHelper
 
         $header = self::getHeader($sign);
         $response = Http::withHeaders($header)->post($url, $post);
-        // return ($response);
+        return ($response);
         $data = json_decode($response, true);
-        // return $data;
+        //return $data;
         if (!$data) {
             return response()->json([
                 'code' => 500,

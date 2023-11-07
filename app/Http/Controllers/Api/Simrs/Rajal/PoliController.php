@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Rajal;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
@@ -152,7 +153,7 @@ class PoliController extends Controller
                         $o->where('pelayanan_id', request('kdpoli'));
                     }
                 ])
-                ->orderby('rs17.rs3', 'DESC')
+                ->orderby('rs17.rs3', 'ASC')
                 ->paginate(request('per_page'));
         } else {
             $status = request('status') ?? '';
@@ -338,5 +339,20 @@ class PoliController extends Controller
             ],
             200
         );
+    }
+
+    public function icare()
+    {
+        $data = [
+            "param" => "0001891242134",
+            "kodedokter" => 256319
+        ];
+
+        $icare = BridgingbpjsHelper::post_url(
+            'icare',
+            'api/rs/validate',
+            $data
+        );
+        return $icare;
     }
 }

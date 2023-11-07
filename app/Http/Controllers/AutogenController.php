@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
+use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Models\Antrean\Booking;
 use App\Models\Berita;
 use App\Models\Kunjungan;
@@ -57,6 +58,7 @@ use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
+use App\Models\Simrs\Bpjs\BpjsHttpRespon;
 use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Mtindakan;
@@ -303,13 +305,64 @@ class AutogenController extends Controller
 
     public function coba()
     {
-        $data = DB::connection('kepex')->table('liburs')
-            ->join('mysql.rs.accounts as user', 'kepex.liburs.user_id', '=', 'user.id')
-            ->limit(100)->get();
-        // $data = DB::table('accounts')
-        //     ->join('kepex.kepegx.liburs as libur', 'accounts.id', '=', 'libur.user_id')
+        // $data = DB::connection('kepex')->table('liburs')
+        //     ->join('mysql.rs.accounts as user', 'kepex.liburs.user_id', '=', 'user.id')
         //     ->limit(100)->get();
-        return response()->json($data, 200);
+        // // $data = DB::table('accounts')
+        // //     ->join('kepex.kepegx.liburs as libur', 'accounts.id', '=', 'libur.user_id')
+        // //     ->limit(100)->get();
+        // return response()->json($data, 200);
+        // $data = 114;
+        // $len = strlen($data);
+        // $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+        // return [
+        //     'data' => $data,
+        //     'use' => $use,
+        //     'length' => $len,
+        // ];
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "request" =>
+            [
+                "t_suratkontrol" => [
+                    "noSuratKontrol" => '1327R0011123K001345',
+                    "user" => '004'
+                ]
+            ]
+        ];
+
+        $insernokontrol = BridgingbpjsHelper::delete_url(
+            'vclaim',
+            'RencanaKontrol/Delete',
+            $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => '84277/11/2023/J',
+                'request' => $data,
+                'respon' => $insernokontrol,
+                'url' => '/RencanaKontrol/Delete',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+
+        return [
+            'insert' => $insernokontrol,
+            // 'type' => $type,
+            // 'data' => $data
+        ];
+
+        // $data = [
+        //     'suratkontrol' => '1327R0011123K001280'
+        // ];
+        // $ret = BridbpjsplanController::hapussuratcontrol($data);
+        // return [
+        //     'data' => $data,
+        //     'ret' => $ret,
+        // ];
     }
     public function gennoreg()
     {
@@ -2469,6 +2522,9 @@ class AutogenController extends Controller
         return new JsonResponse($data);
     }
 
+    public function baru()
+    {
+    }
     public function wawanpost(Request $request)
     {
         // $data = JadwalController::toMatch2($request->id, $request);

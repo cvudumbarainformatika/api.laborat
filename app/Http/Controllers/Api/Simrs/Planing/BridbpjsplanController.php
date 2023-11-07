@@ -13,6 +13,11 @@ class BridbpjsplanController extends Controller
 {
     public static function bridcretaerujukan($request)
     {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
         $data = [
             "request" => [
                 "t_rujukan" => [
@@ -25,7 +30,7 @@ class BridbpjsplanController extends Controller
                     "diagRujukan" => $request->diagnosarujukan,
                     "tipeRujukan" => $request->tiperujukan,
                     "poliRujukan" => $request->polirujukan,
-                    'user' => auth()->user()->pegawai_id
+                    'user' => $use
 
                     // "noSep" => '1327R0010923V008341',
                     // "tglRujukan" => '2023-09-29',
@@ -40,6 +45,7 @@ class BridbpjsplanController extends Controller
                 ]
             ]
         ];
+        $tgltobpjshttpres = DateHelper::getDateTime();
 
         $bridcretaerujukan = BridgingbpjsHelper::post_url(
             'vclaim',
@@ -47,7 +53,6 @@ class BridbpjsplanController extends Controller
             $data
         );
 
-        $tgltobpjshttpres = DateHelper::getDateTime();
         Bpjs_http_respon::create(
             [
                 'method' => 'POST',
@@ -62,7 +67,7 @@ class BridbpjsplanController extends Controller
         $xxx = $bridcretaerujukan['metadata']['code'];
 
         if ($xxx === 200 || $xxx === '200') {
-            $norujukan = $bridcretaerujukan['response']['rujukan']['noRujukan'];
+            $norujukan = $bridcretaerujukan['response']->rujukan->noRujukan;
             $simpanrujukan = Transrujukan::create(
                 [
                     'rs1' => $request->noreg,
@@ -135,6 +140,12 @@ class BridbpjsplanController extends Controller
 
     public static function createspri($request)
     {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "request" =>
             [
@@ -142,7 +153,7 @@ class BridbpjsplanController extends Controller
                 "kodeDokter" => $request->kodedokterdpjp,
                 "poliKontrol" => $request->kdunit,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => auth()->user()->pegawai_id
+                "user" => $use
             ]
         ];
 
@@ -150,6 +161,16 @@ class BridbpjsplanController extends Controller
             'vclaim',
             'RencanaKontrol/InsertSPRI',
             $data
+        );
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $createspri,
+                'url' => '/RencanaKontrol/InsertSPRI',
+                'tgl' => $tgltobpjshttpres
+            ]
         );
         return $createspri;
     }
@@ -162,14 +183,20 @@ class BridbpjsplanController extends Controller
 
     public static function insertsuratcontrol($request)
     {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "request" =>
             [
                 "noSEP" => $request->nosep,
                 "kodeDokter" => $request->kodedokterdpjp,
-                "poliKontrol" => $request->kdunit,
-                "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => auth()->user()->pegawai_id
+                "poliKontrol" => $request->kodepolibpjs,
+                "tglRencanaKontrol" => $request->tglrencanakunjungan,
+                "user" => $use
             ]
         ];
 
@@ -177,6 +204,53 @@ class BridbpjsplanController extends Controller
             'vclaim',
             'RencanaKontrol/insert',
             $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $insernokontrol,
+                'url' => '/RencanaKontrol/insert',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+        return $insernokontrol;
+    }
+    public static function hapussuratcontrol($request, $nosurat)
+    {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "request" =>
+            [
+                "t_suratkontrol" => [
+                    "noSuratKontrol" => $nosurat,
+                    "user" => $use
+                ]
+            ]
+        ];
+
+        $insernokontrol = BridgingbpjsHelper::delete_url(
+            'vclaim',
+            'RencanaKontrol/Delete',
+            $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $insernokontrol,
+                'url' => '/RencanaKontrol/Delete',
+                'tgl' => $tgltobpjshttpres
+            ]
         );
         return $insernokontrol;
     }
