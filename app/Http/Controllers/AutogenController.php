@@ -203,13 +203,13 @@ class AutogenController extends Controller
         // return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/Keluar/List/tglMulai/2023-10-10/tglAkhir/2023-10-10');
         // return BridgingbpjsHelper::get_url('vclaim', 'Rujukan/RS/List/Peserta/0000113076191');
 
-        if (request('to') === '' || request('from') === null) {
-            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
-            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
-        } else {
-            $tgl = request('to') . ' 00:00:00';
-            $tglx = request('from') . ' 23:59:59';
-        }
+        // if (request('to') === '' || request('from') === null) {
+        //     $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+        //     $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        // } else {
+        //     $tgl = request('to') . ' 00:00:00';
+        //     $tglx = request('from') . ' 23:59:59';
+        // }
 
         // $daftarkunjunganpasienbpjs = KunjunganPoli::select(
         //     'rs17.rs1',
@@ -276,7 +276,9 @@ class AutogenController extends Controller
         // return date('Y-m-d H:i:s');
 
         // return BridgingbpjsHelper::get_url('antrean', 'ref/dokter');
-        return '$request->all()';
+        // return '$request->all()';
+
+        // $data
     }
 
     public function create_post(Request $request)
