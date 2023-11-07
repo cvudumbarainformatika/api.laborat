@@ -13,6 +13,11 @@ class BridbpjsplanController extends Controller
 {
     public static function bridcretaerujukan($request)
     {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+
         $data = [
             "request" => [
                 "t_rujukan" => [
@@ -25,7 +30,7 @@ class BridbpjsplanController extends Controller
                     "diagRujukan" => $request->diagnosarujukan,
                     "tipeRujukan" => $request->tiperujukan,
                     "poliRujukan" => $request->polirujukan,
-                    'user' => auth()->user()->pegawai_id
+                    'user' => $use
 
                     // "noSep" => '1327R0010923V008341',
                     // "tglRujukan" => '2023-09-29',
@@ -135,6 +140,11 @@ class BridbpjsplanController extends Controller
 
     public static function createspri($request)
     {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+
         $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "request" =>
@@ -143,7 +153,7 @@ class BridbpjsplanController extends Controller
                 "kodeDokter" => $request->kodedokterdpjp,
                 "poliKontrol" => $request->kdunit,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => auth()->user()->pegawai_id
+                "user" => $use
             ]
         ];
 
@@ -173,6 +183,11 @@ class BridbpjsplanController extends Controller
 
     public static function insertsuratcontrol($request)
     {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+
         $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "request" =>
@@ -181,7 +196,7 @@ class BridbpjsplanController extends Controller
                 "kodeDokter" => $request->kodedokterdpjp,
                 "poliKontrol" => $request->kdunit,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => auth()->user()->pegawai_id
+                "user" => $use
             ]
         ];
 

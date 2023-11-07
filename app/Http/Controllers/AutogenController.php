@@ -301,13 +301,21 @@ class AutogenController extends Controller
 
     public function coba()
     {
-        $data = DB::connection('kepex')->table('liburs')
-            ->join('mysql.rs.accounts as user', 'kepex.liburs.user_id', '=', 'user.id')
-            ->limit(100)->get();
-        // $data = DB::table('accounts')
-        //     ->join('kepex.kepegx.liburs as libur', 'accounts.id', '=', 'libur.user_id')
+        // $data = DB::connection('kepex')->table('liburs')
+        //     ->join('mysql.rs.accounts as user', 'kepex.liburs.user_id', '=', 'user.id')
         //     ->limit(100)->get();
-        return response()->json($data, 200);
+        // // $data = DB::table('accounts')
+        // //     ->join('kepex.kepegx.liburs as libur', 'accounts.id', '=', 'libur.user_id')
+        // //     ->limit(100)->get();
+        // return response()->json($data, 200);
+        $data = 114;
+        $len = strlen($data);
+        $use = $len === 1 ? '00' . $data : ($len === 2 ? '0' . $data : $data);
+        return [
+            'data' => $data,
+            'use' => $use,
+            'length' => $len,
+        ];
     }
     public function gennoreg()
     {
@@ -2467,6 +2475,9 @@ class AutogenController extends Controller
         return new JsonResponse($data);
     }
 
+    public function baru()
+    {
+    }
     public function wawanpost(Request $request)
     {
         // $data = JadwalController::toMatch2($request->id, $request);
