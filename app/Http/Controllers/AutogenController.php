@@ -324,7 +324,7 @@ class AutogenController extends Controller
             "request" =>
             [
                 "t_suratkontrol" => [
-                    "noSuratKontrol" => '1327R0011123K001280',
+                    "noSuratKontrol" => '1327R0011123K001342',
                     "user" => '004'
                 ]
             ]
@@ -342,7 +342,7 @@ class AutogenController extends Controller
                 'noreg' => '84277/11/2023/J',
                 'request' => $data,
                 'respon' => $insernokontrol,
-                'url' => '/RencanaKontrol/delete',
+                'url' => '/RencanaKontrol/Delete',
                 'tgl' => $tgltobpjshttpres
             ]
         );

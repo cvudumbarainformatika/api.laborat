@@ -248,7 +248,7 @@ class BridbpjsplanController extends Controller
                 'noreg' => $request->noreg ?? '',
                 'request' => $data,
                 'respon' => $insernokontrol,
-                'url' => '/RencanaKontrol/delete',
+                'url' => '/RencanaKontrol/Delete',
                 'tgl' => $tgltobpjshttpres
             ]
         );
