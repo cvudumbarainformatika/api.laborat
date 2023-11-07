@@ -152,7 +152,7 @@ class PoliController extends Controller
                         $o->where('pelayanan_id', request('kdpoli'));
                     }
                 ])
-                ->orderby('rs17.rs3', 'DESC')
+                ->orderby('rs17.rs3', 'ASC')
                 ->paginate(request('per_page'));
         } else {
             $status = request('status') ?? '';

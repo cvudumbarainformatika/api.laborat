@@ -40,6 +40,7 @@ class BridbpjsplanController extends Controller
                 ]
             ]
         ];
+        $tgltobpjshttpres = DateHelper::getDateTime();
 
         $bridcretaerujukan = BridgingbpjsHelper::post_url(
             'vclaim',
@@ -47,7 +48,6 @@ class BridbpjsplanController extends Controller
             $data
         );
 
-        $tgltobpjshttpres = DateHelper::getDateTime();
         Bpjs_http_respon::create(
             [
                 'method' => 'POST',
@@ -135,6 +135,7 @@ class BridbpjsplanController extends Controller
 
     public static function createspri($request)
     {
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "request" =>
             [
@@ -151,6 +152,16 @@ class BridbpjsplanController extends Controller
             'RencanaKontrol/InsertSPRI',
             $data
         );
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $createspri,
+                'url' => '/RencanaKontrol/InsertSPRI',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
         return $createspri;
     }
 
@@ -162,6 +173,7 @@ class BridbpjsplanController extends Controller
 
     public static function insertsuratcontrol($request)
     {
+        $tgltobpjshttpres = DateHelper::getDateTime();
         $data = [
             "request" =>
             [
@@ -177,6 +189,17 @@ class BridbpjsplanController extends Controller
             'vclaim',
             'RencanaKontrol/insert',
             $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $insernokontrol,
+                'url' => '/RencanaKontrol/insert',
+                'tgl' => $tgltobpjshttpres
+            ]
         );
         return $insernokontrol;
     }
