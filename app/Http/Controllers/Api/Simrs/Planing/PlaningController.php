@@ -162,7 +162,7 @@ class PlaningController extends Controller
             if ($request->status == 'Operasi') {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::createspri($request);
-                    $nospri = $createspri['response']['noSPRI'];
+                    $nospri = $createspri['response']->noSPRI;
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
                         $simpanop = self::jadwaloperasi($request);
@@ -201,7 +201,7 @@ class PlaningController extends Controller
             } else {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::createspri($request);
-                    $nospri = $createspri['response']['noSPRI'];
+                    $nospri = $createspri['response']->noSPRI;
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
                         $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);

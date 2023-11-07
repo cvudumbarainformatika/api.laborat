@@ -324,7 +324,7 @@ class AutogenController extends Controller
             "request" =>
             [
                 "t_suratkontrol" => [
-                    "noSuratKontrol" => '1327R0011123K001343',
+                    "noSuratKontrol" => '1327R0011123K001345',
                     "user" => '004'
                 ]
             ]
