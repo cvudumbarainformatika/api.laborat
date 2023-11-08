@@ -175,7 +175,16 @@ class FormatingHelper
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
-        return $kdpegsimrs;
+        $kdruang = $user->kdruangansim;
+        $kdgroupnakes = $user->kdgroupnakes;
+        $kddpjp = $user->kddpjp;
+        return (
+            [
+                'kodesimrs' => $kdpegsimrs,
+                'kdruang' => $kdruang,
+                'kdgroupnakes' => $kdgroupnakes,
+                'kddpjp' => $kddpjp
+            ]);
     }
 
     public static function session_ruangan()

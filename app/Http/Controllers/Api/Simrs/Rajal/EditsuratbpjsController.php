@@ -30,7 +30,7 @@ class EditsuratbpjsController extends Controller
                 "kodeDokter" => $request->kodeDokter,
                 "poliKontrol" => $request->poliTujuan,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => FormatingHelper::session_user()
+                "user" => '000' . FormatingHelper::session_user()
             ]
         ];
         $editsuratkontrol = BridgingbpjsHelper::put_url(
@@ -39,8 +39,10 @@ class EditsuratbpjsController extends Controller
             $data
         );
         $cari = Simpansuratkontrol::where('noSuratKontrol', $request->noSuratKontrol)->first();
-
-        $noreg = $cari->noreg;
+        $noreg = '';
+        if ($cari) {
+            $noreg = $cari->noreg;
+        }
         Bpjs_http_respon::create(
             [
                 'noreg' => $noreg,
@@ -54,8 +56,10 @@ class EditsuratbpjsController extends Controller
         $xxx = $editsuratkontrol['metadata']['code'];
         if ($xxx === 200 || $xxx === '200') {
             $cari = Simpansuratkontrol::where('noSuratKontrol', $request->noSuratKontrol)->first();
-            $cari->rs19 = $request->tglrencanakontrol;
-            $cari->save();
+            if ($cari) {
+                $cari->rs19 = $request->tglrencanakontrol;
+                $cari->save();
+            }
             return new JsonResponse(
                 [
                     'result' => $editsuratkontrol
