@@ -10,7 +10,7 @@ Route::group([
     'prefix' => 'simrs/master/diagnosakeperawatan'
 ], function () {
     Route::post('/store', [MasterDiagnosaKeperawatan::class, 'store']);
-    // Route::get('/data', [MasterPemeriksaanFisikController::class, 'index']);
-    // Route::post('/uploads', [MasterPemeriksaanFisikController::class, 'uploads']);
+    Route::get('/getall', [MasterDiagnosaKeperawatan::class, 'index']);
+    Route::post('/delete', [MasterDiagnosaKeperawatan::class, 'delete']);
     // Route::post('/deletetemplate', [MasterPemeriksaanFisikController::class, 'deletetemplate']);
 });
