@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
@@ -343,16 +344,33 @@ class PoliController extends Controller
 
     public function icare()
     {
-        $data = [
-            "param" => "0001891242134",
-            "kodedokter" => 256319
-        ];
+        $wew = FormatingHelper::session_user();
+        $x = $wew['kdgroupnakes'];
+        $kddpjp = $wew['kddpjp'];
 
-        $icare = BridgingbpjsHelper::post_url(
-            'icare',
-            'api/rs/validate',
-            $data
-        );
-        return $icare;
+        if ($x === '1') {
+            if ($kddpjp === '') {
+                return new JsonResponse(['message' => 'Maaf Akun Anda Belum Termaping dengan Aplikasi Hafis...!!! '], 500);
+            }
+            $noka = request('noka');
+            $data = [
+                "param" => $noka,
+                "kodedokter" => (int) $kddpjp
+            ];
+
+            // $data = [
+            //     "param" => '0001538822259',
+            //     "kodedokter" => 256319
+            // ];
+
+            $icare = BridgingbpjsHelper::post_url(
+                'icare',
+                'api/rs/validate',
+                $data
+            );
+            return $icare;
+        } else {
+            return new JsonResponse(['message' => 'Maaf Fitur ini Hanya Untuk Dokter...!!!'], 500);
+        }
     }
 }

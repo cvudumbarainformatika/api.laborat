@@ -22,7 +22,7 @@ class BridgingbpjsHelper
         } else if ($name === 'vclaim') {
             $service_name = 'vclaim-rest';
         } else if ($name === 'icare') {
-            $service_name = 'ihs-dev';
+            $service_name = 'ihs';
         } else {
             $service_name = 'vclaim-rest';
         }
@@ -101,14 +101,14 @@ class BridgingbpjsHelper
     public static function post_url(string $name, $param, $post)
     {
         $url = self::ws_url($name, $param);
-        // $url = self::ws_url_dev($name, $param);
+        //$url = self::ws_url_dev($name, $param);
 
         $sign = self::getSignature($name);
         $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
 
-        $header = self::getHeader($sign);
+        $header = $name === 'icare' ? self::getHeadericare($sign) : self::getHeader($sign);
         $response = Http::withHeaders($header)->post($url, $post);
-        return ($response);
+        // return ($response);
         $data = json_decode($response, true);
         //return $data;
         if (!$data) {
@@ -190,6 +190,8 @@ class BridgingbpjsHelper
 
         $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
         if ($name === 'vclaim') {
+            $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
+        } else if ($name === 'icare') {
             $USERKEY = $VCLAIM_DEV_USER_KEY_DEV;
         } else {
             $USERKEY = $BPJS_ANTREAN_USER_KEY;
@@ -295,5 +297,28 @@ class BridgingbpjsHelper
             return $res;
         }
         return $res;
+    }
+
+    public static function getHeadericare($data)
+    {
+        // $data = self::getSignature();
+        return [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'X-cons-id' => $data['xconsid'],
+            'X-timestamp' => $data['xtimestamp'],
+            'X-signature' => $data['xsignature'],
+            'user_key' => $data['user_key'],
+        ];
+
+
+        // return [
+        //     'Accept' => 'application/json',
+        //     'Content-Type' => 'application/json',
+        //     'x-cons-id' => $data['xconsid'],
+        //     'x-timestamp' => $data['xtimestamp'],
+        //     'x-signature' => $data['xsignature'],
+        //     'user_key' => $data['user_key'],
+        // ];
     }
 }
