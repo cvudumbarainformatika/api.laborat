@@ -34,6 +34,8 @@ class TindakanController extends Controller
         $wew = $x[0]->rs14;
         $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
 
+        $wew = FormatingHelper::session_user();
+        $kdpegsimrs = $wew['kdpegsimrs'];
         $simpantindakan = Tindakan::firstOrNew(
             ['rs8' => FormatingHelper::session_user(), 'rs2' => $request->nota ?? $notatindakan, 'rs1' => $request->noreg, 'rs4' => $request->kdtindakan],
             [
@@ -45,7 +47,7 @@ class TindakanController extends Controller
                 'rs6' => $request->hargasarana,
                 'rs7' => $request->hargasarana,
                 // 'rs8' => auth()->user()->pegawai_id,
-                'rs9' => FormatingHelper::session_user(), //auth()->user()->pegawai_id,
+                'rs9' => $kdpegsimrs, //auth()->user()->pegawai_id,
                 'rs13' => $request->hargapelayanan,
                 'rs14' => $request->hargapelayanan,
                 // 'rs15' => $request->noreg,
