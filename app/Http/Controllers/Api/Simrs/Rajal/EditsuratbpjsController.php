@@ -23,6 +23,7 @@ class EditsuratbpjsController extends Controller
 
     public function editsuratkontrol(Request $request)
     {
+        $user = FormatingHelper::session_user();
         $data = [
             "request" => [
                 "noSuratKontrol" => $request->noSuratKontrol,
@@ -30,7 +31,7 @@ class EditsuratbpjsController extends Controller
                 "kodeDokter" => $request->kodeDokter,
                 "poliKontrol" => $request->poliTujuan,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => '000' . FormatingHelper::session_user()
+                "user" => '000' . $user['kodesimrs']
             ]
         ];
         $editsuratkontrol = BridgingbpjsHelper::put_url(
@@ -72,5 +73,15 @@ class EditsuratbpjsController extends Controller
                 ]
             );
         }
+    }
+
+    public function jadwaldokter(Request $request)
+    {
+        // $tanggal = date('Y-m-d');
+        $jadwaldokter = BridgingbpjsHelper::get_url(
+            'antrean',
+            'jadwaldokter/kodepoli/' . $request->poliTujuan . '/tanggal/' . $request->tglrencanakontrol
+        );
+        return ($jadwaldokter);
     }
 }

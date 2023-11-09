@@ -296,6 +296,11 @@ class BridgingbpjsHelper
         if (!$nilairespon) {
             return $res;
         }
+        $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
+        $res['result'] = json_decode($hasilakhir);
+        if (!$hasilakhir) {
+            return response()->json($data);
+        }
         return $res;
     }
 
