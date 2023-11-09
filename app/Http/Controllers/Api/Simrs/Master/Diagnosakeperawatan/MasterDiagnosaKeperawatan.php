@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Master\Diagnosakeperawatan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mdiagnosakeperawatan;
+use App\Models\Simrs\Master\Mintervensikeperawatan;
 use App\Models\Simrs\Master\Mpemeriksaanfisik;
 use App\Models\Simrs\Master\Mtemplategambar;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,7 @@ class MasterDiagnosaKeperawatan extends Controller
 
     public function index()
     {
-        $data = Mdiagnosakeperawatan::get();
+        $data = Mdiagnosakeperawatan::with('intervensis')->get();
 
         return new JsonResponse([
             'message' => 'success',
@@ -48,13 +49,46 @@ class MasterDiagnosaKeperawatan extends Controller
 
         return new JsonResponse([
             'message' => 'Data Berhasil Disimpan...!!!',
-            'result' => $data
+            'result' => $data->load('intervensis')
         ], 200);
     }
 
     public function delete(Request $request)
     {
         $data = Mdiagnosakeperawatan::find($request->id);
+
+        if (!$data) {
+            return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);
+        }
+
+        $data->delete();
+
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus...!!!',
+        ], 200);
+    }
+
+    public function storeintervensi(Request $request)
+    {
+        $data = null;
+        if ($request->has('id')) {
+            $data = Mintervensikeperawatan::find($request->id);
+            $data->nama = $request->nama;
+            $data->save();
+        }
+        $data = Mintervensikeperawatan::create(
+            ['nama' => $request->nama, 'group' => $request->group, 'mdiagnosakeperawatan_kode' => $request->kode]
+        );
+
+        return new JsonResponse([
+            'message' => 'Data Berhasil Disimpan...!!!',
+            'result' => $data
+        ], 200);
+    }
+
+    public function deleteintervensi(Request $request)
+    {
+        $data = Mintervensikeperawatan::find($request->id);
 
         if (!$data) {
             return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);
