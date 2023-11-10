@@ -17,6 +17,7 @@ use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
+use App\Models\Simrs\Penunjang\Eeg\Eegtrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
@@ -28,6 +29,7 @@ use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Lain\Lain;
+use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rekom\Rekomdpjp;
@@ -195,5 +197,20 @@ class KunjunganPoli extends Model
     public function antrian_ambil()
     {
         return $this->hasMany(Antrianambil::class, 'noreg', 'noreg');
+    }
+
+    public function usg()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+
+    public function ecg()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+
+    public function eeg()
+    {
+        return $this->hasOne(Eegtrans::class, 'rs1', 'rs1');
     }
 }
