@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi\EdukasiController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
@@ -29,6 +30,7 @@ Route::group([
     Route::post('/hapusdiagnosa', [DiagnosatransController::class, 'hapusdiagnosa']);
     Route::post('/simpandiagnosa', [DiagnosatransController::class, 'simpandiagnosa']);
     Route::get('/listdiagnosa', [DiagnosatransController::class, 'listdiagnosa']);
+    Route::get('/diagnosakeperawatan', [DiagnosaKeperawatanController::class, 'diagnosakeperawatan']);
 
     Route::get('/dialogtindakanpoli', [TindakanController::class, 'dialogtindakanpoli']);
     Route::get('/dialogoperasi', [TindakanController::class, 'dialogoperasi']);
