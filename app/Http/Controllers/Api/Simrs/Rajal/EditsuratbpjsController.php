@@ -23,6 +23,7 @@ class EditsuratbpjsController extends Controller
 
     public function editsuratkontrol(Request $request)
     {
+        $user = FormatingHelper::session_user();
         $data = [
             "request" => [
                 "noSuratKontrol" => $request->noSuratKontrol,
@@ -30,7 +31,7 @@ class EditsuratbpjsController extends Controller
                 "kodeDokter" => $request->kodeDokter,
                 "poliKontrol" => $request->poliTujuan,
                 "tglRencanaKontrol" => $request->tglrencanakontrol,
-                "user" => FormatingHelper::session_user()
+                "user" => '000' . $user['kodesimrs']
             ]
         ];
         $editsuratkontrol = BridgingbpjsHelper::put_url(
@@ -39,8 +40,10 @@ class EditsuratbpjsController extends Controller
             $data
         );
         $cari = Simpansuratkontrol::where('noSuratKontrol', $request->noSuratKontrol)->first();
-
-        $noreg = $cari->noreg;
+        $noreg = '';
+        if ($cari) {
+            $noreg = $cari->noreg;
+        }
         Bpjs_http_respon::create(
             [
                 'noreg' => $noreg,
@@ -54,8 +57,10 @@ class EditsuratbpjsController extends Controller
         $xxx = $editsuratkontrol['metadata']['code'];
         if ($xxx === 200 || $xxx === '200') {
             $cari = Simpansuratkontrol::where('noSuratKontrol', $request->noSuratKontrol)->first();
-            $cari->rs19 = $request->tglrencanakontrol;
-            $cari->save();
+            if ($cari) {
+                $cari->rs19 = $request->tglrencanakontrol;
+                $cari->save();
+            }
             return new JsonResponse(
                 [
                     'result' => $editsuratkontrol
@@ -68,5 +73,15 @@ class EditsuratbpjsController extends Controller
                 ]
             );
         }
+    }
+
+    public function jadwaldokter(Request $request)
+    {
+        // $tanggal = date('Y-m-d');
+        $jadwaldokter = BridgingbpjsHelper::get_url(
+            'antrean',
+            'jadwaldokter/kodepoli/' . $request->poliTujuan . '/tanggal/' . $request->tglrencanakontrol
+        );
+        return ($jadwaldokter);
     }
 }

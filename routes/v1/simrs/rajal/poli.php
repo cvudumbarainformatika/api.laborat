@@ -17,4 +17,5 @@ Route::group([
 
     Route::get('/listsuratkontrol', [EditsuratbpjsController::class, 'listsuratkontrol']);
     Route::post('/editsuratkontrol', [EditsuratbpjsController::class, 'editsuratkontrol']);
+    Route::post('/jadwal', [EditsuratbpjsController::class, 'jadwaldokter']);
 });
