@@ -37,7 +37,12 @@ class TindakanController extends Controller
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
         $simpantindakan = Tindakan::firstOrNew(
-            ['rs8' => FormatingHelper::session_user(), 'rs2' => $request->nota ?? $notatindakan, 'rs1' => $request->noreg, 'rs4' => $request->kdtindakan],
+            [
+                'rs8' => $kdpegsimrs,
+                'rs2' => $request->nota ?? $notatindakan,
+                'rs1' => $request->noreg,
+                'rs4' => $request->kdtindakan
+            ],
             [
                 // 'rs1' => $request->noreg,
                 // 'rs2' => $request->nota ?? $notatindakan,
