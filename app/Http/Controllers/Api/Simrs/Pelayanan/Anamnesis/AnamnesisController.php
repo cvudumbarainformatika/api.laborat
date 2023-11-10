@@ -28,6 +28,8 @@ class AnamnesisController extends Controller
                     'asupanmakan' => $request->asupanmakan ?? 0,
                     'kondisikhusus' => $request->kondisikhusus ?? '',
                     'skor' => $request->skor ?? 0,
+                    'scorenyeri' => $request->skornyeri ?? 0,
+                    'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
@@ -53,6 +55,8 @@ class AnamnesisController extends Controller
                     'asupanmakan' => $request->asupanmakan ?? 0,
                     'kondisikhusus' => $request->kondisikhusus ?? '',
                     'skor' => $request->skor ?? 0,
+                    'scorenyeri' => $request->skornyeri ?? 0,
+                    'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
                     'user'  => auth()->user()->pegawai_id,
                 ]
             );
