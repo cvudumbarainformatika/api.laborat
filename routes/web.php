@@ -38,6 +38,7 @@ Route::get('/', function () {
 Route::get('/autogen', [AutogenController::class, 'index']);
 Route::post('/autogen/create_coba', [AutogenController::class, 'create_coba']);
 Route::get('/autogen/coba', [AutogenController::class, 'coba']);
+Route::get('/autogen/baru', [AutogenController::class, 'baru']);
 Route::get('/autogen/gennoreg', [AutogenController::class, 'gennoreg']);
 Route::get('/autogen/coba-api', [AutogenController::class, 'coba_api']);
 Route::get('/autogen/wawan', [AutogenController::class, 'wawan']);
