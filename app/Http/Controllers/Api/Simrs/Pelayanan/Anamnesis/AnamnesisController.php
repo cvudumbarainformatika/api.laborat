@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis as AnamnesisAnamnesis;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ class AnamnesisController extends Controller
 {
     public function simpananamnesis(Request $request)
     {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $kdpegsimrs = $user->kdpegsimrs;
         if ($request->has('id')) {
             $hasil = AnamnesisAnamnesis::where('id', $request->id)->update(
                 [
@@ -30,7 +33,7 @@ class AnamnesisController extends Controller
                     'skor' => $request->skor ?? 0,
                     'scorenyeri' => $request->skornyeri ?? 0,
                     'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
-                    'user'  => auth()->user()->pegawai_id,
+                    'user'  => $kdpegsimrs,
                 ]
             );
             if ($hasil === 1) {
@@ -57,7 +60,7 @@ class AnamnesisController extends Controller
                     'skor' => $request->skor ?? 0,
                     'scorenyeri' => $request->skornyeri ?? 0,
                     'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
-                    'user'  => auth()->user()->pegawai_id,
+                    'user'  => $kdpegsimrs,
                 ]
             );
         }
