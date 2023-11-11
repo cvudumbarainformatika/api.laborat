@@ -12,22 +12,7 @@ class ResumeController extends Controller
 {
     public function resume()
     {
-        $resume = KunjunganPoli::select(
-            'rs17.rs1',
-            'rs17.rs9',
-            'rs17.rs1 as noreg',
-            'rs17.rs2 as norm',
-            'rs17.rs3 as tgl_kunjungan',
-            'rs19.rs2 as poli',
-            'rs9.rs2 as sistembayar',
-            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
-            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
-            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
-                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
-                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
-            'rs15.rs16 as tgllahir',
-            'rs15.rs17 as kelamin'
-        )->with(
+        $resume = KunjunganPoli::with(
             [
                 'dokter:rs1,rs2 as dokter',
                 'diagnosa:rs1,rs3,rs4 as jenisdiagnosa,rs7 as kasus',
