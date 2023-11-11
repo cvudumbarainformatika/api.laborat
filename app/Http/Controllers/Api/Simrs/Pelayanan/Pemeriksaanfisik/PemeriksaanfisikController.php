@@ -41,6 +41,18 @@ class PemeriksaanfisikController extends Controller
                 'ruangan' => $request->spiritual,
                 'scorenyeri' => $request->skornyeri ?? 0,
                 'keteranganscorenyeri' => $request->keteranganskorenyeri ?? '',
+                'kesadaran' => $request->kesadaran ?? '',
+                'kesadarane' => $request->kesadarane ?? 0,
+                'kesadaranm' => $request->kesadaranm ?? 0,
+                'kesadaranv' => $request->kesadaranv ?? 0,
+                // Khusus Paru
+                'inspeksi' => $request->inspeksi ?? '',
+                'palpasi' => $request->palpasi ?? '',
+                'perkusidadakanan' => $request->perkusidadakanan ?? '',
+                'perkusidadakiri' => $request->perkusidadakiri ?? '',
+                'auskultasisuaradasar' => $request->auskultasisuaradasar ?? '',
+                'auskultasisuaratambahankanan' => $request->auskultasisuaratambahankanan ?? '',
+                'auskultasisuaratambahankiri' => $request->auskultasisuaratambahankiri ?? '',
             ]
         );
 
