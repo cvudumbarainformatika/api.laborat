@@ -12,7 +12,10 @@ class ResumeController extends Controller
 {
     public function resume()
     {
-        $resume = KunjunganPoli::with(
+        $resume = KunjunganPoli::select(
+            'rs17.rs1',
+            'rs17.rs9'
+        )->with(
             [
                 'dokter:rs1,rs2 as dokter',
                 'diagnosa:rs1,rs3,rs4 as jenisdiagnosa,rs7 as kasus',
