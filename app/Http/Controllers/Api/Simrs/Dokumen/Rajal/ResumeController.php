@@ -59,11 +59,7 @@ class ResumeController extends Controller
                         ->where('rs4', 'not like', '%Pulang%');
                 },
             ]
-        )
-            ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
-            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
-            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-            ->where('rs17.rs1', request('noreg'))
+        )->where('rs17.rs1', request('noreg'))
             ->get();
         return new JsonResponse($resume);
     }
