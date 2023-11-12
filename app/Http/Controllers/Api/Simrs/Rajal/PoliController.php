@@ -109,6 +109,7 @@ class PoliController extends Controller
                 ->with([
                     'anamnesis', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                     'gambars',
+                    'fisio',
                     'laborats' => function ($t) {
                         $t->with('details.pemeriksaanlab')
                             ->orderBy('id', 'DESC');
@@ -233,6 +234,7 @@ class PoliController extends Controller
                 ->with([
                     'anamnesis', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                     'gambars',
+                    'fisio',
                     'laborats' => function ($t) {
                         $t->with('details.pemeriksaanlab')
                             ->orderBy('id', 'DESC');
