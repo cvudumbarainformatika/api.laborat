@@ -93,6 +93,8 @@ class PemeriksaanfisikController extends Controller
                     'noreg' => $value['noreg'],
                     'norm' => $value['norm'],
                     'panjang' => $value['panjang'],
+                    'width' => $value['width'],
+                    'height' => $value['height'],
                     'penanda' => $value['penanda'],
                     'templategambar' => $value['templategambar'],
                     'templateindex' => $value['templateindex'],
