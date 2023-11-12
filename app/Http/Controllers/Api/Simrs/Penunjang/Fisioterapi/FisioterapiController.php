@@ -45,7 +45,7 @@ class FisioterapiController extends Controller
 
         return new JsonResponse(
             [
-                'message' => 'Permintaan Berhasil Dikirim Ke OK',
+                'message' => 'Permintaan Berhasil Dikirim Ke Fisio Terapi',
                 'result' => $simpanpermintaan,
                 'nota' => $nota
             ],
