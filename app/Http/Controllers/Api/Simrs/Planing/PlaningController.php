@@ -162,9 +162,9 @@ class PlaningController extends Controller
             if ($request->status == 'Operasi') {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::createspri($request);
-                    $nospri = $createspri['response']->noSPRI;
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
+                        $nospri = $createspri['response']->noSPRI;
                         $simpanop = self::jadwaloperasi($request);
                         if ($simpanop == 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
@@ -201,9 +201,9 @@ class PlaningController extends Controller
             } else {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::createspri($request);
-                    $nospri = $createspri['response']->noSPRI;
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
+                        $nospri = $createspri['response']->noSPRI;
                         $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
@@ -233,10 +233,10 @@ class PlaningController extends Controller
             if ($groupsistembayar == '1') {
                 $simpan = BridbpjsplanController::insertsuratcontrol($request);
                 // return new JsonResponse(['sim' => $simpan]);
-                $nosuratkontrol = $simpan['response']->noSuratKontrol;
                 $xxx = $simpan['metadata']['code'];
 
                 if ($xxx === 200 || $xxx === '200') {
+                    $nosuratkontrol = $simpan['response']->noSuratKontrol;
                     $simpanspri = self::simpansuratkontrol($request, $nosuratkontrol);
                     $simpanakhir = self::simpanakhir($request);
                     $data = self::getAllRespPlanning($request->noreg);
