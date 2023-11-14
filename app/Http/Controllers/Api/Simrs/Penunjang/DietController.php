@@ -27,7 +27,7 @@ class DietController extends Controller
                 'diet' => $request->diet,
                 'poli' => $request->kodepoli,
                 'users' => $user['kodesimrs'],
-                'assesmen' => $request->asessmen
+                'assessmen' => $request->asessmen
             ]
         );
         if (!$simpan) {
