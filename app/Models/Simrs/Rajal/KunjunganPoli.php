@@ -17,6 +17,7 @@ use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
+use App\Models\Simrs\Penunjang\DietTrans;
 use App\Models\Simrs\Penunjang\Eeg\Eegtrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
@@ -223,5 +224,10 @@ class KunjunganPoli extends Model
     public function fisio()
     {
         return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'rs1');
+    }
+
+    public function diet()
+    {
+        return $this->hasMany(DietTrans::class, 'rs1', 'rs1');
     }
 }
