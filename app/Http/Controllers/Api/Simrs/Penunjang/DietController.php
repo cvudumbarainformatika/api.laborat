@@ -26,13 +26,13 @@ class DietController extends Controller
                 'tgl' => date('Y-m-d H:i:s'),
                 'diet' => $request->diet,
                 'poli' => $request->kodepoli,
-                'users' => $user['kdpegsimrs'],
+                'users' => $user['kodesimrs'],
                 'assesmen' => $request->asessmen
             ]
         );
         if (!$simpan) {
-            return new JsonResponse(['Not OK' => 'Maaf Data Gagal Disimpan...!!!'], 500);
+            return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['OK' => 'Data Berhasil Disimpan...!!!'], 200);
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpan], 200);
     }
 }
