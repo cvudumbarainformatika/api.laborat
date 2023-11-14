@@ -31,8 +31,8 @@ class DietController extends Controller
             ]
         );
         if (!$simpan) {
-            return new JsonResponse(['Not OK' => 'Maaf Data Gagal Disimpan...!!!'], 500);
+            return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['OK' => 'Data Berhasil Disimpan...!!!'], 200);
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpan], 200);
     }
 }
