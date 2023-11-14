@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class Mpoli extends Model
 {
     use HasFactory;
+    protected $connection = 'mysql';
     protected $table = 'rs19';
     protected $guarded = [];
     public $timestamps = false;

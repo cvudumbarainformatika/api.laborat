@@ -10,6 +10,7 @@ use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Simrs\Master\Mpoli;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,10 @@ class Pegawai extends Model
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class, 'ruang', 'koderuangan');
+    }
+    public function poli()
+    {
+        return $this->belongsTo(Mpoli::class, 'kdruangansim', 'rs1');
     }
 
     public function ruang()

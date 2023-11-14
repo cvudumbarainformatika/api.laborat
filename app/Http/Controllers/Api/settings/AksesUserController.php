@@ -9,6 +9,7 @@ use App\Models\Pegawai\Akses\Role;
 use App\Models\Pegawai\Akses\Submenu;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Ruang;
+use App\Models\Simrs\Master\Mpoli;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,11 @@ class AksesUserController extends Controller
     public function userRole()
     {
         $data = Role::select('id', 'nama')->get();
+        return new JsonResponse($data);
+    }
+    public function getPoli()
+    {
+        $data = Mpoli::listpoli()->where('rs4', 'Poliklinik')->get();
         return new JsonResponse($data);
     }
     public function storeRole(Request $request)
@@ -41,6 +47,15 @@ class AksesUserController extends Controller
             'kode_ruang' => $request->kode_ruang
         ]);
         return new JsonResponse($ruang);
+    }
+    public function storePoli(Request $request)
+    {
+        $data = Pegawai::find($request->id);
+        $poli = Mpoli::where('rs1', $request->kodepoli)->first();
+        $data->update([
+            'kdruangansim' => $request->kodepoli
+        ]);
+        return new JsonResponse($poli);
     }
     public function storeAkses(Request $request)
     {

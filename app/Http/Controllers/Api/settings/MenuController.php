@@ -94,7 +94,7 @@ class MenuController extends Controller
 
     public function cariPegawai()
     {
-        $data = Pegawai::with('ruangan', 'ruang', 'role', 'user.akses')
+        $data = Pegawai::with('ruangan', 'ruang', 'role', 'user.akses', 'poli')
             ->where('aktif', '=', 'AKTIF')
             ->OrWhere('aktif', '=', 'PROGRAMER')
             ->filter(request(['q']))
