@@ -228,6 +228,6 @@ class KunjunganPoli extends Model
 
     public function diet()
     {
-        return $this->hasMany(DietTrans::class, 'rs1', 'rs1');
+        return $this->hasMany(DietTrans::class, 'noreg', 'rs1');
     }
 }
