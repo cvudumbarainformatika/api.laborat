@@ -24,6 +24,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
+use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
@@ -217,5 +218,10 @@ class KunjunganPoli extends Model
     public function pembacaanradiologi()
     {
         return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
+
+    public function fisio()
+    {
+        return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'rs1');
     }
 }

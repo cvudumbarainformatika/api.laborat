@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa;
 
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,8 @@ class DiagnosatransController extends Controller
 
     public function simpandiagnosa(Request $request)
     {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $kdpegsimrs = $user->kdpegsimrs;
         if ($request->has('id')) {
             $simpandiagnosa = Diagnosa::where(['id' => $request->id])->update(
                 [
@@ -31,7 +34,7 @@ class DiagnosatransController extends Controller
                     'rs4' => $request->tipediagnosa,
                     'rs6' => $request->keterangan ?? '',
                     'rs7' => $request->kasus,
-                    'rs8'  => auth()->user()->pegawai_id,
+                    'rs8'  => $kdpegsimrs,
                     'rs9' => $request->dtd ?? '',
                     'rs10' => '',
                     'rs12' => date('Y-m-d'),
@@ -47,7 +50,7 @@ class DiagnosatransController extends Controller
                     'rs4' => $request->tipediagnosa,
                     'rs6' => $request->keterangan ?? '',
                     'rs7' => $request->kasus,
-                    'rs8'  => auth()->user()->pegawai_id,
+                    'rs8'  => $kdpegsimrs,
                     'rs9' => $request->dtd ?? '',
                     'rs10' => '',
                     'rs12' => date('Y-m-d'),

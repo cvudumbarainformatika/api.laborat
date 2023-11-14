@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik_paru;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisikdetail;
@@ -20,6 +21,8 @@ class PemeriksaanfisikController extends Controller
     {
 
         // return $request->all();
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $kdpegsimrs = $user->kdpegsimrs;
 
         $noreg = $request->noreg;
         $norm = $request->norm;
@@ -37,10 +40,23 @@ class PemeriksaanfisikController extends Controller
                 'statuspsikologis' => $request->statuspsikologis,
                 'sosialekonomi' => $request->sosialekonomi,
                 'spiritual' => $request->spiritual,
-                'user'  => auth()->user()->pegawai_id,
+                'user'  => $kdpegsimrs,
                 'ruangan' => $request->spiritual,
                 'scorenyeri' => $request->skornyeri ?? 0,
                 'keteranganscorenyeri' => $request->keteranganskorenyeri ?? '',
+                'kesadaran' => $request->kesadaran ?? '',
+                'kesadarane' => $request->kesadarane ?? 0,
+                'kesadaranm' => $request->kesadaranm ?? 0,
+                'kesadaranv' => $request->kesadaranv ?? 0,
+                // Khusus Paru
+                'inspeksi' => $request->inspeksi,
+                'palpasi' => $request->palpasi,
+                'perkusidadakanan' => $request->perkusidadakanan,
+                'perkusidadakiri' => $request->perkusidadakiri,
+                'auskultasisuaradasar' => $request->auskultasisuaradasar,
+                'auskultasisuaratambahankanan' => $request->auskultasisuaratambahankanan,
+                'auskultasisuaratambahankiri' => $request->auskultasisuaratambahankiri,
+                'kddokter' => $request->kddokter ?? ''
             ]
         );
 
@@ -58,7 +74,7 @@ class PemeriksaanfisikController extends Controller
                     'tgl' => date('Y-m-d H:i:s'),
                     'nama' => $value['nama'],
                     'keterangan' => $value['ket'],
-                    'user'  => auth()->user()->pegawai_id,
+                    'user'  => $kdpegsimrs,
                 ]
             );
         };
@@ -77,6 +93,8 @@ class PemeriksaanfisikController extends Controller
                     'noreg' => $value['noreg'],
                     'norm' => $value['norm'],
                     'panjang' => $value['panjang'],
+                    'width' => $value['width'],
+                    'height' => $value['height'],
                     'penanda' => $value['penanda'],
                     'templategambar' => $value['templategambar'],
                     'templateindex' => $value['templateindex'],
@@ -85,7 +103,7 @@ class PemeriksaanfisikController extends Controller
                     'templateindex' => $value['templateindex'],
                     'x' => $value['x'],
                     'y' => $value['y'],
-                    'user'  => auth()->user()->pegawai_id,
+                    'user'  => $kdpegsimrs,
                 ]
             );
         };
@@ -108,7 +126,7 @@ class PemeriksaanfisikController extends Controller
                         'rs11' => $value['tos'] ?? '',
                         'rs12' => $value['fondosod'] ?? '',
                         'rs13' => $value['fondosos'] ?? '',
-                        'user' => auth()->user()->pegawai_id
+                        'user' => $kdpegsimrs
                     ]
                 );
             }
@@ -121,11 +139,11 @@ class PemeriksaanfisikController extends Controller
                         'noreg' => $noreg,
                         'norm' => $norm,
                         'tgl' => date('Y-m-d H:i:s'),
-                        'inspeksi' => $value['inspeksi'],
-                        'palpasi' => $value['palpasi'] ?? '',
-                        'perkusi' => $value['perkusi'] ?? '',
-                        'auskultasi' => $value['auskultasi'] ?? '',
-                        'user' => auth()->user()->pegawai_id
+                        // 'inspeksi' => $value['inspeksi'],
+                        // 'palpasi' => $value['palpasi'] ?? '',
+                        // 'perkusi' => $value['perkusi'] ?? '',
+                        // 'auskultasi' => $value['auskultasi'] ?? '',
+                        'user' => $kdpegsimrs
                     ]
                 );
             }
