@@ -213,4 +213,9 @@ class KunjunganPoli extends Model
     {
         return $this->hasOne(Eegtrans::class, 'rs1', 'rs1');
     }
+
+    public function pembacaanradiologi()
+    {
+        return $this->hasMany(PembacaanradiologiController::class, 'rs1', 'rs1');
+    }
 }

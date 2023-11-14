@@ -36,6 +36,7 @@ class ResumeController extends Controller
                 'eeg' => function ($eeg) {
                     $eeg->select('rs1', 'rs7 as tanggal', 'rs4 as klasifikasi', 'rs5 as impresi');
                 },
+                'pembacaanradiologi',
                 'apotekrajal' => function ($apotekrajal) {
                     $apotekrajal->select('rs90.rs1', 'rs32.rs2 as obat', 'rs90.rs8 as jumlah')
                         ->join('rs32', 'rs32.rs1', 'rs90.rs4');
