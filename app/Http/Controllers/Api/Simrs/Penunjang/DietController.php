@@ -26,7 +26,7 @@ class DietController extends Controller
                 'tgl' => date('Y-m-d H:i:s'),
                 'diet' => $request->diet,
                 'poli' => $request->kodepoli,
-                'users' => $user['kdpegsimrs'],
+                'users' => $user['kodesimrs'],
                 'assesmen' => $request->asessmen
             ]
         );
