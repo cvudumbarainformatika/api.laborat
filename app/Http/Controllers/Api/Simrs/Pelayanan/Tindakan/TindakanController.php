@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan;
 
 use App\Helpers\FormatingHelper;
+use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
@@ -69,6 +70,8 @@ class TindakanController extends Controller
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+
+        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
