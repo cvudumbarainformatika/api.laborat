@@ -153,7 +153,8 @@ class PoliController extends Controller
                     },
                     'antrian_ambil' => function ($o) {
                         $o->where('pelayanan_id', request('kdpoli'));
-                    }, 'diet' => function ($diet) {
+                    },
+                    'diet' => function ($diet) {
                         $diet->orderBy('id', 'DESC');
                     }
                 ])
@@ -280,6 +281,9 @@ class PoliController extends Controller
                     },
                     'antrian_ambil' => function ($o) {
                         $o->where('pelayanan_id', request('kdpoli'));
+                    },
+                    'diet' => function ($diet) {
+                        $diet->orderBy('id', 'DESC');
                     }
                 ])
                 ->orderby('rs17.rs3', 'DESC')
