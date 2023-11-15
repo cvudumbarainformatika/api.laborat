@@ -19,8 +19,6 @@ class EwseklaimController extends Controller
     public static function ewseklaimrajal_newclaim($noreg)
     {
         //$noreg = $noreg;
-        $diagnosa = self::caridiagnosa($noreg);
-        $tindakan = self::cariprocedure($noreg);
         $carirajal = KunjunganPoli::select('rs2', 'rs3', 'rs25')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
             ->where('rs1', '=', $noreg)
             ->where('rs14', 'Like', '%BPJS%')->get();
