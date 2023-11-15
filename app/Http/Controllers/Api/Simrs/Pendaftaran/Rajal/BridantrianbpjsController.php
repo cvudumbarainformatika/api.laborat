@@ -171,7 +171,7 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        if ($updatewaktuantrian) {
+        if ($updatewaktuantrian && (int)$x < 4) {
             $message = [
                 'kode' => $updatewaktuantrian,
                 'url' => 'antrean/updatewaktu',
