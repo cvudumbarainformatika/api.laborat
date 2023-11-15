@@ -65,6 +65,7 @@ Route::group([
 
     Route::get('/masterdiet', [DietController::class, 'masterdiet']);
     Route::post('/simpandiet', [DietController::class, 'simpandiet']);
+    Route::post('/hapusdiet', [DietController::class, 'hapusdiet']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });

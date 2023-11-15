@@ -22,7 +22,7 @@ class BridgingbpjsHelper
         } else if ($name === 'vclaim') {
             $service_name = 'vclaim-rest';
         } else if ($name === 'icare') {
-            $service_name = 'ihs';
+            $service_name = 'wsihs';
         } else {
             $service_name = 'vclaim-rest';
         }
