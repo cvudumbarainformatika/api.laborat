@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Penunjang;
+namespace App\Http\Controllers\Api\Simrs\Penunjang\Diet;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;

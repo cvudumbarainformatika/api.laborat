@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi\EdukasiController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\PemeriksaanRMKhusus\PemeriksaankhususMataController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
-use App\Http\Controllers\Api\Simrs\Penunjang\DietController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Diet\DietController;
 use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use App\Http\Controllers\Api\Simrs\Rajal\PoliController;
