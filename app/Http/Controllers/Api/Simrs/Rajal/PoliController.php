@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\Simrs\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -302,28 +304,45 @@ class PoliController extends Controller
 
     public function flagfinish(Request $request)
     {
-        $user = Pegawai::find(auth()->user()->pegawai_id);
-        if ($user->kdgroupnakes === 1) {
-            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '1';
-            $updatekunjungan->rs24 = '1';
-            $updatekunjungan->save();
-            return new JsonResponse(['message' => 'ok'], 200);
-        } else {
-            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+        $input = new Request([
+            'noreg' => $request->noreg
+        ]);
+        $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
+
+        if ($cek === 0 || $cek === '') {
+            $user = Pegawai::find(auth()->user()->pegawai_id);
+            $updatewaktu = BridantrianbpjsController::updateWaktu($input, 5);
+            if ($user->kdgroupnakes === 1) {
+                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+                $updatekunjungan->rs19 = '1';
+                $updatekunjungan->rs24 = '1';
+                $updatekunjungan->save();
+                return new JsonResponse(['message' => 'ok'], 200);
+            } else {
+                return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+            }
         }
     }
 
     public function terimapasien(Request $request)
     {
-        $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $flag = $cekx->rs19;
-        if ($flag === '') {
-            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '2';
-            $updatekunjungan->save();
-            return new JsonResponse(['message' => 'ok'], 200);
+        $input = new Request([
+            'noreg' => $request->noreg
+        ]);
+        $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 4)->count();
+
+        if ($cek === 0 || $cek === '') {
+            $updatewaktu = BridantrianbpjsController::updateWaktu($input, 4);
+            $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $flag = $cekx->rs19;
+            if ($flag === '') {
+                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+                $updatekunjungan->rs19 = '2';
+                $updatekunjungan->save();
+                return new JsonResponse(['message' => 'ok'], 200);
+            }
         }
+
         //  return new JsonResponse([''], 500);
     }
 
