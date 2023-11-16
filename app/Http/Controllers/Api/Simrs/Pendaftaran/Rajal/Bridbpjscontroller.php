@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
@@ -200,15 +201,16 @@ class Bridbpjscontroller extends Controller
         return $createsep;
     }
 
-    public function hapussep(Request $request)
+    public static function hapussep(Request $request)
     {
+        $user = FormatingHelper::session_user();
         $data = [
             "request" => [
                 "t_sep" => [
                     // "noSep" => "1327R0010723V006829",
                     // "noSep" => "1327R0010723V006801",
                     "noSep" => $request->noSep,
-                    "user" => '4'
+                    "user" => $user['kodesimrs']
                 ]
             ]
         ];

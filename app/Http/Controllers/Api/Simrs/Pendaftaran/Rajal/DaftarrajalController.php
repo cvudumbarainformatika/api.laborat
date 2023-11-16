@@ -660,6 +660,12 @@ class DaftarrajalController extends Controller
         if (!$hapuskarcis) {
             return new JsonResponse(['message' => 'Maaf Pasien Gagal Dihapus...!!!'], 500);
         }
-        return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+
+        if ($request->nosep === '' || $request->nosep === null) {
+            Bridbpjscontroller::hapussep($request);
+            return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+        } else {
+            return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+        }
     }
 }
