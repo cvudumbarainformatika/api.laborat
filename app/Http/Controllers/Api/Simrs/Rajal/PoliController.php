@@ -313,7 +313,7 @@ class PoliController extends Controller
             $user = Pegawai::find(auth()->user()->pegawai_id);
             $updatewaktu = BridantrianbpjsController::updateWaktu($input, 5);
 
-            if ($user->kdgroupnakes === 1) {
+            if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
                 $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
                 $updatekunjungan->rs19 = '1';
                 $updatekunjungan->rs24 = '1';
