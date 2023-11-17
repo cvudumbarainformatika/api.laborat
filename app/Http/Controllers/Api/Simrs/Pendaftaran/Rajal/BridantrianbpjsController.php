@@ -74,6 +74,7 @@ class BridantrianbpjsController extends Controller
                 "keterangan" => "Peserta harap 30 menit lebih awal guna pencatatan administrasi."
             ];
         $tgltobpjshttpres = DateHelper::getDateTime();
+
         $ambilantrian = BridgingbpjsHelper::post_url(
             'antrean',
             'antrean/add',
@@ -140,6 +141,8 @@ class BridantrianbpjsController extends Controller
             $kodebooking = $cari[0]->kodebooking;
         }
 
+        $tgltobpjshttpres = date('Y-m-d H:i:s');
+
         Bpjsrespontime::create(
             [
                 'kodebooking' => $kodebooking,
@@ -150,7 +153,6 @@ class BridantrianbpjsController extends Controller
                 'user_id' => $user_id
             ]
         );
-        $tgltobpjshttpres = date('Y-m-d H:i:s');
         $data = [
             "kodebooking" => $kodebooking,
             "taskid" => $x,
@@ -208,6 +210,7 @@ class BridantrianbpjsController extends Controller
                 }
             }
             $waktu = strtotime($waktu_ambil_tiket) * 1000;
+            $tgltobpjshttpres = DateHelper::getDateTime();
 
             Bpjsrespontime::create(
                 [
@@ -225,7 +228,7 @@ class BridantrianbpjsController extends Controller
                 "taskid" => $taskid,
                 'waktu' => $waktu
             ];
-            $tgltobpjshttpres = DateHelper::getDateTime();
+
             $updatewaktuantrian = BridgingbpjsHelper::post_url(
                 'antrean',
                 'antrean/updatewaktu',
@@ -278,6 +281,8 @@ class BridantrianbpjsController extends Controller
         }
 
 
+        $tgltobpjshttpres =  date('Y-m-d H:i:s');
+
         Bpjsrespontime::create(
             [
                 'kodebooking' => $kodebooking,
@@ -294,7 +299,6 @@ class BridantrianbpjsController extends Controller
             "taskid" => $taskid,
             'waktu' => $waktu
         ];
-        $tgltobpjshttpres =  date('Y-m-d H:i:s');
         $updatewaktuantrian = BridgingbpjsHelper::post_url(
             'antrean',
             'antrean/updatewaktu',
