@@ -76,7 +76,7 @@ class BridbpjsplanController extends Controller
                     'rs4' => $request->nosep,
                     'rs5' => $request->tglrujukan,
                     'rs6' => $request->ppkdirujuk,
-                    'rs7' => $request->ppkdirujukx,
+                    'rs7' => $request->namappkdirujuk,
                     'rs8' => $request->jenispelayanan,
                     'rs9' => $request->catatan,
                     'rs10' => $request->diagnosarujukan,
