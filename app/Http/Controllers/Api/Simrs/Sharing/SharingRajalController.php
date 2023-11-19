@@ -79,11 +79,13 @@ class SharingRajalController extends Controller
     public function updatesimpansharing(Request $request)
     {
         $cek = FormatingHelper::session_user();
-        $update = SharingTrans::where('rs1', $request->noreg)->first();
+        $update = SharingTrans::where('noreg', $request->noreg)->first();
         $update->flag = '1';
         $update->klaimBpjs = $request->klaimbpjs;
         $update->tglterima = date('Y-m-d h:i:s');
         $update->user = $cek['kodesimrs'];
         $update->save();
+
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 200);
     }
 }
