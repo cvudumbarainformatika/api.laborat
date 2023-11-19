@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Diet\DietController;
 use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use App\Http\Controllers\Api\Simrs\Rajal\PoliController;
+use App\Http\Controllers\Api\Simrs\Sharing\SharingRajalController;
+use App\Models\Simrs\Sharing\SharingTrans;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -66,6 +68,11 @@ Route::group([
     Route::get('/masterdiet', [DietController::class, 'masterdiet']);
     Route::post('/simpandiet', [DietController::class, 'simpandiet']);
     Route::post('/hapusdiet', [DietController::class, 'hapusdiet']);
+
+    Route::get('/dialogmaster', [SharingRajalController::class, 'dialogmaster']);
+    Route::post('/simpansharing', [SharingRajalController::class, 'simpansharing']);
+    Route::post('/updatesimpansharing', [SharingRajalController::class, 'updatesimpansharing']);
+    Route::get('/listpermintaansharing', [SharingRajalController::class, 'listpermintaansharing']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
