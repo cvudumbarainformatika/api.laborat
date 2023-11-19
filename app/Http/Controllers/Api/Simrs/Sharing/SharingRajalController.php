@@ -53,6 +53,7 @@ class SharingRajalController extends Controller
             'noreg',
             'norm',
             'tglEntry',
+            'kdRuang',
             'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
@@ -72,7 +73,7 @@ class SharingRajalController extends Controller
         )->leftjoin('rs15', 'rs15.rs1', '=', 'sharingRajal.norm') //pasien
             ->where('rs15.rs2', 'like', '%' . request('cari') . '%')
             ->where('flag', '')
-            ->get();
+            ->paginate(request('per_page'));
         return new JsonResponse($list);
     }
 
