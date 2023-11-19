@@ -158,6 +158,9 @@ class PoliController extends Controller
                     },
                     'diet' => function ($diet) {
                         $diet->orderBy('id', 'DESC');
+                    },
+                    'sharing' => function ($sharing) {
+                        $sharing->orderBy('id', 'DESC');
                     }
                 ])
                 ->orderby('rs17.rs3', 'ASC')
@@ -286,6 +289,9 @@ class PoliController extends Controller
                     },
                     'diet' => function ($diet) {
                         $diet->orderBy('id', 'DESC');
+                    },
+                    'sharing' => function ($sharing) {
+                        $sharing->orderBy('id', 'DESC');
                     }
                 ])
                 ->orderby('rs17.rs3', 'DESC')
