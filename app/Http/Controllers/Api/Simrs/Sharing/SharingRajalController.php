@@ -79,7 +79,7 @@ class SharingRajalController extends Controller
     public function updatesimpansharing(Request $request)
     {
         $cek = FormatingHelper::session_user();
-        $update = SharingTrans::where('noreg', $request->noreg)->first();
+        $update = SharingTrans::where('noreg', $request->noreg)->where('kdRuang', $request->kodepoli)->first();
         $update->flag = '1';
         $update->klaimBpjs = $request->klaimbpjs;
         $update->tglterima = date('Y-m-d h:i:s');
