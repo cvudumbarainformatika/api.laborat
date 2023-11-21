@@ -16,6 +16,14 @@ class MinmaxobatController extends Controller
 {
     public function simpan(Request $request)
     {
+        $pemilik = Mobatnew::where('kd_obat', $request->kd_obat)->first();
+
+        if ($pemilik->gudang === 'Gd-05010100' && $request->kd_ruang !== 'Gd-05010100') {
+            return new JsonResponse(['message' => 'Maaf tidak ada list obat di gudang ini'], 500);
+        } elseif ($pemilik->gudang === 'Gd-03010100' && $request->kd_ruang !== 'Gd-03010100') {
+            return new JsonResponse(['message' => 'Maaf tidak ada list obat di gudang ini'], 500);
+        }
+
         $simpan = Mminmaxobat::updateOrCreate(
             ['kd_obat' => $request->kd_obat, 'kd_ruang' => $request->kd_ruang],
             [
