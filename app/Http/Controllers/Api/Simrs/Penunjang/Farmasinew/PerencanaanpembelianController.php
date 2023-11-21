@@ -16,6 +16,13 @@ class PerencanaanpembelianController extends Controller
 {
     public function perencanaanpembelian()
     {
+        $xxx = FormatingHelper::session_user();
+        if ($xxx['kode_ruang'] === '') {
+            $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
+        } else {
+            $ruangan = ['', $xxx['kode_ruang']];
+        }
+
         $perencanaapembelianobat = Mobatnew::select(
             'kd_obat',
             'nama_obat',
@@ -35,7 +42,33 @@ class PerencanaanpembelianController extends Controller
                     )
                         ->whereIn(
                             'stokreal.kdruang',
-                            ['Gd-03010100', 'Gd-03010101']
+                            ['Gd-03010100', 'Gd-05010100']
+                        )
+                        ->groupBy('stokreal.kdobat');
+                },
+                'stokrealgudangfs' => function ($stokrealgudangfs) {
+                    $stokrealgudangfs->select(
+                        'stokreal.kdobat',
+                        DB::raw(
+                            'sum(stokreal.jumlah) as jumlah'
+                        )
+                    )
+                        ->where(
+                            'stokreal.kdruang',
+                            'Gd-03010100'
+                        )
+                        ->groupBy('stokreal.kdobat');
+                },
+                'stokrealgudangko' => function ($stokrealgudangko) {
+                    $stokrealgudangko->select(
+                        'stokreal.kdobat',
+                        DB::raw(
+                            'sum(stokreal.jumlah) as jumlah'
+                        )
+                    )
+                        ->where(
+                            'stokreal.kdruang',
+                            'Gd-05010100'
                         )
                         ->groupBy('stokreal.kdobat');
                 },
@@ -65,7 +98,9 @@ class PerencanaanpembelianController extends Controller
                         ->groupBy('kdobat');
                 }
             ]
-        )->get();
+        )->whereIn('gudang', $ruangan)
+            ->orderBy('kd_obat')
+            ->get();
 
         return new JsonResponse($perencanaapembelianobat);
     }
@@ -88,7 +123,8 @@ class PerencanaanpembelianController extends Controller
                 [
                     'no_rencbeliobat' => $norencanabeliobat,
                     'tgl' => date('Y-m-d'),
-                    'user' => auth()->user()->pegawai_id
+                    'user' => auth()->user()->pegawai_id,
+                    'kd_ruang' => $request->kd_ruang
                 ]
             );
 

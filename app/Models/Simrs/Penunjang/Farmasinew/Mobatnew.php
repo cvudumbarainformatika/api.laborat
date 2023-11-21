@@ -59,4 +59,14 @@ class Mobatnew extends Model
     {
         return $this->hasMany(RencanabeliR::class, 'kdobat', 'kd_obat');
     }
+
+    public function stokrealgudangko()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
+    }
+
+    public function stokrealgudangfs()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
+    }
 }
