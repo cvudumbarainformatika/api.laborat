@@ -48,6 +48,9 @@ class PemeriksaanfisikController extends Controller
                 'kesadarane' => $request->kesadarane ?? 0,
                 'kesadaranm' => $request->kesadaranm ?? 0,
                 'kesadaranv' => $request->kesadaranv ?? 0,
+                // baru
+                'statusneurologis' => $request->statusneurologis,
+                'muakuloskeletal' => $request->muakuloskeletal,
                 // Khusus Paru
                 'inspeksi' => $request->inspeksi,
                 'palpasi' => $request->palpasi,
