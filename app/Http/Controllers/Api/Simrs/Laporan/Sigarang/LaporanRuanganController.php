@@ -61,6 +61,13 @@ class LaporanRuanganController extends Controller
             ->get();
 
         $kode_ruang = request('kode_ruang') ?? false;
+        if ($kode_ruang) {
+            if ($kode_ruang === 'Gd-02010102') {
+                $minta = [];
+            } else {
+                $dist = [];
+            }
+        }
         $data = BarangRS::select(
             'kode',
             'nama',
@@ -123,6 +130,115 @@ class LaporanRuanganController extends Controller
             ->filter(request(['q']))
             ->when($kode_ruang, function ($b) {
                 $b->where('kode_depo', request('kode_ruang'));
+            })
+            ->whereIn('kode', $minta)
+            ->orWhereIn('kode', $dist)
+            ->withTrashed()
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
+    public function rekapPengeluaranDepo()
+    {
+        $range = [request('year') . '-01-01 00:00:00', request('year') . '-12-31 23:59:59'];
+
+        $minta = DetailPermintaanruangan::select('kode_rs')->distinct()
+            ->leftJoin('permintaanruangans', function ($p) {
+                $p->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
+            })
+            ->whereBetween('permintaanruangans.tanggal', $range)
+            ->whereIn('permintaanruangans.status', [7, 8])
+            ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
+            ->when(request('kode_ruang'), function ($q) {
+                $q->where('permintaanruangans.dari', request('kode_ruang'));
+            })
+            ->when(request('q'), function ($q) {
+                $anu = BarangRS::select('kode')->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')->get();
+                $q->whereIn('detail_permintaanruangans.kode_rs', $anu);
+            })
+            ->get();
+        $dist = DetailDistribusiLangsung::select('kode_rs')->distinct()
+            ->leftJoin('distribusi_langsungs', function ($p) {
+                $p->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
+            })
+            ->when(request('q'), function ($q) {
+                $anu = BarangRS::select('kode')->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')->get();
+                $q->whereIn('detail_distribusi_langsungs.kode_rs', $anu);
+            })
+            ->whereBetween('distribusi_langsungs.tanggal', $range)
+            ->where('detail_distribusi_langsungs.jumlah', '>', 0)
+            ->get();
+
+        $kode_ruang = request('kode_ruang') ?? false;
+        if ($kode_ruang) {
+            if ($kode_ruang === 'Gd-02010102') {
+                $minta = [];
+            } else {
+                $dist = [];
+            }
+        }
+        $data = BarangRS::select(
+            'kode',
+            'nama',
+            'kode_satuan',
+            'kode_depo',
+        )
+            ->with([
+                'satuan:kode,nama',
+                'detailPermintaanruangan' => function ($mi) use ($minta, $range) {
+                    $mi->select([
+                        'detail_permintaanruangans.no_penerimaan',
+                        'detail_permintaanruangans.kode_rs',
+                        'permintaanruangans.tanggal',
+                        'ruangs.uraian as tujuan',
+                        DB::raw('ROUND(sum(detail_permintaanruangans.jumlah),2) as jumlah'),
+                    ])->leftJoin('permintaanruangans', function ($b) {
+                        $b->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
+                    })->leftJoin('ruangs', function ($p) {
+                        $p->on('ruangs.kode', '=', 'detail_permintaanruangans.tujuan');
+                    })->where(function ($q) use ($minta, $range) {
+                        $q->whereBetween('permintaanruangans.tanggal', $range)
+                            ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
+                            ->whereIn('detail_permintaanruangans.kode_rs', $minta);
+                    })
+                        ->groupBy(
+                            'permintaanruangans.tanggal',
+                            'detail_permintaanruangans.tujuan',
+                            'detail_permintaanruangans.kode_rs',
+                        );
+                },
+                'detailDistribusiLangsung' => function ($la) use ($dist, $range) {
+                    $la->select([
+                        'distribusi_langsungs.tanggal',
+                        'detail_distribusi_langsungs.kode_rs',
+                        'detail_distribusi_langsungs.no_penerimaan',
+                        'ruangs.uraian as tujuan',
+                        DB::raw('ROUND(sum(detail_distribusi_langsungs.jumlah),2) as jumlah'),
+                    ])
+                        ->leftJoin('distribusi_langsungs', function ($b) {
+                            $b->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
+                        })
+                        ->leftJoin('ruangs', function ($p) {
+                            $p->on('ruangs.kode', '=', 'distribusi_langsungs.ruang_tujuan');
+                        })
+
+                        ->where(function ($q) use ($dist, $range) {
+                            $q->whereBetween('distribusi_langsungs.tanggal', $range)
+                                ->whereIn('detail_distribusi_langsungs.kode_rs', $dist)
+                                ->where('detail_distribusi_langsungs.jumlah', '>', 0);
+                        })
+                        ->groupBy(
+                            'distribusi_langsungs.tanggal',
+                            'distribusi_langsungs.ruang_tujuan',
+                            'detail_distribusi_langsungs.kode_rs',
+                        );
+                }
+            ])
+            ->filter(request(['q']))
+            ->when($kode_ruang, function ($b) {
+                $b->where('barang_r_s.kode_depo', request('kode_ruang'));
             })
             ->whereIn('kode', $minta)
             ->orWhereIn('kode', $dist)

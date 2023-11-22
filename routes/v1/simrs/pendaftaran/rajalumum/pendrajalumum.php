@@ -26,4 +26,6 @@ Route::group([
     Route::get('/listkonsulantarpoli', [DaftarrajalController::class, 'listkonsulantarpoli']);
 
     Route::get('/umum/kunjunganpasienumum', [DaftarrajalController::class, 'daftarkunjunganpasienumum']);
+
+    Route::post('/hapuspasien', [DaftarrajalController::class, 'hapuspasien']);
 });

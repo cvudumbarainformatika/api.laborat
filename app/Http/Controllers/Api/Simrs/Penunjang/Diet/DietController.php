@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Penunjang;
+namespace App\Http\Controllers\Api\Simrs\Penunjang\Diet;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
@@ -34,5 +34,15 @@ class DietController extends Controller
             return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan...!!!'], 500);
         }
         return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpan], 200);
+    }
+
+    public function hapusdiet(Request $request)
+    {
+        $cari = DietTrans::find($request->id);
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 }

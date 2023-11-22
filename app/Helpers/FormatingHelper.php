@@ -178,12 +178,14 @@ class FormatingHelper
         $kdruang = $user->kdruangansim;
         $kdgroupnakes = $user->kdgroupnakes;
         $kddpjp = $user->kddpjp;
+        $kode_ruang = $user->kode_ruang;
         return (
             [
                 'kodesimrs' => $kdpegsimrs,
                 'kdruang' => $kdruang,
                 'kdgroupnakes' => $kdgroupnakes,
-                'kddpjp' => $kddpjp
+                'kddpjp' => $kddpjp,
+                'kode_ruang' => $kode_ruang,
             ]);
     }
 

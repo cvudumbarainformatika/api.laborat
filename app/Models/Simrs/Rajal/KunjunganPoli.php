@@ -35,6 +35,7 @@ use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rekom\Rekomdpjp;
+use App\Models\Simrs\Sharing\SharingTrans;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -229,5 +230,9 @@ class KunjunganPoli extends Model
     public function diet()
     {
         return $this->hasMany(DietTrans::class, 'noreg', 'rs1');
+    }
+    public function sharing()
+    {
+        return $this->hasMany(SharingTrans::class, 'noreg', 'rs1');
     }
 }

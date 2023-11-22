@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Simrs\Master\BridgingbpjsController;
 use App\Http\Controllers\Api\Simrs\Master\listsepController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\DaftarrajalController;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Daftarrajalumum;
 use Illuminate\Support\Facades\Route;
 
@@ -36,4 +37,5 @@ Route::group([
     Route::post('/pengajuansep', [Bridbpjscontroller::class, 'pengajuansep']);
 
     Route::post('/re-createsep', [Bridbpjscontroller::class, 'reCreateSep']); // re-create sep
+
 });

@@ -86,7 +86,7 @@ class ObatnewController extends Controller
                     ->orWhere('kandungan', 'Like', '%' . request('q') . '%');
             })->orderBy('id', 'desc')
             ->where('flag', '')
-            ->get();
+            ->paginate(request('per_page'));
 
         return new JsonResponse($list);
     }

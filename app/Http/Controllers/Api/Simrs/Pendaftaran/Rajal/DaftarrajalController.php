@@ -642,4 +642,36 @@ class DaftarrajalController extends Controller
             ->get();
         return new JsonResponse($listkonsulantarpoli);
     }
+
+    public function hapuspasien(Request $request)
+    {
+        $cek = KunjunganPoli::where('rs1', $request->noreg)->where('rs19', '!=', '')->count();
+
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Maaf Pasien Ini Sudah Menerima Pelayanan di Poli...!!!'], 500);
+        }
+
+        $hapuskunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->first();
+        if ($hapuskunjunganpoli != null) {
+            $hapuskunjunganpoli->delete();
+            if (!$hapuskunjunganpoli) {
+                return new JsonResponse(['message' => 'Maaf Pasien Gagal Dihapus...!!!'], 500);
+            }
+        }
+
+        $hapuskarcis = Karcispoli::where('rs1', $request->noreg)->first();
+        if ($hapuskarcis != null) {
+            $hapuskarcis->delete();
+            if (!$hapuskarcis) {
+                return new JsonResponse(['message' => 'Maaf Pasien Gagal Dihapus...!!!'], 500);
+            }
+        }
+
+        if ($request->nosep != '' || $request->nosep != null) {
+            Bridbpjscontroller::hapussep($request);
+            return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+        } else {
+            return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+        }
+    }
 }
