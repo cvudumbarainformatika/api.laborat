@@ -112,6 +112,7 @@ class PoliController extends Controller
                     'anamnesis', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                     'gambars',
                     'fisio',
+                    'diagnosakeperawatan',
                     'laborats' => function ($t) {
                         $t->with('details.pemeriksaanlab')
                             ->orderBy('id', 'DESC');

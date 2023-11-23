@@ -34,6 +34,7 @@ Route::group([
     Route::post('/simpandiagnosa', [DiagnosatransController::class, 'simpandiagnosa']);
     Route::get('/listdiagnosa', [DiagnosatransController::class, 'listdiagnosa']);
     Route::get('/diagnosakeperawatan', [DiagnosaKeperawatanController::class, 'diagnosakeperawatan']);
+    Route::post('/simpandiagnosakeperawatan', [DiagnosaKeperawatanController::class, 'simpandiagnosakeperawatan']);
 
     Route::get('/dialogtindakanpoli', [TindakanController::class, 'dialogtindakanpoli']);
     Route::get('/dialogoperasi', [TindakanController::class, 'dialogoperasi']);
