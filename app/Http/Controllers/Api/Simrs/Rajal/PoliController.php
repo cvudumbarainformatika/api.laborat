@@ -345,26 +345,25 @@ class PoliController extends Controller
         $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 4)->count();
 
         if ($cek === 0 || $cek === '') {
-            $updatewaktu = BridantrianbpjsController::updateWaktu($input, 4);
-            if (!$updatewaktu || $updatewaktu === '' || $updatewaktu === null) {
-                $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
-                $flag = $cekx->rs19;
-                if ($flag === '') {
-                    $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-                    $updatekunjungan->rs19 = '2';
-                    $updatekunjungan->save();
-                    return new JsonResponse(['message' => 'ok'], 200);
-                }
-            } else {
-                $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
-                $flag = $cekx->rs19;
-                if ($flag === '') {
-                    $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-                    $updatekunjungan->rs19 = '2';
-                    $updatekunjungan->save();
-                    return new JsonResponse(['message' => 'ok'], 200);
-                }
-            }
+            BridantrianbpjsController::updateWaktu($input, 4);
+            // return $updatewaktu;
+            // KunjunganPoli::where('rs1', $request->noreg)->first();
+            // $flag = $cekx->rs19;
+            // if ($flag === '') {
+            //     $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            //     $updatekunjungan->rs19 = '2';
+            //     $updatekunjungan->save();
+            //     return new JsonResponse(['message' => 'ok'], 200);
+            // }
+        }
+
+        $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $flag = $cekx->rs19;
+        if ($flag === '') {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '2';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
         }
 
         //  return new JsonResponse([''], 500);
