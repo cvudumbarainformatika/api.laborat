@@ -46,6 +46,7 @@ Route::get('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
 Route::get('/autogen/set-min-max', [AutogenController::class, 'setMinMax']);
 Route::get('/autogen/synct', [JadwalController::class, 'sycncroneJadwal']);
 Route::get('/autogen/http-res-bpjs', [AutogenController::class, 'httpRespBpjs']);
+Route::get('/autogen/hapus-scontrol', [AutogenController::class, 'hapusSKontrol']);
 
 Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);

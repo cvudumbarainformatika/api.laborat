@@ -521,6 +521,42 @@ class AutogenController extends Controller
         return response()->json(['message' => 'success'], 201);
     }
 
+    public function hapusSKontrol()
+    {
+        $surat = request('nosurat');
+        $noreg = request('noreg');
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "request" => [
+                "t_suratkontrol" => [
+                    "noSuratKontrol" => request('nosurat'),
+                    "user" => "xxx"
+                ]
+            ]
+        ];
+        $insernokontrol = BridgingbpjsHelper::delete_url(
+            'vclaim',
+            'RencanaKontrol/Delete',
+            $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $noreg ?? '',
+                'request' => $data,
+                'respon' => $insernokontrol,
+                'url' => '/RencanaKontrol/Delete',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+        return new JsonResponse([
+            'no surat' => $surat,
+            'noreg' => $noreg,
+            'req' => $data,
+            'res bpjs' => $insernokontrol
+        ]);
+    }
     public function httpRespBpjs()
     {
         $data = Bpjs_http_respon::where('noreg', request('noreg'))
