@@ -674,4 +674,29 @@ class DaftarrajalController extends Controller
             return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
         }
     }
+
+    public function simpankonsul(Request $request)
+    {
+        $simpan = $simpankunjunganpoli = KunjunganPoli::create([
+            'rs1' => $request->noreg,
+            'rs2' => $request->norm,
+            'rs3' => $request->tglmasuk,
+            'rs4' => $request->noreg,
+            'rs6' => $request->asalrujukan,
+            'rs8' => $request->kodepoli,
+            //'rs9' => $request->dpjp,
+            'rs10' => 0,
+            'rs11' => '',
+            'rs12' => 0,
+            'rs13' => 0,
+            'rs14' => $request->kodesistembayar,
+            'rs15' => $request->karcis,
+            'rs18' => auth()->user()->pegawai_id,
+            'rs20' => 'Pendaftaran',
+
+        ]);
+        if (!$simpankunjunganpoli) {
+            return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
+        }
+    }
 }
