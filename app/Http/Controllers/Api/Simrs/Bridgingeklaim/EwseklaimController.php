@@ -292,7 +292,7 @@ class EwseklaimController extends Controller
                     }
                 }
             }
-            KlaimrajalEws::where(['noreg' => $noreg])
+            GroupingRajalEws::where(['noreg' => $noreg])
                 ->update(
                     [
                         'cbg_code' => $cbg_code,
