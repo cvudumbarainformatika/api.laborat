@@ -24,11 +24,7 @@ class DiagnosaKeperawatanController extends Controller
     public function simpandiagnosakeperawatan(Request $request)
     {
         $details = collect($request->intervensi);
-        $diagnosa = collect($request->diagnosa);
 
-        return $details->search(function ($item, $key) {
-            return $item['diagnosakeperawatan_kode'] === '5';
-        });
         return $details;
         try {
             DB::beginTransaction();
