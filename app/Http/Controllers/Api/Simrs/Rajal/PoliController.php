@@ -73,6 +73,7 @@ class PoliController extends Controller
                 'rs222.kodedokterdpjp as kodedokterdpjp',
                 'rs222.dokterdpjp as dokterdpjp',
                 'rs222.kdunit as kdunit',
+                'memodiagnosadokter.diagnosa as memodiagnosa',
                 'rs17.rs19 as status'
             )
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
@@ -81,6 +82,7 @@ class PoliController extends Controller
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
                 ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
                 ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
+                ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
                 ->whereBetween('rs17.rs3', [$tgl, $tglx])
                 // ->where('rs17.rs8', $user->kdruangansim ?? '')
                 ->where('rs19.rs4', '=', 'Poliklinik')
@@ -207,6 +209,7 @@ class PoliController extends Controller
                 'rs222.kodedokterdpjp as kodedokterdpjp',
                 'rs222.dokterdpjp as dokterdpjp',
                 'rs222.kdunit as kdunit',
+                'memodiagnosadokter.diagnosa as memodiagnosa',
                 'rs17.rs19 as status'
             )
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
@@ -215,6 +218,7 @@ class PoliController extends Controller
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
                 ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
                 ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
+                ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
                 ->whereBetween('rs17.rs3', [$tgl, $tglx])
                 // ->where('rs17.rs8', $user->kdruangansim ?? '')
                 ->where('rs19.rs4', '=', 'Poliklinik')
