@@ -346,7 +346,7 @@ class PoliController extends Controller
 
         if ($cek === 0 || $cek === '') {
             $updatewaktu = BridantrianbpjsController::updateWaktu($input, 4);
-            // return $updatewaktu;
+            return $updatewaktu;
             $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
             $flag = $cekx->rs19;
             if ($flag === '') {
