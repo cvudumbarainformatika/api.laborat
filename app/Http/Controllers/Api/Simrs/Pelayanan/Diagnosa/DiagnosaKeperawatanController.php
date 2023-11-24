@@ -23,9 +23,7 @@ class DiagnosaKeperawatanController extends Controller
 
     public function simpandiagnosakeperawatan(Request $request)
     {
-        $details = collect($request->diagnosa);
 
-        return $details;
         try {
             DB::beginTransaction();
 
