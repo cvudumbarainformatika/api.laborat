@@ -54,7 +54,7 @@ class DiagnosaKeperawatanController extends Controller
             return new JsonResponse(
                 [
                     'message' => 'Data Berhasil disimpan',
-                    'result' => $success
+                    'result' => $success->load(['intervensi.masterintervensi'])
                 ],
                 200
             );
