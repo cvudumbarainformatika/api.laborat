@@ -322,18 +322,17 @@ class PoliController extends Controller
         $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
 
         if ($cek === 0 || $cek === '') {
-            $user = Pegawai::find(auth()->user()->pegawai_id);
-            $updatewaktu = BridantrianbpjsController::updateWaktu($input, 5);
-
-            if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
-                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-                $updatekunjungan->rs19 = '1';
-                $updatekunjungan->rs24 = '1';
-                $updatekunjungan->save();
-                return new JsonResponse(['message' => 'ok'], 200);
-            } else {
-                return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
-            }
+            BridantrianbpjsController::updateWaktu($input, 5);
+        }
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '1';
+            $updatekunjungan->rs24 = '1';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        } else {
+            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
     }
 
