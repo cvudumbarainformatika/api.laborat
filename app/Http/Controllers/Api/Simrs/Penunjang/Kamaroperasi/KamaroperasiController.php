@@ -28,12 +28,12 @@ class KamaroperasiController extends Controller
                 // ],
                 // [
                 'rs4' => $request->permintaan,
-                'rs8' => $userid['kodesimrs'],
+                'rs8' => $request->kodedokter,
                 'rs9' => '1',
                 'rs10' => $request->kodepoli,
                 'rs11' => $userid['kodesimrs'],
                 'rs13' => $request->kodepoli,
-                'rs14' => $userid['kodesimrs']
+                'rs14' => $request->kodesistembayar
             ]
         );
 
