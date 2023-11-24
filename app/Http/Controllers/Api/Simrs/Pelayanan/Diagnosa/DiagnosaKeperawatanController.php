@@ -79,11 +79,7 @@ class DiagnosaKeperawatanController extends Controller
 
             Intervensikeperawatan::where('diagnosakeperawatan_kode', $target->id)->delete();
 
-            // if (!$rel) {
-            //     return new JsonResponse(['message' => 'Data Gagal dihapus...!!!'], 500);
-            // }
-
-            $target->delete;
+            $target->delete();
             DB::commit();
             return new JsonResponse(
                 [
