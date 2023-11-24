@@ -346,14 +346,15 @@ class PoliController extends Controller
 
         if ($cek === 0 || $cek === '') {
             $updatewaktu = BridantrianbpjsController::updateWaktu($input, 4);
-            return $updatewaktu;
-            $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $flag = $cekx->rs19;
-            if ($flag === '') {
-                $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-                $updatekunjungan->rs19 = '2';
-                $updatekunjungan->save();
-                return new JsonResponse(['message' => 'ok'], 200);
+            if (!$updatewaktu || $updatewaktu === '' || $updatewaktu === null) {
+                $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
+                $flag = $cekx->rs19;
+                if ($flag === '') {
+                    $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+                    $updatekunjungan->rs19 = '2';
+                    $updatekunjungan->save();
+                    return new JsonResponse(['message' => 'ok'], 200);
+                }
             }
         }
 
