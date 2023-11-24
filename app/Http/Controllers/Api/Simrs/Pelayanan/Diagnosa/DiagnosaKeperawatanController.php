@@ -63,4 +63,37 @@ class DiagnosaKeperawatanController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e], 500);
         }
     }
+
+    public function deletediagnosakeperawatan(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $id = $request->id;
+
+            $target = Diagnosakeperawatan::find($id);
+
+            if (!$target) {
+                return new JsonResponse(['message' => 'Data tidak ditemukan'], 500);
+            }
+
+            Intervensikeperawatan::where('diagnosakeperawatan_kode', $target->id)->delete();
+
+            // if (!$rel) {
+            //     return new JsonResponse(['message' => 'Data Gagal dihapus...!!!'], 500);
+            // }
+
+            $target->delete;
+            DB::commit();
+            return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil dihapus'
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            DB::rollback();
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e], 500);
+        }
+    }
 }

@@ -14,6 +14,6 @@ class Diagnosakeperawatan extends Model
 
     public function intervensi()
     {
-        return $this->hasMany(Intervensikeperawatan::class, 'diagnosakeperawatan_kode', 'kode');
+        return $this->hasMany(Intervensikeperawatan::class, 'diagnosakeperawatan_kode', 'id');
     }
 }
