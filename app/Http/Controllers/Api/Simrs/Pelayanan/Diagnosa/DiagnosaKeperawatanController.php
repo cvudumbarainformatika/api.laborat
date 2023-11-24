@@ -23,13 +23,7 @@ class DiagnosaKeperawatanController extends Controller
 
     public function simpandiagnosakeperawatan(Request $request)
     {
-        $details = collect($request->intervensi);
-        $diagnosa = collect($request->diagnosa);
 
-        return $details->search(function ($item, $key) {
-            return $item['diagnosakeperawatan_kode'] === '5';
-        });
-        return $details;
         try {
             DB::beginTransaction();
 
@@ -43,17 +37,15 @@ class DiagnosaKeperawatanController extends Controller
                         'nama' => $value['nama'],
                     ]
                 );
+
+                foreach ($value['details'] as $key => $det) {
+                    Intervensikeperawatan::create([
+                        'diagnosakeperawatan_kode' => $diagnosakeperawatan->id,
+                        'intervensi_id' => $det['intervensi_id']
+                    ]);
+                }
                 array_push($thumb, $diagnosakeperawatan->id);
             }
-
-            // foreach ($request->intervensi as $key => $value) {
-            //     Intervensikeperawatan::create(
-            //         [
-            //             'diagnosakeperawatan_kode' => $value['diagnosakeperawatan_kode'],
-            //             'intervensi_id' => $value['intervensi_id'],
-            //         ]
-            //     );
-            // }
 
             DB::commit();
 
@@ -87,11 +79,7 @@ class DiagnosaKeperawatanController extends Controller
 
             Intervensikeperawatan::where('diagnosakeperawatan_kode', $target->id)->delete();
 
-            // if (!$rel) {
-            //     return new JsonResponse(['message' => 'Data Gagal dihapus...!!!'], 500);
-            // }
-
-            $target->delete;
+            $target->delete();
             DB::commit();
             return new JsonResponse(
                 [
