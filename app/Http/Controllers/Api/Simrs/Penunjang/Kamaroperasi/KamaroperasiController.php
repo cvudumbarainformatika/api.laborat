@@ -19,6 +19,7 @@ class KamaroperasiController extends Controller
         $wew = $x[0]->rs14;
         $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-RJ');
 
+        $userid = FormatingHelper::session_user();
         $requestoperasi = PermintaanOperasi::create(
             [
                 'rs1' => $request->noreg,
@@ -27,12 +28,12 @@ class KamaroperasiController extends Controller
                 // ],
                 // [
                 'rs4' => $request->permintaan,
-                'rs8' => auth()->user()->pegawai_id,
+                'rs8' => $userid['kodesimrs'],
                 'rs9' => '1',
                 'rs10' => $request->kodepoli,
-                'rs11' => auth()->user()->pegawai_id,
+                'rs11' => $userid['kodesimrs'],
                 'rs13' => $request->kodepoli,
-                'rs14' => auth()->user()->pegawai_id
+                'rs14' => $userid['kodesimrs']
             ]
         );
 
