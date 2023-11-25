@@ -55,7 +55,7 @@ class RadiologimetaController extends Controller
                 'rs9' => '1',
                 'rs10' => $request->kodepoli,
                 'rs11' => $userid['kodesimrs'],
-                'rs13' => $request->kd_ruang,
+                'rs13' => $request->kodepoli,
                 'rs14' => $request->kodesistembayar, //$request->kd_akun
                 'rs15' => $request->tpemeriksaan,
                 'cito' => $request->cito === 'Iya' ? 'Cito' : '',
