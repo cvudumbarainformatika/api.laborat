@@ -56,6 +56,7 @@ class FisioterapiController extends Controller
     public function getnota()
     {
         $nota = Fisioterapipermintaan::select('rs2 as nota')->where('rs1', request('noreg'))
+            ->where('rs2', '!=', '')
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
         return new JsonResponse($nota);
