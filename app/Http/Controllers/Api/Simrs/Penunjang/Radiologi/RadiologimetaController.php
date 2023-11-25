@@ -39,6 +39,7 @@ class RadiologimetaController extends Controller
         $wew = $x[0]->rs41;
         $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
 
+        $userid = FormatingHelper::session_user();
         $simpanpermintaanradiologi = Transpermintaanradiologi::create(
             // [
             //     'rs1' => $request->noreg,
@@ -50,12 +51,12 @@ class RadiologimetaController extends Controller
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->permintaan,
                 'rs7' => $request->keterangan,
-                'rs8' => auth()->user()->pegawai_id, //$request->kodedokter
+                'rs8' => $request->kodedokter, //$request->kodedokter
                 'rs9' => '1',
                 'rs10' => $request->kodepoli,
-                'rs11' => auth()->user()->pegawai_id,
-                'rs13' => $request->kd_ruang,
-                'rs14' => auth()->user()->pegawai_id, //$request->kd_akun
+                'rs11' => $userid['kodesimrs'],
+                'rs13' => $request->kodepoli,
+                'rs14' => $request->kodesistembayar, //$request->kd_akun
                 'rs15' => $request->tpemeriksaan,
                 'cito' => $request->cito === 'Iya' ? 'Cito' : '',
                 'jenis_pemeriksaan' => '',

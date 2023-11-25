@@ -27,6 +27,7 @@ class LainController extends Controller
         $wew = $x[0]->rs48;
         $notaP = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAI');
 
+        $userid = FormatingHelper::session_user();
         $simpan = Lain::create(
             // ['rs2' => $notaP],
             [
@@ -38,7 +39,7 @@ class LainController extends Controller
                 'rs8' => $request->kodedokter, //kddokter
                 'rs9' => 1,
                 'rs10' => $request->kodepoli,
-                'rs11' => auth()->user()->pegawai_id,
+                'rs11' => $userid['kodesimrs'],
                 'rs13' => $request->kodepenunjang,
                 'rs14' => $request->koderuang ?? '',
                 'rs15' => $request->kodesistembayar ?? '',

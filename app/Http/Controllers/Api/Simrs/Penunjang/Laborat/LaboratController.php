@@ -64,6 +64,7 @@ class LaboratController extends Controller
         $wew = $x[0]->rs28;
         $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'J-LAB');
 
+        $userid = FormatingHelper::session_user();
         $simpanpermintaanlaborat = LaboratMeta::create(
             [
 
@@ -88,9 +89,9 @@ class LaboratController extends Controller
                 'waktu_fiksasi_spesimen' => date('Y-m-d H:i:s'),
                 'cairan_fiksasi' => $request->cairan_fiksasi,
                 'volume_cairan_fiksasi' => $request->volume_cairan_fiksasi,
-                'petugas_pengambil_spesimen' => auth()->user()->pegawai_id,
-                'petugas_penerima_spesimen' => auth()->user()->pegawai_id,
-                'petugas_penganalisa' => auth()->user()->pegawai_id,
+                'petugas_pengambil_spesimen' => $userid['kodesimrs'],
+                'petugas_penerima_spesimen' => $userid['kodesimrs'],
+                'petugas_penganalisa' => $userid['kodesimrs'],
             ]
         );
 
@@ -112,8 +113,8 @@ class LaboratController extends Controller
                     'rs5' => $request->jumlah,
                     'rs6' => $request->biaya_sarana,
                     'rs7' => $request->biaya_sarana,
-                    'rs8' => auth()->user()->pegawai_id,
-                    'rs9' => auth()->user()->pegawai_id,
+                    'rs8' => $request->kodedokter,
+                    'rs9' => $userid['kodesimrs'],
                     'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
                     'rs13' => $request->biaya_layanan,
                     'rs14' => $request->biaya_layanan,
