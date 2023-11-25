@@ -39,7 +39,7 @@ class TindakanController extends Controller
         $kdpegsimrs = $wew['kodesimrs'];
         $simpantindakan = Tindakan::firstOrNew(
             [
-                'rs8' => $kdpegsimrs,
+                'rs8' => $request->kodedokter,
                 'rs2' => $request->nota ?? $notatindakan,
                 'rs1' => $request->noreg,
                 'rs4' => $request->kdtindakan
