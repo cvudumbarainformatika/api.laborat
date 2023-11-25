@@ -163,6 +163,7 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
 
+
         /*
          * Package Service Providers...
          */
@@ -187,6 +188,7 @@ return [
         * Excel import / export
         */
         Maatwebsite\Excel\ExcelServiceProvider::class,
+        Mavinoo\Batch\BatchServiceProvider::class,
 
     ],
 
@@ -249,6 +251,7 @@ return [
         'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
 
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'Batch' => Mavinoo\Batch\BatchFacade::class,
 
     ],
 
