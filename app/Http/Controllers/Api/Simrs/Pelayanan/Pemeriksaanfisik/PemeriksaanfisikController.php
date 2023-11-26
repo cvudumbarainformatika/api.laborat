@@ -80,6 +80,8 @@ class PemeriksaanfisikController extends Controller
             return new JsonResponse(['message' => 'not ok'], 500);
         }
 
+
+
         $data = $request->details;
         $params = [];
         $idDet = [];
@@ -121,6 +123,7 @@ class PemeriksaanfisikController extends Controller
         // }
         Pemeriksaanfisiksubdetail::whereIn('id', $idDet)->delete();
         Pemeriksaanfisiksubdetail::insert($params);
+        Pemeriksaanfisiksubdetail::whereIn('id', $request->deleteDetails)->delete();
 
         $matas = [];
 
