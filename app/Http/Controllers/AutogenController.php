@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangControll
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
+use App\Http\Controllers\Api\Simrs\Kasir\DetailbillingbynoregController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
 use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
@@ -2550,11 +2551,11 @@ class AutogenController extends Controller
         //     'data' => $collection->only('data'),
         //     'meta' => $collection->except('data'),
         // ], 200);
-        $tanggalPulang = '2023-09-25'; // yyyy-mm-dd
-        $jenisPelayanan = '2'; //Jenis Pelayanan (1. Inap 2. Jalan)
-        $status = '3'; //Status Klaim (1. Proses Verifikasi 2. Pending Verifikasi 3. Klaim)
-        $data = BridgingbpjsHelper::get_url('vclaim', '/Monitoring/Klaim/Tanggal/' . $tanggalPulang . '/JnsPelayanan/' . $jenisPelayanan . '/Status/' . $status);
-
+        // $tanggalPulang = '2023-09-25'; // yyyy-mm-dd
+        // $jenisPelayanan = '2'; //Jenis Pelayanan (1. Inap 2. Jalan)
+        // $status = '3'; //Status Klaim (1. Proses Verifikasi 2. Pending Verifikasi 3. Klaim)
+        // $data = BridgingbpjsHelper::get_url('vclaim', '/Monitoring/Klaim/Tanggal/' . $tanggalPulang . '/JnsPelayanan/' . $jenisPelayanan . '/Status/' . $status);
+        $data = DetailbillingbynoregController::konsulantarpoli('89502/11/2023/J');
         return new JsonResponse($data);
     }
 

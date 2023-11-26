@@ -64,7 +64,7 @@ class BillingbynoregController extends Controller
                 'pelayananrm' => $pelayananrm,
                 'kartuidentitas' => $kartuidentitas,
                 'poliklinik' => $poliklinik,
-                'konsulantarpoli' => isset($konsulantarpoli[0]->subtotal) ? $konsulantarpoli[0]->subtotal : 0,
+                'konsulantarpoli' => isset($konsulantarpoli) ? $konsulantarpoli : 0,
                 'tindakan' => isset($tindakanrinci) ?  $tindakanrinci : '',
                 //        'visite' => isset($visite) ?  $visite : 0,
                 'laborat' => isset($laborat) ?  $laborat : 0,
