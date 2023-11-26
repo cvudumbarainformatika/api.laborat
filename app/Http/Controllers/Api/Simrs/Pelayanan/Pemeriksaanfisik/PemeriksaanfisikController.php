@@ -170,11 +170,11 @@ class PemeriksaanfisikController extends Controller
                 Polimata::insert($matas);
                 // Polimata::whereIn('id', $deletes)->delete();
             });
-
-            // if (!empty($matas)) {
-            //     $index = 'id';
-            //     Batch::update(new Polimata, $matas, $index);
-            // }
+        } else {
+            $idpemeriksaan = $simpanperiksaan->id;
+            DB::transaction(function () use ($idpemeriksaan) {
+                Polimata::where('rs236_id', $idpemeriksaan)->delete();
+            });
         }
 
 
