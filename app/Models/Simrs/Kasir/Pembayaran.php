@@ -16,9 +16,8 @@ class Pembayaran extends Model
     {
         $harga1 = $this->rs7;
         $harga2 = $this->rs11;
-        $subtotal = $harga1+$harga2;
-       // $data->select($subtotal)->where('rs3','=','RM#')->get();
+        $subtotal = $harga1 + (int)$harga2;
+        // $data->select($subtotal)->where('rs3','=','RM#')->get();
         return ($subtotal);
     }
-
 }
