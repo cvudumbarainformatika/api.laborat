@@ -108,7 +108,7 @@ class PemeriksaanfisikController extends Controller
                 'user'  => $kdpegsimrs,
             ];
             if (!empty($value['id'])) {
-                $idDet = $value['id'];
+                $idDet[] = $value['id'];
             }
 
             $params[] = $simpanpemeriksaandetail;
