@@ -52,7 +52,7 @@ class TindakanController extends Controller
                 // 'rs5' => $request->jmltindakan,
                 'rs6' => $request->hargasarana,
                 'rs7' => $request->hargasarana,
-                'rs8' => $kdpegsimrs,
+                'rs8' => $request->kodedokter,
                 'rs9' => $kdpegsimrs, //auth()->user()->pegawai_id,
                 'rs13' => $request->hargapelayanan,
                 'rs14' => $request->hargapelayanan,
