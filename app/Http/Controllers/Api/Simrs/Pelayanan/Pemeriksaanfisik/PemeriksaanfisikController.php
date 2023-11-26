@@ -121,9 +121,13 @@ class PemeriksaanfisikController extends Controller
         //     $index = 'id';
         //     Batch::update(new Pemeriksaanfisiksubdetail, $params, $index);
         // }
-        Pemeriksaanfisiksubdetail::whereIn('id', $idDet)->delete();
-        Pemeriksaanfisiksubdetail::insert($params);
-        Pemeriksaanfisiksubdetail::whereIn('id', $request->deleteDetails)->delete();
+        $deletes = $request->deleteDetails;
+        DB::transaction(function () use ($idDet, $params, $deletes) {
+            Pemeriksaanfisiksubdetail::whereIn('id', $idDet)->delete();
+            Pemeriksaanfisiksubdetail::insert($params);
+            Pemeriksaanfisiksubdetail::whereIn('id', $deletes)->delete();
+        });
+
 
         $matas = [];
 
