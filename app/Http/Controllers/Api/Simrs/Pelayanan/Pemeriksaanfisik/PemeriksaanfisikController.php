@@ -54,6 +54,9 @@ class PemeriksaanfisikController extends Controller
             // baru
             'statusneurologis' => $request->statusneurologis,
             'muakuloskeletal' => $request->muakuloskeletal,
+            'tinggibadan' => $request->tinggibadan,
+            'beratbadan' => $request->beratbadan,
+            'vas' => $request->vas,
             // Khusus Paru
             'inspeksi' => $request->inspeksi,
             'palpasi' => $request->palpasi,
