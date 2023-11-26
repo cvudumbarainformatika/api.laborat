@@ -15,6 +15,7 @@
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "maatwebsite/excel": "^3.1",
+        "mavinoo/laravel-batch": "^2.3",
         "mpyw/eloquent-has-by-join": "^2.0",
         "mpyw/eloquent-has-by-non-dependent-subquery": "^2.0",
         "nullpunkt/lz-string-php": "^1.3",

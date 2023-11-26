@@ -12,8 +12,11 @@ use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+// use Mavinoo\Batch\Batch;
+use Mavinoo\Batch\BatchFacade as Batch;
 
 class PemeriksaanfisikController extends Controller
 {
@@ -26,136 +29,134 @@ class PemeriksaanfisikController extends Controller
 
         $noreg = $request->noreg;
         $norm = $request->norm;
-        $simpanperiksaan = Pemeriksaanfisik::create(
-            [
-                'rs1' => $noreg,
-                'rs2' => $norm,
-                'rs3' => date('Y-m-d H:i:s'),
-                'rs4' => $request->denyutjantung,
-                'tingkatkesadaran' => $request->tingkatkesadaran,
-                'pernapasan' => $request->pernapasan,
-                'sistole' => $request->sistole,
-                'diastole' => $request->diastole,
-                'suhutubuh' => $request->suhutubuh,
-                'statuspsikologis' => $request->statuspsikologis,
-                'sosialekonomi' => $request->sosialekonomi,
-                'spiritual' => $request->spiritual,
-                'user'  => $kdpegsimrs,
-                'ruangan' => $request->spiritual,
-                'scorenyeri' => $request->skornyeri ?? 0,
-                'keteranganscorenyeri' => $request->keteranganskorenyeri ?? '',
-                'kesadaran' => $request->kesadaran ?? '',
-                'kesadarane' => $request->kesadarane ?? 0,
-                'kesadaranm' => $request->kesadaranm ?? 0,
-                'kesadaranv' => $request->kesadaranv ?? 0,
-                // baru
-                'statusneurologis' => $request->statusneurologis,
-                'muakuloskeletal' => $request->muakuloskeletal,
-                // Khusus Paru
-                'inspeksi' => $request->inspeksi,
-                'palpasi' => $request->palpasi,
-                'perkusidadakanan' => $request->perkusidadakanan,
-                'perkusidadakiri' => $request->perkusidadakiri,
-                'auskultasisuaradasar' => $request->auskultasisuaradasar,
-                'auskultasisuaratambahankanan' => $request->auskultasisuaratambahankanan,
-                'auskultasisuaratambahankiri' => $request->auskultasisuaratambahankiri,
-                'kddokter' => $request->kddokter ?? ''
-            ]
-        );
+
+        $form = [
+            'rs1' => $noreg,
+            'rs2' => $norm,
+            'rs3' => date('Y-m-d H:i:s'),
+            'rs4' => $request->denyutjantung,
+            'tingkatkesadaran' => $request->tingkatkesadaran,
+            'pernapasan' => $request->pernapasan,
+            'sistole' => $request->sistole,
+            'diastole' => $request->diastole,
+            'suhutubuh' => $request->suhutubuh,
+            'statuspsikologis' => $request->statuspsikologis,
+            'sosialekonomi' => $request->sosialekonomi,
+            'spiritual' => $request->spiritual,
+            'user'  => $kdpegsimrs,
+            'ruangan' => $request->spiritual,
+            'scorenyeri' => $request->skornyeri ?? 0,
+            'keteranganscorenyeri' => $request->keteranganskorenyeri ?? '',
+            'kesadaran' => $request->kesadaran ?? '',
+            'kesadarane' => $request->kesadarane ?? 0,
+            'kesadaranm' => $request->kesadaranm ?? 0,
+            'kesadaranv' => $request->kesadaranv ?? 0,
+            // baru
+            'statusneurologis' => $request->statusneurologis,
+            'muakuloskeletal' => $request->muakuloskeletal,
+            // Khusus Paru
+            'inspeksi' => $request->inspeksi,
+            'palpasi' => $request->palpasi,
+            'perkusidadakanan' => $request->perkusidadakanan,
+            'perkusidadakiri' => $request->perkusidadakiri,
+            'auskultasisuaradasar' => $request->auskultasisuaradasar,
+            'auskultasisuaratambahankanan' => $request->auskultasisuaratambahankanan,
+            'auskultasisuaratambahankiri' => $request->auskultasisuaratambahankiri,
+            'kddokter' => $request->kddokter ?? ''
+        ];
+
+        $simpanperiksaan = null;
+        if ($request->has('id')) {
+            $simpanperiksaan = Pemeriksaanfisik::find($request->id);
+            $simpanperiksaan->update($form);
+        } else {
+            $simpanperiksaan = Pemeriksaanfisik::create($form);
+        }
+
+
+
 
         if (!$simpanperiksaan) {
             return new JsonResponse(['message' => 'not ok'], 500);
         }
 
-        $data = $request->anatomys;
+        $data = $request->details;
+        $params = [];
         foreach ($data as $key => $value) {
-            $simpanpemeriksaandetail = Pemeriksaanfisikdetail::create(
-                [
-                    'rs236_id' => $simpanperiksaan->id,
-                    'noreg' => $noreg,
-                    'norm' => $norm,
-                    'tgl' => date('Y-m-d H:i:s'),
-                    'nama' => $value['nama'],
-                    'keterangan' => $value['ket'],
-                    'user'  => $kdpegsimrs,
-                ]
-            );
+            $simpanpemeriksaandetail = [
+                'rs236_id' => $simpanperiksaan->id,
+                'noreg' => $noreg,
+                'norm' => $norm,
+                'tgl' => date('Y-m-d H:i:s'),
+                'anatomy' => $value['anatomy'],
+                'ket' => $value['ket'],
+                'ketebalan' => $value['ketebalan'],
+                'panjang' => $value['panjang'],
+                'width' => $value['width'],
+                'height' => $value['height'],
+                'penanda' => $value['penanda'],
+                'tinggi' => $value['tinggi'],
+                'fill' => $value['fill'],
+                'angle' => $value['angle'],
+                'templategambar' => $value['templategambar'],
+                'templateindex' => $value['templateindex'],
+                'templatemenu' => $value['templatemenu'],
+                'warna' => $value['warna'],
+                'x' => $value['x'],
+                'y' => $value['y'],
+                'user'  => $kdpegsimrs,
+            ];
+            if (!empty($value['id'])) {
+                $simpanpemeriksaandetail['id'] = $value['id'];
+                $params[] = $simpanpemeriksaandetail;
+            } else {
+                Pemeriksaanfisiksubdetail::create($simpanpemeriksaandetail);
+            }
         };
 
-        $data = $request->details;
-        foreach ($data as $key => $value) {
-            $simpanpemeriksaandetail = Pemeriksaanfisiksubdetail::create(
-                [
-                    'rs236_id' => $simpanperiksaan->id,
-                    'noreg' => $noreg,
-                    'norm' => $norm,
-                    'tgl' => date('Y-m-d H:i:s'),
-                    'anatomy' => $value['anatomy'],
-                    'ket' => $value['ket'],
-                    'ketebalan' => $value['ketebalan'],
-                    'noreg' => $value['noreg'],
-                    'norm' => $value['norm'],
-                    'panjang' => $value['panjang'],
-                    'width' => $value['width'],
-                    'height' => $value['height'],
-                    'penanda' => $value['penanda'],
-                    'tinggi' => $value['tinggi'],
-                    'fill' => $value['fill'],
-                    'angle' => $value['angle'],
-                    'templategambar' => $value['templategambar'],
-                    'templateindex' => $value['templateindex'],
-                    'templatemenu' => $value['templatemenu'],
-                    'warna' => $value['warna'],
-                    'templateindex' => $value['templateindex'],
-                    'x' => $value['x'],
-                    'y' => $value['y'],
-                    'user'  => $kdpegsimrs,
-                ]
-            );
-        };
+        // update
+        if (!empty($params)) {
+            $index = 'id';
+            Batch::update(new Pemeriksaanfisiksubdetail, $params, $index);
+        }
+
+        $matas = [];
 
         if ($request->has('mata')) {
             foreach ($request->mata as $key => $value) {
-                Polimata::create(
-                    [
-                        'rs236_id' => $simpanperiksaan->id,
-                        'rs1' => $noreg,
-                        'rs2' => $norm,
-                        'rs3' => date('Y-m-d H:i:s'),
-                        'rs4' => $value['vodawal'],
-                        'rs5' => $value['vodrefraksi'] ?? '',
-                        'rs6' => $value['vodakhir'] ?? '',
-                        'rs7' => $value['vosawal'] ?? '',
-                        'rs8' => $value['vosrefraksi'] ?? '',
-                        'rs9' => $value['vosakhir'] ?? '',
-                        'rs10' => $value['tod'] ?? '',
-                        'rs11' => $value['tos'] ?? '',
-                        'rs12' => $value['fondosod'] ?? '',
-                        'rs13' => $value['fondosos'] ?? '',
-                        'user' => $kdpegsimrs
-                    ]
-                );
-            }
-        }
-        if ($request->has('paru')) {
-            foreach ($request->paru as $key => $value) {
-                Pemeriksaanfisik_paru::create(
-                    [
-                        'rs236_id' => $simpanperiksaan->id,
-                        'noreg' => $noreg,
-                        'norm' => $norm,
-                        'tgl' => date('Y-m-d H:i:s'),
-                        // 'inspeksi' => $value['inspeksi'],
-                        // 'palpasi' => $value['palpasi'] ?? '',
-                        // 'perkusi' => $value['perkusi'] ?? '',
-                        // 'auskultasi' => $value['auskultasi'] ?? '',
-                        'user' => $kdpegsimrs
-                    ]
-                );
+                $mata = [
+                    'rs236_id' => $simpanperiksaan->id,
+                    'rs1' => $noreg,
+                    'rs2' => $norm,
+                    'rs3' => date('Y-m-d H:i:s'),
+                    'rs4' => $value['vodawal'],
+                    'rs5' => $value['vodrefraksi'] ?? '',
+                    'rs6' => $value['vodakhir'] ?? '',
+                    'rs7' => $value['vosawal'] ?? '',
+                    'rs8' => $value['vosrefraksi'] ?? '',
+                    'rs9' => $value['vosakhir'] ?? '',
+                    'rs10' => $value['tod'] ?? '',
+                    'rs11' => $value['tos'] ?? '',
+                    'rs12' => $value['fondosod'] ?? '',
+                    'rs13' => $value['fondosos'] ?? '',
+                    'user' => $kdpegsimrs
+                ];
+                if (!empty($value['id'])) {
+                    $mata['id'] = $value['id'];
+                    $matas[] = $mata;
+                    // Polimata::where('id', $value['id'])->update($mata);
+                } else {
+                    Polimata::create($mata);
+                }
             }
         }
 
-        $pemeriksaan = $simpanperiksaan->load(['anatomys', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu']);
+        if (!empty($matas)) {
+            $index = 'id';
+            Batch::update(new Polimata, $matas, $index);
+        }
+
+        $pemeriksaan = $simpanperiksaan->load(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu']);
         return new JsonResponse(
             [
                 'message' => 'BERHASIL DISIMPAN',
