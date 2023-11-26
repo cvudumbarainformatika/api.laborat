@@ -82,6 +82,7 @@ class PemeriksaanfisikController extends Controller
 
         $data = $request->details;
         $params = [];
+        $idDet = [];
         foreach ($data as $key => $value) {
             $simpanpemeriksaandetail = [
                 'rs236_id' => $simpanperiksaan->id,
@@ -107,18 +108,19 @@ class PemeriksaanfisikController extends Controller
                 'user'  => $kdpegsimrs,
             ];
             if (!empty($value['id'])) {
-                $simpanpemeriksaandetail['id'] = $value['id'];
-                $params[] = $simpanpemeriksaandetail;
-            } else {
-                Pemeriksaanfisiksubdetail::create($simpanpemeriksaandetail);
+                $idDet = $value['id'];
             }
+
+            $params[] = $simpanpemeriksaandetail;
         };
 
         // update
-        if (!empty($params)) {
-            $index = 'id';
-            Batch::update(new Pemeriksaanfisiksubdetail, $params, $index);
-        }
+        // if (!empty($params)) {
+        //     $index = 'id';
+        //     Batch::update(new Pemeriksaanfisiksubdetail, $params, $index);
+        // }
+        Pemeriksaanfisiksubdetail::whereIn('id', $idDet)->delete();
+        Pemeriksaanfisiksubdetail::insert($params);
 
         $matas = [];
 
