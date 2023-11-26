@@ -61,6 +61,7 @@ Route::group([
 
     Route::get('/listdokter', [PoliController::class, 'listdokter']);
     Route::post('/gantidpjp', [PoliController::class, 'gantidpjp']);
+    Route::post('/gantimemo', [PoliController::class, 'gantimemo']);
 
     Route::post('/pemeriksaanmatakhusus', [PemeriksaankhususMataController::class, 'pemeriksaanmatakhusus']);
 
