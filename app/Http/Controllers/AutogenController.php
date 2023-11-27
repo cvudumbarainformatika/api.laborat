@@ -2208,7 +2208,8 @@ class AutogenController extends Controller
         // $balik['transaksi'] = $distribute;
 
         // return new JsonResponse($balik);
-        // $anu = substr("2023-10-05 10:23:59", 0, 11);
+        // $anu = substr("2023-11-27 10:23:59", 0, 11);
+        $anu = "2023-11-27";
         // $date = date_create('2023-10-05 10:23:59');
         // $date = date_create('2023-10-05 10:23:59');
         // $anu = date_format($date, 'Y-m-d');
@@ -2216,7 +2217,9 @@ class AutogenController extends Controller
         // return new JsonResponse([
         //     'date comp' => $comp
         // ]);
-        // $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0000113088497' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
+
+        $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0001387099642' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
+        $sep = BridgingbpjsHelper::get_url('vclaim', 'sep/' . '1327R0010923V008197');
         // $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
 
         // $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
@@ -2232,14 +2235,16 @@ class AutogenController extends Controller
         // $kontrol2 = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . "1327R0011023K000206");
         // $rujukanPcare2 = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . "1327R0010923V008304");
 
-        // return new JsonResponse([
-        //     'his' => $history,
-        //     'info' => $infoSep,
-        //     'his2' => $history2,
-        //     'info2' => $infoSep2,
-        //     'kontrol' => $kontrol,
-        //     'rujukanPcare' => $rujukanPcare,
-        // ]);
+        return new JsonResponse([
+            'his' => $history,
+            'sep' => $sep,
+            'anu' => $anu,
+            // 'info' => $infoSep,
+            // 'his2' => $history2,
+            // 'info2' => $infoSep2,
+            // 'kontrol' => $kontrol,
+            // 'rujukanPcare' => $rujukanPcare,
+        ]);
         // $result = Penerimaan::where('no_kwitansi', '<>', '')
         //     ->with('details')
         //     ->orderBy('no_kwitansi')
@@ -2555,8 +2560,8 @@ class AutogenController extends Controller
         // $jenisPelayanan = '2'; //Jenis Pelayanan (1. Inap 2. Jalan)
         // $status = '3'; //Status Klaim (1. Proses Verifikasi 2. Pending Verifikasi 3. Klaim)
         // $data = BridgingbpjsHelper::get_url('vclaim', '/Monitoring/Klaim/Tanggal/' . $tanggalPulang . '/JnsPelayanan/' . $jenisPelayanan . '/Status/' . $status);
-        $data = DetailbillingbynoregController::konsulantarpoli('89502/11/2023/J');
-        return new JsonResponse($data);
+        // $data = DetailbillingbynoregController::konsulantarpoli('89502/11/2023/J');
+        // return new JsonResponse($data);
     }
 
     public function baru()
