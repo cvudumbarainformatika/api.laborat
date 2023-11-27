@@ -6,6 +6,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
+use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
@@ -16,6 +17,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
+use App\Models\Simrs\Rajal\WaktupulangPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -448,13 +450,31 @@ class PoliController extends Controller
 
     public function konsulpoli(Request $request)
     {
-        if ($request->kodepoli == $request->politujuan) {
+
+        $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
+        if (count($cek) > 0) {
+            $before = $cek[0]['rs4'] === 'Kontrol' || $cek[0]['rs4'] === 'Konsultasi';
+            $req = $request->planing == 'Konsultasi' || $request->planing == 'Kontrol';
+            // return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!', $before, $req], 500);
+            if ($before && $req) {
+                $col = collect($cek);
+                $renc = $col->where('rs4', $request->planing);
+                if (count($renc) >= 1) {
+                    $mesage = (count($renc) > 1 ? 'Sudah ada Plannig ' . $request->planing : 'Sudah Ada Planning Kontrol dan Konsultasi');
+                    return new JsonResponse(['message' => $mesage, 'data' => $renc], 500);
+                }
+            } else {
+                return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
+            }
+        }
+
+        if ($request->kdpoli_asal == $request->kdpoli_tujuan) {
             return new JsonResponse(['message' => 'Maaf, tidak boleh konsultasi ke polinya sendiri.'], 500);
         }
-        $tglmasukx = Carbon::create($request->tglmasuk);
+        $tglmasukx = Carbon::create($request->tgl_kunjungan);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
-            ->where('rs8', $request->kodepoli)
+            ->where('rs8', $request->kdpoli_asal)
             ->whereDate('rs3', $tglmasuk)
             ->count();
 
@@ -496,9 +516,10 @@ class PoliController extends Controller
             'rs1' => $noreg,
             'rs2' => $request->norm,
             'rs3' => date('Y-m-d H:i:s'),
-            'rs4' => $request->noreglama,
-            'rs6' => $request->asalrujukan,
-            'rs8' => $request->kodepoli,
+            'rs4' => $request->noreg_lama,
+            // 'rs6' => $request->asalrujukan,
+            'rs6' => '2',
+            'rs8' => $request->kdpoli_asal,
             //'rs9' => $request->dpjp,
             'rs10' => 0,
             'rs11' => '',
@@ -507,18 +528,21 @@ class PoliController extends Controller
             'rs14' => $request->kodesistembayar,
             'rs15' => (int) $caribiaya->sarana + (int) $caribiaya->pelayanan,
             'rs18' => $userid['kodesimrs'],
-            'rs20' => $request->politujuan,
+            'rs20' => $request->kdpoli_tujuan,
 
         ]);
         if (!$simpankunjunganpoli) {
             return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
 
+        $plann = new PlaningController;
         $cetakantrian = AntrianController::ambilnoantrian($request, $input);
-
+        $simpanakhir = PlaningController::simpanakhir($request);
+        $data = $plann->getAllRespPlanning($request->noreg);
         return new JsonResponse([
             'message' => 'data berhasil disimpan',
             'antrian' => $cetakantrian,
+            'result' => $data,
             'noreg' => $noreg
         ], 200);
     }
