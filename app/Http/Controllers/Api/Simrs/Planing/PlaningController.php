@@ -278,7 +278,8 @@ class PlaningController extends Controller
                 'tgl_rencana_konsul' => $request->tgl_rencana_konsul,
                 'kdpoli_asal' => $request->kdpoli_asal,
                 'kdpoli_tujuan' => $request->kdpoli_tujuan,
-                'kddokter_asal' => $request->kddokter_asal
+                'kddokter_asal' => $request->kddokter_asal,
+                'flag' => '1',
             ]
         );
 
@@ -372,12 +373,22 @@ class PlaningController extends Controller
 
     public function hapusplaningpasien(Request $request)
     {
+        $message = 'berhasil Dihapus';
         $cari = WaktupulangPoli::find($request->id);
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
 
         if ($request->plan === 'Konsultasi') {
+            $kunj = KunjunganPoli::where('rs4', $cari->rs1)->first();
+            if ($kunj) {
+                if ($kunj->rs19 !== '') {
+                    return new JsonResponse(['message' => 'Kunjungan Poli Konsul tidak dapat dihapus kerena sudah dilayani / dalam proses layanan'], 500);
+                } else {
+                    $kunj->delete();
+                }
+            }
+
             Listkonsulantarpoli::where('noreg_lama', $cari->rs1)->delete();
             Rekomdpjp::where('noreg', $cari->rs1)->delete();
         }
@@ -399,7 +410,7 @@ class PlaningController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
 
-        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+        return new JsonResponse(['message' => $message], 200);
     }
 
     public static function simpanrujukanumum($request)

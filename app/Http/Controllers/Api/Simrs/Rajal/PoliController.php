@@ -474,7 +474,7 @@ class PoliController extends Controller
         $tglmasukx = Carbon::create($request->tgl_kunjungan);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
-            ->where('rs8', $request->kdpoli_asal)
+            ->where('rs8', $request->kdpoli_tujuan)
             ->whereDate('rs3', $tglmasuk)
             ->count();
 
@@ -519,7 +519,7 @@ class PoliController extends Controller
             'rs4' => $request->noreg_lama,
             // 'rs6' => $request->asalrujukan,
             'rs6' => '2',
-            'rs8' => $request->kdpoli_asal,
+            'rs8' => $request->kdpoli_tujuan,
             //'rs9' => $request->dpjp,
             'rs10' => 0,
             'rs11' => '',
@@ -528,7 +528,7 @@ class PoliController extends Controller
             'rs14' => $request->kodesistembayar,
             'rs15' => (int) $caribiaya->sarana + (int) $caribiaya->pelayanan,
             'rs18' => $userid['kodesimrs'],
-            'rs20' => $request->kdpoli_tujuan,
+            'rs20' => $request->kdpoli_asal,
 
         ]);
         if (!$simpankunjunganpoli) {
@@ -537,10 +537,11 @@ class PoliController extends Controller
 
         $plann = new PlaningController;
         $cetakantrian = AntrianController::ambilnoantrian($request, $input);
-        $simpanakhir = PlaningController::simpanakhir($request);
+        PlaningController::simpanakhir($request);
+        PlaningController::simpankonsulantarpoli($request);
         $data = $plann->getAllRespPlanning($request->noreg);
         return new JsonResponse([
-            'message' => 'data berhasil disimpan',
+            'message' => 'Pasien sudah dikirim ke poli tujuan',
             'antrian' => $cetakantrian,
             'result' => $data,
             'noreg' => $noreg

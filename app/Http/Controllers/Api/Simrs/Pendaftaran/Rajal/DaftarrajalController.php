@@ -651,6 +651,7 @@ class DaftarrajalController extends Controller
             return new JsonResponse(['message' => 'Maaf Pasien Ini Sudah Menerima Pelayanan di Poli...!!!'], 500);
         }
 
+        $kunj = KunjunganPoli::where('rs1', $request->noreg)->first();
         $hapuskunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->first();
         if ($hapuskunjunganpoli != null) {
             $hapuskunjunganpoli->delete();
@@ -668,8 +669,12 @@ class DaftarrajalController extends Controller
         }
 
         if ($request->nosep != '' || $request->nosep != null) {
-            Bridbpjscontroller::hapussep($request);
-            return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+            if ($kunj->rs4 === '') {
+                Bridbpjscontroller::hapussep($request);
+                return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
+            } else {
+                return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!! dan SEP tidak dihapus'], 200);
+            }
         } else {
             return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
         }
