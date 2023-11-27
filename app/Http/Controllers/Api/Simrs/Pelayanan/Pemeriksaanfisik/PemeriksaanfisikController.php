@@ -54,6 +54,9 @@ class PemeriksaanfisikController extends Controller
             // baru
             'statusneurologis' => $request->statusneurologis,
             'muakuloskeletal' => $request->muakuloskeletal,
+            'tinggibadan' => $request->tinggibadan,
+            'beratbadan' => $request->beratbadan,
+            'vas' => $request->vas,
             // Khusus Paru
             'inspeksi' => $request->inspeksi,
             'palpasi' => $request->palpasi,
@@ -138,7 +141,7 @@ class PemeriksaanfisikController extends Controller
                     'rs1' => $noreg,
                     'rs2' => $norm,
                     'rs3' => date('Y-m-d H:i:s'),
-                    'rs4' => $value['vodawal'],
+                    'rs4' => $value['vodawal'] ?? '',
                     'rs5' => $value['vodrefraksi'] ?? '',
                     'rs6' => $value['vodakhir'] ?? '',
                     'rs7' => $value['vosawal'] ?? '',
@@ -150,20 +153,31 @@ class PemeriksaanfisikController extends Controller
                     'rs13' => $value['fondosos'] ?? '',
                     'user' => $kdpegsimrs
                 ];
-                if (!empty($value['id'])) {
-                    $mata['id'] = $value['id'];
-                    $matas[] = $mata;
-                    // Polimata::where('id', $value['id'])->update($mata);
-                } else {
-                    Polimata::create($mata);
-                }
+                // if (!empty($value['id'])) {
+                //     $mata['id'] = $value['id'];
+                //     $matas[] = $mata;
+                //     // Polimata::where('id', $value['id'])->update($mata);
+                // } else {
+                //     Polimata::create($mata);
+                // }
+                $matas[] = $mata;
             }
+
+
+            $idpemeriksaan = $simpanperiksaan->id;
+            DB::transaction(function () use ($idpemeriksaan, $matas) {
+                Polimata::where('rs236_id', $idpemeriksaan)->delete();
+                Polimata::insert($matas);
+                // Polimata::whereIn('id', $deletes)->delete();
+            });
+        } else {
+            $idpemeriksaan = $simpanperiksaan->id;
+            DB::transaction(function () use ($idpemeriksaan) {
+                Polimata::where('rs236_id', $idpemeriksaan)->delete();
+            });
         }
 
-        if (!empty($matas)) {
-            $index = 'id';
-            Batch::update(new Polimata, $matas, $index);
-        }
+
 
         $pemeriksaan = $simpanperiksaan->load(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu']);
         return new JsonResponse(

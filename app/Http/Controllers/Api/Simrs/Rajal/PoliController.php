@@ -15,6 +15,7 @@ use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -394,6 +395,20 @@ class PoliController extends Controller
             [
                 'message' => 'ok',
                 'result' => $carikunjungan->load('datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp'),
+            ],
+            200
+        );
+    }
+    public function gantimemo(Request $request)
+    {
+        $data = Memodiagnosadokter::updateOrCreate(
+            ['noreg' => $request->noreg],
+            ['diagnosa' => $request->memo],
+        );
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $data,
             ],
             200
         );

@@ -104,10 +104,11 @@ class MenuController extends Controller
     public function cari_dokter()
     {
         $data = Pegawai::select('id', 'nip', 'nik', 'nama', 'kelamin', 'foto', 'kdpegsimrs', 'kddpjp')
-            ->where('aktif', '=', 'AKTIF')
-            ->where('kdgroupnakes', '=', '1')
+
             // ->OrWhere('aktif', '=', 'PROGRAMER')
             ->filter(request(['q']))
+            ->where('aktif', '=', 'AKTIF')
+            ->where('kdgroupnakes', '=', '1')
             ->orderBy('nama', 'ASC')->limit(20)->get();
         return new JsonResponse($data);
     }
