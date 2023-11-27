@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Api\Simrs\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
+use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Kasir\Pembayaran;
+use App\Models\Simrs\Master\MtindakanX;
+use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -425,5 +429,82 @@ class PoliController extends Controller
         } else {
             return new JsonResponse(['message' => 'Maaf Fitur ini Hanya Untuk Dokter...!!!'], 500);
         }
+    }
+
+    public function konsulpoli(Request $request)
+    {
+        if ($request->kodepoli == $request->politujuan) {
+            return new JsonResponse(['message' => 'Maaf, tidak boleh konsultasi ke polinya sendiri.'], 500);
+        }
+        $tglmasukx = Carbon::create($request->tglmasuk);
+        $tglmasuk = $tglmasukx->toDateString();
+        $cekpoli = KunjunganPoli::where('rs2', $request->norm)
+            ->where('rs8', $request->kodepoli)
+            ->whereDate('rs3', $tglmasuk)
+            ->count();
+
+        if ($cekpoli > 0) {
+            return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
+        }
+
+        DB::select('call reg_rajal(@nomor)');
+        $hcounter = DB::table('rs1')->select('rs13')->get();
+        $wew = $hcounter[0]->rs13;
+        $noreg = FormatingHelper::gennoreg($wew, 'J');
+
+        $input = new Request([
+            'noreg' => $noreg
+        ]);
+
+        $userid = FormatingHelper::session_user();
+        $caribiaya = MtindakanX::select('rs8 as sarana', 'rs9 as pelayanan')->where('rs1', 'T00009')->first();
+        $biaya = Karcispoli::firstOrCreate(
+            [
+                'rs2' => $request->norm,
+                'rs4' => date('Y-m-d H:i:s'),
+                'rs3' => 'K3#',
+            ],
+            [
+                'rs1' => $noreg,
+                'rs5' => 'D',
+                'rs6' => 'Konsultasi Antar Poliklinik',
+                'rs7' => $caribiaya->sarana,
+                'rs8' => $request->kodesistembayar,
+                'rs10' => $userid['kodesimrs'],
+                'rs11' => $caribiaya->pelayanan,
+                'rs12' => $userid['kodesimrs'],
+                'rs13' => '1'
+            ]
+        );
+
+        $simpankunjunganpoli = KunjunganPoli::create([
+            'rs1' => $noreg,
+            'rs2' => $request->norm,
+            'rs3' => date('Y-m-d H:i:s'),
+            'rs4' => $request->noreglama,
+            'rs6' => $request->asalrujukan,
+            'rs8' => $request->kodepoli,
+            //'rs9' => $request->dpjp,
+            'rs10' => 0,
+            'rs11' => '',
+            'rs12' => 0,
+            'rs13' => 0,
+            'rs14' => $request->kodesistembayar,
+            'rs15' => (int) $caribiaya->sarana + (int) $caribiaya->pelayanan,
+            'rs18' => $userid['kodesimrs'],
+            'rs20' => $request->politujuan,
+
+        ]);
+        if (!$simpankunjunganpoli) {
+            return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
+        }
+
+        $cetakantrian = AntrianController::ambilnoantrian($request, $input);
+
+        return new JsonResponse([
+            'message' => 'data berhasil disimpan',
+            'antrian' => $cetakantrian,
+            'noreg' => $noreg
+        ], 200);
     }
 }
