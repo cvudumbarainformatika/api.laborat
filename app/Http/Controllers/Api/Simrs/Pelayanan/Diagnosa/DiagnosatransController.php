@@ -25,6 +25,8 @@ class DiagnosatransController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
+
+
         if ($request->has('id')) {
             $simpandiagnosa = Diagnosa::where(['id' => $request->id])->update(
                 [
