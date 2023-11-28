@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasi;
 
+use App\Models\Simrs\Master\Mobat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
