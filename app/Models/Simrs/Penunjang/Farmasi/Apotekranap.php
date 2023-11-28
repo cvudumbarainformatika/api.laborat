@@ -17,7 +17,12 @@ class Apotekranap extends Model
         $harga1 = $this->rs6;
         $harga2 = $this->rs8;
         $harga3 = $this->rs10;
-        $subtotal = ($harga1*$harga2)+$harga3;
+        $subtotal = ($harga1 * $harga2) + $harga3;
         return ($subtotal);
+    }
+
+    public function masterobat()
+    {
+        return $this->hasOne(Mobat::class, 'rs1', 'rs4');
     }
 }

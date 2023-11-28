@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasi;
 
+use App\Models\Simrs\Master\Mobat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,9 +16,9 @@ class Apotekrajal extends Model
     protected $keyType = 'string';
     protected $appends = ['subtotal'];
 
-    public function mobat()
+    public function masterobat()
     {
-        return $this->belongsTo(Mobat::class, 'rs4', 'rs1');
+        return $this->hasOne(Mobat::class, 'rs1', 'rs4');
     }
 
     public function getSubtotalAttribute()

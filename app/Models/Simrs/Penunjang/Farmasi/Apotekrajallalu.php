@@ -26,6 +26,11 @@ class Apotekrajallalu extends Model
         $harga = $this->rs6;
         $jumlah = $this->rs8;
         $jumlah_r = $this->rs10;
-        return (($harga*$jumlah)+$jumlah_r);
+        return (($harga * $jumlah) + $jumlah_r);
+    }
+
+    public function masterobat()
+    {
+        return $this->hasOne(Mobat::class, 'rs1', 'rs4');
     }
 }
