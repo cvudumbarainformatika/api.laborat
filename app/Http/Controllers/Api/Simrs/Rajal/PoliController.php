@@ -46,6 +46,7 @@ class PoliController extends Controller
             $daftarkunjunganpasienbpjs = KunjunganPoli::select(
                 'rs17.rs1',
                 'rs17.rs9',
+                'rs17.rs4',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
                 'rs17.rs3 as tgl_kunjungan',
@@ -182,6 +183,7 @@ class PoliController extends Controller
             $daftarkunjunganpasienbpjs = KunjunganPoli::select(
                 'rs17.rs1',
                 'rs17.rs9',
+                'rs17.rs4',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
                 'rs17.rs3 as tgl_kunjungan',
