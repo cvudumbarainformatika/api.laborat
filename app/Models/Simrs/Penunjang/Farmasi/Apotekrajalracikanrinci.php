@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasi;
 
+use App\Models\Simrs\Master\Mobat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,6 +24,11 @@ class Apotekrajalracikanrinci extends Model
     public function relasihederracikan()
     {
         return $this->belongsTo(Apotekrajalracikanhedlalu::class, 'rs1', 'rs1');
+    }
+
+    public function masterobat()
+    {
+        return $this->hasOne(Mobat::class, 'rs1', 'rs4');
     }
 
     public function getSubtotalAttribute()

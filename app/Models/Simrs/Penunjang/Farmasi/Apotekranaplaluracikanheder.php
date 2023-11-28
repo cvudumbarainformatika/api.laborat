@@ -10,4 +10,10 @@ class Apotekranaplaluracikanheder extends Model
     use HasFactory;
     protected $table = 'rs63';
     protected $guarded = ['id'];
+    public $timestamps = false;
+
+    public function apotekranapracikanrincilalu()
+    {
+        return $this->hasMany(Apotekranaplaluracikanrinci::class, 'rs1', 'rs1');
+    }
 }

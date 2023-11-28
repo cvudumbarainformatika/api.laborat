@@ -21,6 +21,11 @@ class Apotekrajalracikanrincilalu extends Model
         return $this->belongsTo(Mobat::class, 'rs4', 'rs1');
     }
 
+    public function masterobat()
+    {
+        return $this->hasOne(Mobat::class, 'rs1', 'rs4');
+    }
+
     public function relasihederracikan()
     {
         return $this->belongsTo(Apotekrajalracikanhedlalu::class, 'rs1', 'rs1');
@@ -30,6 +35,6 @@ class Apotekrajalracikanrincilalu extends Model
     {
         $harga = $this->rs7;
         $jumlah = $this->rs5;
-        return ($harga*$jumlah);
+        return ($harga * $jumlah);
     }
 }

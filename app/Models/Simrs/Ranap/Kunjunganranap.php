@@ -14,6 +14,12 @@ use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranap;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanheder;
@@ -372,5 +378,35 @@ class Kunjunganranap extends Model
     public function klaimranap()
     {
         return $this->hasOne(Klaimranap::class, 'noreg', 'rs1');
+    }
+
+    public function apotekrajal()
+    {
+        return $this->hasMany(Apotekrajal::class, 'rs1', 'rs1');
+    }
+
+    public function apotekrajalpolilalu()
+    {
+        return $this->hasMany(Apotekrajallalu::class, 'rs1', 'rs1');
+    }
+
+    public function apotekracikanrajallalu()
+    {
+        return $this->hasManyThrough(
+            Apotekrajalracikanrincilalu::class,
+            Apotekrajalracikanhedlalu::class,
+            'rs1',
+            'rs1'
+        );
+    }
+
+    public function apotekracikanrajal()
+    {
+        return $this->hasManyThrough(
+            Apotekrajalracikanrinci::class,
+            Apotekrajalracikanheder::class,
+            'rs1',
+            'rs1'
+        );
     }
 }

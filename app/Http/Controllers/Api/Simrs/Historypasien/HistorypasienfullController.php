@@ -46,7 +46,24 @@ class HistorypasienfullController extends Controller
                     'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
                     'transradiologi:rs1,rs4',
                     'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
-                    'hasilradiologi'
+                    'hasilradiologi',
+                    'apotekranap',
+                    'apotekranap.masterobat',
+                    'apotekranaplalu',
+                    'apotekranaplalu.masterobat',
+                    'apotekranapracikanheder',
+                    'apotekranapracikanheder.apotekranapracikanrinci',
+                    'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
+                    'apotekranapracikanhederlalu',
+                    'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
+                    'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
+                    'apotekrajal',
+                    'apotekrajal.masterobat',
+                    'apotekrajalpolilalu.masterobat',
+                    'apotekracikanrajal',
+                    'apotekracikanrajal.masterobat',
+                    'apotekracikanrajallalu',
+                    'apotekracikanrajallalu.masterobat'
                 ]
             )
             ->orderby('tanggal', 'DESC')

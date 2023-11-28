@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/historypasien/'
+    'prefix' => 'simrs/historypasien'
 ], function () {
     Route::get('/historypasienfull', [HistorypasienfullController::class, 'historypasienfull']);
 });
