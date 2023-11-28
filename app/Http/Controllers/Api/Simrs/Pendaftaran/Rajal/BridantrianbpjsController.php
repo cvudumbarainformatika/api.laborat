@@ -180,7 +180,7 @@ class BridantrianbpjsController extends Controller
                 'task' => $x,
                 'user' => auth()->user()->id
             ];
-            // event(new AntreanEvent($message));
+            event(new AntreanEvent($message));
         }
     }
 
