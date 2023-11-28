@@ -231,8 +231,8 @@ class EwseklaimController extends Controller
         );
         $responsesx = BridgingeklaimHelper::curl_func($querysx);
         // return $responsesx;
-        $cbg_code = $responsesx["response"]["cbg"]["code"];
-        $cbg_desc = $responsesx["response"]["cbg"]["description"];
+        $cbg_code = $responsesx["response"]["cbg"]["code"] ?? '';
+        $cbg_desc = $responsesx["response"]["cbg"]["description"] ?? '';
         $cbg_tarif = $responsesx["response"]["cbg"]["tariff"] ?? 0;
         //$special_cmg_option = $responsesx["special_cmg_option"];
         //return $cbg_code;
