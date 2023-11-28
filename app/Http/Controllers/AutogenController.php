@@ -66,6 +66,7 @@ use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
@@ -2209,7 +2210,7 @@ class AutogenController extends Controller
 
         // return new JsonResponse($balik);
         // $anu = substr("2023-11-27 10:23:59", 0, 11);
-        $anu = "2023-11-27";
+        // $anu = "2023-11-27";
         // $date = date_create('2023-10-05 10:23:59');
         // $date = date_create('2023-10-05 10:23:59');
         // $anu = date_format($date, 'Y-m-d');
@@ -2218,8 +2219,8 @@ class AutogenController extends Controller
         //     'date comp' => $comp
         // ]);
 
-        $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0001387099642' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
-        $sep = BridgingbpjsHelper::get_url('vclaim', 'sep/' . '1327R0010923V008197');
+        // $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . '0001387099642' . '/tglMulai/' . $anu . '/tglAkhir/' . $anu);
+        // $sep = BridgingbpjsHelper::get_url('vclaim', 'sep/' . '1327R0010923V008197');
         // $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
 
         // $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
@@ -2235,16 +2236,16 @@ class AutogenController extends Controller
         // $kontrol2 = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . "1327R0011023K000206");
         // $rujukanPcare2 = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . "1327R0010923V008304");
 
-        return new JsonResponse([
-            'his' => $history,
-            'sep' => $sep,
-            'anu' => $anu,
-            // 'info' => $infoSep,
-            // 'his2' => $history2,
-            // 'info2' => $infoSep2,
-            // 'kontrol' => $kontrol,
-            // 'rujukanPcare' => $rujukanPcare,
-        ]);
+        // return new JsonResponse([
+        //     'his' => $history,
+        //     'sep' => $sep,
+        //     'anu' => $anu,
+        // 'info' => $infoSep,
+        // 'his2' => $history2,
+        // 'info2' => $infoSep2,
+        // 'kontrol' => $kontrol,
+        // 'rujukanPcare' => $rujukanPcare,
+        // ]);
         // $result = Penerimaan::where('no_kwitansi', '<>', '')
         //     ->with('details')
         //     ->orderBy('no_kwitansi')
@@ -2562,6 +2563,64 @@ class AutogenController extends Controller
         // $data = BridgingbpjsHelper::get_url('vclaim', '/Monitoring/Klaim/Tanggal/' . $tanggalPulang . '/JnsPelayanan/' . $jenisPelayanan . '/Status/' . $status);
         // $data = DetailbillingbynoregController::konsulantarpoli('89502/11/2023/J');
         // return new JsonResponse($data);
+        $no = '53571/11/2023/J';
+        $no1 = '53565/11/2023/J';
+        $sep = Seprajal::where('rs1', $no1)->first();
+        if (isset($sep)) {
+            $sep1 = Seprajal::firstOrCreate(
+                ['rs1' => $no],
+                [
+                    'rs2' => $sep->rs2,
+                    'rs3' => $sep->rs3,
+                    'rs4' => $sep->rs4,
+                    'rs5' => $sep->rs5,
+                    'rs6' => $sep->rs6,
+                    'rs7' => $sep->rs7,
+                    'rs8' => $sep->rs8,
+                    'rs9' => $sep->rs9,
+                    'rs10' => $sep->rs10,
+                    'rs11' => $sep->rs11,
+                    'rs12' => $sep->rs12,
+                    'rs13' => $sep->rs13,
+                    'rs14' => $sep->rs14,
+                    'rs15' => $sep->rs15,
+                    'rs16' => $sep->rs16,
+                    'rs17' => $sep->rs17,
+                    'rs18' => $sep->rs18,
+                    'laka' => $sep->laka,
+                    'lokasilaka' => $sep->lokasilaka,
+                    'penjaminlaka' => '',
+                    'users' => auth()->user()->pegawai_id ?? 'anu',
+                    'notelepon' => $sep->notelepon,
+                    'tgl_entery' => $sep->tgl_entery,
+                    'noDpjp' => $sep->noDpjp,
+                    'tgl_kejadian_laka' => $sep->tgl_kejadian_laka,
+                    'keterangan' => $sep->keterangan,
+                    'suplesi' => $sep->suplesi,
+                    'nosuplesi' => $sep->nosuplesi,
+                    'kdpropinsi' => $sep->kdpropinsi,
+                    'propinsi' => $sep->propinsi,
+                    'kdkabupaten' => $sep->kdkabupaten,
+                    'kabupaten' => $sep->kabupaten,
+                    'kdkecamatan' => $sep->kdkecamatan,
+                    'kecamatan' => $sep->kecamatan,
+                    'kodedokterdpjp' => $sep->kodedokterdpjp,
+                    'dokterdpjp' => $sep->dokterdpjp,
+                    'kodeasalperujuk' => $sep->kodeasalperujuk,
+                    'namaasalperujuk' => $sep->namaasalperujuk,
+                    'Dinsos' => $sep->Dinsos,
+                    'prolanisPRB' => $sep->prolanisPRB,
+                    'noSKTM' => $sep->noSKTM,
+                    'jeniskunjungan' => $sep->jeniskunjungan,
+                    'tujuanKunj' => $sep->tujuanKunj,
+                    'flagProcedure' => $sep->flagProcedure,
+                    'kdPenunjang' => $sep->kdPenunjang,
+                    'assesmentPel' => $sep->assesmentPel,
+                    'kdUnit' => $sep->kdUnit
+                ]
+            );
+        }
+        return $sep1;
     }
 
     public function baru()
