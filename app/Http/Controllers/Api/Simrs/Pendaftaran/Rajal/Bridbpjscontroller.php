@@ -325,22 +325,13 @@ class Bridbpjscontroller extends Controller
     public function reCreateSep(Request $request)
     {
         // cek
-        // $responBpjs = Bpjs_http_respon::where(function ($a) use ($request) {
-        //     $a->whereNoreg($request->noreg)
-        //         ->orWhere('request', 'LIKE', '%' . $request->norm . '%');
-        // })
-        //     ->where('url', 'LIKE', '%SEP/2.0/insert%')
-        //     ->first();
-        // return new JsonResponse(['message' => $responBpjs]);
-        // cari history pelayanan pasien
+
         $tgltobpjshttpres = DateHelper::getDateTime();
         $tgl = $request->tgl_kunjungan ?? date('Y-m-d');
-        // $tgl = date('Y-m-d');
+
         $date = date_create($tgl);
         $tglCari = date_format($date, 'Y-m-d');
 
-        // $tglCari = date('2023-10-03');
-        // cek history
         $history = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . $request->noka . '/tglMulai/' . $tglCari . '/tglAkhir/' . $tglCari);
         $type = gettype($history);
         if ($type === 'object') {
@@ -361,40 +352,74 @@ class Bridbpjscontroller extends Controller
         // jika tidak ada history
         if (!$sep) {
             // cek tanggal
-            return new JsonResponse(['message' => 'History SEP tanggal ' . date_format($date, 'd-M-Y') . ' tidak ditemukan, sudah di lakukan pengecekan di V-Claim?'], 410);
-            // if (($tglCari !== date('Y-m-d'))) {
-            //     return new JsonResponse(['message' => 'History SEP tidak ditemukan, tidak Bisa mengajukan SEP untuk tgl sebelum hari ini'], 410);
-            // }
-            // $responBpjs = Bpjs_http_respon::where(function ($a) use ($request) {
-            //     $a->whereNoreg($request->noreg)
-            //         ->orWhere('request', 'LIKE', '%' . $request->norm . '%');
-            // })
-            //     ->where('url', 'LIKE', '%SEP/2.0/insert%')
-            //     ->first();
-            // if (!$responBpjs) {
-            //     return new JsonResponse(['message' => 'Data Pengajuan SEP sebeumnya tidak ditemukan'], 410);
-            // }
-            // $createsep = BridgingbpjsHelper::post_url(
-            //     'vclaim',
-            //     'SEP/2.0/insert',
-            //     $responBpjs->request
-            // );
-            // $xxx = $createsep['metadata']['code'];
-            // if ($xxx === 200 || $xxx === '200') {
-            //     // cek history
-            //     $history2 = BridgingbpjsHelper::get_url('vclaim', 'monitoring/HistoriPelayanan/NoKartu/' . $request->noka . '/tglMulai/' . $tglCari . '/tglAkhir/' . $tglCari);
-            //     $sep2 = $history2['metadata']['code'] === '200' ? $history2['result']->histori[0]->noSep : null;
-
-            //     if (!$sep2) {
-            //         return new JsonResponse(['message' => 'Data SEP untuk Nomor Kartu ini tidak ditemukan'], 410);
-            //     }
-            //     $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep2);
-            //     $dataInfo = $infoSep['result'];
-            //     $data = $this->getNesData($dataInfo, $request, $tgltobpjshttpres, $sep2, $infoHis);
-            //     return new JsonResponse(['data' => $data, 'message' => 'Data Berhasil disimpan']);
-            // } else {
-            //     return new JsonResponse(['message' => 'Pembuatan SEP dengan data yang pernah diajukan gagal'], 410);
-            // }
+            $sepsimrs = Seprajal::where('rs1', $request->rs4)->first();
+            if (isset($sepsimrs)) {
+                $sepraj = Seprajal::firstOrCreate(
+                    ['rs1' => $request->noreg],
+                    [
+                        'rs2' => $sepsimrs->rs2,
+                        'rs3' => $sepsimrs->rs3,
+                        'rs4' => $sepsimrs->rs4,
+                        'rs5' => $sepsimrs->rs5,
+                        'rs6' => $sepsimrs->rs6,
+                        'rs7' => $sepsimrs->rs7,
+                        'rs8' => $sepsimrs->rs8,
+                        'rs9' => $sepsimrs->rs9,
+                        'rs10' => $sepsimrs->rs10,
+                        'rs11' => $sepsimrs->rs11,
+                        'rs12' => $sepsimrs->rs12,
+                        'rs13' => $sepsimrs->rs13,
+                        'rs14' => $sepsimrs->rs14,
+                        'rs15' => $sepsimrs->rs15,
+                        'rs16' => $sepsimrs->rs16,
+                        'rs17' => $sepsimrs->rs17,
+                        'rs18' => $sepsimrs->rs18,
+                        'laka' => $sepsimrs->laka,
+                        'lokasilaka' => $sepsimrs->lokasilaka,
+                        'penjaminlaka' => '',
+                        'users' => auth()->user()->pegawai_id ?? 'anu',
+                        'notelepon' => $sepsimrs->notelepon,
+                        'tgl_entery' => $sepsimrs->tgl_entery,
+                        'noDpjp' => $sepsimrs->noDpjp,
+                        'tgl_kejadian_laka' => $sepsimrs->tgl_kejadian_laka,
+                        'keterangan' => $sepsimrs->keterangan,
+                        'suplesi' => $sepsimrs->suplesi,
+                        'nosuplesi' => $sepsimrs->nosuplesi,
+                        'kdpropinsi' => $sepsimrs->kdpropinsi,
+                        'propinsi' => $sepsimrs->propinsi,
+                        'kdkabupaten' => $sepsimrs->kdkabupaten,
+                        'kabupaten' => $sepsimrs->kabupaten,
+                        'kdkecamatan' => $sepsimrs->kdkecamatan,
+                        'kecamatan' => $sepsimrs->kecamatan,
+                        'kodedokterdpjp' => $sepsimrs->kodedokterdpjp,
+                        'dokterdpjp' => $sepsimrs->dokterdpjp,
+                        'kodeasalperujuk' => $sepsimrs->kodeasalperujuk,
+                        'namaasalperujuk' => $sepsimrs->namaasalperujuk,
+                        'Dinsos' => $sepsimrs->Dinsos,
+                        'prolanisPRB' => $sepsimrs->prolanisPRB,
+                        'noSKTM' => $sepsimrs->noSKTM,
+                        'jeniskunjungan' => $sepsimrs->jeniskunjungan,
+                        'tujuanKunj' => $sepsimrs->tujuanKunj,
+                        'flagProcedure' => $sepsimrs->flagProcedure,
+                        'kdPenunjang' => $sepsimrs->kdPenunjang,
+                        'assesmentPel' => $sepsimrs->assesmentPel,
+                        'kdUnit' => $sepsimrs->kdUnit
+                    ]
+                );
+                $dataSep = [
+                    'ins' => $sepraj,
+                    'data' => $sepsimrs
+                ];
+                return new JsonResponse([
+                    'message' => 'History SEP tanggal ' . date_format($date, 'd-M-Y') . ' tidak ditemukan, Data diambilkan dari histori sep RS',
+                    'data' => $dataSep
+                ], 200);
+            }
+            return new JsonResponse([
+                'message' => 'History SEP tanggal ' . date_format($date, 'd-M-Y') . ' tidak ditemukan, sudah di lakukan pengecekan di V-Claim?',
+                'req' => $request->all(),
+                'ins' => $sepsimrs
+            ], 410);
         }
         $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
         $dataInfo = $infoSep['result'];

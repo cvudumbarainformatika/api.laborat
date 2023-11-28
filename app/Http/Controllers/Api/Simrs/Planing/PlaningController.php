@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Mplaning;
 use App\Models\Simrs\Planing\Simpanspri;
@@ -380,12 +381,16 @@ class PlaningController extends Controller
         }
 
         if ($request->plan === 'Konsultasi') {
-            $kunj = KunjunganPoli::where('rs4', $cari->rs1)->first();
-            if ($kunj) {
-                if ($kunj->rs19 !== '') {
+            $konsul = KunjunganPoli::where('rs4', $cari->rs1)->first();
+            if ($konsul) {
+                if ($konsul->rs19 !== '') {
                     return new JsonResponse(['message' => 'Kunjungan Poli Konsul tidak dapat dihapus kerena sudah dilayani / dalam proses layanan'], 500);
                 } else {
-                    $kunj->delete();
+                    $sepkonsul = Seprajal::where('rs1', $konsul->rs1)->first();
+                    if ($sepkonsul) {
+                        $sepkonsul->delete();
+                    }
+                    $konsul->delete();
                 }
             }
 

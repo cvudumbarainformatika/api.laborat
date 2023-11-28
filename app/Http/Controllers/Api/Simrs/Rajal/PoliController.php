@@ -46,6 +46,7 @@ class PoliController extends Controller
             $daftarkunjunganpasienbpjs = KunjunganPoli::select(
                 'rs17.rs1',
                 'rs17.rs9',
+                'rs17.rs4',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
                 'rs17.rs3 as tgl_kunjungan',
@@ -182,6 +183,7 @@ class PoliController extends Controller
             $daftarkunjunganpasienbpjs = KunjunganPoli::select(
                 'rs17.rs1',
                 'rs17.rs9',
+                'rs17.rs4',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
                 'rs17.rs3 as tgl_kunjungan',
@@ -540,6 +542,61 @@ class PoliController extends Controller
         PlaningController::simpanakhir($request);
         PlaningController::simpankonsulantarpoli($request);
         $data = $plann->getAllRespPlanning($request->noreg);
+        $sep = Seprajal::where('rs1', $request->noreg)->first();
+        if (isset($sep)) {
+            Seprajal::firstOrCreate(
+                ['rs1' => $noreg],
+                [
+                    'rs2' => $sep->rs2,
+                    'rs3' => $sep->rs3,
+                    'rs4' => $sep->rs4,
+                    'rs5' => $sep->rs5,
+                    'rs6' => $sep->rs6,
+                    'rs7' => $sep->rs7,
+                    'rs8' => $sep->rs8,
+                    'rs9' => $sep->rs9,
+                    'rs10' => $sep->rs10,
+                    'rs11' => $sep->rs11,
+                    'rs12' => $sep->rs12,
+                    'rs13' => $sep->rs13,
+                    'rs14' => $sep->rs14,
+                    'rs15' => $sep->rs15,
+                    'rs16' => $sep->rs16,
+                    'rs17' => $sep->rs17,
+                    'rs18' => $sep->rs18,
+                    'laka' => $sep->laka,
+                    'lokasilaka' => $sep->lokasilaka,
+                    'penjaminlaka' => '',
+                    'users' => auth()->user()->pegawai_id ?? 'anu',
+                    'notelepon' => $sep->notelepon,
+                    'tgl_entery' => $sep->tgl_entery,
+                    'noDpjp' => $sep->noDpjp,
+                    'tgl_kejadian_laka' => $sep->tgl_kejadian_laka,
+                    'keterangan' => $sep->keterangan,
+                    'suplesi' => $sep->suplesi,
+                    'nosuplesi' => $sep->nosuplesi,
+                    'kdpropinsi' => $sep->kdpropinsi,
+                    'propinsi' => $sep->propinsi,
+                    'kdkabupaten' => $sep->kdkabupaten,
+                    'kabupaten' => $sep->kabupaten,
+                    'kdkecamatan' => $sep->kdkecamatan,
+                    'kecamatan' => $sep->kecamatan,
+                    'kodedokterdpjp' => $sep->kodedokterdpjp,
+                    'dokterdpjp' => $sep->dokterdpjp,
+                    'kodeasalperujuk' => $sep->kodeasalperujuk,
+                    'namaasalperujuk' => $sep->namaasalperujuk,
+                    'Dinsos' => $sep->Dinsos,
+                    'prolanisPRB' => $sep->prolanisPRB,
+                    'noSKTM' => $sep->noSKTM,
+                    'jeniskunjungan' => $sep->jeniskunjungan,
+                    'tujuanKunj' => $sep->tujuanKunj,
+                    'flagProcedure' => $sep->flagProcedure,
+                    'kdPenunjang' => $sep->kdPenunjang,
+                    'assesmentPel' => $sep->assesmentPel,
+                    'kdUnit' => $sep->kdUnit
+                ]
+            );
+        }
         return new JsonResponse([
             'message' => 'Pasien sudah dikirim ke poli tujuan',
             'antrian' => $cetakantrian,
