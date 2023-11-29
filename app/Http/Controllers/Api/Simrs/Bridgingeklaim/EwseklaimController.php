@@ -324,12 +324,13 @@ class EwseklaimController extends Controller
     public static function caridiagnosa($noreg)
     {
         $cari = Diagnosa::select('rs3')->where('rs1', $noreg)->get();
+        // $diagnosa = '';
         foreach ($cari as $val) {
             $wew[] = $val['rs3'] . '#';
             $xxx = implode(',', $wew);
             $diagnosa = str_replace(',', '', $xxx);
         }
-        return $diagnosa;
+        return $diagnosa ?? '';
     }
 
     public static function cariprocedure($noreg)
