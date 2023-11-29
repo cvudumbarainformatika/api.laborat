@@ -313,7 +313,7 @@ class PoliController extends Controller
                         $sharing->orderBy('id', 'DESC');
                     }
                 ])
-                ->orderby('rs17.rs3', 'DESC')
+                ->orderby('rs17.rs3', 'ASC')
                 ->paginate(request('per_page'));
             // ->simplePaginate(request('per_page'));
             // ->get();
