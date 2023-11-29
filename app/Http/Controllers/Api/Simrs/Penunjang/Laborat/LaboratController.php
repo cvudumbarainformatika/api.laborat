@@ -106,10 +106,10 @@ class LaboratController extends Controller
             Laboratpemeriksaan::create(
                 // ['rs2' => $request->nota ?? $notapermintaanlab, 'rs1' => $request->noreg, 'rs4' => $value['kode']],
                 [
-
-                    'rs2' => $simpanpermintaanlaborat->nota, 'rs1' => $request->noreg, 'rs4' => $value['kode'],
+                    'rs1' => $request->noreg,
+                    'rs2' => $simpanpermintaanlaborat->nota,
                     'rs3' => date('Y-m-d H:i:s'),
-
+                    'rs4' => $value['kode'],
                     'rs5' => $request->jumlah,
                     'rs6' => $request->biaya_sarana,
                     'rs7' => $request->biaya_sarana,
@@ -156,89 +156,88 @@ class LaboratController extends Controller
             DB::beginTransaction();
 
             // write your dependent quires here
+            DB::select('call nota_permintaanlab(@nomor)');
+            $x = DB::table('rs1')->select('rs28')->get();
+            $wew = $x[0]->rs28;
+            $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
 
-            $thumb = [];
-            foreach ($request->form as $key => $value) {
-                // array_push($thumb, $value['form']['nota'] ?? $notapermintaanlab, $value['form']['norm'], $value['form']['noreg']);
-
-                DB::select('call nota_permintaanlab(@nomor)');
-                $x = DB::table('rs1')->select('rs28')->get();
-                $wew = $x[0]->rs28;
-                $notapermintaanlab = FormatingHelper::formatallpermintaan($wew, 'J-LAB');
-                $simpanpermintaanlaborat = LaboratMeta::create(
-                    [
-
-                        'nota' => $notapermintaanlab,
-                        'noreg' => $value['form']['noreg'],
-                        'norm' => $value['form']['norm'],
-                        'jenis_laborat' => $value['form']['jenis_laborat'] ?? '',
-                        'tgl_order' => date('Y-m-d H:i:s'),
-                        'puasa_pasien' => $value['form']['puasa_pasien'] ?? '',
-                        'tgl_permintaan' => date('Y-m-d H:i:s'),
-                        'dokter_pengirim' => $value['form']['kodedokter'] ?? '',
-                        'faskes_pengirim' => $value['form']['faskes_pengirim'] ?? '',
-                        'unit_pengirim' => $ruangan,
-                        'prioritas_pemeriksaan' => $value['form']['prioritas_pemeriksaan'],
-                        'diagnosa_masalah' => $value['form']['diagnosa_masalah'] ?? '',
-                        'catatan_permintaan' => $value['form']['catatan_permintaan'] ?? '',
-                        'metode_pengiriman_hasil' => $value['form']['metode_pengiriman_hasil'] ?? '',
-                        'asal_sumber_spesimen' => $value['form']['asal_sumber_spesimen'],
-                        'jumlah_spesimen' => $value['form']['jumlah_spesimen'] ?? '',
-                        'volume_spesimen_klinis' => $value['form']['volume_spesimen_klinis'] ?? '',
-                        'cara_pengambilan_spesimen' => $value['form']['cara_pengambilan_spesimen'] ?? '',
-                        'waktu_pengambilan_spesimen' => date('Y-m-d H:i:s'),
-                        'kondisi_spesimen_waktu_diambil' => $value['form']['kondisi_spesimen_waktu_diambil'] ?? '',
-                        'waktu_fiksasi_spesimen' => date('Y-m-d H:i:s'),
-                        'cairan_fiksasi' => $value['form']['cairan_fiksasi'] ?? '',
-                        'volume_cairan_fiksasi' => $value['form']['volume_cairan_fiksasi'] ?? '',
-                        'petugas_pengambil_spesimen' => '',
-                        'petugas_penerima_spesimen' => '',
-                        'petugas_penganalisa' => '',
-                    ]
-                );
-
-                array_push($thumb, $simpanpermintaanlaborat->nota);
-
-                // if (!$simpanpermintaanlaborat) {
-                //     throw new Exept('Custom exception!');
-                // }
-
-                if (!$simpanpermintaanlaborat) {
-                    return new JsonResponse(['message' => 'Header Data Gagal Disimpan'], 500);
-                }
+            // $thumb = [];
+            // foreach ($request->form as $key => $value) {
+            $where = [
+                'nota' => $notapermintaanlab,
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+            ];
+            $form = [
+                'jenis_laborat' => $request->jenis_laborat ?? '',
+                'tgl_order' => date('Y-m-d H:i:s'),
+                'puasa_pasien' => $request->puasa_pasien ?? '',
+                'tgl_permintaan' => date('Y-m-d H:i:s'),
+                'dokter_pengirim' => $request->kodedokter ?? '',
+                'faskes_pengirim' => $request->faskes_pengirim ?? '',
+                'unit_pengirim' => $ruangan,
+                'prioritas_pemeriksaan' => $request->prioritas_pemeriksaan ?? '',
+                'diagnosa_masalah' => $request->diagnosa_masalah ?? '',
+                'catatan_permintaan' => $request->catatan_permintaan ?? '',
+                'metode_pengiriman_hasil' => $request->metode_pengiriman_hasil ?? '',
+                'asal_sumber_spesimen' => $request->asal_sumber_spesimen,
+                'jumlah_spesimen' => $request->jumlah_spesimen ?? '',
+                'volume_spesimen_klinis' => $request->volume_spesimen_klinis ?? '',
+                'cara_pengambilan_spesimen' => $request->cara_pengambilan_spesimen ?? '',
+                'waktu_pengambilan_spesimen' => date('Y-m-d H:i:s'),
+                'kondisi_spesimen_waktu_diambil' => $request->kondisi_spesimen_waktu_diambil ?? '',
+                'waktu_fiksasi_spesimen' => date('Y-m-d H:i:s'),
+                'cairan_fiksasi' => $request->cairan_fiksasi ?? '',
+                'volume_cairan_fiksasi' => $request->volume_cairan_fiksasi ?? '',
+                'petugas_pengambil_spesimen' => '',
+                'petugas_penerima_spesimen' => '',
+                'petugas_penganalisa' => '',
+            ];
 
 
-                $data = $value['details'];
-                foreach ($data as $row => $val) {
-                    Laboratpemeriksaan::create(
-                        [
 
-                            'rs2' => $simpanpermintaanlaborat->nota,
-                            'rs1' => $value['form']['noreg'],
-                            'rs4' => $val['kode'],
-                            'rs3' => date('Y-m-d H:i:s'),
+            $simpanpermintaanlaborat = LaboratMeta::firstOrCreate($where, $form);
 
-                            'rs5' => $value['form']['jumlah'] ?? '',
-                            'rs6' => $value['form']['biaya_sarana'] ?? '',
-                            'rs7' => $value['form']['biaya_sarana'] ?? '',
-                            'rs8' => $value['form']['kodedokter'] ?? '',
-                            'rs9' => $user,
-                            'rs12' => $value['form']['prioritas_pemeriksaan'] === 'Iya' ? '1' : '',
-                            'rs13' => $value['form']['biaya_layanan'] ?? '',
-                            'rs14' => $value['form']['biaya_layanan'] ?? '',
-                            'rs23'  => $ruangan,
-                            'rs24'  => $value['form']['kdsistembayar'] ?? ''
-                        ]
-                    );
-                };
+            // array_push($thumb, $simpanpermintaanlaborat->nota);
 
-                // END FOREACH
+            // if (!$simpanpermintaanlaborat) {
+            //     throw new Exept('Custom exception!');
+            // }
+
+            if (!$simpanpermintaanlaborat) {
+                return new JsonResponse(['message' => 'Header Data Gagal Disimpan'], 500);
             }
+
+
+            $data = $request->details;
+            $rs51 = [];
+            foreach ($data as $row => $val) {
+                $param = [
+                    'rs2' => $simpanpermintaanlaborat->nota,
+                    'rs1' => $request->noreg,
+                    'rs4' => $val['kode'],
+                    'rs3' => date('Y-m-d H:i:s'),
+                    'rs5' => $request->jumlah ?? '',
+                    'rs6' => $val['biaya_sarana'] ?? '',
+                    'rs7' => $val['biaya_sarana'] ?? '',
+                    'rs8' => $request->kodedokter ?? '',
+                    'rs9' => $user,
+                    'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
+                    'rs13' => $val['biaya_layanan'] ?? '',
+                    'rs14' => $val['biaya_layanan'] ?? '',
+                    'rs23'  => $ruangan,
+                    'rs24'  => $request->kdsistembayar ?? ''
+                ];
+                // Laboratpemeriksaan::create($param);
+                $rs51[] = $param;
+            };
+            Laboratpemeriksaan::insert($rs51);
+            // } // END FOREACH
 
             DB::commit();
 
-            $success = LaboratMeta::whereIn('nota', $thumb)->with(['details.pemeriksaanlab'])->get();
-            $nota = LaboratMeta::select('nota')->where('noreg', $request->form[0]['form']['noreg'])
+            $success = LaboratMeta::where('nota', $notapermintaanlab)->with(['details.pemeriksaanlab'])->get();
+            $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
                 ->groupBy('nota')->orderBy('id', 'DESC')->get();
 
             return new JsonResponse(
@@ -284,5 +283,26 @@ class LaboratController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
+    }
+    public function hapuspermintaanlaboratbaru(Request $request)
+    {
+        // $cari = Laboratpemeriksaan::find($request->id);
+        // if (!$cari) {
+        //     return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        // }
+        // $hapusdetail = Laboratpemeriksaan::where('rs2', '=', $cari->nota)->delete();
+        $hapus = Laboratpemeriksaan::whereIn('id', $request->id)->delete();
+        $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->get();
+
+        $collection = collect($data);
+        $nota = $collection->pluck('nota');
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        return new JsonResponse([
+            'message' => 'berhasil dihapus',
+            'result' => $data,
+            'nota' => $nota,
+        ], 200);
     }
 }

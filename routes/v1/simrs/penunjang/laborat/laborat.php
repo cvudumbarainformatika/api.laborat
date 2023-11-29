@@ -14,6 +14,7 @@ Route::group([
     Route::post('/simpanpermintaanlaborat', [LaboratController::class, 'simpanpermintaanlaborat']);
     Route::post('/simpanpermintaanlaboratbaru', [LaboratController::class, 'simpanpermintaanlaboratbaru']);
     Route::post('/hapuspermintaanlaborat', [LaboratController::class, 'hapuspermintaanlaborat']);
+    Route::post('/hapuspermintaanlaboratbaru', [LaboratController::class, 'hapuspermintaanlaboratbaru']);
 
     Route::get('/listmasterpemeriksaanradiologi', [RadiologimetaController::class, 'listmasterpemeriksaanradiologi']);
 });
