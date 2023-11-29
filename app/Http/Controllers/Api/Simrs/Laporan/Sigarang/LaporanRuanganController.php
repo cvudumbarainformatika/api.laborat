@@ -193,7 +193,7 @@ class LaporanRuanganController extends Controller
                         'detail_permintaanruangans.kode_rs',
                         'permintaanruangans.tanggal',
                         'ruangs.uraian as tujuan',
-                        DB::raw('ROUND(sum(detail_permintaanruangans.jumlah),2) as jumlah'),
+                        DB::raw('ROUND(sum(detail_permintaanruangans.jumlah_distribusi),2) as jumlah'),
                     ])->leftJoin('permintaanruangans', function ($b) {
                         $b->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
                     })->leftJoin('ruangs', function ($p) {
