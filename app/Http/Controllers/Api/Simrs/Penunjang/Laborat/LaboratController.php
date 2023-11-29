@@ -286,11 +286,6 @@ class LaboratController extends Controller
     }
     public function hapuspermintaanlaboratbaru(Request $request)
     {
-        // $cari = Laboratpemeriksaan::find($request->id);
-        // if (!$cari) {
-        //     return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
-        // }
-        // $hapusdetail = Laboratpemeriksaan::where('rs2', '=', $cari->nota)->delete();
         $hapus = Laboratpemeriksaan::whereIn('id', $request->id)->delete();
         $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->get();
 
