@@ -336,7 +336,7 @@ class EwseklaimController extends Controller
     public static function cariprocedure($noreg)
     {
 
-        $cari = Tindakan::select('rs4')->with('maapingprocedure:kdMaster,icd9')
+        $cari = Tindakan::select('rs4')->with('maapingprocedure:kdMaster.icd9')
             ->where('rs1', $noreg)->get();
         if (count($cari) == 0) {
             $icd9 = '';
