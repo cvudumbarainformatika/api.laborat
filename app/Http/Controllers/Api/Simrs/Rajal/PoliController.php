@@ -453,26 +453,31 @@ class PoliController extends Controller
     public function konsulpoli(Request $request)
     {
 
-        $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
-        if (count($cek) > 0) {
-            $before = $cek[0]['rs4'] === 'Kontrol' || $cek[0]['rs4'] === 'Konsultasi';
-            $req = $request->planing == 'Konsultasi' || $request->planing == 'Kontrol';
-            // return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!', $before, $req], 500);
-            if ($before && $req) {
-                $col = collect($cek);
-                $renc = $col->where('rs4', $request->planing);
-                if (count($renc) >= 1) {
-                    $mesage = (count($renc) > 1 ? 'Sudah ada Plannig ' . $request->planing : 'Sudah Ada Planning Kontrol dan Konsultasi');
-                    return new JsonResponse(['message' => $mesage, 'data' => $renc], 500);
-                }
-            } else {
-                return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
-            }
-        }
+        // $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
+        // if (count($cek) > 0) {
+        //     $before = $cek[0]['rs4'] === 'Kontrol' || $cek[0]['rs4'] === 'Konsultasi';
+        //     $req = $request->planing == 'Konsultasi' || $request->planing == 'Kontrol';
+        //     // return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!', $before, $req], 500);
+        //     if ($before && $req) {
+        //         $col = collect($cek);
+        //         $renc = $col->where('rs4', $request->planing);
+        //         if (count($renc) >= 1) {
+        //             $mesage = (count($renc) > 1 ? 'Sudah ada Plannig ' . $request->planing : 'Sudah Ada Planning Kontrol dan Konsultasi');
+        //             return new JsonResponse(['message' => $mesage, 'data' => $renc], 500);
+        //         }
+        //     } else {
+        //         return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
+        //     }
+        // }
 
+        $konsulan = KunjunganPoli::where('rs4', $request->noreg)->count();
+        if ($konsulan > 0) {
+            return new JsonResponse(['message' => 'Pasien sudah pernah di konsulkan oleh poli ini hari ini'], 500);
+        }
         if ($request->kdpoli_asal == $request->kdpoli_tujuan) {
             return new JsonResponse(['message' => 'Maaf, tidak boleh konsultasi ke polinya sendiri.'], 500);
         }
+
         $tglmasukx = Carbon::create($request->tgl_kunjungan);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
