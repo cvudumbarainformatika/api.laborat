@@ -136,7 +136,7 @@ class PoliController extends Controller
                         $t->with('masterpenunjang')->orderBy('id', 'DESC');
                     },
                     'tindakan' => function ($t) {
-                        $t->with('mastertindakan:rs1,rs2')
+                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs')
                             ->orderBy('id', 'DESC');
                     },
                     'diagnosa' => function ($d) {
@@ -273,7 +273,7 @@ class PoliController extends Controller
                         $t->with('masterpenunjang')->orderBy('id', 'DESC');
                     },
                     'tindakan' => function ($t) {
-                        $t->with('mastertindakan:rs1,rs2')
+                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs')
                             ->orderBy('id', 'DESC');
                     },
                     'diagnosa' => function ($d) {

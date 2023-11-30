@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Tindakan;
 
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Ews\MapingProcedure;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Mtindakan;
@@ -41,5 +42,9 @@ class Tindakan extends Model
     public function mpoli()
     {
         return $this->hasOne(Mpoli::class, 'rs1', 'rs22');
+    }
+    public function pegawai()
+    {
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
     }
 }
