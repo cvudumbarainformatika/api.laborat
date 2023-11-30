@@ -57,6 +57,7 @@ class TindakanController extends Controller
                 'rs13' => $request->hargapelayanan,
                 'rs14' => $request->hargapelayanan,
                 // 'rs15' => $request->noreg,
+                'rs20' => $request->keterangan,
                 'rs22' => $request->kdpoli,
                 'rs24' => $request->kdsistembayar,
             ]
