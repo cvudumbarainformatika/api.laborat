@@ -21,6 +21,7 @@ Route::group([
     Route::post('/jadwal', [EditsuratbpjsController::class, 'jadwaldokter']);
 
     Route::get('/listrujukankeluarrs', [EditsuratbpjsController::class, 'listrujukankeluarrs']);
+    Route::post('/updaterujukan', [EditsuratbpjsController::class, 'updaterujukan']);
 
     Route::post('/konsulpoli', [RajalPoliController::class, 'konsulpoli']);
 });
