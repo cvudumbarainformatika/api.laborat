@@ -89,8 +89,8 @@ class EditsuratbpjsController extends Controller
     public function listrujukankeluarrs()
     {
         $listrujukankeluarrs = BridgingbpjsHelper::get_url(
-            'Rujukan',
-            'Rujukan/Keluar/List/tglMulai' . request('tglMulai') . '/tglAkhir/' . request('tglAkhir')
+            'vclaim',
+            'Rujukan/Keluar/List/tglMulai/' . request('tglawal') . '/tglAkhir/' . request('tglakhir')
         );
         return new JsonResponse($listrujukankeluarrs);
     }
