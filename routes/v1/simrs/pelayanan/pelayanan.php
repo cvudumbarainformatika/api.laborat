@@ -47,10 +47,12 @@ Route::group([
     Route::get('/caridiagnosa', [EwseklaimController::class, 'caridiagnosa']);
     Route::get('/carisimulasi', [EwseklaimController::class, 'carisimulasi']);
 
+    Route::get('/cari-sep', [PlaningController::class, 'cariSep']);
     Route::get('/mpalningrajal', [PlaningController::class, 'mpalningrajal']);
     Route::get('/mpoli', [PlaningController::class, 'mpoli']);
     Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
     Route::post('/hapusplaningpasien', [PlaningController::class, 'hapusplaningpasien']);
+
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
     Route::get('/polibpjs', [BridbpjsplanController::class, 'polibpjs']);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Planing;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpoli;
@@ -541,5 +542,14 @@ class PlaningController extends Controller
             return 500;
         }
         return 200;
+    }
+
+    public function cariSep()
+    {
+        $history = BridgingbpjsHelper::get_url(
+            'vclaim',
+            'monitoring/HistoriPelayanan/NoKartu/' . request('noka') . '/tglMulai/' . request('tglawal') . '/tglAkhir/' . request('tglakhir')
+        );
+        return new JsonResponse($history);
     }
 }
