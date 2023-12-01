@@ -13,6 +13,7 @@ class Transrujukan extends Model
     use HasFactory;
     protected $table = 'rs288';
     protected $guarded = ['id'];
+    public $timestamps = false;
 
     public function masterpasien()
     {

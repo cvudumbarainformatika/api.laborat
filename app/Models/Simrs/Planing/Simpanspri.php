@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Planing;
 
+use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,6 +14,6 @@ class Simpanspri extends Model
 
     public function jadwaloperasi()
     {
-        return $this->hasOne(jadwaloperasi::class, 'noreg', 'noreg');
+        return $this->hasOne(JadwaloperasiController::class, 'noreg', 'noreg');
     }
 }

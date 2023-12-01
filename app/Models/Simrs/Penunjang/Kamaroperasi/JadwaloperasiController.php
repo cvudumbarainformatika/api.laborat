@@ -10,4 +10,5 @@ class JadwaloperasiController extends Model
     use HasFactory;
     protected $table = 'operasi_jadwal';
     protected $guarded = ['id'];
+    public $timestamps = false;
 }

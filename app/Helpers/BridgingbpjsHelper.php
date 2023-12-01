@@ -72,7 +72,8 @@ class BridgingbpjsHelper
         if (!$data) {
             return response()->json([
                 'code' => 500,
-                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
+                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down',
+                'data' => $data
             ], 500);
         }
 
@@ -95,6 +96,8 @@ class BridgingbpjsHelper
         if (!$hasilakhir) {
             return response()->json($data);
         }
+
+        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
 
@@ -133,6 +136,8 @@ class BridgingbpjsHelper
         }
         $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
         $res['response'] = json_decode($hasilakhir);
+
+        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
     public static function delete_url(string $name, $param, $post)
@@ -167,6 +172,7 @@ class BridgingbpjsHelper
         if (!$nilairespon) {
             return $res;
         }
+        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
 
@@ -301,6 +307,7 @@ class BridgingbpjsHelper
         if (!$hasilakhir) {
             return response()->json($data);
         }
+        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
 

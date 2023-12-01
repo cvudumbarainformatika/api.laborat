@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Planing;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpoli;
@@ -64,22 +65,22 @@ class PlaningController extends Controller
     }
     public function simpanplaningpasien(Request $request)
     {
-        $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
-        if (count($cek) > 0) {
-            $before = $cek[0]['rs4'] === 'Kontrol' || $cek[0]['rs4'] === 'Konsultasi';
-            $req = $request->planing == 'Konsultasi' || $request->planing == 'Kontrol';
-            // return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!', $before, $req], 500);
-            if ($before && $req) {
-                $col = collect($cek);
-                $renc = $col->where('rs4', $request->planing);
-                if (count($renc) >= 1) {
-                    $mesage = (count($renc) > 1 ? 'Sudah ada Plannig ' . $request->planing : 'Sudah Ada Planning Kontrol dan Konsultasi');
-                    return new JsonResponse(['message' => $mesage, 'data' => $renc], 500);
-                }
-            } else {
-                return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
-            }
-        }
+        // $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
+        // if (count($cek) > 0) {
+        //     $before = $cek[0]['rs4'] === 'Kontrol' || $cek[0]['rs4'] === 'Konsultasi';
+        //     $req = $request->planing == 'Konsultasi' || $request->planing == 'Kontrol';
+        //     // return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!', $before, $req], 500);
+        //     if ($before && $req) {
+        //         $col = collect($cek);
+        //         $renc = $col->where('rs4', $request->planing);
+        //         if (count($renc) >= 1) {
+        //             $mesage = (count($renc) > 1 ? 'Sudah ada Plannig ' . $request->planing : 'Sudah Ada Planning Kontrol dan Konsultasi');
+        //             return new JsonResponse(['message' => $mesage, 'data' => $renc], 500);
+        //         }
+        //     } else {
+        //         return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
+        //     }
+        // }
         $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
         $groupsistembayar = $sistembayar->groups;
 
@@ -541,5 +542,14 @@ class PlaningController extends Controller
             return 500;
         }
         return 200;
+    }
+
+    public function cariSep()
+    {
+        $history = BridgingbpjsHelper::get_url(
+            'vclaim',
+            'monitoring/HistoriPelayanan/NoKartu/' . request('noka') . '/tglMulai/' . request('tglawal') . '/tglAkhir/' . request('tglakhir')
+        );
+        return new JsonResponse($history);
     }
 }
