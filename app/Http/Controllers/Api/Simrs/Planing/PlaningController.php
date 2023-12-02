@@ -634,7 +634,7 @@ class PlaningController extends Controller
                 }
             } else {
                 if ($groupsistembayar == '1') {
-                    $createspri = BridbpjsplanController::createspri($request);
+                    $createspri = BridbpjsplanController::updateSpri($request);
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
                         $nospri = $createspri['response']->noSPRI;
