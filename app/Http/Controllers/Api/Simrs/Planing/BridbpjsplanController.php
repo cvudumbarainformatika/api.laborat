@@ -161,7 +161,7 @@ class BridbpjsplanController extends Controller
         $xxx = $bridcretaerujukan['metadata']['code'];
 
         if ($xxx === 200 || $xxx === '200') {
-            $norujukan = $bridcretaerujukan['response']->rujukan->noRujukan;
+            $norujukan = $bridcretaerujukan['result']->rujukan->noRujukan;
             $simpanrujukan = Transrujukan::updateOrCreate(
                 [
                     'rs1' => $request->noreg,

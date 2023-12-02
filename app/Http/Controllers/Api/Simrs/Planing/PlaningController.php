@@ -601,7 +601,7 @@ class PlaningController extends Controller
                     }
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
-                        $nospri = $createspri['response']->noSPRI;
+                        $nospri = $createspri['result']->noSPRI;
                         $simpanop = self::updatejadwaloperasi($request);
                         if ($simpanop == 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
