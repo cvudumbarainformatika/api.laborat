@@ -289,14 +289,14 @@ class BridbpjsplanController extends Controller
             ]
         ];
 
-        $createspri = BridgingbpjsHelper::post_url(
+        $createspri = BridgingbpjsHelper::put_url(
             'vclaim',
             'RencanaKontrol/UpdateSPRI',
             $data
         );
         Bpjs_http_respon::create(
             [
-                'method' => 'POST',
+                'method' => 'PUT',
                 'noreg' => $request->noreg ?? '',
                 'request' => $data,
                 'respon' => $createspri,
