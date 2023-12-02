@@ -51,6 +51,7 @@ Route::group([
     Route::get('/mpalningrajal', [PlaningController::class, 'mpalningrajal']);
     Route::get('/mpoli', [PlaningController::class, 'mpoli']);
     Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
+    Route::post('/update-planning-pasien', [PlaningController::class, 'updatePlanningPasien']);
     Route::post('/hapusplaningpasien', [PlaningController::class, 'hapusplaningpasien']);
 
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
