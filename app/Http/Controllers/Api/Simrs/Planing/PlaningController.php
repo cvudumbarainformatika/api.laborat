@@ -674,9 +674,10 @@ class PlaningController extends Controller
         if ($noreg) {
             $simpanakhir = WaktupulangPoli::updateOrCreate(
                 [
-                    'rs1' => $request->noreg,
+                    'id' => $request->id,
                 ],
                 [
+                    'rs1' => $request->noreg,
                     'rs2' => $request->norm ?? '',
                     'rs3' => $request->kdruang ?? '',
                     'rs4' => $request->planing ?? '',
