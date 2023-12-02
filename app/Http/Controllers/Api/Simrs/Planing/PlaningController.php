@@ -46,6 +46,7 @@ class PlaningController extends Controller
             'spri',
             'kontrol',
             'ranap',
+            'operasi',
         ])->where('rs1', $noreg)->first();
         return $data;
     }
@@ -59,6 +60,7 @@ class PlaningController extends Controller
             'spri',
             'kontrol',
             'ranap',
+            'operasi',
         ])->where('rs1', $noreg)->get();
         $anu = collect($data);
         return $anu->all();
@@ -727,7 +729,7 @@ class PlaningController extends Controller
     public static function updatejadwaloperasi($request)
     {
         $conter = JadwaloperasiController::count();
-        $kodebooking = "JO/" . ($conter + 1) . "/" . date("d/m/Y");
+        // $kodebooking = "JO/" . ($conter + 1) . "/" . date("d/m/Y");
         $simpan = JadwaloperasiController::updateOrCreate(
             [
                 'noreg' => $request->noreg,
@@ -735,7 +737,7 @@ class PlaningController extends Controller
             [
                 'norm' => $request->norm,
                 //    'nopermintaan' => $request->nopermintaan,
-                'kodebooking' => $kodebooking,
+                // 'kodebooking' => $kodebooking,
                 'tanggaloperasi' => $request->tanggaloperasi,
                 'jenistindakan' => $request->jenistindakan,
                 'icd9' => $request->icd9,
