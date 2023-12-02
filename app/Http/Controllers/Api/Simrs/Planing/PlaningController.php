@@ -596,6 +596,9 @@ class PlaningController extends Controller
             if ($request->status == 'Operasi') {
                 if ($groupsistembayar == '1') {
                     $createspri = BridbpjsplanController::updateSpri($request);
+                    if (!$createspri['metadata']['code']) {
+                        return $createspri;
+                    }
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
                         $nospri = $createspri['response']->noSPRI;
