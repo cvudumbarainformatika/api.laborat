@@ -365,7 +365,7 @@ class PlaningController extends Controller
                 'dokter' => $request->dokter,
                 'kdruangtujuan' => $request->kdruangtujuan,
                 'kontakpasien' => $request->kontakpasien,
-                'jenisoperasi' => $request->kddokter,
+                'jenisoperasi' => $request->jenisoperasi ?? '',
                 'terlaksana' => 0
             ]
         );
@@ -756,7 +756,7 @@ class PlaningController extends Controller
                 'dokter' => $request->dokter,
                 'kdruangtujuan' => $request->kdruangtujuan,
                 'kontakpasien' => $request->kontakpasien,
-                'jenisoperasi' => $request->kddokter,
+                'jenisoperasi' => $request->jenisoperasi ?? '',
                 'terlaksana' => 0
             ]
         );
