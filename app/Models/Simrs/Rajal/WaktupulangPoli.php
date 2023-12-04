@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Rajal;
 
 use App\Models\Poli;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Simpanspri;
 use App\Models\Simrs\Planing\Simpansuratkontrol;
 use App\Models\Simrs\Planing\Transrujukan;
@@ -50,5 +51,9 @@ class WaktupulangPoli extends Model
     public function ranap()
     {
         return $this->hasOne(Mruangranap::class, 'rs4', 'rs5');
+    }
+    public function operasi()
+    {
+        return $this->hasOne(JadwaloperasiController::class, 'noreg', 'rs1');
     }
 }

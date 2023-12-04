@@ -46,6 +46,7 @@ class PlaningController extends Controller
             'spri',
             'kontrol',
             'ranap',
+            'operasi',
         ])->where('rs1', $noreg)->first();
         return $data;
     }
@@ -59,6 +60,7 @@ class PlaningController extends Controller
             'spri',
             'kontrol',
             'ranap',
+            'operasi',
         ])->where('rs1', $noreg)->get();
         $anu = collect($data);
         return $anu->all();
@@ -551,5 +553,241 @@ class PlaningController extends Controller
             'monitoring/HistoriPelayanan/NoKartu/' . request('noka') . '/tglMulai/' . request('tglawal') . '/tglAkhir/' . request('tglakhir')
         );
         return new JsonResponse($history);
+    }
+
+    public function updatePlanningPasien(Request $request)
+    {
+        $sistembayar = Msistembayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
+        $groupsistembayar = $sistembayar->groups;
+        if ($request->planing == 'Rumah Sakit Lain') {
+            if ($groupsistembayar == '1') {
+                $createrujukan = BridbpjsplanController::bridUpdateRujukan($request);
+                if ($createrujukan == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                } elseif ($createrujukan == 200) {
+                    $simpanakhir = self::updateakhir($request);
+                    if ($simpanakhir == 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                    }
+                    $data = $this->getRespPlanning($request->noreg);
+                    return new JsonResponse([
+                        'message' => 'Data Berhasil Diupdate',
+                        'result' => $data
+                    ], 200);
+                } else {
+                    return $createrujukan;
+                }
+            } else {
+                $simpanakhir = self::updateakhir($request);
+                if ($simpanakhir == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!',], 500);
+                }
+                $simpanrujukanumum = self::updaterujukanumum($request);
+                if ($simpanrujukanumum == 500) {
+                    return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate...!!!',], 500);
+                }
+                $data = $this->getRespPlanning($request->noreg);
+                return new JsonResponse([
+                    'message' => 'Data Berhasil Diupdate',
+                    'result' => $data
+                ], 200);
+            }
+        } elseif ($request->planing == 'Rawat Inap') {
+            if ($request->status == 'Operasi') {
+                if ($groupsistembayar == '1') {
+                    $createspri = BridbpjsplanController::updateSpri($request);
+                    if (!$createspri['metadata']['code']) {
+                        return $createspri;
+                    }
+                    $xxx = $createspri['metadata']['code'];
+                    if ($xxx === 200 || $xxx === '200') {
+                        $nospri = $createspri['result']->noSPRI;
+                        $simpanop = self::updatejadwaloperasi($request);
+                        if ($simpanop == 500) {
+                            return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                        }
+                        $simpanspri = self::updatespri($request, $groupsistembayar, $nospri);
+                        $simpanakhir = self::updateakhir($request);
+                        if ($simpanspri === 500) {
+                            return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                        }
+                        $data = $this->getRespPlanning($request->noreg);
+                        return new JsonResponse([
+                            'message' => 'Data Berhasil Diupdate...!!!',
+                            'result' => $data
+                        ], 200);
+                    }
+                } else {
+                    $nospri = $request->noreg;
+                    $simpanop = self::updatejadwaloperasi($request);
+                    // return $simpanop;
+                    if ($simpanop == 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                    }
+                    $simpanspri = self::updatespri($request, $groupsistembayar, $nospri);
+                    if ($simpanspri === 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                    }
+                    $simpanakhir = self::updateakhir($request);
+                    $data = $this->getRespPlanning($request->noreg);
+                    return new JsonResponse([
+                        'message' => 'Data Berhasil Diupdate...!!!',
+                        'result' => $data
+                    ], 200);
+                }
+            } else {
+                if ($groupsistembayar == '1') {
+                    $createspri = BridbpjsplanController::updateSpri($request);
+                    $xxx = $createspri['metadata']['code'];
+                    if ($xxx === 200 || $xxx === '200') {
+                        $nospri = $createspri['response']->noSPRI;
+                        $simpanspri = self::updatespri($request, $groupsistembayar, $nospri);
+                        if ($simpanspri === 500) {
+                            return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                        }
+                        $simpanakhir = self::updateakhir($request);
+                        $data = $this->getRespPlanning($request->noreg);
+                        return new JsonResponse([
+                            'message' => 'Data Berhasil Diupdate...!!!',
+                            'result' => $data
+                        ], 200);
+                    }
+                } else {
+                    $nospri = $request->noreg;
+                    $simpanspri = self::updatespri($request, $groupsistembayar, $nospri);
+                    $simpanakhir = self::updateakhir($request);
+                    $data = $this->getRespPlanning($request->noreg);
+                    if ($simpanspri === 500) {
+                        return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);
+                    }
+                    return new JsonResponse([
+                        'message' => 'Data Berhasil Diupdate...!!!',
+                        'result' => $data
+                    ], 200);
+                }
+            }
+        }
+    }
+    public static function updateakhir($request)
+    {
+        $noreg = $request->noreg ? ($request->noreg !== null ? $request->noreg : false) : false;
+        if ($noreg) {
+            $simpanakhir = WaktupulangPoli::updateOrCreate(
+                [
+                    'id' => $request->id,
+                ],
+                [
+                    'rs1' => $request->noreg,
+                    'rs2' => $request->norm ?? '',
+                    'rs3' => $request->kdruang ?? '',
+                    'rs4' => $request->planing ?? '',
+                    'rs5' => $request->kdruangtujuan ?? '',
+                    'tgl' => date('Y-m-d H:i:s'),
+                    'user' => auth()->user()->pegawai_id
+                ]
+            );
+            if (!$simpanakhir) {
+                return 500;
+            }
+            return 200;
+        } else {
+            return 500;
+        }
+    }
+    public static function updaterujukanumum($request)
+    {
+        $simpanrujukan = Transrujukan::updateOrCreate(
+            [
+                'rs1' => $request->noreg,
+            ],
+            [
+                'rs2' => $request->norm,
+                //    'rs3' => $norujukan,
+                // 'rs4' => $request->nosep,
+                'rs5' => $request->tglrujukan,
+                'rs6' => $request->ppkdirujuk,
+                'rs7' => $request->namappkdirujuk,
+                'rs8' => $request->jenispelayanan,
+                'rs9' => $request->catatan,
+                'rs10' => $request->diagnosarujukan,
+                'rs11' => $request->tiperujukan,
+                'rs12' => $request->kodepoli,
+                'rs13' => date('Y-m-d H:i:s'),
+                'rs14' => auth()->user()->pegawai_id,
+                //   'rs15' => $request->noka,
+                'rs16' => $request->nama,
+                'rs17' => $request->kelamin,
+                'tglRencanaKunjungan' => $request->tglrencanakunjungan,
+                'diagnosa' => $request->diagnosa,
+                'poli' => $request->namapolirujukan,
+                //    'tipefaskes' => $request->tipefaskes,
+                'polix' => $request->polirujukan
+            ]
+        );
+
+        if (!$simpanrujukan) {
+            return 500;
+        }
+        return 200;
+    }
+    public static function updatejadwaloperasi($request)
+    {
+        $conter = JadwaloperasiController::count();
+        // $kodebooking = "JO/" . ($conter + 1) . "/" . date("d/m/Y");
+        $simpan = JadwaloperasiController::updateOrCreate(
+            [
+                'noreg' => $request->noreg,
+            ],
+            [
+                'norm' => $request->norm,
+                //    'nopermintaan' => $request->nopermintaan,
+                // 'kodebooking' => $kodebooking,
+                'tanggaloperasi' => $request->tanggaloperasi,
+                'jenistindakan' => $request->jenistindakan,
+                'icd9' => $request->icd9,
+                'kodepoli' => $request->kodepolibpjs,
+                'namapoli' => $request->polibpjs,
+                'lastupdate' => time(),
+                'ket' => $request->keterangan,
+                'userid' => auth()->user()->pegawai_id,
+                'kdruang' => $request->kdruang,
+                'tglupdate' => $request->tglupdate,
+                'kddokter' => $request->kddokter,
+                'dokter' => $request->dokter,
+                'kdruangtujuan' => $request->kdruangtujuan,
+                'kontakpasien' => $request->kontakpasien,
+                'jenisoperasi' => $request->kddokter,
+                'terlaksana' => 0
+            ]
+        );
+        if (!$simpan) {
+            return 500;
+        }
+        return 200;
+    }
+    public static function updatespri($request, $groupsistembayar, $nospri)
+    {
+        $simpanspri = Simpanspri::updateOrCreate(
+            [
+                'noreg' => $request->noreg,
+            ],
+            [
+                'noSuratKontrol' => $nospri,
+                'norm' => $request->norm,
+                'kodeDokter' => $request->kddokter,
+                'poliKontrol' => $request->kodepolibpjs,
+                'tglRencanaKontrol' => $request->tglrencanakunjungan,
+                'namaDokter' => $request->dokter,
+                'noKartu' => $request->noka,
+                'nama' => $request->nama,
+                'kelamin' => $request->kelamin,
+                'tglLahir' => $request->tgllahir,
+                'user_id' => auth()->user()->pegawai_id
+            ]
+        );
+        if (!$simpanspri) {
+            return 500;
+        }
+        return 200;
     }
 }

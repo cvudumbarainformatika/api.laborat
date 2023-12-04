@@ -113,6 +113,7 @@ class TindakanController extends Controller
             'rs2 as tindakan',
         )
             ->where('rs2', 'Like', '%' . request('tindakan') . '%')
+            ->orWhere('rs1', 'Like', '%' . request('tindakan') . '%')
             ->get();
         return new JsonResponse($dialogoperasi);
     }

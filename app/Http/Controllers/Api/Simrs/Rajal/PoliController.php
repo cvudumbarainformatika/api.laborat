@@ -170,7 +170,8 @@ class PoliController extends Controller
                         'listkonsul',
                         'spri',
                         'ranap',
-                        'kontrol'
+                        'kontrol',
+                        'operasi',
                     )->orderBy('id', 'DESC');
                 },
                 'edukasi' => function ($x) {

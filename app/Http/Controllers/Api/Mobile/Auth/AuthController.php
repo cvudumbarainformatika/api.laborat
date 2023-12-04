@@ -139,6 +139,12 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+
+        // $cek = User::find('pegawai_id', $request->pegawai_id)->first();
+        // if ($cek) {
+        //     return new JsonResponse(['status' => 'failed', 'message' => 'Maaf, Anda sudah Register Sebelumnya'], 500);
+        // }
+
         $data = new User();
         $data->username = $request->username;
         $data->email = $request->username . '@app.com';

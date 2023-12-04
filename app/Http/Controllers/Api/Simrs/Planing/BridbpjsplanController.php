@@ -6,6 +6,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Planing\Simpanspri;
 use App\Models\Simrs\Planing\Transrujukan;
 use Illuminate\Http\Request;
 
@@ -71,6 +72,101 @@ class BridbpjsplanController extends Controller
             $simpanrujukan = Transrujukan::create(
                 [
                     'rs1' => $request->noreg,
+                    'rs2' => $request->norm,
+                    'rs3' => $norujukan,
+                    'rs4' => $request->nosep,
+                    'rs5' => $request->tglrujukan,
+                    'rs6' => $request->ppkdirujuk,
+                    'rs7' => $request->namappkdirujuk,
+                    'rs8' => $request->jenispelayanan,
+                    'rs9' => $request->catatan,
+                    'rs10' => $request->diagnosarujukan,
+                    'rs11' => $request->tiperujukan,
+                    'rs12' => $request->kodepoli,
+                    'rs13' => date('Y-m-d H:i:s'),
+                    'rs14' => auth()->user()->pegawai_id,
+                    'rs15' => $request->noka,
+                    'rs16' => $request->nama,
+                    'rs17' => $request->kelamin,
+                    'tglRencanaKunjungan' => $request->tglrencanakunjungan,
+                    'diagnosa' => $request->diagnosa,
+                    'poli' => $request->namapolirujukan,
+                    'tipefaskes' => $request->tipefaskes,
+                    'polix' => $request->polirujukan
+                ]
+            );
+
+            if (!$simpanrujukan) {
+                return 500;
+            }
+            return 200;
+        }
+
+        return $bridcretaerujukan;
+    }
+    public static function bridUpdateRujukan($request)
+    {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
+        $data = [
+            "request" => [
+                "t_rujukan" => [
+                    "noRujukan" => $request->norujukan,
+                    "tglRujukan" => $request->tglrujukan,
+                    'tglRencanaKunjungan' => $request->tglrencanakunjungan,
+                    "ppkDirujuk" => $request->ppkdirujuk,
+                    "jnsPelayanan" => $request->jenispelayanan,
+                    "catatan" => $request->catatan,
+                    "diagRujukan" => $request->diagnosarujukan,
+                    "tipeRujukan" => $request->tiperujukan,
+                    "poliRujukan" => $request->polirujukan,
+                    'user' => $use
+
+
+                    // "noSep" => '1327R0010923V008341',
+                    // "tglRujukan" => '2023-09-29',
+                    // 'tglRencanaKunjungan' => '2023-10-10',
+                    // "ppkDirujuk" => '1323R001',
+                    // "jnsPelayanan" => '2',
+                    // "catatan" => 'coba ws',
+                    // "diagRujukan" => 'A15',
+                    // "tipeRujukan" => '0',
+                    // "poliRujukan" => 'BSY',
+                    // 'user' => auth()->user()->pegawai_id
+                ]
+            ]
+        ];
+        $tgltobpjshttpres = DateHelper::getDateTime();
+
+        $bridcretaerujukan = BridgingbpjsHelper::put_url(
+            'vclaim',
+            'Rujukan/2.0/update',
+            $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'PUT',
+                'noreg' => $request->noreg,
+                'request' => $data,
+                'respon' => $bridcretaerujukan,
+                'url' => '/Rujukan/2.0/update',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+
+        $xxx = $bridcretaerujukan['metadata']['code'];
+
+        if ($xxx === 200 || $xxx === '200') {
+            $norujukan = $bridcretaerujukan['result'];
+            $simpanrujukan = Transrujukan::updateOrCreate(
+                [
+                    'rs1' => $request->noreg,
+                ],
+                [
                     'rs2' => $request->norm,
                     'rs3' => $norujukan,
                     'rs4' => $request->nosep,
@@ -172,6 +268,65 @@ class BridbpjsplanController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
+        return $createspri;
+    }
+    public static function updateSpri($request)
+    {
+        // menghindari lengt user bpjs yang minta minimal 3 karakter
+        $data = auth()->user()->pegawai_id;
+        $len = strlen($data);
+        $use = $len === 1 ? '000' . $data : ($len === 2 ? '00' . $data : ($len === 3 ? '0' . $data : $data));
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "request" =>
+            [
+                "noSPRI" => $request->nospri,
+                "kodeDokter" => $request->kodedokterdpjp,
+                "poliKontrol" => $request->kodepolibpjs,
+                "tglRencanaKontrol" => $request->tglrencanakontrol,
+                "user" => $use
+            ]
+        ];
+
+        $createspri = BridgingbpjsHelper::put_url(
+            'vclaim',
+            'RencanaKontrol/UpdateSPRI',
+            $data
+        );
+        Bpjs_http_respon::create(
+            [
+                'method' => 'PUT',
+                'noreg' => $request->noreg ?? '',
+                'request' => $data,
+                'respon' => $createspri,
+                'url' => '/RencanaKontrol/UpdateSPRI',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+        // $xxx = $createspri['metadata']['code'];
+        // if ($xxx === 200 || $xxx === '200') {
+        //     $nospri = $createspri['response']->noSPRI;
+        //     $simpanspri = Simpanspri::updateOrCreate(
+        //         [
+        //             'noreg' => $request->noreg,
+        //         ],
+        //         [
+        //             'noSuratKontrol' => $nospri,
+        //             'norm' => $request->norm,
+        //             'kodeDokter' => $request->kddokter,
+        //             'poliKontrol' => $request->kodepolibpjs,
+        //             'tglRencanaKontrol' => $request->tglrencanakunjungan,
+        //             'namaDokter' => $request->dokter,
+        //             'noKartu' => $request->noka,
+        //             'nama' => $request->nama,
+        //             'kelamin' => $request->kelamin,
+        //             'tglLahir' => $request->tgllahir,
+        //             'user_id' => auth()->user()->pegawai_id
+        //         ]
+        //     );
+        //     return $simpanspri;
+        // }
         return $createspri;
     }
 
