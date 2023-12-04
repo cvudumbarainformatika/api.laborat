@@ -1,6 +1,7 @@
 <?php
 
 use App\Helpers\Routes\RouteHelper;
+use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\AutogenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
@@ -34,3 +35,5 @@ Route::prefix('v3')->group(function () {
 
 Route::post('/autogen/wawanpost', [AutogenController::class, 'wawanpost']);
 Route::post('/autogen/create_post', [AutogenController::class, 'create_post']);
+
+Route::post('/autogen/wewx', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);

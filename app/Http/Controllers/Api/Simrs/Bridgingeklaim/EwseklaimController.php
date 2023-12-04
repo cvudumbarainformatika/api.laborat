@@ -16,9 +16,9 @@ use Illuminate\Http\Request;
 
 class EwseklaimController extends Controller
 {
-    public static function ewseklaimrajal_newclaim($noreg)
+    public static function ewseklaimrajal_newclaim()
     {
-        //$noreg = $noreg;
+        $noreg = '91582/11/2023/J';
         $carirajal = KunjunganPoli::select('rs2', 'rs3', 'rs25')->with('masterpasien:rs1,rs2,rs16,rs17,berat_lahir')
             ->where('rs1', '=', $noreg)
             ->where('rs14', 'Like', '%BPJS%')->get();
@@ -51,7 +51,7 @@ class EwseklaimController extends Controller
             $gender = '';
         }
         $klaimrajal = KlaimrajalEws::where('noreg', $noreg)->count();
-        // return $klaimrajal;
+
         if ($klaimrajal === 0) {
             $querys_new_klaim = array(
                 "metadata" => array(
@@ -67,7 +67,6 @@ class EwseklaimController extends Controller
                 )
             );
             $response_new_klaim = BridgingeklaimHelper::curl_func($querys_new_klaim);
-            // return  $response_new_klaim;
             $response_new_klaim_code = $response_new_klaim["metadata"]["code"];
             $response_new_klaim_message = $response_new_klaim["metadata"]["message"];
 
@@ -79,12 +78,29 @@ class EwseklaimController extends Controller
                     $grouper = self::ews_grouper($noreg);
                     return ($grouper);
                 }
-            }
+            } else {
+                $updatedata = self::deleteklaim($noreg);
+                $responupdatedata = $updatedata["metadata"]["code"];
+                $responupdatedatax = $updatedata["metadata"]["message"];
+                $cari = KlaimrajalEws::find($noreg);
+                if (!$cari) {
+                    return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+                }
+                $hapus = $cari->delete();
 
-            return ($response_new_klaim_message);
+                if ($responupdatedata === 200 || $responupdatedata === "200") {
+                    $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas, $tglplng);
+                    if ($setclaimdata["metadata"]["code"] == "200") {
+                        $grouper = self::ews_grouper($noreg);
+                        return ($grouper);
+                    }
+                } else {
+                    return ($responupdatedatax);
+                }
+            }
         }
         $setclaimdata = self::ews_set_claim_data($noreg, $norm, $tgl_masuk, $berat_lahir, $hakkelas, $tglplng);
-        if ($setclaimdata["metadata"]["code"] == "200" || $setclaimdata["metadata"]["code"] == 200) {
+        if ($setclaimdata["metadata"]["code"] == "200") {
             $grouper = self::ews_grouper($noreg);
             return ($grouper);
         }
@@ -204,16 +220,18 @@ class EwseklaimController extends Controller
                     ]
                 );
         }
+        $grouper = self::ews_grouper($noreg);
         $groupingrajal = GroupingRajalEws::updateOrCreate(
             ['noreg' => $noreg],
             [
                 'nosep' => $noreg,
                 'users_grouping' => auth()->user()->pegawai_id,
-                // 'users_grouping' => 4,
+                'cbg_code' => $grouper["response"]["cbg"]["code"],
+                'cbg_desc' => $grouper["response"]["cbg"]["description"],
+                'cbg_tarif' => $grouper["response"]["cbg"]["tariff"],
                 'tgl_grouping' => date("Y-m-d H:i:s")
             ]
         );
-        $grouper = self::ews_grouper($noreg);
         return ($grouper);
         //return ($response_set_claim_data);
     }
@@ -271,6 +289,7 @@ class EwseklaimController extends Controller
             $cbg_code = $responsesxx["response"]["cbg"]["code"];
             $cbg_desc = $responsesxx["response"]["cbg"]["description"];
             $cbg_tarif = $responsesxx["response"]["cbg"]["tariff"] ?? 0;
+
             if (isset($responsesxx["response"]["special_cmg"])) {
                 foreach ($responsesxx["response"]["special_cmg"] as $special_cmg_arrx) {
                     if ($special_cmg_arrx["type"] == "Special Procedure") {
@@ -353,5 +372,39 @@ class EwseklaimController extends Controller
     {
         $noreg = request('noreg');
         return self::ewseklaimrajal_newclaim($noreg);
+    }
+
+    public static function updatedataklaim($norm, $namapasien, $tgl_lahir, $gender)
+    {
+        $updatedataklaim = array(
+            "metadata" => array(
+                "method" => "update_patient",
+                "nomor_rm"  => $norm
+            ),
+            "data" => array(
+                "nomor_kartu" => $norm,
+                "nomor_rm" => $norm,
+                "nama_pasien" => $namapasien,
+                "tgl_lahir" => $tgl_lahir . ' 02:00:00',
+                "gender" => $gender
+            )
+        );
+        $respone_update_data = BridgingeklaimHelper::curl_func($updatedataklaim);
+        return ($respone_update_data);
+    }
+
+    public static function deleteklaim($noreg)
+    {
+        $updatedataklaim = array(
+            "metadata" => array(
+                "method" => "delete_claim"
+            ),
+            "data" => array(
+                "nomor_sep" => $noreg,
+                "coder_nik" => "123123123123"
+            )
+        );
+        $respone_hapusklaim = BridgingeklaimHelper::curl_func($updatedataklaim);
+        return ($respone_hapusklaim);
     }
 }

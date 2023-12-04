@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
+use App\Http\Controllers\Api\Simrs\Bridgingeklaim\ProcedureController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
@@ -78,6 +79,10 @@ Route::group([
     Route::post('/simpansharing', [SharingRajalController::class, 'simpansharing']);
     Route::post('/updatesimpansharing', [SharingRajalController::class, 'updatesimpansharing']);
     Route::get('/listpermintaansharing', [SharingRajalController::class, 'listpermintaansharing']);
+
+    Route::post('/simpanprocedure', [ProcedureController::class, 'simpanprocedure']);
+    Route::get('/listprocedure', [ProcedureController::class, 'listprocedure']);
+    Route::post('/hapusprocedure', [ProcedureController::class, 'hapusprocedure']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 });
