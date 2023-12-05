@@ -22,7 +22,7 @@ class ProcedureController extends Controller
         if (!$simpan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!', 'result' => $simpan], 200);
     }
 
     public function listprocedure()

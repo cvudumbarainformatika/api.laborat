@@ -132,6 +132,7 @@ class PoliController extends Controller
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                 'gambars',
                 'fisio',
+                'prosedur',
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },

@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Rajal;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
+use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -239,5 +240,9 @@ class KunjunganPoli extends Model
     public function sharing()
     {
         return $this->hasMany(SharingTrans::class, 'noreg', 'rs1');
+    }
+    public function prosedur()
+    {
+        return $this->hasMany(ProcedureM::class, 'noreg', 'rs1');
     }
 }
