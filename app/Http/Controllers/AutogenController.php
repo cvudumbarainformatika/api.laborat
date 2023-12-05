@@ -8,6 +8,7 @@ use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
 use App\Exports\pegawaiExport;
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\BridgingeklaimHelper;
 use App\Helpers\DateHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
@@ -2625,12 +2626,23 @@ class AutogenController extends Controller
         //     'Rujukan',
         //     'Rujukan/Keluar/List/tglMulai/' . request('tglawal') . '/tglAkhir/' . request('tglakhir')
         // );
-        $listrujukankeluarrs = BridgingbpjsHelper::get_url(
-            'vclaim',
-            '/Rujukan/Keluar/1327R0011123B000248'
-        );
+        // $listrujukankeluarrs = BridgingbpjsHelper::get_url(
+        //     'vclaim',
+        //     '/Rujukan/Keluar/1327R0011123B000248'
+        // );
 
-        return $listrujukankeluarrs;
+        // return $listrujukankeluarrs;
+        $querysx = array(
+            "metadata" => array(
+                "method" => "grouper",
+                "stage" => "1"
+            ),
+            "data" => array(
+                "nomor_sep" => '91602/11/2023/J'
+            )
+        );
+        $responsesx = EwseklaimController::ewseklaimrajal_newclaim('91602/11/2023/J');
+        return $responsesx;
     }
 
     public function baru()

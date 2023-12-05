@@ -14,7 +14,7 @@ use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class EwseklaimController extends Controller
+class EwseklaimControllerOld extends Controller
 {
     public static function ewseklaimrajal_newclaim()
     {

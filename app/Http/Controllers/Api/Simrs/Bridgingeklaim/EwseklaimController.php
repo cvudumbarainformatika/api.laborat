@@ -172,6 +172,7 @@ class EwseklaimController extends Controller
         );
 
         $response_set_claim_data = BridgingeklaimHelper::curl_func($querys_set_claim_data);
+        // return ($response_set_claim_data);
         if ($response_set_claim_data["metadata"]["code"] == "200") {
             KlaimrajalEws::where(['noreg' => $noreg, 'delete_status' => ''])
                 ->update(
@@ -223,17 +224,17 @@ class EwseklaimController extends Controller
                 );
         }
         $grouper = self::ews_grouper($noreg);
-        // $groupingrajal = GroupingRajalEws::updateOrCreate(
-        //     ['noreg' => $noreg],
-        //     [
-        //         'nosep' => $noreg,
-        //         'users_grouping' => auth()->user()->pegawai_id,
-        //         'cbg_code' => $grouper["response"]["cbg"]["code"],
-        //         'cbg_desc' => $grouper["response"]["cbg"]["description"],
-        //         'cbg_tarif' => $grouper["response"]["cbg"]["tariff"],
-        //         'tgl_grouping' => date("Y-m-d H:i:s")
-        //     ]
-        // );
+        $groupingrajal = GroupingRajalEws::updateOrCreate(
+            ['noreg' => $noreg],
+            [
+                'nosep' => $noreg,
+                'users_grouping' => auth()->user()->pegawai_id,
+                'cbg_code' => $grouper["response"]["cbg"]["code"],
+                'cbg_desc' => $grouper["response"]["cbg"]["description"],
+                'cbg_tarif' => $grouper["response"]["cbg"]["tariff"],
+                'tgl_grouping' => date("Y-m-d H:i:s")
+            ]
+        );
         // $grouper = self::ews_grouper($noreg);
         return ($grouper);
         //return ($response_set_claim_data);
@@ -374,5 +375,20 @@ class EwseklaimController extends Controller
     {
         $noreg = request('noreg');
         return self::ewseklaimrajal_newclaim($noreg);
+    }
+
+    public static function deleteklaim($noreg)
+    {
+        $updatedataklaim = array(
+            "metadata" => array(
+                "method" => "delete_claim"
+            ),
+            "data" => array(
+                "nomor_sep" => $noreg,
+                "coder_nik" => "123123123123"
+            )
+        );
+        $respone_hapusklaim = BridgingeklaimHelper::curl_func($updatedataklaim);
+        return ($respone_hapusklaim);
     }
 }
