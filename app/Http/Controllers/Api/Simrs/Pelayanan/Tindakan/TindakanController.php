@@ -73,6 +73,8 @@ class TindakanController extends Controller
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
         EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+
+        $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
