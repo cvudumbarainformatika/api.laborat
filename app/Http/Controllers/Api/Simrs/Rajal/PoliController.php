@@ -29,7 +29,7 @@ class PoliController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
 
-        $ruangan = request('kdpoli');
+        $ruangan = request('kodepoli');
 
         if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
