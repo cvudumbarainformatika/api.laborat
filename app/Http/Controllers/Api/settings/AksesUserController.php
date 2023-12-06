@@ -51,11 +51,11 @@ class AksesUserController extends Controller
     public function storePoli(Request $request)
     {
         $data = Pegawai::find($request->id);
-        $poli = Mpoli::where('rs1', $request->kodepoli)->first();
+        // $poli = Mpoli::where('rs1', $request->kodepoli)->first();
         $data->update([
             'kdruangansim' => $request->kodepoli
         ]);
-        return new JsonResponse($poli);
+        return new JsonResponse($data);
     }
     public function storeAkses(Request $request)
     {
