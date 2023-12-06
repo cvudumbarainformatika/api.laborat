@@ -103,7 +103,7 @@ class PoliController extends Controller
             //         $anu->where('rs17.rs8', 'LIKE', '%' . $ruangan);
             //     }
             // })
-            ->whereIn('rs17.rs8', [$ruangan])
+            ->whereIn('rs17.rs8', $ruangan)
             // ->where('rs17.rs8', 'LIKE', '%' . $ruangan)
             ->where('rs17.rs8', '!=', 'POL014')
             //    ->where('rs9.rs9', '=', 'BPJS')
