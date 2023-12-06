@@ -29,7 +29,7 @@ class PoliController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
 
-        $ruangan = $user->kdruangansim ?? '';
+        $ruangan = request('kodepoli');
 
         if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
@@ -39,8 +39,9 @@ class PoliController extends Controller
             $tglx = request('from') . ' 23:59:59';
         }
 
-        $gigi = ['POL015', 'POL023', 'POL038', 'POL039', 'POL040'];
-        $saraf = ['POL019', 'POL003'];
+        //$gigi = ['POL015', 'POL023', 'POL038', 'POL039', 'POL040'];
+        // return $gigi;
+        // $saraf = ['POL019', 'POL003'];
         $status = request('status') ?? '';
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
@@ -93,16 +94,16 @@ class PoliController extends Controller
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', $user->kdruangansim ?? '')
             ->where('rs19.rs4', '=', 'Poliklinik')
-            ->when($ruangan !== '', function ($anu) use ($gigi, $ruangan, $saraf) {
-                if (in_array($ruangan, $gigi)) {
-                    $anu->whereIn('rs17.rs8', $gigi);
-                } else if (in_array($ruangan, $saraf)) {
-                    $anu->whereIn('rs17.rs8', $saraf);
-                } else {
-                    $anu->where('rs17.rs8', 'LIKE', '%' . $ruangan);
-                }
-            })
-            // ->whereIn('rs17.rs8', $kodepoli)
+            // ->when($ruangan !== '', function ($anu) use ($gigi, $ruangan, $saraf) {
+            //     if (in_array($ruangan, $gigi)) {
+            //         $anu->whereIn('rs17.rs8', $gigi);
+            //     } else if (in_array($ruangan, $saraf)) {
+            //         $anu->whereIn('rs17.rs8', $saraf);
+            //     } else {
+            //         $anu->where('rs17.rs8', 'LIKE', '%' . $ruangan);
+            //     }
+            // })
+            ->whereIn('rs17.rs8', [$ruangan])
             // ->where('rs17.rs8', 'LIKE', '%' . $ruangan)
             ->where('rs17.rs8', '!=', 'POL014')
             //    ->where('rs9.rs9', '=', 'BPJS')
@@ -132,7 +133,6 @@ class PoliController extends Controller
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                 'gambars',
                 'fisio',
-                'prosedur',
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },
