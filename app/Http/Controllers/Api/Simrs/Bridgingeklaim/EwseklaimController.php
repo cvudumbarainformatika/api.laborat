@@ -232,7 +232,7 @@ class EwseklaimController extends Controller
                 'cbg_code' => $grouper["response"]["cbg"]["code"],
                 'cbg_desc' => $grouper["response"]["cbg"]["description"],
                 // 'cbg_tarif' => $grouper["response"]["cbg"]["tariff"],
-                'cbg_tarif' => $grouper["response"]["cbg"]["base_tariff"] ?? $grouper["response"]["cbg"]["tariff"],
+                'cbg_tarif' => $grouper["response"]["cbg"]["base_tariff"] ?? ($grouper["response"]["cbg"]["tariff"] ?? 0),
                 'tgl_grouping' => date("Y-m-d H:i:s")
             ]
         );
