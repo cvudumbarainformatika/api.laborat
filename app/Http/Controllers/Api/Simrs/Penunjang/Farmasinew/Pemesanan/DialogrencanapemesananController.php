@@ -36,7 +36,7 @@ class DialogrencanapemesananController extends Controller
             ->where('perencana_pebelian_h.flag', '1')->where('perencana_pebelian_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
-            ->orderBy('perencana_pebelian_h.tgl')->get();
+            ->orderBy('perencana_pebelian_h.tgl')->paginate(request('per_page'));
 
         // $rencanabeli = RencanabeliH::with(
         //     'rincian',

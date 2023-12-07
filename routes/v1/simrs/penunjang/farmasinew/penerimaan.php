@@ -14,4 +14,6 @@ Route::group([
     Route::get('/stokgudang', [ListstokgudangController::class, 'stokgudang']);
     Route::post('/simpan', [PenerimaanController::class, 'simpanpenerimaan']);
     Route::post('/kuncipenerimaan', [PenerimaanController::class, 'kuncipenerimaan']);
+
+    Route::post('/simpanpenerimaanlangsung', [PenerimaanController::class, 'simpanpenerimaanlangsung']);
 });
