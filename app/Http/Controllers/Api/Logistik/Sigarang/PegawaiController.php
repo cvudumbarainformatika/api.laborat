@@ -32,7 +32,7 @@ class PegawaiController extends Controller
     public function cariPegawai(Request $request)
     {
         $data = Pegawai::where('nik',  $request->nik)
-            // ->orWhere('nip_baru',  $request->nip)
+            ->whereIn('aktif',  ['AKTIF', 'Aktif'])
             ->orWhere('tgllahir', '=', $request->tgllahir)
             ->with('jabatanTambahan', 'user')
             ->first();
