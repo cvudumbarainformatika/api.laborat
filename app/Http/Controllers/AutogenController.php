@@ -2638,11 +2638,13 @@ class AutogenController extends Controller
                 "stage" => "1"
             ),
             "data" => array(
-                "nomor_sep" => '91602/11/2023/J'
+                "nomor_sep" => '93746/12/2023/J'
             )
         );
-        $responsesx = EwseklaimController::ewseklaimrajal_newclaim('91602/11/2023/J');
-        return $responsesx;
+        $anu = BridgingeklaimHelper::curl_func($querysx);
+        return $anu;
+        // $responsesx = EwseklaimController::ewseklaimrajal_newclaim('93746/12/2023/J');
+        // return $responsesx;
     }
 
     public function baru()

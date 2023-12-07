@@ -232,7 +232,7 @@ class EwseklaimController extends Controller
                 'cbg_code' => $grouper["response"]["cbg"]["code"],
                 'cbg_desc' => $grouper["response"]["cbg"]["description"],
                 // 'cbg_tarif' => $grouper["response"]["cbg"]["tariff"],
-                'cbg_tarif' => $grouper["response"]["cbg"]["base_tariff"],
+                'cbg_tarif' => $grouper["response"]["cbg"]["base_tariff"] ?? ($grouper["response"]["cbg"]["tariff"] ?? 0),
                 'tgl_grouping' => date("Y-m-d H:i:s")
             ]
         );
@@ -257,7 +257,7 @@ class EwseklaimController extends Controller
         $cbg_code = $responsesx["response"]["cbg"]["code"] ?? '';
         $cbg_desc = $responsesx["response"]["cbg"]["description"] ?? '';
         // $cbg_tarif = $responsesx["response"]["cbg"]["tariff"] ?? 0;
-        $cbg_tarif = $responsesx["response"]["cbg"]["base_tariff"] ?? 0;
+        $cbg_tarif = $responsesx["response"]["cbg"]["base_tariff"] ?? ($grouper["response"]["cbg"]["tariff"] ?? 0);
         //$special_cmg_option = $responsesx["special_cmg_option"];
         //return $cbg_code;
         $procedure_code = "";
@@ -295,7 +295,7 @@ class EwseklaimController extends Controller
             $cbg_code = $responsesxx["response"]["cbg"]["code"];
             $cbg_desc = $responsesxx["response"]["cbg"]["description"];
             // $cbg_tarif = $responsesxx["response"]["cbg"]["tariff"] ?? 0;
-            $cbg_tarif = $responsesxx["response"]["cbg"]["base_tariff"] ?? 0;
+            $cbg_tarif = $responsesxx["response"]["cbg"]["base_tariff"] ?? ($grouper["response"]["cbg"]["tariff"] ?? 0);
             if (isset($responsesxx["response"]["special_cmg"])) {
                 foreach ($responsesxx["response"]["special_cmg"] as $special_cmg_arrx) {
                     if ($special_cmg_arrx["type"] == "Special Procedure") {

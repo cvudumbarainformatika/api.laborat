@@ -53,7 +53,7 @@ class AksesUserController extends Controller
         $data = Pegawai::find($request->id);
         // $poli = Mpoli::where('rs1', $request->kodepoli)->first();
         $data->update([
-            'kdruangansim' => $request->kodepoli
+            'kdruangansim' => $request->kodepoli ?? ''
         ]);
         return new JsonResponse($data);
     }
