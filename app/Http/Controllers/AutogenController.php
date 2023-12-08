@@ -2638,7 +2638,7 @@ class AutogenController extends Controller
                 "stage" => "1"
             ),
             "data" => array(
-                "nomor_sep" => '93746/12/2023/J'
+                "nomor_sep" => '93976/12/2023/J'
             )
         );
         $anu = BridgingeklaimHelper::curl_func($querysx);
