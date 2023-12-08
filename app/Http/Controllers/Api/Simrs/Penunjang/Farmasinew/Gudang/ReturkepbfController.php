@@ -14,14 +14,18 @@ class ReturkepbfController extends Controller
 {
     public function simpanretur(Request $request)
     {
-        DB::connection('farmasi')->select('call retur_pbf');
-        $x = DB::connection('farmasi')->table('conter')->select('returpbf')->get();
-        $wew = $x[0]->returpbf;
-        $noretur = FormatingHelper::penerimaanobat($wew, '-RET-PBF');
+        if ($request->noretur == '' || $request->noretur == null) {
+            DB::connection('farmasi')->select('call retur_pbf');
+            $x = DB::connection('farmasi')->table('conter')->select('returpbf')->get();
+            $wew = $x[0]->returpbf;
+            $noretur = FormatingHelper::penerimaanobat($wew, '-RET-PBF');
+        } else {
+            $noretur = $request->noretur;
+        }
 
         $simpan_h = Returpbfheder::updateorcreate(
             [
-                'no_retur' => $request->noretur ?? $noretur,
+                'no_retur' => $noretur,
                 'nopenerimaan' => $request->nopenerimaan,
                 'kdpbf' => $request->kdpbf,
                 'gudang' => $request->gudang
@@ -41,7 +45,7 @@ class ReturkepbfController extends Controller
 
         $simpan_r = Returpbfrinci::updateorcreate(
             [
-                'no_retur' => $request->noretur ?? $noretur,
+                'no_retur' => $noretur,
                 'kd_obat' => $request->kd_obat,
                 'jumlah_retur' => $request->jumlah_retur
             ],
@@ -55,6 +59,14 @@ class ReturkepbfController extends Controller
             Returpbfheder::where('no_retur', $noretur)->first()->delete();
             return new JsonResponse(['message' => 'Maaf retur Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['message' => 'Retur Berhasil Disimpan...!!!'], 200);
+        return new JsonResponse(
+            [
+                'noretur' => $noretur,
+                'heder' => $simpan_h,
+                'rinci' => $simpan_r,
+                'message' => 'Retur Berhasil Disimpan...!!!'
+            ],
+            200
+        );
     }
 }

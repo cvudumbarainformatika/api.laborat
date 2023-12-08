@@ -30,7 +30,8 @@ class PerencanaanpembelianController extends Controller
             'status_fornas',
             'status_forkid',
             'satuan_k',
-            'sistembayar'
+            'sistembayar',
+            'gudang'
         )->with(
             [
                 'stokrealgudang' => function ($stokrealgudang) {
@@ -100,7 +101,7 @@ class PerencanaanpembelianController extends Controller
             ]
         )->whereIn('gudang', $ruangan)
             ->orderBy('kd_obat')
-            ->get();
+            ->paginate(request('per_page'));
 
         return new JsonResponse($perencanaapembelianobat);
     }
