@@ -100,6 +100,7 @@ class PerencanaanpembelianController extends Controller
                 },
                 'stokmaxpergudang' => function ($stokmaxpergudang) use ($ruangan) {
                     $stokmaxpergudang->select(
+                        'kd_ruang',
                         'min_max_ruang.kd_obat',
                         'min_max_ruang.max as jumlah'
                     )->whereIn('kd_ruang', $ruangan);
