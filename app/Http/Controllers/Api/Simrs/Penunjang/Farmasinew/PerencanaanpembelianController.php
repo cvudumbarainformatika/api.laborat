@@ -17,7 +17,7 @@ class PerencanaanpembelianController extends Controller
     public function perencanaanpembelian()
     {
         $xxx = FormatingHelper::session_user();
-        if ($xxx['kode_ruang'] === '') {
+        if ($xxx['kdruang'] === '') {
             $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
         } else {
             $ruangan = ['', $xxx['kode_ruang']];
@@ -99,10 +99,13 @@ class PerencanaanpembelianController extends Controller
                         ->groupBy('kdobat');
                 }
             ]
-        )->whereIn('gudang', $ruangan)
-            ->where('nama_obat', 'Like', '%' . request('o') . '%')
-            ->where('kd_obat', 'Like', '%' . request('o') . '%')
+        )
+            // ->where(function ($obat) {
+            //     $obat->where('nama_obat', 'Like', '%' . request('q') . '%')
+            //         ->orWhere('kd_obat', 'Like', '%' . request('q') . '%');
+            // })
             ->where('flag', '')
+            ->whereIn('gudang', $ruangan)
             ->orderBy('kd_obat')
             ->paginate(request('per_page'));
 
