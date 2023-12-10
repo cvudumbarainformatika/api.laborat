@@ -97,7 +97,13 @@ class PerencanaanpembelianController extends Controller
                         )
                     )->where('flag', '')
                         ->groupBy('kdobat');
-                }
+                },
+                'stokmaxpergudang' => function ($stokmaxpergudang) use ($ruangan) {
+                    $stokmaxpergudang->select(
+                        'min_max_ruang.kd_obat',
+                        'min_max_ruang.max as jumlah'
+                    )->whereIn('kd_ruang', $ruangan);
+                },
             ]
         )
             ->where(function ($obat) {

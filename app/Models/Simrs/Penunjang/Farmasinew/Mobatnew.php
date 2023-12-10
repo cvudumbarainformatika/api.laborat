@@ -69,4 +69,9 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
     }
+
+    public function stokmaxpergudang()
+    {
+        return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kd_obat');
+    }
 }
