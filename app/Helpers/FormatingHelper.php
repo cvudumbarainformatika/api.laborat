@@ -185,7 +185,7 @@ class FormatingHelper
                 'kdruang' => $kdruang,
                 'kdgroupnakes' => $kdgroupnakes,
                 'kddpjp' => $kddpjp,
-                'kode_ruang' => $kode_ruang,
+                'kode_ruang' => $kode_ruang
             ]);
     }
 
