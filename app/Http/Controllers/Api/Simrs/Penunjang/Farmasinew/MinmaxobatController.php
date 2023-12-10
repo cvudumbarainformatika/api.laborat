@@ -49,7 +49,7 @@ class MinmaxobatController extends Controller
             'gudang:kode,nama as namaruangan'
         ])
             ->whereHas('obat', function ($e) {
-                $e->where('new_masterobat.nama_obat', 'LIKE', '%' . request('o') . '%');
+                $e->where('new_masterobat.nama_obat', 'LIKE', '%' . request('o') . '%')->where('flag', '');
             })
             ->whereIn('kd_ruang', $id)
             ->orWhereIn('kd_ruang',  $gd)

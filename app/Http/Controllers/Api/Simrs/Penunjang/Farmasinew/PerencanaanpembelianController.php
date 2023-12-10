@@ -100,6 +100,9 @@ class PerencanaanpembelianController extends Controller
                 }
             ]
         )->whereIn('gudang', $ruangan)
+            ->where('nama_obat', 'Like', '%' . request('o') . '%')
+            ->where('kd_obat', 'Like', '%' . request('o') . '%')
+            ->where('flag', '')
             ->orderBy('kd_obat')
             ->paginate(request('per_page'));
 
