@@ -20,7 +20,7 @@ class PerencanaanpembelianController extends Controller
         if ($xxx['kdruang'] === '') {
             $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
         } else {
-            $ruangan = ['', $xxx['kode_ruang']];
+            $ruangan = ['', $xxx['kdruang']];
         }
 
         $perencanaapembelianobat = Mobatnew::select(
