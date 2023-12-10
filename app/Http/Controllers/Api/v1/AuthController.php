@@ -54,7 +54,7 @@ class AuthController extends Controller
         $user = User::with(['pegawai.role', 'pegawai.ruang',])->find($me->id);
         $loadGudang = array(3, 4, 7);
         if (in_array($user->pegawai->role_id, $loadGudang)) {
-            $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.ruang']);
+            $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.ruang', 'depoSim:kode,nama']);
         }
 
         $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
