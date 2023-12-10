@@ -100,10 +100,10 @@ class PerencanaanpembelianController extends Controller
                 }
             ]
         )
-            // ->where(function ($obat) {
-            //     $obat->where('nama_obat', 'Like', '%' . request('q') . '%')
-            //         ->orWhere('kd_obat', 'Like', '%' . request('q') . '%');
-            // })
+            ->where(function ($obat) {
+                $obat->where('nama_obat', 'Like', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'Like', '%' . request('q') . '%');
+            })
             ->where('flag', '')
             ->whereIn('gudang', $ruangan)
             ->orderBy('kd_obat')
