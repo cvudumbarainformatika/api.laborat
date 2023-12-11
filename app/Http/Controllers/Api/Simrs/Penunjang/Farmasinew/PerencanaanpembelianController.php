@@ -124,6 +124,7 @@ class PerencanaanpembelianController extends Controller
     public function simpanrencanabeliobat(Request $request)
     {
         //$cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
+        $user = FormatingHelper::session_ruangan();
         $cekflag = RencanabeliH::select(
             'perencana_pebelian_h.no_rencbeliobat as notrans',
             'perencana_pebelian_h.kd_ruang as gudang',
@@ -155,52 +156,30 @@ class PerencanaanpembelianController extends Controller
             $x = DB::connection('farmasi')->table('conter')->select('rencblobat')->get();
             $wew = $x[0]->rencblobat;
             $norencanabeliobat = FormatingHelper::norencanabeliobat($wew, 'REN-BOBAT');
-
-            $simpanheder = RencanabeliH::create(
-                [
-                    'no_rencbeliobat' => $norencanabeliobat,
-                    'tgl' => date('Y-m-d'),
-                    'user' => auth()->user()->pegawai_id,
-                    'kd_ruang' => $request->kd_ruang
-                ]
-            );
-
-            if (!$simpanheder) {
-                return new JsonResponse(['message' => 'not ok'], 500);
-            }
-
-            $simpanrinci = RencanabeliR::create(
-                [
-                    'no_rencbeliobat' => $norencanabeliobat,
-                    'kdobat' => $request->kdobat,
-                    'stok_real_gudang' => $request->stok_real_gudang,
-                    'stok_real_rs'  => $request->stok_real_rs,
-                    'stok_max_rs'  => $request->stok_max_rs,
-                    'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                    'tgl_stok'  => $request->tgl_stok,
-                    'pabrikan'  => $request->pabrikan,
-                    'pbf'  => $request->pbf,
-                    'jumlahdirencanakan'  => $request->jumlahdpesan,
-                    'user'  => auth()->user()->pegawai_id
-                ]
-            );
-
-            if (!$simpanrinci) {
-                return new JsonResponse(['message' => 'not ok'], 500);
-            }
-
-            return new JsonResponse(
-                [
-                    'message' => 'ok',
-                    'notrans' => $norencanabeliobat,
-                    'heder' => $simpanheder,
-                    'rinci' => $simpanrinci
-                ],
-                200
-            );
+        } else {
+            $norencanabeliobat = $request->norencanabeliobat;
         }
-        $simpanrinci = RencanabeliR::updateOrCreate(
-            ['no_rencbeliobat' => $request->norencanabeliobat, 'kdobat' => $request->kdobat],
+        $simpanheder = RencanabeliH::updateorcreate(
+            [
+                'no_rencbeliobat' => $norencanabeliobat
+            ],
+            [
+                'tgl' => date('Y-m-d'),
+                'user' => $user['kodesimrs'],
+                'kd_ruang' => $request->kd_ruang
+            ]
+        );
+
+        if (!$simpanheder) {
+            return new JsonResponse(['message' => 'not ok'], 500);
+        }
+
+        $simpanrinci = RencanabeliR::updateorcreate(
+            [
+                'no_rencbeliobat' => $norencanabeliobat,
+                'kdobat' => $request->kdobat,
+                'jumlahdirencanakan'  => $request->jumlahdpesan
+            ],
             [
                 'stok_real_gudang' => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
@@ -209,8 +188,7 @@ class PerencanaanpembelianController extends Controller
                 'tgl_stok'  => $request->tgl_stok,
                 'pabrikan'  => $request->pabrikan,
                 'pbf'  => $request->pbf,
-                'jumlahdirencanakan'  => $request->jumlahdpesan,
-                'user'  => auth()->user()->pegawai_id
+                'user'  => $user['kodesimrs']
             ]
         );
 
@@ -221,6 +199,8 @@ class PerencanaanpembelianController extends Controller
         return new JsonResponse(
             [
                 'message' => 'ok',
+                'notrans' => $norencanabeliobat,
+                'heder' => $simpanheder,
                 'rinci' => $simpanrinci
             ],
             200
