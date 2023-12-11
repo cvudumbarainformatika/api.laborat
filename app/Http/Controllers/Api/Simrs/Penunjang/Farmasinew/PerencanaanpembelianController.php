@@ -124,7 +124,7 @@ class PerencanaanpembelianController extends Controller
     public function simpanrencanabeliobat(Request $request)
     {
         //$cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
-        $user = FormatingHelper::session_ruangan();
+        $xxx = FormatingHelper::session_user();
         $cekflag = RencanabeliH::select(
             'perencana_pebelian_h.no_rencbeliobat as notrans',
             'perencana_pebelian_h.kd_ruang as gudang',
@@ -165,7 +165,7 @@ class PerencanaanpembelianController extends Controller
             ],
             [
                 'tgl' => date('Y-m-d'),
-                'user' => $user['kodesimrs'],
+                'user' => $xxx['kodesimrs'],
                 'kd_ruang' => $request->kd_ruang
             ]
         );
@@ -188,7 +188,7 @@ class PerencanaanpembelianController extends Controller
                 'tgl_stok'  => $request->tgl_stok,
                 'pabrikan'  => $request->pabrikan,
                 'pbf'  => $request->pbf,
-                'user'  => $user['kodesimrs']
+                'user'  => $xxx['kodesimrs']
             ]
         );
 
