@@ -24,7 +24,7 @@ class StokrealController extends Controller
             ],
             [
                 'tglpenerimaan' => $request->tglpenerimaan,
-                'jumlah' => $request->jumlah,
+                'jumlah' => $request->jml_terima_k,
                 'flag' => 1
 
             ]
