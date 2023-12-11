@@ -70,6 +70,10 @@ class Pegawai extends Model
     {
         return $this->hasOne(Gudang::class, 'kode', 'kode_ruang');
     }
+    public function depoSim() // kode gudang menggunakan kolom kdrungansim
+    {
+        return $this->hasOne(Gudang::class, 'kode', 'kdruangansim');
+    }
 
     public function mapingPengguna()
     {
