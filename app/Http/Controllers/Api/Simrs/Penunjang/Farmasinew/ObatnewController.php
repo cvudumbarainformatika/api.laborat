@@ -96,7 +96,9 @@ class ObatnewController extends Controller
 
         $query = Mobatnew::select(
             'kd_obat as kodeobat',
-            'nama_obat as namaobat'
+            'nama_obat as namaobat',
+            'satuan_k',
+            'satuan_b',
         )->where('flag', '')
             ->where(function ($list) {
                 $list->where('nama_obat', 'Like', '%' . request('q') . '%');
