@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliR;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,18 +123,39 @@ class PerencanaanpembelianController extends Controller
 
     public function simpanrencanabeliobat(Request $request)
     {
-        $cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
+        //$cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
+        $cekflag = RencanabeliH::select(
+            'perencana_pebelian_h.no_rencbeliobat as notrans',
+            'perencana_pebelian_h.kd_ruang as gudang',
+            'perencana_pebelian_r.no_rencbeliobat'
+        )
+            ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.no_rencbeliobat')
+            ->where('perencana_pebelian_h.kd_ruang', $request->kd_ruang)
+            ->where('perencana_pebelian_r.kdobat', $request->kdobat)
+            ->where('perencana_pebelian_r.flag', '')
+            ->count();
+
         if ($cekflag > 0) {
             return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
         }
 
+        $cekminmax = Mminmaxobat::where('kd_obat', $request->kdobat)->where('kd_ruang', $request->kd_ruang)->first();
+        $maxobat = (int) $cekminmax['max'] ?? 0;
+        $cekstok = Stokrel::where('kdobat', $request->kdobat)->where('kdruang', $request->kd_ruang)->first();
+        $stok = $cekstok['jumlah'] ?? 0;
+        $max = $maxobat - $stok;
+
+        if ($request->jumlahdpesan > $max) {
+            return new JsonResponse(['message' => 'Maaf Jumlah yang Dipesan melebihi jumlah yang boleh dipesan...!!!'], 500);
+        }
+
         if ($request->norencanabeliobat === '' || $request->norencanabeliobat === null) {
-            //return('wew');
+
             DB::connection('farmasi')->select('call rencana_beliobat(@nomor)');
             $x = DB::connection('farmasi')->table('conter')->select('rencblobat')->get();
             $wew = $x[0]->rencblobat;
             $norencanabeliobat = FormatingHelper::norencanabeliobat($wew, 'REN-BOBAT');
-            //return('wew');
+
             $simpanheder = RencanabeliH::create(
                 [
                     'no_rencbeliobat' => $norencanabeliobat,
