@@ -24,6 +24,7 @@ class RanapController extends Controller
         }
 
         $status = request('status') ?? '';
+        $ruangan = request('koderuangan');
         $data = Kunjunganranap::select(
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
@@ -66,6 +67,12 @@ class RanapController extends Controller
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->whereBetween('rs23.rs3', [$tgl, $tglx])
+            ->where(function ($query) use ($ruangan) {
+                for ($i = 0; $i < count($ruangan); $i++) {
+                    $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                }
+            })
+            // ->whereIn('rs23.rs5', $ruangan)
             // ->where('rs23.rs10', 'like', '%' . $dokter . '%')
             // ->where(function ($sts) use ($status) {
             //     if ($status !== 'all') {
