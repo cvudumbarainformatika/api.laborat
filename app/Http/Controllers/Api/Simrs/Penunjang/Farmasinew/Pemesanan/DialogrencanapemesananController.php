@@ -28,6 +28,7 @@ class DialogrencanapemesananController extends Controller
             'new_masterobat.status_forkid as status_forkid',
             'new_masterobat.sistembayar as sistembayar',
             'perencana_pebelian_r.flag as flagperobat',
+            'perencana_pebelian_h.kd_ruang as gudang',
             DB::raw('sum(pemesanan_r.jumlahdpesan) as jumlahallpesan')
         )
             ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
