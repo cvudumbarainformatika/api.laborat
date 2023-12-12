@@ -34,6 +34,10 @@ class RadiologimetaController extends Controller
 
     public function simpanpermintaanradiologi(Request $request)
     {
+        if ($request->nota !== '') {
+            return new JsonResponse(['message' => 'Maaf buat nota baru untuk permintaan ini...!!!'], 500);
+        }
+
         DB::select('call nota_permintaanradio(@nomor)');
         $x = DB::table('rs1')->select('rs41')->get();
         $wew = $x[0]->rs41;
@@ -47,7 +51,7 @@ class RadiologimetaController extends Controller
             // ],
             [
                 'rs1' => $request->noreg,
-                'rs2' => $request->nota ?? $notapermintaanradio,
+                'rs2' => $notapermintaanradio,
                 'rs3' => date('Y-m-d H:i:s'),
                 'rs4' => $request->permintaan,
                 'rs7' => $request->keterangan,
