@@ -27,6 +27,8 @@ class DialogrencanapemesananController extends Controller
             'new_masterobat.status_fornas as status_fornas',
             'new_masterobat.status_forkid as status_forkid',
             'new_masterobat.sistembayar as sistembayar',
+            'new_masterobat.satuan_b as satuan_b',
+            'new_masterobat.satuan_k as satuan_k',
             'perencana_pebelian_r.flag as flagperobat',
             'perencana_pebelian_h.kd_ruang as gudang',
             DB::raw('sum(pemesanan_r.jumlahdpesan) as jumlahallpesan')
