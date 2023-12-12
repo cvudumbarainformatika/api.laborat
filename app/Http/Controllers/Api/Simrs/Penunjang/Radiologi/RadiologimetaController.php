@@ -34,7 +34,7 @@ class RadiologimetaController extends Controller
 
     public function simpanpermintaanradiologi(Request $request)
     {
-        if ($request->nota !== '') {
+        if ($request->nota !== '' || $request->nota !== null) {
             return new JsonResponse(['message' => 'Maaf buat nota baru untuk permintaan ini...!!!'], 500);
         }
 
