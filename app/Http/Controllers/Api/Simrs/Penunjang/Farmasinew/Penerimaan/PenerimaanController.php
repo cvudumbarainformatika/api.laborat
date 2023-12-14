@@ -27,7 +27,7 @@ class PenerimaanController extends Controller
                 //'penerimaan'
                 'penerimaan' => function ($penerimaan) {
                     //$penerimaan->select('nopemesanan', 'penerimaan.penerimaanrinci:nopemesanan,kdobat,jml_terima');
-                    $penerimaan->select('nopenerimaan', 'nopemesanan')->with('penerimaanrinci:kdobat,nopenerimaan,jml_terima');
+                    $penerimaan->select('nopenerimaan', 'nopemesanan')->with('penerimaanrinci:kdobat,nopenerimaan,jml_terima_b,jml_terima_k');
                 },
             ])
             ->where('flag', '1')
@@ -255,7 +255,8 @@ class PenerimaanController extends Controller
                 'nopenerimaan' => $request->nopenerimaan ?? $nopenerimaan,
                 'kdobat' => $request->kdobat,
                 'no_batch' => $request->no_batch,
-                'jml_terima' => $request->jumlah,
+                'jml_terima_b' => $request->jml_terima_b,
+                'jml_terima_k' => $request->jml_terima_k,
                 'harga' => $request->harga,
                 'harga_kcl' => $request->harga_kcl,
             ],
