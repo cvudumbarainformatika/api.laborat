@@ -189,6 +189,7 @@ class PenerimaanruanganController extends Controller
         $det = DetailPermintaanruangan::where('permintaanruangan_id', $request->id)->get();
         foreach ($det as $detail) {
 
+            // gaween whereIn
             $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
                 ->where('kode_rs', $detail['kode_rs'])
                 ->where('sisa_stok', '>', 0)
@@ -207,6 +208,7 @@ class PenerimaanruanganController extends Controller
                     if ($ada < $masuk) {
                         $sisa = $masuk - $ada;
 
+                        // pake insert dellok d Simrs->Penunjang->Laborat->LaboratController->simpanpermintaanlaboratbaru
                         RecentStokUpdate::create([
                             'kode_rs' => $detail['kode_rs'],
                             'kode_ruang' => $detail['tujuan'],
@@ -233,6 +235,7 @@ class PenerimaanruanganController extends Controller
                         $loop = true;
                     } else {
                         $sisa = $ada - $masuk;
+
 
                         RecentStokUpdate::create([
                             'kode_rs' => $detail['kode_rs'],
