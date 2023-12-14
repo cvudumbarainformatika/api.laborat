@@ -2642,6 +2642,7 @@ class AutogenController extends Controller
             )
         );
         $anu = BridgingeklaimHelper::curl_func($querysx);
+        $anu = date('Y-m-d H:i:s ', 1700438819);
         return $anu;
         // $responsesx = EwseklaimController::ewseklaimrajal_newclaim('93746/12/2023/J');
         // return $responsesx;
