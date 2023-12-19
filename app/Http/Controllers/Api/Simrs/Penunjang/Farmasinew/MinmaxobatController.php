@@ -74,6 +74,7 @@ class MinmaxobatController extends Controller
                     $q->whereKdRuang(request('kd_ruang'));
                 });
             }])
+            ->limit(50)
             ->get();
         return new JsonResponse($query);
         // $qwerty = Mminmaxobat::with([
