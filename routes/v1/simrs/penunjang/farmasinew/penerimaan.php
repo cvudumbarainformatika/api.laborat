@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Penerimaan\ListstokgudangController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -16,4 +17,11 @@ Route::group([
     Route::post('/kuncipenerimaan', [PenerimaanController::class, 'kuncipenerimaan']);
 
     Route::post('/simpanpenerimaanlangsung', [PenerimaanController::class, 'simpanpenerimaanlangsung']);
+
+
+
+    Route::post('/insertsementara', [StokrealController::class, 'insertsementara']);
+    Route::post('/updatestoksementara', [StokrealController::class, 'updatestoksementara']);
+
+    Route::get('/liststokreal', [StokrealController::class, 'liststokreal']);
 });
