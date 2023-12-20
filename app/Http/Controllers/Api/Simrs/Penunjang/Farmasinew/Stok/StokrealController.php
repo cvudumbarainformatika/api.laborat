@@ -63,4 +63,8 @@ class StokrealController extends Controller
 
         return [$nopenerimaan, $jmlstoksatuan];
     }
+
+    public function insertsementara()
+    {
+    }
 }
