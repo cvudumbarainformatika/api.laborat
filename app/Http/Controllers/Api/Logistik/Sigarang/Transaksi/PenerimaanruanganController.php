@@ -120,51 +120,6 @@ class PenerimaanruanganController extends Controller
     public static function telahDiDistribusikan($request, $permintaanruangan)
     // public static function telahDiDistribusikan($permintaanruangan)
     {
-        // return $request->all();
-        // $stok = [];
-
-        // check stok masih cukup atau tidak
-        //
-        // foreach ($permintaanruangan->details as $key => $detail) {
-        //     $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
-        //         ->where('kode_rs', $detail['kode_rs'])
-        //         ->where('sisa_stok', '>', 0)
-        //         ->with('barang')
-        //         ->get();
-
-        //     $sisaStok = collect($dari)->sum('sisa_stok');
-        //     $disetujui = $detail['jumlah_disetujui'];
-
-
-        //     if (count($dari) === 0) {
-        //         $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
-        //         $pesan = 'stok ' .  $barang->nama . ' tidak ada';
-        //         $status = 410;
-
-        //         return ['status' => $status, 'message' => $pesan,];
-        //     }
-
-        //     if ($sisaStok < $disetujui) {
-        //         $barang = $dari[$key]['barang']['nama'];
-        //         $pesan = 'stok ' .  $barang . ' tidak mencukupi';
-        //         $status = 410;
-
-        //         return ['status' => $status, 'message' => $pesan,];
-        //     }
-        // }
-        // return [
-        //     'sisaStok' => $sisaStok,
-        //     'jumlahDistribusi' => $jumlahDistribusi,
-        //     'status' => $status,
-        //     'pesan' => $pesan,
-        //     'barang' => $barang,
-        //     'dari' => $dari,
-        //     'stok' => $stok,
-        //     'permintaan ruangn' => $permintaanruangan,
-        //     'request' => $request->all()
-        // ];
-
-        // buat penerimaan
 
         $tmpreff = explode('-', $permintaanruangan->reff); // ganti dari no permintaan ke n penerimaan
         $reff = 'TRMR-' . $tmpreff[1];
@@ -203,7 +158,8 @@ class PenerimaanruanganController extends Controller
             if ($jumlahDistribusi > 0) {
                 // masukkan detail sesuai order FIFO
                 $masuk = $jumlahDistribusi;
-                do {
+                // do {
+                while ($masuk > 0) {
                     $ada = $dari[$index]->sisa_stok;
                     if ($ada < $masuk) {
                         $sisa = $masuk - $ada;
@@ -260,9 +216,11 @@ class PenerimaanruanganController extends Controller
                         $detailPermintaan->update([
                             'no_penerimaan' => $dari[$index]->no_penerimaan,
                         ]);
+                        $masuk = 0;
                         $loop = false;
                     }
-                } while ($loop);
+                };
+                // } while ($loop);
             }
         }
         return [

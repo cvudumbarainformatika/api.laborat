@@ -2632,20 +2632,96 @@ class AutogenController extends Controller
         // );
 
         // return $listrujukankeluarrs;
-        $querysx = array(
-            "metadata" => array(
-                "method" => "grouper",
-                "stage" => "1"
-            ),
-            "data" => array(
-                "nomor_sep" => '93976/12/2023/J'
-            )
-        );
-        $anu = BridgingeklaimHelper::curl_func($querysx);
-        $anu = date('Y-m-d H:i:s ', 1700438819);
-        return $anu;
+        // $querysx = array(
+        //     "metadata" => array(
+        //         "method" => "grouper",
+        //         "stage" => "1"
+        //     ),
+        //     "data" => array(
+        //         "nomor_sep" => '93976/12/2023/J'
+        //     )
+        // );
+        // $anu = BridgingeklaimHelper::curl_func($querysx);
+        // $anu = date('Y-m-d H:i:s ', 1700438819);
+        // return $anu;
         // $responsesx = EwseklaimController::ewseklaimrajal_newclaim('93746/12/2023/J');
         // return $responsesx;
+        $det = DetailPermintaanruangan::where('permintaanruangan_id', 4647)->get();
+        $recentStok = [];
+        $detailPenerimaan = [];
+        foreach ($det as $key => $detail) {
+            // gaween whereIn
+            $dari = RecentStokUpdate::where('kode_ruang', $detail['dari'])
+                ->where('kode_rs', $detail['kode_rs'])
+                ->where('sisa_stok', '>', 0)
+                ->oldest()
+                ->get();
+
+            $sisaStok = collect($dari)->sum('sisa_stok');
+            $index = 0;
+            $jumlahDistribusi = $detail['jumlah_disetujui'];
+            if ($jumlahDistribusi > 0) {
+                // masukkan detail sesuai order FIFO
+                $masuk = $jumlahDistribusi;
+                // do {
+                while ($masuk > 0) {
+                    $ada = $dari[$index]->sisa_stok;
+                    if ($ada < $masuk) {
+                        $sisa = $masuk - $ada;
+
+                        // pake insert dellok d Simrs->Penunjang->Laborat->LaboratController->simpanpermintaanlaboratbaru
+                        $stok = [
+
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_ruang' => $detail['tujuan'],
+                            'sisa_stok' => $ada,
+                            'harga' => $dari[$index]->harga,
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                        ];
+                        $penerimaanruangan = [
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                            'jumlah' => $ada,
+                            'no_distribusi' => '$request->no_distribusi',
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_satuan' => $detail['kode_satuan'],
+                        ];
+                        $recentStok[] = $stok;
+                        $detailPenerimaan[] = $penerimaanruangan;
+
+                        $index = $index + 1;
+                        $masuk = $sisa;
+                        $loop = true;
+                    } else {
+                        $sisa = $ada - $masuk;
+
+                        $stok = [
+
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_ruang' => $detail['tujuan'],
+                            'sisa_stok' => $masuk,
+                            'harga' => $dari[$index]->harga,
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                        ];
+                        $penerimaanruangan = [
+                            'no_penerimaan' => $dari[$index]->no_penerimaan,
+                            'jumlah' => $masuk,
+                            'no_distribusi' => '$request->no_distribusi',
+                            'kode_rs' => $detail['kode_rs'],
+                            'kode_satuan' => $detail['kode_satuan'],
+                        ];
+                        $recentStok[] = $stok;
+                        $detailPenerimaan[] = $penerimaanruangan;
+                        $masuk = 0;
+                        $loop = false;
+                    }
+                };
+                // } while ($loop);
+            }
+        }
+        return [
+            'recent' => $recentStok,
+            'detail penerimaan' => $detailPenerimaan,
+        ];
     }
 
     public function baru()
