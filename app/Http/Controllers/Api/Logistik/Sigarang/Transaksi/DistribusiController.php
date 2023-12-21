@@ -197,13 +197,13 @@ class DistribusiController extends Controller
         // $permintaanruangan = Permintaanruangan::with('details')->find($request->id);
         // return new JsonResponse($permintaanruangan);
         // $permintaanruangan = Permintaanruangan::find($request->id);
+        $temp = PenerimaanruanganController::telahDiDistribusikan($request, $permintaanruangan);
+        if ($temp['status'] !== 201) {
+            return new JsonResponse($temp, $temp['status']);
+        }
         try {
 
             DB::beginTransaction();
-            $temp = PenerimaanruanganController::telahDiDistribusikan($request, $permintaanruangan);
-            if ($temp['status'] !== 201) {
-                return new JsonResponse($temp, $temp['status']);
-            }
 
             $tanggal_distribusi = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
             $status = 7;
