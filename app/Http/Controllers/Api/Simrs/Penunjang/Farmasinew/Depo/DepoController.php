@@ -69,6 +69,10 @@ class DepoController extends Controller
 
     public function simpanpermintaandepo(Request $request)
     {
+        $cek = Permintaandepoheder::where('flag', '!=', '')->where('no_permintaan', $request->no_permintaan)->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Maaf Data ini Sudah Dikunci...!!!'], 500);
+        }
         $stokreal = Stokrel::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
         $stokrealx = (int) $stokreal->stok;
         $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
@@ -135,10 +139,11 @@ class DepoController extends Controller
 
     public function kuncipermintaan(Request $request)
     {
-        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->update(['flag' => '1']);
-        if (!$kuncipermintaan) {
-            return new JsonResponse(['message' => 'Maaf Permintaan Gagal Dikirim Ke Gudang,Moho Periksa Kembali Data Anda...!!!'], 500);
-        }
+        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
+        $kuncipermintaan->flag = '1';
+        $kuncipermintaan->tgl_kirim = date('Y-m-d H:i:s');
+        $kuncipermintaan->save();
+
         return new JsonResponse(['message' => 'Permintaan Berhasil Dikirim Kegudang...!!!'], 200);
     }
 
@@ -146,21 +151,21 @@ class DepoController extends Controller
     {
         $depo = request('kddepo');
         $nopermintaan = request('no_permintaan');
-        if ($depo === '' || $depo === null) {
-            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
-                ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
-                ->orderBY('tgl_permintaan', 'desc')
-                ->get();
-            return new JsonResponse($listpermintaandepo);
-        } else {
+        // if ($depo === '' || $depo === null) {
+        //     $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
+        //         ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+        //         ->orderBY('tgl_permintaan', 'desc')
+        //         ->get();
+        //     return new JsonResponse($listpermintaandepo);
+        // } else {
 
-            $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
-                ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
-                ->where('dari', $depo)
-                ->orderBY('tgl_permintaan', 'desc')
-                ->get();
-            return new JsonResponse($listpermintaandepo);
-        }
+        $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
+            ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+            ->where('dari', 'like', '%' . $depo . '%')
+            ->orderBY('tgl_permintaan', 'desc')
+            ->get();
+        return new JsonResponse($listpermintaandepo);
+        // }
     }
 
     // public function lihatstokgudang()
@@ -208,4 +213,6 @@ class DepoController extends Controller
     //         ]
     //     );
     // }
+
+
 }
