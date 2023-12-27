@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\DepoController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\LihatStokController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -13,4 +14,6 @@ Route::group([
     Route::get('/listpermintaandepo', [DepoController::class, 'listpermintaandepo']);
     Route::post('/kuncipermintaan', [DepoController::class, 'kuncipermintaan']);
     Route::post('/terimadistribusi', [DepoController::class, 'terimadistribusi']);
+
+    Route::get('/lihatstokobateresep', [LihatStokController::class, 'lihatstokobateresep']);
 });
