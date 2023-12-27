@@ -6,6 +6,7 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -214,5 +215,27 @@ class DepoController extends Controller
     //     );
     // }
 
+    public function terimadistribusi(Request $request)
+    {
+        $obatditerima = Mutasigudangkedepo::leftjoin('stokreal', 'mutasi_gudangdepo.nopenerimaan', 'stokreal.nopenerimaan')
+            ->where('mutasi_gudangdepo.kd_obat', 'stokreal.kdobat')
+            ->where('no_permintaan', $request->no_permintaan)
+            ->where('kdruang', $request->kdruang)
+            ->get();
+        return $obatditerima;
+        foreach ($obatditerima as $wew) {
+            echo $wew->nopenerimaan;
+        }
 
+
+
+        $user = FormatingHelper::session_user();
+        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
+        $kuncipermintaan->flag = '4';
+        $kuncipermintaan->tgl_terima_depo = date('Y-m-d H:i:s');
+        $kuncipermintaan->user_terima_depo = $user['kodesimrs'];
+        $kuncipermintaan->save();
+
+        return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
+    }
 }

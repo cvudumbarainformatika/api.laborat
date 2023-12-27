@@ -12,4 +12,5 @@ Route::group([
     Route::post('/simpanpermintaandepo', [DepoController::class, 'simpanpermintaandepo']);
     Route::get('/listpermintaandepo', [DepoController::class, 'listpermintaandepo']);
     Route::post('/kuncipermintaan', [DepoController::class, 'kuncipermintaan']);
+    Route::post('/terimadistribusi', [DepoController::class, 'terimadistribusi']);
 });
