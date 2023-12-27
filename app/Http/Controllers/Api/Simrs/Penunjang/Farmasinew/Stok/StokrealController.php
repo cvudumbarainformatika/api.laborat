@@ -117,7 +117,7 @@ class StokrealController extends Controller
     public function liststokreal()
     {
         $kdruang = request('kdruang');
-        $stokreal = Stokreal::where('stokreal.flag', '')
+        $stokreal = Stokreal::select()->where('stokreal.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->where('stokreal.kdruang', $kdruang)
             ->where('stokreal.nopenerimaan', 'like', '%' . request('q') . '%')

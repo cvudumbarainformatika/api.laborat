@@ -153,13 +153,6 @@ class DepoController extends Controller
     {
         $depo = request('kddepo');
         $nopermintaan = request('no_permintaan');
-        // if ($depo === '' || $depo === null) {
-        //     $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
-        //         ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
-        //         ->orderBY('tgl_permintaan', 'desc')
-        //         ->get();
-        //     return new JsonResponse($listpermintaandepo);
-        // } else {
 
         $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
@@ -169,52 +162,6 @@ class DepoController extends Controller
         return new JsonResponse($listpermintaandepo);
         // }
     }
-
-    // public function lihatstokgudang()
-    // {
-
-    //     $gudang = request('kdgudang');
-    //     $depo = request('kddepo');
-    //     $stokgudang = Stokrel::select(
-    //         'stokreal.*',
-    //         'new_masterobat.*',
-    //         DB::raw('sum(stokreal.jumlah) as  jumlah'),
-    //         'new_masterobat.nama_obat as nama_obat'
-    //     )->with([
-    //         'permintaanobatrinci' => function ($permintaanobatrinci) {
-    //             $permintaanobatrinci->select(
-    //                 'permintaan_r.kdobat',
-    //                 DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
-    //             )
-    //                 ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-    //                 ->where('permintaan_h.flag', '');
-    //         },
-    //         'minmax' => function ($mimnmax) use ($depo) {
-    //             $mimnmax->select('kd_obat', 'kd_ruang', 'max')->when($depo, function ($xxx) use ($depo) {
-    //                 $xxx->where('kd_ruang', $depo);
-    //             });
-    //         }
-    //     ])
-    //         ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-    //         ->when($gudang, function ($wew) use ($gudang) {
-    //             $wew->where('stokreal.kdruang', $gudang);
-    //         })
-    //         ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
-    //         //    ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
-    //         ->get();
-    //     $datastok = $stokgudang->groupBy()->map(function ($xxx) {
-    //         $stolreal = $xxx->jumlah;
-    //         $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-    //         $stokalokasi = (int) $stolreal - (int) $permintaantotal;
-    //         $xxx['stokalokasi'] = $stokalokasi;
-    //         return $xxx;
-    //     });
-    //     return new JsonResponse(
-    //         [
-    //             'obat' => $stokgudang
-    //         ]
-    //     );
-    // }
 
     public function terimadistribusi(Request $request)
     {
@@ -240,10 +187,6 @@ class DepoController extends Controller
             ->orderBy('stokreal.tglexp')
             ->get();
         foreach ($obatditerima as $wew) {
-            Stokreal::where('nopenerimaan', $wew->nopenerimaan)
-                ->where('kdobat', $wew->kodeobat)
-                ->where('kdruang', $request->kdruang)
-                ->update(['jumlah' => $wew->sisa]);
 
             Stokreal::create(
                 [
@@ -259,8 +202,6 @@ class DepoController extends Controller
                 ]
             );
         }
-
-
 
         $user = FormatingHelper::session_user();
         $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();

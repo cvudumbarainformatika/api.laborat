@@ -9,6 +9,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,8 @@ class DistribusigudangController extends Controller
                     'permintaanrinci.stokreal' => function ($stokdendiri) {
                         $stokdendiri->select('kdobat', 'kdruang', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
                             ->groupBy('kdruang');
-                    }
+                    },
+                    'mutasigudangkedepo'
                 ]
             )
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
@@ -46,7 +48,8 @@ class DistribusigudangController extends Controller
                 'permintaanrinci.stokreal' => function ($stokdendiri) {
                     $stokdendiri->select('kdobat', 'kdruang', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
                         ->groupBy('kdruang');
-                }
+                },
+                'mutasigudangkedepo'
             ])
                 ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
                 ->where('tujuan', $gudang)
@@ -127,6 +130,11 @@ class DistribusigudangController extends Controller
                         'jml' => $sisa
                     ]
                 );
+                Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('kdruang', $request->kdgudang)
+                    ->update(['jumlah' => 0]);
+
                 $masuk = $sisax;
                 $index = $index + 1;
                 //return $jmldiminta;
@@ -140,6 +148,10 @@ class DistribusigudangController extends Controller
                         'jml' => $masuk
                     ]
                 );
+                Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('kdruang', $request->kdgudang)
+                    ->update(['jumlah' => $sisax]);
                 $masuk = 0;
             }
         }
