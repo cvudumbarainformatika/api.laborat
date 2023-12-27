@@ -8,6 +8,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -217,14 +218,46 @@ class DepoController extends Controller
 
     public function terimadistribusi(Request $request)
     {
-        $obatditerima = Mutasigudangkedepo::leftjoin('stokreal', 'mutasi_gudangdepo.nopenerimaan', 'stokreal.nopenerimaan')
-            ->where('mutasi_gudangdepo.kd_obat', 'stokreal.kdobat')
+        $obatditerima = Mutasigudangkedepo::select(
+            'mutasi_gudangdepo.no_permintaan as nopermintaan',
+            'mutasi_gudangdepo.nopenerimaan as nopenerimaan',
+            'mutasi_gudangdepo.kd_obat as kodeobat',
+            'mutasi_gudangdepo.jml as jml',
+            'stokreal.tglpenerimaan as tglpenerimaan',
+            'stokreal.harga as harga',
+            'stokreal.tglexp as tglexp',
+            'stokreal.nobatch as nobatch',
+            'stokreal.nodistribusi as nodistribusi',
+            'stokreal.jumlah',
+            DB::raw('(stokreal.jumlah-mutasi_gudangdepo.jml) as sisa')
+        )
+            ->leftjoin('stokreal', function ($x) {
+                $x->on('mutasi_gudangdepo.nopenerimaan', '=', 'stokreal.nopenerimaan')
+                    ->on('mutasi_gudangdepo.kd_obat', '=', 'stokreal.kdobat');
+            })
             ->where('no_permintaan', $request->no_permintaan)
             ->where('kdruang', $request->kdruang)
+            ->orderBy('stokreal.tglexp')
             ->get();
-        return $obatditerima;
         foreach ($obatditerima as $wew) {
-            echo $wew->nopenerimaan;
+            Stokreal::where('nopenerimaan', $wew->nopenerimaan)
+                ->where('kdobat', $wew->kodeobat)
+                ->where('kdruang', $request->kdruang)
+                ->update(['jumlah' => $wew->sisa]);
+
+            Stokreal::create(
+                [
+                    'nopenerimaan' => $wew->nopenerimaan,
+                    'tglpenerimaan' => $wew->tglpenerimaan,
+                    'kdobat' => $wew->kodeobat,
+                    'jumlah' => $wew->jml,
+                    'kdruang' => $request->tujuan,
+                    'harga' => $wew->harga,
+                    'tglexp' => $wew->tglexp,
+                    'nobatch' => $wew->nobatch,
+                    'nodistribusi' => $request->no_permintaan
+                ]
+            );
         }
 
 
