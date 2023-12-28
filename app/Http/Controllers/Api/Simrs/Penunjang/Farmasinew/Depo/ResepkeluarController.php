@@ -75,8 +75,29 @@ class ResepkeluarController extends Controller
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();
+
         $index = 0;
         $masuk = $jmldiminta;
+
+        if ($request->groupsistembayar === '1') {
+            if ($caristok[$index]->harga <= 50000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 28 / 100;
+            } elseif ($caristok[$index]->harga > 50000 && $caristok[$index]->harga <= 250000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 26 / 100;
+            } elseif ($caristok[$index]->harga > 250000 && $caristok[$index]->harga <= 500000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 21 / 100;
+            } elseif ($caristok[$index]->harga > 500000 && $caristok[$index]->harga <= 1000000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 16 / 100;
+            } elseif ($caristok[$index]->harga > 1000000 && $caristok[$index]->harga <= 5000000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 11 / 100;
+            } elseif ($caristok[$index]->harga > 5000000 && $caristok[$index]->harga <= 10000000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 9 / 100;
+            } elseif ($caristok[$index]->harga > 10000000) {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 7 / 100;
+            }
+        } else {
+            $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 25 / 100;
+        }
 
         while ($masuk > 0) {
             $sisa = $caristok[$index]->jumlah;
@@ -99,7 +120,8 @@ class ResepkeluarController extends Controller
                         'uraian50' => $request->uraian50,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'jumlah' => $caristok[$index]->jumlah,
-                        'harga' => $caristok[$index]->harga,
+                        'harga_beli' => $caristok[$index]->harga,
+                        'harga_jual' => $hargajual,
                         'aturan' => $request->aturan,
                         'keterangan' => $request->keterangan,
                         'user' => $user['kodesimrs']
@@ -132,7 +154,8 @@ class ResepkeluarController extends Controller
                         'uraian50' => $request->uraian50,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'jumlah' => $masuk,
-                        'harga' => $caristok[$index]->harga,
+                        'harga_beli' => $caristok[$index]->harga,
+                        'harga_jual' => $hargajual,
                         'aturan' => $request->aturan,
                         'keterangan' => $request->keterangan,
                         'user' => $user['kodesimrs']
