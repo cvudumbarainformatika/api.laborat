@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
@@ -94,6 +95,20 @@ class StokrealController extends Controller
                 'nobatch' => $request->nobatch ?? '',
             ]
         );
+
+        $simpanstokopname = Stokopname::create(
+            [
+                'nopenerimaan' => $request->notrans ?? $notrans,
+                'tglpenerimaan' => $request->tglpenerimaan ?? date('Y-m-d H:i:s'),
+                'kdobat' => $request->kdobat,
+                'jumlah' => $request->jumlah,
+                'kdruang' => $request->kdruang,
+                'harga' => $request->harga ?? '',
+                'tglexp' => $request->tglexp ?? '',
+                'nobatch' => $request->nobatch ?? '',
+                'tglopname' => '2023-12-31 23:59:59'
+            ]
+        );
         return new JsonResponse(
             [
                 'datastok' => $simpanstok,
@@ -104,7 +119,7 @@ class StokrealController extends Controller
     }
     public function updatestoksementara(Request $request)
     {
-        $cari = Stokrel::where('id', $request->id)->first();
+        $cari = Stokopname::where('id', $request->id)->first();
         $cari->jumlah = $request->jumlah ?? '';
         $cari->harga = $request->harga ?? '';
         $cari->tglexp = $request->tglexp ?? '';
