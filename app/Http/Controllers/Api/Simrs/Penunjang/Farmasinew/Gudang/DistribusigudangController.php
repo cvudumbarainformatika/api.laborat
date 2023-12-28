@@ -108,7 +108,7 @@ class DistribusigudangController extends Controller
     public function simpandistribusidepo(Request $request)
     {
         $jmldiminta = $request->jumlah_minta;
-        $caristok = Stokrel::where('kdobat', $request->kodeobat)->where('kdruang', $request->kdgudang)
+        $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kdgudang)
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();

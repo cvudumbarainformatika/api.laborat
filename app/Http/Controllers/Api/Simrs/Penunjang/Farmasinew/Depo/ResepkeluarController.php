@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -47,10 +51,76 @@ class ResepkeluarController extends Controller
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
                 'ruangan' => $request->kdruangan,
-                'depo' => $request->kodedepo,
-                'noreg' => $request->noreg,
-                'noreg' => $request->noreg,
+                'noresep' => $request->noresep,
+                'sistembayar' => $request->sistembayar,
+                'diagnosa' => $request->diagnosa,
+                'kodeincbg' => $request->kodeincbg,
+                'uraianinacbg' => $request->uraianinacbg,
+                'tarifina' => $request->tarifina,
+                'tagihanrs' => $request->tagihanrs,
             ]
         );
+        if (!$simpan) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
+
+        $simpanrinci = Resepkeluarrinci::create(
+            [
+                'noreg' => $request->noreg,
+                'nota' => $nonota,
+                'kdobat' => $request->kodeobat,
+                'kandungan' => $request->kandungan,
+                'fornas' => $request->fornas,
+                'forkit' => $request->forkit,
+                'generik' => $request->generik,
+                'kode108' => $request->kode108,
+                'uraian108' => $request->uraian108,
+                'kode50' => $request->kode50,
+                'uraian50' => $request->uraian50,
+                'nopenerimaan' => $request->nopenerimaan,
+                'jumlah' => $request->jumlah,
+                'harga' => $request->harga,
+                'aturan' => $request->aturan,
+                'keterangan' => $request->keterangan,
+                'user' => $user['kodesimrs']
+            ]
+        );
+
+        if (!$simpanrinci) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
+
+        $jmldiminta = $request->jumlah;
+        $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
+            ->where('jumlah', '!=', 0)
+            ->orderBy('tglexp')
+            ->get();
+        $index = 0;
+        $masuk = $jmldiminta;
+
+        while ($masuk > 0) {
+            $sisa = $caristok[$index]->jumlah;
+
+            if ($sisa < $masuk) {
+                $sisax = $masuk - $sisa;
+
+                Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('kdruang', $request->kdgudang)
+                    ->update(['jumlah' => 0]);
+
+                $masuk = $sisax;
+                $index = $index + 1;
+                //return $jmldiminta;
+            } else {
+                $sisax = $sisa - $masuk;
+                Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('kdruang', $request->kdgudang)
+                    ->update(['jumlah' => $sisax]);
+                $masuk = 0;
+            }
+        }
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
     }
 }
