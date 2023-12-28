@@ -83,18 +83,18 @@ class StokrealController extends Controller
         }
         $notrans = $sementara . '-' . $kdruang;
 
-        $simpanstok = Stokrel::create(
-            [
-                'nopenerimaan' => $request->notrans ?? $notrans,
-                'tglpenerimaan' => $request->tglpenerimaan ?? date('Y-m-d H:i:s'),
-                'kdobat' => $request->kdobat,
-                'jumlah' => $request->jumlah,
-                'kdruang' => $request->kdruang,
-                'harga' => $request->harga ?? '',
-                'tglexp' => $request->tglexp ?? '',
-                'nobatch' => $request->nobatch ?? '',
-            ]
-        );
+        // $simpanstok = Stokrel::create(
+        //     [
+        //         'nopenerimaan' => $request->notrans ?? $notrans,
+        //         'tglpenerimaan' => $request->tglpenerimaan ?? date('Y-m-d H:i:s'),
+        //         'kdobat' => $request->kdobat,
+        //         'jumlah' => $request->jumlah,
+        //         'kdruang' => $request->kdruang,
+        //         'harga' => $request->harga ?? '',
+        //         'tglexp' => $request->tglexp ?? '',
+        //         'nobatch' => $request->nobatch ?? '',
+        //     ]
+        // );
 
         $simpanstokopname = Stokopname::create(
             [
@@ -111,7 +111,7 @@ class StokrealController extends Controller
         );
         return new JsonResponse(
             [
-                'datastok' => $simpanstok,
+                'datastok' => $simpanstokopname,
                 'message' => 'Stok Berhasil Disimpan...!!!'
             ],
             200
