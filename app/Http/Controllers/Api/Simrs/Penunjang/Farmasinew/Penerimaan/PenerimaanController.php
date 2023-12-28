@@ -90,7 +90,7 @@ class PenerimaanController extends Controller
             ],
             [
                 'tgl_exp' => $request->tgl_exp,
-                'satuan_bsr' => $request->satuan_bsr,
+                'satuan' => $request->satuan_bsr,
                 'satuan_kcl' => $request->satuan_kcl,
                 'isi' => $request->isi,
                 'diskon' => $request->diskon,
