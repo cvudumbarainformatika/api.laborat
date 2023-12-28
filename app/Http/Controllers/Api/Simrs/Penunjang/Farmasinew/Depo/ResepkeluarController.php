@@ -50,6 +50,8 @@ class ResepkeluarController extends Controller
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
+                'tgl' => date('Y-m-d H:i:s'),
+                'depo' => $request->kodedepo,
                 'ruangan' => $request->kdruangan,
                 'noresep' => $request->noresep,
                 'sistembayar' => $request->sistembayar,
@@ -144,6 +146,10 @@ class ResepkeluarController extends Controller
                 $masuk = 0;
             }
         }
-        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+        return new JsonResponse([
+            'heder' => $simpan,
+            'rinci' => $simpanrinci,
+            'message' => 'Data Berhasil Disimpan...!!!'
+        ], 200);
     }
 }
