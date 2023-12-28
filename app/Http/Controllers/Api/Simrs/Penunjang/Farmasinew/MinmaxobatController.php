@@ -17,7 +17,6 @@ class MinmaxobatController extends Controller
     public function simpan(Request $request)
     {
         $pemilik = Mobatnew::where('kd_obat', $request->kd_obat)->first();
-        // return $pemilik->gudang;
 
         if ($request->kd_ruang === 'Gd-05010100' || $request->kd_ruang === 'Gd-03010100') {
             if ($pemilik->gudang === '') {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\CaripasienController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\DepoController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\LihatStokController;
 use Illuminate\Support\Facades\Route;
@@ -16,4 +17,8 @@ Route::group([
     Route::post('/terimadistribusi', [DepoController::class, 'terimadistribusi']);
 
     Route::get('/lihatstokobateresep', [LihatStokController::class, 'lihatstokobateresep']);
+
+    Route::get('/caripasienpoli', [CaripasienController::class, 'caripasienpoli']);
+    Route::get('/caripasienranap', [CaripasienController::class, 'caripasienranap']);
+    Route::get('/caripasienigd', [CaripasienController::class, 'caripasienigd']);
 });
