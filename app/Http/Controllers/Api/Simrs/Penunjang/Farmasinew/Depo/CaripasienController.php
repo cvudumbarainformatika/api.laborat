@@ -162,7 +162,7 @@ class CaripasienController extends Controller
             'rs15.rs55 as nohp',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-            'rs21.rs2 as namanakes',
+            'rs21.rs2 as dokter',
             'rs227.rs8 as sep',
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
