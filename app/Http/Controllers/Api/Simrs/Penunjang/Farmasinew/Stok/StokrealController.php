@@ -22,7 +22,7 @@ class StokrealController extends Controller
                 'kdruang' => $request->kdruang,
                 'nobatch' => $request->no_batch,
                 'tglexp' => $request->tgl_exp,
-                'harga' => $request->harga_kcl
+                'harga' => $request->harga_netto_kecil
             ],
             [
                 'tglpenerimaan' => $request->tglpenerimaan,
