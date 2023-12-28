@@ -64,31 +64,9 @@ class ResepkeluarController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
-        $simpanrinci = Resepkeluarrinci::create(
-            [
-                'noreg' => $request->noreg,
-                'nota' => $nonota,
-                'kdobat' => $request->kodeobat,
-                'kandungan' => $request->kandungan,
-                'fornas' => $request->fornas,
-                'forkit' => $request->forkit,
-                'generik' => $request->generik,
-                'kode108' => $request->kode108,
-                'uraian108' => $request->uraian108,
-                'kode50' => $request->kode50,
-                'uraian50' => $request->uraian50,
-                'nopenerimaan' => $request->nopenerimaan,
-                'jumlah' => $request->jumlah,
-                'harga' => $request->harga,
-                'aturan' => $request->aturan,
-                'keterangan' => $request->keterangan,
-                'user' => $user['kodesimrs']
-            ]
-        );
-
-        if (!$simpanrinci) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        }
+        // if (!$simpanrinci) {
+        //     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        // }
 
         $jmldiminta = $request->jumlah;
         $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
@@ -104,9 +82,31 @@ class ResepkeluarController extends Controller
             if ($sisa < $masuk) {
                 $sisax = $masuk - $sisa;
 
+                $simpanrinci = Resepkeluarrinci::create(
+                    [
+                        'noreg' => $request->noreg,
+                        'nota' => $nonota,
+                        'kdobat' => $request->kodeobat,
+                        'kandungan' => $request->kandungan,
+                        'fornas' => $request->fornas,
+                        'forkit' => $request->forkit,
+                        'generik' => $request->generik,
+                        'kode108' => $request->kode108,
+                        'uraian108' => $request->uraian108,
+                        'kode50' => $request->kode50,
+                        'uraian50' => $request->uraian50,
+                        'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                        'jumlah' => $caristok[$index]->jumlah,
+                        'harga' => $caristok[$index]->harga,
+                        'aturan' => $request->aturan,
+                        'keterangan' => $request->keterangan,
+                        'user' => $user['kodesimrs']
+                    ]
+                );
+
                 Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                     ->where('kdobat', $caristok[$index]->kdobat)
-                    ->where('kdruang', $request->kdgudang)
+                    ->where('kdruang', $request->kodedepo)
                     ->update(['jumlah' => 0]);
 
                 $masuk = $sisax;
@@ -114,9 +114,32 @@ class ResepkeluarController extends Controller
                 //return $jmldiminta;
             } else {
                 $sisax = $sisa - $masuk;
+
+                $simpanrinci = Resepkeluarrinci::create(
+                    [
+                        'noreg' => $request->noreg,
+                        'nota' => $nonota,
+                        'kdobat' => $request->kodeobat,
+                        'kandungan' => $request->kandungan,
+                        'fornas' => $request->fornas,
+                        'forkit' => $request->forkit,
+                        'generik' => $request->generik,
+                        'kode108' => $request->kode108,
+                        'uraian108' => $request->uraian108,
+                        'kode50' => $request->kode50,
+                        'uraian50' => $request->uraian50,
+                        'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                        'jumlah' => $masuk,
+                        'harga' => $caristok[$index]->harga,
+                        'aturan' => $request->aturan,
+                        'keterangan' => $request->keterangan,
+                        'user' => $user['kodesimrs']
+                    ]
+                );
+
                 Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                     ->where('kdobat', $caristok[$index]->kdobat)
-                    ->where('kdruang', $request->kdgudang)
+                    ->where('kdruang', $request->kodedepo)
                     ->update(['jumlah' => $sisax]);
                 $masuk = 0;
             }
