@@ -132,11 +132,11 @@ class StokrealController extends Controller
     public function liststokreal()
     {
         $kdruang = request('kdruang');
-        $stokreal = Stokreal::select('stokreal.*', 'new_masterobat.*', 'stokreal.id as idx')->where('stokreal.flag', '')
-            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
-            ->where('stokreal.kdruang', $kdruang)
-            ->where('stokreal.nopenerimaan', 'like', '%' . request('q') . '%')
-            ->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+        $stokreal = Stokopname::select('stokopname.*', 'new_masterobat.*', 'stokopname.id as idx')->where('stokopname.flag', '')
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokopname.kdobat')
+            ->where('stokopname.kdruang', $kdruang)
+            ->where('stokopname.nopenerimaan', 'like', '%' . request('q') . '%')
+            ->orwhere('stokopname.kdobat', 'like', '%' . request('q') . '%')
             ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%')
             ->paginate(request('per_page'));
         return new JsonResponse($stokreal);
