@@ -6,6 +6,7 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
@@ -53,6 +54,7 @@ class ResepkeluarController extends Controller
                 'tgl' => date('Y-m-d H:i:s'),
                 'depo' => $request->kodedepo,
                 'ruangan' => $request->kdruangan,
+                'dokter' => $request->kddokter,
                 'noresep' => $request->noresep,
                 'sistembayar' => $request->sistembayar,
                 'diagnosa' => $request->diagnosa,
@@ -79,28 +81,27 @@ class ResepkeluarController extends Controller
         $index = 0;
         $masuk = $jmldiminta;
 
-        if ($request->groupsistembayar === '1') {
-            if ($caristok[$index]->harga <= 50000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 28 / 100;
-            } elseif ($caristok[$index]->harga > 50000 && $caristok[$index]->harga <= 250000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 26 / 100;
-            } elseif ($caristok[$index]->harga > 250000 && $caristok[$index]->harga <= 500000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 21 / 100;
-            } elseif ($caristok[$index]->harga > 500000 && $caristok[$index]->harga <= 1000000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 16 / 100;
-            } elseif ($caristok[$index]->harga > 1000000 && $caristok[$index]->harga <= 5000000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 11 / 100;
-            } elseif ($caristok[$index]->harga > 5000000 && $caristok[$index]->harga <= 10000000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 9 / 100;
-            } elseif ($caristok[$index]->harga > 10000000) {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 7 / 100;
-            }
-        } else {
-            $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * 25 / 100;
-        }
-
         while ($masuk > 0) {
             $sisa = $caristok[$index]->jumlah;
+            if ($request->groupsistembayar == 1) {
+                if ($caristok[$index]->harga <= 50000) {
+                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 28 / (int) 100;
+                } elseif ($caristok[$index]->harga > 50000 && $caristok[$index]->harga <= 250000) {
+                    $hargajual = (int) $caristok[$index]->harga + ((int) $caristok[$index]->harga * (int) 26 / (int) 100);
+                } elseif ($caristok[$index]->harga > 250000 && $caristok[$index]->harga <= 500000) {
+                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 21 / (int) 100;
+                } elseif ($caristok[$index]->harga > 500000 && $caristok[$index]->harga <= 1000000) {
+                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 16 / (int)100;
+                } elseif ($caristok[$index]->harga > 1000000 && $caristok[$index]->harga <= 5000000) {
+                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 11 /  (int)100;
+                } elseif ($caristok[$index]->harga > 5000000 && $caristok[$index]->harga <= 10000000) {
+                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 9 / (int) 100;
+                } elseif ($caristok[$index]->harga > 10000000) {
+                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 7 / (int) 100;
+                }
+            } else {
+                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 25 / (int)100;
+            }
 
             if ($sisa < $masuk) {
                 $sisax = $masuk - $sisa;
@@ -174,5 +175,61 @@ class ResepkeluarController extends Controller
             'rinci' => $simpanrinci,
             'message' => 'Data Berhasil Disimpan...!!!'
         ], 200);
+    }
+
+    public function listresep()
+    {
+        $listresep = Resepkeluarheder::with(
+            [
+                'rincian',
+                'rincian.mobat',
+                'sistembayar'
+            ]
+        )
+            ->where('depo', request('kddepo'))
+            ->get();
+        return new JsonResponse($listresep);
+    }
+
+    public function hapusobat(Request $request)
+    {
+
+        $kembalikan = Stokreal::select(
+            'stokreal.nopenerimaan as nopenerimaan',
+            'stokreal.kdobat as kdobat',
+            'stokreal.harga as harga',
+            DB::raw('stokreal.jumlah + resep_keluar_r.jumlah as masuk')
+        )
+            ->leftjoin('resep_keluar_r', function ($e) {
+                $e->on('resep_keluar_r.nopenerimaan', 'stokreal.nopenerimaan')
+                    ->on('resep_keluar_r.kdobat', 'stokreal.kdobat')
+                    ->on('resep_keluar_r.harga_beli', 'stokreal.harga');
+            })
+            ->where('resep_keluar_r.kdobat', $request->kdobat)
+            ->where('stokreal.kdruang', $request->koderuang)
+            ->where('resep_keluar_r.nota', $request->nota)
+            ->get();
+
+        foreach ($kembalikan as $e) {
+
+            $updatestok = Stokreal::where('nopenerimaan', $e->nopenerimaan)
+                ->where('kdobat', $e->kdobat)
+                ->where('stokreal.kdruang', $request->koderuang)
+                ->where('harga', $e->harga)->first();
+            $updatestok->jumlah = $e->masuk;
+            $updatestok->save();
+
+            $hapusobatx = Resepkeluarrinci::where('kdobat', $request->kdobat)->where('nota', $request->nota)->first();
+            $hapusobatx->delete();
+        }
+
+        return new JsonResponse(['message' => 'Data Berhasil dihapus...!!!'], 200);
+        // $hapusobat = Resepkeluarrinci::where('kdobat', $request->kdobat)->where('nota', $request->nota)->get();
+        // foreach ($hapusobat as $x) {
+        //     $hapusobatx = Resepkeluarrinci::where('kdobat', $request->kdobat)->where('nota', $request->nota)->first();
+        //     $hapusobatx->delete();
+        // }
+
+        // $hapusobat->delete();
     }
 }

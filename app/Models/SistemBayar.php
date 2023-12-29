@@ -9,6 +9,7 @@ class SistemBayar extends Model
 {
     use HasFactory;
     protected $table = 'rs9';
+    protected $connection = 'mysql';
 
     public function kunjungan_rawat_inap()
     {

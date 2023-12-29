@@ -24,4 +24,7 @@ Route::group([
     Route::get('/caripasienigd', [CaripasienController::class, 'caripasienigd']);
 
     Route::post('/resepkeluar', [ResepkeluarController::class, 'resepkeluar']);
+    Route::get('/listresep', [ResepkeluarController::class, 'listresep']);
+
+    Route::post('/hapusobat', [ResepkeluarController::class, 'hapusobat']);
 });
