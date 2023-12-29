@@ -69,6 +69,11 @@ class CaripasienController extends Controller
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('nosep') . '%');
             })
             ->whereDate('rs17.rs3', '>=', $tglskrng)
+            ->with([
+                'diagnosa' => function ($d) {
+                    $d->with('masterdiagnosa');
+                }
+            ])
             ->orderby('rs17.rs3', 'ASC')
             ->paginate(request('per_page'));
 
@@ -141,7 +146,7 @@ class CaripasienController extends Controller
             'rs23.rs5 as kdruangan',
             'rs23.rs6 as ketruangan',
             'rs23.rs7 as nomorbed',
-            'rs23.rs10 as kddokter',
+            'rs23.rs10 as kodedokter',
             'rs23.rs19 as kdsistembayar',
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
             'rs15.rs2 as nama_panggil',

@@ -97,7 +97,8 @@ class Pegawai extends Model
     {
         $search->when($reqs['q'] ?? false, function ($search, $query) {
             return $search->where('nip', 'LIKE', '%' . $query . '%')
-                ->orWhere('nama', 'LIKE', '%' . $query . '%');
+                ->orWhere('nama', 'LIKE', '%' . $query . '%')
+                ->orWhere('kdpegsimrs', 'LIKE', '%' . $query . '%');
             // ->orWhere('kodemapingrs', 'LIKE', '%' . $query . '%');
         });
     }
