@@ -135,9 +135,11 @@ class StokrealController extends Controller
         $stokreal = Stokopname::select('stokopname.*', 'new_masterobat.*', 'stokopname.id as idx')->where('stokopname.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokopname.kdobat')
             ->where('stokopname.kdruang', $kdruang)
-            ->where('stokopname.nopenerimaan', 'like', '%' . request('q') . '%')
-            ->orwhere('stokopname.kdobat', 'like', '%' . request('q') . '%')
-            ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%')
+            ->where(function ($x) {
+                $x->where('stokopname.nopenerimaan', 'like', '%' . request('q') . '%')
+                    ->orwhere('stokopname.kdobat', 'like', '%' . request('q') . '%')
+                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
             ->paginate(request('per_page'));
         return new JsonResponse($stokreal);
     }
