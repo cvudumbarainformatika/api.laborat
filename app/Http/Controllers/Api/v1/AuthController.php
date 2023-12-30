@@ -51,10 +51,10 @@ class AuthController extends Controller
     public function authuser()
     {
         $me = auth()->user();
-        $user = User::with(['pegawai.role', 'pegawai.ruang',])->find($me->id);
+        $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
         $loadGudang = array(3, 4, 7);
         if (in_array($user->pegawai->role_id, $loadGudang)) {
-            $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.ruang', 'pegawai.depoSim:kode,nama']);
+            $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.depoSim:kode,nama']);
         }
 
         $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();

@@ -60,6 +60,10 @@ class Pegawai extends Model
     {
         return $this->hasOne(Ruang::class, 'kode', 'kode_ruang');
     }
+    public function ruangsim()
+    {
+        return $this->hasOne(Ruang::class, 'kode', 'kdruangansim');
+    }
 
     public function role()
     {
