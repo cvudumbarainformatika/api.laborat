@@ -201,6 +201,7 @@ class ResepkeluarController extends Controller
     {
         $listresep = Resepkeluarheder::with(
             [
+                'datapasien',
                 'rincian',
                 'rincian.mobat',
                 'sistembayar'

@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\SistemBayar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,5 +28,10 @@ class Resepkeluarheder extends Model
     public function sistembayar()
     {
         return $this->hasone(SistemBayar::class, 'rs1', 'sistembayar');
+    }
+
+    public function datapasien()
+    {
+        return $this->hasOne(Mpasien::class, 'rs1', 'norm');
     }
 }
