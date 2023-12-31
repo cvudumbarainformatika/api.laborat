@@ -27,4 +27,6 @@ Route::group([
     Route::get('/listresep', [ResepkeluarController::class, 'listresep']);
 
     Route::post('/hapusobat', [ResepkeluarController::class, 'hapusobat']);
+
+    Route::get('/listjenisresep', [ResepkeluarController::class, 'listjenisresep']);
 });

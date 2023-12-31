@@ -6,6 +6,7 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Mjenisresep;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
@@ -18,6 +19,16 @@ class ResepkeluarController extends Controller
 {
     public function resepkeluar(Request $request)
     {
+        $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
+            ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
+            ->where('jumlah', '!=', 0)
+            ->orderBy('tglexp')
+            ->get();
+
+        if ($request->jumlah > $cekjumlahstok[0]->jumlahstok) {
+            return new JsonResponse(['message' => 'Maaf Stok Tidak Mencukupi...!!!'], 500);
+        }
+
         if ($request->kodedepo === 'Gd-04010102') {
             $procedure = 'resepkeluardeporanap(@nomor)';
             $colom = 'deporanap';
@@ -76,7 +87,7 @@ class ResepkeluarController extends Controller
             ->orderBy('tglpenerimaan', 'desc')
             ->limit(5)
             ->get();
-        $harga = $cariharga;
+        $harga = $cariharga[0]->harga;
 
         $jmldiminta = $request->jumlah;
         $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
@@ -128,9 +139,10 @@ class ResepkeluarController extends Controller
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'jumlah' => $caristok[$index]->jumlah,
                         'harga_beli' => $caristok[$index]->harga,
+                        'hpp' => $harga,
                         'harga_jual' => $hargajual,
                         'aturan' => $request->aturan,
-                        'keterangan' => $request->keterangan,
+                        'keterangan' => $request->keterangan ?? '',
                         'user' => $user['kodesimrs']
                     ]
                 );
@@ -162,6 +174,7 @@ class ResepkeluarController extends Controller
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'jumlah' => $masuk,
                         'harga_beli' => $caristok[$index]->harga,
+                        'hpp' => $harga,
                         'harga_jual' => $hargajual,
                         'aturan' => $request->aturan,
                         'keterangan' => $request->keterangan,
@@ -236,5 +249,11 @@ class ResepkeluarController extends Controller
         // }
 
         // $hapusobat->delete();
+    }
+
+    public function listjenisresep()
+    {
+        $listjenisresep = Mjenisresep::where('hidden', '')->get();
+        return new JsonResponse($listjenisresep);
     }
 }
