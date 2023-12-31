@@ -37,20 +37,19 @@ class MinmaxobatController extends Controller
                     return new JsonResponse(['message' => 'Maaf tidak ada list obat di gudang ini'], 500);
                 }
             }
-
-            $simpan = Mminmaxobat::updateOrCreate(
-                ['kd_obat' => $request->kd_obat, 'kd_ruang' => $request->kd_ruang],
-                [
-                    'min' => $request->min,
-                    'max' => $request->max
-                ]
-            );
-
-            if (!$simpan) {
-                return new JsonResponse(['message' => 'DATA TIDAK TERSIMPAN...!!!'], 500);
-            }
-            return new JsonResponse(['message' => 'DATA TERSIMPAN...!!!'], 200);
         }
+        $simpan = Mminmaxobat::updateOrCreate(
+            ['kd_obat' => $request->kd_obat, 'kd_ruang' => $request->kd_ruang],
+            [
+                'min' => $request->min,
+                'max' => $request->max
+            ]
+        );
+
+        if (!$simpan) {
+            return new JsonResponse(['message' => 'DATA TIDAK TERSIMPAN...!!!'], 500);
+        }
+        return new JsonResponse(['message' => 'DATA TERSIMPAN...!!!'], 200);
     }
 
     public function caribynamaobat()
