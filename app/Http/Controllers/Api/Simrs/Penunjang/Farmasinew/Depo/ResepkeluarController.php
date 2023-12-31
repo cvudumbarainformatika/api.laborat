@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
@@ -68,9 +69,14 @@ class ResepkeluarController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
-        // if (!$simpanrinci) {
-        //     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        // }
+        $gudang = ['Gd-05010100', 'Gd-03010100'];
+        $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
+            ->whereIn('kdruang', $gudang)
+            ->where('kdobat', $request->kodeobat)
+            ->orderBy('tglpenerimaan', 'desc')
+            ->limit(5)
+            ->get();
+        $harga = $cariharga;
 
         $jmldiminta = $request->jumlah;
         $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
@@ -85,22 +91,22 @@ class ResepkeluarController extends Controller
             $sisa = $caristok[$index]->jumlah;
             if ($request->groupsistembayar == 1) {
                 if ($caristok[$index]->harga <= 50000) {
-                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 28 / (int) 100;
+                    $hargajual = (int) $harga + (int) $harga * (int) 28 / (int) 100;
                 } elseif ($caristok[$index]->harga > 50000 && $caristok[$index]->harga <= 250000) {
-                    $hargajual = (int) $caristok[$index]->harga + ((int) $caristok[$index]->harga * (int) 26 / (int) 100);
+                    $hargajual = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
                 } elseif ($caristok[$index]->harga > 250000 && $caristok[$index]->harga <= 500000) {
-                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 21 / (int) 100;
+                    $hargajual = (int) $harga + (int) $harga * (int) 21 / (int) 100;
                 } elseif ($caristok[$index]->harga > 500000 && $caristok[$index]->harga <= 1000000) {
-                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 16 / (int)100;
+                    $hargajual = (int) $harga + (int) $harga * (int) 16 / (int)100;
                 } elseif ($caristok[$index]->harga > 1000000 && $caristok[$index]->harga <= 5000000) {
-                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 11 /  (int)100;
+                    $hargajual = (int) $harga + (int) $harga * (int) 11 /  (int)100;
                 } elseif ($caristok[$index]->harga > 5000000 && $caristok[$index]->harga <= 10000000) {
-                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 9 / (int) 100;
+                    $hargajual = (int) $harga + (int) $harga * (int) 9 / (int) 100;
                 } elseif ($caristok[$index]->harga > 10000000) {
-                    $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 7 / (int) 100;
+                    $hargajual = (int) $harga + (int) $harga * (int) 7 / (int) 100;
                 }
             } else {
-                $hargajual = (int) $caristok[$index]->harga + (int) $caristok[$index]->harga * (int) 25 / (int)100;
+                $hargajual = (int) $harga + (int) $harga * (int) 25 / (int)100;
             }
 
             if ($sisa < $masuk) {
@@ -170,9 +176,10 @@ class ResepkeluarController extends Controller
                 $masuk = 0;
             }
         }
+        //return $harga;
         return new JsonResponse([
-            'heder' => $simpan,
-            'rinci' => $simpanrinci,
+            // 'heder' => $simpan,
+            //  'rinci' => $simpanrinci,
             'message' => 'Data Berhasil Disimpan...!!!'
         ], 200);
     }
@@ -209,9 +216,7 @@ class ResepkeluarController extends Controller
             ->where('stokreal.kdruang', $request->koderuang)
             ->where('resep_keluar_r.nota', $request->nota)
             ->get();
-
         foreach ($kembalikan as $e) {
-
             $updatestok = Stokreal::where('nopenerimaan', $e->nopenerimaan)
                 ->where('kdobat', $e->kdobat)
                 ->where('stokreal.kdruang', $request->koderuang)
