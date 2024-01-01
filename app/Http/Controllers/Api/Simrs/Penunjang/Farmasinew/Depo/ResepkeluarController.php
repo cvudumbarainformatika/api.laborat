@@ -53,7 +53,7 @@ class ResepkeluarController extends Controller
             $wew = $x[0]->$colom;
             $nonota = FormatingHelper::penerimaanobat($wew, $lebel);
         } else {
-            $nonota = $request->nonota;
+            $nonota = $request->nota;
         }
         $user = FormatingHelper::session_user();
         $simpan = Resepkeluarheder::firstorcreate(
