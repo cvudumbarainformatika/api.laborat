@@ -2731,11 +2731,14 @@ class AutogenController extends Controller
         //     'sekarang' => $tglskrng,
         //     'prev' => $prev,
         // ];
-        $simpan = Resepkeluarheder::create(
-
+        $simpan = Resepkeluarheder::updateOrCreate(
+            [
+                'noreg' => 'XXXXX'
+            ],
             [
                 'tgl' => date('Y-m-d H:i:s'),
             ]
+
         );
 
         return new JsonResponse(['sim' => $simpan]);
