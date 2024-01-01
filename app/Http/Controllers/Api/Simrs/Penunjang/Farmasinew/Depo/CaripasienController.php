@@ -14,6 +14,9 @@ class CaripasienController extends Controller
     public function caripasienpoli()
     {
         $tglskrng = date('Y-m-d');
+
+        $date = new \DateTime('-7 days');
+        $prev = $date->format('Y-m-d');
         $carirajal = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs9',
@@ -68,7 +71,7 @@ class CaripasienController extends Controller
                     ->orWhere('rs17.rs1', 'LIKE', '%' . request('noreg') . '%')
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('nosep') . '%');
             })
-            ->whereDate('rs17.rs3', '>=', $tglskrng)
+            ->whereBetween('rs17.rs3', [$prev . ' 00:00:00', $tglskrng . ' 23:59:59'])
             ->with([
                 'diagnosa' => function ($d) {
                     $d->with('masterdiagnosa');
