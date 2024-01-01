@@ -57,7 +57,7 @@ class ResepkeluarController extends Controller
         }
         $user = FormatingHelper::session_user();
 
-        return new JsonResponse(['user' => $user], 200);
+
 
         $simpan = Resepkeluarheder::firstorcreate(
             [
@@ -82,7 +82,7 @@ class ResepkeluarController extends Controller
         if (!$simpan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
-
+        return new JsonResponse(['simpan' => $simpan], 200);
         $gudang = ['Gd-05010100', 'Gd-03010100'];
         $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
             ->whereIn('kdruang', $gudang)
