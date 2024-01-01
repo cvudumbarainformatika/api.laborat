@@ -57,7 +57,7 @@ class ResepkeluarController extends Controller
         }
         $user = FormatingHelper::session_user();
 
-        $simpan = Resepkeluarheder::firstOrCreate(
+        $simpan = Resepkeluarheder::updateOrCreate(
             [
                 'nota' => $nonota
             ],
