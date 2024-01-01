@@ -57,10 +57,10 @@ class ResepkeluarController extends Controller
         }
 
         $user = FormatingHelper::session_user();
-        $simpanrinci = Resepkeluarrinci::create([
-            'nota' => $nonota,
-        ]);
-        return new JsonResponse(['simpan' => $simpanrinci, 'message' => 'tak simpan headernya'], 410);
+        // $simpanrinci = Resepkeluarrinci::create([
+        //     'nota' => $nonota,
+        // ]);
+        // return new JsonResponse(['simpan' => $simpanrinci, 'message' => 'tak simpan headernya'], 410);
         $simpan = Resepkeluarheder::updateOrCreate(
             [
                 'nota' => $nonota
