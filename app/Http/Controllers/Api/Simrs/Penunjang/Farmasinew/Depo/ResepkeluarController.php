@@ -29,7 +29,7 @@ class ResepkeluarController extends Controller
                 'tgl' => date('Y-m-d H:i:s'),
                 'depo' => $request->kodedepo,
                 'ruangan' => $request->kdruangan,
-                // 'dokter' => $request->kddokter,
+                'dokter' => $request->kddokter,
                 'noresep' => $request->noresep,
                 'sistembayar' => $request->sistembayar,
                 'diagnosa' => $request->diagnosa,
