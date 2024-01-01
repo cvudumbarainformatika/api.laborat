@@ -102,7 +102,7 @@ class ResepkeluarController extends Controller
                 'kodeincbg' => $request->kodeincbg,
                 'uraianinacbg' => $request->uraianinacbg,
                 'tarifina' => $request->tarifina,
-                'tagihanrs' => $request->tagihanrs,
+                'tagihanrs' => $request->tagihanrs ?? 0,
             ]
         );
 

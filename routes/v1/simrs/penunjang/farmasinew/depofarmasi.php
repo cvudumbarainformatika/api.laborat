@@ -23,8 +23,8 @@ Route::group([
     Route::get('/caripasienranap', [CaripasienController::class, 'caripasienranap']);
     Route::get('/caripasienigd', [CaripasienController::class, 'caripasienigd']);
 
-    // Route::post('/resepkeluar', [ResepkeluarController::class, 'resepkeluar']);
-    Route::post('/resepkeluar', [ResepkeluarController::class, 'cekResepKeluar']);
+    Route::post('/resepkeluar', [ResepkeluarController::class, 'resepkeluar']);
+    // Route::post('/resepkeluar', [ResepkeluarController::class, 'cekResepKeluar']);
     Route::get('/listresep', [ResepkeluarController::class, 'listresep']);
 
     Route::post('/hapusobat', [ResepkeluarController::class, 'hapusobat']);
