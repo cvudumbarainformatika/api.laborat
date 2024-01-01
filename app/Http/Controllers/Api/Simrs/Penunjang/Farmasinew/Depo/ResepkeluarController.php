@@ -55,14 +55,12 @@ class ResepkeluarController extends Controller
         } else {
             $nonota = $request->nota;
         }
-        return new JsonResponse(['simpan' => $nonota], 410);
+
         $user = FormatingHelper::session_user();
 
-        $simpan = Resepkeluarheder::updateOrCreate(
+        $simpan = Resepkeluarheder::create(
             [
-                'nota' => $nonota
-            ],
-            [
+                'nota' => $nonota,
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
                 'tgl' => date('Y-m-d H:i:s'),
@@ -78,10 +76,31 @@ class ResepkeluarController extends Controller
                 'tagihanrs' => $request->tagihanrs,
             ]
         );
+        // $simpan = Resepkeluarheder::updateOrCreate(
+        //     [
+        //         'nota' => $nonota
+        //     ],
+        //     [
+        //         'noreg' => $request->noreg,
+        //         'norm' => $request->norm,
+        //         'tgl' => date('Y-m-d H:i:s'),
+        //         'depo' => $request->kodedepo,
+        //         'ruangan' => $request->kdruangan,
+        //         'dokter' => $request->kddokter,
+        //         'noresep' => $request->noresep,
+        //         'sistembayar' => $request->sistembayar,
+        //         'diagnosa' => $request->diagnosa,
+        //         'kodeincbg' => $request->kodeincbg,
+        //         'uraianinacbg' => $request->uraianinacbg,
+        //         'tarifina' => $request->tarifina,
+        //         'tagihanrs' => $request->tagihanrs,
+        //     ]
+        // );
 
         if (!$simpan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
+        return new JsonResponse(['simpan' => $nonota, 'message' => 'tak simpan headernya'], 410);
         $gudang = ['Gd-05010100', 'Gd-03010100'];
         $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
             ->whereIn('kdruang', $gudang)
