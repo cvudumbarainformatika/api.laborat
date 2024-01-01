@@ -191,8 +191,9 @@ class ResepkeluarController extends Controller
         }
         //return $harga;
         return new JsonResponse([
-            // 'heder' => $simpan,
-            //  'rinci' => $simpanrinci,
+            'heder' => $simpan,
+            'rinci' => $simpanrinci,
+            'nota' => $nonota,
             'message' => 'Data Berhasil Disimpan...!!!'
         ], 200);
     }
