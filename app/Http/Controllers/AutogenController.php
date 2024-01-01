@@ -2738,7 +2738,7 @@ class AutogenController extends Controller
             ]
         );
 
-        return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'sim' => $simpan], 500);
+        return new JsonResponse(['sim' => $simpan]);
     }
 
     public function baru()
