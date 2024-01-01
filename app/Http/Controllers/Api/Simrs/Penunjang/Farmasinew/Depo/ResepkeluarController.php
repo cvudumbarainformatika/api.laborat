@@ -55,6 +55,7 @@ class ResepkeluarController extends Controller
         } else {
             $nonota = $request->nota;
         }
+        return new JsonResponse(['simpan' => $nonota], 200);
         $user = FormatingHelper::session_user();
 
         $simpan = Resepkeluarheder::updateOrCreate(
@@ -77,7 +78,7 @@ class ResepkeluarController extends Controller
                 'tagihanrs' => $request->tagihanrs,
             ]
         );
-        // return new JsonResponse(['simpan' => $simpan], 200);
+
         if (!$simpan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
