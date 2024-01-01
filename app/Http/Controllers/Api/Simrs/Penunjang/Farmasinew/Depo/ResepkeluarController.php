@@ -25,7 +25,7 @@ class ResepkeluarController extends Controller
             ],
             [
                 'noreg' => $request->noreg,
-                // 'norm' => $request->norm,
+                'norm' => $request->norm,
                 'tgl' => date('Y-m-d H:i:s'),
                 // 'depo' => $request->kodedepo,
                 // 'ruangan' => $request->kdruangan,
@@ -36,7 +36,7 @@ class ResepkeluarController extends Controller
                 // 'kodeincbg' => $request->kodeincbg,
                 // 'uraianinacbg' => $request->uraianinacbg,
                 // 'tarifina' => $request->tarifina,
-                // 'tagihanrs' => $request->tagihanrs,
+                'tagihanrs' => $request->tagihanrs,
             ]
         );
         return new JsonResponse(['simpan' => $simpan, 'message' => 'tak simpan headernya'], 410);
