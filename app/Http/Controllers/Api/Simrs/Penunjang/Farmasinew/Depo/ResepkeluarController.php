@@ -24,7 +24,7 @@ class ResepkeluarController extends Controller
                 'nota' => 'nonotaXXX'
             ],
             [
-                // 'noreg' => $request->noreg,
+                'noreg' => $request->noreg,
                 // 'norm' => $request->norm,
                 'tgl' => date('Y-m-d H:i:s'),
                 // 'depo' => $request->kodedepo,
