@@ -57,7 +57,10 @@ class ResepkeluarController extends Controller
         }
 
         $user = FormatingHelper::session_user();
-
+        $simpanrinci = Resepkeluarrinci::create([
+            'nota' => $nonota,
+        ]);
+        return new JsonResponse(['simpan' => $simpanrinci, 'message' => 'tak simpan headernya'], 410);
         $simpan = Resepkeluarheder::updateOrCreate(
             [
                 'nota' => $nonota
@@ -82,7 +85,7 @@ class ResepkeluarController extends Controller
         if (!$simpan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
-        return new JsonResponse(['simpan' => $nonota, 'message' => 'tak simpan headernya'], 410);
+
         $gudang = ['Gd-05010100', 'Gd-03010100'];
         $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
             ->whereIn('kdruang', $gudang)
