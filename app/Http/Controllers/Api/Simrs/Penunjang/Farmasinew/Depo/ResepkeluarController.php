@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class ResepkeluarController extends Controller
 {
-    public function resepkeluar(Request $request)
+    public function cekResepKeluar(Request $request)
     {
         $simpan = Resepkeluarheder::updateOrCreate(
             [
@@ -40,6 +40,10 @@ class ResepkeluarController extends Controller
             ]
         );
         return new JsonResponse(['simpan' => $simpan, 'message' => 'tak simpan headernya'], 410);
+    }
+    public function resepkeluar(Request $request)
+    {
+
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
             ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
