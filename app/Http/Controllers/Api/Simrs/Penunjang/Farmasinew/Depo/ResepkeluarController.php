@@ -55,7 +55,7 @@ class ResepkeluarController extends Controller
         } else {
             $nonota = $request->nota;
         }
-        return new JsonResponse(['simpan' => $nonota], 200);
+        return new JsonResponse(['simpan' => $nonota], 410);
         $user = FormatingHelper::session_user();
 
         $simpan = Resepkeluarheder::updateOrCreate(
