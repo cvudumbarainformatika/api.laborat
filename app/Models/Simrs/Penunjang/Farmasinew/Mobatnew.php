@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -73,5 +74,9 @@ class Mobatnew extends Model
     public function stokmaxpergudang()
     {
         return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kd_obat');
+    }
+    public function saldoawal()
+    {
+        return $this->hasMany(Stokopname::class, 'kd_obat', 'kd_obat');
     }
 }
