@@ -68,6 +68,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
@@ -2722,14 +2723,22 @@ class AutogenController extends Controller
         //     'recent' => $recentStok,
         //     'detail penerimaan' => $detailPenerimaan,
         // ];
-        $tglskrng = date('Y-m-d');
-        $date = new \DateTime('-7 days');
-        $prev = $date->format('Y-m-d');
+        // $tglskrng = date('Y-m-d');
+        // $date = new \DateTime('-7 days');
+        // $prev = $date->format('Y-m-d');
 
-        return [
-            'sekarang' => $tglskrng,
-            'prev' => $prev,
-        ];
+        // return [
+        //     'sekarang' => $tglskrng,
+        //     'prev' => $prev,
+        // ];
+        $simpan = Resepkeluarheder::create(
+
+            [
+                'tgl' => date('Y-m-d H:i:s'),
+            ]
+        );
+
+        return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'sim' => $simpan], 500);
     }
 
     public function baru()
