@@ -16,6 +16,7 @@ class Mpasien extends Model
     protected $guarded = [''];
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
+    protected $connection = 'mysql';
 
     // public $timestamps = false;
 

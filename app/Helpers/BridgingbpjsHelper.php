@@ -70,6 +70,7 @@ class BridgingbpjsHelper
         $data = json_decode($response, true);
         // return $data;
         if (!$data) {
+            date_default_timezone_set('Asia/Jakarta');
             return response()->json([
                 'code' => 500,
                 'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down',
@@ -89,15 +90,17 @@ class BridgingbpjsHelper
         // }
         $nilairespon = $data["response"] ?? false;
         if (!$nilairespon) {
+            date_default_timezone_set('Asia/Jakarta');
             return $res;
         }
         $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
+
+        date_default_timezone_set('Asia/Jakarta');
         $res['result'] = json_decode($hasilakhir);
         if (!$hasilakhir) {
             return response()->json($data);
         }
 
-        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
 
@@ -115,6 +118,7 @@ class BridgingbpjsHelper
         $data = json_decode($response, true);
         //return $data;
         if (!$data) {
+            date_default_timezone_set('Asia/Jakarta');
             return response()->json([
                 'code' => 500,
                 'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
@@ -131,13 +135,14 @@ class BridgingbpjsHelper
         $nilairespon = $data["response"] ?? false;
 
         if (!$nilairespon) {
+            date_default_timezone_set('Asia/Jakarta');
             $res['response'] = 'Response Tidak ada';
             return $res;
         }
         $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
+        date_default_timezone_set('Asia/Jakarta');
         $res['response'] = json_decode($hasilakhir);
 
-        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
     public static function delete_url(string $name, $param, $post)
@@ -154,6 +159,7 @@ class BridgingbpjsHelper
         $data = json_decode($response, true);
         // return $data;
         if (!$data) {
+            date_default_timezone_set('Asia/Jakarta');
             return response()->json([
                 'code' => 500,
                 'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
@@ -169,10 +175,11 @@ class BridgingbpjsHelper
         $res['response'] =  $data['response'];
 
         $nilairespon = $data["response"] ?? false;
+        date_default_timezone_set('Asia/Jakarta');
+
         if (!$nilairespon) {
             return $res;
         }
-        date_default_timezone_set('Asia/Jakarta');
         return $res;
     }
 

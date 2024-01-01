@@ -12,4 +12,6 @@ Route::group([
     Route::post('/verifpermintaanobat', [DistribusigudangController::class, 'verifpermintaanobat']);
     Route::get('/rencanadistribusikedepo', [DistribusigudangController::class, 'rencanadistribusikedepo']);
     Route::post('/simpandistribusidepo', [DistribusigudangController::class, 'simpandistribusidepo']);
+    Route::post('/kuncipermintaandaridepo', [DistribusigudangController::class, 'kuncipermintaandaridepo']);
+    Route::post('/distribusikan', [DistribusigudangController::class, 'distribusikan']);
 });

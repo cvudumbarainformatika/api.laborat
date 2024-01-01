@@ -18,12 +18,26 @@ class MinmaxobatController extends Controller
     {
         $pemilik = Mobatnew::where('kd_obat', $request->kd_obat)->first();
 
-        if ($pemilik->gudang === 'Gd-05010100' && $request->kd_ruang !== 'Gd-05010100') {
-            return new JsonResponse(['message' => 'Maaf tidak ada list obat di gudang ini'], 500);
-        } elseif ($pemilik->gudang === 'Gd-03010100' && $request->kd_ruang !== 'Gd-03010100') {
-            return new JsonResponse(['message' => 'Maaf tidak ada list obat di gudang ini'], 500);
-        }
+        if ($request->kd_ruang === 'Gd-05010100' || $request->kd_ruang === 'Gd-03010100') {
+            if ($pemilik->gudang === '') {
+                $simpan = Mminmaxobat::updateOrCreate(
+                    ['kd_obat' => $request->kd_obat, 'kd_ruang' => $request->kd_ruang],
+                    [
+                        'min' => $request->min,
+                        'max' => $request->max
+                    ]
+                );
 
+                if (!$simpan) {
+                    return new JsonResponse(['message' => 'DATA TIDAK TERSIMPAN...!!!'], 500);
+                }
+                return new JsonResponse(['message' => 'DATA TERSIMPAN...!!!'], 200);
+            } else {
+                if ($pemilik->gudang != $request->kd_ruang) {
+                    return new JsonResponse(['message' => 'Maaf tidak ada list obat di gudang ini'], 500);
+                }
+            }
+        }
         $simpan = Mminmaxobat::updateOrCreate(
             ['kd_obat' => $request->kd_obat, 'kd_ruang' => $request->kd_ruang],
             [
@@ -74,6 +88,7 @@ class MinmaxobatController extends Controller
                     $q->whereKdRuang(request('kd_ruang'));
                 });
             }])
+            ->limit(50)
             ->get();
         return new JsonResponse($query);
         // $qwerty = Mminmaxobat::with([

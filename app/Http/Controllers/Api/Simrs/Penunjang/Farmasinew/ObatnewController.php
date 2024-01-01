@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use function PHPUnit\Framework\isEmpty;
+
 class ObatnewController extends Controller
 {
     public function simpan(Request $request)
@@ -22,7 +24,8 @@ class ObatnewController extends Controller
         } else {
             $kodeobat = $request->kd_obat;
         }
-
+        $request['kelasterapis'] = $request->kelasterapis ?? '';
+        $request['gudang'] = $request->gudang ?? '';
 
         $simpan = Mobatnew::updateOrCreate(
             ['kd_obat' => $kodeobat],
@@ -103,6 +106,7 @@ class ObatnewController extends Controller
             ->where(function ($list) {
                 $list->where('nama_obat', 'Like', '%' . request('q') . '%');
             })->orderBy('nama_obat')
+            ->limit(50)
             ->get();
         return new JsonResponse($query);
     }

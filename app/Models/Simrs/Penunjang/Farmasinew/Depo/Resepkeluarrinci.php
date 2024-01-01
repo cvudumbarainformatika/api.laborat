@@ -1,26 +1,20 @@
 <?php
 
-namespace App\Models\Simrs\Penunjang\Farmasinew\Stok;
+namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
-<<<<<<< HEAD
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
-=======
->>>>>>> 13b8704a5e960cb39cf0516b65f95c8f3cd7a761
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Stokopname extends Model
+class Resepkeluarrinci extends Model
 {
     use HasFactory;
-    protected $table = 'stokopname';
+    protected $table = 'resep_keluar_r';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
-<<<<<<< HEAD
 
-    public function masterobat()
+    public function mobat()
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
     }
-=======
->>>>>>> 13b8704a5e960cb39cf0516b65f95c8f3cd7a761
 }
