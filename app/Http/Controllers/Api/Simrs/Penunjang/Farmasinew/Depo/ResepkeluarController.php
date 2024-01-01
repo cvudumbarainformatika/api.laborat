@@ -19,6 +19,27 @@ class ResepkeluarController extends Controller
 {
     public function resepkeluar(Request $request)
     {
+        $simpan = Resepkeluarheder::updateOrCreate(
+            [
+                'nota' => 'nonotaXXX'
+            ],
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'tgl' => date('Y-m-d H:i:s'),
+                'depo' => $request->kodedepo,
+                'ruangan' => $request->kdruangan,
+                'dokter' => $request->kddokter,
+                'noresep' => $request->noresep,
+                'sistembayar' => $request->sistembayar,
+                'diagnosa' => $request->diagnosa,
+                'kodeincbg' => $request->kodeincbg,
+                'uraianinacbg' => $request->uraianinacbg,
+                'tarifina' => $request->tarifina,
+                'tagihanrs' => $request->tagihanrs,
+            ]
+        );
+        return new JsonResponse(['simpan' => $simpan, 'message' => 'tak simpan headernya'], 410);
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
             ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
