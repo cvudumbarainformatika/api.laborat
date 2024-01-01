@@ -21,7 +21,7 @@ class ResepkeluarController extends Controller
     {
         $simpan = Resepkeluarheder::updateOrCreate(
             [
-                'nota' => 'nonotaXXX'
+                'nota' => 'nonotaXXXXX'
             ],
             [
                 'noreg' => $request->noreg,
