@@ -35,7 +35,7 @@ class ResepkeluarController extends Controller
                 // 'kodeincbg' => $request->kodeincbg,
                 // 'uraianinacbg' => $request->uraianinacbg,
                 // 'tarifina' => $request->tarifina,
-                // 'tagihanrs' => $request->tagihanrs,
+                'tagihanrs' => $request->tagihanrs,
             ]
         );
         return new JsonResponse(['simpan' => $simpan, 'message' => 'tak simpan headernya'], 410);
