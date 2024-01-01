@@ -32,9 +32,9 @@ class ResepkeluarController extends Controller
                 // 'dokter' => $request->kddokter,
                 // 'noresep' => $request->noresep,
                 // 'sistembayar' => $request->sistembayar,
-                // 'diagnosa' => $request->diagnosa,
-                // 'kodeincbg' => $request->kodeincbg,
-                // 'uraianinacbg' => $request->uraianinacbg,
+                'diagnosa' => $request->diagnosa,
+                'kodeincbg' => $request->kodeincbg,
+                'uraianinacbg' => $request->uraianinacbg,
                 'tarifina' => $request->tarifina,
                 'tagihanrs' => $request->tagihanrs,
             ]
