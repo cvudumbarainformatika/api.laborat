@@ -19,24 +19,23 @@ class ResepkeluarController extends Controller
 {
     public function cekResepKeluar(Request $request)
     {
-        $simpan = Resepkeluarheder::updateOrCreate(
+        $simpan = Resepkeluarheder::create(
             [
-                'nota' => 'nonotaXXXXX'
-            ],
-            [
-                'noreg' => $request->noreg,
-                'norm' => $request->norm,
+                'nota' => 'nonotaXXXXX',
+
+                // 'noreg' => $request->noreg,
+                // 'norm' => $request->norm,
                 'tgl' => date('Y-m-d H:i:s'),
-                'depo' => $request->kodedepo,
-                'ruangan' => $request->kdruangan,
-                'dokter' => $request->kddokter,
-                'noresep' => $request->noresep,
-                'sistembayar' => $request->sistembayar,
-                'diagnosa' => $request->diagnosa,
-                'kodeincbg' => $request->kodeincbg,
-                'uraianinacbg' => $request->uraianinacbg,
-                'tarifina' => $request->tarifina,
-                'tagihanrs' => $request->tagihanrs,
+                // 'depo' => $request->kodedepo,
+                // 'ruangan' => $request->kdruangan,
+                // 'dokter' => $request->kddokter,
+                // 'noresep' => $request->noresep,
+                // 'sistembayar' => $request->sistembayar,
+                // 'diagnosa' => $request->diagnosa,
+                // 'kodeincbg' => $request->kodeincbg,
+                // 'uraianinacbg' => $request->uraianinacbg,
+                // 'tarifina' => $request->tarifina,
+                // 'tagihanrs' => $request->tagihanrs,
             ]
         );
         return new JsonResponse(['simpan' => $simpan, 'message' => 'tak simpan headernya'], 410);
