@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Msigna extends Model
 {
     use HasFactory;
+    protected $connection = 'farmasi';
+    protected $table = 'signa';
+    protected $guarded = ['id'];
 }

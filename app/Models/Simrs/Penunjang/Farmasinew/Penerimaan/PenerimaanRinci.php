@@ -17,4 +17,9 @@ class PenerimaanRinci extends Model
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
     }
+
+    public function header()
+    {
+        return $this->belongsTo(PenerimaanHeder::class, 'nopenerimaan', 'nopenerimaan');
+    }
 }
