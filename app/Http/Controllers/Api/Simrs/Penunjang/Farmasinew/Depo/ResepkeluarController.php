@@ -87,10 +87,10 @@ class ResepkeluarController extends Controller
         // return new JsonResponse(['simpan' => $simpanrinci, 'message' => 'tak simpan headernya'], 410);
         $simpan = Resepkeluarheder::updateOrCreate(
             [
-                'nota' => $nonota
+                'nota' => $nonota,
+                'noreg' => $request->noreg,
             ],
             [
-                'noreg' => $request->noreg,
                 'norm' => $request->norm,
                 'tgl' => date('Y-m-d H:i:s'),
                 'depo' => $request->kodedepo,
