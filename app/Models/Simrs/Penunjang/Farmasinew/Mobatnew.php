@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,6 +79,15 @@ class Mobatnew extends Model
     }
     public function saldoawal()
     {
-        return $this->hasMany(Stokopname::class, 'kd_obat', 'kd_obat');
+        return $this->hasMany(Stokopname::class, 'kdobat', 'kd_obat');
+    }
+
+    public function penerimaanrinci()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kd_obat');
+    }
+    public function mutasi()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
     }
 }
