@@ -18,107 +18,125 @@ class PerencanaanpembelianController extends Controller
 {
     public function perencanaanpembelian()
     {
-        $xxx = FormatingHelper::session_user();
-        if ($xxx['kdruang'] === '') {
-            $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
-        } else {
-            $ruangan = ['', $xxx['kdruang']];
-        }
-
-        $perencanaapembelianobat = Mobatnew::select(
-            'kd_obat',
-            'nama_obat',
-            'status_generik',
-            'status_fornas',
-            'status_forkid',
-            'satuan_k',
-            'sistembayar',
-            'gudang'
-        )->with(
-            [
-                'stokrealgudang' => function ($stokrealgudang) {
-                    $stokrealgudang->select(
-                        'stokreal.kdobat',
-                        DB::raw(
-                            'sum(stokreal.jumlah) as jumlah'
-                        )
-                    )
-                        ->whereIn(
-                            'stokreal.kdruang',
-                            ['Gd-03010100', 'Gd-05010100']
-                        )
-                        ->groupBy('stokreal.kdobat');
-                },
-                'stokrealgudangfs' => function ($stokrealgudangfs) {
-                    $stokrealgudangfs->select(
-                        'stokreal.kdobat',
-                        DB::raw(
-                            'sum(stokreal.jumlah) as jumlah'
-                        )
-                    )
-                        ->where(
-                            'stokreal.kdruang',
-                            'Gd-03010100'
-                        )
-                        ->groupBy('stokreal.kdobat');
-                },
-                'stokrealgudangko' => function ($stokrealgudangko) {
-                    $stokrealgudangko->select(
-                        'stokreal.kdobat',
-                        DB::raw(
-                            'sum(stokreal.jumlah) as jumlah'
-                        )
-                    )
-                        ->where(
-                            'stokreal.kdruang',
-                            'Gd-05010100'
-                        )
-                        ->groupBy('stokreal.kdobat');
-                },
-                'stokrealallrs' => function ($stokrealallrs) {
-                    $stokrealallrs->select(
-                        'stokreal.kdobat',
-                        DB::raw(
-                            'sum(stokreal.jumlah) as jumlah'
-                        )
-                    )->groupBy('stokreal.kdobat');
-                },
-                'stokmaxrs' => function ($stokmaxrs) {
-                    $stokmaxrs->select(
-                        'min_max_ruang.kd_obat',
-                        DB::raw(
-                            'sum(min_max_ruang.max) as jumlah'
-                        )
-                    )->groupBy('min_max_ruang.kd_obat');
-                },
-                'perencanaanrinci' => function ($perencanaanrinci) {
-                    $perencanaanrinci->select(
-                        'kdobat',
-                        DB::raw(
-                            'sum(jumlahdirencanakan) as jumlah'
-                        )
-                    )->where('flag', '')
-                        ->groupBy('kdobat');
-                },
-                'stokmaxpergudang' => function ($stokmaxpergudang) use ($ruangan) {
-                    $stokmaxpergudang->select(
-                        'kd_ruang',
-                        'min_max_ruang.kd_obat',
-                        'min_max_ruang.max as jumlah'
-                    )->whereIn('kd_ruang', $ruangan);
-                },
-            ]
+        $perencanaapembelianobat = Mminmaxobat::select(
+            'min_max_ruang.kd_obat as kd_obat',
+            DB::raw('sum(min_max_ruang.min) as summin'),
+            DB::raw('sum(min_max_ruang.max) as summax'),
+            DB::raw('round(sum(stokreal.jumlah)) as stok'),
         )
-            ->where(function ($obat) {
-                $obat->where('nama_obat', 'Like', '%' . request('q') . '%')
-                    ->orWhere('kd_obat', 'Like', '%' . request('q') . '%');
-            })
-            ->where('flag', '')
-            ->whereIn('gudang', $ruangan)
-            ->orderBy('kd_obat')
-            ->paginate(request('per_page'));
+            ->leftjoin('stokreal', 'stokreal.kdobat', 'min_max_ruang.kd_obat')
+            ->with(
+                [
+                    'obat:kd_obat,nama_obat',
 
+                ]
+            )
+            ->havingRaw('stok <= summin')
+            ->where('min_max_ruang.kd_ruang', 'like', '%GD%')
+            ->groupby('min_max_ruang.kd_obat')
+            ->get();
         return new JsonResponse($perencanaapembelianobat);
+        // $xxx = FormatingHelper::session_user();
+        // if ($xxx['kdruang'] === '') {
+        //     $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
+        // } else {
+        //     $ruangan = ['', $xxx['kdruang']];
+        // }
+
+        // $perencanaapembelianobat = Mobatnew::select(
+        //     'kd_obat',
+        //     'nama_obat',
+        //     'status_generik',
+        //     'status_fornas',
+        //     'status_forkid',
+        //     'satuan_k',
+        //     'sistembayar',
+        //     'gudang'
+        // )->with(
+        //     [
+        //         'stokrealgudang' => function ($stokrealgudang) {
+        //             $stokrealgudang->select(
+        //                 'stokreal.kdobat',
+        //                 DB::raw(
+        //                     'sum(stokreal.jumlah) as jumlah'
+        //                 )
+        //             )
+        //                 ->whereIn(
+        //                     'stokreal.kdruang',
+        //                     ['Gd-03010100', 'Gd-05010100']
+        //                 )
+        //                 ->groupBy('stokreal.kdobat');
+        //         },
+        //         'stokrealgudangfs' => function ($stokrealgudangfs) {
+        //             $stokrealgudangfs->select(
+        //                 'stokreal.kdobat',
+        //                 DB::raw(
+        //                     'sum(stokreal.jumlah) as jumlah'
+        //                 )
+        //             )
+        //                 ->where(
+        //                     'stokreal.kdruang',
+        //                     'Gd-03010100'
+        //                 )
+        //                 ->groupBy('stokreal.kdobat');
+        //         },
+        //         'stokrealgudangko' => function ($stokrealgudangko) {
+        //             $stokrealgudangko->select(
+        //                 'stokreal.kdobat',
+        //                 DB::raw(
+        //                     'sum(stokreal.jumlah) as jumlah'
+        //                 )
+        //             )
+        //                 ->where(
+        //                     'stokreal.kdruang',
+        //                     'Gd-05010100'
+        //                 )
+        //                 ->groupBy('stokreal.kdobat');
+        //         },
+        //         'stokrealallrs' => function ($stokrealallrs) {
+        //             $stokrealallrs->select(
+        //                 'stokreal.kdobat',
+        //                 DB::raw(
+        //                     'sum(stokreal.jumlah) as jumlah'
+        //                 )
+        //             )->groupBy('stokreal.kdobat');
+        //         },
+        //         'stokmaxrs' => function ($stokmaxrs) {
+        //             $stokmaxrs->select(
+        //                 'min_max_ruang.kd_obat',
+        //                 DB::raw(
+        //                     'sum(min_max_ruang.max) as jumlah'
+        //                 )
+        //             )->groupBy('min_max_ruang.kd_obat');
+        //         },
+        //         'perencanaanrinci' => function ($perencanaanrinci) {
+        //             $perencanaanrinci->select(
+        //                 'kdobat',
+        //                 DB::raw(
+        //                     'sum(jumlahdirencanakan) as jumlah'
+        //                 )
+        //             )->where('flag', '')
+        //                 ->groupBy('kdobat');
+        //         },
+        //         'stokmaxpergudang' => function ($stokmaxpergudang) use ($ruangan) {
+        //             $stokmaxpergudang->select(
+        //                 'kd_ruang',
+        //                 'min_max_ruang.kd_obat',
+        //                 'min_max_ruang.max as jumlah'
+        //             )->whereIn('kd_ruang', $ruangan);
+        //         },
+        //     ]
+        // )
+        //     ->where(function ($obat) {
+        //         $obat->where('nama_obat', 'Like', '%' . request('q') . '%')
+        //             ->orWhere('kd_obat', 'Like', '%' . request('q') . '%');
+        //     })
+        //     ->where('flag', '')
+        //     ->whereIn('gudang', $ruangan)
+        //     ->orderBy('kd_obat')
+        //     ->paginate(request('per_page'));
+
+        // return new JsonResponse($perencanaapembelianobat);
     }
 
     public function simpanrencanabeliobat(Request $request)
