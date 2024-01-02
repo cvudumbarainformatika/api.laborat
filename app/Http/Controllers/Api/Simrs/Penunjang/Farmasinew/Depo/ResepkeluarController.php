@@ -17,8 +17,32 @@ use Illuminate\Support\Facades\DB;
 
 class ResepkeluarController extends Controller
 {
+    public function cekResepKeluar(Request $request)
+    {
+        $simpan = Resepkeluarheder::create(
+            [
+                'nota' => 'nonotaXXXXX',
+
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'tgl' => date('Y-m-d H:i:s'),
+                'depo' => $request->kodedepo,
+                'ruangan' => $request->kdruangan,
+                'dokter' => $request->kddokter,
+                'noresep' => $request->noresep,
+                'sistembayar' => $request->sistembayar,
+                'diagnosa' => $request->diagnosa,
+                'kodeincbg' => $request->kodeincbg,
+                'uraianinacbg' => $request->uraianinacbg,
+                'tarifina' => $request->tarifina,
+                'tagihanrs' => $request->tagihanrs ?? 0,
+            ]
+        );
+        return new JsonResponse(['simpan' => $simpan, 'message' => 'tak simpan headernya'], 410);
+    }
     public function resepkeluar(Request $request)
     {
+
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
             ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
@@ -53,15 +77,20 @@ class ResepkeluarController extends Controller
             $wew = $x[0]->$colom;
             $nonota = FormatingHelper::penerimaanobat($wew, $lebel);
         } else {
-            $nonota = $request->nonota;
+            $nonota = $request->nota;
         }
+
         $user = FormatingHelper::session_user();
-        $simpan = Resepkeluarheder::firstorcreate(
+        // $simpanrinci = Resepkeluarrinci::create([
+        //     'nota' => $nonota,
+        // ]);
+        // return new JsonResponse(['simpan' => $simpanrinci, 'message' => 'tak simpan headernya'], 410);
+        $simpan = Resepkeluarheder::updateOrCreate(
             [
-                'nota' => $nonota
+                'nota' => $nonota,
+                'noreg' => $request->noreg,
             ],
             [
-                'noreg' => $request->noreg,
                 'norm' => $request->norm,
                 'tgl' => date('Y-m-d H:i:s'),
                 'depo' => $request->kodedepo,
@@ -73,9 +102,10 @@ class ResepkeluarController extends Controller
                 'kodeincbg' => $request->kodeincbg,
                 'uraianinacbg' => $request->uraianinacbg,
                 'tarifina' => $request->tarifina,
-                'tagihanrs' => $request->tagihanrs,
+                'tagihanrs' => $request->tagihanrs ?? 0,
             ]
         );
+
         if (!$simpan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
@@ -191,8 +221,9 @@ class ResepkeluarController extends Controller
         }
         //return $harga;
         return new JsonResponse([
-            // 'heder' => $simpan,
-            //  'rinci' => $simpanrinci,
+            'heder' => $simpan,
+            'rinci' => $simpanrinci,
+            'nota' => $nonota,
             'message' => 'Data Berhasil Disimpan...!!!'
         ], 200);
     }

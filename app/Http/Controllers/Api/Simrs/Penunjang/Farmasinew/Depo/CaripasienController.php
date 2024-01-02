@@ -14,6 +14,9 @@ class CaripasienController extends Controller
     public function caripasienpoli()
     {
         $tglskrng = date('Y-m-d');
+
+        $date = new \DateTime('-7 days');
+        $prev = $date->format('Y-m-d');
         $carirajal = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs9',
@@ -68,7 +71,7 @@ class CaripasienController extends Controller
                     ->orWhere('rs17.rs1', 'LIKE', '%' . request('noreg') . '%')
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('nosep') . '%');
             })
-            ->whereDate('rs17.rs3', '>=', $tglskrng)
+            ->whereBetween('rs17.rs3', [$prev . ' 00:00:00', $tglskrng . ' 23:59:59'])
             ->with([
                 'diagnosa' => function ($d) {
                     $d->with('masterdiagnosa');
@@ -181,10 +184,10 @@ class CaripasienController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->where(function ($query) {
                 $query->where('rs15.rs2', 'LIKE', '%' . request('nama') . '%')
-                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('nik') . '%')
+                    // ->orWhere('rs15.rs46', 'LIKE', '%' . request('nik') . '%')
                     ->orWhere('rs23.rs2', 'LIKE', '%' . request('norm') . '%')
-                    ->orWhere('rs23.rs1', 'LIKE', '%' . request('noreg') . '%')
-                    ->orWhere('rs227.rs8', 'LIKE', '%' . request('sep') . '%');
+                    ->orWhere('rs23.rs1', 'LIKE', '%' . request('noreg') . '%');
+                // ->orWhere('rs227.rs8', 'LIKE', '%' . request('sep') . '%');
             })
             ->where('rs23.rs22', '')
             ->orderby('rs23.rs3', 'ASC')
