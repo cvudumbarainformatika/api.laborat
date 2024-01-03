@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mjenisresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Msigna;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
@@ -48,7 +50,7 @@ class ResepkeluarController extends Controller
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();
-
+        $jumlahstok = $cekjumlahstok[0]->jumlahstok;
         if ($request->jumlah > $cekjumlahstok[0]->jumlahstok) {
             return new JsonResponse(['message' => 'Maaf Stok Tidak Mencukupi...!!!'], 500);
         }
@@ -62,6 +64,12 @@ class ResepkeluarController extends Controller
             $colom = 'depook';
             $lebel = 'D-KO';
         } elseif ($request->kodedepo === 'Gd-05010101') {
+            $lanjut = $request->lanjuTr ?? '';
+            $cekpemberian = self::cekpemberianobat($request, $jumlahstok);
+            if ($cekpemberian['status'] == 1 && $lanjut !== '1') {
+                return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
+            }
+
             $procedure = 'resepkeluardeporajal(@nomor)';
             $colom = 'deporajal';
             $lebel = 'D-RJ';
@@ -172,6 +180,7 @@ class ResepkeluarController extends Controller
                         'hpp' => $harga,
                         'harga_jual' => $hargajual,
                         'aturan' => $request->aturan,
+                        'konsumsi' => $request->konsumsi,
                         'keterangan' => $request->keterangan ?? '',
                         'user' => $user['kodesimrs']
                     ]
@@ -184,6 +193,7 @@ class ResepkeluarController extends Controller
 
                 $masuk = $sisax;
                 $index = $index + 1;
+                $simpanrinci->load('mobat:kd_obat,nama_obat');
                 //return $jmldiminta;
             } else {
                 $sisax = $sisa - $masuk;
@@ -207,6 +217,7 @@ class ResepkeluarController extends Controller
                         'hpp' => $harga,
                         'harga_jual' => $hargajual,
                         'aturan' => $request->aturan,
+                        'konsumsi' => $request->konsumsi,
                         'keterangan' => $request->keterangan,
                         'user' => $user['kodesimrs']
                     ]
@@ -217,6 +228,7 @@ class ResepkeluarController extends Controller
                     ->where('kdruang', $request->kodedepo)
                     ->update(['jumlah' => $sisax]);
                 $masuk = 0;
+                $simpanrinci->load('mobat:kd_obat,nama_obat');
             }
         }
         //return $harga;
@@ -287,5 +299,78 @@ class ResepkeluarController extends Controller
     {
         $listjenisresep = Mjenisresep::where('hidden', '')->get();
         return new JsonResponse($listjenisresep);
+    }
+
+    public function ambilSigna()
+    {
+        $data = Msigna::get();
+        return new JsonResponse($data);
+    }
+    public static function cekpemberianobat($request, $jumlahstok)
+    {
+        // ini tujuannya mencari sisa obat pasien dengan dihitung jumlah konsumsi obat per hari bersasarkan signa
+        // harus ada data jumlah hari (obat dikonsumsi dalam ... hari) di tabel
+        $cekmaster = Mobatnew::select('kandungan')->where('kd_obat', $request->kdobat)->first();
+        // $jumlahdosis = $request->jumlahdosis;
+        // $jumlah = $request->jumlah;
+        // $jmlhari = (int) $jumlah / $jumlahdosis;
+        // $total = (int) $jmlhari + (int) $jumlahstok;
+        if ($cekmaster->kandungan === '') {
+            $hasil = Resepkeluarheder::select(
+                'resep_keluar_h.nota as nota',
+                'resep_keluar_h.tgl as tgl',
+                'resep_keluar_r.konsumsi',
+                DB::raw('(DATEDIFF(CURRENT_DATE(), resep_keluar_h.tgl)+1) as selisih')
+            )
+                ->leftjoin('resep_keluar_r', 'resep_keluar_h.nota', 'resep_keluar_r.nota')
+                ->where('resep_keluar_h.norm', $request->norm)
+                ->where('resep_keluar_r.kdobat', $request->kdobat)
+                ->orderBy('resep_keluar_h.tgl', 'desc')
+                ->limit(1)
+                ->get();
+        } else {
+            $hasil = Resepkeluarheder::select(
+                'resep_keluar_h.nota as nota',
+                'resep_keluar_h.tgl as tgl',
+                'resep_keluar_r.konsumsi',
+                DB::raw('(DATEDIFF(CURRENT_DATE(), resep_keluar_h.tgl)+1) as selisih')
+            )
+                ->leftjoin('resep_keluar_r', 'resep_keluar_h.nota', 'resep_keluar_r.nota')
+                ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'resep_keluar_r.kdobat')
+                ->where('resep_keluar_h.norm', $request->norm)
+                ->where('resep_keluar_r.kdobat', $request->kdobat)
+                ->where('new_masterobat.kandungan', $request->kandungan)
+                ->orderBy('resep_keluar_h.tgl', 'desc')
+                ->limit(1)
+                ->get();
+        }
+        $selisih = 0;
+        $total = 0;
+        if (count($hasil)) {
+            $selisih = $hasil[0]->selisih;
+            $total = (float)$hasil[0]->konsumsi;
+            if ($selisih <= $total) {
+                return [
+                    'status' => 1,
+                    'hasil' => $hasil,
+                    'selisih' => $selisih,
+                    'total' => $total,
+                ];
+            } else {
+                return [
+                    'status' => 2,
+                    'hasil' => $hasil,
+                    'selisih' => $selisih,
+                    'total' => $total,
+                ];
+                // return 2;
+            }
+        }
+        return [
+            'status' => 2,
+            'hasil' => $hasil,
+            'selisih' => $selisih,
+            'total' => $total,
+        ];
     }
 }
