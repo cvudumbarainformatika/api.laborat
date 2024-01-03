@@ -21,9 +21,27 @@ class PerencanaanpembelianController extends Controller
         $perencanaapembelianobat = Mminmaxobat::select(
             'min_max_ruang.kd_obat as kd_obat',
             'new_masterobat.nama_obat as namaobat',
+            'new_masterobat.status_generik as status_generik',
+            'new_masterobat.status_fornas as status_fornas',
+            'new_masterobat.status_forkid as status_forkid',
+            'new_masterobat.satuan_k as satuan_k',
+            'new_masterobat.sistembayar as sistembayar',
+            'new_masterobat.gudang as gudang',
             DB::raw('sum(min_max_ruang.min) as summin'),
             DB::raw('sum(min_max_ruang.max) as summax'),
             DB::raw('round(sum(stokreal.jumlah)) as stok'),
+        )->with(
+            [
+                'perencanaanrinci' => function ($perencanaanrinci) {
+                    $perencanaanrinci->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlahdirencanakan) as jumlah'
+                        )
+                    )->where('flag', '')
+                        ->groupBy('kdobat');
+                },
+            ]
         )
             ->leftjoin('stokreal', 'stokreal.kdobat', 'min_max_ruang.kd_obat')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'min_max_ruang.kd_obat')
