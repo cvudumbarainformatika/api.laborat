@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MinmaxobatController;
+use App\Models\Sigarang\Gudang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,5 +17,10 @@ class Stokreal extends Model
     public function minmax()
     {
         return $this->hasOne(Mminmaxobat::class, 'kd_obat', 'kdobat');
+    }
+
+    public function gudangdepo()
+    {
+        return $this->hasOne(Gudang::class, 'kode', 'kdruang');
     }
 }

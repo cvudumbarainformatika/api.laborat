@@ -20,19 +20,16 @@ class PerencanaanpembelianController extends Controller
     {
         $perencanaapembelianobat = Mminmaxobat::select(
             'min_max_ruang.kd_obat as kd_obat',
+            'new_masterobat.nama_obat as namaobat',
             DB::raw('sum(min_max_ruang.min) as summin'),
             DB::raw('sum(min_max_ruang.max) as summax'),
             DB::raw('round(sum(stokreal.jumlah)) as stok'),
         )
             ->leftjoin('stokreal', 'stokreal.kdobat', 'min_max_ruang.kd_obat')
-            ->with(
-                [
-                    'obat:kd_obat,nama_obat',
-
-                ]
-            )
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'min_max_ruang.kd_obat')
             ->havingRaw('stok <= summin')
             ->where('min_max_ruang.kd_ruang', 'like', '%GD%')
+            ->where('new_masterobat.nama_obat', 'like', '%' . request('namaobat') . '%')
             ->groupby('min_max_ruang.kd_obat')
             ->get();
         return new JsonResponse($perencanaapembelianobat);
@@ -137,6 +134,31 @@ class PerencanaanpembelianController extends Controller
         //     ->paginate(request('per_page'));
 
         // return new JsonResponse($perencanaapembelianobat);
+    }
+
+    public function viewrinci()
+    {
+        $viewrinci = Stokreal::select(
+            'stokreal.kdobat as kdobat',
+            'stokreal.kdruang as kdruang',
+            'new_masterobat.nama_obat as namaobat',
+            DB::raw('sum(stokreal.jumlah) as jumlah'),
+
+        )->with(
+            [
+                'gudangdepo:kode,nama',
+                // 'gudanggudangdepo.minmax'
+            ]
+        )
+            ->leftjoin('new_masterobat', 'stokreal.kdobat', 'new_masterobat.kd_obat')
+            ->groupby('stokreal.kdobat', 'stokreal.kdruang')
+            ->where('kdobat', request('kdobat'))->get();
+
+        $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))->get();
+        return new JsonResponse([
+            'viewrincistok' => $viewrinci,
+            'viewrinciminmax' => $viewrinciminmax,
+        ]);
     }
 
     public function simpanrencanabeliobat(Request $request)
