@@ -154,7 +154,9 @@ class PerencanaanpembelianController extends Controller
             ->groupby('stokreal.kdobat', 'stokreal.kdruang')
             ->where('kdobat', request('kdobat'))->get();
 
-        $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))->get();
+        $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
+            ->where('kd_ruang', 'like', '%GD%')
+            ->get();
         return new JsonResponse([
             'viewrincistok' => $viewrinci,
             'viewrinciminmax' => $viewrinciminmax,
