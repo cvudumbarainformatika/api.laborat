@@ -31,7 +31,8 @@ class KartustokController extends Controller
         $list = Mobatnew::with([
             'mkelasterapi',
             'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
-                $saldo->whereBetween('tglpenerimaan', [$blnLaluAwal, $blnLaluAkhir]);
+                $saldo->whereBetween('tglpenerimaan', [$blnLaluAwal, $blnLaluAkhir])
+                    ->where('kdruang', request('koderuangan'));
             },
             'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir) {
                 $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir) {
