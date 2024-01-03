@@ -259,8 +259,13 @@ class PerencanaanpembelianController extends Controller
 
     public function listrencanabeli()
     {
+        if (request('kdruang') == '' || request('kdruang') == null) {
+            $gudang = ['Gd-05010100', 'Gd-03010100'];
+        } else {
+            $gudang = request('kdruang');
+        }
         $rencanabeli = RencanabeliH::with('rincian')
-            ->wherein('kd_ruang', request('kdruang'))
+            ->wherein('kd_ruang', $gudang)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
