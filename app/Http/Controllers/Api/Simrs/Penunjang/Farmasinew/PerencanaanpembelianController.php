@@ -152,7 +152,8 @@ class PerencanaanpembelianController extends Controller
         )
             ->leftjoin('new_masterobat', 'stokreal.kdobat', 'new_masterobat.kd_obat')
             ->groupby('stokreal.kdobat', 'stokreal.kdruang')
-            ->where('kdobat', request('kdobat'))->get();
+            ->where('kdobat', request('kdobat'))
+            ->get();
 
         $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
             ->where('kd_ruang', 'like', '%GD%')
@@ -182,9 +183,16 @@ class PerencanaanpembelianController extends Controller
             return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
         }
 
-        $cekminmax = Mminmaxobat::where('kd_obat', $request->kdobat)->where('kd_ruang', $request->kd_ruang)->first();
+        $cekminmax = Mminmaxobat::select(DB::raw('sum(max) as max'))
+            ->where('kd_obat', $request->kdobat)
+            ->where('kd_ruang', 'like', '%GD%')
+            ->groupby('kd_obat')->first();
         $maxobat = (int) $cekminmax['max'] ?? 0;
-        $cekstok = Stokrel::where('kdobat', $request->kdobat)->where('kdruang', $request->kd_ruang)->first();
+
+        $cekstok = Stokrel::select(DB::raw('sum(jumlah) as jumlah'))
+            ->where('kdobat', $request->kdobat)
+            ->where('kdruang', 'like', '%GD%')
+            ->groupby('kdobat')->first();
         $stok = $cekstok['jumlah'] ?? 0;
         $max = $maxobat - $stok;
 
@@ -251,7 +259,9 @@ class PerencanaanpembelianController extends Controller
 
     public function listrencanabeli()
     {
-        $rencanabeli = RencanabeliH::with('rincian')->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+        $rencanabeli = RencanabeliH::with('rincian')
+            ->wherein('kd_ruang', request('kdruang'))
+            ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }
