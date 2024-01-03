@@ -64,10 +64,10 @@ class ResepkeluarController extends Controller
             $colom = 'depook';
             $lebel = 'D-KO';
         } elseif ($request->kodedepo === 'Gd-05010101') {
-
+            $lanjut = $request->lanjuTr ?? '';
             $cekpemberian = self::cekpemberianobat($request, $jumlahstok);
-            if ($cekpemberian['status'] == 1) {
-                return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 500);
+            if ($cekpemberian['status'] == 1 && $lanjut !== '1') {
+                return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
             }
 
             $procedure = 'resepkeluardeporajal(@nomor)';
