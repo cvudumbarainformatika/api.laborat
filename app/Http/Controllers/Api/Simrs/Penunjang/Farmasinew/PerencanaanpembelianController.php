@@ -49,7 +49,7 @@ class PerencanaanpembelianController extends Controller
             ->where('min_max_ruang.kd_ruang', 'like', '%GD%')
             ->where('new_masterobat.nama_obat', 'like', '%' . request('namaobat') . '%')
             ->groupby('min_max_ruang.kd_obat')
-            ->get();
+            ->paginate(request('per_page'));
         return new JsonResponse($perencanaapembelianobat);
         // $xxx = FormatingHelper::session_user();
         // if ($xxx['kdruang'] === '') {
