@@ -175,6 +175,7 @@ class PerencanaanpembelianController extends Controller
 
         $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
             ->where('kd_ruang', 'like', '%GD%')
+            ->with('gudang:kode,nama')
             ->get();
         return new JsonResponse([
             'viewrincistok' => $viewrinci,
