@@ -38,4 +38,9 @@ class Mminmaxobat extends Model
     {
         return $this->hasMany(RencanabeliR::class, 'kdobat', 'kd_obat');
     }
+
+    public function stokreal()
+    {
+        return $this->hasMany(stokreal::class, 'kdobat', 'kd_obat');
+    }
 }

@@ -83,7 +83,7 @@ class BridgingeklaimHelper
     {
         $header = array("Content-Type: application/x-www-form-urlencoded");
         $url = "http://192.168.150.100/E-Klaim/ws.php";
-        $key = "ab6ebbfb8c9a80841d21307d8c0a0ff213b0549cfdc191f7d51645c3310d9da7";
+        $key = "14e988d90f85bece31cbb1ac3e1b76e88083560c52cc4f4e951c5ebee4f2ee85";
 
         $json_request = json_encode($ws_query);
         $payload = self::inacbg_encrypt($json_request, $key);

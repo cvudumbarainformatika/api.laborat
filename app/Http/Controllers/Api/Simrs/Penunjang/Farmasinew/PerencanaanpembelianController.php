@@ -29,7 +29,6 @@ class PerencanaanpembelianController extends Controller
             'new_masterobat.gudang as gudang',
             DB::raw('sum(min_max_ruang.min) as summin'),
             DB::raw('sum(min_max_ruang.max) as summax'),
-            DB::raw('round(sum(stokreal.jumlah)) as stok'),
         )->with(
             [
                 'perencanaanrinci' => function ($perencanaanrinci) {
@@ -41,16 +40,32 @@ class PerencanaanpembelianController extends Controller
                     )->where('flag', '')
                         ->groupBy('kdobat');
                 },
+                'stokreal' => function ($stokreal) {
+                    $stokreal->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlah) as jumlah'
+                        )
+                    )->where('kdruang', 'like', '%Gd%')
+                        ->groupBy('kdobat');
+                }
             ]
         )
-            ->leftjoin('stokreal', 'stokreal.kdobat', 'min_max_ruang.kd_obat')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'min_max_ruang.kd_obat')
-            ->havingRaw('stok <= summin')
-            ->where('min_max_ruang.kd_ruang', 'like', '%GD%')
+            //    ->havingRaw('stok <= summin')
+            ->where('min_max_ruang.kd_ruang', 'like', '%Gd%')
             ->where('new_masterobat.nama_obat', 'like', '%' . request('namaobat') . '%')
             ->groupby('min_max_ruang.kd_obat')
-            ->paginate(request('per_page'));
-        return new JsonResponse($perencanaapembelianobat);
+            ->get();
+        $x = collect($perencanaapembelianobat);
+        // $y = $x->where('stokreal.jumlah', '<=', 'summin');
+        $y = $x->map(function ($item, $key) {
+            $wew = $item->stokreal;
+
+            //$wew['umlah'] //= $item['stokreal']['jumlah'];
+            return $wew;
+        });
+        return new JsonResponse($y);
         // $xxx = FormatingHelper::session_user();
         // if ($xxx['kdruang'] === '') {
         //     $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
@@ -170,7 +185,8 @@ class PerencanaanpembelianController extends Controller
         )
             ->leftjoin('new_masterobat', 'stokreal.kdobat', 'new_masterobat.kd_obat')
             ->groupby('stokreal.kdobat', 'stokreal.kdruang')
-            ->where('kdobat', request('kdobat'))
+            ->where('stokreal.kdobat', request('kdobat'))
+            ->where('stokreal.kdruang', 'like', '%GD%')
             ->get();
 
         $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
