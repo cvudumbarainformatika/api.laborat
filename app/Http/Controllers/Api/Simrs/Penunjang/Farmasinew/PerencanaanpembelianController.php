@@ -283,7 +283,7 @@ class PerencanaanpembelianController extends Controller
         } else {
             $gudang = request('kdruang');
         }
-        $rencanabeli = RencanabeliH::with('rincian')
+        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat')
             ->wherein('kd_ruang', $gudang)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')->paginate(request('per_page'));
