@@ -275,7 +275,7 @@ class ResepkeluarController extends Controller
                         ->orWhere('noreg', request('q'));
                 });
             })
-            ->get();
+            ->paginate(request('per_page'));
         return new JsonResponse($listresep);
         // return new JsonResponse([
         //     'q' => request('q'),
