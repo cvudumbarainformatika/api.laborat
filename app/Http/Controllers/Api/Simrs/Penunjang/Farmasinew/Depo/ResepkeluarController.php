@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mjenisresep;
@@ -16,6 +17,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+use function PHPUnit\Framework\isEmpty;
 
 class ResepkeluarController extends Controller
 {
@@ -242,6 +245,19 @@ class ResepkeluarController extends Controller
 
     public function listresep()
     {
+        $rm = [];
+        if (request('q') !== null) {
+            $pasien = Mpasien::select('rs1')
+                ->where('rs2', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs1', 'LIKE', '%' . request('q') . '%')
+                ->get();
+            if (count($pasien) > 0) {
+                $x = collect($pasien);
+                $rm = $x->map(function ($it, $k) {
+                    return $it->rs1;
+                });
+            }
+        }
         $listresep = Resepkeluarheder::with(
             [
                 'datapasien',
@@ -251,8 +267,22 @@ class ResepkeluarController extends Controller
             ]
         )
             ->where('depo', request('kddepo'))
+            ->when(request('q') !== null, function ($x) use ($rm) {
+                $x->where(function ($q) use ($rm) {
+                    $q->whereIn('norm', $rm)
+                        ->orWhere('norm', request('q'))
+                        ->orWhere('noresep', request('q'))
+                        ->orWhere('noreg', request('q'));
+                });
+            })
             ->get();
         return new JsonResponse($listresep);
+        // return new JsonResponse([
+        //     'q' => request('q'),
+        //     'empty' => request('q') !== null,
+        //     'rm' => $rm,
+        //     'resep' => $listresep
+        // ]);
     }
 
     public function hapusobat(Request $request)
