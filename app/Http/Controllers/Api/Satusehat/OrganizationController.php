@@ -72,7 +72,8 @@ class OrganizationController extends Controller
         }
 
         // jika ditemukan kirim ke satu sehat
-        $organization_id = '63312221-e8d8-4ecd-bf4f-d2d329e41e59';
+        $organization_id_dev = '63312221-e8d8-4ecd-bf4f-d2d329e41e59';
+        $organization_id = '100026342';
 
         $satset_uuid = $data->satset_uuid;
         $uuid = '';
