@@ -28,7 +28,7 @@ class AuthSatsetHelper
         ];
 
         $client = new Client();
-        $request = $client->post($url_dev, $options);
+        $request = $client->post($url_prod, $options);
         return $request;
     }
     public static function getToken()
@@ -45,7 +45,7 @@ class AuthSatsetHelper
 
 
         $response = Http::withHeaders($headers)
-            ->asForm()->post($url_dev, [
+            ->asForm()->post($url_prod, [
                 'client_id' => $client_id,
                 'client_secret' => $client_secret,
             ]);
