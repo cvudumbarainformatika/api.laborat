@@ -337,7 +337,7 @@ class PerencanaanpembelianController extends Controller
 
                 )
                     ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
-                    ->havingRaw('balance <= stok');
+                    ->havingRaw('balance >= stok');
             })
             ->with([
                 'stokmaxrs' => function ($mm) {
@@ -358,7 +358,8 @@ class PerencanaanpembelianController extends Controller
                         // db::raw('sum(jumlah) as stok')
 
                     )
-                        ->where('jumlah', '>=', 0);
+                        ->where('jumlah', '>=', 0)
+                        ->where('jumlah', '!=', 0);
                 },
                 'perencanaanrinci' => function ($perencanaanrinci) {
                     $perencanaanrinci->select(
