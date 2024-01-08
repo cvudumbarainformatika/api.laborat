@@ -21,18 +21,51 @@ class PerencanaanpembelianController extends Controller
         $perencanaapembelianobat = Mminmaxobat::select(
             'min_max_ruang.kd_obat as kd_obat',
             'new_masterobat.nama_obat as namaobat',
+            'new_masterobat.status_generik as status_generik',
+            'new_masterobat.status_fornas as status_fornas',
+            'new_masterobat.status_forkid as status_forkid',
+            'new_masterobat.satuan_k as satuan_k',
+            'new_masterobat.sistembayar as sistembayar',
+            'new_masterobat.gudang as gudang',
             DB::raw('sum(min_max_ruang.min) as summin'),
             DB::raw('sum(min_max_ruang.max) as summax'),
-            DB::raw('round(sum(stokreal.jumlah)) as stok'),
+        )->with(
+            [
+                'perencanaanrinci' => function ($perencanaanrinci) {
+                    $perencanaanrinci->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlahdirencanakan) as jumlah'
+                        )
+                    )->where('flag', '')
+                        ->groupBy('kdobat');
+                },
+                'stokreal' => function ($stokreal) {
+                    $stokreal->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlah) as jumlah'
+                        )
+                    )->where('kdruang', 'like', '%Gd%')
+                        ->groupBy('kdobat');
+                }
+            ]
         )
-            ->leftjoin('stokreal', 'stokreal.kdobat', 'min_max_ruang.kd_obat')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'min_max_ruang.kd_obat')
-            ->havingRaw('stok <= summin')
-            ->where('min_max_ruang.kd_ruang', 'like', '%GD%')
+            //    ->havingRaw('stok <= summin')
+            ->where('min_max_ruang.kd_ruang', 'like', '%Gd%')
             ->where('new_masterobat.nama_obat', 'like', '%' . request('namaobat') . '%')
             ->groupby('min_max_ruang.kd_obat')
             ->get();
-        return new JsonResponse($perencanaapembelianobat);
+        $x = collect($perencanaapembelianobat);
+        // $y = $x->where('stokreal.jumlah', '<=', 'summin');
+        $y = $x->map(function ($item, $key) {
+            $wew = $item->stokreal;
+
+            //$wew['umlah'] //= $item['stokreal']['jumlah'];
+            return $wew;
+        });
+        return new JsonResponse($y);
         // $xxx = FormatingHelper::session_user();
         // if ($xxx['kdruang'] === '') {
         //     $ruangan = ['', 'Gd-05010100', 'Gd-03010100'];
@@ -152,11 +185,13 @@ class PerencanaanpembelianController extends Controller
         )
             ->leftjoin('new_masterobat', 'stokreal.kdobat', 'new_masterobat.kd_obat')
             ->groupby('stokreal.kdobat', 'stokreal.kdruang')
-            ->where('kdobat', request('kdobat'))
+            ->where('stokreal.kdobat', request('kdobat'))
+            ->where('stokreal.kdruang', 'like', '%GD%')
             ->get();
 
         $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
             ->where('kd_ruang', 'like', '%GD%')
+            ->with('gudang:kode,nama')
             ->get();
         return new JsonResponse([
             'viewrincistok' => $viewrinci,
@@ -259,8 +294,13 @@ class PerencanaanpembelianController extends Controller
 
     public function listrencanabeli()
     {
-        $rencanabeli = RencanabeliH::with('rincian')
-            ->wherein('kd_ruang', request('kdruang'))
+        if (request('kdruang') == '' || request('kdruang') == null) {
+            $gudang = ['Gd-05010100', 'Gd-03010100'];
+        } else {
+            $gudang = request('kdruang');
+        }
+        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat')
+            ->wherein('kd_ruang', $gudang)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
