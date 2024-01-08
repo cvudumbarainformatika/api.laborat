@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class PerencanaanpembelianController extends Controller
 {
+
     public function perencanaanpembelian()
     {
         $perencanaapembelianobat = Mminmaxobat::select(
@@ -314,5 +315,63 @@ class PerencanaanpembelianController extends Controller
             return new JsonResponse(['message' => 'gagal mengupdate data'], 500);
         }
         return new JsonResponse(['message' => 'ok'], 200);
+    }
+    public function ambilRencana()
+    {
+        $data = Mobatnew::select(
+            'kd_obat',
+            'nama_obat',
+            'status_generik',
+            'status_fornas',
+            'status_forkid',
+            'satuan_k',
+            'sistembayar',
+            'gudang'
+        )
+            ->whereHas('stokmaxrs', function ($q) {
+                $q->select(
+                    'min_max_ruang.kd_obat',
+                    'min_max_ruang.min',
+                    db::raw('sum(min_max_ruang.min) as balance'),
+                    db::raw('sum(stokreal.jumlah) as stok')
+
+                )
+                    ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
+                    ->havingRaw('balance <= stok');
+            })
+            ->with([
+                'stokmaxrs' => function ($mm) {
+                    $mm->select(
+                        'kd_obat',
+                        'kd_ruang',
+                        'min',
+                        'max',
+                        // db::raw('sum(min) as balance'),
+
+                    );
+                },
+                'stokrealallrs' => function ($stokrealallrs) {
+                    $stokrealallrs->select(
+                        'kdobat',
+                        'jumlah',
+                        'kdruang',
+                        // db::raw('sum(jumlah) as stok')
+
+                    )
+                        ->where('jumlah', '>=', 0);
+                },
+                'perencanaanrinci' => function ($perencanaanrinci) {
+                    $perencanaanrinci->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlahdirencanakan) as jumlah'
+                        )
+                    )->where('flag', '')
+                        ->groupBy('kdobat');
+                },
+            ])
+            ->paginate(10);
+
+        return new JsonResponse($data);
     }
 }

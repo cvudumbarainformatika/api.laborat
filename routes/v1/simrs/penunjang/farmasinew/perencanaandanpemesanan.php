@@ -9,7 +9,8 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/farmasinew'
 ], function () {
-    Route::get('/dialogperencanaanobat', [PerencanaanpembelianController::class, 'perencanaanpembelian']);
+    // Route::get('/dialogperencanaanobat', [PerencanaanpembelianController::class, 'perencanaanpembelian']);
+    Route::get('/dialogperencanaanobat', [PerencanaanpembelianController::class, 'ambilRencana']);
     Route::get('/dialogperencanaanobatdetail', [PerencanaanpembelianController::class, 'viewrinci']);
     Route::post('/simpanperencanaanbeliobat', [PerencanaanpembelianController::class, 'simpanrencanabeliobat']);
     Route::get('/listrencanabeli', [PerencanaanpembelianController::class, 'listrencanabeli']);
