@@ -3,6 +3,7 @@
 // use App\Http\Controllers\Api\Satusehat\OrganizationController;
 
 use App\Http\Controllers\Api\Satusehat\AuthController;
+use App\Http\Controllers\Api\Satusehat\LocationController;
 use App\Http\Controllers\Api\Satusehat\OrganizationController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,4 +19,7 @@ Route::group([
     Route::post('/postOrganisasiRs', [OrganizationController::class, 'postOrganisasiRs']);
     Route::get('/organization', [OrganizationController::class, 'cariorganisasidisatset']);
     Route::get('/sendToSatset', [OrganizationController::class, 'sendToSatset']);
+
+
+    Route::get('/listRuanganRajal', [LocationController::class, 'listRuanganRajal']);
 });
