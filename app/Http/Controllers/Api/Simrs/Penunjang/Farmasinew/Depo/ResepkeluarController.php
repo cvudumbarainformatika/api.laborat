@@ -82,13 +82,13 @@ class ResepkeluarController extends Controller
             $lebel = 'D-IR';
         }
 
-        if ($request->nota === '' || $request->nota === null) {
+        if ($request->noresep === '' || $request->noresep === null) {
             DB::connection('farmasi')->select('call ' . $procedure);
             $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
             $wew = $x[0]->$colom;
-            $nonota = FormatingHelper::penerimaanobat($wew, $lebel);
+            $noresep = FormatingHelper::resep($wew, $lebel);
         } else {
-            $nonota = $request->nota;
+            $noresep = $request->noresep;
         }
 
         $user = FormatingHelper::session_user();
@@ -98,7 +98,7 @@ class ResepkeluarController extends Controller
         // return new JsonResponse(['simpan' => $simpanrinci, 'message' => 'tak simpan headernya'], 410);
         $simpan = Resepkeluarheder::updateOrCreate(
             [
-                'nota' => $nonota,
+                'nota' => $noresep,
                 'noreg' => $request->noreg,
             ],
             [
@@ -107,7 +107,6 @@ class ResepkeluarController extends Controller
                 'depo' => $request->kodedepo,
                 'ruangan' => $request->kdruangan,
                 'dokter' => $request->kddokter,
-                'noresep' => $request->noresep,
                 'sistembayar' => $request->sistembayar,
                 'diagnosa' => $request->diagnosa,
                 'kodeincbg' => $request->kodeincbg,
@@ -167,7 +166,7 @@ class ResepkeluarController extends Controller
                 $simpanrinci = Resepkeluarrinci::create(
                     [
                         'noreg' => $request->noreg,
-                        'nota' => $nonota,
+                        'nota' => $noresep,
                         'kdobat' => $request->kodeobat,
                         'kandungan' => $request->kandungan,
                         'fornas' => $request->fornas,
@@ -204,7 +203,7 @@ class ResepkeluarController extends Controller
                 $simpanrinci = Resepkeluarrinci::create(
                     [
                         'noreg' => $request->noreg,
-                        'nota' => $nonota,
+                        'nota' => $noresep,
                         'kdobat' => $request->kodeobat,
                         'kandungan' => $request->kandungan,
                         'fornas' => $request->fornas,
@@ -219,6 +218,7 @@ class ResepkeluarController extends Controller
                         'harga_beli' => $caristok[$index]->harga,
                         'hpp' => $harga,
                         'harga_jual' => $hargajual,
+                        'nilai_r' => 300,
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
                         'keterangan' => $request->keterangan,
@@ -238,7 +238,7 @@ class ResepkeluarController extends Controller
         return new JsonResponse([
             'heder' => $simpan,
             'rinci' => $simpanrinci,
-            'nota' => $nonota,
+            'nota' => $noresep,
             'message' => 'Data Berhasil Disimpan...!!!'
         ], 200);
     }

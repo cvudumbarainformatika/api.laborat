@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\CaripasienController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\DepoController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\EresepController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\LihatStokController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\ResepkeluarController;
 use Illuminate\Support\Facades\Route;
@@ -31,4 +32,6 @@ Route::group([
     Route::post('/hapusobat', [ResepkeluarController::class, 'hapusobat']);
 
     Route::get('/listjenisresep', [ResepkeluarController::class, 'listjenisresep']);
+
+    Route::post('/pembuatanresep', [EresepController::class, 'pembuatanresep']);
 });
