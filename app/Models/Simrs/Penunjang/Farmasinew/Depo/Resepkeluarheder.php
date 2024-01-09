@@ -17,7 +17,7 @@ class Resepkeluarheder extends Model
 
     public function rincian()
     {
-        return $this->hasMany(Resepkeluarrinci::class, 'nota', 'nota');
+        return $this->hasMany(Resepkeluarrinci::class, 'noresep', 'noresep');
     }
 
     public function dokter()

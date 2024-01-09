@@ -217,14 +217,31 @@ class EresepController extends Controller
 
     public function listresepbydokter()
     {
-        $listresep = Resepkeluarheder::with(
-            [
-                'rincian',
-                'dokter',
-                'sistembayar',
-                'datapasien'
-            ]
-        );
+        $listresep = Resepkeluarheder::select(
+            'farmasi.resep_keluar_h.*',
+            'kepegx.pegawai.nama as dokter',
+            'rs.rs9.rs2 as sistembayar',
+            'rs.rs15.rs2 as namapasien'
+        )
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', 'farmasi.resep_keluar_h.dokter')
+            ->leftjoin('rs.rs9', 'rs.rs9.rs1', 'farmasi.resep_keluar_h.sistembayar')
+            ->leftjoin('rs.rs15', 'rs.rs15.rs1', 'farmasi.resep_keluar_h.norm')
+            ->with(
+                [
+                    'rincian.mobat:kd_obat,nama_obat',
+                    // 'dokter:kdpegsimrs,nama',
+                    // 'sistembayar:rs1,rs2,rs9',
+                    // 'datapasien'
+                ]
+            )
+            ->where(function ($query) {
+                $query->where('rs.rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('farmasi.resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('farmasi.resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs.rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            })
+            ->get();
         return new JsonResponse(
             [
                 'result' => $listresep
