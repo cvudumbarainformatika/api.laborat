@@ -17,4 +17,9 @@ class Resepkeluarrinci extends Model
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
     }
+
+    public function heder()
+    {
+        return $this->hasOne(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
 }
