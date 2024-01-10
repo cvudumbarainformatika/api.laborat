@@ -27,8 +27,47 @@ class BridgingSatsetHelper
     {
         $url = self::base_url() . $params;
         $response = Http::withToken($token)->get($url);
+        $data = json_decode($response, true);
 
-        return $response;
+        // return $data;
+        // JIKA ERROR
+        $error = $data['resourceType'] === 'OperationOutcome';
+        $notfound = count($data['entry']) === 0;
+        if ($error || $notfound) {
+            $err = [
+                'method' => 'GET',
+                'url' => $params,
+                'response' => $data
+            ];
+            $resp = SatsetErrorRespon::create($err);
+
+            $send = [
+                'message' => $error ? 'failed' : 'Tidak Ditemukan Data di Satu Sehat',
+                'data' => $resp
+            ];
+            return $send;
+        }
+        // JIKA SUCCESS
+        $success = [
+            'method' => 'GET',
+            'url' => $params,
+            'response' => $data,
+
+        ];
+
+        if ($data['resourceType'] === 'Bundle') {
+            if (count($data['entry']) > 0) {
+                $resp = Satset::firstOrCreate([
+                    'resource' => $data['resourceType'],
+                    'uuid' => $data['entry'][0]['resource']['id']
+                ], $success);
+                $send = [
+                    'message' => 'success',
+                    'data' => $resp
+                ];
+                return $send;
+            }
+        }
     }
 
     public static function post_data($token, $params, $form)
