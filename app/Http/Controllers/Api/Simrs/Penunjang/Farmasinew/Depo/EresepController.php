@@ -28,6 +28,7 @@ class EresepController extends Controller
             'stokreal.kdruang as kdruang',
             'new_masterobat.nama_obat as namaobat',
             'new_masterobat.kandungan as kandungan',
+            'new_masterobat.bentuk_sediaan as bentuk_sediaan',
             'new_masterobat.satuan_k as satuankecil',
             'new_masterobat.status_fornas as fornas',
             'new_masterobat.status_forkid as forkit',

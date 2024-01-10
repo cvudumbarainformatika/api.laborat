@@ -27,6 +27,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
@@ -244,5 +245,10 @@ class KunjunganPoli extends Model
     public function prosedur()
     {
         return $this->hasMany(ProcedureM::class, 'noreg', 'rs1');
+    }
+
+    public function newapotekrajal()
+    {
+        return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
     }
 }
