@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class EresepController extends Controller
 {
+
     public function lihatstokobateresepBydokter()
     {
         $groupsistembayar = request('groups');
@@ -23,7 +24,8 @@ class EresepController extends Controller
             $sistembayar = ['SEMUA', 'UMUM'];
         }
         $cariobat = Stokreal::select(
-            'stokreal.kdobat as kodeobat',
+            'stokreal.kdobat as kdobat',
+            'stokreal.kdruang as kdruang',
             'new_masterobat.nama_obat as namaobat',
             'new_masterobat.kandungan as kandungan',
             'new_masterobat.satuan_k as satuankecil',
@@ -40,18 +42,39 @@ class EresepController extends Controller
         )
             ->with(
                 [
-                    'minmax'
+                    'minmax',
+                    'transnonracikan'
+                    => function ($transnonracikan) {
+                        $transnonracikan->select(
+                            'resep_keluar_r.kdobat as kdobat',
+                            'resep_keluar_h.depo as kdruang',
+                            DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                        )
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_r.noresep')
+                            ->where('resep_keluar_h.depo', request('kdruang'))
+                            ->groupBy('resep_keluar_r.kdobat');
+                    },
                 ]
             )
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
-            ->where('kdruang', request('kdruang'))
+            ->where('stokreal.kdruang', request('kdruang'))
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
+            ->where(function ($query) {
+                $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
+            })
             ->groupBy('stokreal.kdobat')
             ->get();
-
+        $wew = collect($cariobat)->map(function ($x, $y) {
+            $total = $x->total ?? 0;
+            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            $x->alokasi = $total - $jumlahtrans;
+            return $x;
+        });
         return new JsonResponse(
             [
-                'dataobat' => $cariobat
+                'dataobat' => $wew
             ]
         );
     }
@@ -190,5 +213,39 @@ class EresepController extends Controller
             'nota' => $noresep,
             'message' => 'Data Berhasil Disimpan...!!!'
         ], 200);
+    }
+
+    public function listresepbydokter()
+    {
+        $listresep = Resepkeluarheder::select(
+            'farmasi.resep_keluar_h.*',
+            'kepegx.pegawai.nama as dokter',
+            'rs.rs9.rs2 as sistembayar',
+            'rs.rs15.rs2 as namapasien'
+        )
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', 'farmasi.resep_keluar_h.dokter')
+            ->leftjoin('rs.rs9', 'rs.rs9.rs1', 'farmasi.resep_keluar_h.sistembayar')
+            ->leftjoin('rs.rs15', 'rs.rs15.rs1', 'farmasi.resep_keluar_h.norm')
+            ->with(
+                [
+                    'rincian.mobat:kd_obat,nama_obat',
+                    // 'dokter:kdpegsimrs,nama',
+                    // 'sistembayar:rs1,rs2,rs9',
+                    // 'datapasien'
+                ]
+            )
+            ->where(function ($query) {
+                $query->where('rs.rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('farmasi.resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('farmasi.resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs.rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            })
+            ->get();
+        return new JsonResponse(
+            [
+                'result' => $listresep
+            ]
+        );
     }
 }
