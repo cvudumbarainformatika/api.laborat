@@ -45,7 +45,7 @@ class PractitionerController extends Controller
         }
 
         $params = "/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|$data->nik";
-        // return $params;
+        // return $params dasdas;
 
         $send = BridgingSatsetHelper::get_data($token, $params);
 
