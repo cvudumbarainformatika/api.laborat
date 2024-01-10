@@ -2,6 +2,8 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Satset\Satset;
+use App\Models\Simrs\Organisasi\Organisasi;
 use App\Models\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +18,14 @@ class Ruang extends Model
     public function namagedung()
     {
         return $this->belongsTo(Gedung::class, 'gedung', 'nomor');
+    }
+    public function organisasi()
+    {
+        return $this->setConnection('mysql')->belongsTo(Organisasi::class, 'departement_uuid', 'satset_uuid');
+    }
+    public function satset()
+    {
+        return $this->setConnection('mysql')->belongsTo(Satset::class, 'satset_uuid', 'uuid');
     }
 
     public function mapingRuang()

@@ -22,4 +22,5 @@ Route::group([
 
 
     Route::get('/listRuanganRajal', [LocationController::class, 'listRuanganRajal']);
+    Route::post('/updateLocation', [LocationController::class, 'updateLocation']);
 });
