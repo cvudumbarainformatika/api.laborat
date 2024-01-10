@@ -186,7 +186,11 @@ class PoliController extends Controller
                 },
                 'sharing' => function ($sharing) {
                     $sharing->orderBy('id', 'DESC');
-                }
+                },
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with('permintaanresep')
+                        ->orderBy('id', 'DESC');
+                },
             ])
             ->orderby('rs17.rs3', 'ASC')
             ->paginate(request('per_page'));
