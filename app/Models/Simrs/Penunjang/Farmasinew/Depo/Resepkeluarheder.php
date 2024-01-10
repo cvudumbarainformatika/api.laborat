@@ -34,4 +34,9 @@ class Resepkeluarheder extends Model
     {
         return $this->hasOne(Mpasien::class, 'rs1', 'norm');
     }
+
+    public function permintaanresep()
+    {
+        return $this->hasMany(Permintaanresep::class, 'noresep', 'noresep');
+    }
 }
