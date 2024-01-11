@@ -193,7 +193,7 @@ class EresepController extends Controller
                         'noresep' => $noresep,
                         'namaracikan' => $request->namaracikan,
                         'tiperacikan' => $request->jenisracikan,
-                        'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                        'jumlahdibutuhkan' => $request->jumlahdibutuhkan, // jumlah racikan
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
                         'keterangan' => $request->keterangan,
@@ -211,9 +211,9 @@ class EresepController extends Controller
                         'uraian50' => $request->uraian50,
                         'stokalokasi' => $request->stokalokasi,
                         'dosisobat' => $request->dosisobat,
-                        'dosismaksimum' => $request->dosismaksimum,
-                        'jumlah' => $request->jumlah,
-                        'keteranganx' => $request->keteranganx,
+                        'dosismaksimum' => $request->dosismaksimum, // dosis resep
+                        'jumlah' => $request->jumlah, // jumlah obat
+                        'keteranganx' => $request->keteranganx, // keterangan obat
                         'user' => $user['kodesimrs']
                     ]
                 );
