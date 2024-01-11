@@ -139,6 +139,13 @@ class DaftarrajalController extends Controller
                     'data' => $data
                 ], 410);
             }
+            $data2 = Mpasien::where('rs49', $request->nik)->first();
+            if ($data2) {
+                return new JsonResponse([
+                    'message' => 'NIK Sudah ada',
+                    'data' => $data
+                ], 410);
+            }
         }
         $masterpasien = self::simpanMpasien($request);
         if (!$masterpasien) {
