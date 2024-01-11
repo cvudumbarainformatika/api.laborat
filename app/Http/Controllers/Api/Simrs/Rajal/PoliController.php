@@ -188,7 +188,7 @@ class PoliController extends Controller
                     $sharing->orderBy('id', 'DESC');
                 },
                 'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->with('permintaanresep')
+                    $newapotekrajal->with('permintaanresep.mobat')
                         ->orderBy('id', 'DESC');
                 },
             ])
