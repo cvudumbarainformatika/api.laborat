@@ -404,6 +404,7 @@ class EresepController extends Controller
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
+                            'tiperacikan' => $request->tiperacikan,
                             'namaracikan' => $request->namaracikan,
                             'kdobat' => $request->kodeobat,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
