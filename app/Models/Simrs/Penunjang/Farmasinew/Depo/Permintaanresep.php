@@ -13,7 +13,7 @@ class Permintaanresep extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
-    public function dokter()
+    public function mobat()
     {
         return $this->hasone(Mobatnew::class, 'kd_obat', 'kdobat');
     }

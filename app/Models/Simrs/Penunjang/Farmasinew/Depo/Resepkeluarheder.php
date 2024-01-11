@@ -39,4 +39,8 @@ class Resepkeluarheder extends Model
     {
         return $this->hasMany(Permintaanresep::class, 'noresep', 'noresep');
     }
+    public function permintaanracikan()
+    {
+        return $this->hasMany(Permintaanresepracikan::class, 'noresep', 'noresep');
+    }
 }
