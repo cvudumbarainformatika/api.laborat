@@ -37,4 +37,7 @@ Route::group([
     Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
     Route::post('/pembuatanresep', [EresepController::class, 'pembuatanresep']);
     Route::get('/listresepbydokter', [EresepController::class, 'listresepbydokter']);
+    Route::post('/kirimresep', [EresepController::class, 'kirimresep']);
+    Route::get('/conterracikan', [EresepController::class, 'conterracikan']);
+    Route::post('/eresepobatkeluar', [EresepController::class, 'eresepobatkeluar']);
 });

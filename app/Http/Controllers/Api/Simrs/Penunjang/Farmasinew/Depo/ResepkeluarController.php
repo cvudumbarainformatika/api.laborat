@@ -166,7 +166,7 @@ class ResepkeluarController extends Controller
                 $simpanrinci = Resepkeluarrinci::create(
                     [
                         'noreg' => $request->noreg,
-                        'nota' => $noresep,
+                        'noresep' => $noresep,
                         'kdobat' => $request->kodeobat,
                         'kandungan' => $request->kandungan,
                         'fornas' => $request->fornas,
@@ -181,6 +181,7 @@ class ResepkeluarController extends Controller
                         'harga_beli' => $caristok[$index]->harga,
                         'hpp' => $harga,
                         'harga_jual' => $hargajual,
+                        'nilai_r' => 300,
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
                         'keterangan' => $request->keterangan ?? '',
@@ -203,7 +204,7 @@ class ResepkeluarController extends Controller
                 $simpanrinci = Resepkeluarrinci::create(
                     [
                         'noreg' => $request->noreg,
-                        'nota' => $noresep,
+                        'noresep' => $noresep,
                         'kdobat' => $request->kodeobat,
                         'kandungan' => $request->kandungan,
                         'fornas' => $request->fornas,

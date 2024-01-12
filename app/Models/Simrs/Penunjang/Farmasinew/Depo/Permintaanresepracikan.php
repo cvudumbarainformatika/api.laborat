@@ -6,10 +6,10 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Permintaanresep extends Model
+class Permintaanresepracikan extends Model
 {
     use HasFactory;
-    protected $table = 'resep_permintaan_keluar';
+    protected $table = 'resep_permintaan_keluar_racikan';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
