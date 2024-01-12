@@ -131,9 +131,14 @@ class BridantrianbpjsController extends Controller
     public static function updateWaktu($input, $x)
     {
         // return $input;
+        // $waktu = strtotime(date('Y-m-d H:i:s')) * 1000;
+        // $now = date('Y-m-d H:i:s');
+        // $date = Carbon::parse($now)->locale('id');;
+        // $waktu = strtotime($date) * 1000;
+        // $waktu = strtotime(Carbon::now('Asia/Jakarta')) * 1000;
+        $waktu = strtotime(Carbon::parse(date('Y-m-d H:i:s'))->locale('id')) * 1000;
         $kodebooking = $input->noreg;
         $user_id = auth()->user()->pegawai_id;
-        $waktu = strtotime(date('Y-m-d H:i:s')) * 1000;
         $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking);
         $wew = $bpjsantrian->count();
         if ($wew > 0) {
