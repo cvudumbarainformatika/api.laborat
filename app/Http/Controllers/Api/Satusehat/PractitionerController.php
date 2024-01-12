@@ -15,10 +15,24 @@ class PractitionerController extends Controller
 {
     public function listPractitioner()
     {
-        $data = Pegawai::where([
-            ['aktif', '=', 'AKTIF'],
-            ['kdgroupnakes', '<>', ''],
-        ])->paginate(request('per_page'));
+        $data = Pegawai::when(
+            request('q'),
+            function ($q) {
+                $q->where('nama', 'LIKE', '%' . request('q') . '%');
+            }
+        )->where(
+            function ($q) {
+                if (request('status') === 'Terkoneksi') {
+                    $q->where('satset_uuid', '<>', '')->orWhereNotNull('satset_uuid');
+                } else if (request('status') === 'Belum Terkoneksi') {
+                    $q->where('satset_uuid', '')->orWhereNull('satset_uuid');
+                }
+            }
+        )
+            ->where([
+                ['aktif', '=', 'AKTIF'],
+                ['kdgroupnakes', '<>', ''],
+            ])->paginate(request('per_page'));
 
 
         return new JsonResponse($data);
