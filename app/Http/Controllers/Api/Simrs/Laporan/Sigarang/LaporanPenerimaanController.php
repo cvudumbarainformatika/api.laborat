@@ -50,6 +50,9 @@ class LaporanPenerimaanController extends Controller
                         // ->whereBetween('penerimaans.tanggal', [request('tgl'), request('tglx')]);
                     })
                     ->whereBetween('penerimaans.tanggal', [request('tgl') . ' 00:00:00', request('tglx') . ' 23:59:59'])
+                    ->when(request('kode_ruang'), function ($q) {
+                        $q->where('barang_r_s.kode_depo', request('kode_ruang'));
+                    })
                     ->groupBy('detail_penerimaans.kode_rs');
             }
         ])
