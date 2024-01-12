@@ -56,7 +56,7 @@ class LaporanPenerimaanController extends Controller
                     ->groupBy('detail_penerimaans.kode_rs');
             }
         ])
-            ->whereHas('barangrs')
+            // ->whereHas('barangrs')
             ->Where('rekening50s.jenis', '02')->where('rekening50s.objek', '01')
             ->get();
         //$wew[] = $rek50[0]->kode50cari;
