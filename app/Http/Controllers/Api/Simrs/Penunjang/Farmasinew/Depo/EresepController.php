@@ -324,6 +324,7 @@ class EresepController extends Controller
                     ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs.rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
+            ->where('farmasi.resep_keluar_h.depo', request('kddepo'))
             ->get();
         return new JsonResponse(
             [

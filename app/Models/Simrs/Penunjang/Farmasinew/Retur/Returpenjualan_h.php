@@ -10,4 +10,5 @@ class Returpenjualan_h extends Model
     use HasFactory;
     protected $table = 'retur_penjualan_h';
     protected $guarded = ['id'];
+    protected $connection = 'farmasi';
 }

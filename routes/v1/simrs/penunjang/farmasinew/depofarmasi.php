@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\DepoController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\EresepController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\LihatStokController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\ResepkeluarController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\ReturpenjualanController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -40,4 +41,7 @@ Route::group([
     Route::post('/kirimresep', [EresepController::class, 'kirimresep']);
     Route::get('/conterracikan', [EresepController::class, 'conterracikan']);
     Route::post('/eresepobatkeluar', [EresepController::class, 'eresepobatkeluar']);
+
+    //--------------Retur penjualan -------------//
+    Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
 });

@@ -82,7 +82,8 @@ class PoliController extends Controller
             'rs222.dokterdpjp as dokterdpjp',
             'rs222.kdunit as kdunit',
             'memodiagnosadokter.diagnosa as memodiagnosa',
-            'rs17.rs19 as status'
+            'rs17.rs19 as status',
+            'antrian_ambil.nomor as noantrian'
         )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
@@ -91,6 +92,7 @@ class PoliController extends Controller
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
+            ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', $user->kdruangansim ?? '')
             ->where('rs19.rs4', '=', 'Poliklinik')
@@ -178,9 +180,11 @@ class PoliController extends Controller
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
                 },
-                'antrian_ambil' => function ($o) {
-                    $o->where('pelayanan_id', request('kdpoli'));
-                },
+                // 'antrian_ambil' => function ($o) {
+                //     $o
+                //         //->where('pelayanan_id', request('kdpoli'))
+                //         ->orderBY('nomor');
+                // },
                 'diet' => function ($diet) {
                     $diet->orderBy('id', 'DESC');
                 },
@@ -195,8 +199,18 @@ class PoliController extends Controller
                         ->orderBy('id', 'DESC');
                 },
             ])
-            ->orderby('rs17.rs3', 'ASC')
+            ->orderby('antrian_ambil.nomor', 'Asc')
+            //    ->orderby('rs17.rs3', 'Asc')
             ->paginate(request('per_page'));
+        // $sorted = $daftarkunjunganpasienbpjs->map(function ($daftarkunjunganpasienbpjs) {
+        //     $order = $daftarkunjunganpasienbpjs['antrian_ambil'][0]->nomor ?? 0;
+        //     return [
+        //         ...$daftarkunjunganpasienbpjs,
+        //         'items' => $daftarkunjunganpasienbpjs->items->mapWithKeys(
+        //             fn ($item) => [array_search($item['antrian_ambil'][0]->nomor, $order) => $item]
+        //         )->sortKeys()
+        //     ];
+        // });
 
         // if ($ruangan === 'POL023') {
         //     $kodepoli = ['POL015', 'POL023', 'POL038', 'POL039', 'POL040'];
