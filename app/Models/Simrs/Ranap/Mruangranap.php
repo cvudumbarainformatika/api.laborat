@@ -12,5 +12,5 @@ class Mruangranap extends Model
     protected $gurded = ['id'];
     public $timestamps = false;
     protected $keyType = 'string';
-
+    protected $connection = 'mysql';
 }

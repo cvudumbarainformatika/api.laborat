@@ -205,4 +205,14 @@ class FormatingHelper
         }
         return $has . $n . "-" . date("d") . "" . date("m") . "" . date("Y") . "-" . $kode;
     }
+
+    public static function antrian($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 4 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $kode . $has . $n;
+    }
 }

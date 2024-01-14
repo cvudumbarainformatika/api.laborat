@@ -143,4 +143,32 @@ class StokrealController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($stokreal);
     }
+
+    public static function updatestokdepo($request)
+    {
+        $kembalikan = Stokreal::select(
+            'stokreal.nopenerimaan as nopenerimaan',
+            'stokreal.kdobat as kdobat',
+            'stokreal.harga as harga',
+            DB::raw('stokreal.jumlah + retur_penjualan_r.jumlah_retur as masuk')
+        )
+            ->leftjoin('retur_penjualan_r', function ($e) {
+                $e->on('retur_penjualan_r.nopenerimaan', 'stokreal.nopenerimaan')
+                    ->on('retur_penjualan_r.kdobat', 'stokreal.kdobat')
+                    ->on('retur_penjualan_r.harga_beli', 'stokreal.harga');
+            })
+            ->where('retur_penjualan_r.kdobat', $request->kdobat)
+            ->where('stokreal.kdruang', $request->koderuang)
+            ->where('retur_penjualan_r.noresep', $request->noresep)
+            ->get();
+        foreach ($kembalikan as $e) {
+            $updatestok = Stokreal::where('nopenerimaan', $e->nopenerimaan)
+                ->where('kdobat', $e->kdobat)
+                ->where('stokreal.kdruang', $request->koderuang)
+                ->where('harga', $e->harga)->first();
+            $updatestok->jumlah = $e->masuk;
+            $updatestok->save();
+        }
+        return 200;
+    }
 }

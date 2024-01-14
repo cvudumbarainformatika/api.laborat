@@ -55,15 +55,12 @@ class ReturkepbfController extends Controller
                 'tgl_exp' => $request->tgl_exp
             ]
         );
-        if (!$simpan_r) {
-            Returpbfheder::where('no_retur', $noretur)->first()->delete();
-            return new JsonResponse(['message' => 'Maaf retur Gagal Disimpan...!!!'], 500);
-        }
+
         return new JsonResponse(
             [
                 'noretur' => $noretur,
                 'heder' => $simpan_h,
-                'rinci' => $simpan_r,
+                'rinci' => $simpan_r->load('mobatnew'),
                 'message' => 'Retur Berhasil Disimpan...!!!'
             ],
             200

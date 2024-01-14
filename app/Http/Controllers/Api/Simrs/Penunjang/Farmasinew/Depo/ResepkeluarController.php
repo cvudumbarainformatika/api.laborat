@@ -302,7 +302,7 @@ class ResepkeluarController extends Controller
             })
             ->where('resep_keluar_r.kdobat', $request->kdobat)
             ->where('stokreal.kdruang', $request->koderuang)
-            ->where('resep_keluar_r.nota', $request->nota)
+            ->where('resep_keluar_r.noresep', $request->noresep)
             ->get();
         foreach ($kembalikan as $e) {
             $updatestok = Stokreal::where('nopenerimaan', $e->nopenerimaan)
