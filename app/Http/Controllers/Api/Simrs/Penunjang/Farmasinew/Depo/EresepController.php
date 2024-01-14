@@ -203,7 +203,7 @@ class EresepController extends Controller
         }
 
         if ($request->jenisresep == 'Racikan') {
-            if ($request->jenisracikan == 'DTD') {
+            if ($request->tiperacikan == 'DTD') {
                 $simpandtd = Permintaanresepracikan::create(
                     [
                         'noreg' => $request->noreg,
