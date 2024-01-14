@@ -209,7 +209,7 @@ class EresepController extends Controller
                         'noreg' => $request->noreg,
                         'noresep' => $noresep,
                         'namaracikan' => $request->namaracikan,
-                        'tiperacikan' => $request->jenisracikan,
+                        'tiperacikan' => $request->tiperacikan,
                         'jumlahdibutuhkan' => $request->jumlahdibutuhkan, // jumlah racikan
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
