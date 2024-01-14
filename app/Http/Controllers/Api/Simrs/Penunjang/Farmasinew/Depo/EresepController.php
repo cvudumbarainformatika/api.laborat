@@ -360,8 +360,15 @@ class EresepController extends Controller
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
+        $kirimresep->load([
+            'permintaanresep.mobat:kd_obat,nama_obat',
+            'permintaanracikan.mobat:kd_obat,nama_obat',
+        ]);
 
-        return new JsonResponse(['message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!'], 200);
+        return new JsonResponse([
+            'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
+            'data' => $kirimresep
+        ], 200);
     }
 
     public function eresepobatkeluar(Request $request)
