@@ -234,6 +234,7 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
+                $simpandtd->load('mobat:kd_obat,nama_obat');
             } else {
                 $simpannondtd = Permintaanresepracikan::create(
                     [
@@ -265,6 +266,7 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
+                $simpannondtd->load('mobat:kd_obat,nama_obat');
             }
         } else {
             $simpanrinci = Permintaanresep::create(
@@ -291,6 +293,7 @@ class EresepController extends Controller
                     'user' => $user['kodesimrs']
                 ]
             );
+            $simpanrinci->load('mobat:kd_obat,nama_obat');
         }
         return new JsonResponse([
             'heder' => $simpan,
