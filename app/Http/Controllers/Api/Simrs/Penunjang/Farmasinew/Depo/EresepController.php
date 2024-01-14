@@ -346,6 +346,7 @@ class EresepController extends Controller
             })
             ->where('farmasi.resep_keluar_h.depo', request('kddepo'))
             ->where('farmasi.resep_keluar_h.flag', '!=', '')
+            ->orderBy('farmasi.resep_keluar_h.tgl_permintaan', 'DESC')
             ->paginate(request('per_page'));
         return new JsonResponse($listresep);
     }
