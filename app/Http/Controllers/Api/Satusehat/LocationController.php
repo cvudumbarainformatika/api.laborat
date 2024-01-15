@@ -18,7 +18,7 @@ class LocationController extends Controller
 {
     public function listRuanganRajal()
     {
-        $data = Ruang::where('group', '=', 'rajal')
+        $data = Ruang::where('groupper', '=', 'rajal')
             ->with(['namagedung', 'organisasi', 'satset'])
             ->get();
 
@@ -35,7 +35,7 @@ class LocationController extends Controller
             'ruang' => $request->ruang,
             'uraian' => $request->uraian,
             // 'group'=>$request->group,
-            'group' => $request->group,
+            'groupper' => $request->groupper,
             'phone' => $request->phone,
             'fax' => $request->fax,
             'email' => $request->email,
