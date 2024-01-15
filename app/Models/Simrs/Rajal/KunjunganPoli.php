@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Rajal;
 
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Satset\Satset;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
@@ -250,5 +251,10 @@ class KunjunganPoli extends Model
     public function newapotekrajal()
     {
         return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
+
+    public function satset()
+    {
+        return $this->hasOne(Satset::class, 'uuid', 'rs1');
     }
 }

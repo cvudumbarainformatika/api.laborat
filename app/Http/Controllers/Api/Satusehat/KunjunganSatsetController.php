@@ -7,6 +7,7 @@ use App\Helpers\PostKunjunganHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\Pegawai\Extra;
+use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -31,15 +32,18 @@ class KunjunganSatsetController extends Controller
     {
         // return $req;
         if (!isset($req['to'])) {
-            $tgl = Carbon::now()->subDay()->format('Y-m-d 00:00:00');
-            $tglx = Carbon::now()->subDay()->format('Y-m-d 23:59:59');
+            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = $req->to . ' 00:00:00';
-            $tglx = $req->from . ' 23:59:59';
+            $tgl = $req['to'] . ' 00:00:00';
+            $tglx = $req['from'] . ' 23:59:59';
         }
 
         $data = KunjunganPoli::select(
+            'rs17.rs1',
             'rs17.rs9',
+            'rs17.rs4',
+            'rs17.rs8',
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs17.rs3 as tgl_kunjungan',
@@ -52,21 +56,57 @@ class KunjunganSatsetController extends Controller
             'rs9.groups as groups',
             'rs15.rs2 as nama',
             'rs15.rs49 as nik',
-            'rs15.satset_uuid as satset_uuid',
+            'rs15.satset_uuid as pasien_uuid',
+            'rs17.rs19 as status',
+            'satsets.uuid as satset',
+            'satset_error_respon.uuid as satset_error',
         )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+            ->leftjoin('satsets', 'satsets.uuid', '=', 'rs17.rs1') //satset
+            ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
 
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', $user->kdruangansim ?? '')
             ->where('rs17.rs8', '!=', 'POL014')
+            ->where('rs17.rs19', '=', '1')
+
+            ->where('rs19.rs5', '=', '1')
+            ->where('rs19.rs4', '=', 'Poliklinik')
+            ->whereNull('satsets.uuid')
+
+            ->where(function ($query) {
+                $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%') //pasien nama
+                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%') //pasien
+                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%') //KUNJUNGAN
+                    ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%') //KUNJUNGAN
+                    ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                    // ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+            })
 
             ->with([
-                'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,satset_uuid'
+                'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,satset_uuid',
+                'relmpoli.ruang',
+                //   // 1 (mulai waktu tunggu admisi),
+                //   // 2 (akhir waktu tunggu admisi/mulai waktu layan admisi),
+                //   // 3 (akhir waktu layan admisi/mulai waktu tunggu poli),
+                //   // 4 (akhir waktu tunggu poli/mulai waktu layan poli),
+                //   // 5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                //   // 6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                //   // 7 (akhir waktu obat selesai dibuat),
+                //   // 99 (tidak hadir/batal)
+                'taskid' => function ($q) {
+                    $q->select('noreg', 'kodebooking', 'taskid', 'waktu', 'created_at')
+                        ->orderBy('taskid', 'ASC');
+                },
+                'diagnosa' => function ($d) {
+                    $d->with('masterdiagnosa');
+                },
             ])
-
 
             ->orderby('rs17.rs3', 'ASC')
             ->paginate($req['per_page']);
@@ -99,7 +139,7 @@ class KunjunganSatsetController extends Controller
             $data->satset_uuid = $send['data']['uuid'];
             $data->save();
         }
-        return $data;
+        return $send;
     }
 
     public function kirimKunjungan(Request $request)
@@ -116,7 +156,35 @@ class KunjunganSatsetController extends Controller
                 'message' => 'Maaf ... Dokter Ini Belum Terkoneksi Ke Satu Sehat'
             ], 500);
         }
+        $patient = $request->pasien_uuid;
+        if (!$patient) {
+            return response()->json([
+                'message' => 'Maaf ... Pasien Ini Belum Terkoneksi Ke Satu Sehat'
+            ], 500);
+        }
+        $poli = $request->relmpoli;
+        if (!$poli) {
+            return response()->json([
+                'message' => 'Maaf ... DATA POLI Belum Ada'
+            ], 500);
+        }
+
+        $mappingruang = $poli['ruang'];
+        if (!$mappingruang) {
+            return response()->json([
+                'message' => 'Maaf ... Tidak Ada Mapping Ruangan di Poli'
+            ], 500);
+        }
+        $diagnosa = $request->diagnosa;
+        if (!$diagnosa) {
+            return response()->json([
+                'message' => 'Maaf ... Tidak Ada Diagnosa Pada Kunjungan Ini'
+            ], 500);
+        }
         // return $practitioner;
-        return PostKunjunganHelper::form($request);
+        $form = PostKunjunganHelper::form($request);
+
+        $send = BridgingSatsetHelper::post_bundle($request->token, $form, $request->noreg);
+        return $send;
     }
 }

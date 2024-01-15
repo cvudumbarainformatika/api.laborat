@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Master;
 
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Billing\Rajal\Allbillrajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,5 +44,10 @@ class Mpoli extends Model
     public function kunjungan()
     {
         return $this->hasMany(Allbillrajal::class, 'rs8', 'rs1');
+    }
+
+    public function ruang()
+    {
+        return $this->setConnection('kepex')->belongsTo(Ruang::class, 'kode_ruang', 'kode');
     }
 }

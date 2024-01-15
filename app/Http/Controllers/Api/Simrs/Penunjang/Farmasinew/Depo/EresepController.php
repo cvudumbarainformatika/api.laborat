@@ -89,6 +89,7 @@ class EresepController extends Controller
                     ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
             ->groupBy('stokreal.kdobat')
+            ->limit(30)
             ->get();
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
@@ -203,13 +204,13 @@ class EresepController extends Controller
         }
 
         if ($request->jenisresep == 'Racikan') {
-            if ($request->jenisracikan == 'DTD') {
+            if ($request->tiperacikan == 'DTD') {
                 $simpandtd = Permintaanresepracikan::create(
                     [
                         'noreg' => $request->noreg,
                         'noresep' => $noresep,
                         'namaracikan' => $request->namaracikan,
-                        'tiperacikan' => $request->jenisracikan,
+                        'tiperacikan' => $request->tiperacikan,
                         'jumlahdibutuhkan' => $request->jumlahdibutuhkan, // jumlah racikan
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
@@ -234,6 +235,7 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
+                $simpandtd->load('mobat:kd_obat,nama_obat');
             } else {
                 $simpannondtd = Permintaanresepracikan::create(
                     [
@@ -265,6 +267,7 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
+                $simpannondtd->load('mobat:kd_obat,nama_obat');
             }
         } else {
             $simpanrinci = Permintaanresep::create(
@@ -291,6 +294,7 @@ class EresepController extends Controller
                     'user' => $user['kodesimrs']
                 ]
             );
+            $simpanrinci->load('mobat:kd_obat,nama_obat');
         }
         return new JsonResponse([
             'heder' => $simpan,
@@ -357,8 +361,15 @@ class EresepController extends Controller
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
+        $kirimresep->load([
+            'permintaanresep.mobat:kd_obat,nama_obat',
+            'permintaanracikan.mobat:kd_obat,nama_obat',
+        ]);
 
-        return new JsonResponse(['message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!'], 200);
+        return new JsonResponse([
+            'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
+            'data' => $kirimresep
+        ], 200);
     }
 
     public function eresepobatkeluar(Request $request)
