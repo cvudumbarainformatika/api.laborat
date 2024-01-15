@@ -2731,17 +2731,41 @@ class AutogenController extends Controller
         //     'sekarang' => $tglskrng,
         //     'prev' => $prev,
         // ];
-        $simpan = Resepkeluarheder::updateOrCreate(
-            [
-                'noreg' => 'XXXXX'
-            ],
-            [
-                'tgl' => date('Y-m-d H:i:s'),
-            ]
+        // $simpan = Resepkeluarheder::updateOrCreate(
+        //     [
+        //         'noreg' => 'XXXXX'
+        //     ],
+        //     [
+        //         'tgl' => date('Y-m-d H:i:s'),
+        //     ]
 
-        );
+        // );
 
-        return new JsonResponse(['sim' => $simpan]);
+        // return new JsonResponse(['sim' => $simpan]);
+        $waktu = strtotime(date('Y-m-d H:i:s')) * 1000;
+        $waktu2 = strtotime(date('Y-m-d H:i:s'));
+        $waktu3 = date('Y-m-d H:i:s');
+        $carbon = Carbon::now('Asia/Jakarta');
+        $carbon2 = strtotime(Carbon::now('Asia/Jakarta'));
+        $carbon3 = Carbon::parse($waktu3)->locale('id');
+        $carbon4 = strtotime($carbon3);
+        $carbon5 = Carbon::now('UTC');
+        $carbon6 = Carbon::parse($carbon5)->locale('id');
+        $carbon7 = $carbon6->format('l, j F Y ; h:i a');
+        $carbon8 = $carbon3->format('l, j F Y ; h:i a');
+        return [
+            'waktu' => $waktu,
+            'waktu2' => $waktu2,
+            'waktu3' => $waktu3,
+            'carbon' => $carbon,
+            'carbon2' => $carbon2,
+            'carbon3' => $carbon3,
+            'carbon4' => $carbon4,
+            'carbon5' => $carbon5,
+            'carbon6' => $carbon6,
+            'carbon7' => $carbon7,
+            'carbon8' => $carbon8,
+        ];
     }
 
     public function baru()

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -202,13 +203,13 @@ class EresepController extends Controller
         }
 
         if ($request->jenisresep == 'Racikan') {
-            if ($request->jenisracikan == 'DTD') {
+            if ($request->tiperacikan == 'DTD') {
                 $simpandtd = Permintaanresepracikan::create(
                     [
                         'noreg' => $request->noreg,
                         'noresep' => $noresep,
                         'namaracikan' => $request->namaracikan,
-                        'tiperacikan' => $request->jenisracikan,
+                        'tiperacikan' => $request->tiperacikan,
                         'jumlahdibutuhkan' => $request->jumlahdibutuhkan, // jumlah racikan
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
@@ -233,6 +234,7 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
+                $simpandtd->load('mobat:kd_obat,nama_obat');
             } else {
                 $simpannondtd = Permintaanresepracikan::create(
                     [
@@ -264,6 +266,7 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
+                $simpannondtd->load('mobat:kd_obat,nama_obat');
             }
         } else {
             $simpanrinci = Permintaanresep::create(
@@ -290,6 +293,7 @@ class EresepController extends Controller
                     'user' => $user['kodesimrs']
                 ]
             );
+            $simpanrinci->load('mobat:kd_obat,nama_obat');
         }
         return new JsonResponse([
             'heder' => $simpan,
@@ -303,33 +307,51 @@ class EresepController extends Controller
 
     public function listresepbydokter()
     {
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                $rm = collect($data)->map(function ($x) {
+                    return $x->norm;
+                });
+            }
+        }
+        // return $rm;
         $listresep = Resepkeluarheder::select(
             'farmasi.resep_keluar_h.*',
             'kepegx.pegawai.nama as dokter',
-            'rs.rs9.rs2 as sistembayar',
-            'rs.rs15.rs2 as namapasien'
         )
-            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', 'farmasi.resep_keluar_h.dokter')
-            ->leftjoin('rs.rs9', 'rs.rs9.rs1', 'farmasi.resep_keluar_h.sistembayar')
-            ->leftjoin('rs.rs15', 'rs.rs15.rs1', 'farmasi.resep_keluar_h.norm')
+            ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
             ->with(
                 [
-                    'rincian.mobat:kd_obat,nama_obat'
+                    'rincian.mobat:kd_obat,nama_obat',
+                    'permintaanresep.mobat:kd_obat,nama_obat',
+                    'permintaanracikan.mobat:kd_obat,nama_obat',
+                    'poli',
+                    'sistembayar',
+                    'datapasien' => function ($quer) {
+                        $quer->select(
+                            'rs1',
+                            'rs2 as nama'
+                        );
+                    }
                 ]
             )
-            ->where(function ($query) {
-                $query->where('rs.rs15.rs2', 'LIKE', '%' . request('q') . '%')
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('farmasi.resep_keluar_h.norm', $rm);
+                })
                     ->orWhere('farmasi.resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('farmasi.resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs.rs9.rs2', 'LIKE', '%' . request('q') . '%');
+                    ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
             })
-            ->get();
-        return new JsonResponse(
-            [
-                'result' => $listresep
-            ]
-        );
+            ->where('farmasi.resep_keluar_h.depo', request('kddepo'))
+            ->where('farmasi.resep_keluar_h.flag', '!=', '')
+            ->orderBy('farmasi.resep_keluar_h.tgl_permintaan', 'DESC')
+            ->paginate(request('per_page'));
+        return new JsonResponse($listresep);
     }
 
     public function kirimresep(Request $request)
@@ -338,8 +360,15 @@ class EresepController extends Controller
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
+        $kirimresep->load([
+            'permintaanresep.mobat:kd_obat,nama_obat',
+            'permintaanracikan.mobat:kd_obat,nama_obat',
+        ]);
 
-        return new JsonResponse(['message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!'], 200);
+        return new JsonResponse([
+            'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
+            'data' => $kirimresep
+        ], 200);
     }
 
     public function eresepobatkeluar(Request $request)
