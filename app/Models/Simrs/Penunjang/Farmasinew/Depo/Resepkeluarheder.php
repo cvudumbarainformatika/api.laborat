@@ -4,7 +4,6 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
-use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\SistemBayar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,10 +42,5 @@ class Resepkeluarheder extends Model
     public function permintaanracikan()
     {
         return $this->hasMany(Permintaanresepracikan::class, 'noresep', 'noresep');
-    }
-
-    public function ruanganranap()
-    {
-        return $this->hasOne(Mruangranap::class, 'rs1', 'ruangan');
     }
 }
