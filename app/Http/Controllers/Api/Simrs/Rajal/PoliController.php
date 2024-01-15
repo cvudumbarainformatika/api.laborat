@@ -200,7 +200,7 @@ class PoliController extends Controller
                 },
             ])
             ->orderby('antrian_ambil.nomor', 'Asc')
-            //    ->orderby('rs17.rs3', 'Asc')
+            ->groupby('rs17.rs1')
             ->paginate(request('per_page'));
         // $sorted = $daftarkunjunganpasienbpjs->map(function ($daftarkunjunganpasienbpjs) {
         //     $order = $daftarkunjunganpasienbpjs['antrian_ambil'][0]->nomor ?? 0;
