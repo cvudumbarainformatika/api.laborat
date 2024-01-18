@@ -131,17 +131,18 @@ class DaftarigdController extends Controller
         ];
     }
 
-    public function tagihanadminigd($input,$request)
+    public function tagihanadminigd($input, $request)
     {
-        $taguhanigd = Karcispoli::firstOrcreate(['rs1' => $input,'rs3' => 'A2#'],
-        [
-            'rs4' => date('Y-m-d'),
-            'rs5' => 'D',
-            'rs6' => 'Administrasi IGD',
-            'rs7' => 8000
-        ]
-     );
-     return $taguhanigd ;
+        $taguhanigd = Karcispoli::firstOrcreate(
+            ['rs1' => $input, 'rs3' => 'A2#'],
+            [
+                'rs4' => date('Y-m-d'),
+                'rs5' => 'D',
+                'rs6' => 'Administrasi IGD',
+                'rs7' => 8000
+            ]
+        );
+        return $taguhanigd;
     }
 
     public function simpandaftar(Request $request)
@@ -154,7 +155,7 @@ class DaftarigdController extends Controller
             // $user = auth()->user(]);
             $masterpasien = $this->simpanMpasien($request);
             $simpankunjunganpoli = $this->simpankunjunganpoli($request);
-            $tagihanigd = $this->tagihanadminigd($simpankunjunganpoli['input']->noreg,$request);
+            $tagihanigd = $this->tagihanadminigd($simpankunjunganpoli['input']->noreg, $request);
             // if ($simpankunjunganpoli) {
             //     $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
             // }
@@ -188,12 +189,12 @@ class DaftarigdController extends Controller
 
     public function daftarkunjunganpasienbpjs()
     {
-        if (request('tgl') === '' || request('tgl') === null) {
+        if (request('from') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = request('tgl') . ' 00:00:00';
-            $tglx = request('tgl') . ' 23:59:59';
+            $tgl = request('from') . ' 00:00:00';
+            $tglx = request('to') . ' 23:59:59';
         }
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1', // iki tak munculne maneh gawe relasi with
@@ -222,6 +223,8 @@ class DaftarigdController extends Controller
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
             'rs222.rs8 as sep',
+            'rs222.kodedokterdpjp as kodedokterdpjp',
+            'rs222.dokterdpjp as dokterdpjp',
             'generalconsent.norm as generalconsent',
             // 'bpjs_respon_time.taskid as taskid',
             // TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15 . rs16, now()), rs15 . rs16), now(), " Hari ")
@@ -245,6 +248,15 @@ class DaftarigdController extends Controller
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
+            ->with([
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+            ])
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
 
