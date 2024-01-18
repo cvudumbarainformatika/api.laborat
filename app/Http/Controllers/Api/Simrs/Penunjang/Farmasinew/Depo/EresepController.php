@@ -596,7 +596,7 @@ class EresepController extends Controller
         if (count($racik) === 0 && count($nonracik) === 0) {
             $head = Resepkeluarheder::where('noresep', $request->noresep)->first();
             if ($head) {
-                $$head->delete();
+                $head->delete();
             }
         }
     }
