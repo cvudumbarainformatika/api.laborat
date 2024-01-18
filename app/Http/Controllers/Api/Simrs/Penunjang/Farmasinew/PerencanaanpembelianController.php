@@ -192,11 +192,11 @@ class PerencanaanpembelianController extends Controller
             ->leftjoin('new_masterobat', 'stokreal.kdobat', 'new_masterobat.kd_obat')
             ->groupby('stokreal.kdobat', 'stokreal.kdruang')
             ->where('stokreal.kdobat', request('kdobat'))
-            ->where('stokreal.kdruang', 'like', '%GD%')
+            // ->where('stokreal.kdruang', 'like', '%GD%')
             ->get();
 
         $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
-            ->where('kd_ruang', 'like', '%GD%')
+            // ->where('kd_ruang', 'like', '%GD%')
             ->with('gudang:kode,nama')
             ->get();
         return new JsonResponse([
