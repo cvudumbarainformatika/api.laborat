@@ -29,7 +29,7 @@ class DisplayController extends Controller
         $data = Display::when(request('q'), function ($search, $q) {
             $search->where('kode', 'LIKE', '%' . $q . '%');
         })
-            ->with(['unit'])
+            // ->with(['unit'])
             ->orderBy('kode', 'ASC')
             // ->orderBy('loket_no', 'ASC')
             ->paginate(request('per_page'));
@@ -104,21 +104,31 @@ class DisplayController extends Controller
     public function display()
     {
         $hr_ini = date('Y-m-d');
-        $data = Unit::where('display_id', request('kode'))
-            ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
-                $q->whereBetween('tanggalperiksa', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
-                    ->where('statuscetak', '=', 1)
-                    // ->where('statuspanggil', '=', 1)
-                    ->orderBy('angkaantrean', 'DESC');
-            }])
-            ->get();
+        $data = Display::where('kode', request('kode'))
+            ->with([
+                'poli.jumlahkunjunganpoli' => function ($q) use ($hr_ini) {
+                    $q->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                        ->with(['antrian_ambil']);
+                }
+            ])
+            // ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
+            //     $q->whereBetween('tanggalperiksa', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+            //         ->where('statuscetak', '=', 1)
+            //         // ->where('statuspanggil', '=', 1)
+            //         ->orderBy('angkaantrean', 'DESC');
+            // }])
+            ->first();
         if (!$data) {
-            return response()->json('Maaf display belum ada');
+            return response()->json(['message' => 'Maaf display belum ada'], 500);
         }
 
         return response()->json($data);
     }
 
+    public function send_panggilan(Request $request)
+    {
+        return $request->all();
+    }
     public function delete_panggilan(Request $request)
     {
         Panggil::where('nomorantrean', $request->nomorantrean)->delete();

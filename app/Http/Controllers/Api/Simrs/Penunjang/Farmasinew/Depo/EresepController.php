@@ -21,8 +21,22 @@ class EresepController extends Controller
     {
         $conter = Permintaanresepracikan::where('noresep', request('noresep'))
             ->groupby('noresep', 'namaracikan')
-            ->count();
-        $conterx =  (int) $conter + 1;
+            // ->count(); kalo count ada 2 nama racikan terhitung 1
+            ->get();
+
+        /*  mencari nilai max racikan jika lebih dari satu, dan agar jika ada yang di hapus racikannya tapi tidak
+            dihapus semua, maka nomornya bisa lanjut
+        */
+        $col = collect($conter)->map(function ($c) {
+            $temp = explode(' ', $c->namaracikan);
+            return  (int)$temp[1];
+        })->max();
+        $num = 0;
+        if (count($conter)) {
+            $num = $col;
+        }
+        // return new JsonResponse($num);
+        $conterx =  $num + 1;
         $contery = 'Racikan ' . $conterx;
         return new JsonResponse($contery);
     }
@@ -540,6 +554,50 @@ class EresepController extends Controller
                 'rinci' => $simpanrinci,
                 'message' => 'Data Berhasil Disimpan...!!!'
             ], 200);
+        }
+    }
+
+    public function hapusPermintaanObat(Request $request)
+    {
+        if ($request->has('namaracikan')) {
+            $obat = Permintaanresepracikan::find($request->id);
+            if ($obat) {
+                $obat->delete();
+                self::hapusHeader($request);
+                return new JsonResponse([
+                    'message' => 'Permintaan resep Obat Racikan telah dihapus',
+                    'obat' => $obat,
+                ]);
+            }
+            return new JsonResponse([
+                'message' => 'Permintaan resep Obat Racikan Gagal dihapus',
+                'obat' => $obat,
+            ], 410);
+        }
+        $obat = Permintaanresep::find($request->id);
+        if ($obat) {
+            $obat->delete();
+            self::hapusHeader($request);
+            return new JsonResponse([
+                'message' => 'Permintaan resep Obat telah dihapus',
+                'obat' => $obat,
+            ]);
+        }
+        return new JsonResponse([
+            'message' => 'Permintaan resep Obat Gagal dihapus',
+            'obat' => $obat,
+        ], 410);
+    }
+
+    public static function hapusHeader($request)
+    {
+        $racik = Permintaanresepracikan::where('noresep', $request->noresep)->get();
+        $nonracik = Permintaanresep::where('noresep', $request->noresep)->get();
+        if (count($racik) === 0 && count($nonracik) === 0) {
+            $head = Resepkeluarheder::where('noresep', $request->noresep)->first();
+            if ($head) {
+                $head->delete();
+            }
         }
     }
 }
