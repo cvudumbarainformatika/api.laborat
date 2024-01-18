@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Model;
 class Display extends Model
 {
     use HasFactory;
-    protected $connection = 'antrean';
+    // protected $connection = 'antrean'; // Pindah
+    protected $connection = 'newantrean';
     protected $table = 'displays';
     protected $guarded = ['id'];
 
