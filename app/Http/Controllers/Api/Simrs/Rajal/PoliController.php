@@ -782,4 +782,22 @@ class PoliController extends Controller
             'noreg' => $noreg
         ], 200);
     }
+
+    public function tidakhadir(Request $request)
+    {
+        $input = new Request([
+            'noreg' => $request->noreg
+        ]);
+        $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 3)->count();
+
+        if ($cek === 0 || $cek === '') {
+            BridantrianbpjsController::updateWaktu($input, 3);
+        }
+
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $updatekunjungan->rs19 = '3';
+        $updatekunjungan->rs24 = '1';
+        $updatekunjungan->save();
+        return new JsonResponse(['message' => 'ok'], 200);
+    }
 }

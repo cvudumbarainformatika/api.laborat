@@ -26,6 +26,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
@@ -408,5 +409,10 @@ class Kunjunganranap extends Model
             'rs1',
             'rs1'
         );
+    }
+    public function newapotekrajal()
+    {
+        // return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
+        return $this->hasOne(Resepkeluarheder::class, 'noreg', 'noreg');
     }
 }

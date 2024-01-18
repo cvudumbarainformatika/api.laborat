@@ -130,12 +130,12 @@ class PenerimaanController extends Controller
                 ->update(['flag' => '1']);
         }
 
-        $jumlahitem = PemesananRinci::where('kdobat', $request->kdobat)->sum('jumlahdpesan')->count();
+        $jumlahitem = PemesananRinci::where('kdobat', $request->kdobat)->where('nopemesanan', $request->nopemesanan)->count();
         $jumlahflag = PemesananRinci::select('flag')
             ->with(['pemesananheder'])
             ->where('nopemesanan', $request->nopemesanan)
             ->where('kdobat', $request->kdobat)->sum('flag');
-        if ((int) $jumlahflag === $jumlahflag) {
+        if ((int) $jumlahflag === $jumlahitem) {
             $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
             $kuncipermintaan->flag = '2';
             $kuncipermintaan->save();
