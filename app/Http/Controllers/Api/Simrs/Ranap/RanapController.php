@@ -73,6 +73,15 @@ class RanapController extends Controller
                     $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
                 }
             })
+            ->with([
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+            ])
             // ->whereIn('rs23.rs5', $ruangan)
             // ->where('rs23.rs10', 'like', '%' . $dokter . '%')
             // ->where(function ($sts) use ($status) {
