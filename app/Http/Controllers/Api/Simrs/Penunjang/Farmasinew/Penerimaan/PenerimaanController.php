@@ -130,7 +130,7 @@ class PenerimaanController extends Controller
                 ->update(['flag' => '1']);
         }
 
-        $jumlahitem = PenerimaanRinci::where('kdobat', $request->kdobat)->count();
+        $jumlahitem = PemesananRinci::where('kdobat', $request->kdobat)->where('nopemesanan', $request->nopemesanan)->count();
         $jumlahflag = PemesananRinci::select('flag')
             ->with(['pemesananheder'])
             ->where('nopemesanan', $request->nopemesanan)
