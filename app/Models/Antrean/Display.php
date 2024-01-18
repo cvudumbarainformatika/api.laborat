@@ -3,6 +3,8 @@
 namespace App\Models\Antrean;
 
 // use App\Models\Executive\KeuTransPendapatan;
+
+use App\Models\Simrs\Master\Mpoli;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,6 +18,10 @@ class Display extends Model
     public function unit()
     {
         return $this->hasMany(Unit::class, 'display_id', 'kode');
+    }
+    public function poli()
+    {
+        return $this->hasMany(Mpoli::class, 'displaykode', 'kode');
     }
 
     // public function referensi_poli_bpjs()
