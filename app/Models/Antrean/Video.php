@@ -13,6 +13,7 @@ class Video extends Model
     protected $table = 'videos';
     protected $guarded = ['id'];
 
+
     // public function unit()
     // {
     //     return $this->hasMany(Unit::class, 'display_id', 'kode');

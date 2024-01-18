@@ -116,6 +116,7 @@ class KunjunganSatsetController extends Controller
 
     public function getPasienByNikSatset(Request $request)
     {
+        // return $request->all();
         $nik = $request->nik;
         $token = $request->token;
         $norm = $request->norm;
