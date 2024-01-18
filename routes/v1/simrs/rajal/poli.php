@@ -24,4 +24,6 @@ Route::group([
     Route::post('/updaterujukan', [EditsuratbpjsController::class, 'updaterujukan']);
 
     Route::post('/konsulpoli', [RajalPoliController::class, 'konsulpoli']);
+
+    Route::post('/tidakhadir', [RajalPoliController::class, 'tidakhadir']);
 });
