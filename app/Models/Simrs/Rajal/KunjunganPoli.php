@@ -250,7 +250,7 @@ class KunjunganPoli extends Model
 
     public function newapotekrajal()
     {
-        return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
 
     public function satset()

@@ -52,6 +52,6 @@ class Resepkeluarheder extends Model
 
     public function ruanganranap()
     {
-        return $this->belongsTo(Mruangranap::class, 'rs1', 'ruangan');
+        return $this->belongsTo(Mruangranap::class, 'ruangan', 'rs1');
     }
 }
