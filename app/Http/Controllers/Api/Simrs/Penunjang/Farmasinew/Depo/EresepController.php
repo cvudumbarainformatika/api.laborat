@@ -341,10 +341,11 @@ class EresepController extends Controller
             ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
             ->with(
                 [
-                    'rincian.mobat:kd_obat,nama_obat',
-                    'permintaanresep.mobat:kd_obat,nama_obat',
-                    'permintaanracikan.mobat:kd_obat,nama_obat',
+                    'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
                     'poli',
+                    'ruanganranap',
                     'sistembayar',
                     'datapasien' => function ($quer) {
                         $quer->select(
