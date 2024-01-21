@@ -11,7 +11,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ChatMessageEvent implements ShouldBroadcast
+class NotifMessageEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -39,13 +39,13 @@ class ChatMessageEvent implements ShouldBroadcast
     public function broadcastOn()
     {
         return [
-            new PresenceChannel("presence.chat.{$this->chn}"),
+            new PrivateChannel("private.notif.{$this->chn}"),
         ];
     }
 
     public function broadcastAs()
     {
-        return 'chat-message';
+        return 'notif-message';
     }
 
     public function broadcastWith()

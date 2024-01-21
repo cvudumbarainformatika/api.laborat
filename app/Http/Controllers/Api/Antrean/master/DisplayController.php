@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Antrean\master;
 
 use App\Events\AnjunganEvent;
+use App\Events\ChatMessageEvent;
+use App\Events\NotifMessageEvent;
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Antrean\Display;
@@ -127,7 +129,15 @@ class DisplayController extends Controller
 
     public function send_panggilan(Request $request)
     {
-        return $request->all();
+        $msgEvent = [
+            'data' => $request->all(),
+        ];
+        event(new NotifMessageEvent($msgEvent, $request->channel, auth()->user()));
+        Panggil::firstOrCreate(
+            ['noreg' => $request->noreg, 'noantrian' => $request->noantrian, 'kdpoli' => $request->kdpoli],
+            ['channel' => $request->channel, 'tglkunjungan' => $request->tglkunjungan]
+        );
+        return 'ok';
     }
     public function delete_panggilan(Request $request)
     {
