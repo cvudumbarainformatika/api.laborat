@@ -37,13 +37,27 @@ class HistorypasienfullController extends Controller
             ->union($historyx)
             ->with(
                 [
-                    'anamnesis:rs1,rs4,riwayatpenyakit,riwayatalergi,keteranganalergi,riwayatpengobatan',
-                    'diagnosa:rs1,rs3,rs7',
-                    'diagnosa.masterdiagnosa:rs1,rs4',
-                    'tindakan:rs1,rs4',
-                    'tindakan.mastertindakan:rs1,rs2',
-                    'laborat:rs1,rs4,rs21',
-                    'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
+                    'anamnesis',
+                    'pemeriksaanfisik' => function ($a) {
+                        $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                            ->orderBy('id', 'DESC');
+                    },
+                    'diagnosa' => function ($a) {
+                        $a->with(['masterdiagnosa'])
+                            ->orderBy('id', 'DESC');
+                    },
+                    //    'diagnosa.masterdiagnosa:rs1,rs4',
+                    'tindakan' => function ($a) {
+                        $a->with(['mastertindakan'])
+                            ->orderBy('id', 'DESC');
+                    },
+                    //    'tindakan.mastertindakan:rs1,rs2',
+                    'laborat' => function ($a) {
+                        $a->with(['pemeriksaanlab'])
+                            ->orderBy('id', 'DESC');
+                    },
+                    //    'laborat.pemeriksaanlab:rs1,rs2,rs21,nilainormal,satuan',
+                    'laborats',
                     'transradiologi:rs1,rs4',
                     'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
                     'hasilradiologi',
