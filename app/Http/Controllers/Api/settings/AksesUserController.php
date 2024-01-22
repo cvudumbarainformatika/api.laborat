@@ -27,7 +27,7 @@ class AksesUserController extends Controller
     }
     public function getPoli()
     {
-        $data = Mpoli::listpoli()->where('rs4', 'Poliklinik')->get();
+        $data = Mpoli::listpoli()->where('rs4', 'Poliklinik')->where('rs5', '=', '1')->get();
         return new JsonResponse($data);
     }
     public function storeRole(Request $request)
