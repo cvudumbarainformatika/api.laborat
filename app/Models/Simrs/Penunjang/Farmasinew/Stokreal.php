@@ -4,6 +4,8 @@ namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MinmaxobatController;
 use App\Models\Sigarang\Gudang;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,11 +30,13 @@ class Stokreal extends Model
 
     public function transnonracikan()
     {
-        return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat');
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); diganti ke permintaan
+        return $this->hasMany(Permintaanresep::class, 'kdobat', 'kdobat');
     }
 
     public function transracikan()
     {
-        return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+        // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+        return $this->hasMany(Permintaanresepracikan::class, 'kdobat', 'kdobat');
     }
 }

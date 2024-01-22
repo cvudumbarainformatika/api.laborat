@@ -73,25 +73,27 @@ class EresepController extends Controller
                     'minmax',
                     'transnonracikan' => function ($transnonracikan) {
                         $transnonracikan->select(
-                            'resep_keluar_r.kdobat as kdobat',
+                            // 'resep_keluar_r.kdobat as kdobat',
+                            'resep_permintaan_keluar.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
-                            DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
                         )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_r.noresep')
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
                             ->where('flag', '!=', '3')
-                            ->groupBy('resep_keluar_r.kdobat');
+                            ->groupBy('resep_permintaan_keluar.kdobat');
                     },
                     'transracikan' => function ($transracikan) {
                         $transracikan->select(
-                            'resep_keluar_racikan_r.kdobat as kdobat',
+                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
-                            DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
+                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                         )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_racikan_r.noresep')
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
                             ->where('flag', '!=', '3')
-                            ->groupBy('resep_keluar_racikan_r.kdobat');
+                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
                     },
                 ]
             )
@@ -110,7 +112,7 @@ class EresepController extends Controller
             $total = $x->total ?? 0;
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-            $x->alokasi = $total - $jumlahtrans + $jumlahtransx;
+            $x->alokasi = $total - $jumlahtrans - $jumlahtransx;
             return $x;
         });
         return new JsonResponse(
