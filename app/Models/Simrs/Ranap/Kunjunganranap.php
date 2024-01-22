@@ -10,6 +10,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
@@ -31,6 +32,7 @@ use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
 use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
+use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Oksigen\Oksigen;
 use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
@@ -410,9 +412,20 @@ class Kunjunganranap extends Model
             'rs1'
         );
     }
+
+    public function pemeriksaanfisik()
+    {
+        return $this->hasMany(Pemeriksaanfisik::class, 'rs1', 'rs1');
+    }
+
     public function newapotekrajal()
     {
         // return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'noreg');
+    }
+
+    public function laborats()
+    {
+        return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');
     }
 }
