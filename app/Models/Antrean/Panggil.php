@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 class Panggil extends Model
 {
     use HasFactory;
-    protected $connection = 'antrean';
+    // protected $connection = 'antrean'; // Pindah
+    protected $connection = 'newantrean';
     protected $table = 'panggils';
     protected $guarded = ['id'];
 

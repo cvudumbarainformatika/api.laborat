@@ -28,6 +28,7 @@ class Mpoli extends Model
             'rs5 as statukeaktifan',
             'rs6 as kodemapingbpjs',
             'rs7 as polimapingbpjs',
+            'displaykode'
         ]);
     }
 

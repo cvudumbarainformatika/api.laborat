@@ -17,8 +17,12 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('presence.chat.{id}', function ($user, $id) {
+Broadcast::channel('presence.chat.{roomId}', function ($user, $roomId) {
     return $user;
+});
+Broadcast::channel('private.notif.{roomId}', function ($user, $roomId) {
+    // return $user;
+    return true;
 });
 
 Broadcast::channel('qrcode', function () {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Simrs\Rajal;
 
+use App\Events\ChatMessageEvent;
+use App\Events\NotifMessageEvent;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
@@ -491,7 +493,7 @@ class PoliController extends Controller
         //     // ->simplePaginate(request('per_page'));
         //     // ->get();
         // }
-
+        event(new ChatMessageEvent('hello', 'poli', auth()->user()));
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
 

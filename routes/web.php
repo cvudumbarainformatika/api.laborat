@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\NotifMessageEvent;
 use App\Events\PlaygroundEvent;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
@@ -27,11 +28,20 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-WebSocketsRouter::webSocket('/socket/update-post', UpdatePostSocketHandler::class);
+// WebSocketsRouter::webSocket('/socket/update-post', UpdatePostSocketHandler::class);
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+// Route::post('/notif-message', function (Request $request) {
+//     event(new NotifMessageEvent($request->message, auth()->user()));
+//     return null;
+// });
+
+
+
 // stok opname
 // Route::get('/opname', [StokOpnameController::class, 'storeMonthly']);
 
@@ -57,13 +67,13 @@ Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller
 
 Route::get('/print/page', [PrintController::class, 'index']);
 
-Route::get('/unsubscribe/{user}', function (Request $request, $user) {
-    if (!$request->hasValidSignature()) {
-        abort(401);
-    }
+// Route::get('/unsubscribe/{user}', function (Request $request, $user) {
+//     if (!$request->hasValidSignature()) {
+//         abort(401);
+//     }
 
-    return $user;
-})->name('unsubscribe')->middleware('signed');
+//     return $user;
+// })->name('unsubscribe')->middleware('signed');
 
 
 
