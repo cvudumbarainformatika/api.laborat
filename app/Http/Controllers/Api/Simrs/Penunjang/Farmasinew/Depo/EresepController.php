@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
@@ -9,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,25 +74,27 @@ class EresepController extends Controller
                     'minmax',
                     'transnonracikan' => function ($transnonracikan) {
                         $transnonracikan->select(
-                            'resep_keluar_r.kdobat as kdobat',
+                            // 'resep_keluar_r.kdobat as kdobat',
+                            'resep_permintaan_keluar.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
-                            DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
                         )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_r.noresep')
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
                             ->where('flag', '!=', '3')
-                            ->groupBy('resep_keluar_r.kdobat');
+                            ->groupBy('resep_permintaan_keluar.kdobat');
                     },
                     'transracikan' => function ($transracikan) {
                         $transracikan->select(
-                            'resep_keluar_racikan_r.kdobat as kdobat',
+                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
-                            DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
+                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                         )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_racikan_r.noresep')
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
                             ->where('flag', '!=', '3')
-                            ->groupBy('resep_keluar_racikan_r.kdobat');
+                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
                     },
                 ]
             )
@@ -109,7 +113,7 @@ class EresepController extends Controller
             $total = $x->total ?? 0;
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-            $x->alokasi = $total - $jumlahtrans + $jumlahtransx;
+            $x->alokasi = $total - $jumlahtrans - $jumlahtransx;
             return $x;
         });
         return new JsonResponse(
@@ -145,6 +149,11 @@ class EresepController extends Controller
             $colom = 'depook';
             $lebel = 'D-KO';
         } elseif ($request->kodedepo === 'Gd-05010101') {
+            $lanjut = $request->lanjuTr ?? '';
+            $cekpemberian = self::cekpemberianobat($request, $jumlahstok);
+            if ($cekpemberian['status'] == 1 && $lanjut !== '1') {
+                return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
+            }
 
             $procedure = 'resepkeluardeporajal(@nomor)';
             $colom = 'deporajal';
@@ -369,11 +378,39 @@ class EresepController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($listresep);
     }
+    public function getSingleResep()
+    {
+
+        $listresep = Resepkeluarheder::select(
+            'farmasi.resep_keluar_h.*',
+            'kepegx.pegawai.nama as dokter',
+        )
+            ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
+            ->with(
+                [
+                    'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                    'poli',
+                    'ruanganranap',
+                    'sistembayar',
+                    'datapasien' => function ($quer) {
+                        $quer->select(
+                            'rs1',
+                            'rs2 as nama'
+                        );
+                    }
+                ]
+            )
+            ->where('farmasi.resep_keluar_h.id', request('id'))
+            ->first();
+        return new JsonResponse($listresep);
+    }
 
     public function kirimresep(Request $request)
     {
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
-        $kirimresep->flag = '1';
+        // $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
         $kirimresep->load([
@@ -381,10 +418,21 @@ class EresepController extends Controller
             'permintaanracikan.mobat:kd_obat,nama_obat',
         ]);
 
+        $msg = [
+            'data' => [
+                'id' => $kirimresep->id,
+                'noreg' => $kirimresep->noreg,
+                'depo' => $kirimresep->depo,
+                'noresep' => $kirimresep->noresep,
+                'status' => '1',
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
-        ], 200);
+            // ], 200);
+        ], 410);
     }
 
     public function eresepobatkeluar(Request $request)
@@ -600,5 +648,74 @@ class EresepController extends Controller
                 $head->delete();
             }
         }
+    }
+    public static function cekpemberianobat($request, $jumlahstok)
+    {
+        // ini tujuannya mencari sisa obat pasien dengan dihitung jumlah konsumsi obat per hari bersasarkan signa
+        // harus ada data jumlah hari (obat dikonsumsi dalam ... hari) di tabel
+
+        $cekmaster = Mobatnew::select('kandungan')->where('kd_obat', $request->kodeobat)->first();
+
+        // $jumlahdosis = $request->jumlahdosis;
+        // $jumlah = $request->jumlah;
+        // $jmlhari = (int) $jumlah / $jumlahdosis;
+        // $total = (int) $jmlhari + (int) $jumlahstok;
+        if ($cekmaster->kandungan === '') {
+            $hasil = Resepkeluarheder::select(
+                'resep_keluar_h.noresep as noresep',
+                'resep_keluar_h.tgl as tgl',
+                'resep_keluar_r.konsumsi',
+                DB::raw('(DATEDIFF(CURRENT_DATE(), resep_keluar_h.tgl)+1) as selisih')
+            )
+                ->leftjoin('resep_keluar_r', 'resep_keluar_h.noresep', 'resep_keluar_r.noresep')
+                ->where('resep_keluar_h.norm', $request->norm)
+                ->where('resep_keluar_r.kdobat', $request->kodeobat)
+                ->orderBy('resep_keluar_h.tgl', 'desc')
+                ->limit(1)
+                ->get();
+        } else {
+            $hasil = Resepkeluarheder::select(
+                'resep_keluar_h.noresep as noresep',
+                'resep_keluar_h.tgl as tgl',
+                'resep_keluar_r.konsumsi',
+                DB::raw('(DATEDIFF(CURRENT_DATE(), resep_keluar_h.tgl)+1) as selisih')
+            )
+                ->leftjoin('resep_keluar_r', 'resep_keluar_h.noresep', 'resep_keluar_r.noresep')
+                ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'resep_keluar_r.kdobat')
+                ->where('resep_keluar_h.norm', $request->norm)
+                ->where('resep_keluar_r.kdobat', $request->kodeobat)
+                ->where('new_masterobat.kandungan', $request->kandungan)
+                ->orderBy('resep_keluar_h.tgl', 'desc')
+                ->limit(1)
+                ->get();
+        }
+        $selisih = 0;
+        $total = 0;
+        if (count($hasil)) {
+            $selisih = $hasil[0]->selisih;
+            $total = (float)$hasil[0]->konsumsi;
+            if ($selisih <= $total) {
+                return [
+                    'status' => 1,
+                    'hasil' => $hasil,
+                    'selisih' => $selisih,
+                    'total' => $total,
+                ];
+            } else {
+                return [
+                    'status' => 2,
+                    'hasil' => $hasil,
+                    'selisih' => $selisih,
+                    'total' => $total,
+                ];
+                // return 2;
+            }
+        }
+        return [
+            'status' => 2,
+            'hasil' => $hasil,
+            'selisih' => $selisih,
+            'total' => $total,
+        ];
     }
 }
