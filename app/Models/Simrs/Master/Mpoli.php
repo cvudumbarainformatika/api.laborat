@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Master;
 
+use App\Models\Antrean\Panggil;
 use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Billing\Rajal\Allbillrajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -40,6 +41,11 @@ class Mpoli extends Model
     public function jumlahkunjunganpoli()
     {
         return $this->hasMany(KunjunganPoli::class, 'rs8', 'rs1');
+    }
+
+    public function panggilan()
+    {
+        return $this->hasMany(Panggil::class, 'kdpoli', 'rs1');
     }
 
     public function kunjungan()

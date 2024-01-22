@@ -109,8 +109,21 @@ class DisplayController extends Controller
         $data = Display::where('kode', request('kode'))
             ->with([
                 'poli.jumlahkunjunganpoli' => function ($q) use ($hr_ini) {
-                    $q->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
-                        ->with(['antrian_ambil']);
+                    $q->select(
+                        'rs17.rs1',
+                        'rs17.rs1 as noreg',
+                        'rs17.rs2',
+                        'rs17.rs3',
+                        'rs17.rs8',
+                        'rs17.rs19 as status',
+                        'antrian_ambil.nomor as noantrian'
+                    )->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                        ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                        ->orderby('antrian_ambil.nomor', 'ASC');
+                },
+                'poli.panggilan' => function ($q) use ($hr_ini) {
+                    $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                        ->orderby('updated_at', 'DESC');
                 }
             ])
             // ->with(['display', 'layanan', 'layanan.bookings' => function ($q) use ($hr_ini) {
@@ -133,10 +146,12 @@ class DisplayController extends Controller
             'data' => $request->all(),
         ];
         event(new NotifMessageEvent($msgEvent, $request->channel, auth()->user()));
-        Panggil::firstOrCreate(
+
+
+        Panggil::updateOrCreate(
             ['noreg' => $request->noreg, 'noantrian' => $request->noantrian, 'kdpoli' => $request->kdpoli],
             ['channel' => $request->channel, 'tglkunjungan' => $request->tglkunjungan]
-        );
+        )->increment('counter');
         return 'ok';
     }
     public function delete_panggilan(Request $request)
