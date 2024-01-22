@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
@@ -377,11 +378,39 @@ class EresepController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($listresep);
     }
+    public function getSingleResep()
+    {
+
+        $listresep = Resepkeluarheder::select(
+            'farmasi.resep_keluar_h.*',
+            'kepegx.pegawai.nama as dokter',
+        )
+            ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
+            ->with(
+                [
+                    'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                    'poli',
+                    'ruanganranap',
+                    'sistembayar',
+                    'datapasien' => function ($quer) {
+                        $quer->select(
+                            'rs1',
+                            'rs2 as nama'
+                        );
+                    }
+                ]
+            )
+            ->where('farmasi.resep_keluar_h.id', request('id'))
+            ->first();
+        return new JsonResponse($listresep);
+    }
 
     public function kirimresep(Request $request)
     {
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
-        $kirimresep->flag = '1';
+        // $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
         $kirimresep->load([
@@ -389,10 +418,21 @@ class EresepController extends Controller
             'permintaanracikan.mobat:kd_obat,nama_obat',
         ]);
 
+        $msg = [
+            'data' => [
+                'id' => $kirimresep->id,
+                'noreg' => $kirimresep->noreg,
+                'depo' => $kirimresep->depo,
+                'noresep' => $kirimresep->noresep,
+                'status' => '1',
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
-        ], 200);
+            // ], 200);
+        ], 410);
     }
 
     public function eresepobatkeluar(Request $request)
