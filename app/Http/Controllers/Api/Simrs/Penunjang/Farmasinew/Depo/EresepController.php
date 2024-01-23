@@ -591,7 +591,7 @@ class EresepController extends Controller
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
                             'namaracikan' => $request->namaracikan,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'jumlah' => $masuk,
                             'harga_beli' => $caristok[$index]->harga,
@@ -606,7 +606,7 @@ class EresepController extends Controller
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'kandungan' => $request->kandungan,
                             'fornas' => $request->fornas,
                             'forkit' => $request->forkit,
