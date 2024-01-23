@@ -343,27 +343,23 @@ class EresepController extends Controller
             }
         }
         // return $rm;
-        $listresep = Resepkeluarheder::select(
-            'farmasi.resep_keluar_h.*',
-            'kepegx.pegawai.nama as dokter',
+        $listresep = Resepkeluarheder::with(
+            [
+                'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                'poli',
+                'ruanganranap',
+                'sistembayar',
+                'dokter:kdpegsimrs,nama',
+                'datapasien' => function ($quer) {
+                    $quer->select(
+                        'rs1',
+                        'rs2 as nama'
+                    );
+                }
+            ]
         )
-            ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
-            ->with(
-                [
-                    'rincian.mobat:kd_obat,nama_obat,satuan_k',
-                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
-                    'poli',
-                    'ruanganranap',
-                    'sistembayar',
-                    'datapasien' => function ($quer) {
-                        $quer->select(
-                            'rs1',
-                            'rs2 as nama'
-                        );
-                    }
-                ]
-            )
             ->where(function ($query) use ($rm) {
                 $query->when(count($rm) > 0, function ($wew) use ($rm) {
                     $wew->whereIn('farmasi.resep_keluar_h.norm', $rm);
@@ -381,27 +377,23 @@ class EresepController extends Controller
     public function getSingleResep()
     {
 
-        $listresep = Resepkeluarheder::select(
-            'farmasi.resep_keluar_h.*',
-            'kepegx.pegawai.nama as dokter',
+        $listresep = Resepkeluarheder::with(
+            [
+                'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                'poli',
+                'ruanganranap',
+                'sistembayar',
+                'dokter:kdpegsimrs,nama',
+                'datapasien' => function ($quer) {
+                    $quer->select(
+                        'rs1',
+                        'rs2 as nama'
+                    );
+                }
+            ]
         )
-            ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
-            ->with(
-                [
-                    'rincian.mobat:kd_obat,nama_obat,satuan_k',
-                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
-                    'poli',
-                    'ruanganranap',
-                    'sistembayar',
-                    'datapasien' => function ($quer) {
-                        $quer->select(
-                            'rs1',
-                            'rs2 as nama'
-                        );
-                    }
-                ]
-            )
             ->where('farmasi.resep_keluar_h.id', request('id'))
             ->first();
         return new JsonResponse($listresep);
