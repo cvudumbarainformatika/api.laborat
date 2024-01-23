@@ -362,16 +362,18 @@ class EresepController extends Controller
         )
             ->where(function ($query) use ($rm) {
                 $query->when(count($rm) > 0, function ($wew) use ($rm) {
-                    $wew->whereIn('farmasi.resep_keluar_h.norm', $rm);
+                    $wew->whereIn('norm', $rm);
                 })
-                    ->orWhere('farmasi.resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('farmasi.resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
+                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
-            ->where('farmasi.resep_keluar_h.depo', request('kddepo'))
-            ->where('farmasi.resep_keluar_h.flag', '!=', '')
-            ->orderBy('farmasi.resep_keluar_h.tgl_permintaan', 'DESC')
+            ->where('depo', request('kddepo'))
+            ->whereIn('flag', request('flag'))
+            ->orderBy('flag', 'ASC')
+            ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
+        // return new JsonResponse(request()->all());
         return new JsonResponse($listresep);
     }
     public function getSingleResep()
@@ -406,8 +408,8 @@ class EresepController extends Controller
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
         $kirimresep->load([
-            'permintaanresep.mobat:kd_obat,nama_obat',
-            'permintaanracikan.mobat:kd_obat,nama_obat',
+            'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+            'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
         ]);
 
         $msg = [
@@ -424,6 +426,46 @@ class EresepController extends Controller
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
         ], 200);
+    }
+
+    public function terimaResep(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if ($data) {
+            $data->flag = '2';
+            $data->save();
+            // $msg = [
+            //     'data' => [
+            //         'id' => $data->id,
+            //         'noreg' => $data->noreg,
+            //         'depo' => $data->depo,
+            //         'noresep' => $data->noresep,
+            //         'status' => '2',
+            //     ]
+            // ];
+            // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            return new JsonResponse(['message' => 'Resep Diterima', 'data' => $data], 200);
+        }
+        return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
+    }
+    public function resepSelesai(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if ($data) {
+            $data->update(['flag' => '3']);
+            // $msg = [
+            //     'data' => [
+            //         'id' => $data->id,
+            //         'noreg' => $data->noreg,
+            //         'depo' => $data->depo,
+            //         'noresep' => $data->noresep,
+            //         'status' => '3',
+            //     ]
+            // ];
+            // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            return new JsonResponse(['message' => 'Resep Selesai', 'data' => $data], 200);
+        }
+        return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
     }
 
     public function eresepobatkeluar(Request $request)
