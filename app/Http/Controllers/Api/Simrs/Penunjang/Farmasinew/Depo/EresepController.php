@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
@@ -346,6 +347,7 @@ class EresepController extends Controller
         $listresep = Resepkeluarheder::with(
             [
                 'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
                 'poli',
@@ -382,6 +384,7 @@ class EresepController extends Controller
         $listresep = Resepkeluarheder::with(
             [
                 'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
                 'poli',
@@ -470,8 +473,9 @@ class EresepController extends Controller
 
     public function eresepobatkeluar(Request $request)
     {
+        // return new JsonResponse($request->all());
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
-            ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
+            ->where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();
@@ -485,14 +489,14 @@ class EresepController extends Controller
         $gudang = ['Gd-05010100', 'Gd-03010100'];
         $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
             ->whereIn('kdruang', $gudang)
-            ->where('kdobat', $request->kodeobat)
+            ->where('kdobat', $request->kdobat)
             ->orderBy('tglpenerimaan', 'desc')
             ->limit(5)
             ->get();
         $harga = $cariharga[0]->harga;
 
         $jmldiminta = $request->jumlah;
-        $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
+        $caristok = Stokreal::where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();
@@ -526,13 +530,13 @@ class EresepController extends Controller
                 $sisax = $masuk - $sisa;
 
                 if ($request->jenisresep == 'Racikan') {
-                    $simpanrinci = Resepkeluarrinci::create(
+                    $simpanrinci = Resepkeluarrinciracikan::create(
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
                             'tiperacikan' => $request->tiperacikan,
                             'namaracikan' => $request->namaracikan,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'jumlah' => $caristok[$index]->jumlah,
                             'harga_beli' => $caristok[$index]->harga,
@@ -547,7 +551,7 @@ class EresepController extends Controller
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'kandungan' => $request->kandungan,
                             'fornas' => $request->fornas,
                             'forkit' => $request->forkit,
@@ -582,7 +586,7 @@ class EresepController extends Controller
                 $sisax = $sisa - $masuk;
 
                 if ($request->jenisresep == 'Racikan') {
-                    $simpanrinci = Resepkeluarrinci::create(
+                    $simpanrinci = Resepkeluarrinciracikan::create(
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
