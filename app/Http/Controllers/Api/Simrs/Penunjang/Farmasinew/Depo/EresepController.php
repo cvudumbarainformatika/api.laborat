@@ -402,7 +402,7 @@ class EresepController extends Controller
     public function kirimresep(Request $request)
     {
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
-        // $kirimresep->flag = '1';
+        $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
         $kirimresep->load([
@@ -423,8 +423,7 @@ class EresepController extends Controller
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
-            // ], 200);
-        ], 410);
+        ], 200);
     }
 
     public function eresepobatkeluar(Request $request)
