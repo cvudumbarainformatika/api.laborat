@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,13 +17,22 @@ class ReturpenjualanController extends Controller
 {
     public function caribynoresep()
     {
+
+        if (request('to') === '' || request('from') === null) {
+            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $tgl = request('from') . ' 00:00:00';
+            $tglx = request('to') . ' 23:59:59';
+        }
         $carinoresep = Resepkeluarheder::with(
             [
-                'rincian',
-                'datapasien:rs1,rs2',
+                'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
                 'datapasien:rs1,rs2,rs3,rs17,rs16,rs46,rs49',
                 'dokter:kdpegsimrs,nama',
                 'ruanganranap:rs1,rs2',
+                'poli:rs1,rs2',
                 'sistembayar:rs1,rs2'
             ]
         )
@@ -31,8 +41,10 @@ class ReturpenjualanController extends Controller
                     ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
-            //    ->where('flag', '4')
-            ->get();
+            ->whereBetween('tgl_permintaan', [$tgl, $tglx])
+            ->whereIn('flag', request('flag'))
+            ->orderBy('tgl', 'ASC')
+            ->paginate(request('per_page'));
         return new JsonResponse(
             [
                 'result' => $carinoresep
@@ -42,6 +54,8 @@ class ReturpenjualanController extends Controller
 
     public function returpenjualan(Request $request)
     {
+        $data = $request->all();
+        return new JsonResponse($data);
         if ($request->noretur == '' || $request->noretur == null) {
             DB::connection('farmasi')->select('call returpenjualan');
             $x = DB::connection('farmasi')->table('conter')->select('returpenjualan')->get();
@@ -70,11 +84,11 @@ class ReturpenjualanController extends Controller
             return new JsonResponse(['message' => 'Maaf Data Gagal Disimpan'], 500);
         }
 
-        $updatestok = StokrealController::updatestokdepo($request);
         $simpanrinci = Returpenjualan_r::create(
             [
                 'noretur' => $noretur,
                 'noreg' => $request->noreg,
+                'kdobat' => $request->kdobat,
                 'kandungan' => $request->kandungan,
                 'fornas' => $request->fornas,
                 'forkit' => $request->forkit,
@@ -89,6 +103,7 @@ class ReturpenjualanController extends Controller
                 'user' => $user['kodesimrs']
             ]
         );
+        $updatestok = StokrealController::updatestokdepo($request);
         return new JsonResponse(
             [
                 'message' => 'Data Berhasil Disimpan...!!!',

@@ -13,6 +13,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -343,6 +344,13 @@ class EresepController extends Controller
                 });
             }
         }
+        if (request('to') === '' || request('from') === null) {
+            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $tgl = request('from') . ' 00:00:00';
+            $tglx = request('to') . ' 23:59:59';
+        }
         // return $rm;
         $listresep = Resepkeluarheder::with(
             [
@@ -371,6 +379,7 @@ class EresepController extends Controller
                     ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
+            ->whereBetween('tgl_permintaan', [$tgl, $tglx])
             ->whereIn('flag', request('flag'))
             ->orderBy('flag', 'ASC')
             ->orderBy('tgl_permintaan', 'ASC')
@@ -591,6 +600,7 @@ class EresepController extends Controller
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
                             'namaracikan' => $request->namaracikan,
+                            'tiperacikan' => $request->tiperacikan,
                             'kdobat' => $request->kdobat,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'jumlah' => $masuk,
