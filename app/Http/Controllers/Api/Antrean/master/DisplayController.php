@@ -164,4 +164,10 @@ class DisplayController extends Controller
         event(new AnjunganEvent($message));
         return response()->json($request->all(), 200);
     }
+
+    public function get_weather()
+    {
+        $data = Http::get('http://api.weatherapi.com/v1/forecast.json?key=88a330fe969d462e919175655242101&q=probolinggo&days=3&aqi=no&alerts=no');
+        return $data;
+    }
 }
