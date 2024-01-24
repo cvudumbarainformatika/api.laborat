@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
@@ -9,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
@@ -342,39 +344,63 @@ class EresepController extends Controller
             }
         }
         // return $rm;
-        $listresep = Resepkeluarheder::select(
-            'farmasi.resep_keluar_h.*',
-            'kepegx.pegawai.nama as dokter',
+        $listresep = Resepkeluarheder::with(
+            [
+                'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                'poli',
+                'ruanganranap',
+                'sistembayar',
+                'dokter:kdpegsimrs,nama',
+                'datapasien' => function ($quer) {
+                    $quer->select(
+                        'rs1',
+                        'rs2 as nama'
+                    );
+                }
+            ]
         )
-            ->leftjoin('kepegx.pegawai', 'farmasi.resep_keluar_h.dokter', 'kepegx.pegawai.kdpegsimrs')
-            ->with(
-                [
-                    'rincian.mobat:kd_obat,nama_obat,satuan_k',
-                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
-                    'poli',
-                    'ruanganranap',
-                    'sistembayar',
-                    'datapasien' => function ($quer) {
-                        $quer->select(
-                            'rs1',
-                            'rs2 as nama'
-                        );
-                    }
-                ]
-            )
             ->where(function ($query) use ($rm) {
                 $query->when(count($rm) > 0, function ($wew) use ($rm) {
-                    $wew->whereIn('farmasi.resep_keluar_h.norm', $rm);
+                    $wew->whereIn('norm', $rm);
                 })
-                    ->orWhere('farmasi.resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('farmasi.resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('farmasi.resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
+                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
-            ->where('farmasi.resep_keluar_h.depo', request('kddepo'))
-            ->where('farmasi.resep_keluar_h.flag', '!=', '')
-            ->orderBy('farmasi.resep_keluar_h.tgl_permintaan', 'DESC')
+            ->where('depo', request('kddepo'))
+            ->whereIn('flag', request('flag'))
+            ->orderBy('flag', 'ASC')
+            ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
+        // return new JsonResponse(request()->all());
+        return new JsonResponse($listresep);
+    }
+    public function getSingleResep()
+    {
+
+        $listresep = Resepkeluarheder::with(
+            [
+                'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                'poli',
+                'ruanganranap',
+                'sistembayar',
+                'dokter:kdpegsimrs,nama',
+                'datapasien' => function ($quer) {
+                    $quer->select(
+                        'rs1',
+                        'rs2 as nama'
+                    );
+                }
+            ]
+        )
+            ->where('farmasi.resep_keluar_h.id', request('id'))
+            ->first();
         return new JsonResponse($listresep);
     }
 
@@ -385,20 +411,71 @@ class EresepController extends Controller
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
         $kirimresep->load([
-            'permintaanresep.mobat:kd_obat,nama_obat',
-            'permintaanracikan.mobat:kd_obat,nama_obat',
+            'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
+            'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
         ]);
 
+        $msg = [
+            'data' => [
+                'id' => $kirimresep->id,
+                'noreg' => $kirimresep->noreg,
+                'depo' => $kirimresep->depo,
+                'noresep' => $kirimresep->noresep,
+                'status' => '1',
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
         ], 200);
     }
 
+    public function terimaResep(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if ($data) {
+            $data->flag = '2';
+            $data->save();
+            // $msg = [
+            //     'data' => [
+            //         'id' => $data->id,
+            //         'noreg' => $data->noreg,
+            //         'depo' => $data->depo,
+            //         'noresep' => $data->noresep,
+            //         'status' => '2',
+            //     ]
+            // ];
+            // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            return new JsonResponse(['message' => 'Resep Diterima', 'data' => $data], 200);
+        }
+        return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
+    }
+    public function resepSelesai(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if ($data) {
+            $data->update(['flag' => '3']);
+            // $msg = [
+            //     'data' => [
+            //         'id' => $data->id,
+            //         'noreg' => $data->noreg,
+            //         'depo' => $data->depo,
+            //         'noresep' => $data->noresep,
+            //         'status' => '3',
+            //     ]
+            // ];
+            // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            return new JsonResponse(['message' => 'Resep Selesai', 'data' => $data], 200);
+        }
+        return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
+    }
+
     public function eresepobatkeluar(Request $request)
     {
+        // return new JsonResponse($request->all());
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
-            ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
+            ->where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();
@@ -412,14 +489,14 @@ class EresepController extends Controller
         $gudang = ['Gd-05010100', 'Gd-03010100'];
         $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
             ->whereIn('kdruang', $gudang)
-            ->where('kdobat', $request->kodeobat)
+            ->where('kdobat', $request->kdobat)
             ->orderBy('tglpenerimaan', 'desc')
             ->limit(5)
             ->get();
         $harga = $cariharga[0]->harga;
 
         $jmldiminta = $request->jumlah;
-        $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
+        $caristok = Stokreal::where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '!=', 0)
             ->orderBy('tglexp')
             ->get();
@@ -453,13 +530,13 @@ class EresepController extends Controller
                 $sisax = $masuk - $sisa;
 
                 if ($request->jenisresep == 'Racikan') {
-                    $simpanrinci = Resepkeluarrinci::create(
+                    $simpanrinci = Resepkeluarrinciracikan::create(
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
                             'tiperacikan' => $request->tiperacikan,
                             'namaracikan' => $request->namaracikan,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'jumlah' => $caristok[$index]->jumlah,
                             'harga_beli' => $caristok[$index]->harga,
@@ -474,7 +551,7 @@ class EresepController extends Controller
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'kandungan' => $request->kandungan,
                             'fornas' => $request->fornas,
                             'forkit' => $request->forkit,
@@ -509,12 +586,12 @@ class EresepController extends Controller
                 $sisax = $sisa - $masuk;
 
                 if ($request->jenisresep == 'Racikan') {
-                    $simpanrinci = Resepkeluarrinci::create(
+                    $simpanrinci = Resepkeluarrinciracikan::create(
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
                             'namaracikan' => $request->namaracikan,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'jumlah' => $masuk,
                             'harga_beli' => $caristok[$index]->harga,
@@ -529,7 +606,7 @@ class EresepController extends Controller
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $request->noresep,
-                            'kdobat' => $request->kodeobat,
+                            'kdobat' => $request->kdobat,
                             'kandungan' => $request->kandungan,
                             'fornas' => $request->fornas,
                             'forkit' => $request->forkit,

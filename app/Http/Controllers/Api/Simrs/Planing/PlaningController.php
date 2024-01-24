@@ -183,6 +183,9 @@ class PlaningController extends Controller
                             'message' => 'Data Berhasil Disimpan...!!!',
                             'result' => $data
                         ], 200);
+                    } else {
+                        $msg = $createspri['metadata']['message'] ?? '';
+                        return new JsonResponse(['message' => 'Respon BPJS :  ' . $msg], 410);
                     }
                 } else {
                     $nospri = $request->noreg;
@@ -218,6 +221,9 @@ class PlaningController extends Controller
                             'message' => 'Data Berhasil Disimpan...!!!',
                             'result' => $data
                         ], 200);
+                    } else {
+                        $msg = $createspri['metadata']['message'] ?? '';
+                        return new JsonResponse(['message' => 'Respon BPJS :  ' . $msg], 410);
                     }
                 } else {
                     $nospri = $request->noreg;
