@@ -16,6 +16,6 @@ class Mtindakan extends Model
 
     public function maapingprocedure()
     {
-        return $this->hasMany(MapingProcedure::class, 'kdMaster', 'rs1');
+        return $this->hasOne(MapingProcedure::class, 'kdMaster', 'rs1');
     }
 }
