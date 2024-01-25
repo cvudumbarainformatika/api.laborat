@@ -26,7 +26,7 @@ class TindakanController extends Controller
             'prosedur_mapping.icd9'
         )
             ->leftjoin('prosedur_mapping', 'rs30.rs1', '=', 'prosedur_mapping.kdMaster')
-            ->with('maapingprocedure.prosedur')
+            // ->with('maapingprocedure.prosedur')
             ->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
             ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%')
             ->get();
