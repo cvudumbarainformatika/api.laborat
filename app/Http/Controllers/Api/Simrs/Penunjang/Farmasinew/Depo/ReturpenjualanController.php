@@ -43,7 +43,12 @@ class ReturpenjualanController extends Controller
             })
             ->where('depo', request('kddepo'))
             ->whereBetween('tgl_permintaan', [$tgl, $tglx])
-            ->whereIn('flag', request('flag'))
+            ->when(request('flag'), function ($x) {
+                $x->whereIn('flag', request('flag'));
+            })
+            ->when(!request('flag'), function ($x) {
+                $x->where('flag', '3');
+            })
             ->orderBy('tgl', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse(
@@ -119,6 +124,14 @@ class ReturpenjualanController extends Controller
     {
 
         $user = FormatingHelper::session_user();
+        $req = $request->all();
+        $tmpRin = collect($req['listObat'])->sum('jumlah_retur');
+        $tmpRac = collect($req['rincianracik'])->sum('jumlah_retur');
+        // $tmpRinMap = $tmpRin->sum('jumlah_retur');
+        // cek bahwa ada yang diretur
+        if ($tmpRin <= 0 && $tmpRac <= 0) {
+            return new JsonResponse(['message' => 'Tidak ada Jumlah Obat yang akan diretur'], 410);
+        }
 
         if ($request->noretur == '' || $request->noretur == null) {
             DB::connection('farmasi')->select('call returpenjualan(@nomor)');
@@ -128,12 +141,23 @@ class ReturpenjualanController extends Controller
         } else {
             $noretur = $request->noretur;
         }
+        $noret = ['noretur' => $noretur];
+
+        $isiHead = [
+            'tgl_retur' => date('Y-m-d H:i:s'),
+            'noresep' => $request->noresep,
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'kddokter' => $request->kddokter,
+            'kdruangan' => $request->ruangan,
+            'user' => $user['kodesimrs']
+        ];
 
         $rinci = [];
         $racik = [];
 
-        if (count($request->rincian)) {
-            foreach ($request->rincian as $key) {
+        if (count($request->listObat)) {
+            foreach ($request->listObat as $key) {
                 if ($key['jumlah_retur'] > 0) {
                     $temp = [
                         'noretur' => $noretur,
@@ -180,23 +204,34 @@ class ReturpenjualanController extends Controller
                 }
             }
         }
-
-        $isiHead = [
-            'tgl_retur' => date('Y-m-d H:i:s'),
-            'noresep' => $request->noresep,
-            'noreg' => $request->noreg,
-            'norm' => $request->norm,
-            'kddokter' => $request->kddokter,
-            'kdruangan' => $request->ruangan,
-            'user' => $user['kodesimrs']
-        ];
-
-        $data['rinci'] = $rinci;
-        $data['racik'] = $racik;
-        $data['noret'] = $noretur;
-        $data['head'] = $isiHead;
-        $data['user'] = $user;
-
-        return new JsonResponse($data);
+        // stok kembali ke gudang atau ke depo?
+        try {
+            DB::beginTransaction();
+            $simpanHeader = Returpenjualan_h::firstOrCreate($noret, $isiHead);
+            if (!$simpanHeader) {
+                return new JsonResponse(['message' => 'Header Data Gagal Disimpan'], 410);
+            }
+            if (count($rinci)) {
+                Returpenjualan_r::insert($rinci);
+            }
+            if (count($racik)) {
+                Returpenjualan_r::insert($racik);
+            }
+            $permintaanHead = Resepkeluarheder::where('noresep', $request->noresep)->where('noreg', $request->noreg)->first();
+            if ($permintaanHead) {
+                $permintaanHead->flag = '4';
+                $permintaanHead->save();
+            }
+            DB::commit();
+            $simpanHeader->load('rinci');
+            return new JsonResponse([
+                'message' => 'retur disimpan',
+                'data' => $simpanHeader
+            ]);
+        } catch (\Exception $e) {
+            // May day,  rollback!!! rollback!!!
+            DB::rollback();
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e], 410);
+        }
     }
 }

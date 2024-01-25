@@ -380,7 +380,12 @@ class EresepController extends Controller
             })
             ->where('depo', request('kddepo'))
             ->whereBetween('tgl_permintaan', [$tgl, $tglx])
-            ->whereIn('flag', request('flag'))
+            ->when(request('flag'), function ($x) {
+                $x->whereIn('flag', request('flag'));
+            })
+            ->when(!request('flag'), function ($x) {
+                $x->where('flag', '2');
+            })
             ->orderBy('flag', 'ASC')
             ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));

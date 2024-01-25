@@ -11,4 +11,9 @@ class Returpenjualan_h extends Model
     protected $table = 'retur_penjualan_h';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
+
+    public function rinci()
+    {
+        return $this->hasMany(Returpenjualan_r::class, 'noretur', 'noretur');
+    }
 }
