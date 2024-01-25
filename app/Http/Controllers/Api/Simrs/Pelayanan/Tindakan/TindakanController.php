@@ -17,13 +17,17 @@ class TindakanController extends Controller
     public function dialogtindakanpoli()
     {
         $dialogtindakanpoli = Mtindakan::select(
-            'rs1 as kdtindakan',
-            'rs2 as tindakan',
-            'rs8 as sarana',
-            'rs9 as pelayanan',
-            DB::raw('rs8 +rs9 as tarif')
+            'rs30.rs1 as kdtindakan',
+            'rs30.rs2 as tindakan',
+            'rs30.rs8 as sarana',
+            'rs30.rs9 as pelayanan',
+            DB::raw('rs30.rs8 + rs30.rs9 as tarif'),
+            'prosedur_mapping.icd9'
         )
-            ->where('rs2', 'Like', '%' . request('tindakan') . '%')
+            ->leftjoin('prosedur_mapping', 'rs30.rs1', '=', 'prosedur_mapping.kdMaster')
+
+            ->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
+            ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
     }

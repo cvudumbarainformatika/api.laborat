@@ -49,5 +49,5 @@ Route::group([
 
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
-    Route::post('/returpenjualan', [EresepController::class, 'returpenjualan']);
+    Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
 });

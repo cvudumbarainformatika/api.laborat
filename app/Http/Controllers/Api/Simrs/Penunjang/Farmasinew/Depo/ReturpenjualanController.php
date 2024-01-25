@@ -25,17 +25,18 @@ class ReturpenjualanController extends Controller
             $tgl = request('from') . ' 00:00:00';
             $tglx = request('to') . ' 23:59:59';
         }
-        $carinoresep = Resepkeluarheder::with(
-            [
-                'rincian.mobat:kd_obat,nama_obat,satuan_k',
-                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
-                'datapasien:rs1,rs2,rs3,rs17,rs16,rs46,rs49',
-                'dokter:kdpegsimrs,nama',
-                'ruanganranap:rs1,rs2',
-                'poli:rs1,rs2',
-                'sistembayar:rs1,rs2'
-            ]
-        )
+        $carinoresep = Resepkeluarheder::select('resep_keluar_h.*', 'resep_keluar_h.dokter as kddokter')
+            ->with(
+                [
+                    'rincian.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
+                    'rincianracik.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
+                    'datapasien:rs1,rs2,rs3,rs17,rs16,rs46,rs49',
+                    'dokter:kdpegsimrs,nama',
+                    'ruanganranap:rs1,rs2',
+                    'poli:rs1,rs2',
+                    'sistembayar:rs1,rs2'
+                ]
+            )
             ->where(function ($query) {
                 $query->where('noresep', 'like', '%' . request('q') . '%')
                     ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
@@ -56,6 +57,7 @@ class ReturpenjualanController extends Controller
     {
         $data = $request->all();
         return new JsonResponse($data);
+
         if ($request->noretur == '' || $request->noretur == null) {
             DB::connection('farmasi')->select('call returpenjualan');
             $x = DB::connection('farmasi')->table('conter')->select('returpenjualan')->get();
@@ -112,5 +114,89 @@ class ReturpenjualanController extends Controller
             ],
             200
         );
+    }
+    public function newreturpenjualan(Request $request)
+    {
+
+        $user = FormatingHelper::session_user();
+
+        if ($request->noretur == '' || $request->noretur == null) {
+            DB::connection('farmasi')->select('call returpenjualan(@nomor)');
+            $x = DB::connection('farmasi')->table('conter')->select('returpenjualan')->first();
+            $wew = $x->returpenjualan;
+            $noretur = FormatingHelper::penerimaanobat($wew, '-RET-PEN');
+        } else {
+            $noretur = $request->noretur;
+        }
+
+        $rinci = [];
+        $racik = [];
+
+        if (count($request->rincian)) {
+            foreach ($request->rincian as $key) {
+                if ($key['jumlah_retur'] > 0) {
+                    $temp = [
+                        'noretur' => $noretur,
+                        'noreg' => $request->noreg,
+                        'kdobat' => $key['kdobat'],
+                        'kandungan' => $key['mobat']['kandungan'],
+                        'fornas' => $key['mobat']['status_generik'],
+                        'forkit' => $key['mobat']['status_forkid'],
+                        'generik' => $key['mobat']['status_fornas'],
+                        'kode108' => $key['mobat']['kode108'],
+                        'uraian108' => $key['mobat']['uraian108'],
+                        'kode50' => $key['mobat']['kode50'],
+                        'uraian50' => $key['mobat']['uraian50'],
+                        'nopenerimaan' => $key['nopenerimaan'],
+                        'jumlah_keluar' => $key['jumlah_keluar'],
+                        'jumlah_retur' => $key['jumlah_retur'],
+                        'user' => $user['kodesimrs']
+                    ];
+                    array_push($rinci, $temp);
+                }
+            }
+        }
+        if (count($request->rincianracik)) {
+            foreach ($request->rincianracik as $key) {
+                if ($key['jumlah_retur'] > 0) {
+                    $temp = [
+                        'noretur' => $noretur,
+                        'noreg' => $request->noreg,
+                        'kdobat' => $key['kdobat'],
+                        'kandungan' => $key['mobat']['kandungan'],
+                        'fornas' => $key['mobat']['status_generik'],
+                        'forkit' => $key['mobat']['status_forkid'],
+                        'generik' => $key['mobat']['status_fornas'],
+                        'kode108' => $key['mobat']['kode108'],
+                        'uraian108' => $key['mobat']['uraian108'],
+                        'kode50' => $key['mobat']['kode50'],
+                        'uraian50' => $key['mobat']['uraian50'],
+                        'nopenerimaan' => $key['nopenerimaan'],
+                        'jumlah_keluar' => $key['jumlah_keluar'],
+                        'jumlah_retur' => $key['jumlah_retur'],
+                        'user' => $user['kodesimrs']
+                    ];
+                    array_push($racik, $temp);
+                }
+            }
+        }
+
+        $isiHead = [
+            'tgl_retur' => date('Y-m-d H:i:s'),
+            'noresep' => $request->noresep,
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'kddokter' => $request->kddokter,
+            'kdruangan' => $request->ruangan,
+            'user' => $user['kodesimrs']
+        ];
+
+        $data['rinci'] = $rinci;
+        $data['racik'] = $racik;
+        $data['noret'] = $noretur;
+        $data['head'] = $isiHead;
+        $data['user'] = $user;
+
+        return new JsonResponse($data);
     }
 }
