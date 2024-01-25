@@ -15,6 +15,6 @@ class MapingProcedure extends Model
 
     public function prosedur()
     {
-        return $this->hasOne(Icd9prosedure::class, 'kd_prosedur', 'icd9');
+        return $this->hasMany(Icd9prosedure::class, 'kd_prosedur', 'icd9');
     }
 }
