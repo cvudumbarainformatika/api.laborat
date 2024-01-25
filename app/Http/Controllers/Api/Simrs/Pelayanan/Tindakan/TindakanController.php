@@ -17,6 +17,7 @@ class TindakanController extends Controller
     public function dialogtindakanpoli()
     {
         $dialogtindakanpoli = Mtindakan::select(
+            'rs30.rs1',
             'rs30.rs1 as kdtindakan',
             'rs30.rs2 as tindakan',
             'rs30.rs8 as sarana',
@@ -25,7 +26,7 @@ class TindakanController extends Controller
             'prosedur_mapping.icd9'
         )
             ->leftjoin('prosedur_mapping', 'rs30.rs1', '=', 'prosedur_mapping.kdMaster')
-
+            ->with('maapingprocedure.prosedur')
             ->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
             ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%')
             ->get();
