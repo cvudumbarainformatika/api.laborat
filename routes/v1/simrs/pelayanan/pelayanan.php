@@ -42,8 +42,9 @@ Route::group([
     Route::get('/dialogoperasi', [TindakanController::class, 'dialogoperasi']);
     Route::get('/notatindakan', [TindakanController::class, 'notatindakan']);
     Route::post('/simpantindakanpoli', [TindakanController::class, 'simpantindakanpoli']);
-    Route::post('/simpandokumentindakanpoli', [TindakanController::class, 'simpandokumentindakanpoli']);
     Route::post('/hapustindakanpoli', [TindakanController::class, 'hapustindakanpoli']);
+    Route::post('/simpandokumentindakanpoli', [TindakanController::class, 'simpandokumentindakanpoli']);
+    Route::post('/hapusdokumentindakan', [TindakanController::class, 'hapusdokumentindakan']);
 
     Route::post('/ewseklaimrajal_newclaim', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);
     Route::get('/caridiagnosa', [EwseklaimController::class, 'caridiagnosa']);

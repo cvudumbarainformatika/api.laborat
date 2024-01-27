@@ -156,6 +156,17 @@ class TindakanController extends Controller
         }
     }
 
+    public function hapusdokumentindakan(Request $request)
+    {
+        $template = Gbrdokumentindakan::find($request->id);
+        Storage::delete('public/dokumentindakan/' . $template->original);
+        $template->delete();
+
+        $res = Gbrdokumentindakan::find($template->rst73_id);
+
+        return new JsonResponse(['message' => 'success', 'result' => $res->load(['gambardokumens'])], 200);
+    }
+
     public function dialogoperasi()
     {
         $dialogoperasi = Masteroperasi::select(
