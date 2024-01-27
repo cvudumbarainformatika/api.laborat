@@ -7,10 +7,12 @@ use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
+use App\Models\Simrs\Tindakan\Gbrdokumentindakan;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TindakanController extends Controller
 {
@@ -111,6 +113,47 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+
+
+    public function simpandokumentindakanpoli(Request $request)
+    {
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            if (!empty($files)) {
+
+                for ($i = 0; $i < count($files); $i++) {
+                    $file = $files[$i];
+                    $originalname = $file->getClientOriginalName();
+                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->mpemeriksaanfisik_id . '.' . $file->getClientOriginalExtension();
+                    $data = Gbrdokumentindakan::where('original', $originalname)->first();
+                    Storage::delete('public/dokumentindakan/' . $originalname);
+
+                    $gallery = null;
+                    if ($data) {
+                        $gallery = $data;
+                    } else {
+                        $gallery = new Gbrdokumentindakan();
+                    }
+                    $path = $file->storeAs('public/dokumentindakan', $penamaan);
+                    // $target = storage_path() . "/app/public/dokumentindakan/" . $penamaan;
+                    // $type = pathinfo($target, PATHINFO_EXTENSION);
+                    // $data = file_get_contents($target);
+                    // $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    // $base64 = 'data:' . mime_content_type($target) . ';base64,' . base64_encode($target); //ini baru
+
+
+
+                    $gallery->nama = $path;
+                    $gallery->url = 'dokumentindakan/' . $penamaan;
+                    $gallery->original = $originalname;
+                    $gallery->rs73_id = $request->id;
+                    $gallery->save();
+                }
+                $res = Tindakan::find($request->id);
+                return new JsonResponse(['message' => 'success', 'result' => $res->load('gambardokumens')], 200);
+            }
+        }
     }
 
     public function dialogoperasi()
