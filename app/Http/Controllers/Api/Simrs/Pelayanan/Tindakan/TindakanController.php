@@ -125,7 +125,7 @@ class TindakanController extends Controller
                 for ($i = 0; $i < count($files); $i++) {
                     $file = $files[$i];
                     $originalname = $file->getClientOriginalName();
-                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->mpemeriksaanfisik_id . '.' . $file->getClientOriginalExtension();
+                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->rs73_id . '.' . $file->getClientOriginalExtension();
                     $data = Gbrdokumentindakan::where('original', $originalname)->first();
                     Storage::delete('public/dokumentindakan/' . $originalname);
 
@@ -147,11 +147,11 @@ class TindakanController extends Controller
                     $gallery->nama = $path;
                     $gallery->url = 'dokumentindakan/' . $penamaan;
                     $gallery->original = $originalname;
-                    $gallery->rs73_id = $request->id;
+                    $gallery->rs73_id = $request->rs73_id;
                     $gallery->save();
                 }
-                $res = Tindakan::find($request->id);
-                return new JsonResponse(['message' => 'success', 'result' => $res->load('gambardokumens')], 200);
+                $res = Tindakan::find($request->rs73_id);
+                return new JsonResponse(['message' => 'success', 'result' => $res->load(['gambardokumens'])], 200);
             }
         }
     }
