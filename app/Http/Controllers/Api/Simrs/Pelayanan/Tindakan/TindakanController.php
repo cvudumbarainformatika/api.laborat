@@ -159,10 +159,11 @@ class TindakanController extends Controller
     public function hapusdokumentindakan(Request $request)
     {
         $template = Gbrdokumentindakan::find($request->id);
-        Storage::delete('public/dokumentindakan/' . $template->original);
+        // return $template;
+        Storage::delete($template->nama);
         $template->delete();
 
-        $res = Gbrdokumentindakan::find($template->rst73_id);
+        $res = Tindakan::find($template->rs73_id);
 
         return new JsonResponse(['message' => 'success', 'result' => $res->load(['gambardokumens'])], 200);
     }
