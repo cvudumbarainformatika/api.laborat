@@ -311,35 +311,9 @@ class ReturpenjualanController extends Controller
                                 array_push($racik, $temp);
                             }
                         }
-                        // $temp = [
-                        //     'noretur' => $noretur,
-                        //     'noreg' => $request->noreg,
-                        //     'kdobat' => $key['kdobat'],
-                        //     'kandungan' => $key['mobat']['kandungan'],
-                        //     'fornas' => $key['mobat']['status_generik'],
-                        //     'forkit' => $key['mobat']['status_forkid'],
-                        //     'generik' => $key['mobat']['status_fornas'],
-                        //     'kode108' => $key['mobat']['kode108'],
-                        //     'uraian108' => $key['mobat']['uraian108'],
-                        //     'kode50' => $key['mobat']['kode50'],
-                        //     'uraian50' => $key['mobat']['uraian50'],
-                        //     'nopenerimaan' => $key['nopenerimaan'],
-                        //     'jumlah_keluar' => $key['jumlah_keluar'],
-                        //     'jumlah_retur' => $key['jumlah_retur'],
-                        //     'user' => $user['kodesimrs']
-                        // ];
-                        // array_push($racik, $temp);
                     }
                 }
             }
-            // stok kembali ke depo?
-
-            // return new JsonResponse([
-            //     'message' => 'retur disimpan',
-            //     'head' => $isiHead,
-            //     'rinci' => $rinci,
-            //     'racik' => $racik,
-            // ]);
 
             $simpanHeader = Returpenjualan_h::firstOrCreate($noret, $isiHead);
             if (!$simpanHeader) {
