@@ -467,6 +467,7 @@ class DaftarrajalController extends Controller
             'rs15.bahasa as bahasa',
             'rs15.bacatulis as bacatulis',
             'rs15.kdhambatan as kdhambatan',
+            'rs15.rs2 as name',
             'rs222.rs8 as sep',
             'generalconsent.norm as generalconsent',
             // 'bpjs_respon_time.taskid as taskid',

@@ -285,6 +285,23 @@ class AutogenController extends Controller
         // return '$request->all()';
 
         // $data
+
+        $pola = [];
+        $n = request('q');
+
+        for ($i = 1; $i <= $n; $i++) {
+            $rumus = $i / 2 * ($i + 1);
+            $rumus2 = 2 * $i - 1;
+            $data = [
+                'no' => $i,
+                'hasil pola 1' => (int)$rumus,
+                'hasil pola 2' => (int)$rumus2,
+                'kesimpulan' => "jika Angka = {$i}, Maka Hasil yang didapat di pola 1 = {$rumus} dan Hasil yang didapat di pola 2 = {$rumus2}"
+            ];
+            $pola[] = $data;
+        }
+
+        return $pola;
     }
 
     public function create_post(Request $request)
