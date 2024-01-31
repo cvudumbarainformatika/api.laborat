@@ -6,6 +6,8 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use Carbon\Carbon;
@@ -133,80 +135,186 @@ class ReturpenjualanController extends Controller
             return new JsonResponse(['message' => 'Tidak ada Jumlah Obat yang akan diretur'], 410);
         }
 
-        if ($request->noretur == '' || $request->noretur == null) {
-            DB::connection('farmasi')->select('call returpenjualan(@nomor)');
-            $x = DB::connection('farmasi')->table('conter')->select('returpenjualan')->first();
-            $wew = $x->returpenjualan;
-            $noretur = FormatingHelper::penerimaanobat($wew, '-RET-PEN');
-        } else {
-            $noretur = $request->noretur;
-        }
-        $noret = ['noretur' => $noretur];
-
-        $isiHead = [
-            'tgl_retur' => date('Y-m-d H:i:s'),
-            'noresep' => $request->noresep,
-            'noreg' => $request->noreg,
-            'norm' => $request->norm,
-            'kddokter' => $request->kddokter,
-            'kdruangan' => $request->ruangan,
-            'user' => $user['kodesimrs']
-        ];
-
-        $rinci = [];
-        $racik = [];
-
-        if (count($request->listObat)) {
-            foreach ($request->listObat as $key) {
-                if ($key['jumlah_retur'] > 0) {
-                    $temp = [
-                        'noretur' => $noretur,
-                        'noreg' => $request->noreg,
-                        'kdobat' => $key['kdobat'],
-                        'kandungan' => $key['mobat']['kandungan'],
-                        'fornas' => $key['mobat']['status_generik'],
-                        'forkit' => $key['mobat']['status_forkid'],
-                        'generik' => $key['mobat']['status_fornas'],
-                        'kode108' => $key['mobat']['kode108'],
-                        'uraian108' => $key['mobat']['uraian108'],
-                        'kode50' => $key['mobat']['kode50'],
-                        'uraian50' => $key['mobat']['uraian50'],
-                        'nopenerimaan' => $key['nopenerimaan'],
-                        'jumlah_keluar' => $key['jumlah_keluar'],
-                        'jumlah_retur' => $key['jumlah_retur'],
-                        'user' => $user['kodesimrs']
-                    ];
-                    array_push($rinci, $temp);
-                }
-            }
-        }
-        if (count($request->rincianracik)) {
-            foreach ($request->rincianracik as $key) {
-                if ($key['jumlah_retur'] > 0) {
-                    $temp = [
-                        'noretur' => $noretur,
-                        'noreg' => $request->noreg,
-                        'kdobat' => $key['kdobat'],
-                        'kandungan' => $key['mobat']['kandungan'],
-                        'fornas' => $key['mobat']['status_generik'],
-                        'forkit' => $key['mobat']['status_forkid'],
-                        'generik' => $key['mobat']['status_fornas'],
-                        'kode108' => $key['mobat']['kode108'],
-                        'uraian108' => $key['mobat']['uraian108'],
-                        'kode50' => $key['mobat']['kode50'],
-                        'uraian50' => $key['mobat']['uraian50'],
-                        'nopenerimaan' => $key['nopenerimaan'],
-                        'jumlah_keluar' => $key['jumlah_keluar'],
-                        'jumlah_retur' => $key['jumlah_retur'],
-                        'user' => $user['kodesimrs']
-                    ];
-                    array_push($racik, $temp);
-                }
-            }
-        }
-        // stok kembali ke gudang atau ke depo?
         try {
+
             DB::beginTransaction();
+            if ($request->noretur == '' || $request->noretur == null) {
+                DB::connection('farmasi')->select('call returpenjualan(@nomor)');
+                $x = DB::connection('farmasi')->table('conter')->select('returpenjualan')->first();
+                $wew = $x->returpenjualan;
+                $noretur = FormatingHelper::penerimaanobat($wew, '-RET-PEN');
+            } else {
+                $noretur = $request->noretur;
+            }
+            $noret = ['noretur' => $noretur];
+
+            $isiHead = [
+                'tgl_retur' => date('Y-m-d H:i:s'),
+                'noresep' => $request->noresep,
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'kddokter' => $request->kddokter,
+                'kdruangan' => $request->ruangan,
+                'user' => $user['kodesimrs']
+            ];
+
+            $rinci = [];
+            $racik = [];
+
+            if (count($request->listObat)) {
+                foreach ($request->listObat as $key) {
+                    if ($key['jumlah_retur'] > 0) {
+                        $obats = Resepkeluarrinci::where('noreg', $request->noreg)
+                            ->where('noresep', $request->noresep)
+                            ->where('kdobat', $key['kdobat'])
+                            ->orderBy('id', 'DESC')
+                            ->get();
+
+                        $jum = $key['jumlah_retur'];
+                        $index = 0;
+
+
+                        while ($jum > 0) {
+                            $ada = (int)$obats[$index]->jumlah;
+                            if ($ada < $jum) {
+                                $temp = [
+                                    'noretur' => $noretur,
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'kdobat' => $key['kdobat'],
+                                    'kandungan' => $key['mobat']['kandungan'],
+                                    'fornas' => $key['mobat']['status_generik'],
+                                    'forkit' => $key['mobat']['status_forkid'],
+                                    'generik' => $key['mobat']['status_fornas'],
+                                    'kode108' => $key['mobat']['kode108'],
+                                    'uraian108' => $key['mobat']['uraian108'],
+                                    'kode50' => $key['mobat']['kode50'],
+                                    'uraian50' => $key['mobat']['uraian50'],
+                                    'nopenerimaan' => $obats[$index]->nopenerimaan,
+                                    'jumlah_keluar' => $ada,
+                                    'jumlah_retur' => $ada,
+                                    'harga_beli' => $key['harga_beli'],
+                                    'hpp' => $key['hpp'],
+                                    'harga_jual' => $key['harga_jual'],
+                                    'nilai_r' => $key['nilai_r'],
+                                    'user' => $user['kodesimrs'],
+                                    'created_at' => date('Y-m-d H:i:s'),
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ];
+
+                                $sisa = $jum - $ada;
+                                $index += 1;
+                                $jum = $sisa;
+                                array_push($rinci, $temp);
+                            } else {
+                                $temp = [
+                                    'noretur' => $noretur,
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'kdobat' => $key['kdobat'],
+                                    'kandungan' => $key['mobat']['kandungan'],
+                                    'fornas' => $key['mobat']['status_generik'],
+                                    'forkit' => $key['mobat']['status_forkid'],
+                                    'generik' => $key['mobat']['status_fornas'],
+                                    'kode108' => $key['mobat']['kode108'],
+                                    'uraian108' => $key['mobat']['uraian108'],
+                                    'kode50' => $key['mobat']['kode50'],
+                                    'uraian50' => $key['mobat']['uraian50'],
+                                    'nopenerimaan' => $obats[$index]->nopenerimaan,
+                                    'jumlah_keluar' => $ada,
+                                    'jumlah_retur' => $jum,
+                                    'harga_beli' => $key['harga_beli'],
+                                    'hpp' => $key['hpp'],
+                                    'harga_jual' => $key['harga_jual'],
+                                    'nilai_r' => $key['nilai_r'],
+                                    'user' => $user['kodesimrs'],
+                                    'created_at' => date('Y-m-d H:i:s'),
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ];
+                                $jum = 0;
+                                array_push($rinci, $temp);
+                            }
+                        }
+                    }
+                }
+            }
+            if (count($request->rincianracik)) {
+                foreach ($request->rincianracik as $key) {
+                    if ($key['jumlah_retur'] > 0) {
+                        $jum = $key['jumlah_retur'];
+                        $index = 0;
+
+                        $obats = Resepkeluarrinciracikan::where('noreg', $request->noreg)
+                            ->where('noresep', $request->noresep)
+                            ->where('kdobat', $key['kdobat'])
+                            ->orderBy('id', 'DESC')
+                            ->get();
+
+                        while ($jum > 0) {
+                            $ada = (int)$obats[$index]->jumlah;
+                            if ($ada < $jum) {
+                                $temp = [
+                                    'noretur' => $noretur,
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'kdobat' => $key['kdobat'],
+                                    'kandungan' => $key['mobat']['kandungan'],
+                                    'fornas' => $key['mobat']['status_generik'],
+                                    'forkit' => $key['mobat']['status_forkid'],
+                                    'generik' => $key['mobat']['status_fornas'],
+                                    'kode108' => $key['mobat']['kode108'],
+                                    'uraian108' => $key['mobat']['uraian108'],
+                                    'kode50' => $key['mobat']['kode50'],
+                                    'uraian50' => $key['mobat']['uraian50'],
+                                    'nopenerimaan' => $obats[$index]->nopenerimaan,
+                                    'jumlah_keluar' => $ada,
+                                    'jumlah_retur' => $ada,
+                                    'harga_beli' => $key['harga_beli'],
+                                    'hpp' => $key['hpp'],
+                                    'harga_jual' => $key['harga_jual'],
+                                    'nilai_r' => $key['nilai_r'],
+                                    'user' => $user['kodesimrs'],
+                                    'created_at' => date('Y-m-d H:i:s'),
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ];
+
+                                $sisa = $jum - $ada;
+                                $index += 1;
+                                $jum = $sisa;
+                                array_push($racik, $temp);
+                            } else {
+                                $temp = [
+                                    'noretur' => $noretur,
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'kdobat' => $key['kdobat'],
+                                    'kandungan' => $key['mobat']['kandungan'],
+                                    'fornas' => $key['mobat']['status_generik'],
+                                    'forkit' => $key['mobat']['status_forkid'],
+                                    'generik' => $key['mobat']['status_fornas'],
+                                    'kode108' => $key['mobat']['kode108'],
+                                    'uraian108' => $key['mobat']['uraian108'],
+                                    'kode50' => $key['mobat']['kode50'],
+                                    'uraian50' => $key['mobat']['uraian50'],
+                                    'nopenerimaan' => $obats[$index]->nopenerimaan,
+                                    'jumlah_keluar' => $ada,
+                                    'jumlah_retur' => $jum,
+                                    'harga_beli' => $key['harga_beli'],
+                                    'hpp' => $key['hpp'],
+                                    'harga_jual' => $key['harga_jual'],
+                                    'nilai_r' => $key['nilai_r'],
+                                    'user' => $user['kodesimrs'],
+                                    'created_at' => date('Y-m-d H:i:s'),
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ];
+                                $jum = 0;
+                                array_push($racik, $temp);
+                            }
+                        }
+                    }
+                }
+            }
+
             $simpanHeader = Returpenjualan_h::firstOrCreate($noret, $isiHead);
             if (!$simpanHeader) {
                 return new JsonResponse(['message' => 'Header Data Gagal Disimpan'], 410);
@@ -222,11 +330,23 @@ class ReturpenjualanController extends Controller
                 $permintaanHead->flag = '4';
                 $permintaanHead->save();
             }
-            DB::commit();
+
             $simpanHeader->load('rinci');
+            $returRinci = Returpenjualan_r::select('kdobat')->where('noretur', $simpanHeader->noretur)->distinct()->get();
+            foreach ($returRinci as $key) {
+                $data = (object) [];
+                $data->koderuang = $request->depo;
+                $data->kdobat = $key['kdobat'];
+                $data->noresep = $simpanHeader->noresep;
+
+                $updatestok = StokrealController::updatestokdepo($data);
+            }
+
+            DB::commit();
             return new JsonResponse([
                 'message' => 'retur disimpan',
-                'data' => $simpanHeader
+                'data' => $simpanHeader,
+                'retur rinci' => $returRinci
             ]);
         } catch (\Exception $e) {
             // May day,  rollback!!! rollback!!!

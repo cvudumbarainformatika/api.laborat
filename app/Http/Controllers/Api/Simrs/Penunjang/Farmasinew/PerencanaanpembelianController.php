@@ -377,6 +377,7 @@ class PerencanaanpembelianController extends Controller
                         ->groupBy('kdobat');
                 },
             ])
+            ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
             ->paginate(10);
 
         return new JsonResponse($data);
