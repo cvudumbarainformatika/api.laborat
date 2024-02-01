@@ -26,9 +26,22 @@ class DistribusigudangController extends Controller
                 [
                     'permintaanrinci.masterobat',
                     'user:id,nip,nama',
-                    'permintaanrinci.stokreal' => function ($stokdendiri) {
-                        $stokdendiri->select('kdobat', 'kdruang', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
-                            ->groupBy('kdruang');
+                    'permintaanrinci' => function ($rinci) {
+                        $rinci->with([
+                            'stokreal' => function ($stokdendiri) {
+                                $stokdendiri
+                                    // ->selectRaw('SUM(CAST(jumlah AS DECIMAL)) AS stoksendiri')
+                                    ->select(
+                                        'kdobat',
+                                        'kdruang',
+                                        'jumlah',
+                                        // DB::raw('jumlah as stoksendiri')
+                                    );
+                                // ->selectRaw('sum(jumlah) as stoksendiri')
+                                // ->selectRaw('sum(jumlah) as stoksendiri')
+                                // ->groupBy('kdruang');
+                            }
+                        ]);
                     },
                     'mutasigudangkedepo'
                 ]
@@ -45,9 +58,22 @@ class DistribusigudangController extends Controller
 
             $listpermintaandepo = Permintaandepoheder::with([
                 'permintaanrinci.masterobat', 'user:id,nip,nama',
-                'permintaanrinci.stokreal' => function ($stokdendiri) {
-                    $stokdendiri->select('kdobat', 'kdruang', DB::raw('sum(stokreal.jumlah) as stokdendiri'))
-                        ->groupBy('kdruang');
+                'permintaanrinci' => function ($rinci) {
+                    $rinci->with([
+                        'stokreal' => function ($stokdendiri) {
+                            $stokdendiri
+                                // ->selectRaw('SUM(CAST(jumlah AS DECIMAL)) AS stoksendiri')
+                                ->select(
+                                    'kdobat',
+                                    'kdruang',
+                                    'jumlah',
+                                    // DB::raw('jumlah as stoksendiri')
+                                );
+                            // ->selectRaw('sum(jumlah) as stoksendiri');
+                            // ->selectRaw('sum(jumlah) as stoksendiri')
+                            // ->groupBy('kdruang');
+                        }
+                    ]);
                 },
                 'mutasigudangkedepo'
             ])

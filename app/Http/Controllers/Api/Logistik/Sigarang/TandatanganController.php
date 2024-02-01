@@ -45,7 +45,8 @@ class TandatanganController extends Controller
     public function getPtk()
     {
         $data = Pegawai::when(request('ptk') ?? function ($wew) {
-            $wew->where('role_id', 2);
+            // $wew->where('role_id', 2);
+            $wew->limit(20);
         }, function ($anu) {
             $anu->where('nama', 'LIKE', '%' . request('ptk') . '%')
                 ->where('role_id', 2);
