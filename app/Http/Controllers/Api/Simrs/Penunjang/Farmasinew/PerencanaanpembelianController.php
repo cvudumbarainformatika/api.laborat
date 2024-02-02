@@ -186,6 +186,7 @@ class PerencanaanpembelianController extends Controller
         )->with(
             [
                 'gudangdepo:kode,nama',
+                'ruang:kode,uraian',
                 // 'gudanggudangdepo.minmax'
             ]
         )
@@ -197,7 +198,7 @@ class PerencanaanpembelianController extends Controller
 
         $viewrinciminmax = Mminmaxobat::where('kd_obat', request('kdobat'))
             // ->where('kd_ruang', 'like', '%GD%')
-            ->with('gudang:kode,nama')
+            ->with('gudang:kode,nama', 'ruang:kode,uraian')
             ->get();
         return new JsonResponse([
             'viewrincistok' => $viewrinci,
@@ -305,7 +306,7 @@ class PerencanaanpembelianController extends Controller
         } else {
             $gudang = request('kdruang');
         }
-        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat')
+        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat', 'rincian.stok')
             ->wherein('kd_ruang', $gudang)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')->paginate(request('per_page'));
@@ -381,5 +382,21 @@ class PerencanaanpembelianController extends Controller
             ->paginate(10);
 
         return new JsonResponse($data);
+    }
+
+    public function updateRinci(Request $request)
+    {
+
+        return new JsonResponse($request->all());
+    }
+    public function hapusHead(Request $request)
+    {
+
+        return new JsonResponse($request->all());
+    }
+    public function hapusRinci(Request $request)
+    {
+
+        return new JsonResponse($request->all());
     }
 }

@@ -174,6 +174,7 @@ class PlaningController extends Controller
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                         }
                         $simpanspri = self::simpanspri($request, $groupsistembayar, $nospri);
+                        $simpanrekomdpjp = self::simpan_rekom_dpjp($request);
                         $simpanakhir = self::simpanakhir($request);
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
@@ -198,6 +199,7 @@ class PlaningController extends Controller
                     if ($simpanspri === 500) {
                         return new JsonResponse(['message' => 'Maaf, Data Gagal Disimpan Di RS...!!!'], 500);
                     }
+                    $simpanrekomdpjp = self::simpan_rekom_dpjp($request);
                     $simpanakhir = self::simpanakhir($request);
                     $data = $this->getRespPlanning($request->noreg);
                     return new JsonResponse([
@@ -535,7 +537,7 @@ class PlaningController extends Controller
                 'noDpjp' => $nomor,
                 'noRm' => $request->norm,
                 'noreg' => $request->noreg,
-                'kdSaran' => $request->kdSaran,
+                'kdSaran' => $request->kdSaran ?? '',
                 'saran' => $saran,
                 'ket' => $request->ket ?? '',
                 'tglInsert' => date('Y-m-d'),
