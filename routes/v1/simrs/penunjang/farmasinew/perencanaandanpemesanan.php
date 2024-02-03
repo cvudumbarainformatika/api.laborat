@@ -16,7 +16,7 @@ Route::group([
     Route::get('/listrencanabeli', [PerencanaanpembelianController::class, 'listrencanabeli']);
     Route::post('/kuncirencana', [PerencanaanpembelianController::class, 'kuncirencana']);
 
-    Route::post('/update-rinci', [PerencanaanpembelianController::class, 'updateRinci']);
-    Route::post('/hapus-head', [PerencanaanpembelianController::class, 'hapusHead']);
-    Route::post('/hapus-rinci', [PerencanaanpembelianController::class, 'hapusRinci']);
+    Route::post('/rencana/update-rinci', [PerencanaanpembelianController::class, 'updateRinci']);
+    Route::post('/rencana/hapus-head', [PerencanaanpembelianController::class, 'hapusHead']);
+    Route::post('/rencana/hapus-rinci', [PerencanaanpembelianController::class, 'hapusRinci']);
 });

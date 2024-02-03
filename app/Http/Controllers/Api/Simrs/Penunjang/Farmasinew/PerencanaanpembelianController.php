@@ -227,13 +227,13 @@ class PerencanaanpembelianController extends Controller
 
         $cekminmax = Mminmaxobat::select(DB::raw('sum(max) as max'))
             ->where('kd_obat', $request->kdobat)
-            ->where('kd_ruang', 'like', '%GD%')
+            // ->where('kd_ruang', 'like', '%GD%')
             ->groupby('kd_obat')->first();
         $maxobat = (int) $cekminmax['max'] ?? 0;
 
         $cekstok = Stokrel::select(DB::raw('sum(jumlah) as jumlah'))
             ->where('kdobat', $request->kdobat)
-            ->where('kdruang', 'like', '%GD%')
+            // ->where('kdruang', 'like', '%GD%')
             ->groupby('kdobat')->first();
         $stok = $cekstok['jumlah'] ?? 0;
         $max = $maxobat - $stok;
@@ -386,17 +386,57 @@ class PerencanaanpembelianController extends Controller
 
     public function updateRinci(Request $request)
     {
-
-        return new JsonResponse($request->all());
+        $rinc = RencanabeliR::find($request->id);
+        if (!$rinc) {
+            return new JsonResponse([
+                'message' => 'Data Tidak ditemukan'
+            ], 410);
+        }
+        $rinc->jumlahdirencanakan = $request->jumlahdirencanakan;
+        $rinc->save();
+        return new JsonResponse([
+            'message' => 'Data Berhasil Di Update'
+        ]);
     }
     public function hapusHead(Request $request)
     {
-
-        return new JsonResponse($request->all());
+        $head = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)->first();
+        $rinc = RencanabeliR::where('no_rencbeliobat', $request->no_rencbeliobat)->get();
+        if (!$head) {
+            return new JsonResponse([
+                'message' => 'Data Tidak ditemukan'
+            ], 410);
+        }
+        if (count($rinc) > 0) {
+            foreach ($rinc as $key) {
+                $key->delete();
+            }
+        }
+        if ($head) {
+            $head->delete();
+        }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus'
+        ]);
     }
     public function hapusRinci(Request $request)
     {
-
-        return new JsonResponse($request->all());
+        $rinc = RencanabeliR::find($request->id);
+        if (!$rinc) {
+            return new JsonResponse([
+                'message' => 'Data Tidak ditemukan'
+            ], 410);
+        }
+        if ($rinc) {
+            $rinc->delete();
+        }
+        $rincAll = RencanabeliR::where('no_rencbeliobat', $request->no_rencbeliobat)->get();
+        if (count($rincAll) === 0) {
+            $head = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)->first();
+            $head->delete();
+        }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus'
+        ]);
     }
 }
