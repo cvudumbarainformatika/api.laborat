@@ -309,6 +309,25 @@ class PerencanaanpembelianController extends Controller
         $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat', 'rincian.stok')
             ->wherein('kd_ruang', $gudang)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+            ->when(request('flag'), function ($x) {
+                $x->whereIn('flag', request('flag'));
+            })
+            ->orderBy('tgl', 'desc')->paginate(request('per_page'));
+        return new JsonResponse($rencanabeli);
+    }
+    public function listVerif()
+    {
+        if (request('kdruang') == '' || request('kdruang') == null) {
+            $gudang = ['Gd-05010100', 'Gd-03010100'];
+        } else {
+            $gudang = request('kdruang');
+        }
+        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat', 'rincian.stok', 'gudang')
+            ->wherein('kd_ruang', $gudang)
+            ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+            ->when(request('flag'), function ($x) {
+                $x->whereIn('flag', request('flag'));
+            })
             ->orderBy('tgl', 'desc')->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }

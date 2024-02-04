@@ -19,4 +19,6 @@ Route::group([
     Route::post('/rencana/update-rinci', [PerencanaanpembelianController::class, 'updateRinci']);
     Route::post('/rencana/hapus-head', [PerencanaanpembelianController::class, 'hapusHead']);
     Route::post('/rencana/hapus-rinci', [PerencanaanpembelianController::class, 'hapusRinci']);
+
+    Route::get('/list-verif', [PerencanaanpembelianController::class, 'listVerif']);
 });

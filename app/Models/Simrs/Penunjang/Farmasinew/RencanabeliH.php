@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Sigarang\Gudang;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -22,10 +23,13 @@ class RencanabeliH extends Model
         return $this->hasMany(RencanabeliR::class, 'no_rencbeliobat', 'no_rencbeliobat');
     }
 
-
     public function pihakketiga()
     {
         return $this->hasOne(Mpihakketiga::class, 'kode', 'kodepbf');
+    }
+    public function gudang()
+    {
+        return $this->hasOne(Gudang::class, 'kode', 'kd_ruang');
     }
 
     public function pemesananrinci()
