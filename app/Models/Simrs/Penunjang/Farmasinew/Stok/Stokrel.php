@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Stok;
 
+use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
@@ -39,5 +41,13 @@ class Stokrel extends Model
     public function minmax()
     {
         return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kdobat');
+    }
+    public function gudang()
+    {
+        return $this->belongsTo(Gudang::class, 'kdruang', 'kode');
+    }
+    public function ruang()
+    {
+        return $this->belongsTo(Ruang::class, 'kdruang', 'kode');
     }
 }

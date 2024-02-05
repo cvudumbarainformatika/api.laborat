@@ -28,4 +28,8 @@ class RencanabeliR extends Model
     {
         return $this->hasMany(Stokrel::class, 'kdobat', 'kdobat');
     }
+    public function minmax()
+    {
+        return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kdobat');
+    }
 }

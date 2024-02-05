@@ -193,6 +193,7 @@ class PerencanaanpembelianController extends Controller
             ->leftjoin('new_masterobat', 'stokreal.kdobat', 'new_masterobat.kd_obat')
             ->groupby('stokreal.kdobat', 'stokreal.kdruang')
             ->where('stokreal.kdobat', request('kdobat'))
+            ->where('stokreal.flag', '')
             // ->where('stokreal.kdruang', 'like', '%GD%')
             ->get();
 
@@ -322,13 +323,28 @@ class PerencanaanpembelianController extends Controller
         } else {
             $gudang = request('kdruang');
         }
-        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat', 'rincian.stok', 'gudang')
+        $rencanabeli = RencanabeliH::with([
+            'rincian' => function ($r) {
+                $r->with([
+                    'minmax',
+                    'mobat',
+                    'stok' => function ($s) {
+                        $s->with('gudang:kode,nama', 'ruang:kode,uraian')
+                            ->where('jumlah', '>', 0)
+                            ->where('flag', '');
+                    }
+                ]);
+            },
+            'gudang'
+        ])
             ->wherein('kd_ruang', $gudang)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
-            ->orderBy('tgl', 'desc')->paginate(request('per_page'));
+            ->orderBy('flag', 'asc')
+            ->orderBy('tgl', 'desc')
+            ->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }
 
