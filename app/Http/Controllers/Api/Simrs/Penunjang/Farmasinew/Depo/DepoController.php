@@ -215,4 +215,43 @@ class DepoController extends Controller
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
     }
+
+    public function listMutasi()
+    {
+        $gudang = request('kdgudang');
+        $nopermintaan = request('no_permintaan');
+        $flag = request('flag');
+        $depo = request('kddepo');
+        $listpermintaandepo = Permintaandepoheder::with([
+            'permintaanrinci.masterobat',
+            'user:id,nip,nama',
+            'permintaanrinci' => function ($rinci) {
+                $rinci->with([
+                    'stokreal' => function ($stokdendiri) {
+                        $stokdendiri
+                            ->select(
+                                'kdobat',
+                                'kdruang',
+                                'jumlah',
+                            );
+                    }
+                ]);
+            },
+            'mutasigudangkedepo'
+        ])
+            ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+            ->where('flag', '!=', '')
+            ->when($gudang, function ($wew) use ($gudang) {
+                $wew->whereIn('tujuan', [$gudang]);
+            })
+            ->when($flag, function ($wew) use ($flag) {
+                $wew->where('flag', $flag);
+            })
+            ->when($depo, function ($wew) use ($depo) {
+                $wew->where('dari', $depo);
+            })
+            ->orderBY('tgl_permintaan', 'desc')
+            ->paginate(request('per_page'));
+        return new JsonResponse($listpermintaandepo);
+    }
 }
