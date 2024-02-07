@@ -33,6 +33,7 @@ class AnamnesisController extends Controller
                     'skor' => $request->skor ?? 0,
                     'scorenyeri' => $request->skornyeri ?? 0,
                     'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
+                    //    'keteranganscorenyeri' => $request->riwayatpekerjaan ?? '',
                     'user'  => $kdpegsimrs,
                 ]
             );
