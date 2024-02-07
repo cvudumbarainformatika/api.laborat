@@ -7,23 +7,30 @@ use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
+use App\Models\Simrs\Tindakan\Gbrdokumentindakan;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TindakanController extends Controller
 {
     public function dialogtindakanpoli()
     {
         $dialogtindakanpoli = Mtindakan::select(
-            'rs1 as kdtindakan',
-            'rs2 as tindakan',
-            'rs8 as sarana',
-            'rs9 as pelayanan',
-            DB::raw('rs8 +rs9 as tarif')
+            'rs30.rs1',
+            'rs30.rs1 as kdtindakan',
+            'rs30.rs2 as tindakan',
+            'rs30.rs8 as sarana',
+            'rs30.rs9 as pelayanan',
+            DB::raw('rs30.rs8 + rs30.rs9 as tarif'),
+            'prosedur_mapping.icd9'
         )
-            ->where('rs2', 'Like', '%' . request('tindakan') . '%')
+            ->leftjoin('prosedur_mapping', 'rs30.rs1', '=', 'prosedur_mapping.kdMaster')
+            // ->with('maapingprocedure.prosedur')
+            ->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
+            ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
     }
@@ -106,6 +113,59 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+
+
+    public function simpandokumentindakanpoli(Request $request)
+    {
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
+            if (!empty($files)) {
+
+                for ($i = 0; $i < count($files); $i++) {
+                    $file = $files[$i];
+                    $originalname = $file->getClientOriginalName();
+                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->rs73_id . '.' . $file->getClientOriginalExtension();
+                    $data = Gbrdokumentindakan::where('original', $originalname)->first();
+                    Storage::delete('public/dokumentindakan/' . $originalname);
+
+                    $gallery = null;
+                    if ($data) {
+                        $gallery = $data;
+                    } else {
+                        $gallery = new Gbrdokumentindakan();
+                    }
+                    $path = $file->storeAs('public/dokumentindakan', $penamaan);
+                    // $target = storage_path() . "/app/public/dokumentindakan/" . $penamaan;
+                    // $type = pathinfo($target, PATHINFO_EXTENSION);
+                    // $data = file_get_contents($target);
+                    // $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    // $base64 = 'data:' . mime_content_type($target) . ';base64,' . base64_encode($target); //ini baru
+
+
+
+                    $gallery->nama = $path;
+                    $gallery->url = 'dokumentindakan/' . $penamaan;
+                    $gallery->original = $originalname;
+                    $gallery->rs73_id = $request->rs73_id;
+                    $gallery->save();
+                }
+                $res = Tindakan::find($request->rs73_id);
+                return new JsonResponse(['message' => 'success', 'result' => $res->load(['gambardokumens'])], 200);
+            }
+        }
+    }
+
+    public function hapusdokumentindakan(Request $request)
+    {
+        $template = Gbrdokumentindakan::find($request->id);
+        // return $template;
+        Storage::delete($template->nama);
+        $template->delete();
+
+        $res = Tindakan::find($template->rs73_id);
+
+        return new JsonResponse(['message' => 'success', 'result' => $res->load(['gambardokumens'])], 200);
     }
 
     public function dialogoperasi()

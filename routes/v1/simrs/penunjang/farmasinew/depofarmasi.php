@@ -44,7 +44,10 @@ Route::group([
     Route::get('/conterracikan', [EresepController::class, 'conterracikan']);
     Route::post('/eresepobatkeluar', [EresepController::class, 'eresepobatkeluar']);
     Route::post('/hapus-permintaan-obat', [EresepController::class, 'hapusPermintaanObat']);
+    Route::post('/terima-resep', [EresepController::class, 'terimaResep']);
+    Route::post('/resep-selesai', [EresepController::class, 'resepSelesai']);
 
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
+    Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
 });

@@ -15,6 +15,7 @@ class DialogrencanapemesananController extends Controller
     {
         $rencanabeli = RencanabeliH::select(
             'perencana_pebelian_h.no_rencbeliobat as noperencanaan',
+            'perencana_pebelian_h.kd_ruang',
             'perencana_pebelian_h.tgl as tglperencanaan',
             'perencana_pebelian_r.kdobat as kdobat',
             'perencana_pebelian_r.stok_real_gudang as stokgudang',

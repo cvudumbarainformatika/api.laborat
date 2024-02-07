@@ -265,7 +265,7 @@ class LaporanMutasiGudangController extends Controller
             ]);
 
 
-        $data = $barang->orderBy('kode_108', 'ASC')->get();
+        $data = $barang->orderBy('kode_108', 'ASC')->orderBy('nama', 'ASC')->get();
         // foreach ($data as $barang) {
         //     foreach ($barang->detailPemakaianruangan as $det) {
         //         $det->append('harga');

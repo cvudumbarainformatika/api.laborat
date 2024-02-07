@@ -56,17 +56,19 @@ class MinmaxobatController extends Controller
     {
         $id = Mruangan::where('uraian', 'LIKE', '%' . request('r') . '%')->pluck('kode');
         $gd = Gudang::where('gudang', '<>', '')->where('nama', 'LIKE', '%' . request('r') . '%')->pluck('kode');
-
+        $ob = Mobatnew::where('nama_obat', 'LIKE', '%' . request('o') . '%')->where('flag', '')->pluck('kd_obat');
         $qwerty = Mminmaxobat::with([
             'obat:kd_obat,nama_obat as namaobat,satuan_k',
             'ruanganx:kode,uraian as namaruangan',
             'gudang:kode,nama as namaruangan'
         ])
-            ->whereHas('obat', function ($e) {
-                $e->where('new_masterobat.nama_obat', 'LIKE', '%' . request('o') . '%')->where('flag', '');
+            ->where(function ($f) use ($id, $gd) {
+                $f->whereIn('kd_ruang', $id)
+                    ->orWhereIn('kd_ruang',  $gd);
             })
-            ->whereIn('kd_ruang', $id)
-            ->orWhereIn('kd_ruang',  $gd)
+            ->when(count($ob), function ($a) use ($ob) {
+                $a->whereIn('kd_obat', $ob);
+            })
             ->paginate(request('per_page'));
         return new JsonResponse($qwerty, 200);
     }
