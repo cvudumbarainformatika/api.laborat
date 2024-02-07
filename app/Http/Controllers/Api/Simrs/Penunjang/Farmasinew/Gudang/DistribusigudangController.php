@@ -21,6 +21,7 @@ class DistribusigudangController extends Controller
         $gudang = request('kdgudang');
         $nopermintaan = request('no_permintaan');
         $flag = request('flag');
+        $depo = request('kddepo');
         if ($gudang === '' || $gudang === null) {
             $listpermintaandepo = Permintaandepoheder::with(
                 [
@@ -50,6 +51,9 @@ class DistribusigudangController extends Controller
                 ->where('flag', '!=', '')
                 ->when($flag, function ($wew) use ($flag) {
                     $wew->where('flag', $flag);
+                })
+                ->when($depo, function ($wew) use ($depo) {
+                    $wew->where('dari', $depo);
                 })
                 ->orderBY('tgl_permintaan', 'desc')
                 ->paginate(request('per_page'));
@@ -82,6 +86,9 @@ class DistribusigudangController extends Controller
                 ->where('flag', '!=', '')
                 ->when($flag, function ($wew) use ($flag) {
                     $wew->where('flag', $flag);
+                })
+                ->when($depo, function ($wew) use ($depo) {
+                    $wew->where('dari', $depo);
                 })
                 ->orderBY('tgl_permintaan', 'desc')
                 ->paginate(request('per_page'));
