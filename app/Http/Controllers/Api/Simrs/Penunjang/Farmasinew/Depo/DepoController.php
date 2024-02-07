@@ -45,6 +45,7 @@ class DepoController extends Controller
                 $wew->where('stokreal.kdruang', $gudang);
             })
             ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
+            ->where('stokreal.jumlah', '>', 0)
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
@@ -58,7 +59,9 @@ class DepoController extends Controller
         $stokdewe = Stokrel::select('kdobat', DB::raw('sum(stokreal.jumlah) as  jumlah'), 'kdruang')
             ->when($depo, function ($wew) use ($depo) {
                 $wew->where('stokreal.kdruang', $depo);
-            })->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+            })
+            ->where('jumlah', '>', 0)
+            ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
 
         return new JsonResponse(
