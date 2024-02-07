@@ -38,8 +38,8 @@ class HistorypasienfullController extends Controller
             ->with(
                 [
                     'anamnesis',
-                    'pemeriksaanfisik' => function ($a) {
-                        $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                    'pemeriksaanfisik' => function ($p) {
+                        $p->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                             ->orderBy('id', 'DESC');
                     },
                     'diagnosa' => function ($a) {
