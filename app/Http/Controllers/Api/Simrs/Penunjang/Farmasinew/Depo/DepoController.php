@@ -105,7 +105,7 @@ class DepoController extends Controller
                 'no_permintaan' => $nopermintaandepo,
             ],
             [
-                'tgl_permintaan' => $request->tgl_permintaan ?? date('Y-m-d H:i:s'),
+                'tgl_permintaan' => $request->tgl_permintaan ? $request->tgl_permintaan . date(' H:i:s') : date('Y-m-d H:i:s'),
                 'dari' => $request->dari,
                 'tujuan' => $request->tujuan,
                 'user' => auth()->user()->pegawai_id
@@ -240,18 +240,30 @@ class DepoController extends Controller
             'mutasigudangkedepo'
         ])
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
-            ->where('flag', '!=', '')
             ->when($gudang, function ($wew) use ($gudang) {
-                $wew->whereIn('tujuan', [$gudang]);
+                $all = ['Gd-02010104', 'Gd-05010101', 'Gd-04010103', 'Gd-03010101', 'Gd-04010102'];
+                if ($gudang === 'all') {
+                    $wew->whereIn('tujuan', $all);
+                } else {
+                    $wew->where('tujuan', $gudang);
+                }
             })
             ->when($flag, function ($wew) use ($flag) {
-                $wew->where('flag', $flag);
+                $all = ['', '1', '2', '4'];
+                if ($flag === '5') {
+                    $wew->whereIn('flag', $all);
+                } else if ($flag === '0') {
+                    $wew->where('flag', '');
+                } else {
+                    $wew->where('flag', $flag);
+                }
             })
             ->when($depo, function ($wew) use ($depo) {
                 $wew->where('dari', $depo);
             })
             ->orderBY('tgl_permintaan', 'desc')
             ->paginate(request('per_page'));
+        // $listpermintaandepo['req'] = request()->all();
         return new JsonResponse($listpermintaandepo);
     }
 }
