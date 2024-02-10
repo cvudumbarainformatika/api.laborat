@@ -218,6 +218,7 @@ class DepoController extends Controller
 
     public function listMutasi()
     {
+        // return request()->all();
         $gudang = request('kdgudang');
         $nopermintaan = request('no_permintaan');
         $flag = request('flag');
@@ -249,7 +250,7 @@ class DepoController extends Controller
                 }
             })
             ->when($flag, function ($wew) use ($flag) {
-                $all = ['', '1', '2', '4'];
+                $all = ['', '1', '2', '3', '4'];
                 if ($flag === '5') {
                     $wew->whereIn('flag', $all);
                 } else if ($flag === '0') {
