@@ -96,10 +96,6 @@ class GeneralconsentController extends Controller
         }
 
 
-
-
-        // file_put_contents($file, $image_base64);
-        // Storage::delete('public/' . $folderPath . $imageName);
         Storage::disk('public')->put($file, $image_base64);
 
         // $data = file_get_contents(Storage::disk('public')->get($file));
@@ -109,6 +105,7 @@ class GeneralconsentController extends Controller
     public function createTtdPetugas($img, $norm, $nik)
     {
         $folderPath = "ttdpetugas/";
+
         $cek = Generalconsent::where('norm', '=', $norm)->first();
         $image_parts = explode(";base64,", $img);
         if (count($image_parts) <= 2) {
