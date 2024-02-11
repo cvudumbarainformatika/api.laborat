@@ -179,12 +179,23 @@ class BastController extends Controller
     public function listBastByKwitansi()
     {
 
+        $res1 = Penerimaan::select('no_bast')
+            ->distinct()
+            ->where('no_bast', '<>', '')
+            ->orderBy('tanggal_bast', 'DESC')
+            // ->get();
+            ->paginate(request('per_page'));
+
+        $col = collect($res1);
+        $data = $col['data'];
+
         $result = Penerimaan::where('no_bast', '<>', '')
             // ->whereNull('tanggal_pembayaran')
             ->with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
-            ->orderBy('no_bast')
-            // ->get();
-            ->paginate(request('per_page'));
+            ->whereIn('no_bast', $data)
+            // ->orderBy('tanggal_bast', 'DESC')
+            ->get();
+        // ->paginate(request('per_page'));
 
         $groupedResult = $result->groupBy('no_bast')->map(function ($group) {
             return $group->map(function ($item) {
@@ -207,7 +218,9 @@ class BastController extends Controller
         $anu = collect($result);
         return new JsonResponse([
             'data' => $formattedResult,
-            'meta' => $anu->except('data'),
+            'meta' => $col->except('data'),
+            'res' => $col,
+            'dat' => $data,
         ]);
     }
     public function jumlahNomorBast()

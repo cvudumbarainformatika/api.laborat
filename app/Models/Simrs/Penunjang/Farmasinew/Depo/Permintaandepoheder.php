@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
@@ -23,6 +24,14 @@ class Permintaandepoheder extends Model
     public function user()
     {
         return $this->hasOne(Pegawai::class, 'id', 'user');
+    }
+    public function asal()
+    {
+        return $this->belongsTo(Gudang::class, 'dari', 'kode');
+    }
+    public function menuju()
+    {
+        return $this->belongsTo(Gudang::class, 'tujuan', 'kode');
     }
 
     public function mutasigudangkedepo()

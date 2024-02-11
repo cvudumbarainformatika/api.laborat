@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MinmaxobatController;
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -26,6 +27,10 @@ class Stokreal extends Model
     public function gudangdepo()
     {
         return $this->hasOne(Gudang::class, 'kode', 'kdruang');
+    }
+    public function ruang()
+    {
+        return $this->hasOne(Ruang::class, 'kode', 'kdruang');
     }
 
     public function transnonracikan()

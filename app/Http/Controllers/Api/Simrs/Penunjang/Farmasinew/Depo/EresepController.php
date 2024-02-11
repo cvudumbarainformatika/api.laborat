@@ -56,6 +56,7 @@ class EresepController extends Controller
         $cariobat = Stokreal::select(
             'stokreal.kdobat as kdobat',
             'stokreal.kdruang as kdruang',
+            'stokreal.tglexp',
             'new_masterobat.nama_obat as namaobat',
             'new_masterobat.kandungan as kandungan',
             'new_masterobat.bentuk_sediaan as bentuk_sediaan',
@@ -102,6 +103,7 @@ class EresepController extends Controller
             )
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->where('stokreal.kdruang', request('kdruang'))
+            ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
             ->where(function ($query) {
                 $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')

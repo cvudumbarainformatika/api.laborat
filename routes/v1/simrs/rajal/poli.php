@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\Antrean\master\PoliController;
 use App\Http\Controllers\Api\Simrs\Rajal\EditsuratbpjsController;
+use App\Http\Controllers\Api\Simrs\Rajal\KunjunganPoliBynoregController;
 use App\Http\Controllers\Api\Simrs\Rajal\PoliController as RajalPoliController;
+use App\Http\Controllers\Api\Simrs\Rajal\RmeRajalController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -26,4 +28,6 @@ Route::group([
     Route::post('/konsulpoli', [RajalPoliController::class, 'konsulpoli']);
 
     Route::post('/tidakhadir', [RajalPoliController::class, 'tidakhadir']);
+
+    Route::get('/datamrerajal', [RmeRajalController::class, 'rmerajal']);
 });

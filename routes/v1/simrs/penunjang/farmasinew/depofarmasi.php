@@ -50,4 +50,7 @@ Route::group([
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
     Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
+
+    // ------- Mutasi Antar Depo ----------
+    Route::get('/list-mutasi', [DepoController::class, 'listMutasi']);
 });

@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Master\Mobat;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
@@ -33,6 +34,10 @@ class Mminmaxobat extends Model
     public function gudang()
     {
         return $this->belongsTo(Gudang::class, 'kd_ruang', 'kode');
+    }
+    public function ruang()
+    {
+        return $this->belongsTo(Ruang::class, 'kd_ruang', 'kode');
     }
     public function perencanaanrinci()
     {

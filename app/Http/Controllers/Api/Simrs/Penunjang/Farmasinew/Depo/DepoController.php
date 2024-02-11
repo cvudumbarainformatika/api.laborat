@@ -45,6 +45,7 @@ class DepoController extends Controller
                 $wew->where('stokreal.kdruang', $gudang);
             })
             ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
+            ->where('stokreal.jumlah', '>', 0)
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
@@ -58,7 +59,9 @@ class DepoController extends Controller
         $stokdewe = Stokrel::select('kdobat', DB::raw('sum(stokreal.jumlah) as  jumlah'), 'kdruang')
             ->when($depo, function ($wew) use ($depo) {
                 $wew->where('stokreal.kdruang', $depo);
-            })->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+            })
+            ->where('jumlah', '>', 0)
+            ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
 
         return new JsonResponse(
@@ -102,7 +105,7 @@ class DepoController extends Controller
                 'no_permintaan' => $nopermintaandepo,
             ],
             [
-                'tgl_permintaan' => $request->tgl_permintaan ?? date('Y-m-d H:i:s'),
+                'tgl_permintaan' => $request->tgl_permintaan ? $request->tgl_permintaan . date(' H:i:s') : date('Y-m-d H:i:s'),
                 'dari' => $request->dari,
                 'tujuan' => $request->tujuan,
                 'user' => auth()->user()->pegawai_id
@@ -154,7 +157,7 @@ class DepoController extends Controller
         $depo = request('kddepo');
         $nopermintaan = request('no_permintaan');
 
-        $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat')
+        $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat', 'asal:kode,nama', 'menuju:kode,nama')
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('dari', 'like', '%' . $depo . '%')
             ->orderBY('tgl_permintaan', 'desc')
@@ -211,5 +214,57 @@ class DepoController extends Controller
         $kuncipermintaan->save();
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
+    }
+
+    public function listMutasi()
+    {
+        // return request()->all();
+        $gudang = request('kdgudang');
+        $nopermintaan = request('no_permintaan');
+        $flag = request('flag');
+        $depo = request('kddepo');
+        $listpermintaandepo = Permintaandepoheder::with([
+            'permintaanrinci.masterobat',
+            'user:id,nip,nama',
+            'permintaanrinci' => function ($rinci) {
+                $rinci->with([
+                    'stokreal' => function ($stokdendiri) {
+                        $stokdendiri
+                            ->select(
+                                'kdobat',
+                                'kdruang',
+                                'jumlah',
+                            );
+                    }
+                ]);
+            },
+            'mutasigudangkedepo'
+        ])
+            ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+            ->when($gudang, function ($wew) use ($gudang) {
+                $all = ['Gd-02010104', 'Gd-05010101', 'Gd-04010103', 'Gd-03010101', 'Gd-04010102'];
+                if ($gudang === 'all') {
+                    $wew->whereIn('tujuan', $all);
+                } else {
+                    $wew->where('tujuan', $gudang);
+                }
+            })
+            ->when($flag, function ($wew) use ($flag) {
+                $all = ['', '1', '2', '3', '4'];
+                if ($flag === '5') {
+                    $wew->whereIn('flag', $all);
+                } else if ($flag === '0') {
+                    $wew->where('flag', '');
+                } else {
+                    $wew->where('flag', $flag);
+                }
+            })
+            ->when($depo, function ($wew) use ($depo) {
+                $wew->where('dari', $depo);
+            })
+            ->orderBY('tgl_permintaan', 'desc')
+            ->paginate(request('per_page'));
+        // $listpermintaandepo['req'] = request()->all();
+        return new JsonResponse($listpermintaandepo);
     }
 }
