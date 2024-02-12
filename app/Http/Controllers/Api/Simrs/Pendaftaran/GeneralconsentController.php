@@ -79,7 +79,8 @@ class GeneralconsentController extends Controller
         $cek = Generalconsent::where('norm', '=', $norm)->first();
 
         $image_parts = explode(";base64,", $img);
-        if (count($image_parts) <= 2) {
+        // return $image_parts;
+        if (count($image_parts) < 2) {
             return $cek->ttdpasien;
         }
         $image_type_aux = explode("image/", $image_parts[0]);
