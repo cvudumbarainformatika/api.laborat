@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Generalconsent\Generalconsent;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Generalconsenttrans_h;
 use Illuminate\Http\JsonResponse;
@@ -29,10 +31,31 @@ class GeneralconsentController extends Controller
             $ttdpasien = $this->createImage($request->ttdpasien, $request->norm);
         }
         if ($request->ttdpetugas !== null || $request->ttdpetugas !== "") {
-            $ttdpetugas = $this->createImage($request->ttdpasien, $request->norm);
+            $ttdpetugas = $this->createTtdPetugas($request->ttdpasien, $request->norm, $request->nikpetugas);
         }
 
         // simpan ke transaksi general consent pasien
+
+        $gencon = Generalconsent::updateOrCreate(
+            ['norm' => $request->norm],
+            [
+                'nama' => $request->nama,
+                'alamat' => $request->alamat,
+                'nohp' => $request->nohp,
+                'hubunganpasien' => $request->hubunganpasien,
+                'nikpetugas' => $request->nikpetugas,
+                'ttdpasien' => $ttdpasien,
+                'ttdpetugas' => $ttdpetugas,
+            ]
+        );
+
+        if (!$gencon) {
+            $message = [
+                'message' => 'Ada yang Error ... Silahkan Ulangi !'
+            ];
+            return response()->json($message, 500);
+        }
+
         return response()->json($ttdpasien);
     }
 
@@ -50,21 +73,63 @@ class GeneralconsentController extends Controller
     public function createImage($img, $norm)
     {
 
-        $folderPath = "images/";
+
+        $folderPath = "ttdpasien/";
+
+        $cek = Generalconsent::where('norm', '=', $norm)->first();
 
         $image_parts = explode(";base64,", $img);
+        if (count($image_parts) <= 2) {
+            return $cek->ttdpasien;
+        }
         $image_type_aux = explode("image/", $image_parts[0]);
         $image_type = $image_type_aux[1];
         $image_base64 = base64_decode($image_parts[1]);
-        $file = $folderPath . $norm . '.' . $image_type;
+        $file = $folderPath . $norm . '-' . date('YmdHis') . '.' . $image_type;
 
         $imageName = $norm . '.' . $image_type;
-        // file_put_contents($file, $image_base64);
-        Storage::delete('public/images/' . $imageName);
-        Storage::disk('public')->put('images/' . $imageName, $image_base64);
+        if (!$cek) {
+            $imageName = $file;
+        } else {
+            $imageName = $cek->ttdpasien;
+            Storage::delete('public/' . $imageName);
+        }
+
+
+        Storage::disk('public')->put($file, $image_base64);
 
         // $data = file_get_contents(Storage::disk('public')->get($file));
         // $base64 = 'data:image/' . $image_type . ';base64,' . base64_encode($data);
+        return $file;
+    }
+    public function createTtdPetugas($img, $norm, $nik)
+    {
+        $folderPath = "ttdpetugas/";
+
+        $cek = Generalconsent::where('norm', '=', $norm)->first();
+        $image_parts = explode(";base64,", $img);
+        if (count($image_parts) <= 2) {
+            return $cek->ttdpetugas;
+        }
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+        $file = $folderPath . $norm . '-' . date('YmdHis') . '.' . $image_type;
+
+        $imageName = $norm . '.' . $image_type;
+        if (!$cek) {
+            $imageName = $file;
+        } else {
+            $imageName = $cek->ttdpetugas;
+            Storage::delete('public/' . $imageName);
+        }
+
+        Storage::disk('public')->put($file, $image_base64);
+
+        $pegawai = Pegawai::where('nik', $nik)->first();
+        $pegawai->ttdpegawai = $file;
+        $pegawai->save();
+
         return $file;
     }
 }

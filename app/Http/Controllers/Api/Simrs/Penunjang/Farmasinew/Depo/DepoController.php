@@ -105,7 +105,7 @@ class DepoController extends Controller
                 'no_permintaan' => $nopermintaandepo,
             ],
             [
-                'tgl_permintaan' => $request->tgl_permintaan ?? date('Y-m-d H:i:s'),
+                'tgl_permintaan' => $request->tgl_permintaan ? $request->tgl_permintaan . date(' H:i:s') : date('Y-m-d H:i:s'),
                 'dari' => $request->dari,
                 'tujuan' => $request->tujuan,
                 'user' => auth()->user()->pegawai_id
@@ -214,5 +214,57 @@ class DepoController extends Controller
         $kuncipermintaan->save();
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
+    }
+
+    public function listMutasi()
+    {
+        // return request()->all();
+        $gudang = request('kdgudang');
+        $nopermintaan = request('no_permintaan');
+        $flag = request('flag');
+        $depo = request('kddepo');
+        $listpermintaandepo = Permintaandepoheder::with([
+            'permintaanrinci.masterobat',
+            'user:id,nip,nama',
+            'permintaanrinci' => function ($rinci) {
+                $rinci->with([
+                    'stokreal' => function ($stokdendiri) {
+                        $stokdendiri
+                            ->select(
+                                'kdobat',
+                                'kdruang',
+                                'jumlah',
+                            );
+                    }
+                ]);
+            },
+            'mutasigudangkedepo'
+        ])
+            ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+            ->when($gudang, function ($wew) use ($gudang) {
+                $all = ['Gd-02010104', 'Gd-05010101', 'Gd-04010103', 'Gd-03010101', 'Gd-04010102'];
+                if ($gudang === 'all') {
+                    $wew->whereIn('tujuan', $all);
+                } else {
+                    $wew->where('tujuan', $gudang);
+                }
+            })
+            ->when($flag, function ($wew) use ($flag) {
+                $all = ['', '1', '2', '3', '4'];
+                if ($flag === '5') {
+                    $wew->whereIn('flag', $all);
+                } else if ($flag === '0') {
+                    $wew->where('flag', '');
+                } else {
+                    $wew->where('flag', $flag);
+                }
+            })
+            ->when($depo, function ($wew) use ($depo) {
+                $wew->where('dari', $depo);
+            })
+            ->orderBY('tgl_permintaan', 'desc')
+            ->paginate(request('per_page'));
+        // $listpermintaandepo['req'] = request()->all();
+        return new JsonResponse($listpermintaandepo);
     }
 }
