@@ -28,9 +28,12 @@ class TindakanController extends Controller
             'prosedur_mapping.icd9'
         )
             ->leftjoin('prosedur_mapping', 'rs30.rs1', '=', 'prosedur_mapping.kdMaster')
-            // ->with('maapingprocedure.prosedur')
-            ->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
-            ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%')
+            ->where(function ($query) {
+                $query->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
+                    ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%');
+            })
+            ->where('rs30.rs2', 'Like', '%' . request('kdpoli') . '%')
+            ->where('rs30.rs4')
             ->get();
         return new JsonResponse($dialogtindakanpoli);
     }
