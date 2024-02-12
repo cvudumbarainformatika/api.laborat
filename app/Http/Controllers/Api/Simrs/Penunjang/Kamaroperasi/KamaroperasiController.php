@@ -76,4 +76,17 @@ class KamaroperasiController extends Controller
         }
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
+
+    public function listkamaroperasi()
+    {
+        $dari = '2024-02-07 00:00:01';
+        $sampai = '2024-02-07 23:59:59';
+        $listkamaroperasi = PermintaanOperasi::with(
+            [
+                'kunjunganranap.masterpasien:rs1,rs2',
+                'kunjunganrajal.masterpasien:rs1,rs2'
+            ]
+        )->whereBetween('rs3', [$dari, $sampai])->get();
+        return new JsonResponse($listkamaroperasi);
+    }
 }

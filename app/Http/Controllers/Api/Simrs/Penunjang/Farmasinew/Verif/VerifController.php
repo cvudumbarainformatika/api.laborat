@@ -45,6 +45,7 @@ class VerifController extends Controller
             ->first();
         $verifrinci->tglverif = date('Y-m-d H:i:s');
         $verifrinci->userverif = $kdpegsimrs;
+        $verifrinci->flag = '2';
         $verifrinci->save();
         return new JsonResponse(
             [
