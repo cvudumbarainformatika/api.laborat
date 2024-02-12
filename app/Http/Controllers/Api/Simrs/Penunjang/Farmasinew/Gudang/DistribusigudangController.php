@@ -114,7 +114,7 @@ class DistribusigudangController extends Controller
             $sisa = $caristok[$index]->jumlah;
             if ($sisa < $masuk) {
                 $sisax = $masuk - $sisa;
-                Mutasigudangkedepo::create(
+                $mutasi = Mutasigudangkedepo::create(
                     [
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
@@ -132,7 +132,7 @@ class DistribusigudangController extends Controller
                 //return $jmldiminta;
             } else {
                 $sisax = $sisa - $masuk;
-                Mutasigudangkedepo::create(
+                $mutasi = Mutasigudangkedepo::create(
                     [
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
@@ -147,7 +147,7 @@ class DistribusigudangController extends Controller
                 $masuk = 0;
             }
         }
-        return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 200);
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'data' => $mutasi], 200);
     }
 
     public function kuncipermintaandaridepo(Request $request)
