@@ -484,7 +484,12 @@ class DaftarrajalController extends Controller
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')
-            ->where('rs9.rs9', '=', 'BPJS')
+            ->where(function ($q) {
+                // 'rs9.rs9', '=', request('kdbayar') ?? 'BPJS'
+                if (request('kdbayar') !== 'ALL') {
+                    $q->where('rs9.rs9', '=', 'BPJS');
+                }
+            })
             ->where(function ($query) {
                 $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')

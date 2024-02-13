@@ -31,10 +31,12 @@ class GeneralconsentController extends Controller
             $ttdpasien = $this->createImage($request->ttdpasien, $request->norm);
         }
         if ($request->ttdpetugas !== null || $request->ttdpetugas !== "") {
-            $ttdpetugas = $this->createTtdPetugas($request->ttdpasien, $request->norm, $request->nikpetugas);
+            $ttdpetugas = $this->createTtdPetugas($request->ttdpetugas, $request->norm, $request->nikpetugas);
         }
 
         // simpan ke transaksi general consent pasien
+
+        // return $ttdpetugas;
 
         $gencon = Generalconsent::updateOrCreate(
             ['norm' => $request->norm],
@@ -56,7 +58,9 @@ class GeneralconsentController extends Controller
             return response()->json($message, 500);
         }
 
-        return response()->json($ttdpasien);
+        $res = Generalconsent::where('norm', $request->norm)->first();
+
+        return response()->json($res);
     }
 
     public function simpanmaster(Request $request)
@@ -109,7 +113,7 @@ class GeneralconsentController extends Controller
 
         $cek = Generalconsent::where('norm', '=', $norm)->first();
         $image_parts = explode(";base64,", $img);
-        if (count($image_parts) <= 2) {
+        if (count($image_parts) < 2) {
             return $cek->ttdpetugas;
         }
         $image_type_aux = explode("image/", $image_parts[0]);
@@ -132,5 +136,24 @@ class GeneralconsentController extends Controller
         $pegawai->save();
 
         return $file;
+    }
+
+    public function simpanpdf(Request $request)
+    {
+        $validatedData = $request->validate([
+            'pdf' => 'required|mimes:pdf',
+            'norm' => 'required'
+        ]);
+        $file = $request->name('pdf');
+        $name = $file->getClientOriginalName();
+        // $uniqueName = bin2hex(random_bytes(3)) . '.' . 'pdf';
+        $file->move(public_path('generalconsent/'), $name);
+
+
+
+        $data = Generalconsent::where('norm', '=', $request->norm)->first();
+        $data->pdf = $file;
+        $data->save();
+        return response()->json(['success' => $data]);
     }
 }

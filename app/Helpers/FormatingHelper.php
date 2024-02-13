@@ -63,20 +63,20 @@ class FormatingHelper
         }
 
         if ($biaya_rm1 > 0) {
-            $sarana = null;
-            $pelayanan = null;
+            $sarana = 0;
+            $pelayanan = 0;
             $sarana = $sarana . $biaya_rm1;
             $pelayanan = $pelayanan . $biaya_rm2;
         }
 
         if ($biaya_karcis1 > 0) {
-            $sarana = $sarana . "#" . $biaya_karcis2;
-            $pelayanan = $pelayanan . "#" . $biaya_karcis1;
+            $sarana = $sarana ?? 0 . "#" . $biaya_karcis2;
+            $pelayanan = $pelayanan ?? 0 . "#" . $biaya_karcis1;
         }
 
         if ($biaya_kartu1 > 0) {
-            $sarana = $sarana . "#" . $biaya_kartu1;
-            $pelayanan = $pelayanan . "#" . $biaya_kartu2;
+            $sarana = $sarana ?? 0 . "#" . $biaya_kartu1;
+            $pelayanan = $pelayanan ?? 0 . "#" . $biaya_kartu2;
         }
 
 

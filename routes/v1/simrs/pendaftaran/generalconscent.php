@@ -11,5 +11,6 @@ Route::group([
 ], function () {
     Route::get('/mastergeneralconsent', [GeneralconsentController::class, 'mastergeneralconsent']);
     Route::post('/simpangeneralcontent', [GeneralconsentController::class, 'simpangeneralcontent']);
+    Route::post('/simpanpdf', [GeneralconsentController::class, 'simpanpdf']);
     Route::post('/simpanmaster', [GeneralconsentController::class, 'simpanmaster']);
 });

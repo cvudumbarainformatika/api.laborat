@@ -117,8 +117,10 @@ class DisplayController extends Controller
                         'rs17.rs8',
                         'rs17.rs19 as status',
                         'antrian_ambil.nomor as noantrian'
-                    )->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                    )
+                        ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
                         ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                        ->where('antrian_ambil.nomor', 'NOT LIKE', '%FJ%')
                         ->orderby('antrian_ambil.nomor', 'ASC');
                 },
                 'poli.panggilan' => function ($q) use ($hr_ini) {
