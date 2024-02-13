@@ -9,6 +9,7 @@ Route::group([
     'prefix' => 'simrs/farmasinew/gudang/distribusi'
 ], function () {
     Route::get('/listpermintaandepo', [DistribusigudangController::class, 'listpermintaandepo']);
+    Route::get('/list-permintaan-ruangan', [DistribusigudangController::class, 'listPermintaanRuangan']);
     Route::post('/verifpermintaanobat', [DistribusigudangController::class, 'verifpermintaanobat']);
     Route::get('/rencanadistribusikedepo', [DistribusigudangController::class, 'rencanadistribusikedepo']);
     Route::post('/simpandistribusidepo', [DistribusigudangController::class, 'simpandistribusidepo']);

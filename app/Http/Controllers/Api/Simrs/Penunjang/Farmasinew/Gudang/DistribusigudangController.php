@@ -54,6 +54,47 @@ class DistribusigudangController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($listpermintaandepo);
     }
+    public function listPermintaanRuangan()
+    {
+        $gudang = request('kdgudang');
+        $nopermintaan = request('no_permintaan');
+        $flag = request('flag');
+        $depo = request('kddepo');
+        $listpermintaandepo = Permintaandepoheder::with([
+            'permintaanrinci.masterobat',
+            'user:id,nip,nama',
+            'permintaanrinci' => function ($rinci) {
+                $rinci->with([
+                    'stokreal' => function ($stokdendiri) {
+                        $stokdendiri
+                            ->select(
+                                'kdobat',
+                                'kdruang',
+                                'jumlah',
+                            );
+                    }
+                ]);
+            },
+            'mutasigudangkedepo'
+        ])
+            ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+            ->where('flag', '!=', '')
+            ->when($gudang, function ($wew) use ($gudang) {
+                $wew->where('tujuan', $gudang);
+            })
+            ->when($flag, function ($wew) use ($flag) {
+                $wew->where('flag', $flag);
+            })
+            ->when($depo, function ($wew) use ($depo) {
+                $wew->where('dari', $depo);
+            })
+            ->when(!$depo, function ($wew) {
+                $wew->where('dari', 'LIKE', '%' . 'R-' . '%');
+            })
+            ->orderBY('tgl_permintaan', 'desc')
+            ->paginate(request('per_page'));
+        return new JsonResponse($listpermintaandepo);
+    }
 
     // public function verifpermintaanobat(Request $request)
     // {
