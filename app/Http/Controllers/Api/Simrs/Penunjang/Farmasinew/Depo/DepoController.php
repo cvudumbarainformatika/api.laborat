@@ -165,6 +165,19 @@ class DepoController extends Controller
         return new JsonResponse($listpermintaandepo);
         // }
     }
+    public function listPermintaanRuangan()
+    {
+        $depo = request('kddepo') ?? 'R-';
+        $nopermintaan = request('no_permintaan');
+
+        $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat', 'asal:kode,nama', 'menuju:kode,nama')
+            ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
+            ->where('dari', 'like', '%' . $depo . '%')
+            ->orderBY('tgl_permintaan', 'desc')
+            ->get();
+        return new JsonResponse($listpermintaandepo);
+        // }
+    }
 
     public function terimadistribusi(Request $request)
     {
