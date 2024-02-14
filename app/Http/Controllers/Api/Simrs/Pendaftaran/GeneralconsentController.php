@@ -85,7 +85,7 @@ class GeneralconsentController extends Controller
         $image_parts = explode(";base64,", $img);
         // return $image_parts;
         if (count($image_parts) < 2) {
-            return $cek->ttdpasien;
+            return $img;
         }
         $image_type_aux = explode("image/", $image_parts[0]);
         $image_type = $image_type_aux[1];
@@ -114,7 +114,7 @@ class GeneralconsentController extends Controller
         $cek = Generalconsent::where('norm', '=', $norm)->first();
         $image_parts = explode(";base64,", $img);
         if (count($image_parts) < 2) {
-            return $cek->ttdpetugas;
+            return $img;
         }
         $image_type_aux = explode("image/", $image_parts[0]);
         $image_type = $image_type_aux[1];
@@ -140,20 +140,73 @@ class GeneralconsentController extends Controller
 
     public function simpanpdf(Request $request)
     {
-        $validatedData = $request->validate([
-            'pdf' => 'required|mimes:pdf',
-            'norm' => 'required'
-        ]);
-        $file = $request->name('pdf');
-        $name = $file->getClientOriginalName();
-        // $uniqueName = bin2hex(random_bytes(3)) . '.' . 'pdf';
-        $file->move(public_path('generalconsent/'), $name);
 
 
+        if ($request->hasFile('pdf')) {
+            $files = $request->file('pdf');
 
-        $data = Generalconsent::where('norm', '=', $request->norm)->first();
-        $data->pdf = $file;
-        $data->save();
-        return response()->json(['success' => $data]);
+            if (!empty($files)) {
+                $file = $files;
+                $originalname = $file->getClientOriginalName();
+                $data = Generalconsent::where('norm', '=', $request->norm)->first();
+                Storage::delete('public/generalconsent/' . $originalname);
+                $pdf = null;
+                if ($data) {
+                    $pdf = $data;
+                } else {
+                    $pdf = new Generalconsent();
+                }
+                $file->storeAs('public/generalconsent/', $originalname);
+
+                $url = "generalconsent/$originalname";
+                $pdf->pdf = $url;
+                $pdf->save();
+                return response()->json(['success' => $data]);
+            }
+        }
+
+        return response()->json(['message' => 'Ada kesalahan'], 500);
+
+        // return $request->all();
+        // $pdf = "";
+        // if ($request->pdf !== null || $request->pdf !== "") {
+        //     $pdf = $this->createImagePdf($request->pdf, $request->norm);
+        // }
+
+        // return $pdf;
+    }
+
+    public function createImagePdf($img, $norm)
+    {
+
+
+        $folderPath = "generalconsent/";
+
+        $cek = Generalconsent::where('norm', '=', $norm)->first();
+
+        $image_parts = explode(";base64,", $img);
+        // return $image_parts;
+        if (count($image_parts) < 2) {
+            return $img;
+        }
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+        $file = $folderPath . $norm . '-' . date('YmdHis') . '.' . $image_type;
+
+        $imageName = $norm . '.' . $image_type;
+        if (!$cek) {
+            $imageName = $file;
+        } else {
+            $imageName = $cek->ttdpasien;
+            Storage::delete('public/' . $imageName);
+        }
+
+
+        Storage::disk('public')->put($file, $image_base64);
+
+        // $data = file_get_contents(Storage::disk('public')->get($file));
+        // $base64 = 'data:image/' . $image_type . ';base64,' . base64_encode($data);
+        return $file;
     }
 }
