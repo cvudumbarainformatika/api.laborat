@@ -19,6 +19,10 @@ class Stokreal extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    public function obat()
+    {
+        return $this->belongsTo(Mobatnew::class, 'kdobat', 'kd_obat');
+    }
     public function minmax()
     {
         return $this->hasOne(Mminmaxobat::class, 'kd_obat', 'kdobat');
