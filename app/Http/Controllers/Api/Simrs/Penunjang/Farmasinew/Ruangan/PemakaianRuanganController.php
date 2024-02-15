@@ -14,7 +14,7 @@ class PemakaianRuanganController extends Controller
     public function getStokRuangan()
     {
         $obat = Stokreal::selectRaw('*, sum(jumlah) as stok')
-            ->with('obat:kd_obat,nama_obat')
+            ->with('obat:kd_obat,nama_obat,satuan_k', 'ruang:kode,uraian')
             ->where('jumlah', '>', 0)
             ->where('kdruang', request('kdruang'))
             ->groupBy('kdobat', 'kdruang')
