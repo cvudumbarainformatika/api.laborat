@@ -98,11 +98,14 @@ class Pegawai extends Model
 
     public function getTtdpegawaiUrlAttribute()
     {
-        $image = URL::to('/storage/' . $this->attributes['ttdpegawai']);
+        $image = URL::to('/storage/' . $this->ttdpegawai);
+        if (!$image) {
+            return null;
+        }
         $handle = @fopen($image, 'r');
         if ($handle) {
             $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
-            return $this->attributes['ttdpegawai'] ? $base64 : null;
+            return $this->ttdpegawai ? $base64 : null;
         } else {
             return null;
         }

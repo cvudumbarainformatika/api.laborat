@@ -19,6 +19,7 @@ Route::group([
     Route::post('/save-pemeriksaanfisik', [RajalPoliController::class, 'save_pemeriksaanfisik']);
     Route::post('/flagfinish', [RajalPoliController::class, 'flagfinish']);
     Route::post('/terimapasien', [RajalPoliController::class, 'terimapasien']);
+    Route::post('/updatewaktubpjs', [RajalPoliController::class, 'updatewaktubpjs']);
 
     Route::get('/listsuratkontrol', [EditsuratbpjsController::class, 'listsuratkontrol']);
     Route::post('/editsuratkontrol', [EditsuratbpjsController::class, 'editsuratkontrol']);

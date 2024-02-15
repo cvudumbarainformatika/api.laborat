@@ -526,6 +526,94 @@ class PoliController extends Controller
 
     public function terimapasien(Request $request)
     {
+
+
+        $cekx = KunjunganPoli::select('rs1', 'rs9')->where('rs1', $request->noreg)
+            ->with([
+                'anamnesis',
+                'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                'gambars',
+                'fisio',
+                'diagnosakeperawatan' => function ($diag) {
+                    $diag->with('intervensi.masterintervensi');
+                },
+                'laborats' => function ($t) {
+                    $t->with('details.pemeriksaanlab')
+                        ->orderBy('id', 'DESC');
+                },
+                'radiologi' => function ($t) {
+                    $t->orderBy('id', 'DESC');
+                },
+                'penunjanglain' => function ($t) {
+                    $t->with('masterpenunjang')->orderBy('id', 'DESC');
+                },
+                'tindakan' => function ($t) {
+                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+                        ->orderBy('id', 'DESC');
+                },
+                'diagnosa' => function ($d) {
+                    $d->with('masterdiagnosa');
+                },
+                'pemeriksaanfisik' => function ($a) {
+                    $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        ->orderBy('id', 'DESC');
+                },
+                'ok' => function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                'taskid' => function ($q) {
+                    $q->orderBy('taskid', 'DESC');
+                },
+                'planning' => function ($p) {
+                    $p->with(
+                        'masterpoli',
+                        'rekomdpjp',
+                        'transrujukan',
+                        'listkonsul',
+                        'spri',
+                        'ranap',
+                        'kontrol',
+                        'operasi',
+                    )->orderBy('id', 'DESC');
+                },
+                'edukasi' => function ($x) {
+                    $x->orderBy('id', 'DESC');
+                },
+                // 'antrian_ambil' => function ($o) {
+                //     $o
+                //         //->where('pelayanan_id', request('kdpoli'))
+                //         ->orderBY('nomor');
+                // },
+                'diet' => function ($diet) {
+                    $diet->orderBy('id', 'DESC');
+                },
+                'sharing' => function ($sharing) {
+                    $sharing->orderBy('id', 'DESC');
+                },
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+            ])
+            ->first();
+        $flag = $cekx->rs19;
+        if ($flag === '') {
+            // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $cekx->rs19 = '2';
+            $cekx->save();
+            // return new JsonResponse(['message' => 'ok'], 200);
+        }
+
+        return new JsonResponse($cekx, 200);
+
+        //  return new JsonResponse([''], 500);
+    }
+
+    public function updatewaktubpjs(Request $request)
+    {
         $input = new Request([
             'noreg' => $request->noreg
         ]);
@@ -533,27 +621,7 @@ class PoliController extends Controller
 
         if ($cek === 0 || $cek === '') {
             BridantrianbpjsController::updateWaktu($input, 4);
-            // return $updatewaktu;
-            // KunjunganPoli::where('rs1', $request->noreg)->first();
-            // $flag = $cekx->rs19;
-            // if ($flag === '') {
-            //     $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            //     $updatekunjungan->rs19 = '2';
-            //     $updatekunjungan->save();
-            //     return new JsonResponse(['message' => 'ok'], 200);
-            // }
         }
-
-        $cekx = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $flag = $cekx->rs19;
-        if ($flag === '') {
-            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '2';
-            $updatekunjungan->save();
-            return new JsonResponse(['message' => 'ok'], 200);
-        }
-
-        //  return new JsonResponse([''], 500);
     }
 
     public function listdokter()
