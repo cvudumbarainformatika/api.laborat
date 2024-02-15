@@ -7,6 +7,7 @@ use App\Models\Satset\Satset;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
+use App\Models\Simrs\Generalconsent\Generalconsent;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -256,5 +257,9 @@ class KunjunganPoli extends Model
     public function satset()
     {
         return $this->hasOne(Satset::class, 'uuid', 'rs1');
+    }
+    public function generalcons()
+    {
+        return $this->hasOne(Generalconsent::class, 'norm', 'norm');
     }
 }

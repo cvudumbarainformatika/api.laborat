@@ -14,6 +14,7 @@ use App\Models\Simrs\Master\Mpoli;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 
 class Pegawai extends Model
 {
@@ -21,6 +22,7 @@ class Pegawai extends Model
     protected $connection = 'kepex';
     protected $table = 'pegawai';
     protected $guarded = ['id'];
+    protected $appends = ['ttdpegawai_url'];
     // protected $hidden = [];
 
     public $timestamps = false;
@@ -92,6 +94,18 @@ class Pegawai extends Model
     public function alpha()
     {
         return $this->hasMany(Alpha::class);
+    }
+
+    public function getTtdpegawaiUrlAttribute()
+    {
+        $image = URL::to('/storage/' . $this->attributes['ttdpegawai']);
+        $handle = @fopen($image, 'r');
+        if ($handle) {
+            $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
+            return $this->attributes['ttdpegawai'] ? $base64 : null;
+        } else {
+            return null;
+        }
     }
 
 

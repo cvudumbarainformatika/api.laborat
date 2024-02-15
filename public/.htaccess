@@ -14,7 +14,21 @@
 #     </FilesMatch>
 # </IfModule>
 
+# <IfModule mod_headers.c>
+#     <FilesMatch "\.(bmp|pdf|cur|gif|ico|jpe?g|png|svgz?|webp|pdf|eot|otf|tt[cf]|woff2?)$">
+#         Header set Cross-Origin-Resource-Policy 'cross-origin'
+#     </FilesMatch>
+# </IfModule>
 
+<IfModule mod_setenvif.c>
+  <IfModule mod_headers.c>
+    <FilesMatch "\.(avifs?|bmp|cur|gif|ico|jpe?g|jxl|a?png|svgz?|webp|js|pdf)$">
+      SetEnvIf Origin ":" IS_CORS
+      Header set Access-Control-Allow-Origin "*" env=IS_CORS
+      Header set Cross-Origin-Resource-Policy 'cross-origin'
+    </FilesMatch>
+  </IfModule>
+</IfModule>
 
 <IfModule mod_rewrite.c>
 

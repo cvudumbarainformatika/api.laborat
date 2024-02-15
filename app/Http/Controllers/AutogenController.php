@@ -286,22 +286,26 @@ class AutogenController extends Controller
 
         // $data
 
-        $pola = [];
-        $n = request('q');
+        // $pola = [];
+        // $n = request('q');
 
-        for ($i = 1; $i <= $n; $i++) {
-            $rumus = $i / 2 * ($i + 1);
-            $rumus2 = 2 * $i - 1;
-            $data = [
-                'no' => $i,
-                'hasil pola 1' => (int)$rumus,
-                'hasil pola 2' => (int)$rumus2,
-                'kesimpulan' => "jika Angka = {$i}, Maka Hasil yang didapat di pola 1 = {$rumus} dan Hasil yang didapat di pola 2 = {$rumus2}"
-            ];
-            $pola[] = $data;
-        }
+        // for ($i = 1; $i <= $n; $i++) {
+        //     $rumus = $i / 2 * ($i + 1);
+        //     $rumus2 = 2 * $i - 1;
+        //     $data = [
+        //         'no' => $i,
+        //         'hasil pola 1' => (int)$rumus,
+        //         'hasil pola 2' => (int)$rumus2,
+        //         'kesimpulan' => "jika Angka = {$i}, Maka Hasil yang didapat di pola 1 = {$rumus} dan Hasil yang didapat di pola 2 = {$rumus2}"
+        //     ];
+        //     $pola[] = $data;
+        // }
 
-        return $pola;
+        // return $pola;
+
+        $image = public_path('storage/ttdpasien/235150-20240213095254.jpeg');
+        $base64 = base64_encode(file_get_contents($image));
+        echo $base64;
     }
 
     public function create_post(Request $request)

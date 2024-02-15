@@ -502,7 +502,8 @@ class DaftarrajalController extends Controller
             })
             ->with(['taskid' => function ($q) {
                 $q->orderBy('taskid', 'DESC');
-            }])
+            }, 'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien'])
+
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
 
