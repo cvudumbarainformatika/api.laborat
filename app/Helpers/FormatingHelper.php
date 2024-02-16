@@ -80,7 +80,8 @@ class FormatingHelper
         }
 
 
-        $tarif = $biaya_rm1 + $biaya_rm2 + $biaya_karcis1 + $biaya_karcis2 + $biaya_kartu1 + $biaya_kartu2;
+        // $tarif = $biaya_rm1 + $biaya_rm2 + $biaya_karcis1 + $biaya_karcis2 + $biaya_kartu1 + $biaya_kartu2;
+        $tarif =  $biaya_karcis1 + $biaya_karcis2 + $biaya_kartu1 + $biaya_kartu2;
 
         return [
             'nama_biaya' => $nama_biaya,
