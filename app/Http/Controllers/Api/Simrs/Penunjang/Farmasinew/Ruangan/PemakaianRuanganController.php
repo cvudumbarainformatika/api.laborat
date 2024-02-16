@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Ruangan;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PemakaianRuanganController extends Controller
 {
@@ -28,5 +30,13 @@ class PemakaianRuanganController extends Controller
             ->paginate(request('per_page'));
 
         return new JsonResponse($obat);
+    }
+
+    public function simpanpemaikaianruangan()
+    {
+        DB::select('call pemakaianruangan(@nomor)');
+        $x = DB::table('conter')->select('pemakaianruangan')->get();
+        $wew = $x[0]->pemakaianruangan;
+        $pemakaianruangan = FormatingHelper::nopemakaianruangan($wew, 'RUA-FAR');
     }
 }
