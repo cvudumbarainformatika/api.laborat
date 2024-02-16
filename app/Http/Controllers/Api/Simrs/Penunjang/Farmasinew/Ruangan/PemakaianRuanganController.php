@@ -32,11 +32,20 @@ class PemakaianRuanganController extends Controller
         return new JsonResponse($obat);
     }
 
-    public function simpanpemaikaianruangan()
+    public function simpanpemaikaianruangan(Request $request)
     {
+
+        return new JsonResponse($request->all());
+
         DB::select('call pemakaianruangan(@nomor)');
         $x = DB::table('conter')->select('pemakaianruangan')->get();
         $wew = $x[0]->pemakaianruangan;
         $pemakaianruangan = FormatingHelper::nopemakaianruangan($wew, 'RUA-FAR');
+    }
+
+    public function selesaiPakai(Request $request)
+    {
+
+        return new JsonResponse($request->all());
     }
 }

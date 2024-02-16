@@ -9,4 +9,6 @@ Route::group([
     'prefix' => 'simrs/penunjang/farmasinew/ruangan'
 ], function () {
     Route::get('/get-stok-ruangan', [PemakaianRuanganController::class, 'getStokRuangan']);
+    Route::post('/simpan', [PemakaianRuanganController::class, 'simpanpemaikaianruangan']);
+    Route::post('/selesai', [PemakaianRuanganController::class, 'selesaiPakai']);
 });
