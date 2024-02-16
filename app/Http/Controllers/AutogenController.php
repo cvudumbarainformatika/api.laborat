@@ -2791,13 +2791,15 @@ class AutogenController extends Controller
 
     public function baru()
     {
-        $data['normal'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002107');
-        $data['inap'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002121');
-        $data['inap1'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002120');
-        $data['inap2'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002119');
-        $data['inap3'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002118');
-        $data['inap4'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002117');
-        $data['inap5'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002116');
+        // $data['normal'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002107');
+        // $data['inap'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002121');
+        // $data['inap1'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002120');
+        // $data['inap2'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002119');
+        // $data['inap3'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002118');
+        // $data['inap4'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002117');
+        // $data['inap5'] = BridgingbpjsHelper::get_url('vclaim', 'RencanaKontrol/noSuratKontrol/' . '1327R0011123K002116');
+        // return $data;
+        $data = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'RM#')->first();
         return $data;
     }
     public function wawanpost(Request $request)
