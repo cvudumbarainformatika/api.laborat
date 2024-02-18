@@ -34,7 +34,11 @@ class HistoryController extends Controller
         $nama = request('nama');
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
-        $idpegawai = Pegawai::select('id')->where('kode_ruang', $pegawai->kode_ruang)->get();
+        $raw = Pegawai::select('id')->where('kode_ruang', $pegawai->kode_ruang)->get();
+        $col = collect($raw);
+        $idpegawai = $col->map(function ($item) {
+            return $item->id;
+        });
 
         // pemesanan
 
