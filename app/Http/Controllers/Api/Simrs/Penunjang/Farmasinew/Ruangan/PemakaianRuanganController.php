@@ -34,6 +34,29 @@ class PemakaianRuanganController extends Controller
         return new JsonResponse($obat);
     }
 
+    public function getPemakaianRuangan()
+    {
+        $data = PemakaianH::with([
+            'rinci' => function ($rin) {
+                $rin->with('obat')
+                    ->selectRaw('*, sum(jumlah) as total')
+                    ->groupBy('nopemakaian', 'kd_obat');
+            },
+            'ruangan'
+        ])
+            ->when(request('flag'), function ($q) {
+                $flag = request('flag');
+                $anu = [];
+                foreach ($flag as $key) {
+                    $anu[] = $key ?? '';
+                }
+                $q->whereIn('flag', $anu);
+            })
+            ->whereBetween('tgl', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
     public function simpanpemaikaianruangan(Request $request)
     {
         // return new JsonResponse($request->all());
@@ -61,10 +84,13 @@ class PemakaianRuanganController extends Controller
             // rinci
             $rinci = [];
             foreach ($request->obats as $rin) {
-                if ((int)$rin['dipakai'] > 0) {
-                    $stok = Stokreal::where('kdobat', $rin['kdobat'])->where('kdruang', $request->kdruang)->orderBy('tglexp', 'ASC')->get();
+                if ((float)$rin['dipakai'] > 0) {
+                    $stok = Stokreal::where('kdobat', $rin['kdobat'])
+                        ->where('kdruang', $request->kdruang)
+                        ->where('jumlah', '>', 0)
+                        ->orderBy('tglexp', 'ASC')->get();
                     $index = 0;
-                    $dipakai = (int)$rin['dipakai'];
+                    $dipakai = (float)$rin['dipakai'];
                     while ($dipakai > 0) {
                         $ada = (float)$stok[$index]->jumlah;
                         if ($ada < $dipakai) {
@@ -75,6 +101,8 @@ class PemakaianRuanganController extends Controller
                                 'nobatch' => $stok[$index]->nobatch,
                                 'jumlah' => $ada,
                                 'flag' => '',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s')
                             ];
                             $rinci[] = $temp;
                             $sisa = $dipakai - $ada;
@@ -88,6 +116,8 @@ class PemakaianRuanganController extends Controller
                                 'nobatch' => $stok[$index]->nobatch,
                                 'jumlah' => $dipakai,
                                 'flag' => '',
+                                'created_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s')
                             ];
                             $rinci[] = $temp;
                             $dipakai = 0;
@@ -143,6 +173,7 @@ class PemakaianRuanganController extends Controller
 
     public function selesaiPakai(Request $request)
     {
+        // return new JsonResponse($request->all());
         $data = PemakaianH::where('nopemakaian', $request->nopemakaian)->first();
         $data->flag = '1';
         $data->save();
@@ -150,5 +181,68 @@ class PemakaianRuanganController extends Controller
             'message' => 'Data sudah dikunci.',
             'data' => $data
         ]);
+    }
+    public function hapusHeader(Request $request)
+    {
+        $head = PemakaianH::where('nopemakaian', $request->nopemakaian)->first();
+        if (!$head) {
+            return new JsonResponse(['message' => 'Data tidak ditermukan'], 410);
+        }
+        $rinci = PemakaianR::where('nopemakaian', $request->nopemakaian)->where('flag', '1')->get();
+        $stok = [];
+        if (count($rinci)) {
+            foreach ($rinci as $rinc) {
+                $temp = Stokreal::where('kdruang', $head->kdruang)
+                    ->where('kdobat', $rinc['kd_obat'])
+                    ->where('nopenerimaan', $rinc['nopenerimaan'])
+                    ->first();
+                $total = (float)$temp->jumlah + (float) $rinc['jumlah'];
+                $temp->jumlah = $total;
+                $temp->save();
+                $stok[] = $temp;
+                $rinc->delete();
+            }
+        }
+        $head->delete();
+        return new JsonResponse([
+            'head' => $head,
+            'rinci' => $rinci,
+            'stok' => $stok,
+            'message' => 'Data berhasil di hapus, Stok sudah dikembalikan'
+        ]);
+    }
+    public function hapusRinci(Request $request)
+    {
+        $rinci = PemakaianR::where('nopemakaian', $request->nopemakaian)
+            ->where('kd_obat', $request->kd_obat)
+            ->where('flag', '1')
+            ->get();
+        if (count($rinci)) {
+            $head = PemakaianH::where('nopemakaian', $request->nopemakaian)->first();
+            $stok = [];
+            foreach ($rinci as $rinc) {
+                $temp = Stokreal::where('kdruang', $head->kdruang)
+                    ->where('kdobat', $rinc['kd_obat'])
+                    ->where('nopenerimaan', $rinc['nopenerimaan'])
+                    ->first();
+                $total = (float)$temp->jumlah + (float) $rinc['jumlah'];
+                $temp->jumlah = $total;
+                $temp->save();
+                $stok[] = $temp;
+                $rinc->delete();
+            }
+            $adaRinci = PemakaianR::where('nopemakaian', $request->nopemakaian)->where('flag', '1')->get();
+            if (count($adaRinci) <= 0) {
+                $head->delete();
+            }
+            return new JsonResponse([
+                'head' => $head,
+                'rinci' => $rinci,
+                'adaRinci' => $adaRinci,
+                'stok' => $stok,
+                'message' => 'Data berhasil di hapus, Stok sudah dikembalikan'
+            ]);
+        }
+        return new JsonResponse(['message' => 'Data tidak ditemukan'], 410);
     }
 }
