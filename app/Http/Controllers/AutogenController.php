@@ -2793,10 +2793,13 @@ class AutogenController extends Controller
         $mapp = $co->map(function ($item) {
             return $item->id;
         });
+        $anu = $mapp;
+        $anu[] = 0;
         return [
             'id' => $idpeg,
             'col' => $co,
             'map' => $mapp,
+            'anu' => $anu,
             'id aja' => $id,
         ];
     }

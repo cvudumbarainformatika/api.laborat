@@ -39,6 +39,7 @@ class HistoryController extends Controller
         $idpegawai = $col->map(function ($item) {
             return $item->id;
         });
+        $idpegawai[] = 0;
 
         // pemesanan
 
@@ -54,7 +55,7 @@ class HistoryController extends Controller
             }
             if ($pegawai->role_id !== 1) {
                 if ($pegawai->kode_ruang === 'Gd-02010102') {
-                    $pemesanan->whereIn('created_by', $idpegawai)->orWhere('created_by', 0);
+                    $pemesanan->whereIn('created_by', $idpegawai);
                 } else {
                     $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
                 }
