@@ -47,6 +47,7 @@ class EresepController extends Controller
 
     public function lihatstokobateresepBydokter()
     {
+        // penccarian termasuk tiperesep
         $groupsistembayar = request('groups');
         if ($groupsistembayar == '1') {
             $sistembayar = ['SEMUA', 'BPJS'];
@@ -64,6 +65,8 @@ class EresepController extends Controller
             'new_masterobat.status_fornas as fornas',
             'new_masterobat.status_forkid as forkit',
             'new_masterobat.status_generik as generik',
+            'new_masterobat.status_kronis as kronis',
+            'new_masterobat.status_prb as prb',
             'new_masterobat.kode108',
             'new_masterobat.uraian108',
             'new_masterobat.kode50',
@@ -193,6 +196,7 @@ class EresepController extends Controller
                 'kodeincbg' => $request->kodeincbg,
                 'uraianinacbg' => $request->uraianinacbg,
                 'tarifina' => $request->tarifina,
+                'tiperesep' => $request->tiperesep ?? 'normal',
                 'tagihanrs' => $request->tagihanrs ?? 0,
             ]
         );
@@ -258,6 +262,7 @@ class EresepController extends Controller
                         'dosisobat' => $request->dosisobat,
                         'dosismaksimum' => $request->dosismaksimum, // dosis resep
                         'jumlah' => $request->jumlah, // jumlah obat
+                        'satuan_racik' => $request->satuan_racik, // jumlah obat
                         'keteranganx' => $request->keteranganx, // keterangan obat
                         'user' => $user['kodesimrs']
                     ]
@@ -290,6 +295,7 @@ class EresepController extends Controller
                         // 'dosisobat' => $request->dosisobat,
                         // 'dosismaksimum' => $request->dosismaksimum,
                         'jumlah' => $request->jumlah,
+                        'satuan_racik' => $request->satuan_racik,
                         'keteranganx' => $request->keteranganx,
                         'user' => $user['kodesimrs']
                     ]
