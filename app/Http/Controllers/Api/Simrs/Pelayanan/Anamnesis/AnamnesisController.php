@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis as AnamnesisAnamnesis;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -90,17 +91,46 @@ class AnamnesisController extends Controller
 
     public function historyanamnesis()
     {
+        $raw = [];
         $history = AnamnesisAnamnesis::select(
+            'id',
+            'rs2 as norm',
             'rs3 as tgl',
             'rs4 as keluhanutama',
             'riwayatpenyakit',
             'riwayatalergi',
             'keteranganalergi',
-            'riwayatpengobatan'
+            'riwayatpengobatan',
+            'riwayatpenyakitsekarang',
+            'riwayatpenyakitkeluarga',
+            'skreeninggizi',
+            'asupanmakan',
+            'kondisikhusus',
+            'skor',
+            'scorenyeri',
+            'keteranganscorenyeri',
+            'user',
         )
             ->where('rs2', request('norm'))
-            ->orderBy('rs3', 'DESC')
-            ->get();
-        return new JsonResponse($history);
+            ->where('rs3', '<', Carbon::now()->toDateString())
+            ->with('datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs')
+            ->orderBy('tgl', 'DESC')
+            ->get()
+            ->chunk(10);
+        // ->chunk(10, function ($q) use ($raw) {
+        //     foreach ($q as $x) {
+        //         $raw[] = $x;
+        //     }
+        // });
+        // ->simplePaginate(10);
+        // ->cursorPaginate(5)->through(function ($item) {
+        //     return $item->makeHidden('id');
+        // });
+        // ->limit(10)->offset(0)->get();
+
+        $collapsed = $history->collapse();
+
+
+        return new JsonResponse($collapsed->all());
     }
 }
