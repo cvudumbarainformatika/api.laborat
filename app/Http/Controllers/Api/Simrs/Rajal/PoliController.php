@@ -601,7 +601,7 @@ class PoliController extends Controller
             ->first();
         $flag = $cekx->rs19;
         if ($flag === '') {
-            // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            KunjunganPoli::where('rs1', $request->noreg)->first();
             $cekx->rs19 = '2';
             $cekx->save();
             // return new JsonResponse(['message' => 'ok'], 200);
