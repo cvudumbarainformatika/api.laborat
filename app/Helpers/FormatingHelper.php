@@ -26,11 +26,11 @@ class FormatingHelper
             return new JsonResponse('data tidak ada');
         }
         $flag = $data->rs3;
-        $data2 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'RM#')->first();
-        $nama_biaya_rm = $data2 ? $data2->rs2 : '';
-        $kode_biaya_rm = "RM";
-        $biaya_rm1 = $data2 ? $data2->rs8 : '0';
-        $biaya_rm2 = $data2 ? $data2->rs9 : '0';
+        // $data2 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'RM#')->first();
+        // $nama_biaya_rm = $data2 ? $data2->rs2 : '';
+        // $kode_biaya_rm = "RM";
+        // $biaya_rm1 = $data2 ? $data2->rs8 : '0';
+        // $biaya_rm2 = $data2 ? $data2->rs9 : '0';
 
         $nama_biaya_lama = null;
         $kode_biaya_lama = null;
@@ -51,23 +51,27 @@ class FormatingHelper
         $biaya_kartu2 = $data4[0]->rs9;
 
         if ($kartu != 'Lama') {
-            $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama . '' . $nama_biaya_tidak_lama;
-            $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama . '' . $kode_biaya_tidak_lama;
+            // $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama . '' . $nama_biaya_tidak_lama;
+            // $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama . '' . $kode_biaya_tidak_lama;
+            $nama_biaya =  $nama_biaya_lama . '' . $nama_biaya_tidak_lama;
+            $kode_biaya =  $kode_biaya_lama . '' . $kode_biaya_tidak_lama;
             $biaya_kartu1;
             $biaya_kartu2;
         } else {
-            $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama;
-            $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama;
+            // $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama;
+            // $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama;
+            $nama_biaya =  $nama_biaya_lama;
+            $kode_biaya =  $kode_biaya_lama;
             $biaya_kartu1 = 0;
             $biaya_kartu2 = 0;
         }
 
-        if ($biaya_rm1 > 0) {
-            $sarana = 0;
-            $pelayanan = 0;
-            $sarana = $sarana . $biaya_rm1;
-            $pelayanan = $pelayanan . $biaya_rm2;
-        }
+        // if ($biaya_rm1 > 0) {
+        //     $sarana = 0;
+        //     $pelayanan = 0;
+        //     $sarana = $sarana . $biaya_rm1;
+        //     $pelayanan = $pelayanan . $biaya_rm2;
+        // }
 
         if ($biaya_karcis1 > 0) {
             $sarana = $sarana ?? 0 . "#" . $biaya_karcis2;
