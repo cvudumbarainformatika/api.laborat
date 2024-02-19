@@ -197,6 +197,7 @@ class EresepController extends Controller
                 'uraianinacbg' => $request->uraianinacbg,
                 'tarifina' => $request->tarifina,
                 'tiperesep' => $request->tiperesep ?? 'normal',
+                // 'iter_expired' => $request->iter_expired ?? '',
                 'tagihanrs' => $request->tagihanrs ?? 0,
             ]
         );
