@@ -2787,21 +2787,24 @@ class AutogenController extends Controller
         //     'carbon7' => $carbon7,
         //     'carbon8' => $carbon8,
         // ];
-        $idpeg = Pegawai::select('id')->where('kode_ruang', 'Gd-02010102')->get();
-        $co = collect($idpeg);
-        $id = $co->except('ttdpegawai_url');
-        $mapp = $co->map(function ($item) {
-            return $item->id;
-        });
-        $anu = $mapp;
-        $anu[] = 0;
-        return [
-            'id' => $idpeg,
-            'col' => $co,
-            'map' => $mapp,
-            'anu' => $anu,
-            'id aja' => $id,
-        ];
+        // $idpeg = Pegawai::select('id')->where('kode_ruang', 'Gd-02010102')->get();
+        // $co = collect($idpeg);
+        // $id = $co->except('ttdpegawai_url');
+        // $mapp = $co->map(function ($item) {
+        //     return $item->id;
+        // });
+        // $anu = $mapp;
+        // $anu[] = 0;
+        // return [
+        //     'id' => $idpeg,
+        //     'col' => $co,
+        //     'map' => $mapp,
+        //     'anu' => $anu,
+        //     'id aja' => $id,
+        // ];
+        // $ant = new BridantrianbpjsController;
+        // $temp = $ant->batalantrian();
+        // return $temp;
     }
 
     public function baru()
