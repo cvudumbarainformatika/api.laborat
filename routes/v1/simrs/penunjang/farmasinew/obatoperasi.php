@@ -9,5 +9,7 @@ Route::group([
     'prefix' => 'simrs/penunjang/farmasinew/obatoperasi'
 ], function () {
     Route::get('/get-permintaan', [PersiapanOperasiController::class, 'getPermintaan']);
-    Route::post('/simpan-distribusi', [PersiapanOperasiController::class, 'simpanDistribusi']);
+    Route::post('/simpan-permintaan', [PersiapanOperasiController::class, 'simpanPermintaan']);
+    Route::post('/distribusi', [PersiapanOperasiController::class, 'simpanDistribusi']);
+    Route::post('/terima-pengembalian', [PersiapanOperasiController::class, 'terimaPengembalian']);
 });
