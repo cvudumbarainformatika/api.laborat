@@ -15,6 +15,7 @@ class PersiapanOperasiController extends Controller
         $flag = request('flag') ?? [];
         $data = PersiapanOperasi::with('rinci.obat:kd_obat,nama_obat,satuan_k', 'pasien:rs1,rs2')
             ->whereIn('flag', $flag)
+            ->orderBy('tgl_permintaan', "desc")
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
