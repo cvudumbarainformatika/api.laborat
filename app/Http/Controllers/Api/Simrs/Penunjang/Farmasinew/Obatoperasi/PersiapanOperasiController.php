@@ -131,6 +131,7 @@ class PersiapanOperasiController extends Controller
                 'rinci' => $rinci,
                 'data' => $dist,
                 'head' => $head,
+                'message' => 'Data berhasil di simpan'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -142,6 +143,100 @@ class PersiapanOperasiController extends Controller
     }
     public function terimaPengembalian(Request $request)
     {
-        return new JsonResponse($request->all());
+        try {
+            DB::beginTransaction();
+            $rinci = $request->rinci;
+            $user = FormatingHelper::session_user();
+            $kode = $user['kodesimrs'];
+            if (count($rinci) > 0) {
+                foreach ($rinci as $key) {
+                    // update data rinci
+                    $kembali = (float)$key['jumlah_kembali'];
+                    $dataDistribusi = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
+                        ->where('nopermintaan', $key['nopermintaan'])
+                        ->orderBy('id', 'DESC')
+                        ->get();
+
+                    if ($kembali > 0) {
+                        $dataRinci = PersiapanOperasiRinci::find($key['id']);
+                        if (!$dataRinci) {
+                            return new JsonResponse(['message' => 'Data Rinci tidak ditemukan']);
+                        }
+                        $dataRinci->jumlah_kembali = $key['jumlah_kembali'];
+                        $dataRinci->save();
+                        // update data distribusi
+
+                        $index = 0;
+                        while ($kembali > 0) {
+                            $ada = (float)$dataDistribusi[$index]->jumlah;
+                            if ($ada < $kembali) {
+                                $dataDistribusi[$index]->jumlah_retur = $ada;
+                                $dataDistribusi[$index]->tgl_retur = date('Y-m_d H:i:s');
+                                $dataDistribusi[$index]->save();
+
+                                // update stok
+                                $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
+                                    ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
+                                    ->where('kdruang', 'Gd-04010103')
+                                    ->first();
+
+                                $totalStok = (float)$stok->jumlah + $ada;
+                                $stok->jumlah = $totalStok;
+                                $stok->save();
+
+                                $sisa = $kembali - $ada;
+                                $index += 1;
+                                $kembali = $sisa;
+                            } else {
+
+                                $dataDistribusi[$index]->jumlah_retur = $kembali;
+                                $dataDistribusi[$index]->tgl_retur = date('Y-m_d H:i:s');
+                                $dataDistribusi[$index]->save();
+
+                                // update stok
+                                $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
+                                    ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
+                                    ->where('kdruang', 'Gd-04010103')
+                                    ->first();
+                                $totalStok = (float)$stok->jumlah + $kembali;
+                                $stok->jumlah = $totalStok;
+                                $stok->save();
+
+                                $kembali = 0;
+                            }
+                        }
+                    } else if ($kembali == 0) {
+
+                        foreach ($dataDistribusi as $key) {
+                            $key['tgl_retur'] = date('Y-m_d H:i:s');
+                            $key->save();
+                        }
+                    }
+                }
+            }
+
+            // update header
+            $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+            if (!$head) {
+                return new JsonResponse(['message' => 'Data Header tidak ditemukan'], 410);
+            }
+            $head->flag = '4';
+            $head->save();
+
+            return new JsonResponse([
+                'rinci' => $rinci,
+                'head' => $head,
+                'dataDistribusi' => $dataDistribusi ?? [],
+                'message' => 'Data berhasil di simpan'
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan...!!!',
+                'result' => $e,
+            ], 410);
+        }
     }
 }
