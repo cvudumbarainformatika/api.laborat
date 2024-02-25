@@ -34,7 +34,7 @@ class PersiapanOperasiController extends Controller
     {
         $belum = PersiapanOperasi::with([
             'rinci' => function ($ri) {
-                $ri->with('obat:kd_obat,nama_obat,satuan_k')->where('noresep', '=', '');
+                $ri->with('obat:kd_obat,nama_obat,satuan_k');
             },
             'pasien:rs1,rs2',
             'userminta:kdpegsimrs,nama',
