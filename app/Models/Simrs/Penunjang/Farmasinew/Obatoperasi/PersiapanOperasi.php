@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,5 +25,18 @@ class PersiapanOperasi extends Model
     public function pasien()
     {
         return $this->belongsTo(Mpasien::class, 'norm', 'rs1');
+    }
+
+    public function userminta()
+    {
+        return $this->belongsTo(Pegawai::class, 'user_minta', 'kdpegsimrs');
+    }
+    public function userdist()
+    {
+        return $this->belongsTo(Pegawai::class, 'user_distribusi', 'kdpegsimrs');
+    }
+    public function dokter()
+    {
+        return $this->belongsTo(Pegawai::class, 'dokter', 'kdpegsimrs');
     }
 }
