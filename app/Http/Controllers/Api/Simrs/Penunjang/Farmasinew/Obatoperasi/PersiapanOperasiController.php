@@ -41,9 +41,7 @@ class PersiapanOperasiController extends Controller
             'userdist:kdpegsimrs,nama',
             'dokter:kdpegsimrs,nama',
         ])
-            ->whereHas('rinci', function ($ri) {
-                $ri->where('noresep', '=', '');
-            })
+
             ->where('flag', '=', '2')
             ->where('noreg', '=', request('noreg'))
             ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
@@ -57,18 +55,26 @@ class PersiapanOperasiController extends Controller
             'persiapan_operasis.tgl_resep',
             'persiapan_operasis.dokter',
             'persiapan_operasis.user_minta',
+            'persiapan_operasis.flag',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k',
         )
             ->with([
                 'pasien:rs1,rs2',
                 'userminta:kdpegsimrs,nama',
                 'dokter:kdpegsimrs,nama',
             ])
+            // ->leftJoin('persiapan_operasi_rincis', function ($q) {
+            //     $q->on('persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+            //         ->leftJoin('new_masterobat', 'persiapan_operasi_rincis.kd_obat', '=', 'new_masterobat.kd_obat');
+            // })
             ->leftJoin('persiapan_operasi_rincis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
-            ->whereIn('flag', ['2', '3'])
+            ->leftJoin('new_masterobat', 'persiapan_operasi_rincis.kd_obat', '=', 'new_masterobat.kd_obat')
+            ->whereIn('persiapan_operasis.flag', ['2', '3'])
             ->where('persiapan_operasis.noreg', '=', request('noreg'))
-            ->when(request('noresep'), function ($q) {
-                $q->where('persiapan_operasi_rincis.noresep', request('noresep'));
-            })
+            // ->when(request('noresep'), function ($q) {
+            //     $q->where('persiapan_operasi_rincis.noresep', request('noresep'));
+            // })
             ->where('persiapan_operasi_rincis.noresep', '!=', '')
             ->whereBetween('persiapan_operasis.tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->orderBy('persiapan_operasis.tgl_permintaan', "desc")
@@ -237,6 +243,7 @@ class PersiapanOperasiController extends Controller
             'noreg' => $request->noreg,
             'norm' => $request->norm,
             'tgl_permintaan' => date('Y-m-d H:i:s'),
+            'tgl_kirim' => date('Y-m-d H:i:s'),
             'depo' => 'Gd-04010103',
             'ruangan' => 'R-0101025',
             'dokter' =>  $user['kodesimrs'],
@@ -319,6 +326,9 @@ class PersiapanOperasiController extends Controller
                 $adaRinci->jumlah_resep = $key['jumlah_resep'];
                 $adaRinci->save();
             }
+        } else {
+
+            return new JsonResponse(['message' => 'Tidak ada Obat untuk disimpan'], 410);
         }
         $header = Resepkeluarheder::updateOrCreate(['noresep' => $noresep], $head);
         if (!$header) {
@@ -351,7 +361,36 @@ class PersiapanOperasiController extends Controller
     }
     public function selesaiEresep(Request $request)
     {
-        return new JsonResponse($request->all());
+        $data = PersiapanOperasi::find($request->id);
+        if ($data) {
+            $data->flag = '3';
+            $data->save();
+            return new JsonResponse([
+                'message' => 'Resep untuk nomor permintaan ' . $request->nopermintaan . ' sudah selesai'
+            ]);
+        }
+        return new JsonResponse([
+            'message' => 'Nomor permintaan ' . $request->nopermintaan . ' gagal diselesaikan, tidak adakan diterima oleh depo'
+        ], 410);
+    }
+    public function batalObatResep(Request $request)
+    {
+        $head = PersiapanOperasi::find($request->headid);
+        $data = PersiapanOperasiRinci::find($request->id);
+        $flag = (int) $head->flag;
+        if ($flag <= 3) {
+            $data->noresep = '';
+            $data->jumlah_resep = 0;
+            $data->save();
+        } else {
+            return new JsonResponse(['message' => 'Tidak boleh di hapus dari resep karena sudah di proses di apotek'], 410);
+        }
+        return new JsonResponse([
+            'message' => 'Obat sudah di hapus dari resep',
+            'head' => $head,
+            'data' => $data,
+            // 'req' => $request->all(),
+        ]);
     }
     public static function resepKeluar($key)
     {
