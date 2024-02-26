@@ -493,6 +493,7 @@ class PersiapanOperasiController extends Controller
     }
     public function terimaPengembalian(Request $request)
     {
+        // return new JsonResponse($request->all());
         try {
             DB::beginTransaction();
             $rinci = $request->rinci;
