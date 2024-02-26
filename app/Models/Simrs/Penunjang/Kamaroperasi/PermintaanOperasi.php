@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 
+use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,5 +23,15 @@ class PermintaanOperasi extends Model
     public function kunjunganrajal()
     {
         return $this->hasOne(KunjunganPoli::class, 'rs1', 'rs1');
+    }
+
+    public function sistembayar()
+    {
+        return $this->hasOne(Msistembayar::class, 'rs1', 'rs14');
+    }
+
+    public function dokter()
+    {
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs8');
     }
 }

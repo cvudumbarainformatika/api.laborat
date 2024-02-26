@@ -8,6 +8,7 @@ use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class KamaroperasiController extends Controller
@@ -79,14 +80,34 @@ class KamaroperasiController extends Controller
 
     public function listkamaroperasi()
     {
-        $dari = '2024-02-07 00:00:01';
-        $sampai = '2024-02-07 23:59:59';
+        if (request('to') === '' || request('from') === null) {
+            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $tgl = request('to') . ' 00:00:00';
+            $tglx = request('from') . ' 23:59:59';
+        }
+        $status = request('status') ?? '';
         $listkamaroperasi = PermintaanOperasi::with(
             [
-                'kunjunganranap.masterpasien:rs1,rs2',
-                'kunjunganrajal.masterpasien:rs1,rs2'
+                'kunjunganranap.masterpasien',
+                'kunjunganrajal.masterpasien',
+                'sistembayar',
+                'dokter',
+                'kunjunganranap.relmasterruangranap',
+                'kunjunganrajal.relmpoli',
             ]
-        )->whereBetween('rs3', [$dari, $sampai])->get();
+        )->where(function ($sts) use ($status) {
+            if ($status !== 'all') {
+                if ($status === '') {
+                    $sts->where('rs9', '!=', '1');
+                } else {
+                    $sts->where('rs9', '=', $status);
+                }
+            }
+        })
+            ->whereBetween('rs3', [$tgl, $tglx])
+            ->paginate(request('per_page'));
         return new JsonResponse($listkamaroperasi);
     }
 }
