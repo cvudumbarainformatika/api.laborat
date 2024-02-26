@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Planing;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mcounter;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
@@ -492,6 +493,7 @@ class PlaningController extends Controller
 
     public static function simpansuratkontrol($request, $nosuratkontrol)
     {
+        $dokter = Pegawai::where('kddpjp', $request->kodedokterdpjp)->first();
         $simpansuratkontrol = Simpansuratkontrol::firstOrCreate(
             [
                 'noSuratKontrol' => $nosuratkontrol
@@ -503,7 +505,8 @@ class PlaningController extends Controller
                 'kodeDokter' => $request->kodedokterdpjp,
                 'poliKontrol' => $request->kodepolibpjs,
                 'tglRencanaKontrol' => $request->tglrencanakunjungan,
-                'namaDokter' => $request->dokter,
+                // 'namaDokter' => $request->dokter,
+                'namaDokter' => $dokter->nama ?? 'Dokter tidak di temukan di data pegawai',
                 'noKartu' => $request->noka,
                 'nama' => $request->nama,
                 'kelamin' => $request->kelamin,

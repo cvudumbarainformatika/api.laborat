@@ -26,62 +26,66 @@ class FormatingHelper
             return new JsonResponse('data tidak ada');
         }
         $flag = $data->rs3;
-        $data2 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'RM#')->first();
-        $nama_biaya_rm = $data2 ? $data2->rs2 : '';
-        $kode_biaya_rm = "RM";
-        $biaya_rm1 = $data2 ? $data2->rs8 : '0';
-        $biaya_rm2 = $data2 ? $data2->rs9 : '0';
+        // $data2 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'RM#')->first();
+        // $nama_biaya_rm = $data2 ? $data2->rs2 : '';
+        // $kode_biaya_rm = "RM";
+        // $biaya_rm1 = $data2 ? $data2->rs8 : '0';
+        // $biaya_rm2 = $data2 ? $data2->rs9 : '0';
 
-        $nama_biaya_lama = null;
-        $kode_biaya_lama = null;
+        $nama_biaya = null;
+        $kode_biaya = null;
         $data3 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'K2#')
             ->where('rs4', 'LIKE', '%' . $flag . '%')->get();
-        $nama_biaya_lama = $nama_biaya_lama . "#" . $data3[0]->rs2;
-        $kode_biaya_lama = $kode_biaya_lama . "#" . "K2";
+        $nama_biaya = $nama_biaya . "#" . $data3[0]->rs2;
+        $kode_biaya = $kode_biaya . "#" . "K2";
         $biaya_karcis1 = $data3[0]->rs8;
         $biaya_karcis2 = $data3[0]->rs9;
 
-        $nama_biaya_tidak_lama = null;
-        $kode_biaya_tidak_lama = null;
-        $data4 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'K1#')
-            ->where('rs4', '=', 'RJ')->get();
-        $nama_biaya_tidak_lama = $nama_biaya_tidak_lama . "#" . $data4[0]->rs2;
-        $kode_biaya_tidak_lama = $kode_biaya_tidak_lama . "#" . "K1";
-        $biaya_kartu1 = $data4[0]->rs8;
-        $biaya_kartu2 = $data4[0]->rs9;
+        // $nama_biaya_tidak_lama = null;
+        // $kode_biaya_tidak_lama = null;
+        // $data4 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'K1#')
+        //     ->where('rs4', '=', 'RJ')->get();
+        // $nama_biaya_tidak_lama = $nama_biaya_tidak_lama . "#" . $data4[0]->rs2;
+        // $kode_biaya_tidak_lama = $kode_biaya_tidak_lama . "#" . "K1";
+        // $biaya_kartu1 = $data4[0]->rs8;
+        // $biaya_kartu2 = $data4[0]->rs9;
 
-        if ($kartu != 'Lama') {
-            $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama . '' . $nama_biaya_tidak_lama;
-            $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama . '' . $kode_biaya_tidak_lama;
-            $biaya_kartu1;
-            $biaya_kartu2;
-        } else {
-            $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama;
-            $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama;
-            $biaya_kartu1 = 0;
-            $biaya_kartu2 = 0;
-        }
+        // if ($kartu != 'Lama') {
+        //     // $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama . '' . $nama_biaya_tidak_lama;
+        //     // $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama . '' . $kode_biaya_tidak_lama;
+        //     $nama_biaya =  $nama_biaya_lama . '' . $nama_biaya_tidak_lama;
+        //     $kode_biaya =  $kode_biaya_lama . '' . $kode_biaya_tidak_lama;
+        //     $biaya_kartu1 = 0;
+        //     $biaya_kartu2 = 0;
+        // } else {
+        // $nama_biaya = $nama_biaya_rm . '' . $nama_biaya_lama;
+        // $kode_biaya = $kode_biaya_rm . '' . $kode_biaya_lama;
+        // $nama_biaya =  $nama_biaya_lama;
+        // $kode_biaya =  $kode_biaya_lama;
+        // $biaya_kartu1 = 0;
+        // $biaya_kartu2 = 0;
+        // }
 
-        if ($biaya_rm1 > 0) {
-            $sarana = 0;
-            $pelayanan = 0;
-            $sarana = $sarana . $biaya_rm1;
-            $pelayanan = $pelayanan . $biaya_rm2;
-        }
+        // if ($biaya_rm1 > 0) {
+        //     $sarana = 0;
+        //     $pelayanan = 0;
+        //     $sarana = $sarana . $biaya_rm1;
+        //     $pelayanan = $pelayanan . $biaya_rm2;
+        // }
 
         if ($biaya_karcis1 > 0) {
             $sarana = $sarana ?? 0 . "#" . $biaya_karcis2;
             $pelayanan = $pelayanan ?? 0 . "#" . $biaya_karcis1;
         }
 
-        if ($biaya_kartu1 > 0) {
-            $sarana = $sarana ?? 0 . "#" . $biaya_kartu1;
-            $pelayanan = $pelayanan ?? 0 . "#" . $biaya_kartu2;
-        }
+        // if ($biaya_kartu1 > 0) {
+        //     $sarana = $sarana ?? 0 . "#" . $biaya_kartu1;
+        //     $pelayanan = $pelayanan ?? 0 . "#" . $biaya_kartu2;
+        // }
 
 
         // $tarif = $biaya_rm1 + $biaya_rm2 + $biaya_karcis1 + $biaya_karcis2 + $biaya_kartu1 + $biaya_kartu2;
-        $tarif =  $biaya_karcis1 + $biaya_karcis2 + $biaya_kartu1 + $biaya_kartu2;
+        $tarif =  $biaya_karcis1 + $biaya_karcis2;
 
         return [
             'nama_biaya' => $nama_biaya,

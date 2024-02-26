@@ -34,7 +34,12 @@ class HistoryController extends Controller
         $nama = request('nama');
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
-        $idpegawai = Pegawai::select('id')->where('kode_ruang', $pegawai->kode_ruang)->get();
+        $raw = Pegawai::select('id')->where('kode_ruang', $pegawai->kode_ruang)->get();
+        $col = collect($raw);
+        $idpegawai = $col->map(function ($item) {
+            return $item->id;
+        });
+        $idpegawai[] = 0;
 
         // pemesanan
 
@@ -50,7 +55,7 @@ class HistoryController extends Controller
             }
             if ($pegawai->role_id !== 1) {
                 if ($pegawai->kode_ruang === 'Gd-02010102') {
-                    $pemesanan->whereIn('created_by', $idpegawai)->orWhere('created_by', 0);
+                    $pemesanan->whereIn('created_by', $idpegawai);
                 } else {
                     $pemesanan->whereIn('created_by', [$user->pegawai_id, 0]);
                 }
