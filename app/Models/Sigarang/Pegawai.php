@@ -119,7 +119,7 @@ class Pegawai extends Model
         $handle = @fopen($image, 'r');
         if ($handle) {
             $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
-            return $this->ttdpegawai ? $base64 : null;
+            return  $base64 ? $base64 : null;
         } else {
             return null;
         }
