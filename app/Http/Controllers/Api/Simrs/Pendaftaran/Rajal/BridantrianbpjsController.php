@@ -104,17 +104,18 @@ class BridantrianbpjsController extends Controller
         //return $ambilantrian;
     }
 
-    public function batalantrian(Request $request)
+    public function batalantrian($request)
+    // public function batalantrian(Request $request)
     {
         $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "kodebooking" => $request,
+            "keterangan" => "Terjadi perubahan jadwal dokter, silahkan daftar kembali",
+        ];
         // $data = [
         //     "kodebooking" => $request->kodebooking,
-        //     "keterangan" => "Terjadi perubahan jadwal dokter, silahkan daftar kembali",
+        //     "keterangan" => $request->alasan,
         // ];
-        $data = [
-            "kodebooking" => $request->kodebooking,
-            "keterangan" => $request->alasan,
-        ];
         $batalantrian = BridgingbpjsHelper::post_url(
             'antrean',
             'antrean/batal',

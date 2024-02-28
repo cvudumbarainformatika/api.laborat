@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\SistemBayar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -264,7 +265,7 @@ class PersiapanOperasiController extends Controller
             'tarifina' => $request->tarifina ?? '',
             'tiperesep' => $request->tiperesep ?? 'normal',
             'tagihanrs' => $request->tagihanrs ?? 0,
-            'flag' => '10',
+            'flag' => '9',
         ];
         $obat = $request->obats;
         $rinci = [];
@@ -402,107 +403,123 @@ class PersiapanOperasiController extends Controller
             // 'req' => $request->all(),
         ]);
     }
-    public static function resepKeluar($key)
+    public static function resepKeluar($key, $request, $kode, $data)
     {
         $rinci = [];
-        // cari harga
-        $gudang = ['Gd-05010100', 'Gd-03010100'];
-        $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-            ->whereIn('kdruang', $gudang)
-            ->where('kdobat', $key['kd_obat'])
-            ->orderBy('tglpenerimaan', 'desc')
-            ->limit(5)
-            ->get();
-        $harga = $cariharga[0]->harga;
-        $sistemBayar = SistemBayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
-        $gr = $sistemBayar->groups ?? '';
-        if ($gr == 1) {
-            if ($harga <= 50000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-            } elseif ($harga > 50000 && $harga <= 250000) {
-                $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-            } elseif ($harga > 250000 && $harga <= 500000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-            } elseif ($harga > 500000 && $harga <= 1000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-            } elseif ($harga > 1000000 && $harga <= 5000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-            } elseif ($harga > 5000000 && $harga <= 10000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-            } elseif ($harga > 10000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
+        foreach ($data as $key) {
+            $listPasienOp = PermintaanOperasi::where('rs1', $request->noreg)->first();
+            $sistemBayar = 0;
+            if ($listPasienOp) {
+                $tmp = SistemBayar::select('groups')->where('rs1', $listPasienOp->rs14)->first();
+                $sistemBayar = $tmp->groups;
             }
-        } else {
-            $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-        }
-        $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
-        $dist = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
-            ->where('nopermintaan', $key['nopermintaan'])
-            ->orderBy('id', 'ASC')
-            ->get();
-        $index = 0;
-        $masuk = (float) $key['jumlah_resep'];
-        while ($masuk > 0) {
-            $ada = (float)$dist[$index]->jumlah;
-            if ($ada < $masuk) {
-                $rin = [
-                    'noreg' => $request->noreg,
-                    // 'noresep' => $noresep,
-                    'kdobat' => $masterObat->kd_obat,
-                    'kandungan' => $masterObat->kandungan,
-                    'fornas' => $masterObat->status_fornas,
-                    'forkit' => $masterObat->status_forkid,
-                    'generik' => $masterObat->status_generik,
-                    'kode108' => $masterObat->kode108,
-                    'uraian108' => $masterObat->uraian108,
-                    'kode50' => $masterObat->kode50,
-                    'uraian50' => $masterObat->uraian50,
-                    'stokalokasi' =>  0,
-                    'r' => 300,
-                    'jumlah' => $ada,
-                    'hpp' => $harga ?? 0,
-                    'hargajual' => $hargajualx,
-                    'aturan' => 'dipakai untuk operasi',
-                    'konsumsi' => 1,
-                    'keterangan' => 'Di pakai untuk operasi' ?? '',
-                    'user' => $user['kodesimrs']
-                ];
-                $rinci[] = $rin;
-                $sisa = $masuk - $ada;
-                $index += 1;
-                $masuk = $sisa;
-            } else {
-                $rin = [
-                    'noreg' => $request->noreg,
-                    // 'noresep' => $noresep,
-                    'kdobat' => $masterObat->kd_obat,
-                    'kandungan' => $masterObat->kandungan,
-                    'fornas' => $masterObat->status_fornas,
-                    'forkit' => $masterObat->status_forkid,
-                    'generik' => $masterObat->status_generik,
-                    'kode108' => $masterObat->kode108,
-                    'uraian108' => $masterObat->uraian108,
-                    'kode50' => $masterObat->kode50,
-                    'uraian50' => $masterObat->uraian50,
-                    'stokalokasi' =>  0,
-                    'r' => 300,
-                    'jumlah' => $masuk,
-                    'hpp' => $harga ?? 0,
-                    'hargajual' => $hargajualx,
-                    'aturan' => 'dipakai untuk operasi',
-                    'konsumsi' => 1,
-                    'keterangan' => 'Di pakai untuk operasi' ?? '',
-                    'user' => $user['kodesimrs']
-                ];
-                $rinci[] = $rin;
+            // cari harga
+            $gudang = ['Gd-05010100', 'Gd-03010100'];
+            $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
+                ->whereIn('kdruang', $gudang)
+                ->where('kdobat', $key['kd_obat'])
+                ->orderBy('tglpenerimaan', 'desc')
+                ->limit(5)
+                ->get();
+            $harga = $cariharga[0]->harga;
 
-                $masuk = 0;
+            // return $sistemBayar;
+            $gr = $sistemBayar ?? '';
+            if ($gr == 1) {
+                if ($harga <= 50000) {
+                    $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
+                } elseif ($harga > 50000 && $harga <= 250000) {
+                    $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
+                } elseif ($harga > 250000 && $harga <= 500000) {
+                    $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
+                } elseif ($harga > 500000 && $harga <= 1000000) {
+                    $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
+                } elseif ($harga > 1000000 && $harga <= 5000000) {
+                    $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
+                } elseif ($harga > 5000000 && $harga <= 10000000) {
+                    $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
+                } elseif ($harga > 10000000) {
+                    $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
+                }
+            } else {
+                $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
+            }
+            $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
+            $dist = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
+                ->where('nopermintaan', $key['nopermintaan'])
+                ->orderBy('id', 'ASC')
+                ->get();
+            $index = 0;
+            $masuk = (float) $key['jumlah_resep'];
+
+            while ($masuk > 0) {
+                $ada = (float)$dist[$index]->jumlah;
+                $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])->where('nopenerimaan', $dist[$index]->nopenerimaan)->where('kdruang', 'Gd-04010103')->first();
+                if ($ada < $masuk) {
+                    $rin = [
+                        'noreg' => $request->noreg,
+                        'noresep' => $key['noresep'],
+                        'kdobat' => $masterObat->kd_obat,
+                        'kandungan' => $masterObat->kandungan,
+                        'fornas' => $masterObat->status_fornas,
+                        'forkit' => $masterObat->status_forkid,
+                        'generik' => $masterObat->status_generik,
+                        'kode108' => $masterObat->kode108,
+                        'uraian108' => $masterObat->uraian108,
+                        'kode50' => $masterObat->kode50,
+                        'uraian50' => $masterObat->uraian50,
+                        'nilai_r' => 300,
+                        'jumlah' => $ada,
+                        'harga_beli' => $hargaBeli->harga ?? 0,
+                        'hpp' => $harga ?? 0,
+                        'harga_jual' => $hargajualx,
+                        'aturan' => 'dipakai untuk operasi',
+                        'konsumsi' => 1,
+                        'keterangan' => 'Di pakai untuk operasi' ?? '',
+                        'user' => $kode,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                    $rinci[] = $rin;
+                    $sisa = $masuk - $ada;
+                    $index += 1;
+                    $masuk = $sisa;
+                } else {
+                    $rin = [
+                        'noreg' => $request->noreg,
+                        'noresep' => $key['noresep'],
+                        'kdobat' => $masterObat->kd_obat,
+                        'kandungan' => $masterObat->kandungan,
+                        'fornas' => $masterObat->status_fornas,
+                        'forkit' => $masterObat->status_forkid,
+                        'generik' => $masterObat->status_generik,
+                        'kode108' => $masterObat->kode108,
+                        'uraian108' => $masterObat->uraian108,
+                        'kode50' => $masterObat->kode50,
+                        'uraian50' => $masterObat->uraian50,
+                        'nilai_r' => 300,
+                        'jumlah' => $masuk,
+                        'harga_beli' => $hargaBeli->harga ?? 0,
+                        'hpp' => $harga ?? 0,
+                        'harga_jual' => $hargajualx,
+                        'aturan' => 'dipakai untuk operasi',
+                        'konsumsi' => 1,
+                        'keterangan' => 'Di pakai untuk operasi' ?? '',
+                        'user' => $kode,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                    $rinci[] = $rin;
+
+                    $masuk = 0;
+                }
             }
         }
         return $rinci;
     }
     public function terimaPengembalian(Request $request)
     {
+        // $resepKeluar = self::resepKeluar($key, $request);
         // return new JsonResponse($request->all());
         try {
             DB::beginTransaction();
@@ -514,6 +531,7 @@ class PersiapanOperasiController extends Controller
                 foreach ($rinci as $key) {
                     // update data rinci
                     $kembali = (float)$key['jumlah_kembali'];
+                    $jmlResep = (float) $key['jumlah_resep'];
                     $dataDistribusi = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
                         ->where('nopermintaan', $key['nopermintaan'])
                         ->orderBy('id', 'DESC')
@@ -574,9 +592,129 @@ class PersiapanOperasiController extends Controller
                             $key->save();
                         }
                     }
-                    $resepKeluar = self::resepKeluar($key);
+
+                    // $dist = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
+                    //     ->where('nopermintaan', $key['nopermintaan'])
+                    //     ->orderBy('id', 'ASC')
+                    //     ->get();
+
+                    // if ($jmlResep > 0) {
+                    //     // resep keluar
+                    //     $listPasienOp = PermintaanOperasi::where('rs1', $request->noreg)->first();
+                    //     $sistemBayar = 0;
+                    //     if ($listPasienOp) {
+                    //         $tmp = SistemBayar::select('groups')->where('rs1', $listPasienOp->rs14)->first();
+                    //         $sistemBayar = $tmp->groups;
+                    //     }
+                    //     // $rinci = [];
+                    //     // cari harga
+                    //     $gudang = ['Gd-05010100', 'Gd-03010100'];
+                    //     $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
+                    //         ->whereIn('kdruang', $gudang)
+                    //         ->where('kdobat', $key['kd_obat'])
+                    //         ->orderBy('tglpenerimaan', 'desc')
+                    //         ->limit(5)
+                    //         ->get();
+                    //     $harga = $cariharga[0]->harga;
+
+                    //     // return $sistemBayar;
+                    //     $gr = $sistemBayar ?? '';
+                    //     if ($gr == 1) {
+                    //         if ($harga <= 50000) {
+                    //             $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
+                    //         } elseif ($harga > 50000 && $harga <= 250000) {
+                    //             $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
+                    //         } elseif ($harga > 250000 && $harga <= 500000) {
+                    //             $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
+                    //         } elseif ($harga > 500000 && $harga <= 1000000) {
+                    //             $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
+                    //         } elseif ($harga > 1000000 && $harga <= 5000000) {
+                    //             $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
+                    //         } elseif ($harga > 5000000 && $harga <= 10000000) {
+                    //             $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
+                    //         } elseif ($harga > 10000000) {
+                    //             $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
+                    //         }
+                    //     } else {
+                    //         $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
+                    //     }
+                    //     $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
+
+                    //     $index = 0;
+                    //     $resepnya = (float) $key['jumlah_resep'];
+
+                    //     while ($resepnya > 0) {
+                    //         $ada = (float)$dist[$index]->jumlah;
+                    //         $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])->where('nopenerimaan', $dist[$index]->nopenerimaan)->where('kdruang', 'Gd-04010103')->first();
+                    //         if ($ada < $resepnya) {
+                    //             $rin = [
+                    //                 'noreg' => $request->noreg,
+                    //                 'noresep' => $key['noresep'],
+                    //                 'kdobat' => $masterObat->kd_obat,
+                    //                 'kandungan' => $masterObat->kandungan,
+                    //                 'fornas' => $masterObat->status_fornas,
+                    //                 'forkit' => $masterObat->status_forkid,
+                    //                 'generik' => $masterObat->status_generik,
+                    //                 'kode108' => $masterObat->kode108,
+                    //                 'uraian108' => $masterObat->uraian108,
+                    //                 'kode50' => $masterObat->kode50,
+                    //                 'uraian50' => $masterObat->uraian50,
+                    //                 'nilai_r' => 300,
+                    //                 'jumlah' => $ada,
+                    //                 'harga_beli' => $hargaBeli->harga ?? 0,
+                    //                 'hpp' => $harga ?? 0,
+                    //                 'harga_jual' => $hargajualx,
+                    //                 'aturan' => 'dipakai untuk operasi',
+                    //                 'konsumsi' => 1,
+                    //                 'keterangan' => 'Di pakai untuk operasi' ?? '',
+                    //                 'user' => $kode,
+                    //                 'created_at' => date('Y-m-d H:i:s'),
+                    //                 'updated_at' => date('Y-m-d H:i:s'),
+                    //             ];
+                    //             $resepKeluar[] = $rin;
+                    //             $sisa = $resepnya - $ada;
+                    //             $index += 1;
+                    //             $resepnya = $sisa;
+                    //         } else {
+                    //             $rin = [
+                    //                 'noreg' => $request->noreg,
+                    //                 'noresep' => $key['noresep'],
+                    //                 'kdobat' => $masterObat->kd_obat,
+                    //                 'kandungan' => $masterObat->kandungan,
+                    //                 'fornas' => $masterObat->status_fornas,
+                    //                 'forkit' => $masterObat->status_forkid,
+                    //                 'generik' => $masterObat->status_generik,
+                    //                 'kode108' => $masterObat->kode108,
+                    //                 'uraian108' => $masterObat->uraian108,
+                    //                 'kode50' => $masterObat->kode50,
+                    //                 'uraian50' => $masterObat->uraian50,
+                    //                 'nilai_r' => 300,
+                    //                 'jumlah' => $resepnya,
+                    //                 'harga_beli' => $hargaBeli->harga ?? 0,
+                    //                 'hpp' => $harga ?? 0,
+                    //                 'harga_jual' => $hargajualx,
+                    //                 'aturan' => 'dipakai untuk operasi',
+                    //                 'konsumsi' => 1,
+                    //                 'keterangan' => 'Di pakai untuk operasi' ?? '',
+                    //                 'user' => $kode,
+                    //                 'created_at' => date('Y-m-d H:i:s'),
+                    //                 'updated_at' => date('Y-m-d H:i:s'),
+                    //             ];
+                    //             $resepKeluar[] = $rin;
+
+                    //             $resepnya = 0;
+                    //         }
+                    //     }
+                    // }
+                }
+                $keluar = self::resepKeluar($key, $request, $kode, $rinci);
+
+
+                foreach ($keluar as $kel) {
+                    $resepKeluar[] = $kel;
                 }
             }
+
 
             // update header
             $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
@@ -586,15 +724,38 @@ class PersiapanOperasiController extends Controller
             $head->flag = '4';
             $head->save();
 
+            // insert resep keluar
+            $resepK = Resepkeluarrinci::insert($resepKeluar);
+
+            // update header resep
+            $col = collect($resepKeluar);
+            $nores = $col->map(function ($it, $key) {
+                return $it['noresep'];
+            });
+            $uniNores = array_unique($nores->all());
+            $resepH = [];
+            foreach ($uniNores as $nor) {
+                $temp = Resepkeluarheder::where('noresep', $nor)->first();
+                $temp->flag = '3';
+                $temp->tgl = date('Y-m-d');
+                $temp->save();
+                $resepH[] = $temp;
+            }
+            // return new JsonResponse([
+            //     'noresep U' => $uniNores,
+            //     'resepH' => $resepH,
+            //     'data' => $resepKeluar,
+            // ], 410);
+
+            DB::commit();
             return new JsonResponse([
                 'rinci' => $rinci,
                 'head' => $head,
                 'resepKeluar' => $resepKeluar,
+                'resepH' => $resepH,
                 'dataDistribusi' => $dataDistribusi ?? [],
                 'message' => 'Data berhasil di simpan'
             ]);
-
-            DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse([

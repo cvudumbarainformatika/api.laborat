@@ -2802,9 +2802,9 @@ class AutogenController extends Controller
         //     'anu' => $anu,
         //     'id aja' => $id,
         // ];
-        // $ant = new BridantrianbpjsController;
-        // $temp = $ant->batalantrian();
-        // return $temp;
+        $ant = new BridantrianbpjsController;
+        $temp = $ant->batalantrian('K20240226211236');
+        return $temp;
     }
 
     public function baru()

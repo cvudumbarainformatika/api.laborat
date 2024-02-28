@@ -478,7 +478,7 @@ class EresepController extends Controller
     {
         $data = Resepkeluarheder::find($request->id);
         if ($data) {
-            $data->update(['flag' => '3']);
+            $data->update(['flag' => '3', 'tgl' => date('Y-m-d')]);
             // $msg = [
             //     'data' => [
             //         'id' => $data->id,
