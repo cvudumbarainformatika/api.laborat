@@ -2802,9 +2802,23 @@ class AutogenController extends Controller
         //     'anu' => $anu,
         //     'id aja' => $id,
         // ];
-        $ant = new BridantrianbpjsController;
-        $temp = $ant->batalantrian('K20240226211236');
-        return $temp;
+        // $ant = new BridantrianbpjsController;
+        // $temp = $ant->batalantrian('K20240226211236');
+        // return $temp;
+        $class = new StockController;
+
+        // $data = [
+        //     'kode' => 'RS-0852',
+        //     'no_penerimaan' => 'DPBHP_00002X/JAN/2023',
+        //     'harga' => '8000',
+        // ];
+        $data = [
+            'kode' => request('k'),
+            'no_penerimaan' => request('n'),
+            'harga' => request('h'),
+        ];
+        $result = $class->updateHarga($data);
+        return $result;
     }
 
     public function baru()

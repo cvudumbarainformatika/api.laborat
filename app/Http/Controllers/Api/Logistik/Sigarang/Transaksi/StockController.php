@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\MapingBarangDepo;
 use App\Models\Sigarang\MinMaxDepo;
+use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\PenggunaRuang;
 use App\Models\Sigarang\RecentStokUpdate;
@@ -458,5 +459,39 @@ class StockController extends Controller
             'tahun' => $prevToWt,
             'request' => $request
         ]);
+    }
+
+    // update harga stok
+    public function updateHarga($data)
+    {
+        // return $data;
+        $recent = RecentStokUpdate::where('kode_rs', $data['kode'])
+            ->where('no_penerimaan', $data['no_penerimaan'])
+            ->get();
+        $month = MonthlyStokUpdate::where('kode_rs', $data['kode'])
+            ->where('no_penerimaan', $data['no_penerimaan'])
+            ->get();
+        if (count($recent)) {
+            foreach ($recent as $key) {
+                if ($key['harga'] <= 0) {
+                    $key['harga'] = (float)$data['harga'];
+                    $key->save();
+                }
+            }
+        }
+        if (count($month)) {
+            foreach ($month as $key) {
+                if ($key['harga'] <= 0) {
+                    $key['harga'] = (float)$data['harga'];
+                    $key->save();
+                }
+            }
+        }
+        $balik = [
+            'a-req' => $data,
+            'recent' => $recent,
+            'month' => $month,
+        ];
+        return $balik;
     }
 }
