@@ -89,8 +89,18 @@ class PersiapanOperasiController extends Controller
     // post placed down below
     public function simpanPermintaan(Request $request)
     {
-        return new JsonResponse($request->all());
+        $simpanheder = PersiapanOperasi::create($request->all());
+        $simpanrinci = PersiapanOperasiRinci::create($request->all());
+        return new JsonResponse(
+            [
+                'message' => 'Data Berhasil Disimpan',
+                'heder' => $simpanheder,
+                'rinci' => $simpanrinci
+            ],
+            200
+        );
     }
+
     public function simpanDistribusi(Request $request)
     {
         // cek stok
