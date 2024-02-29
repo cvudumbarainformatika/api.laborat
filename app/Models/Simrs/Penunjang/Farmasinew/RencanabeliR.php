@@ -32,4 +32,8 @@ class RencanabeliR extends Model
     {
         return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kdobat');
     }
+    public function penerimaan()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kdobat');
+    }
 }

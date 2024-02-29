@@ -146,7 +146,7 @@ class LaporanRuanganController extends Controller
             ->leftJoin('permintaanruangans', function ($p) {
                 $p->on('permintaanruangans.id', '=', 'detail_permintaanruangans.permintaanruangan_id');
             })
-            ->whereBetween('permintaanruangans.tanggal', $range)
+            ->whereBetween('permintaanruangans.tanggal_distribusi', $range)
             ->whereIn('permintaanruangans.status', [7, 8])
             ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
             ->when(request('kode_ruang'), function ($q) {
@@ -191,7 +191,7 @@ class LaporanRuanganController extends Controller
                     $mi->select([
                         'detail_permintaanruangans.no_penerimaan',
                         'detail_permintaanruangans.kode_rs',
-                        'permintaanruangans.tanggal',
+                        'permintaanruangans.tanggal_distribusi as tanggal',
                         'ruangs.uraian as tujuan',
                         DB::raw('ROUND(sum(detail_permintaanruangans.jumlah_distribusi),2) as jumlah'),
                     ])->leftJoin('permintaanruangans', function ($b) {
@@ -199,12 +199,12 @@ class LaporanRuanganController extends Controller
                     })->leftJoin('ruangs', function ($p) {
                         $p->on('ruangs.kode', '=', 'detail_permintaanruangans.tujuan');
                     })->where(function ($q) use ($minta, $range) {
-                        $q->whereBetween('permintaanruangans.tanggal', $range)
+                        $q->whereBetween('permintaanruangans.tanggal_distribusi', $range)
                             ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
                             ->whereIn('detail_permintaanruangans.kode_rs', $minta);
                     })
                         ->groupBy(
-                            'permintaanruangans.tanggal',
+                            'permintaanruangans.tanggal_distribusi',
                             'detail_permintaanruangans.tujuan',
                             'detail_permintaanruangans.kode_rs',
                         );
