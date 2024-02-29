@@ -41,6 +41,7 @@ class PemesananController extends Controller
                 'nopemesanan' => $nopemesanan,
                 'tgl_pemesanan' => date('Y-m-d H:i:s'),
                 'kdpbf' => $request->kdpbf,
+                'kd_ruang' => $request->gudang ?? '',
                 'user' => auth()->user()->pegawai_id
             ]);
 
@@ -111,14 +112,19 @@ class PemesananController extends Controller
         //     ->with('pihakketiga')
         //     ->where('nopemesanan', '!=', '')
         //     ->orderBy('tglpemesanan')->paginate(request('per_page'));
-
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag')
+        $gud = request('gudang');
+        $gud[] = '';
+        // return new JsonResponse($gud);
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
             ->with(
+                'gudang:kode,nama',
                 'pihakketiga',
                 'rinci',
                 'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
             )
-            ->orderBy('tgl_pemesanan', 'desc')->paginate(request('per_page'));
+            ->whereIn('kd_ruang', $gud)
+            ->orderBy('tgl_pemesanan', 'desc')
+            ->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
 
