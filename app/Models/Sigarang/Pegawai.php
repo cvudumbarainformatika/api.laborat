@@ -22,7 +22,7 @@ class Pegawai extends Model
     protected $connection = 'kepex';
     protected $table = 'pegawai';
     protected $guarded = ['id'];
-    protected $appends = ['ttdpegawai_url'];
+    protected $appends = ['ttdpegawai_url', 'foto_pegawai'];
     // protected $hidden = [];
 
     public $timestamps = false;
@@ -106,6 +106,20 @@ class Pegawai extends Model
         if ($handle) {
             $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
             return $this->ttdpegawai ? $base64 : null;
+        } else {
+            return null;
+        }
+    }
+    public function getFotoPegawaiAttribute()
+    {
+        $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}";
+        if (!$image) {
+            return null;
+        }
+        $handle = @fopen($image, 'r');
+        if ($handle) {
+            $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
+            return  $base64 ? $base64 : null;
         } else {
             return null;
         }
