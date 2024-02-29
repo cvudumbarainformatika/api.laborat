@@ -40,7 +40,8 @@ class DialogrencanapemesananController extends Controller
             ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
             ->leftjoin('new_masterobat', 'perencana_pebelian_r.kdobat', '=', 'new_masterobat.kd_obat')
             ->leftjoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
-            ->where('perencana_pebelian_h.flag', '2')->where('perencana_pebelian_r.flag', '')
+            ->where('perencana_pebelian_h.flag', '2')
+            ->where('perencana_pebelian_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
             ->orderBy('perencana_pebelian_h.tgl')->paginate(request('per_page'));

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RencanabeliH extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'perencana_pebelian_h';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';

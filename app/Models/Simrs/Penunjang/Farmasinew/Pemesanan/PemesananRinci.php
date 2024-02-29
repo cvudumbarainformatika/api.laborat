@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PemesananRinci extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'pemesanan_r';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';

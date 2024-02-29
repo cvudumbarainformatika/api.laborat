@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PemesananHeder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'pemesanan_h';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
