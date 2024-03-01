@@ -114,8 +114,9 @@ class PersiapanOperasiController extends Controller
                     ->where('jumlah', '>', 0)
                     ->groupBy('kdobat')
                     ->first();
+                $namaobat = $key['obat']['nama_obat'] ?? '';
                 if (!$stok) {
-                    return new JsonResponse(['message' => 'Stok Obat tidak tersedia'], 410);
+                    return new JsonResponse(['message' => 'Stok Obat' . $namaobat . ' tidak tersedia'], 410);
                 }
                 if ($stok->total < $key['jumlah_distribusi']) {
                     $obat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
