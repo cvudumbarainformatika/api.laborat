@@ -251,7 +251,7 @@ class LaporanPenerimaanController extends Controller
                         ]);
                 }
             ])
-
+            ->orderBy('nama', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
