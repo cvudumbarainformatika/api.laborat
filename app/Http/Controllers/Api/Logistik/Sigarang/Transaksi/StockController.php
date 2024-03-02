@@ -41,22 +41,31 @@ class StockController extends Controller
         $user = auth()->user();
         $pegawai = Pegawai::find($user->pegawai_id);
 
-        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok');
+        // $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok');
+        $before = RecentStokUpdate::select([
+            'barang_r_s.kode',
+            'barang_r_s.nama',
+            'recent_stok_updates.kode_rs',
+            'recent_stok_updates.sisa_stok',
+            'recent_stok_updates.kode_ruang',
+            DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
+        ])
+            ->leftJoin('barang_r_s', 'barang_r_s.kode', '=', 'recent_stok_updates.kode_rs');
 
         $before->when(request('q'), function ($anu) {
-            $anu->select([
-                'barang_r_s.kode',
-                'barang_r_s.nama',
-                'recent_stok_updates.kode_rs',
-                'recent_stok_updates.sisa_stok',
-                'recent_stok_updates.kode_ruang',
-                DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
-            ])
-                ->join('barang_r_s', function ($wew) {
-                    $wew->on('recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
-                        ->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
-                        ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
-                });
+            // $anu->select([
+            //     'barang_r_s.kode',
+            //     'barang_r_s.nama',
+            //     'recent_stok_updates.kode_rs',
+            //     'recent_stok_updates.sisa_stok',
+            //     'recent_stok_updates.kode_ruang',
+            //     DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
+            // ])
+            // $anu->join('barang_r_s', function ($wew) {
+            // $wew->on('recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
+            $anu->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
+            // });
         });
 
         if ($pegawai->role_id === 5) {
@@ -76,10 +85,10 @@ class StockController extends Controller
                 ->where('kode_ruang', '<>', 'Gd-02010100')
                 ->orWhere('kode_ruang', 'like', '%R-%');
         }
-        $raw = $before->orderBy(request('order_by'), request('sort'))
+        $raw = $before->orderBy('barang_r_s.nama', 'ASC')
             ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
-            ->where('sisa_stok', '>', 0)
-            ->groupBy('kode_rs', 'kode_ruang')
+            ->where('recent_stok_updates.sisa_stok', '>', 0)
+            ->groupBy('recent_stok_updates.kode_rs', 'recent_stok_updates.kode_ruang')
             // ->filter(request(['q']))
             ->paginate($perpage);
 
