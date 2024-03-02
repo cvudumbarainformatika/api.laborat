@@ -152,6 +152,9 @@ class LaporanRuanganController extends Controller
             ->when(request('kode_ruang'), function ($q) {
                 $q->where('permintaanruangans.dari', request('kode_ruang'));
             })
+            ->when(request('ruang'), function ($q) {
+                $q->where('permintaanruangans.kode_ruang', request('ruang'));
+            })
             ->when(request('q'), function ($q) {
                 $anu = BarangRS::select('kode')->where('barang_r_s.kode', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')->get();
@@ -203,6 +206,9 @@ class LaporanRuanganController extends Controller
                             ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
                             ->whereIn('detail_permintaanruangans.kode_rs', $minta);
                     })
+                        ->when(request('ruang'), function ($q) {
+                            $q->where('permintaanruangans.kode_ruang', request('ruang'));
+                        })
                         ->groupBy(
                             'permintaanruangans.tanggal_distribusi',
                             'detail_permintaanruangans.tujuan',
