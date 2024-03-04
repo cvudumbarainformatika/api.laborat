@@ -190,6 +190,11 @@ return [
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Mavinoo\Batch\BatchServiceProvider::class,
 
+        /*
+        * intervention image
+        */
+        Intervention\Image\ImageServiceProvider::class,
+
     ],
 
     /*
@@ -252,6 +257,8 @@ return [
 
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'Batch' => Mavinoo\Batch\BatchFacade::class,
+
+        'Image' => Intervention\Image\Facades\Image::class,
 
     ],
 
