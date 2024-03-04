@@ -15,6 +15,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
+use Intervention\Image\ImageManager;
 
 class Pegawai extends Model
 {
@@ -112,17 +113,37 @@ class Pegawai extends Model
     }
     public function getFotoPegawaiAttribute()
     {
-        $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}";
+        // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}";
+        // if (!$image) {
+        //     return null;
+        // }
+        // $handle = @fopen($image, 'r');
+        // if ($handle) {
+        //     $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
+        //     return  $base64 ? $base64 : null;
+        // } else {
+        //     return null;
+        // }
+
+        $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
         if (!$image) {
             return null;
         }
         $handle = @fopen($image, 'r');
         if ($handle) {
-            $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
-            return  $base64 ? $base64 : null;
+            // $manager = new ImageManager(['driver' => 'imagick']);
+            $manager = new ImageManager();
+            $base64 = (string) $manager->make($image)->resize(300, null, function ($constraint) {
+                $constraint->aspectRatio();
+            })->encode('data-url');
+
+            // $base64 = "data:image/{$extension};base64," . base64_encode(file_get_contents($img));
+            $result=  $base64 ? $base64 : null;
+            return $result;
         } else {
             return null;
-        }
+        } 
+
     }
 
 
