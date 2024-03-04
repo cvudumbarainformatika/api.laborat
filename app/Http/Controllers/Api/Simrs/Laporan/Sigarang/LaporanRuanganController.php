@@ -90,7 +90,7 @@ class LaporanRuanganController extends Controller
                     })->leftJoin('ruangs', function ($p) {
                         $p->on('ruangs.kode', '=', 'detail_permintaanruangans.tujuan');
                     })->where(function ($q) use ($minta) {
-                        $q->whereBetween('permintaanruangans.tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+                        $q->whereBetween('permintaanruangans.tanggal_distribusi', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
                             ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0)
                             ->whereIn('detail_permintaanruangans.kode_rs', $minta);
                     })
