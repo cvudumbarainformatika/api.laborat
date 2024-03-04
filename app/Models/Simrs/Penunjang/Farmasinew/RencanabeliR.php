@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RencanabeliR extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'perencana_pebelian_r';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
@@ -31,5 +31,9 @@ class RencanabeliR extends Model
     public function minmax()
     {
         return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kdobat');
+    }
+    public function penerimaan()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kdobat');
     }
 }

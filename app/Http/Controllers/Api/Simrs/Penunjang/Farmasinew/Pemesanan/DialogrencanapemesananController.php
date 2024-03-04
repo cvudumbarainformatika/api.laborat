@@ -14,6 +14,7 @@ class DialogrencanapemesananController extends Controller
     public function dialogrencanabeli()
     {
         $rencanabeli = RencanabeliH::select(
+            'perencana_pebelian_h.no_rencbeliobat',
             'perencana_pebelian_h.no_rencbeliobat as noperencanaan',
             'perencana_pebelian_h.kd_ruang',
             'perencana_pebelian_h.tgl as tglperencanaan',
@@ -40,8 +41,33 @@ class DialogrencanapemesananController extends Controller
             ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
             ->leftjoin('new_masterobat', 'perencana_pebelian_r.kdobat', '=', 'new_masterobat.kd_obat')
             ->leftjoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
-            ->where('perencana_pebelian_h.flag', '2')->where('perencana_pebelian_r.flag', '')
+            ->where('perencana_pebelian_h.flag', '2')
+            ->where('perencana_pebelian_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
+            ->with([
+                'rincian' => function ($re) {
+                    $re->select('no_rencbeliobat', 'kdobat')
+                        ->with([
+                            'penerimaan' => function ($pen) {
+                                $pen->select(
+                                    'kdobat',
+                                    'harga_kcl as harga'
+                                )
+                                    ->orderBy('id', 'DESC')
+                                    ->limit(1);
+                            },
+                            'stok' => function ($pen) {
+                                $pen->select(
+                                    'kdobat',
+                                    'harga'
+                                )
+                                    ->orderBy('id', 'DESC')
+                                    ->limit(1);
+                            }
+                        ])
+                        ->where('flag', '');
+                }
+            ])
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
             ->orderBy('perencana_pebelian_h.tgl')->paginate(request('per_page'));
 

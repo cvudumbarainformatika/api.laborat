@@ -71,7 +71,7 @@ class PersiapanOperasiController extends Controller
             // })
             ->leftJoin('persiapan_operasi_rincis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
             ->leftJoin('new_masterobat', 'persiapan_operasi_rincis.kd_obat', '=', 'new_masterobat.kd_obat')
-            ->whereIn('persiapan_operasis.flag', ['2', '3'])
+            ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
             ->where('persiapan_operasis.noreg', '=', request('noreg'))
             // ->when(request('noresep'), function ($q) {
             //     $q->where('persiapan_operasi_rincis.noresep', request('noresep'));
@@ -114,6 +114,10 @@ class PersiapanOperasiController extends Controller
                     ->where('jumlah', '>', 0)
                     ->groupBy('kdobat')
                     ->first();
+                $namaobat = $key['obat']['nama_obat'] ?? '';
+                if (!$stok) {
+                    return new JsonResponse(['message' => 'Stok Obat' . $namaobat . ' tidak tersedia'], 410);
+                }
                 if ($stok->total < $key['jumlah_distribusi']) {
                     $obat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
                     return new JsonResponse([
@@ -393,6 +397,8 @@ class PersiapanOperasiController extends Controller
             $data->noresep = '';
             $data->jumlah_resep = 0;
             $data->save();
+            $head->flag = '2';
+            $head->save();
         } else {
             return new JsonResponse(['message' => 'Tidak boleh di hapus dari resep karena sudah di proses di apotek'], 410);
         }

@@ -18,6 +18,7 @@ Route::group([
     Route::post('/store-mul', [LiburController::class, 'storeMultiDate']);
     Route::post('/delete', [LiburController::class, 'delete']);
 });
+
 Route::group([
     'middleware' => 'auth:api',
     'prefix' => 'dispen'
@@ -42,11 +43,11 @@ Route::group([
     Route::post('/ramadhan', [LiburController::class, 'ramadhan']);
 });
 
-Route::group([
-    // 'middleware' => 'auth:api',
-    // 'middleware' => 'jwt.verify',
-    'prefix' => 'absen'
-], function () {
-    Route::get('/alpha', [LiburController::class, 'tulisTidakMasuk']);
-    // Route::post('/ramadhan', [LiburController::class, 'ramadhan']);
-});
+// Route::group([
+//     // 'middleware' => 'auth:api',
+//     // 'middleware' => 'jwt.verify',
+//     'prefix' => 'absen'
+// ], function () {
+//     Route::get('/alpha', [LiburController::class, 'tulisTidakMasuk']);
+//     // Route::post('/ramadhan', [LiburController::class, 'ramadhan']);
+// });

@@ -175,6 +175,8 @@ class LiburController extends Controller
 
     public function tulisTidakMasuk()
     {
+        // return 'ok';
+
         $today = date('l');
         $date = date('Y-m-d');
         $jadwal = JadwalAbsen::where('day', $today)

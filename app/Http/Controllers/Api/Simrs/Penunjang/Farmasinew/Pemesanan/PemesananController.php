@@ -41,6 +41,7 @@ class PemesananController extends Controller
                 'nopemesanan' => $nopemesanan,
                 'tgl_pemesanan' => date('Y-m-d H:i:s'),
                 'kdpbf' => $request->kdpbf,
+                'kd_ruang' => $request->gudang ?? '',
                 'user' => auth()->user()->pegawai_id
             ]);
 
@@ -52,6 +53,7 @@ class PemesananController extends Controller
                 'nopemesanan' => $nopemesanan,
                 'noperencanaan' => $request->noperencanaan,
                 'kdobat'  => $request->kdobat,
+                'harga'  => $request->harga,
                 'stok_real_gudang'  => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
                 'stok_max_rs'  => $request->stok_max_rs,
@@ -111,14 +113,19 @@ class PemesananController extends Controller
         //     ->with('pihakketiga')
         //     ->where('nopemesanan', '!=', '')
         //     ->orderBy('tglpemesanan')->paginate(request('per_page'));
-
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag')
+        $gud = request('gudang');
+        $gud[] = '';
+        // return new JsonResponse($gud);
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
             ->with(
+                'gudang:kode,nama',
                 'pihakketiga',
                 'rinci',
                 'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
             )
-            ->orderBy('tgl_pemesanan', 'desc')->paginate(request('per_page'));
+            ->whereIn('kd_ruang', $gud)
+            ->orderBy('tgl_pemesanan', 'desc')
+            ->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);
     }
 
@@ -129,5 +136,56 @@ class PemesananController extends Controller
             return new JsonResponse(['message' => 'not ok'], 500);
         }
         return new JsonResponse(['message' => 'ok'], 200);
+    }
+    public function batal(Request $request)
+    {
+        $data = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan, gagal batal'], 410);
+        }
+        $data->delete();
+        $rinci = PemesananRinci::where('nopemesanan', $request->nopemesanan)->get();
+        if (count($rinci) > 0) {
+            foreach ($rinci as $key) {
+                $rencana = RencanabeliR::where('no_rencbeliobat', $key['noperencanaan'])->where('kdobat', $key['kdobat'])->first();
+                $rencana->flag = '';
+                $rencana->save();
+                $key->delete();
+            }
+        }
+        return new JsonResponse(
+            [
+                'message' => 'Data berhasil dihapus',
+                'data' => $data,
+                'rinci' => $rinci,
+                'req' => $request->all()
+            ]
+        );
+    }
+    public function batalRinci(Request $request)
+    {
+        $data = PemesananRinci::find($request->id);
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan, gagal batal'], 410);
+        }
+        $rencana = RencanabeliR::where('no_rencbeliobat', $data->noperencanaan)->where('kdobat', $data->kdobat)->first();
+        $rencana->flag = '';
+        $rencana->save();
+        $data->delete();
+        $rinci = PemesananRinci::where('nopemesanan', $request->nopemesanan)->get();
+        if (count($rinci) === 0) {
+            $head = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
+            if ($head) {
+                $head->delete();
+            }
+        }
+        return new JsonResponse(
+            [
+                'message' => 'Data berhasil dihapus',
+                'data' => $data,
+                'rinci' => $rinci,
+                'req' => $request->all()
+            ]
+        );
     }
 }

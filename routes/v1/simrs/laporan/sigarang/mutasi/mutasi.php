@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/lap-mutasi', [LaporanMutasiGudangController::class, 'lapMutasi']);
     Route::get('/lap-mutasi-depo', [LaporanMutasiGudangController::class, 'lapMutasiDepo']);
+    Route::get('/lap-masuk-depo', [LaporanMutasiGudangController::class, 'lapRekapMasukDepo']);
 });
