@@ -128,18 +128,19 @@ class PenerimaanController extends Controller
             ->with(['pemesananheder'])
             ->where('nopemesanan', $request->nopemesanan)
             ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
+        $jumlahterima = PenerimaanRinci::select('penerimaan_r.jml_terima_k')
+            ->join('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+            ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
+            ->where('penerimaan_r.kdobat', $request->kdobat)->sum('penerimaan_r.jml_terima_k');
 
-        if ((int) $jumlahpesan === $request->jml_all_penerimaan) {
+        if ((int) $jumlahpesan === (int)$jumlahterima) {
             PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                 ->update(['flag' => '1']);
         }
 
-        $jumlahitem = PemesananRinci::where('kdobat', $request->kdobat)->where('nopemesanan', $request->nopemesanan)->count();
-        $jumlahflag = PemesananRinci::select('flag')
-            ->with(['pemesananheder'])
-            ->where('nopemesanan', $request->nopemesanan)
-            ->where('kdobat', $request->kdobat)->sum('flag');
-        if ((int) $jumlahflag === $jumlahitem) {
+        $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
+
+        if (count($pesan) === 0) {
             $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
             $kuncipermintaan->flag = '2';
             $kuncipermintaan->save();
@@ -149,7 +150,7 @@ class PenerimaanController extends Controller
             'message' => 'ok',
             'nopenerimaan' => $nopenerimaan,
             'heder' => $simpanheder,
-            'rinci' => $simpanrinci
+            'rinci' => $simpanrinci,
         ]);
     }
 
