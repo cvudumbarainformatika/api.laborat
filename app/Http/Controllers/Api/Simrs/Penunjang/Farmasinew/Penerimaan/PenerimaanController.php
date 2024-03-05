@@ -137,7 +137,11 @@ class PenerimaanController extends Controller
             PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                 ->update(['flag' => '1']);
         }
-
+        $rinciTrm = PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->where('kdobat', $request->kdobat)->latest('id')->first();
+        if ($rinciTrm) {
+            $rinciTrm->jml_all_penerimaan = $jumlahterima;
+            $rinciTrm->save();
+        }
         $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
 
         if (count($pesan) === 0) {
