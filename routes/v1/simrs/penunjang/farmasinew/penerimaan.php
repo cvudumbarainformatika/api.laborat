@@ -18,7 +18,8 @@ Route::group([
 
     Route::post('/simpanpenerimaanlangsung', [PenerimaanController::class, 'simpanpenerimaanlangsung']);
 
-
+    Route::post('/batal-header', [PenerimaanController::class, 'batalHeader']);
+    Route::post('/batal-rinci', [PenerimaanController::class, 'batalRinci']);
 
     Route::post('/insertsementara', [StokrealController::class, 'insertsementara']);
     Route::post('/updatestoksementara', [StokrealController::class, 'updatestoksementara']);

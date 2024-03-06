@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -128,6 +129,7 @@ class PenerimaanController extends Controller
             ->with(['pemesananheder'])
             ->where('nopemesanan', $request->nopemesanan)
             ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
+
         $jumlahterima = PenerimaanRinci::select('penerimaan_r.jml_terima_k')
             ->join('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
             ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
@@ -137,17 +139,19 @@ class PenerimaanController extends Controller
             PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                 ->update(['flag' => '1']);
         }
+
         $rinciTrm = PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->where('kdobat', $request->kdobat)->latest('id')->first();
         if ($rinciTrm) {
             $rinciTrm->jml_all_penerimaan = $jumlahterima;
             $rinciTrm->save();
         }
         $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
-
+        $pesananDikunci = false;
         if (count($pesan) === 0) {
             $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
             $kuncipermintaan->flag = '2';
             $kuncipermintaan->save();
+            $pesananDikunci = true;
         }
 
         return new JsonResponse([
@@ -155,6 +159,7 @@ class PenerimaanController extends Controller
             'nopenerimaan' => $nopenerimaan,
             'heder' => $simpanheder,
             'rinci' => $simpanrinci,
+            'kunci pesanan' => $pesananDikunci,
         ]);
     }
 
@@ -300,6 +305,113 @@ class PenerimaanController extends Controller
             'nopenerimaan' => $nopenerimaan,
             'heder' => $simpanheder,
             'rinci' => $simpanrinci
+        ]);
+    }
+    public function batalHeader(Request $request)
+    {
+        $pemesananH = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
+        $pemesananR = [];
+        $penerimaanH = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
+        $penerimaanR = PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->get();
+        $stok = Stokreal::where('nopenerimaan', $request->nopenerimaan)->where('flag', '1')->get();
+
+        if (!$penerimaanH) {
+            return new JsonResponse(['message' => 'Gagal hapus, data tidak ditemukan'], 410);
+        }
+
+        if (count($penerimaanR)) {
+            foreach ($penerimaanR as $key) {
+                $item = PemesananRinci::where('nopemesanan', $request->nopemesanan)
+                    ->where('kdobat', $key['kdobat'])
+                    ->get();
+                if (count($item)) {
+                    if (count($item) > 1) {
+                        foreach ($item as $it) {
+                            $it->flag = '';
+                            $it->save();
+                            $pemesananR[] = $it;
+                        }
+                    } else {
+                        $item[0]->flag = '';
+                        $item[0]->save();
+                        $pemesananR[] = $item[0];
+                    }
+                }
+                $key->delete();
+            }
+        }
+
+        if ($pemesananH) {
+            $pemesananH->flag = '1';
+            $pemesananH->save();
+        }
+
+        $penerimaanH->delete();
+
+        if (count($stok)) {
+            foreach ($stok as $st) {
+                $st->delete();
+            }
+        }
+        return new JsonResponse([
+            'message' => 'Data berhasil dihapus',
+            'pemesanan header' => $pemesananH,
+            'pemesanan rinci' => $pemesananR,
+            'penerimaan header' => $penerimaanH,
+            'penerimaan rinci' => $penerimaanR,
+        ]);
+    }
+    public function batalRinci(Request $request)
+    {
+        $penerimaanH = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
+        $penerimaanR = PenerimaanRinci::find($request->id);
+        if (!$penerimaanR) {
+            return new JsonResponse(['message' => 'gagal dihapus, data tidak ditemukan'], 410);
+        }
+        $pemesananH = PemesananHeder::where('nopemesanan', $penerimaanH->nopemesanan)->first();
+
+        $pemesananR = PemesananRinci::where('nopemesanan', $penerimaanH->nopemesanan)
+            ->where('kdobat', $penerimaanR->kdobat)
+            ->get();
+        if (count($pemesananR) >= 0) {
+            if (count($pemesananR) > 1) {
+                foreach ($pemesananR as $it) {
+                    $it->flag = '';
+                    $it->save();
+                    $pemesananR[] = $it;
+                }
+            } else {
+                $pemesananR[0]->flag = '';
+                $pemesananR[0]->save();
+            }
+        }
+
+        if ($pemesananH) {
+            $pemesananH->flag = '1';
+            $pemesananH->save();
+        }
+
+        $stok = Stokreal::where('nopenerimaan', $request->nopenerimaan)->where('kdobat', $penerimaanR->kdobat)->where('flag', '1')->get();
+        if (count($stok)) {
+            foreach ($stok as $st) {
+                $st->delete();
+            }
+        }
+
+        $penerimaanR->delete();
+
+        $allRinci = PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->get();
+        if (count($allRinci) <= 0) {
+            $penerimaanH->delete();
+        }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus',
+            'pemesanan header' => $pemesananH,
+            'pemesanan rinci' => $pemesananR,
+            'penerimaan header' => $penerimaanH,
+            'penerimaan rinci' => $penerimaanR,
+            'all rinci' => $allRinci,
+
         ]);
     }
 }
