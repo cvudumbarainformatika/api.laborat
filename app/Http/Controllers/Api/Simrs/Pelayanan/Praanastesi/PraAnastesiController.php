@@ -54,4 +54,25 @@ class PraAnastesiController extends Controller
       return new JsonResponse($data);
 
   }
+
+  public function deletedata(Request $request)
+  {
+     $id = $request->id;
+     $data = PraAnastesi::find($id);
+     if (!$data) {
+        return new JsonResponse(['message'=> 'Data tidak ditemukan'], 500);
+     }
+     $data->delete();
+     return new JsonResponse(['message'=> 'Sukses dihapus!'],200);
+  }
+
+  public function getPraAnastesiKunjunganPoli()
+  {
+      $data = PraAnastesi::where('noreg','=', request('noreg'))->get();
+      if (!$data) {
+        return new JsonResponse(['message'=> 'Ada Kesalahan'], 500);
+      }
+
+      return new JsonResponse($data);
+  }
 }
