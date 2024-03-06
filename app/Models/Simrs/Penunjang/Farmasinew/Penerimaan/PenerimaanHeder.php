@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PenerimaanHeder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $table = 'penerimaan_h';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
