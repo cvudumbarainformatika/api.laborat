@@ -118,6 +118,33 @@ class ObatnewController extends Controller
             ->get();
         return new JsonResponse($query);
     }
+    public function cariObatHarga()
+    {
+        $query = Mobatnew::select(
+            'kd_obat',
+            'nama_obat as namaobat',
+            'satuan_k',
+            'satuan_b',
+        )
+            ->where('flag', '')
+            ->where(function ($list) {
+                $list->where('nama_obat', 'Like', '%' . request('q') . '%');
+            })
+            ->with([
+                'onestok' => function ($q) {
+                    $q->select('kdobat', 'harga', 'nopenerimaan')
+                        ->where('harga', '>', 0)
+                        ->orderBy('id', 'desc');
+                }
+            ])
+            ->when(request('konsinyasi') === '1', function ($q) {
+                $q->where('status_konsinyasi', '1');
+            })
+            ->orderBy('nama_obat')
+            ->limit(50)
+            ->get();
+        return new JsonResponse($query);
+    }
 
     public function hapusMapingTerapi(Request $request)
     {

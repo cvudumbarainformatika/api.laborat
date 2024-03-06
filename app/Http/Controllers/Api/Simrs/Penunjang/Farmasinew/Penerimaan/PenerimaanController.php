@@ -19,10 +19,11 @@ class PenerimaanController extends Controller
 {
     public function listpemesananfix()
     {
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf')
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'kd_ruang')
             ->with([
+                'gudang',
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
-                'rinci:nopemesanan,kdobat,jumlahdpesan',
+                'rinci:nopemesanan,kdobat,jumlahdpesan,harga as harga_kcl',
                 'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,satuan_b,satuan_k,kekuatan_dosis,volumesediaan,kelas_terapi',
                 //'penerimaan'
                 'penerimaan' => function ($penerimaan) {
@@ -30,6 +31,9 @@ class PenerimaanController extends Controller
                     $penerimaan->select('nopenerimaan', 'nopemesanan')->with('penerimaanrinci:kdobat,nopenerimaan,jml_terima_b,jml_terima_k');
                 },
             ])
+            ->when(request('gudang'), function ($q) {
+                $q->where('kd_ruang', request('gudang'));
+            })
             ->where('flag', '1')
             ->get();
         return new JsonResponse($listpemesanan);
@@ -124,18 +128,23 @@ class PenerimaanController extends Controller
             ->with(['pemesananheder'])
             ->where('nopemesanan', $request->nopemesanan)
             ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
+        $jumlahterima = PenerimaanRinci::select('penerimaan_r.jml_terima_k')
+            ->join('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+            ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
+            ->where('penerimaan_r.kdobat', $request->kdobat)->sum('penerimaan_r.jml_terima_k');
 
-        if ((int) $jumlahpesan === $request->jml_all_penerimaan) {
+        if ((int) $jumlahpesan === (int)$jumlahterima) {
             PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                 ->update(['flag' => '1']);
         }
+        $rinciTrm = PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->where('kdobat', $request->kdobat)->latest('id')->first();
+        if ($rinciTrm) {
+            $rinciTrm->jml_all_penerimaan = $jumlahterima;
+            $rinciTrm->save();
+        }
+        $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
 
-        $jumlahitem = PemesananRinci::where('kdobat', $request->kdobat)->where('nopemesanan', $request->nopemesanan)->count();
-        $jumlahflag = PemesananRinci::select('flag')
-            ->with(['pemesananheder'])
-            ->where('nopemesanan', $request->nopemesanan)
-            ->where('kdobat', $request->kdobat)->sum('flag');
-        if ((int) $jumlahflag === $jumlahitem) {
+        if (count($pesan) === 0) {
             $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
             $kuncipermintaan->flag = '2';
             $kuncipermintaan->save();
@@ -145,7 +154,7 @@ class PenerimaanController extends Controller
             'message' => 'ok',
             'nopenerimaan' => $nopenerimaan,
             'heder' => $simpanheder,
-            'rinci' => $simpanrinci
+            'rinci' => $simpanrinci,
         ]);
     }
 
