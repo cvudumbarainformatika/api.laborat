@@ -10,6 +10,8 @@ Route::group([
 ], function () {
     Route::get('/get-permintaan', [PersiapanOperasiController::class, 'getPermintaan']);
     Route::get('/get-permintaan-for-dokter', [PersiapanOperasiController::class, 'getPermintaanForDokter']);
+    Route::get('/get-obat-persiapan', [PersiapanOperasiController::class, 'getObatPersiapan']);
+
     Route::post('/simpan-permintaan', [PersiapanOperasiController::class, 'simpanPermintaan']);
     Route::post('/distribusi', [PersiapanOperasiController::class, 'simpanDistribusi']);
     Route::post('/terima-pengembalian', [PersiapanOperasiController::class, 'terimaPengembalian']);

@@ -9,6 +9,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -47,5 +48,9 @@ class Stokreal extends Model
     {
         // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
         return $this->hasMany(Permintaanresepracikan::class, 'kdobat', 'kdobat');
+    }
+    public function persiapanrinci()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kdobat');
     }
 }

@@ -87,7 +87,7 @@ class EresepController extends Controller
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->where('flag', '!=', '3')
+                            ->whereIn('flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar.kdobat');
                     },
                     'transracikan' => function ($transracikan) {
@@ -99,7 +99,7 @@ class EresepController extends Controller
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->where('flag', '!=', '3')
+                            ->whereIn('flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar_racikan.kdobat');
                     },
                 ]
@@ -108,6 +108,7 @@ class EresepController extends Controller
             ->where('stokreal.kdruang', request('kdruang'))
             ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
+            ->where('new_masterobat.status_konsinyasi', '')
             ->where(function ($query) {
                 $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%')
