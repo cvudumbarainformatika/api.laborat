@@ -125,7 +125,7 @@ class Pegawai extends Model
         //     return null;
         // }
         $nip = $this->nip;
-        $foto = $this->nip;
+        $foto = $this->foto;
 
         if ($nip === null || $nip === '' || $foto===null || $foto === '') {
             return null;
