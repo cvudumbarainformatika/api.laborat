@@ -184,17 +184,21 @@ class PersiapanOperasiController extends Controller
     // post placed down below
     public function simpanPermintaan(Request $request)
     {
-        // return new JsonResponse($request->all());
         $user = FormatingHelper::session_user();
         $kode = $user['kodesimrs'];
         if (!$request->nopermintaan) {
-            $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->count();
-            $jmlChar = count(str_split(strval($jum)));
+            $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->latest('id')->get();
+            $num = 1;
+            if (count($jum) >= 1) {
+                $expl = explode('/', $jum[0]->nopermintaan);
+                $num = (int) $expl[0] ?? 1;
+            }
+            $jmlChar = count(str_split(strval($num)));
             $nol = [];
             for ($i = 0; $i < 8 - $jmlChar; $i++) {
                 $nol[] = '0';
             }
-            $imp = implode('', $nol) . ($jum + 1);
+            $imp = implode('', $nol) . ($num + 1);
             $nopermintaan = $imp  . '/OP/' . date('dmY');
         } else {
             $nopermintaan = $request->nopermintaan;
@@ -217,9 +221,12 @@ class PersiapanOperasiController extends Controller
             ],
             [
                 'jumlah_minta' => $request->jumlah_minta,
-                'status_konsinyasi' => $request->status_konsinyasi,
+                'status_konsinyasi' => $request->status_konsinyasi ?? '',
             ]
         );
+        if ($rinci) {
+            $rinci->load('obat:kd_obat,nama_obat');
+        }
         return new JsonResponse(
             [
                 'message' => 'Data Berhasil Disimpan',
@@ -229,6 +236,40 @@ class PersiapanOperasiController extends Controller
             ],
             200
         );
+    }
+
+    public function hapusObatPermintaan(Request $request)
+    {
+        $data = PersiapanOperasiRinci::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Gagal hapus, data tidak ditemukan'
+            ], 410);
+        }
+        $allRinci = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->count();
+        $data->delete();
+        if ($allRinci <= 1) {
+            $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+            $head->delete();
+        }
+        return new JsonResponse([
+            'message' => 'Data berhasil dihapus',
+            'obat' => $data,
+            'head' => $head ?? null,
+            'all rinci' => $allRinci
+        ], 200);
+    }
+
+    public function selesaiObatPermintaan(Request $request)
+    {
+        $data = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+        $data->flag = '1';
+        $data->save();
+        $data->load('rinci.obat:kd_obat,nama_obat');
+        return new JsonResponse([
+            'data' => $data,
+            'message' => 'Permintaan obat untuk operasi sudah dikirimkan ke depo'
+        ], 200);
     }
 
     public function simpanDistribusi(Request $request)

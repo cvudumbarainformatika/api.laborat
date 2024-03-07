@@ -96,6 +96,7 @@ class KamaroperasiController extends Controller
                 'dokter',
                 'kunjunganranap.relmasterruangranap',
                 'kunjunganrajal.relmpoli',
+                'permintaanobatoperasi.rinci.obat:kd_obat,nama_obat',
             ]
         )->where(function ($sts) use ($status) {
             if ($status !== 'all') {

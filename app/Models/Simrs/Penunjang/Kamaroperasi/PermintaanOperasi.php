@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,5 +34,9 @@ class PermintaanOperasi extends Model
     public function dokter()
     {
         return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs8');
+    }
+    public function permintaanobatoperasi()
+    {
+        return $this->hasMany(PersiapanOperasi::class, 'noreg', 'rs1');
     }
 }

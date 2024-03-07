@@ -13,6 +13,9 @@ Route::group([
     Route::get('/get-obat-persiapan', [PersiapanOperasiController::class, 'getObatPersiapan']);
 
     Route::post('/simpan-permintaan', [PersiapanOperasiController::class, 'simpanPermintaan']);
+    Route::post('/hapus-obat-permintaan', [PersiapanOperasiController::class, 'hapusObatPermintaan']);
+    Route::post('/selesai-obat-permintaan', [PersiapanOperasiController::class, 'selesaiObatPermintaan']);
+
     Route::post('/distribusi', [PersiapanOperasiController::class, 'simpanDistribusi']);
     Route::post('/terima-pengembalian', [PersiapanOperasiController::class, 'terimaPengembalian']);
     Route::post('/simpan-resep', [PersiapanOperasiController::class, 'simpanEresep']);
