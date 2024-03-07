@@ -43,7 +43,7 @@ class PersiapanOperasiController extends Controller
             'dokter:kdpegsimrs,nama',
         ])
 
-            ->where('flag', '=', '2')
+            ->whereIn('flag', ['1', '2'])
             ->where('noreg', '=', request('noreg'))
             ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->orderBy('tgl_permintaan', "desc")
@@ -188,10 +188,11 @@ class PersiapanOperasiController extends Controller
         $kode = $user['kodesimrs'];
         if (!$request->nopermintaan) {
             $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->latest('id')->get();
-            $num = 1;
+            // $jum = PersiapanOperasi::whereMonth('tgl_permintaan', '01')->latest('id')->get();
+            $num = 0;
             if (count($jum) >= 1) {
                 $expl = explode('/', $jum[0]->nopermintaan);
-                $num = (int) $expl[0] ?? 1;
+                $num = (int) $expl[0] ?? 0;
             }
             $jmlChar = count(str_split(strval($num)));
             $nol = [];
@@ -203,6 +204,11 @@ class PersiapanOperasiController extends Controller
         } else {
             $nopermintaan = $request->nopermintaan;
         }
+        // return new JsonResponse([
+        //     'jum' => $jum,
+        //     'nopermintaan' => $nopermintaan,
+        //     'num' => $num
+        // ], 410);
         $head = PersiapanOperasi::updateOrCreate(
             [
                 'noreg' => $request->noreg,
