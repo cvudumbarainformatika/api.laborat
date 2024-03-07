@@ -184,13 +184,48 @@ class PersiapanOperasiController extends Controller
     // post placed down below
     public function simpanPermintaan(Request $request)
     {
-        $simpanheder = PersiapanOperasi::create($request->all());
-        $simpanrinci = PersiapanOperasiRinci::create($request->all());
+        // return new JsonResponse($request->all());
+        $user = FormatingHelper::session_user();
+        $kode = $user['kodesimrs'];
+        if (!$request->nopermintaan) {
+            $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->count();
+            $jmlChar = count(str_split(strval($jum)));
+            $nol = [];
+            for ($i = 0; $i < 8 - $jmlChar; $i++) {
+                $nol[] = '0';
+            }
+            $imp = implode('', $nol) . ($jum + 1);
+            $nopermintaan = $imp  . '/OP/' . date('dmY');
+        } else {
+            $nopermintaan = $request->nopermintaan;
+        }
+        $head = PersiapanOperasi::updateOrCreate(
+            [
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+                'nopermintaan' => $nopermintaan,
+            ],
+            [
+                'tgl_permintaan' => date('Y-m-d H:i:s'),
+                'user_minta' => $kode,
+            ]
+        );
+        $rinci = PersiapanOperasiRinci::updateOrCreate(
+            [
+                'nopermintaan' => $nopermintaan,
+                'kd_obat' => $request->kodeobat,
+            ],
+            [
+                'jumlah_minta' => $request->jumlah_minta,
+                'status_konsinyasi' => $request->status_konsinyasi,
+            ]
+        );
         return new JsonResponse(
             [
                 'message' => 'Data Berhasil Disimpan',
-                'heder' => $simpanheder,
-                'rinci' => $simpanrinci
+                'heder' => $head,
+                'rinci' => $rinci,
+                'nota' => $nopermintaan,
             ],
             200
         );
