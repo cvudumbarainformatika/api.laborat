@@ -10,4 +10,6 @@ Route::group([
 ], function () {
     Route::get('/master', [PraAnastesiController::class, 'master']);
     Route::post('/savedata', [PraAnastesiController::class, 'savedata']);
+    Route::post('/deletedata', [PraAnastesiController::class, 'deletedata']);
+    Route::get('/getPraAnastesiKunjunganPoli', [PraAnastesiController::class, 'getPraAnastesiKunjunganPoli']);
 });
