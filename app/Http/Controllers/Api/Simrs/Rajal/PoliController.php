@@ -548,7 +548,7 @@ class PoliController extends Controller
                     $t->with('masterpenunjang')->orderBy('id', 'DESC');
                 },
                 'tindakan' => function ($t) {
-                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
                         ->orderBy('id', 'DESC');
                 },
                 'diagnosa' => function ($d) {

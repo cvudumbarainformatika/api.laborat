@@ -51,4 +51,8 @@ class Tindakan extends Model
     {
         return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
     }
+    public function pelaksanalamasimrs()
+    {
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs8');
+    }
 }
