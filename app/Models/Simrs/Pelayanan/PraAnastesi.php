@@ -13,7 +13,9 @@ class PraAnastesi extends Model
       'asaClasification' => 'array',
       'kajianSistem' => 'array',
       'laboratorium' => 'array',
-      'laboratorium' => 'array',
       'penyulitAnastesi' => 'array',
+      'teknikAnestesia' => 'array',
+      'teknikKhusus' => 'array',
+      'pascaAnastesi' => 'array',
   ];
 }

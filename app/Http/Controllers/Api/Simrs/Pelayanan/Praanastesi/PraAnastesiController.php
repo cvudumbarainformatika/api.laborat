@@ -44,6 +44,26 @@ class PraAnastesiController extends Controller
       $data->laboratorium = $request->laboratorium;
       $data->penyulitAnastesi = $request->penyulitAnastesi;
       $data->pegawai_id = auth()->user()->pegawai_id;
+
+      // baru
+      $data->teknikAnestesia = $request->teknikAnestesia;
+      $data->teknikKhusus = $request->teknikKhusus;
+      $data->pascaAnastesi = $request->pascaAnastesi;
+
+      $data->keteranganLainlainRawatKhusus = $request->keteranganLainlainRawatKhusus;
+
+      $data->mulaiPuasaTgl = $request->mulaiPuasaTgl;
+      $data->mulaiPuasajam = $request->mulaiPuasajam;
+      $data->preMedikasiTgl = $request->preMedikasiTgl;
+      $data->preMedikasiJam = $request->preMedikasiJam;
+      $data->transKeKamarBedahTgl = $request->transKeKamarBedahTgl;
+      $data->transKeKamarBedahJam = $request->transKeKamarBedahJam;
+      $data->rencanaOperasiTgl = $request->rencanaOperasiTgl;
+      $data->rencanaOperasiJam = $request->rencanaOperasiJam;
+        
+      $data->catatanPersiapanPraAnastesi = $request->catatanPersiapanPraAnastesi;
+      $data->kolomTindakLanjut = $request->kolomTindakLanjut;
+
       
       $saved = $data->save();
 
