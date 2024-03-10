@@ -132,7 +132,8 @@ class Pegawai extends Model
         }
 
         $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
-        if (!$image) {
+        $exist = file_exists($image);
+        if (!$image || !$exist) {
             return null;
         }
         $handle = @fopen($image, 'r');
