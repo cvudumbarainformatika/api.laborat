@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Pegawai\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Alpha;
+use App\Models\Pegawai\Hari;
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\Kategory;
 use App\Models\Pegawai\Libur;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Pegawai;
@@ -125,6 +127,85 @@ class LiburController extends Controller
             }
         }
         return new JsonResponse(['message' => 'Berhasil menyimpan data', 'request' => $request->all()], 201);
+    }
+    public function getPegawai()
+    {
+        $data = Pegawai::select('pegawai.id', 'pegawai.nama')
+            ->leftJoin('jadwal_absens', 'jadwal_absens.pegawai_id', '=', 'pegawai.id')
+            ->where('pegawai.aktif', 'AKTIF')
+            ->where(function ($q) {
+                $q->where('pegawai.nama', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pegawai.nik', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pegawai.nip', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pegawai.nip_baru', 'LIKE', '%' . request('q') . '%');
+            })
+
+            ->where('jadwal_absens.kategory_id', request('id_kategory'))
+            ->groupBy('jadwal_absens.pegawai_id')
+            ->limit(50)
+            ->get();
+        return new JsonResponse($data);
+    }
+    public function getKategori()
+    {
+        $data = Kategory::whereIn('id', [1, 2])
+            ->get();
+        return new JsonResponse($data);
+    }
+    public function getHari()
+    {
+        $data = Hari::get();
+        return new JsonResponse($data);
+    }
+    public function getJadwal()
+    {
+        $data = JadwalAbsen::where('kategory_id', request('id_kategory'))
+            ->when(request('id_peg'), function ($q) {
+                $q->where('pegawai_id', request('id_peg'));
+            })
+            ->when(request('hari'), function ($q) {
+                $q->whereIn('hari', request('hari'));
+            })
+            ->with('pegawai:id,nama')
+            ->limit(20)
+            ->get();
+        return new JsonResponse($data);
+    }
+    public function simpanPerubahanJadwal(Request $request)
+    {
+        $kategory = $request->id_kategory;
+        $id_peg = $request->id_peg;
+        $hari = $request->hari;
+        $masuk = $request->masuk;
+        $pulang = $request->pulang;
+        if (!$hari) {
+            return new JsonResponse([
+                'message' => 'harus dipilih hari apa jadwal akan diganti'
+            ], 410);
+        }
+        if (!$masuk && !$pulang) {
+            return new JsonResponse([
+                'message' => 'Tidak ada jam yang akan diganti'
+            ], 410);
+        }
+
+
+        $data = JadwalAbsen::where('kategory_id', $kategory)
+            ->whereIn('hari', $hari)
+            ->when($id_peg, function ($q) use ($id_peg) {
+                $q->where('pegawai_id', $id_peg);
+            })
+            ->when($masuk, function ($q) use ($masuk) {
+                $q->update(['masuk' => $masuk]);
+            })
+            ->when($pulang, function ($q) use ($pulang) {
+                $q->update(['pulang' => $pulang]);
+            });
+
+        return new JsonResponse([
+            'message' => 'Data sudah disimpan',
+            'data' => $data,
+        ]);
     }
     public function ramadhan(Request $request)
     {
