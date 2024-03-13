@@ -54,7 +54,7 @@ class ResumeController extends Controller
                         ->join('rs32', 'rs32.rs1', 'rs164.rs4');
                 },
                 'tindakan' => function ($tindakan) {
-                    $tindakan->select('rs73.rs1', 'rs30.rs2 as tindakan')
+                    $tindakan->select('rs73.rs1', 'rs30.rs2 as tindakan', 'rs73.rs20 as keterangan')
                         ->join('rs30', 'rs30.rs1', 'rs73.rs4')
                         ->where('rs73.rs22', '!=', 'POL009');
                 },
