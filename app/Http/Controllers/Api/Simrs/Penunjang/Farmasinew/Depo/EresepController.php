@@ -188,6 +188,7 @@ class EresepController extends Controller
             ],
             [
                 'norm' => $request->norm,
+                'iter_expired' => $request->iter_expired ?? null,
                 'tgl_permintaan' => date('Y-m-d H:i:s'),
                 'depo' => $request->kodedepo,
                 'ruangan' => $request->kdruangan,
