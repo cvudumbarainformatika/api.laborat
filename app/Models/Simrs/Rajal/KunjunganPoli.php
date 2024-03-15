@@ -262,4 +262,9 @@ class KunjunganPoli extends Model
     {
         return $this->hasOne(Generalconsent::class, 'norm', 'norm');
     }
+
+    public function pemeriksaanfisikmata()
+    {
+        return $this->hasOne(Polimata::class, 'rs1', 'rs1');
+    }
 }

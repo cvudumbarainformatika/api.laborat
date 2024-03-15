@@ -22,6 +22,7 @@ class ResumeController extends Controller
                 'diagnosa.masterdiagnosa:rs1,rs4 as diagnosa',
                 'anamnesis',
                 'pemeriksaanfisik',
+                'pemeriksaanfisikmata',
                 'edukasi',
                 'laborat:rs1,rs2,rs4,rs21,metode,tat',
                 'laborat.pemeriksaanlab:rs1,rs2',
@@ -55,8 +56,7 @@ class ResumeController extends Controller
                 },
                 'tindakan' => function ($tindakan) {
                     $tindakan->select('rs73.rs1', 'rs30.rs2 as tindakan', 'rs73.rs20 as keterangan')
-                        ->join('rs30', 'rs30.rs1', 'rs73.rs4')
-                        ->where('rs73.rs22', '!=', 'POL009');
+                        ->join('rs30', 'rs30.rs1', 'rs73.rs4');
                 },
                 'planning' => function ($planning) {
                     $planning
