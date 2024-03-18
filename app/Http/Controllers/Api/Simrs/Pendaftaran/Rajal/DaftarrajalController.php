@@ -305,16 +305,16 @@ class DaftarrajalController extends Controller
                 'noreg' => $input->noreg
             ], 200);
         } else {
-            $antrianambil = Antrianambil::create(
-                [
-                    'noreg' => $input->noreg,
-                    'norm' => $request->norm,
-                    'tgl_booking' => date('Y-m-d'),
-                    'pelayanan_id' => $request->kodepoli,
-                    'nomor' => $noantrian,
-                    'user_id' => auth()->user()->pegawai_id
-                ]
-            );
+            // $antrianambil = Antrianambil::create(
+            //     [
+            //         'noreg' => $input->noreg,
+            //         'norm' => $request->norm,
+            //         'tgl_booking' => date('Y-m-d'),
+            //         'pelayanan_id' => $request->kodepoli,
+            //         'nomor' => $noantrian,
+            //         'user_id' => auth()->user()->pegawai_id
+            //     ]
+            // );
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
             BridantrianbpjsController::updateWaktu($input, 3);
             return new JsonResponse([
