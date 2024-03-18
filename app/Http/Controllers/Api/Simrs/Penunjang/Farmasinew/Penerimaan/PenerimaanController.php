@@ -183,7 +183,7 @@ class PenerimaanController extends Controller
             'penerimaan_h.kunci as kunci',
             'penerimaan_h.total_faktur_pbf as total',
         )
-            ->leftjoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
+            ->leftJoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
             ->when($kodegudang['kdruang'] !== '', function ($e) use ($kodegudang) {
                 $e->where('penerimaan_h.gudang', $kodegudang['kdruang']);
             })
