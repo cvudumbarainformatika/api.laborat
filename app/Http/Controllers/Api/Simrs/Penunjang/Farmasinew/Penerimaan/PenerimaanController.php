@@ -170,30 +170,30 @@ class PenerimaanController extends Controller
         $kodegudang = FormatingHelper::session_user();
 
         $listpenerimaan = PenerimaanHeder::select(
-            'penerimaan_h.nopenerimaan as nopenerimaan',
-            'penerimaan_h.nopemesanan as nopemesanan',
-            'penerimaan_h.tglpenerimaan as tglpenerimaan',
-            'penerimaan_h.kdpbf as kodepbf',
+            'farmasi.penerimaan_h.nopenerimaan as nopenerimaan',
+            'farmasi.penerimaan_h.nopemesanan as nopemesanan',
+            'farmasi.penerimaan_h.tglpenerimaan as tglpenerimaan',
+            'farmasi.penerimaan_h.kdpbf as kodepbf',
             'siasik.pihak_ketiga.nama as pbf',
-            'penerimaan_h.pengirim as pengirim',
-            'penerimaan_h.jenissurat as jenissurat',
-            'penerimaan_h.nomorsurat as nomorsurat',
-            'penerimaan_h.tglsurat as tglsurat',
-            'penerimaan_h.batasbayar as batasbayar',
-            'penerimaan_h.kunci as kunci',
-            'penerimaan_h.total_faktur_pbf as total',
+            'farmasi.penerimaan_h.pengirim as pengirim',
+            'farmasi.penerimaan_h.jenissurat as jenissurat',
+            'farmasi.penerimaan_h.nomorsurat as nomorsurat',
+            'farmasi.penerimaan_h.tglsurat as tglsurat',
+            'farmasi.penerimaan_h.batasbayar as batasbayar',
+            'farmasi.penerimaan_h.kunci as kunci',
+            'farmasi.penerimaan_h.total_faktur_pbf as total',
         )
-            ->leftJoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
+            ->leftJoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'farmasi.penerimaan_h.kdpbf')
             ->when($kodegudang['kdruang'] !== '', function ($e) use ($kodegudang) {
-                $e->where('penerimaan_h.gudang', $kodegudang['kdruang']);
+                $e->where('farmasi.penerimaan_h.gudang', $kodegudang['kdruang']);
             })
-            ->where('penerimaan_h.nopenerimaan', 'Like', '%' . request('cari') . '%')
-            ->orWhere('penerimaan_h.nopemesanan', 'Like', '%' . request('cari') . '%')
-            ->orWhere('penerimaan_h.tglpenerimaan', 'Like', '%' . request('cari') . '%')
+            ->where('farmasi.penerimaan_h.nopenerimaan', 'Like', '%' . request('cari') . '%')
+            ->orWhere('farmasi.penerimaan_h.nopemesanan', 'Like', '%' . request('cari') . '%')
+            ->orWhere('farmasi.penerimaan_h.tglpenerimaan', 'Like', '%' . request('cari') . '%')
             ->orWhere('siasik.pihak_ketiga.nama', 'Like', '%' . request('cari') . '%')
-            ->orWhere('penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')
-            ->orWhere('penerimaan_h.jenissurat', 'Like', '%' . request('cari') . '%')
-            ->orWhere('penerimaan_h.nomorsurat', 'Like', '%' . request('cari') . '%')
+            ->orWhere('farmasi.penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')
+            ->orWhere('farmasi.penerimaan_h.jenissurat', 'Like', '%' . request('cari') . '%')
+            ->orWhere('farmasi.penerimaan_h.nomorsurat', 'Like', '%' . request('cari') . '%')
             ->with(['penerimaanrinci', 'penerimaanrinci.masterobat'])->orderBy('tglpenerimaan', 'desc')
             ->paginate(request('per_page'));
         return new JsonResponse($listpenerimaan);
