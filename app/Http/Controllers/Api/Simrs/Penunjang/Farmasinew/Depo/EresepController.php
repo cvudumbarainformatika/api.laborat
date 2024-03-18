@@ -391,6 +391,9 @@ class EresepController extends Controller
             })
             ->where('depo', request('kddepo'))
             ->whereBetween('tgl_permintaan', [$tgl, $tglx])
+            ->when(request('tipe'), function ($x) {
+                $x->where('tiperesep', request('tipe'));
+            })
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
