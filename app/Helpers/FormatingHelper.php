@@ -36,8 +36,10 @@ class FormatingHelper
         $kode_biaya = null;
         $data3 = DB::table('rs30z')->select('rs2', 'rs8', 'rs9')->where('rs3', '=', 'K2#')
             ->where('rs4', 'LIKE', '%' . $flag . '%')->get();
-        $nama_biaya = $nama_biaya . "#" . $data3[0]->rs2;
-        $kode_biaya = $kode_biaya . "#" . "K2";
+        $nama_biaya =  $data3[0]->rs2;
+        $kode_biaya =  "K2#";
+        // $nama_biaya = $nama_biaya . "#" . $data3[0]->rs2;
+        // $kode_biaya = $kode_biaya . "#" . "K2";
         $biaya_karcis1 = $data3[0]->rs8;
         $biaya_karcis2 = $data3[0]->rs9;
 
@@ -74,8 +76,12 @@ class FormatingHelper
         // }
 
         if ($biaya_karcis1 > 0) {
-            $sarana = $sarana ?? 0 . "#" . $biaya_karcis2;
-            $pelayanan = $pelayanan ?? 0 . "#" . $biaya_karcis1;
+            $sarana = 0;
+            $pelayanan = 0;
+            $sarana =  $biaya_karcis2;
+            $pelayanan =  $biaya_karcis1;
+            // $sarana = $sarana ?? 0 . "#" . $biaya_karcis2;
+            // $pelayanan = $pelayanan ?? 0 . "#" . $biaya_karcis1;
         }
 
         // if ($biaya_kartu1 > 0) {
