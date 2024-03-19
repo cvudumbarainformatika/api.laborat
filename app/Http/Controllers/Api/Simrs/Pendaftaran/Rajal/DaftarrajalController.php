@@ -266,7 +266,11 @@ class DaftarrajalController extends Controller
 
 
         //  PASIEN MJKN ======================================================================================
-        $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')->where('nomorantrean', '=', $noantrian)
+        $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+            ->where('nomorantrean', '=', $noantrian)
+            ->when($request->nokabpjs, function ($q) use ($request) {
+                $q->where('nomorkartu', $request->nokabpjs);
+            })
             ->whereDate('tanggalperiksa', '=', $tgl)->first();
         if (!$bpjsantrian) {
 
