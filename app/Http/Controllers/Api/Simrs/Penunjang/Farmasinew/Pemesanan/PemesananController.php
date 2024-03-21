@@ -53,7 +53,7 @@ class PemesananController extends Controller
                 'nopemesanan' => $nopemesanan,
                 'noperencanaan' => $request->noperencanaan,
                 'kdobat'  => $request->kdobat,
-                'harga'  => $request->harga,
+                'harga'  => $request->harga ?? 0,
                 'stok_real_gudang'  => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
                 'stok_max_rs'  => $request->stok_max_rs,

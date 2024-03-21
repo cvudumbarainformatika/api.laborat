@@ -151,6 +151,40 @@ class DepoController extends Controller
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Dikirim Kegudang...!!!'], 200);
     }
+    public function hapusHead(Request $request)
+    {
+        $data = Permintaandepoheder::find($request->id);
+        if (!$data) {
+            return new JsonResponse(['message' => 'Gagal menghapus permintaan. Data tidak ditemukan.'], 410);
+        }
+        $rinci = Permintaandeporinci::where('no_permintaan', $data->no_permintaan)->get();
+        $data->delete();
+        foreach ($rinci as $key) {
+            $key->delete();
+        }
+        return new JsonResponse([
+            'rinci' => $rinci,
+            'data' => $data,
+            'message' => 'Data sudah dihapus.'
+        ]);
+    }
+    public function hapusRinci(Request $request)
+    {
+        $data = Permintaandeporinci::find($request->id);
+        if (!$data) {
+            return new JsonResponse(['message' => 'Gagal menghapus permintaan. Data tidak ditemukan.'], 410);
+        }
+        $count = Permintaandeporinci::where('no_permintaan', $data->no_permintaan)->count();
+        $data->delete();
+        if ($count <= 1) {
+            $head = Permintaandepoheder::where('no_permintaan', $data->no_permintaan)->first();
+            $head->delete();
+        }
+        return new JsonResponse([
+            'count' => $count,
+            'message' => 'Data sudah dihapus.'
+        ]);
+    }
 
     public function listpermintaandepo()
     {
