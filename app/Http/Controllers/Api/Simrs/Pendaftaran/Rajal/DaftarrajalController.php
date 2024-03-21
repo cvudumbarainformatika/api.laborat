@@ -309,7 +309,7 @@ class DaftarrajalController extends Controller
             ], 200);
         } else {
             if ($bpjsantrian) {
-                $antrianambil = Antrianambil::create(
+                $cetakantrian = Antrianambil::create(
                     [
                         'noreg' => $input->noreg,
                         'norm' => $request->norm,
