@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Msistembayar;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -38,5 +39,9 @@ class PermintaanOperasi extends Model
     public function permintaanobatoperasi()
     {
         return $this->hasMany(PersiapanOperasi::class, 'noreg', 'rs1');
+    }
+    public function newapotekrajal()
+    {
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
 }
