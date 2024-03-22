@@ -109,6 +109,12 @@ class EresepController extends Controller
             ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
             ->where('new_masterobat.status_konsinyasi', '')
+            ->when(request('tiperesep') === 'prb', function ($q) {
+                $q->where('new_masterobat.status_prb', '!=', '');
+            })
+            ->when(request('tiperesep') === 'iter', function ($q) {
+                $q->where('new_masterobat.status_kronis', '!=', '');
+            })
             ->where(function ($query) {
                 $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%')
