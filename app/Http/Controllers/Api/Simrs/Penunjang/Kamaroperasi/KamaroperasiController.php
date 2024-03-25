@@ -97,6 +97,13 @@ class KamaroperasiController extends Controller
                 'kunjunganranap.relmasterruangranap',
                 'kunjunganrajal.relmpoli',
                 'permintaanobatoperasi.rinci.obat:kd_obat,nama_obat',
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])->whereIn('flag', ['', '1', '2', '3', '4'])
+                        ->orderBy('id', 'DESC');
+                },
             ]
         )->where(function ($sts) use ($status) {
             if ($status !== 'all') {
