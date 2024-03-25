@@ -17,8 +17,12 @@ Route::group([
     Route::post('/simpanpermintaandepo', [DepoController::class, 'simpanpermintaandepo']);
     Route::get('/listpermintaandepo', [DepoController::class, 'listpermintaandepo']);
     Route::get('/list-permintaan-ruangan', [DepoController::class, 'listPermintaanRuangan']);
+
     Route::post('/kuncipermintaan', [DepoController::class, 'kuncipermintaan']);
     Route::post('/terimadistribusi', [DepoController::class, 'terimadistribusi']);
+
+    Route::post('/hapus-permintaan-head', [DepoController::class, 'hapusHead']);
+    Route::post('/hapus-permintaan-rinci', [DepoController::class, 'hapusRinci']);
 
     Route::get('/lihatstokobateresep', [LihatStokController::class, 'lihatstokobateresep']);
 

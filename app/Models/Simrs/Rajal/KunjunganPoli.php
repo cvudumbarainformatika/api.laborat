@@ -271,4 +271,8 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(LaporanTindakan::class, 'noreg', 'rs1');
     }
+    public function pemeriksaanfisikmata()
+    {
+        return $this->hasOne(Polimata::class, 'rs1', 'rs1');
+    }
 }

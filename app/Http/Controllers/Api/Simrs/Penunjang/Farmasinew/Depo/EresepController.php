@@ -109,6 +109,12 @@ class EresepController extends Controller
             ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
             ->where('new_masterobat.status_konsinyasi', '')
+            ->when(request('tiperesep') === 'prb', function ($q) {
+                $q->where('new_masterobat.status_prb', '!=', '');
+            })
+            ->when(request('tiperesep') === 'iter', function ($q) {
+                $q->where('new_masterobat.status_kronis', '!=', '');
+            })
             ->where(function ($query) {
                 $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%')
@@ -188,6 +194,7 @@ class EresepController extends Controller
             ],
             [
                 'norm' => $request->norm,
+                'iter_expired' => $request->iter_expired ?? null,
                 'tgl_permintaan' => date('Y-m-d H:i:s'),
                 'depo' => $request->kodedepo,
                 'ruangan' => $request->kdruangan,
@@ -390,6 +397,9 @@ class EresepController extends Controller
             })
             ->where('depo', request('kddepo'))
             ->whereBetween('tgl_permintaan', [$tgl, $tglx])
+            ->when(request('tipe'), function ($x) {
+                $x->where('tiperesep', request('tipe'));
+            })
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })

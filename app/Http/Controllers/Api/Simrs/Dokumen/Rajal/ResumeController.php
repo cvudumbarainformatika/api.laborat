@@ -18,13 +18,16 @@ class ResumeController extends Controller
         )->with(
             [
                 'dokter:rs1,rs2 as dokter',
-                'diagnosa:rs1,rs3,rs4 as jenisdiagnosa,rs7 as kasus',
+                'diagnosa:rs1,rs2,rs3,rs4 as jenisdiagnosa,rs5,rs6,rs7 as kasus,rs8,rs9,rs10,rs11,rs12',
                 'diagnosa.masterdiagnosa:rs1,rs4 as diagnosa',
                 'anamnesis',
-                'pemeriksaanfisik',
                 'edukasi',
                 'laborat:rs1,rs2,rs4,rs21,metode,tat',
                 'laborat.pemeriksaanlab:rs1,rs2',
+                'pemeriksaanfisik' => function ($a) {
+                    $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        ->orderBy('id', 'DESC');
+                },
                 'usg' => function ($usg) {
                     $usg->select('rs1', 'rs20 as hasil')->where('rs4', 'T00031')
                         ->orWhere('rs4', 'T00068')->orWhere('rs4', 'TX0128')
@@ -54,14 +57,14 @@ class ResumeController extends Controller
                         ->join('rs32', 'rs32.rs1', 'rs164.rs4');
                 },
                 'tindakan' => function ($tindakan) {
-                    $tindakan->select('rs73.rs1', 'rs30.rs2 as tindakan')
-                        ->join('rs30', 'rs30.rs1', 'rs73.rs4')
-                        ->where('rs73.rs22', '!=', 'POL009');
+                    $tindakan->select('rs73.rs1', 'rs30.rs2 as tindakan', 'rs73.rs20 as keterangan')
+                        ->join('rs30', 'rs30.rs1', 'rs73.rs4');
                 },
                 'planning' => function ($planning) {
                     $planning
                         ->where('rs4', 'not like', '%Pulang%');
                 },
+                'diagnosakeperawatan.intervensi.masterintervensi'
             ]
         )->where('rs17.rs1', request('noreg'))
             ->get();

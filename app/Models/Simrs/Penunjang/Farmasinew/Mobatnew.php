@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -97,5 +98,10 @@ class Mobatnew extends Model
     public function mutasi()
     {
         return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
+    }
+
+    public function persiapanoperasirinci()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
     }
 }

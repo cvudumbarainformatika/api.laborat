@@ -38,59 +38,77 @@ class StockController extends Controller
         $perpage = request('per_page') ? request('per_page') : 10;
         // $raw = RecentStokUpdate::with('depo', 'ruang', 'barang.barang108')
 
-        $user = auth()->user();
-        $pegawai = Pegawai::find($user->pegawai_id);
+        $user = auth()->user()->pegawai_id;
+        $pegawai = Pegawai::find($user);
 
         // $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok');
-        $before = RecentStokUpdate::select([
-            'barang_r_s.kode',
-            'barang_r_s.nama',
-            'recent_stok_updates.kode_rs',
-            'recent_stok_updates.sisa_stok',
-            'recent_stok_updates.kode_ruang',
-            DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
-        ])
-            ->leftJoin('barang_r_s', 'barang_r_s.kode', '=', 'recent_stok_updates.kode_rs');
+        // $before = RecentStokUpdate::select([
+        //     'barang_r_s.kode',
+        //     'barang_r_s.nama',
+        //     'recent_stok_updates.kode_rs',
+        //     'recent_stok_updates.sisa_stok',
+        //     'recent_stok_updates.kode_ruang',
+        //     DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
+        // ])
+        $before = RecentStokUpdate::selectRaw('* , sum(sisa_stok) as totalStok')
+            // ->leftJoin('barang_r_s', 'barang_r_s.kode', '=', 'recent_stok_updates.kode_rs')
+            // ->when(request('q'), function ($anu) {
+            //     $anu->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
+            //         ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
+            // })
+            ->when($pegawai->role_id === 5, function ($q) use ($pegawai) {
+                $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+                $ruang = PenggunaRuang::select('kode_ruang')->where('kode_pengguna', $pengguna->kode_pengguna)->get();
+                $raw = collect($ruang);
+                $only = $raw->map(function ($y) {
+                    return $y->kode_ruang;
+                });
 
-        $before->when(request('q'), function ($anu) {
-            // $anu->select([
-            //     'barang_r_s.kode',
-            //     'barang_r_s.nama',
-            //     'recent_stok_updates.kode_rs',
-            //     'recent_stok_updates.sisa_stok',
-            //     'recent_stok_updates.kode_ruang',
-            //     DB::raw('sum(recent_stok_updates.sisa_stok) as totalStok')
-            // ])
-            // $anu->join('barang_r_s', function ($wew) {
-            // $wew->on('recent_stok_updates.kode_rs', '=', 'barang_r_s.kode')
-            $anu->where('barang_r_s.nama', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('barang_r_s.kode', 'LIKE', '%' . request('q') . '%');
-            // });
-        });
-
-        if ($pegawai->role_id === 5) {
-
-            $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
-
-            $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
-            $raw = collect($ruang);
-            $only = $raw->map(function ($y) {
-                return $y->kode_ruang;
-            });
-
-            $before->whereIn('kode_ruang', $only);
-        }
-        if ($pegawai->role_id === 4) {
-            $before->where('kode_ruang', $pegawai->kode_ruang)
-                ->where('kode_ruang', '<>', 'Gd-02010100')
-                ->orWhere('kode_ruang', 'like', '%R-%');
-        }
-        $raw = $before->orderBy('barang_r_s.nama', 'ASC')
+                $q->whereIn('kode_ruang', $only);
+            })
+            ->when($pegawai->role_id === 4, function ($q) use ($pegawai) {
+                $q->where('kode_ruang', $pegawai->kode_ruang)
+                    ->where('kode_ruang', '<>', 'Gd-02010100')
+                    ->orWhere('kode_ruang', 'like', '%R-%');
+            })
+            ->where('sisa_stok', '>', 0)
+            // ->orderBy('barang_r_s.nama', 'ASC')
             ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
-            ->where('recent_stok_updates.sisa_stok', '>', 0)
-            ->groupBy('recent_stok_updates.kode_rs', 'recent_stok_updates.kode_ruang')
-            // ->filter(request(['q']))
+            ->groupBy('kode_ruang', 'kode_rs')
+            // ->where('recent_stok_updates.sisa_stok', '>', 0)
+            // ->orderBy('barang_r_s.nama', 'ASC')
+            // ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
+            // ->groupBy('recent_stok_updates.kode_rs', 'recent_stok_updates.kode_ruang')
+
+            ->filter(request(['q']))
+            // ->simplePaginate($perpage);
             ->paginate($perpage);
+
+        // if ($pegawai->role_id === 5) {
+
+        //     $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
+
+        //     $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
+        //     $raw = collect($ruang);
+        //     $only = $raw->map(function ($y) {
+        //         return $y->kode_ruang;
+        //     });
+
+        //     $before->whereIn('kode_ruang', $only);
+        // }
+        // if ($pegawai->role_id === 4) {
+        //     $before->where('kode_ruang', $pegawai->kode_ruang)
+        //         ->where('kode_ruang', '<>', 'Gd-02010100')
+        //         ->orWhere('kode_ruang', 'like', '%R-%');
+        // }
+        // $raw = $before->orderBy('barang_r_s.nama', 'ASC')
+        //     ->with('depo', 'ruang', 'barang.barang108', 'barang.satuan')
+        //     ->where('recent_stok_updates.sisa_stok', '>', 0)
+        //     ->groupBy('recent_stok_updates.kode_rs', 'recent_stok_updates.kode_ruang')
+        //     // ->filter(request(['q']))
+        //     ->paginate($perpage);
+
+        $raw = $before;
 
         $col = collect($raw);
         $meta = $col->except('data');
