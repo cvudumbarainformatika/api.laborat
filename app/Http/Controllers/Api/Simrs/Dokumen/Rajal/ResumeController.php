@@ -21,10 +21,13 @@ class ResumeController extends Controller
                 'diagnosa:rs1,rs3,rs4 as jenisdiagnosa,rs7 as kasus',
                 'diagnosa.masterdiagnosa:rs1,rs4 as diagnosa',
                 'anamnesis',
-                'pemeriksaanfisik.pemeriksaankhususmata',
                 'edukasi',
                 'laborat:rs1,rs2,rs4,rs21,metode,tat',
                 'laborat.pemeriksaanlab:rs1,rs2',
+                'pemeriksaanfisik' => function ($a) {
+                    $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        ->orderBy('id', 'DESC');
+                },
                 'usg' => function ($usg) {
                     $usg->select('rs1', 'rs20 as hasil')->where('rs4', 'T00031')
                         ->orWhere('rs4', 'T00068')->orWhere('rs4', 'TX0128')
