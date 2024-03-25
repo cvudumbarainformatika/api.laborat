@@ -18,7 +18,7 @@ class ResumeController extends Controller
         )->with(
             [
                 'dokter:rs1,rs2 as dokter',
-                'diagnosa:rs1,rs3,rs4 as jenisdiagnosa,rs7 as kasus',
+                'diagnosa:rs1,rs2,rs3,rs4 as jenisdiagnosa,rs5,rs6,rs7 as kasus,rs8,rs9,rs10,rs11,rs12',
                 'diagnosa.masterdiagnosa:rs1,rs4 as diagnosa',
                 'anamnesis',
                 'edukasi',
@@ -64,6 +64,7 @@ class ResumeController extends Controller
                     $planning
                         ->where('rs4', 'not like', '%Pulang%');
                 },
+                'diagnosakeperawatan.intervensi.masterintervensi'
             ]
         )->where('rs17.rs1', request('noreg'))
             ->get();
