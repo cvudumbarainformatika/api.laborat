@@ -55,6 +55,7 @@ use App\Models\User;
 use App\Models\Pegawai\Akses\User as Akses;
 use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\JadwalAbsen;
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
@@ -95,35 +96,18 @@ class AutogenController extends Controller
 
     public function index(Request $request)
     {
-        $result = null;
-        $image = "http://192.168.100.100/simpeg/foto/3513102310870002/foto-3513102310870002.jpg"; 
-        if (!$image) {
-            return null;
-        }
-        $handle = @fopen($image, 'r');
-        if ($handle) {
-            // $photo = file_get_contents($image);
-            // $size = getimagesize($image);
-            // $extension = image_type_to_extension($size[2]);
-            $path_parts = pathinfo($image);
-            $extension = $path_parts['extension'];
-            
-            // $manager = new ImageManager(['driver' => 'imagick']);
-            $manager = new ImageManager();
-            $base64 = (string) $manager->make($image)->resize(300, null, function ($constraint) {
-                $constraint->aspectRatio();
-            })->encode('data-url');
+        $thumb = collect();
+        $dokter = Mpegawaisimpeg::select('id','kdpegsimrs', 'nama')
+        ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
+        ->orderBy('id')
+        ->chunk(50, function($dokters) use ($thumb){
+            foreach ($dokters as $q) {
+                $thumb->push($q);
+            }
+        });
 
-            // $base64 = "data:image/{$extension};base64," . base64_encode(file_get_contents($img));
-            $result=  $base64 ? $base64 : null;
-            // $result=  $extension ??  null;
-            // dd($path_parts['extension']);
-            // echo $extension; exit();
-        } 
 
-        // echo 'kkkkk';
-
-        return response()->json($result);
+        return new JsonResponse($thumb);
     }
     public function gennoreg()
     {

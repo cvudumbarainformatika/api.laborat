@@ -14,6 +14,7 @@ use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
+use App\Models\Simrs\Pelayanan\LaporanTindakan;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
@@ -50,7 +51,7 @@ class KunjunganPoli extends Model
 {
     use HasFactory;
     protected $table = 'rs17';
-    protected $guarded = [''];
+    protected $guarded = ['id'];
     public $timestamps = false;
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
@@ -261,5 +262,13 @@ class KunjunganPoli extends Model
     public function generalcons()
     {
         return $this->hasOne(Generalconsent::class, 'norm', 'norm');
+    }
+
+
+
+    // masuk tanggal 22 maret 2024
+    public function laporantindakan()
+    {
+        return $this->hasMany(LaporanTindakan::class, 'noreg', 'rs1');
     }
 }

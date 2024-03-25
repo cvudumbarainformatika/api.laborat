@@ -96,21 +96,9 @@ class PoliController extends Controller
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
             ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            // ->where('rs17.rs8', $user->kdruangansim ?? '')
             ->where('rs19.rs4', '=', 'Poliklinik')
-            // ->when($ruangan !== '', function ($anu) use ($gigi, $ruangan, $saraf) {
-            //     if (in_array($ruangan, $gigi)) {
-            //         $anu->whereIn('rs17.rs8', $gigi);
-            //     } else if (in_array($ruangan, $saraf)) {
-            //         $anu->whereIn('rs17.rs8', $saraf);
-            //     } else {
-            //         $anu->where('rs17.rs8', 'LIKE', '%' . $ruangan);
-            //     }
-            // })
             ->whereIn('rs17.rs8', $ruangan)
-            // ->where('rs17.rs8', 'LIKE', '%' . $ruangan)
             ->where('rs17.rs8', '!=', 'POL014')
-            //    ->where('rs9.rs9', '=', 'BPJS')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
                     if ($status === '') {
@@ -182,11 +170,6 @@ class PoliController extends Controller
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
                 },
-                // 'antrian_ambil' => function ($o) {
-                //     $o
-                //         //->where('pelayanan_id', request('kdpoli'))
-                //         ->orderBY('nomor');
-                // },
                 'diet' => function ($diet) {
                     $diet->orderBy('id', 'DESC');
                 },
@@ -200,6 +183,7 @@ class PoliController extends Controller
                     ])
                         ->orderBy('id', 'DESC');
                 },
+                'laporantindakan'
             ])
             ->orderby('antrian_ambil.nomor', 'Asc')
             ->groupby('rs17.rs1')
@@ -534,6 +518,7 @@ class PoliController extends Controller
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
                 'gambars',
                 'fisio',
+                'laporantindakan',
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },
@@ -579,11 +564,6 @@ class PoliController extends Controller
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
                 },
-                // 'antrian_ambil' => function ($o) {
-                //     $o
-                //         //->where('pelayanan_id', request('kdpoli'))
-                //         ->orderBY('nomor');
-                // },
                 'diet' => function ($diet) {
                     $diet->orderBy('id', 'DESC');
                 },
@@ -601,15 +581,11 @@ class PoliController extends Controller
             ->first();
         $flag = $cekx->rs19;
         if ($flag === '') {
-            // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
             $cekx->rs19 = '2';
             $cekx->save();
-            // return new JsonResponse(['message' => 'ok'], 200);
         }
 
         return new JsonResponse($cekx, 200);
-
-        //  return new JsonResponse([''], 500);
     }
 
     public function updatewaktubpjs(Request $request)
