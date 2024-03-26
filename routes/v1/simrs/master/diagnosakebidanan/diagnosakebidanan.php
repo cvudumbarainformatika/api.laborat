@@ -11,9 +11,9 @@ Route::group([
 ], function () {
     Route::post('/store', [MasterDiagnosaKebidanan::class, 'store']);
     Route::get('/getall', [MasterDiagnosaKebidanan::class, 'index']);
-    // Route::post('/storeintervensi', [MasterDiagnosaKeperawatan::class, 'storeintervensi']);
+    Route::post('/storeintervensi', [MasterDiagnosaKebidanan::class, 'storeintervensi']);
     // Route::get('/getall', [MasterDiagnosaKeperawatan::class, 'index']);
     // Route::post('/delete', [MasterDiagnosaKeperawatan::class, 'delete']);
-    // Route::post('/deleteintervensi', [MasterDiagnosaKeperawatan::class, 'deleteintervensi']);
+    Route::post('/deleteintervensi', [MasterDiagnosaKebidanan::class, 'deleteintervensi']);
     // Route::post('/deletetemplate', [MasterPemeriksaanFisikController::class, 'deletetemplate']);
 });

@@ -10,4 +10,9 @@ class Mdiagnosakebidanan extends Model
     use HasFactory;
     protected $table = 'mdiagnosakebidanan';
     protected $guarded = ['id'];
+
+    public function intervensis()
+    {
+        return $this->hasMany(Mintervensikebidanan::class, 'mdiagnosakebidanan_kode', 'kode');
+    }
 }

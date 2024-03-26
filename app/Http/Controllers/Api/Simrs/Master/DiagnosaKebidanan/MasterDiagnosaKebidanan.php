@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Master\DiagnosaKebidanan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mdiagnosakebidanan;
-use App\Models\Simrs\Master\Mintervensikeperawatan;
+use App\Models\Simrs\Master\Mintervensikebidanan;
 use App\Models\Simrs\Master\Mpemeriksaanfisik;
 use App\Models\Simrs\Master\Mtemplategambar;
 use Illuminate\Http\JsonResponse;
@@ -18,10 +18,8 @@ class MasterDiagnosaKebidanan extends Controller
 
     public function index()
     {
-        // $data = Mdiagnosakeperawatan::with('intervensis')->get();
-
         $thumb = collect();
-        Mdiagnosakebidanan::orderBy('id')
+        Mdiagnosakebidanan::with('intervensis')->orderBy('id')
         ->chunk(10, function($diags) use ($thumb){
             foreach ($diags as $q) {
                 $thumb->push($q);
@@ -78,36 +76,38 @@ class MasterDiagnosaKebidanan extends Controller
     //     ], 200);
     // }
 
-    // public function storeintervensi(Request $request)
-    // {
-    //     $data = null;
-    //     if ($request->has('id')) {
-    //         $data = Mintervensikeperawatan::find($request->id);
-    //         $data->nama = $request->nama;
-    //         $data->save();
-    //     }
-    //     $data = Mintervensikeperawatan::create(
-    //         ['nama' => $request->nama, 'group' => $request->group, 'mdiagnosakeperawatan_kode' => $request->kode]
-    //     );
+    public function storeintervensi(Request $request)
+    {
+        $data = null;
+        if ($request->has('id')) {
+            $data = Mintervensikebidanan::find($request->id);
+            $data->nama = $request->nama;
+            $data->save();
+        } else {
+          $data = Mintervensikebidanan::create(
+            ['nama' => $request->nama, 'group' => $request->group, 'mdiagnosakebidanan_kode' => $request->kode]
+          );
+        }
+        
 
-    //     return new JsonResponse([
-    //         'message' => 'Data Berhasil Disimpan...!!!',
-    //         'result' => $data
-    //     ], 200);
-    // }
+        return new JsonResponse([
+            'message' => 'Data Berhasil Disimpan...!!!',
+            'result' => $data
+        ], 200);
+    }
 
-    // public function deleteintervensi(Request $request)
-    // {
-    //     $data = Mintervensikeperawatan::find($request->id);
+    public function deleteintervensi(Request $request)
+    {
+        $data = Mintervensikebidanan::find($request->id);
 
-    //     if (!$data) {
-    //         return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);
-    //     }
+        if (!$data) {
+            return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);
+        }
 
-    //     $data->delete();
+        $data->delete();
 
-    //     return new JsonResponse([
-    //         'message' => 'Data Berhasil dihapus...!!!',
-    //     ], 200);
-    // }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus...!!!',
+        ], 200);
+    }
 }
