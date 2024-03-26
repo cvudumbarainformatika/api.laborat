@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Sigarang\Supplier;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,11 +27,56 @@ class PembayaranController extends Controller
 
         return new JsonResponse($data);
     }
+    // cari penyedianya nya dulu, yang sudah BAST tapi belum dibayar
+    public function cariPenyedia()
+    {
+        $raw = Penerimaan::selectRaw('kode_perusahaan')
+            // ->whereNot('tanggal_bast', null)
+            // ->where('nilai_tagihan', '>=', 0)
+            // ->where(function ($x) {
+            //     $x->where('tanggal_bast', '<>', null)
+            //         ->orWhere('nilai_tagihan', '>=', 0);
+            // })
+            ->where('no_bast', '<>', '')
+            ->where('no_kwitansi', '')
+            ->distinct()->get();
+        $col = collect($raw)->map(function ($item) {
+            return $item->kode_perusahaan;
+        });
+        $data = Supplier::select('nama', 'kode')->whereIn('kode', $col)->get();
+
+        return new JsonResponse($data);
+    }
+    public function cariBast()
+    {
+        $data = Penerimaan::select('no_bast', 'kontrak')->where('kode_perusahaan', request('kode'))
+            ->where('no_bast', '<>', '')
+            ->where('no_kwitansi', '')
+            ->distinct('no_bast')
+            ->with('details_kontrak')
+            ->orderBy('no_bast')
+            ->get();
+
+        return new JsonResponse($data);
+    }
     public function ambilKontrak()
     {
         $data = KontrakPengerjaan::where('nokontrakx', request('kontrak'))
             ->with('penyedia')
             ->first();
+
+        return new JsonResponse($data);
+    }
+    public function ambilPenerimaanByBast()
+    {
+        $data = Penerimaan::where('no_bast', request('no_bast'))
+            ->whereNotNull('tanggal_bast')
+            ->whereNull('tanggal_pembayaran')
+            ->with(['details' => function ($anu) {
+                $anu->select('uraian_50', 'penerimaan_id')
+                    ->distinct('uraian_50');
+            }])
+            ->get();
 
         return new JsonResponse($data);
     }
