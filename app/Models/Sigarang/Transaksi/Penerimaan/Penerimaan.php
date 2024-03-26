@@ -43,7 +43,7 @@ class Penerimaan extends Model
 
     public function details_kontrak()
     {
-        return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrak');
+        return $this->belongsTo(KontrakPengerjaan::class, 'kontrak', 'nokontrakx');
     }
     public function stokgudang()
     {

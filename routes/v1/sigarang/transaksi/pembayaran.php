@@ -10,6 +10,9 @@ Route::group(
     ],
     function () {
         Route::get('/cari-kontrak', [PembayaranController::class, 'cariKontrak']);
+        Route::get('/cari-penyedia', [PembayaranController::class, 'cariPenyedia']);
+        Route::get('/cari-bast', [PembayaranController::class, 'cariBast']);
+        Route::get('/ambil-penerimaan-by-bast', [PembayaranController::class, 'ambilPenerimaanByBast']);
         Route::get('/ambil-kontrak', [PembayaranController::class, 'ambilKontrak']);
         Route::get('/ambil-penerimaan', [PembayaranController::class, 'ambilPenerimaan']);
         Route::get('/ambil-no-bayar', [PembayaranController::class, 'ambilNoBayar']);

@@ -193,7 +193,7 @@ class BastController extends Controller
             // ->whereNull('tanggal_pembayaran')
             ->with('details.satuan', 'perusahaan', 'dibuat', 'dibast', 'dibayar')
             ->whereIn('no_bast', $data)
-            // ->orderBy('tanggal_bast', 'DESC')
+            ->orderBy('tanggal_bast', 'DESC')
             ->get();
         // ->paginate(request('per_page'));
 
@@ -212,6 +212,8 @@ class BastController extends Controller
                 'tanggal' => $items[0]->tanggal_bast,
                 'dibuat' => $items[0]->dibuat,
                 'dibast' => $items[0]->dibast,
+                'nomor' => $items[0]->nomor,
+                'penyedia' => $items[0]->perusahaan->nama ?? '',
                 'penerimaan' => $items,
             ];
         })->values();
