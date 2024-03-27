@@ -13,7 +13,7 @@ Route::group([
     Route::get('/getall', [MasterDiagnosaKebidanan::class, 'index']);
     Route::post('/storeintervensi', [MasterDiagnosaKebidanan::class, 'storeintervensi']);
     // Route::get('/getall', [MasterDiagnosaKeperawatan::class, 'index']);
-    // Route::post('/delete', [MasterDiagnosaKeperawatan::class, 'delete']);
+    Route::post('/delete', [MasterDiagnosaKebidanan::class, 'delete']);
     Route::post('/deleteintervensi', [MasterDiagnosaKebidanan::class, 'deleteintervensi']);
     // Route::post('/deletetemplate', [MasterPemeriksaanFisikController::class, 'deletetemplate']);
 });

@@ -61,20 +61,20 @@ class MasterDiagnosaKebidanan extends Controller
         ], 200);
     }
 
-    // public function delete(Request $request)
-    // {
-    //     $data = Mdiagnosakeperawatan::find($request->id);
+    public function delete(Request $request)
+    {
+        $data = Mdiagnosakebidanan::find($request->id);
 
-    //     if (!$data) {
-    //         return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);
-    //     }
+        if (!$data) {
+            return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);
+        }
 
-    //     $data->delete();
+        $data->delete();
 
-    //     return new JsonResponse([
-    //         'message' => 'Data Berhasil dihapus...!!!',
-    //     ], 200);
-    // }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus...!!!',
+        ], 200);
+    }
 
     public function storeintervensi(Request $request)
     {
