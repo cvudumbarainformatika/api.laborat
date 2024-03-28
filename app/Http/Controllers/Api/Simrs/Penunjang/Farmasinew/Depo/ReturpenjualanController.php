@@ -182,7 +182,7 @@ class ReturpenjualanController extends Controller
                                     'noreg' => $request->noreg,
                                     'noresep' => $request->noresep,
                                     'kdobat' => $key['kdobat'],
-                                    'kandungan' => $key['mobat']['kandungan'],
+                                    'kandungan' => $key['mobat']['kandungan'] ?? '',
                                     'fornas' => $key['mobat']['status_generik'],
                                     'forkit' => $key['mobat']['status_forkid'],
                                     'generik' => $key['mobat']['status_fornas'],
