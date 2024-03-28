@@ -133,6 +133,9 @@ class PemakaianRuanganController extends Controller
             // }
             // simpan rinci
             $simpanRinci = PemakaianR::insert($rinci);
+
+            DB::commit();
+
             // update stok
             $rinc = PemakaianR::where('nopemakaian', $pemakaianruangan)->where('flag', '')->get();
             $st = [];
@@ -153,7 +156,6 @@ class PemakaianRuanganController extends Controller
                     $rin->save();
                 }
             }
-            DB::commit();
             return new JsonResponse([
                 'head' => $simpahHead,
                 'rinci' => $simpanRinci,
