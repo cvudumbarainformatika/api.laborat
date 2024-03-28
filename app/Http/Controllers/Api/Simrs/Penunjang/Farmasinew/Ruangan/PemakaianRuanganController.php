@@ -133,9 +133,6 @@ class PemakaianRuanganController extends Controller
             // }
             // simpan rinci
             $simpanRinci = PemakaianR::insert($rinci);
-
-            DB::commit();
-
             // update stok
             $rinc = PemakaianR::where('nopemakaian', $pemakaianruangan)->where('flag', '')->get();
             $st = [];
@@ -156,6 +153,7 @@ class PemakaianRuanganController extends Controller
                     $rin->save();
                 }
             }
+            DB::commit();
             return new JsonResponse([
                 'head' => $simpahHead,
                 'rinci' => $simpanRinci,
@@ -166,9 +164,9 @@ class PemakaianRuanganController extends Controller
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan...!!!',
                 'result' => $e,
-                'rinc' => $rinc,
-                'st' => $st,
-                'ss' => $ss,
+                'rinc' => $rinc ?? 'tidak ada',
+                'st' => $st ?? 'tidak ada',
+                'ss' => $ss ?? 'tidak ada',
             ], 410);
         }
     }
