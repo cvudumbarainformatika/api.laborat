@@ -24,8 +24,8 @@ class SetNewStokController extends Controller
             ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
         ];
         $gudBaru = ['05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
-        $mapingGud = ['GU0001', 'GU0002'];
-        $mapingDep = ['RC0001', 'AP0002', 'AP0005', 'AP0001', 'AP0007'];
+
+        $mapingDep = ['GU0001', 'GU0002', 'RC0001', 'AP0002', 'AP0005', 'AP0001', 'AP0007'];
         $stok = StokReal::where('rs2', '>', 0)->get();
         $colStok = collect($stok);
         $mapingObat = MapingObat::with([
