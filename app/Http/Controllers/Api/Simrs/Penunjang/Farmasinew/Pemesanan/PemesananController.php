@@ -36,75 +36,81 @@ class PemesananController extends Controller
             $x = DB::connection('farmasi')->table('conter')->select('pemesanan')->get();
             $wew = $x[0]->pemesanan;
             $nopemesanan = FormatingHelper::pemesananobat($wew, 'PES-BOBAT');
-
-            $simpanheder = PemesananHeder::create([
+        } else {
+            $nopemesanan = $request->nopemesanan;
+        }
+        $simpanheder = PemesananHeder::firstOrCreate(
+            [
                 'nopemesanan' => $nopemesanan,
+            ],
+            [
                 'tgl_pemesanan' => date('Y-m-d H:i:s'),
                 'kdpbf' => $request->kdpbf,
                 'kd_ruang' => $request->gudang ?? '',
                 'user' => auth()->user()->pegawai_id
-            ]);
+            ]
+        );
 
-            if (!$simpanheder) {
-                return new JsonResponse(['message' => 'not ok'], 500);
-            }
-
-            $simpanrinci = PemesananRinci::create([
-                'nopemesanan' => $nopemesanan,
-                'noperencanaan' => $request->noperencanaan,
-                'kdobat'  => $request->kdobat,
-                'harga'  => $request->harga ?? 0,
-                'stok_real_gudang'  => $request->stok_real_gudang,
-                'stok_real_rs'  => $request->stok_real_rs,
-                'stok_max_rs'  => $request->stok_max_rs,
-                'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                'tgl_stok'  => $request->tgl_stok,
-                'jumlahdpesan'  => $request->jumlahdpesan,
-                'user'  => auth()->user()->pegawai_id,
-            ]);
-
-            if (!$simpanrinci) {
-                return new JsonResponse(['message' => 'not ok'], 500);
-            }
-
-            return new JsonResponse(
-                [
-                    'message' => 'ok',
-                    'notrans' => $nopemesanan,
-                    'heder' => $simpanheder,
-                    'rinci' => $simpanrinci
-                ],
-                200
-            );
-        } else {
-
-            $simpanrinci = PemesananRinci::create([
-                'nopemesanan' => $request->nopemesanan,
-                'noperencanaan' => $request->noperencanaan,
-                'kdobat'  => $request->kdobat,
-                'stok_real_gudang'  => $request->stok_real_gudang,
-                'stok_real_rs'  => $request->stok_real_rs,
-                'stok_max_rs'  => $request->stok_max_rs,
-                'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
-                'tgl_stok'  => $request->tgl_stok,
-                'jumlahdpesan'  => $request->jumlahdpesan,
-                'user'  => auth()->user()->pegawai_id,
-            ]);
-
-            if (!$simpanrinci) {
-                return new JsonResponse(['message' => 'not ok'], 500);
-            }
-
-            return new JsonResponse(
-                [
-                    'message' => 'ok',
-                    'notrans' => $request->nopemesanan,
-                    //    'heder' => $simpanheder,
-                    'rinci' => $simpanrinci
-                ],
-                200
-            );
+        if (!$simpanheder) {
+            return new JsonResponse(['message' => 'not ok'], 500);
         }
+
+        $simpanrinci = PemesananRinci::create([
+            'nopemesanan' => $nopemesanan,
+            'noperencanaan' => $request->noperencanaan,
+            'kdobat'  => $request->kdobat,
+            'harga'  => $request->harga ?? 0,
+            'stok_real_gudang'  => $request->stok_real_gudang,
+            'stok_real_rs'  => $request->stok_real_rs,
+            'stok_max_rs'  => $request->stok_max_rs,
+            'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
+            'tgl_stok'  => $request->tgl_stok,
+            'jumlahdpesan'  => $request->jumlahdpesan,
+            'user'  => auth()->user()->pegawai_id,
+        ]);
+
+        if (!$simpanrinci) {
+            return new JsonResponse(['message' => 'not ok'], 500);
+        }
+
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'notrans' => $nopemesanan,
+                'heder' => $simpanheder,
+                'rinci' => $simpanrinci
+            ],
+            200
+        );
+        // } else {
+
+        //     $simpanrinci = PemesananRinci::create([
+        //         'nopemesanan' => $request->nopemesanan,
+        //         'noperencanaan' => $request->noperencanaan,
+        //         'kdobat'  => $request->kdobat,
+        //         'stok_real_gudang'  => $request->stok_real_gudang,
+        //         'stok_real_rs'  => $request->stok_real_rs,
+        //         'stok_max_rs'  => $request->stok_max_rs,
+        //         'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
+        //         'tgl_stok'  => $request->tgl_stok,
+        //         'jumlahdpesan'  => $request->jumlahdpesan,
+        //         'user'  => auth()->user()->pegawai_id,
+        //     ]);
+
+        //     if (!$simpanrinci) {
+        //         return new JsonResponse(['message' => 'not ok'], 500);
+        //     }
+
+        //     return new JsonResponse(
+        //         [
+        //             'message' => 'ok',
+        //             'notrans' => $request->nopemesanan,
+        //             //    'heder' => $simpanheder,
+        //             'rinci' => $simpanrinci
+        //         ],
+        //         200
+        //     );
+        // }
     }
 
     public function listpemesanan()

@@ -341,6 +341,10 @@ class EresepController extends Controller
             );
             $simpanrinci->load('mobat:kd_obat,nama_obat');
         }
+        $simpan->load(
+            'permintaanresep.mobat:kd_obat,nama_obat',
+            'permintaanracikan.mobat:kd_obat,nama_obat'
+        );
         return new JsonResponse([
             'heder' => $simpan,
             'rinci' => $simpanrinci ?? 0,
