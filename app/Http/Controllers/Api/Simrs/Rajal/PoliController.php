@@ -519,6 +519,7 @@ class PoliController extends Controller
                 'gambars',
                 'fisio',
                 'laporantindakan',
+                'psikiatri',
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },

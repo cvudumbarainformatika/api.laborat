@@ -15,6 +15,7 @@ use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\LaporanTindakan;
+use App\Models\Simrs\Pelayanan\PsikiatriPoli;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
@@ -270,6 +271,10 @@ class KunjunganPoli extends Model
     public function laporantindakan()
     {
         return $this->hasMany(LaporanTindakan::class, 'noreg', 'rs1');
+    }
+    public function psikiatri()
+    {
+        return $this->hasMany(PsikiatriPoli::class, 'noreg', 'rs1');
     }
     public function pemeriksaanfisikmata()
     {
