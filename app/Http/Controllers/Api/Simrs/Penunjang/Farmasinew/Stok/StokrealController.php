@@ -128,6 +128,17 @@ class StokrealController extends Controller
 
         return new JsonResponse(['message' => 'Stok Berhasil Disimpan...!!!'], 200);
     }
+    public function updatehargastok(Request $request)
+    {
+        $cari = Stokreal::where('id', $request->id)->first();
+        $cari->jumlah = $request->jumlah ?? '';
+        $cari->harga = $request->harga ?? '';
+        $cari->tglexp = $request->tglexp ?? '';
+        $cari->nobatch = $request->nobatch ?? '';
+        $cari->save();
+
+        return new JsonResponse(['message' => 'Stok Berhasil Disimpan...!!!'], 200);
+    }
 
     public function liststokreal()
     {

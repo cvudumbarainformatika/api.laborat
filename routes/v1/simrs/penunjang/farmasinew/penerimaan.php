@@ -27,4 +27,5 @@ Route::group([
     Route::get('/liststokreal', [StokrealController::class, 'liststokreal']); // ini list stok opname
 
     Route::get('/list-stok-sekarang', [StokrealController::class, 'listStokSekarang']);
+    Route::post('/update-stok-sekarang', [StokrealController::class, 'updatehargastok']);
 });
