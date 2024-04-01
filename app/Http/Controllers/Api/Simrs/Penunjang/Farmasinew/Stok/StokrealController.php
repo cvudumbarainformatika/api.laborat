@@ -140,6 +140,9 @@ class StokrealController extends Controller
                     ->orwhere('stokopname.kdobat', 'like', '%' . request('q') . '%')
                     ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
             })
+            ->when(request('from'), function ($q) {
+                $q->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59']);
+            })
             ->paginate(request('per_page'));
         return new JsonResponse($stokreal);
     }

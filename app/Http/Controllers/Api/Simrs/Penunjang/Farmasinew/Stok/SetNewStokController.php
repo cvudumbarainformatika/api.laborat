@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasi\MapingObat;
+use App\Models\Simrs\Penunjang\Farmasi\StokOpname;
 use App\Models\Simrs\Penunjang\Farmasi\StokReal;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname as StokStokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal as FarmasinewStokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,8 +28,7 @@ class SetNewStokController extends Controller
         $gudBaru = ['05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
 
         $mapingDep = ['GU0001', 'GU0002', 'RC0001', 'AP0002', 'AP0005', 'AP0001', 'AP0007'];
-        $stok = StokReal::where('rs2', '>', 0)->get();
-        $colStok = collect($stok);
+
         $mapingObat = MapingObat::with([
             'master:rs1,rs4',
             'stok' => function ($stok) use ($mapingDep) {
@@ -73,7 +74,9 @@ class SetNewStokController extends Controller
         }
         if (count($newStok) > 0) {
             FarmasinewStokreal::truncate();
-            $data['ins'] = FarmasinewStokreal::insert($newStok);
+            foreach (array_chunk($newStok, 1000) as $t) {
+                $data['ins'] = FarmasinewStokreal::insert($t);
+            }
         }
 
         $data['new stok'] = $newStok;
@@ -132,7 +135,102 @@ class SetNewStokController extends Controller
         }
         return [
             'stok' => $stok,
-            'data' => $data,
+            'data' => $data ?? false,
         ];
+    }
+
+    public function setStokOpnameAwal()
+    {
+        $tanggal = StokOpname::select('rs5')->distinct()->orderBy('rs5', 'DESC')->first('rs5');
+        $tglVal = $tanggal['rs5'];
+        $newOpname = [];
+        $opname = StokStokopname::whereNotBetween('tglopname', [$tglVal, $tglVal])->get();
+        foreach ($opname as $key) {
+            $temp = [
+                'nopenerimaan' => $key['nopenerimaan'],
+                'tglpenerimaan' => $key['tglpenerimaan'],
+                'kdobat' => $key['kdobat'],
+                'jumlah' => $key['jumlah'],
+                'kdruang' => $key['kdruang'],
+                'harga' => $key['harga'],
+                'flag' => $key['flag'],
+                'tglexp' => $key['tglexp'],
+                'nobatch' => $key['nobatch'],
+                'nodistribusi' => $key['nodistribusi'],
+                'tglopname' => $key['tglopname'],
+                'created_at' => $key['created_at'],
+                'updated_at' => $key['updated_at'],
+            ];
+            $newOpname[] = $temp;
+        }
+        $mapingGudang = [
+            ['nama' => 'Gudang Farmasi ( Kamar Obat )', 'kode' => 'Gd-05010100', 'lama' => 'GU0001'],
+            ['nama' => 'Gudang Farmasi (Floor Stok)', 'kode' => 'Gd-03010100', 'lama' => 'GU0002'],
+            ['nama' => 'Floor Stock 1 (AKHP)', 'kode' => 'Gd-03010101', 'lama' => 'RC0001'],
+            ['nama' => 'Depo Rawat inap', 'kode' => 'Gd-04010102', 'lama' => 'AP0002'],
+            ['nama' => 'Depo OK', 'kode' => 'Gd-04010103', 'lama' => 'AP0005'],
+            ['nama' => 'Depo Rawat Jalan', 'kode' => 'Gd-05010101', 'lama' => 'AP0001'],
+            ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
+        ];
+
+        $mapingDep = ['GU0001', 'GU0002', 'RC0001', 'AP0002', 'AP0005', 'AP0001', 'AP0007'];
+
+        $mapingObat = MapingObat::with([
+            // 'master:rs1,rs4',
+            'stokopname' => function ($stok) use ($mapingDep, $tglVal) {
+                $stok->whereIn('rs4', $mapingDep)
+                    ->whereBetween('rs5', [$tglVal, $tglVal]);
+            },
+        ])
+            ->where('obatbaru', '<>', '')
+            // ->limit(50)
+            ->get();
+
+        foreach ($mapingObat as $key) {
+            foreach ($key['stokopname'] as $st) {
+                $raw = collect($mapingGudang)
+                    ->where('lama', $st['rs4'])
+                    ->map(function ($it, $key) {
+                        return $it['kode'] ?? null;
+                    });
+
+                $item = current((array)$raw); // value of current object
+                $anu = key((array)$item); // key of the object value
+                $ruang = $item[$anu] ?? $st['rs4'];
+                if ($ruang === 'Gd-05010100') $nPen = 'G-KO';
+                else if ($ruang === 'Gd-03010100') $nPen = 'G-FO';
+                else if ($ruang === 'Gd-03010101') $nPen = 'D-FO';
+                else if ($ruang === 'Gd-04010102') $nPen = 'D-RI';
+                else if ($ruang === 'Gd-04010103') $nPen = 'D-OK';
+                else if ($ruang === 'Gd-05010101') $nPen = 'D-RJ';
+                else if ($ruang === 'Gd-02010104') $nPen = 'D-IGD';
+                else  $nPen = 'NDF';
+                $temp = [
+                    'nopenerimaan' => '001/' . date('m/Y') . '/opnameAwal/' . $nPen,
+                    'tglpenerimaan' => date('Y-m-d H:i:s'),
+                    'kdobat' => $key['obatbaru'],
+                    'jumlah' => $st['rs2'],
+                    'kdruang' => $ruang,
+                    'harga' => $st['rs3'],
+                    'flag' => '',
+                    'tglexp' => '',
+                    'nobatch' => '',
+                    'nodistribusi' => '',
+                    'tglopname' => $st['rs5'],
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ];
+                $newOpname[] = $temp;
+            }
+        }
+        if (count($newOpname) > 0) {
+            StokStokopname::truncate();
+            foreach (array_chunk($newOpname, 1000) as $t) {
+                $data['ins'] = StokStokopname::insert($t);
+            }
+        }
+        // $data['mapingObat'] = $mapingObat;
+        $data['newOpname'] = $newOpname;
+        return new JsonResponse($data);
     }
 }
