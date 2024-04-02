@@ -23,4 +23,8 @@ class MapingObat extends Model
     {
         return $this->hasMany(StokOpname::class, 'rs1', 'obatlama');
     }
+    public function rincipenerimaan()
+    {
+        return $this->hasOne(TransaksiPenerimaanRinci::class, 'rs2', 'obatlama');
+    }
 }

@@ -128,6 +128,17 @@ class StokrealController extends Controller
 
         return new JsonResponse(['message' => 'Stok Berhasil Disimpan...!!!'], 200);
     }
+    public function updatehargastok(Request $request)
+    {
+        $cari = Stokreal::where('id', $request->id)->first();
+        $cari->jumlah = $request->jumlah ?? '';
+        $cari->harga = $request->harga ?? '';
+        $cari->tglexp = $request->tglexp ?? '';
+        $cari->nobatch = $request->nobatch ?? '';
+        $cari->save();
+
+        return new JsonResponse(['message' => 'Stok Berhasil Disimpan...!!!'], 200);
+    }
 
     public function liststokreal()
     {
@@ -140,6 +151,25 @@ class StokrealController extends Controller
                     ->orwhere('stokopname.kdobat', 'like', '%' . request('q') . '%')
                     ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
             })
+            ->when(request('from'), function ($q) {
+                $q->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59']);
+            })
+            ->orderBy('new_masterobat.nama_obat', 'ASC')
+            ->paginate(request('per_page'));
+        return new JsonResponse($stokreal);
+    }
+    public function listStokSekarang()
+    {
+        $kdruang = request('kdruang');
+        $stokreal = Stokreal::select('stokreal.*', 'new_masterobat.*', 'stokreal.id as idx')->where('stokreal.flag', '')
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->where('stokreal.kdruang', $kdruang)
+            ->where(function ($x) {
+                $x->where('stokreal.nopenerimaan', 'like', '%' . request('q') . '%')
+                    ->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
+            ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($stokreal);
     }

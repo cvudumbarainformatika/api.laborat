@@ -214,6 +214,9 @@ class LaporanMutasiGudangController extends Controller
                         ->leftJoin('distribusi_langsungs', function ($p) {
                             $p->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
                         })
+                        ->when(request('kode_ruang') !== 'all' && request('kode_ruang') !== 'Gd-02010102', function ($q) {
+                            $q->where('distribusi_langsungs.ruang_tujuan', request('kode_ruang'));
+                        })
                         ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
                         // ->with('recentstok')
                         ->with([
