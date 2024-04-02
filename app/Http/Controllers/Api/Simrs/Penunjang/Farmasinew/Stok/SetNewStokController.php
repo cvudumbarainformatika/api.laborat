@@ -35,7 +35,22 @@ class SetNewStokController extends Controller
                 $stok->where('rs2', '>', 0)
                     ->whereIn('rs4', $mapingDep);
             },
-        ])->where('obatbaru', '<>', '')->get();
+            'rincipenerimaan' => function ($tr) {
+                $tr->select(
+                    'rs82.rs1',
+                    'rs82.rs2',
+                    'rs82.rs6',
+                    'rs82.rs7',
+                    'rs81.rs2 as tanggal',
+                )
+                    ->leftJoin('rs81', 'rs81.rs1', '=', 'rs82.rs1')
+                    ->orderBy('rs81.rs2', 'DESC');
+                // ->limit(5);
+            }
+        ])
+            ->where('obatbaru', '<>', '')
+            // ->limit(10)
+            ->get();
         $newStok = [];
         foreach ($mapingObat as $key) {
             foreach ($key['stok'] as $st) {
@@ -45,9 +60,9 @@ class SetNewStokController extends Controller
                         return $it['kode'] ?? null;
                     });
                 /**
-            Catatan:
-            $anu dan $item ada karena key nya ($anu) dinamis, maka key nya harus dicari berdasarkan nilai objeck yang sekarang ($item)
-            key nya tidak bisa langsung diambil dari $raw, karena $raw masih belum menjadi nilai dari object, maka nilai dari object harus di akses terlebih dahulu di $item
+                 * Catatan:
+                 * $anu dan $item ada karena key nya ($anu) dinamis, maka key nya harus dicari berdasarkan nilai objeck yang sekarang ($item)
+                 * key nya tidak bisa langsung diambil dari $raw, karena $raw masih belum menjadi nilai dari object, maka nilai dari object harus di akses terlebih dahulu di $item
                  */
                 $item = current((array)$raw); // value of current object
                 $anu = key((array)$item); // key of the object value
@@ -61,11 +76,13 @@ class SetNewStokController extends Controller
                 else  $nPen = 'NDF';
                 $temp = [
                     'nopenerimaan' => '001/' . date('m/Y') . '/awal/' . $nPen,
-                    'tglpenerimaan' => date('Y-m-d H:i:s'),
+                    'tglpenerimaan' => $key['rincipenerimaan']['tanggal'] ?? date('Y-m-d H:i:s'),
                     'kdobat' => $key['obatbaru'],
                     'jumlah' => $st['rs2'],
                     'kdruang' => $item[$anu],
                     'harga' => $key['master']['rs4'],
+                    'tglexp' => $key['rincipenerimaan']['rs7'] ?? null,
+                    'nobatch' => $key['rincipenerimaan']['rs6'] ?? '',
                     'created_at' => date('Y-m-d H:i:s'),
                     'updated_at' => date('Y-m-d H:i:s'),
                 ];
@@ -79,6 +96,7 @@ class SetNewStokController extends Controller
             }
         }
 
+        // $data['mapingObat'] = $mapingObat;
         $data['new stok'] = $newStok;
         $data['har'] = $this->cekHargaGud();
 
@@ -181,6 +199,18 @@ class SetNewStokController extends Controller
                 $stok->whereIn('rs4', $mapingDep)
                     ->whereBetween('rs5', [$tglVal, $tglVal]);
             },
+            'rincipenerimaan' => function ($tr) {
+                $tr->select(
+                    'rs82.rs1',
+                    'rs82.rs2',
+                    'rs82.rs6',
+                    'rs82.rs7',
+                    'rs81.rs2 as tanggal',
+                )
+                    ->leftJoin('rs81', 'rs81.rs1', '=', 'rs82.rs1')
+                    ->orderBy('rs81.rs2', 'DESC');
+                // ->limit(10);
+            }
         ])
             ->where('obatbaru', '<>', '')
             // ->limit(50)
@@ -207,14 +237,14 @@ class SetNewStokController extends Controller
                 else  $nPen = 'NDF';
                 $temp = [
                     'nopenerimaan' => '001/' . date('m/Y') . '/opnameAwal/' . $nPen,
-                    'tglpenerimaan' => date('Y-m-d H:i:s'),
+                    'tglpenerimaan' => $key['rincipenerimaan']['tanggal'] ?? date('Y-m-d H:i:s'),
                     'kdobat' => $key['obatbaru'],
                     'jumlah' => $st['rs2'],
                     'kdruang' => $ruang,
                     'harga' => $st['rs3'],
                     'flag' => '',
-                    'tglexp' => '',
-                    'nobatch' => '',
+                    'tglexp' => $key['rincipenerimaan']['rs7'] ?? null,
+                    'nobatch' => $key['rincipenerimaan']['rs6'] ?? '',
                     'nodistribusi' => '',
                     'tglopname' => $st['rs5'],
                     'created_at' => date('Y-m-d H:i:s'),
