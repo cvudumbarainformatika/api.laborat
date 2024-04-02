@@ -448,6 +448,12 @@ class EresepController extends Controller
     public function kirimresep(Request $request)
     {
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
+        if (!$kirimresep) {
+            return new JsonResponse([
+                'message' => 'Resep tidak ditemukan',
+
+            ], 410);
+        }
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
