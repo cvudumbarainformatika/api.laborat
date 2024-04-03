@@ -9,7 +9,7 @@ class LaporanTindakan extends Model
     use HasFactory;
     protected $table = 'laporan_tindakan';
     protected $guarded = ['id'];
-    protected $casts = [
-      'laporantindakan' => 'array',
-    ];
+    // protected $casts = [
+    //   'laporantindakan' => 'array',
+    // ];
 }

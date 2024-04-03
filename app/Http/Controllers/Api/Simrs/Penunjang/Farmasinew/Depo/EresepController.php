@@ -341,11 +341,17 @@ class EresepController extends Controller
             );
             $simpanrinci->load('mobat:kd_obat,nama_obat');
         }
-        $simpan->load(
+
+        // $simpan->load(
+        //     'permintaanresep.mobat:kd_obat,nama_obat',
+        //     'permintaanracikan.mobat:kd_obat,nama_obat'
+        // );
+        $endas = Resepkeluarheder::where('noreg', $request->noreg)->with(
             'permintaanresep.mobat:kd_obat,nama_obat',
             'permintaanracikan.mobat:kd_obat,nama_obat'
-        );
+        )->get();
         return new JsonResponse([
+            'newapotekrajal' => $endas,
             'heder' => $simpan,
             'rinci' => $simpanrinci ?? 0,
             'rincidtd' => $simpandtd ?? 0,
@@ -448,6 +454,12 @@ class EresepController extends Controller
     public function kirimresep(Request $request)
     {
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
+        if (!$kirimresep) {
+            return new JsonResponse([
+                'message' => 'Resep tidak ditemukan',
+
+            ], 410);
+        }
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
@@ -692,9 +704,14 @@ class EresepController extends Controller
             if ($obat) {
                 $obat->delete();
                 self::hapusHeader($request);
+                $endas = Resepkeluarheder::where('noreg', $request->noreg)->with(
+                    'permintaanresep.mobat:kd_obat,nama_obat',
+                    'permintaanracikan.mobat:kd_obat,nama_obat'
+                )->get();
                 return new JsonResponse([
                     'message' => 'Permintaan resep Obat Racikan telah dihapus',
                     'obat' => $obat,
+                    'newapotekrajal' => $endas,
                 ]);
             }
             return new JsonResponse([
@@ -706,9 +723,14 @@ class EresepController extends Controller
         if ($obat) {
             $obat->delete();
             self::hapusHeader($request);
+            $endas = Resepkeluarheder::where('noreg', $request->noreg)->with(
+                'permintaanresep.mobat:kd_obat,nama_obat',
+                'permintaanracikan.mobat:kd_obat,nama_obat'
+            )->get();
             return new JsonResponse([
                 'message' => 'Permintaan resep Obat telah dihapus',
                 'obat' => $obat,
+                'newapotekrajal' => $endas,
             ]);
         }
         return new JsonResponse([

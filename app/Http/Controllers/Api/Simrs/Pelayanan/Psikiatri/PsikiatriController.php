@@ -13,6 +13,8 @@ class PsikiatriController extends Controller
 
     public function store(Request $request)
     {
+      $user = auth()->user()->pegawai_id;
+      $request->request->add(['user_input' => $user]);
       $saved = PsikiatriPoli::create($request->all());
 
       if (!$saved) {
