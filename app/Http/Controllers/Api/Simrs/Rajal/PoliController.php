@@ -523,6 +523,9 @@ class PoliController extends Controller
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },
+                'diagnosakebidanan' => function ($diag) {
+                    $diag->with('intervensi.masterintervensi');
+                },
                 'laborats' => function ($t) {
                     $t->with('details.pemeriksaanlab')
                         ->orderBy('id', 'DESC');

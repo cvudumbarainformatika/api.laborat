@@ -2,35 +2,34 @@
 
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa;
 
-use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
-use App\Models\Simrs\Master\Mdiagnosakeperawatan;
-use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
-use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
-use App\Models\Simrs\Pelayanan\Intervensikeperawatan;
+use App\Models\Simrs\Master\Mdiagnosakebidanan;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
+use App\Models\Simrs\Pelayanan\Intervensikebidanan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class DiagnosaKeperawatanController extends Controller
+class DiagnosaKebidananController extends Controller
 {
-    public function diagnosakeperawatan()
+    public function diagnosakebidanan()
     {
-        $listdiagnosa = Mdiagnosakeperawatan::with(['intervensis'])
+        $listdiagnosa = Mdiagnosakebidanan::with(['intervensis'])
             ->get();
         return new JsonResponse($listdiagnosa);
     }
 
-    public function simpandiagnosakeperawatan(Request $request)
+    public function simpandiagnosakebidanan(Request $request)
     {
 
         try {
             DB::beginTransaction();
 
-            $thumb = [];
             $user = auth()->user()->pegawai_id;
+
+            $thumb = [];
             foreach ($request->diagnosa as $key => $value) {
-                $diagnosakeperawatan = Diagnosakeperawatan::create(
+                $diagnosakebidanan = Diagnosakebidanan::create(
                     [
                         'noreg' => $value['noreg'],
                         'norm' => $value['norm'],
@@ -41,17 +40,17 @@ class DiagnosaKeperawatanController extends Controller
                 );
 
                 foreach ($value['details'] as $key => $det) {
-                    Intervensikeperawatan::create([
-                        'diagnosakeperawatan_kode' => $diagnosakeperawatan->id,
+                    Intervensikebidanan::create([
+                        'diagnosakebidanan_kode' => $diagnosakebidanan->id,
                         'intervensi_id' => $det['intervensi_id']
                     ]);
                 }
-                array_push($thumb, $diagnosakeperawatan->id);
+                array_push($thumb, $diagnosakebidanan->id);
             }
 
             DB::commit();
 
-            $success = Diagnosakeperawatan::whereIn('id', $thumb)->get();
+            $success = Diagnosakebidanan::whereIn('id', $thumb)->get();
 
             return new JsonResponse(
                 [
@@ -66,20 +65,20 @@ class DiagnosaKeperawatanController extends Controller
         }
     }
 
-    public function deletediagnosakeperawatan(Request $request)
+    public function deletediagnosakebidanan(Request $request)
     {
         try {
             DB::beginTransaction();
 
             $id = $request->id;
 
-            $target = Diagnosakeperawatan::find($id);
+            $target = Diagnosakebidanan::find($id);
 
             if (!$target) {
                 return new JsonResponse(['message' => 'Data tidak ditemukan'], 500);
             }
 
-            Intervensikeperawatan::where('diagnosakeperawatan_kode', $target->id)->delete();
+            Intervensikebidanan::where('diagnosakebidanan_kode', $target->id)->delete();
 
             $target->delete();
             DB::commit();
