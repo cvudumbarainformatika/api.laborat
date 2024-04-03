@@ -6,7 +6,7 @@ use App\Models\Simrs\Pelayanan\Intervensikebidanan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Diagnosakebidanan extends Model
+class DiagnosaKebidanan extends Model
 {
     use HasFactory;
     protected $table = 'diagnosakebidanan';
