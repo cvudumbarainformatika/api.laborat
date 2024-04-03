@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Rajal;
 
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Satset\Satset;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
@@ -22,6 +23,7 @@ use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penunjang\DietTrans;
@@ -270,7 +272,11 @@ class KunjunganPoli extends Model
         return $this->hasOne(Generalconsent::class, 'norm', 'norm');
     }
 
-
+    //pegawai dari simpeg
+    public function pegawai()
+    {
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
+    }
 
     // masuk tanggal 22 maret 2024
     public function laporantindakan()
@@ -284,5 +290,10 @@ class KunjunganPoli extends Model
     public function pemeriksaanfisikmata()
     {
         return $this->hasOne(Polimata::class, 'rs1', 'rs1');
+    }
+
+    public function jampulangtaskid()
+    {
+        return $this->hasMany(Bpjsrespontime::class, 'noreg', 'rs1');
     }
 }
