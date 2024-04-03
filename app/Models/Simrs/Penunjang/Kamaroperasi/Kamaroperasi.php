@@ -20,7 +20,12 @@ class Kamaroperasi extends Model
         $harga2 = (int) $this->rs6;
         $harga3 = (int) $this->rs7;
         $jumlah = (int) $this->rs8;
-        $biaya = ($harga1+$harga2+$harga3)*$jumlah;
+        $biaya = ($harga1 + $harga2 + $harga3) * $jumlah;
         return ($biaya);
+    }
+
+    public function mastertindakanoperasi()
+    {
+        return $this->hasOne(Masteroperasi::class, 'rs1', 'rs4');
     }
 }
