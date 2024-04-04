@@ -274,7 +274,7 @@ class PerencanaanpembelianController extends Controller
                 'jumlahdirencanakan'  => $request->jumlahdpesan
             ],
             [
-                'stok_real_gudang' => $request->stok_real_gudang,
+                // 'stok_real_gudang' => $request->stok_real_gudang,
                 'stok_real_rs'  => $request->stok_real_rs,
                 'stok_max_rs'  => $request->stok_max_rs,
                 'jumlah_bisa_dibeli'  => $request->jumlah_bisa_dibeli,
