@@ -22,6 +22,9 @@ class VerifController extends Controller
         $verifrinci->jumlah_diverif = $request->jumlah_diverif;
         $verifrinci->user_verif = $kdpegsimrs;
         $verifrinci->waktu_verif = date('Y-m-d H:i:s');
+        if ($request->jumlah_diverif === 0 || $request->jumlah_diverif === '0') {
+            $verifrinci->flag = '1';
+        }
         $verifrinci->save();
         return new JsonResponse(
             [

@@ -308,6 +308,7 @@ class PenerimaanController extends Controller
         }
 
 
+        $simpanrinci->load('masterobat:kd_obat,nama_obat,satuan_b');
         return new JsonResponse([
             'message' => 'ok',
             'nopenerimaan' => $nopenerimaan,
