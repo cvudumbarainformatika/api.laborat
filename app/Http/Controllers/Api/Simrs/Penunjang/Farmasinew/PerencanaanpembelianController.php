@@ -313,7 +313,8 @@ class PerencanaanpembelianController extends Controller
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
-            ->orderBy('tgl', 'desc')->paginate(request('per_page'));
+            ->orderBy('tgl', 'desc')
+            ->paginate(request('per_page'));
         return new JsonResponse($rencanabeli);
     }
     public function listVerif()
@@ -408,6 +409,15 @@ class PerencanaanpembelianController extends Controller
                         'kdobat',
                         DB::raw(
                             'sum(jumlahdirencanakan) as jumlah'
+                        )
+                    )->where('flag', '')
+                        ->groupBy('kdobat');
+                },
+                'pemesananrinci' => function ($q) {
+                    $q->select(
+                        'kdobat',
+                        DB::raw(
+                            'sum(jumlahdpesan) as jumlah'
                         )
                     )->where('flag', '')
                         ->groupBy('kdobat');

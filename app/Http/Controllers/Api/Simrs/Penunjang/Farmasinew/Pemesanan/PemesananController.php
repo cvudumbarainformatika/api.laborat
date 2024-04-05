@@ -153,9 +153,11 @@ class PemesananController extends Controller
         $rinci = PemesananRinci::where('nopemesanan', $request->nopemesanan)->get();
         if (count($rinci) > 0) {
             foreach ($rinci as $key) {
-                $rencana = RencanabeliR::where('no_rencbeliobat', $key['noperencanaan'])->where('kdobat', $key['kdobat'])->first();
-                $rencana->flag = '';
-                $rencana->save();
+                $rencana = RencanabeliR::where('no_rencbeliobat', $key['noperencanaan'])->where('kdobat', $key['kdobat'])->where('jumlah_diverif', '>', 0)->first();
+                if ($rencana) {
+                    $rencana->flag = '';
+                    $rencana->save();
+                }
                 $key->delete();
             }
         }
