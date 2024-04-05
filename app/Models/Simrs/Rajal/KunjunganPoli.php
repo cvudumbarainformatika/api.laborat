@@ -17,6 +17,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\LaporanTindakan;
+use App\Models\Simrs\Pelayanan\NeonatusMedis;
 use App\Models\Simrs\Pelayanan\PsikiatriPoli;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
@@ -295,5 +296,10 @@ class KunjunganPoli extends Model
     public function jampulangtaskid()
     {
         return $this->hasMany(Bpjsrespontime::class, 'noreg', 'rs1');
+    }
+
+    public function neonatusmedis()
+    {
+        return $this->hasMany(NeonatusMedis::class, 'noreg', 'rs1');
     }
 }
