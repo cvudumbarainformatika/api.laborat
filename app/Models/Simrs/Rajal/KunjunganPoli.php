@@ -17,6 +17,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\LaporanTindakan;
+use App\Models\Simrs\Pelayanan\NeonatusKeperawatan;
 use App\Models\Simrs\Pelayanan\NeonatusMedis;
 use App\Models\Simrs\Pelayanan\PsikiatriPoli;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
@@ -301,5 +302,9 @@ class KunjunganPoli extends Model
     public function neonatusmedis()
     {
         return $this->hasMany(NeonatusMedis::class, 'noreg', 'rs1');
+    }
+    public function neonatuskeperawatan()
+    {
+        return $this->hasMany(NeonatusKeperawatan::class, 'noreg', 'rs1');
     }
 }

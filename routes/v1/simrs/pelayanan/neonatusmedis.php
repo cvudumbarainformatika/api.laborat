@@ -11,5 +11,8 @@ Route::group([
     'prefix' => 'simrs/pelayanan/neonatusmedis'
 ], function () {
     Route::post('/store', [NeonatusMedisController::class, 'store']);
-    // Route::post('/deletedata', [PsikiatriController::class, 'deletedata']);
+    Route::post('/deletedata', [NeonatusMedisController::class, 'deletedata']);
+    Route::post('/storeRiwayatKehamilan', [NeonatusMedisController::class, 'storeRiwayatKehamilan']);
+    Route::get('/riwayatKehamilan', [NeonatusMedisController::class, 'riwayatKehamilan']);
+    Route::post('/deleteRiwayatKehamilan', [NeonatusMedisController::class, 'deleteRiwayatKehamilan']);
 });
