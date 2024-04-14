@@ -14,6 +14,7 @@ class RmeRajalController extends Controller
         $data = KunjunganPoli::with(
             [
                 'anamnesis',
+                'diagnosakeperawatan.intervensi.masterintervensi',
                 'pemeriksaanfisik' => function ($p) {
                     $p->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                         ->orderBy('id', 'DESC');
