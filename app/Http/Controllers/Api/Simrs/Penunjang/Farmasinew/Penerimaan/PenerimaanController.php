@@ -74,7 +74,7 @@ class PenerimaanController extends Controller
                 'tglpenerimaan' => $request->tglpenerimaan,
                 'pengirim' => $request->pengirim,
                 'jenissurat' => $request->jenissurat,
-                'jenis_penerimaan' => 'Penerimaan Tidak Langsung',
+                'jenis_penerimaan' => 'Pesanan',
                 'nomorsurat' => $request->nomorsurat,
                 'tglsurat' => $request->tglsurat,
                 'batasbayar' => $request->batasbayar,
