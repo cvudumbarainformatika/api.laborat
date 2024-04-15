@@ -24,7 +24,7 @@ class PenerimaanController extends Controller
     {
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'kd_ruang')
             ->with([
-                'gudang',
+                'gudang:kode,nama',
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
                 'rinci:nopemesanan,kdobat,jumlahdpesan,harga as harga_kcl',
                 'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,satuan_b,satuan_k,kekuatan_dosis,volumesediaan,kelas_terapi',
