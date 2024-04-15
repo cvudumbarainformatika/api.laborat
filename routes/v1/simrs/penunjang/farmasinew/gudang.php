@@ -10,4 +10,6 @@ Route::group([
     'prefix' => 'simrs/penunjang/farmasinew/gudang'
 ], function () {
     Route::get('/list-pemakaian-konsinyasi', [KonsinyasiController::class, 'getListPemakaianKonsinyasi']);
+    //pemfakturan
+    // pembayaran
 });

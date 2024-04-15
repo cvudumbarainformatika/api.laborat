@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
+use App\Helpers\HargaHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
@@ -214,37 +215,10 @@ class EresepController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
-        $gudang = ['Gd-05010100', 'Gd-03010100'];
-        $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-            ->whereIn('kdruang', $gudang)
-            ->where('kdobat', $request->kodeobat)
-            ->orderBy('tglpenerimaan', 'desc')
-            ->limit(5)
-            ->get();
-        if (count($cariharga) <= 0) {
-            return new JsonResponse(['message' => 'Tidak ada harga di gudang untuk obat ini'], 410);
-        }
-        $harga = $cariharga[0]->harga;
-
-        if ($request->groupsistembayar == 1) {
-            if ($harga <= 50000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-            } elseif ($harga > 50000 && $harga <= 250000) {
-                $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-            } elseif ($harga > 250000 && $harga <= 500000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-            } elseif ($harga > 500000 && $harga <= 1000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-            } elseif ($harga > 1000000 && $harga <= 5000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-            } elseif ($harga > 5000000 && $harga <= 10000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-            } elseif ($harga > 10000000) {
-                $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
-            }
-        } else {
-            $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-        }
+        
+        $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
+        $hargajualx = $har['hargaJual'];
+        $harga = $har['harga'];
 
         if ($request->jenisresep == 'Racikan') {
             if ($request->tiperacikan == 'DTD') {

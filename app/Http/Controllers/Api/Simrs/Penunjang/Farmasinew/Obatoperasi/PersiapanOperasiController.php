@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
 use App\Helpers\FormatingHelper;
+use App\Helpers\HargaHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -454,35 +455,13 @@ class PersiapanOperasiController extends Controller
         if (count($obat) > 0) {
             foreach ($obat as $key) {
                 // cari harga
-                $gudang = ['Gd-05010100', 'Gd-03010100'];
-                $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-                    ->whereIn('kdruang', $gudang)
-                    ->where('kdobat', $key['kd_obat'])
-                    ->orderBy('tglpenerimaan', 'desc')
-                    ->limit(5)
-                    ->get();
-                $harga = $cariharga[0]->harga;
                 $sistemBayar = SistemBayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
                 $gr = $sistemBayar->groups ?? '';
-                if ($gr == 1) {
-                    if ($harga <= 50000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-                    } elseif ($harga > 50000 && $harga <= 250000) {
-                        $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-                    } elseif ($harga > 250000 && $harga <= 500000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-                    } elseif ($harga > 500000 && $harga <= 1000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-                    } elseif ($harga > 1000000 && $harga <= 5000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-                    } elseif ($harga > 5000000 && $harga <= 10000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-                    } elseif ($harga > 10000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
-                    }
-                } else {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-                }
+
+
+                $har = HargaHelper::getHarga($key['kd_obat'], $gr);
+                $hargajualx = $har['hargaJual'];
+                $harga = $har['harga'];
                 $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
                 $rin = [
                     'noreg' => $request->noreg,
@@ -591,42 +570,19 @@ class PersiapanOperasiController extends Controller
         $rinci = [];
         foreach ($data as $key) {
             $listPasienOp = PermintaanOperasi::where('rs1', $request->noreg)->first();
+
+            // cari harga
             $sistemBayar = 0;
             if ($listPasienOp) {
                 $tmp = SistemBayar::select('groups')->where('rs1', $listPasienOp->rs14)->first();
                 $sistemBayar = $tmp->groups;
             }
-            // cari harga
-            $gudang = ['Gd-05010100', 'Gd-03010100'];
-            $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-                ->whereIn('kdruang', $gudang)
-                ->where('kdobat', $key['kd_obat'])
-                ->orderBy('tglpenerimaan', 'desc')
-                ->limit(5)
-                ->get();
-            $harga = $cariharga[0]->harga;
-
-            // return $sistemBayar;
             $gr = $sistemBayar ?? '';
-            if ($gr == 1) {
-                if ($harga <= 50000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-                } elseif ($harga > 50000 && $harga <= 250000) {
-                    $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-                } elseif ($harga > 250000 && $harga <= 500000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-                } elseif ($harga > 500000 && $harga <= 1000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-                } elseif ($harga > 1000000 && $harga <= 5000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-                } elseif ($harga > 5000000 && $harga <= 10000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-                } elseif ($harga > 10000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
-                }
-            } else {
-                $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-            }
+
+            $har = HargaHelper::getHarga($key['kd_obat'], $gr);
+            $hargajualx = $har['hargaJual'];
+            $harga = $har['harga'];
+
             $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
             $dist = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
                 ->where('nopermintaan', $key['nopermintaan'])
@@ -775,120 +731,6 @@ class PersiapanOperasiController extends Controller
                             $key->save();
                         }
                     }
-
-                    // $dist = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
-                    //     ->where('nopermintaan', $key['nopermintaan'])
-                    //     ->orderBy('id', 'ASC')
-                    //     ->get();
-
-                    // if ($jmlResep > 0) {
-                    //     // resep keluar
-                    //     $listPasienOp = PermintaanOperasi::where('rs1', $request->noreg)->first();
-                    //     $sistemBayar = 0;
-                    //     if ($listPasienOp) {
-                    //         $tmp = SistemBayar::select('groups')->where('rs1', $listPasienOp->rs14)->first();
-                    //         $sistemBayar = $tmp->groups;
-                    //     }
-                    //     // $rinci = [];
-                    //     // cari harga
-                    //     $gudang = ['Gd-05010100', 'Gd-03010100'];
-                    //     $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-                    //         ->whereIn('kdruang', $gudang)
-                    //         ->where('kdobat', $key['kd_obat'])
-                    //         ->orderBy('tglpenerimaan', 'desc')
-                    //         ->limit(5)
-                    //         ->get();
-                    //     $harga = $cariharga[0]->harga;
-
-                    //     // return $sistemBayar;
-                    //     $gr = $sistemBayar ?? '';
-                    //     if ($gr == 1) {
-                    //         if ($harga <= 50000) {
-                    //             $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-                    //         } elseif ($harga > 50000 && $harga <= 250000) {
-                    //             $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-                    //         } elseif ($harga > 250000 && $harga <= 500000) {
-                    //             $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-                    //         } elseif ($harga > 500000 && $harga <= 1000000) {
-                    //             $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-                    //         } elseif ($harga > 1000000 && $harga <= 5000000) {
-                    //             $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-                    //         } elseif ($harga > 5000000 && $harga <= 10000000) {
-                    //             $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-                    //         } elseif ($harga > 10000000) {
-                    //             $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
-                    //         }
-                    //     } else {
-                    //         $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-                    //     }
-                    //     $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
-
-                    //     $index = 0;
-                    //     $resepnya = (float) $key['jumlah_resep'];
-
-                    //     while ($resepnya > 0) {
-                    //         $ada = (float)$dist[$index]->jumlah;
-                    //         $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])->where('nopenerimaan', $dist[$index]->nopenerimaan)->where('kdruang', 'Gd-04010103')->first();
-                    //         if ($ada < $resepnya) {
-                    //             $rin = [
-                    //                 'noreg' => $request->noreg,
-                    //                 'noresep' => $key['noresep'],
-                    //                 'kdobat' => $masterObat->kd_obat,
-                    //                 'kandungan' => $masterObat->kandungan,
-                    //                 'fornas' => $masterObat->status_fornas,
-                    //                 'forkit' => $masterObat->status_forkid,
-                    //                 'generik' => $masterObat->status_generik,
-                    //                 'kode108' => $masterObat->kode108,
-                    //                 'uraian108' => $masterObat->uraian108,
-                    //                 'kode50' => $masterObat->kode50,
-                    //                 'uraian50' => $masterObat->uraian50,
-                    //                 'nilai_r' => 300,
-                    //                 'jumlah' => $ada,
-                    //                 'harga_beli' => $hargaBeli->harga ?? 0,
-                    //                 'hpp' => $harga ?? 0,
-                    //                 'harga_jual' => $hargajualx,
-                    //                 'aturan' => 'dipakai untuk operasi',
-                    //                 'konsumsi' => 1,
-                    //                 'keterangan' => 'Di pakai untuk operasi' ?? '',
-                    //                 'user' => $kode,
-                    //                 'created_at' => date('Y-m-d H:i:s'),
-                    //                 'updated_at' => date('Y-m-d H:i:s'),
-                    //             ];
-                    //             $resepKeluar[] = $rin;
-                    //             $sisa = $resepnya - $ada;
-                    //             $index += 1;
-                    //             $resepnya = $sisa;
-                    //         } else {
-                    //             $rin = [
-                    //                 'noreg' => $request->noreg,
-                    //                 'noresep' => $key['noresep'],
-                    //                 'kdobat' => $masterObat->kd_obat,
-                    //                 'kandungan' => $masterObat->kandungan,
-                    //                 'fornas' => $masterObat->status_fornas,
-                    //                 'forkit' => $masterObat->status_forkid,
-                    //                 'generik' => $masterObat->status_generik,
-                    //                 'kode108' => $masterObat->kode108,
-                    //                 'uraian108' => $masterObat->uraian108,
-                    //                 'kode50' => $masterObat->kode50,
-                    //                 'uraian50' => $masterObat->uraian50,
-                    //                 'nilai_r' => 300,
-                    //                 'jumlah' => $resepnya,
-                    //                 'harga_beli' => $hargaBeli->harga ?? 0,
-                    //                 'hpp' => $harga ?? 0,
-                    //                 'harga_jual' => $hargajualx,
-                    //                 'aturan' => 'dipakai untuk operasi',
-                    //                 'konsumsi' => 1,
-                    //                 'keterangan' => 'Di pakai untuk operasi' ?? '',
-                    //                 'user' => $kode,
-                    //                 'created_at' => date('Y-m-d H:i:s'),
-                    //                 'updated_at' => date('Y-m-d H:i:s'),
-                    //             ];
-                    //             $resepKeluar[] = $rin;
-
-                    //             $resepnya = 0;
-                    //         }
-                    //     }
-                    // }
                 }
                 $keluar = self::resepKeluar($key, $request, $kode, $rinci);
 
