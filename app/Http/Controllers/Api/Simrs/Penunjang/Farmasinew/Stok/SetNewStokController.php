@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasi\MapingObat;
 use App\Models\Simrs\Penunjang\Farmasi\StokOpname;
 use App\Models\Simrs\Penunjang\Farmasi\StokReal;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname as StokStokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal as FarmasinewStokreal;
 use Illuminate\Http\JsonResponse;
@@ -52,6 +53,7 @@ class SetNewStokController extends Controller
             // ->limit(10)
             ->get();
         $newStok = [];
+        $daftarHarga = [];
         foreach ($mapingObat as $key) {
             foreach ($key['stok'] as $st) {
                 $raw = collect($mapingGudang)
@@ -87,12 +89,27 @@ class SetNewStokController extends Controller
                     'updated_at' => date('Y-m-d H:i:s'),
                 ];
                 $newStok[] = $temp;
+                $harg = [
+                    'nopenerimaan' => '001/' . date('m/Y') . '/awal/' . $nPen,
+                    'kd_obat' => $key['obatbaru'],
+                    'harga' => $key['master']['rs4'],
+                    'tgl_mulai_berlaku' => date('Y-m-d H:i:s'),
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ];
+                $daftarHarga[] = $harg;
             }
         }
         if (count($newStok) > 0) {
             FarmasinewStokreal::truncate();
             foreach (array_chunk($newStok, 1000) as $t) {
                 $data['ins'] = FarmasinewStokreal::insert($t);
+            }
+        }
+        if (count($daftarHarga) > 0) {
+            DaftarHarga::truncate();
+            foreach (array_chunk($daftarHarga, 1000) as $t) {
+                $data['ins'] = DaftarHarga::insert($t);
             }
         }
 
@@ -113,6 +130,7 @@ class SetNewStokController extends Controller
         $obDFo = FarmasinewStokreal::where('kdruang', $dFo)->whereNotIn('kdobat', $obFo)->groupBy('kdobat')->get();
         $obDep = FarmasinewStokreal::whereIn('kdruang', $dep)->whereNotIn('kdobat', $obKo)->groupBy('kdobat')->get();
         $stok = [];
+        $harga = [];
         if (count($obDFo) > 0) {
             foreach ($obDFo as $key) {
                 $temp['nopenerimaan'] = $key['nopenerimaan'];
@@ -128,6 +146,15 @@ class SetNewStokController extends Controller
                 $temp['created_at'] = date('Y-m-d H:i:s');
                 $temp['updated_at'] = date('Y-m-d H:i:s');
                 $stok[] = $temp;
+                if ((float)$key['harga'] > 0) {
+                    $tHarga['nopenerimaan'] = $key['nopenerimaan'];
+                    $tHarga['kd_obat'] = $key['kdobat'];
+                    $tHarga['harga'] = $key['harga'];
+                    $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
+                    $tHarga['created_at'] = date('Y-m-d H:i:s');
+                    $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                    $harga[] = $tHarga;
+                }
             }
         }
         if (count($obDep) > 0) {
@@ -146,14 +173,30 @@ class SetNewStokController extends Controller
                 $temp['created_at'] = date('Y-m-d H:i:s');
                 $temp['updated_at'] = date('Y-m-d H:i:s');
                 $stok[] = $temp;
+                if ((float)$key['harga'] > 0) {
+                    $tHarga['nopenerimaan'] = $key['nopenerimaan'];
+                    $tHarga['kd_obat'] = $key['kdobat'];
+                    $tHarga['harga'] = $key['harga'];
+                    $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
+                    $tHarga['created_at'] = date('Y-m-d H:i:s');
+                    $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                    $harga[] = $tHarga;
+                }
             }
         }
         if (count($stok) > 0) {
             $data = FarmasinewStokreal::insert($stok);
         }
+        if (count($harga) > 0) {
+            foreach (array_chunk($harga, 1000) as $t) {
+                $dataHarga = DaftarHarga::insert($t);
+            }
+        }
         return [
             'stok' => $stok,
+            'harga' => $harga,
             'data' => $data ?? false,
+            'data harga' => $dataHarga ?? false,
         ];
     }
 
