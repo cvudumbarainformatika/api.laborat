@@ -221,10 +221,10 @@ class EresepController extends Controller
             ->orderBy('tglpenerimaan', 'desc')
             ->limit(5)
             ->get();
-        if (count($cariharga) <= 0) {
+        $harga = $cariharga[0]->harga;
+        if (!$harga) {
             return new JsonResponse(['message' => 'Tidak ada harga di gudang untuk obat ini'], 410);
         }
-        $harga = $cariharga[0]->harga;
 
         if ($request->groupsistembayar == 1) {
             if ($harga <= 50000) {

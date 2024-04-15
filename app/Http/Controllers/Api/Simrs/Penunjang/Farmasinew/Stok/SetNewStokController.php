@@ -50,10 +50,10 @@ class SetNewStokController extends Controller
             }
         ])
             ->where('obatbaru', '<>', '')
+            ->orderBy('obatbaru', 'ASC')
             // ->limit(10)
             ->get();
         $newStok = [];
-        $daftarHarga = [];
         foreach ($mapingObat as $key) {
             foreach ($key['stok'] as $st) {
                 $raw = collect($mapingGudang)
@@ -89,29 +89,22 @@ class SetNewStokController extends Controller
                     'updated_at' => date('Y-m-d H:i:s'),
                 ];
                 $newStok[] = $temp;
-                $harg = [
-                    'nopenerimaan' => '001/' . date('m/Y') . '/awal/' . $nPen,
-                    'kd_obat' => $key['obatbaru'],
-                    'harga' => $key['master']['rs4'],
-                    'tgl_mulai_berlaku' => date('Y-m-d H:i:s'),
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ];
-                $daftarHarga[] = $harg;
             }
         }
+
         if (count($newStok) > 0) {
             FarmasinewStokreal::truncate();
             foreach (array_chunk($newStok, 1000) as $t) {
                 $data['ins'] = FarmasinewStokreal::insert($t);
             }
         }
-        if (count($daftarHarga) > 0) {
-            DaftarHarga::truncate();
-            foreach (array_chunk($daftarHarga, 1000) as $t) {
-                $data['ins'] = DaftarHarga::insert($t);
-            }
-        }
+        // if (count($daftarHarga) > 0) {
+        //     DaftarHarga::truncate();
+        //     $uni = array_unique($daftarHarga, SORT_REGULAR);
+        //     foreach (array_chunk($uni, 1000) as $t) {
+        //         $data['ins'] = DaftarHarga::insert($t);
+        //     }
+        // }
 
         // $data['mapingObat'] = $mapingObat;
         $data['new stok'] = $newStok;
@@ -130,7 +123,6 @@ class SetNewStokController extends Controller
         $obDFo = FarmasinewStokreal::where('kdruang', $dFo)->whereNotIn('kdobat', $obFo)->groupBy('kdobat')->get();
         $obDep = FarmasinewStokreal::whereIn('kdruang', $dep)->whereNotIn('kdobat', $obKo)->groupBy('kdobat')->get();
         $stok = [];
-        $harga = [];
         if (count($obDFo) > 0) {
             foreach ($obDFo as $key) {
                 $temp['nopenerimaan'] = $key['nopenerimaan'];
@@ -146,15 +138,6 @@ class SetNewStokController extends Controller
                 $temp['created_at'] = date('Y-m-d H:i:s');
                 $temp['updated_at'] = date('Y-m-d H:i:s');
                 $stok[] = $temp;
-                if ((float)$key['harga'] > 0) {
-                    $tHarga['nopenerimaan'] = $key['nopenerimaan'];
-                    $tHarga['kd_obat'] = $key['kdobat'];
-                    $tHarga['harga'] = $key['harga'];
-                    $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
-                    $tHarga['created_at'] = date('Y-m-d H:i:s');
-                    $tHarga['updated_at'] = date('Y-m-d H:i:s');
-                    $harga[] = $tHarga;
-                }
             }
         }
         if (count($obDep) > 0) {
@@ -173,6 +156,22 @@ class SetNewStokController extends Controller
                 $temp['created_at'] = date('Y-m-d H:i:s');
                 $temp['updated_at'] = date('Y-m-d H:i:s');
                 $stok[] = $temp;
+            }
+        }
+        if (count($stok) > 0) {
+            foreach (array_chunk($stok, 1000) as $t) {
+                $data = FarmasinewStokreal::insert($t);
+            }
+        }
+
+        // insert harga
+        $harga = [];
+        $allGud = ['Gd-05010100', 'Gd-03010100'];
+        $obAllDep = FarmasinewStokreal::whereIn('kdruang', $allGud)->groupBy('kdobat')->get();
+
+        if (count($obAllDep) > 0) {
+            foreach ($obAllDep as $key) {
+
                 if ((float)$key['harga'] > 0) {
                     $tHarga['nopenerimaan'] = $key['nopenerimaan'];
                     $tHarga['kd_obat'] = $key['kdobat'];
@@ -184,10 +183,8 @@ class SetNewStokController extends Controller
                 }
             }
         }
-        if (count($stok) > 0) {
-            $data = FarmasinewStokreal::insert($stok);
-        }
         if (count($harga) > 0) {
+            DaftarHarga::truncate();
             foreach (array_chunk($harga, 1000) as $t) {
                 $dataHarga = DaftarHarga::insert($t);
             }

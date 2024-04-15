@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpihakketiga;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -43,125 +44,142 @@ class PenerimaanController extends Controller
 
     public function simpanpenerimaan(Request $request)
     {
+        try {
+            DB::connection('farmasi')->beginTransaction();
 
-        if ($request->gudang === 'Gd-05010100') {
-            $procedure = 'penerimaan_obat_ko(@nomor)';
-            $colom = 'penerimaanko';
-            $lebel = 'G-KO';
-        } else {
-            $procedure = 'penerimaan_obat_fs(@nomor)';
-            $colom = 'penerimaanfs';
-            $lebel = 'G-FS';
-        }
-        if ($request->nopenerimaan === '' || $request->nopenerimaan === null) {
-            DB::connection('farmasi')->select('call ' . $procedure);
-            $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
-            $wew = $x[0]->$colom;
-            $nopenerimaan = FormatingHelper::penerimaanobat($wew, $lebel);
-        } else {
-            $nopenerimaan = $request->nopenerimaan;
-        }
 
-        $user = FormatingHelper::session_user();
-        $simpanheder = PenerimaanHeder::updateorcreate(
-            [
+            if ($request->gudang === 'Gd-05010100') {
+                $procedure = 'penerimaan_obat_ko(@nomor)';
+                $colom = 'penerimaanko';
+                $lebel = 'G-KO';
+            } else {
+                $procedure = 'penerimaan_obat_fs(@nomor)';
+                $colom = 'penerimaanfs';
+                $lebel = 'G-FS';
+            }
+            if ($request->nopenerimaan === '' || $request->nopenerimaan === null) {
+                DB::connection('farmasi')->select('call ' . $procedure);
+                $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
+                $wew = $x[0]->$colom;
+                $nopenerimaan = FormatingHelper::penerimaanobat($wew, $lebel);
+            } else {
+                $nopenerimaan = $request->nopenerimaan;
+            }
+
+            $user = FormatingHelper::session_user();
+            $simpanheder = PenerimaanHeder::updateorcreate(
+                [
+                    'nopenerimaan' => $nopenerimaan,
+                    'nopemesanan' => $request->nopemesanan,
+                    'kdpbf' => $request->kdpbf,
+                    'gudang' => $request->gudang
+                ],
+                [
+                    'tglpenerimaan' => $request->tglpenerimaan,
+                    'pengirim' => $request->pengirim,
+                    'jenissurat' => $request->jenissurat,
+                    'jenis_penerimaan' => 'Pesanan',
+                    'nomorsurat' => $request->nomorsurat,
+                    'tglsurat' => $request->tglsurat,
+                    'batasbayar' => $request->batasbayar,
+                    'user' => $user['kodesimrs'],
+                    // 'total_faktur_pbf' => $request->total_faktur_pbf,
+                ]
+            );
+            if (!$simpanheder) {
+                return new JsonResponse(['message' => 'not ok'], 500);
+            }
+            $simpanrinci = PenerimaanRinci::updateorcreate(
+                [
+                    'nopenerimaan' => $nopenerimaan,
+                    'kdobat' => $request->kdobat,
+                    'no_batch' => $request->no_batch,
+                    'jml_terima_b' => $request->jml_terima_b,
+                    'jml_terima_k' => $request->jml_terima_k,
+                    'harga' => $request->harga,
+                    'harga_kcl' => $request->harga_kcl,
+                ],
+                [
+                    'tgl_exp' => $request->tgl_exp,
+                    'satuan' => $request->satuan_bsr,
+                    'satuan_kcl' => $request->satuan_kcl,
+                    'isi' => $request->isi,
+                    'diskon' => $request->diskon,
+                    'diskon_rp' => $request->diskon_rp,
+                    'diskon_rp_kecil' => $request->diskon_rp_kecil,
+                    'ppn' => $request->ppn,
+                    'ppn_rp' => $request->ppn_rp,
+                    'ppn_rp_kecil' => $request->ppn_rp_kecil,
+                    'harga_netto' => $request->harga_netto,
+                    'harga_netto_kecil' => $request->harga_netto_kecil,
+                    'jml_pesan' => $request->jml_pesan,
+                    'jml_terima_lalu' => $request->jml_terima_lalu,
+                    'jml_all_penerimaan' => $request->jml_all_penerimaan,
+                    'subtotal' => $request->subtotal,
+                    'user' => $user['kodesimrs']
+                ]
+            );
+            if (!$simpanrinci) {
+                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'Data Heder Gagal Disimpan...!!!'], 500);
+            }
+            if ($request->jenissurat === 'Faktur') {
+                $sub = PenerimaanRinci::selectRaw('sum(subtotal) as total')->where('nopenerimaan', $nopenerimaan)->groupBy('nopenerimaan')->first();
+                if ($sub) {
+                    $head = PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first();
+                    if ($head) {
+                        $head->total_faktur_pbf = $sub->total;
+                        $head->save();
+                    }
+                }
+            }
+            $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
+            if ($stokrealsimpan !== 200) {
+                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
+            }
+
+            $jumlahpesan = PemesananRinci::select('jumlahdpesan')
+                ->with(['pemesananheder'])
+                ->where('nopemesanan', $request->nopemesanan)
+                ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
+
+            $jumlahterima = PenerimaanRinci::select('penerimaan_r.jml_terima_k')
+                ->join('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
+                ->where('penerimaan_r.kdobat', $request->kdobat)->sum('penerimaan_r.jml_terima_k');
+
+            if ((int) $jumlahpesan === (int)$jumlahterima) {
+                PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
+                    ->update(['flag' => '1']);
+            }
+
+            $rinciTrm = PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->where('kdobat', $request->kdobat)->latest('id')->first();
+            if ($rinciTrm) {
+                $rinciTrm->jml_all_penerimaan = $jumlahterima;
+                $rinciTrm->save();
+            }
+            $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
+            $pesananDikunci = false;
+            if (count($pesan) === 0) {
+                $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
+                $kuncipermintaan->flag = '2';
+                $kuncipermintaan->save();
+                $pesananDikunci = true;
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'ok',
                 'nopenerimaan' => $nopenerimaan,
-                'nopemesanan' => $request->nopemesanan,
-                'kdpbf' => $request->kdpbf,
-                'gudang' => $request->gudang
-            ],
-            [
-                'tglpenerimaan' => $request->tglpenerimaan,
-                'pengirim' => $request->pengirim,
-                'jenissurat' => $request->jenissurat,
-                'jenis_penerimaan' => 'Pesanan',
-                'nomorsurat' => $request->nomorsurat,
-                'tglsurat' => $request->tglsurat,
-                'batasbayar' => $request->batasbayar,
-                'user' => $user['kodesimrs'],
-                // 'total_faktur_pbf' => $request->total_faktur_pbf,
-            ]
-        );
-        if (!$simpanheder) {
-            return new JsonResponse(['message' => 'not ok'], 500);
+                'heder' => $simpanheder,
+                'rinci' => $simpanrinci,
+                'kunci pesanan' => $pesananDikunci,
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
-        $simpanrinci = PenerimaanRinci::updateorcreate(
-            [
-                'nopenerimaan' => $nopenerimaan,
-                'kdobat' => $request->kdobat,
-                'no_batch' => $request->no_batch,
-                'jml_terima_b' => $request->jml_terima_b,
-                'jml_terima_k' => $request->jml_terima_k,
-                'harga' => $request->harga,
-                'harga_kcl' => $request->harga_kcl,
-            ],
-            [
-                'tgl_exp' => $request->tgl_exp,
-                'satuan' => $request->satuan_bsr,
-                'satuan_kcl' => $request->satuan_kcl,
-                'isi' => $request->isi,
-                'diskon' => $request->diskon,
-                'diskon_rp' => $request->diskon_rp,
-                'diskon_rp_kecil' => $request->diskon_rp_kecil,
-                'ppn' => $request->ppn,
-                'ppn_rp' => $request->ppn_rp,
-                'ppn_rp_kecil' => $request->ppn_rp_kecil,
-                'harga_netto' => $request->harga_netto,
-                'harga_netto_kecil' => $request->harga_netto_kecil,
-                'jml_pesan' => $request->jml_pesan,
-                'jml_terima_lalu' => $request->jml_terima_lalu,
-                'jml_all_penerimaan' => $request->jml_all_penerimaan,
-                'subtotal' => $request->subtotal,
-                'user' => $user['kodesimrs']
-            ]
-        );
-        if (!$simpanrinci) {
-            PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
-            return new JsonResponse(['message' => 'Data Heder Gagal Disimpan...!!!'], 500);
-        }
-        $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
-        if ($stokrealsimpan !== 200) {
-            PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
-            PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
-            return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
-        }
-
-        $jumlahpesan = PemesananRinci::select('jumlahdpesan')
-            ->with(['pemesananheder'])
-            ->where('nopemesanan', $request->nopemesanan)
-            ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
-
-        $jumlahterima = PenerimaanRinci::select('penerimaan_r.jml_terima_k')
-            ->join('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
-            ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
-            ->where('penerimaan_r.kdobat', $request->kdobat)->sum('penerimaan_r.jml_terima_k');
-
-        if ((int) $jumlahpesan === (int)$jumlahterima) {
-            PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
-                ->update(['flag' => '1']);
-        }
-
-        $rinciTrm = PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->where('kdobat', $request->kdobat)->latest('id')->first();
-        if ($rinciTrm) {
-            $rinciTrm->jml_all_penerimaan = $jumlahterima;
-            $rinciTrm->save();
-        }
-        $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
-        $pesananDikunci = false;
-        if (count($pesan) === 0) {
-            $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
-            $kuncipermintaan->flag = '2';
-            $kuncipermintaan->save();
-            $pesananDikunci = true;
-        }
-
-        return new JsonResponse([
-            'message' => 'ok',
-            'nopenerimaan' => $nopenerimaan,
-            'heder' => $simpanheder,
-            'rinci' => $simpanrinci,
-            'kunci pesanan' => $pesananDikunci,
-        ]);
     }
 
     public function listepenerimaan()
@@ -219,6 +237,30 @@ class PenerimaanController extends Controller
             ->update(['kunci' => '1']);
         if (!$kuncipenerimaan) {
             return new JsonResponse(['message' => 'Gagal Mengunci Penerimaan,Cek Lagi Data Yang Anda Input...!!!'], 500);
+        }
+        $penerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->where('jenissurat', 'Faktur')->first();
+        if ($penerimaan) {
+            if ($penerimaan->jenissurat === 'Faktur') {
+                $rin = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil')->where('nopenerimaan', $request->nopenerimaan)->get();
+                if (count($rin) > 0) {
+                    $harga = [];
+                    foreach ($rin as $key) {
+                        $tHarga['nopenerimaan'] = $key['nopenerimaan'];
+                        $tHarga['kd_obat'] = $key['kdobat'];
+                        $tHarga['harga'] = $key['harga_netto_kecil'];
+                        $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
+                        $tHarga['created_at'] = date('Y-m-d H:i:s');
+                        $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                        $harga[] = $tHarga;
+                    }
+
+                    if (count($harga) > 0) {
+                        foreach (array_chunk($harga, 1000) as $t) {
+                            DaftarHarga::insert($t);
+                        }
+                    }
+                }
+            }
         }
         return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci, Dan Stok Sudah Bertambah...!!!'], 200);
     }
