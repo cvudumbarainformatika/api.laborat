@@ -198,40 +198,43 @@ class DaftarrajalController extends Controller
             return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
 
-        $kode_biaya =  $request->kode_biaya;
-        $nama_biaya =  $request->nama_biaya;
-        $sarana =  $request->sarana;
-        $pelayanan =  $request->pelayanan;
 
-        // foreach ($kode_biaya as $key => $value) {
+            $kode_biaya =  $request->kode_biaya;
+            $nama_biaya =  $request->nama_biaya;
+            $sarana =  $request->sarana;
+            $pelayanan =  $request->pelayanan;
 
-        $kar = Karcispoli::firstOrCreate(
-            [
-                'rs2' => $request->norm,
-                'rs4' => $request->tglmasuk,
-                'rs3' => $kode_biaya,
-            ],
-            [
-                'rs1' => $input->noreg,
-                // 'rs3' => $xxx->kode_biaya,
-                'rs5' => 'D',
-                'rs6' => $nama_biaya,
-                'rs7' => $sarana,
-                'rs8' => $request->kodesistembayar,
-                'rs10' => auth()->user()->pegawai_id,
-                // 'rs11' => $xxx->pelayanan,
-                'rs11' => $pelayanan,
-                'rs12' => auth()->user()->pegawai_id,
-                'rs13' => '1'
-            ]
-        );
+            // foreach ($kode_biaya as $key => $value) {
 
-        //     array_push($anu, $kar);
-        // }
-        if (!$kar) {
-            $hapuskunjunganpoli = KunjunganPoli::where('rs1', $input->noreg)->first()->delete();
-            return new JsonResponse(['message' => 'karcis gagal disimpan'], 500);
-        }
+            $kar = Karcispoli::firstOrCreate(
+                [
+                    'rs2' => $request->norm,
+                    'rs4' => $request->tglmasuk,
+                    'rs3' => $kode_biaya,
+                ],
+                [
+                    'rs1' => $input->noreg,
+                    // 'rs3' => $xxx->kode_biaya,
+                    'rs5' => 'D',
+                    'rs6' => $nama_biaya,
+                    'rs7' => $sarana,
+                    'rs8' => $request->kodesistembayar,
+                    'rs10' => auth()->user()->pegawai_id,
+                    // 'rs11' => $xxx->pelayanan,
+                    'rs11' => $pelayanan,
+                    'rs12' => auth()->user()->pegawai_id,
+                    'rs13' => '1'
+                ]
+            );
+
+            //     array_push($anu, $kar);
+            // }
+
+            if (!$kar) {
+                $hapuskunjunganpoli = KunjunganPoli::where('rs1', $input->noreg)->first()->delete();
+                return new JsonResponse(['message' => 'karcis gagal disimpan'], 500);
+            }
+
 
         //------------LOG ANTRIAN----------------//
         // $updatelogantrian = self::updatelogantrian($request,$input);

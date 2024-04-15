@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\SistemBayar;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,45 @@ class DaftarigdController extends Controller
 {
     public static function simpanMpasien($request)
     {
+        $gelardepan = '';
+        $gelarbelakang = '';
+        $nik = '';
+        $nomoridentitaslain = '';
+        $noteleponrumah = '';
+        $nokabpjs = '';
+        if ($request->gelardepan === '' || $request->gelardepan === null) {
+            $gelardepan = '';
+        } else {
+            $gelardepan = $request->gelardepan;
+        }
+
+        if ($request->gelarbelakang === '' || $request->gelarbelakang === null) {
+            $gelarbelakang = '';
+        } else {
+            $gelarbelakang = $request->gelarbelakang;
+        }
+
+        if ($request->nik === '' || $request->nik === null) {
+            $nik = '';
+            $nomoridentitaslain = $request->nomoridentitaslain;
+        } else {
+            $nik = $request->nik;
+            $nomoridentitaslain = '';
+        }
+
+        if ($request->noteleponrumah === '' || $request->noteleponrumah === null) {
+            $noteleponrumah = '';
+        } else {
+            $noteleponrumah = $request->noteleponrumah;
+        }
+
+        if ($request->nokabpjs === '' || $request->nokabpjs === null) {
+            $nokabpjs = '';
+        } else {
+            $nokabpjs = $request->nokabpjs;
+        }
+
+
         $request->validate([
             'norm' => 'required|string|max:6|min:6',
             'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
@@ -39,7 +79,7 @@ class DaftarigdController extends Controller
                 'kd_propinsi' => $request->kodepropinsi,
                 'rs11' => $request->kabupatenkota,
                 'kd_kota' => $request->kodekabupatenkota,
-                'rs49' => $request->nik,
+                'rs49' => $nik,
                 'rs37' => $request->templahir,
                 'rs16' => $request->tgllahir,
                 'rs17' => $request->kelamin,
@@ -50,33 +90,61 @@ class DaftarigdController extends Controller
                 'rs39' => $request->suku,
                 'rs55' => $request->noteleponhp,
                 'bahasa' => $request->bahasa,
-                'noidentitaslain' => $request->nomoridentitaslain,
+                'noidentitaslain' => $nomoridentitaslain,
                 'namaibu' => $request->namaibukandung,
                 'kodepos' => $request->kodepos,
                 'kd_negara' => $request->negara,
                 'kd_rt_dom' => $request->rtdomisili,
                 'kd_rw_dom' => $request->rwdomisili,
-                'kd_kel_dom' => $request->kelurahandomisili,
-                'kd_kec_dom' => $request->kecamatandomisili,
-                'kd_kota_dom' => $request->kabupatenkotadomisili,
+                'kd_kel_dom' => $request->kodekelurahandomisili,
+                'kd_kec_dom' => $request->kodekecamatandomisili,
+                'kd_kota_dom' => $request->kodekabupatenkotadomisili,
                 'kodeposdom' => $request->kodeposdomisili,
-                'kd_prov_dom' => $request->propinsidomisili,
+                'kd_prov_dom' => $request->kodepropinsidomisili,
                 'kd_negara_dom' => $request->negaradomisili,
-                'noteleponrumah' => $request->noteleponrumah,
+                'noteleponrumah' => $noteleponrumah,
                 'kd_pendidikan' => $request->kodependidikan,
                 'kd_pekerjaan' => $request->pekerjaan,
                 'flag_pernikahan' => $request->statuspernikahan,
-                'rs46' => $request->nokabpjs,
+                'rs46' => $nokabpjs,
                 'rs40' => $request->barulama,
-                'gelardepan' => $request->gelardepan,
-                'gelarbelakang' => $request->gelarbelakang
+                'gelardepan' => $gelardepan,
+                'gelarbelakang' => $gelarbelakang,
+                'bacatulis' => $request->bacatulis,
+                'kdhambatan' => $request->kdhambatan
             ]
         );
         return $masterpasien;
     }
 
-    public static function simpankunjunganpoli($request)
+    public function simpankunjunganigd(Request $request)
     {
+        if ($request->barulama === 'baru') {
+            $data = Mpasien::where('rs1', $request->norm)->first();
+            if ($data) {
+                return new JsonResponse([
+                    'message' => 'Nomor RM Sudah ada',
+                    'data' => $data
+                ], 410);
+            }
+            $data2 = Mpasien::where('rs49', $request->nik)->first();
+            if ($data2) {
+                return new JsonResponse([
+                    'message' => 'NIK Sudah ada',
+                    'data' => $data
+                ], 410);
+            }
+        }
+        $ceksispas = SistemBayar::select('groups')->where('rs1', $request->kodesistembayar)->get();
+        if($ceksispas[0]->groups === '1' && $request->nokabpjs === null)
+        {
+            return new JsonResponse(['message' => 'Pasien Bpjs, Noka Tidak Boleh Kosong...!!!'], 500);
+        }
+        //return $ceksispas[0]->groups;
+        $masterpasien = self::simpanMpasien($request);
+        if (!$masterpasien) {
+            return new JsonResponse(['message' => 'DATA MASTER PASIEN GAGAL DISIMPAN/DIUPDATE'], 500);
+        }
         $tglmasukx = Carbon::create($request->tglmasuk);
         $tglmasuk = $tglmasukx->toDateString();
         $cekpoli = KunjunganPoli::where('rs2', $request->norm)
@@ -85,8 +153,7 @@ class DaftarigdController extends Controller
             ->count();
 
         if ($cekpoli > 0) {
-            // return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
-            return false;
+            return new JsonResponse(['message' => 'PASIEN SUDAH ADA DI HARI DAN POLI YANG SAMA'], 500);
         }
 
         DB::select('call reg_igd(@nomor)');
@@ -109,7 +176,7 @@ class DaftarigdController extends Controller
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
             'rs2' => $request->norm,
-            'rs3' => $request->tglmasuk,
+            'rs3' => date('Y-m-d h:i:s'),
             'rs6' => $request->asalrujukan,
             'rs8' => $request->kodepoli,
             //'rs9' => $request->dpjp,
@@ -118,74 +185,76 @@ class DaftarigdController extends Controller
             'rs12' => 0,
             'rs13' => 0,
             'rs14' => $request->kodesistembayar,
-            'rs15' => $request->karcis,
+            'rs15' => 8000,
             'rs18' => auth()->user()->pegawai_id,
             'rs20' => 'Pendaftaran IGD',
 
         ]);
-        return [
-            'simpan' => $simpankunjunganpoli ? '' : $simpankunjunganpoli,
-            'input' => $input,
-            'masuk' => $tglmasuk,
-            'count' => $cekpoli
-        ];
-    }
-
-    public function tagihanadminigd($input, $request)
-    {
-        $taguhanigd = Karcispoli::firstOrcreate(
-            ['rs1' => $input, 'rs3' => 'A2#'],
-            [
-                'rs4' => date('Y-m-d'),
-                'rs5' => 'D',
-                'rs6' => 'Administrasi IGD',
-                'rs7' => 8000
-            ]
-        );
-        return $taguhanigd;
-    }
-
-    public function simpandaftar(Request $request)
-    {
-        try {
-            //code...
-            DB::beginTransaction();
-
-            //-----------Masuk Transaksi--------------
-            // $user = auth()->user(]);
-            $masterpasien = $this->simpanMpasien($request);
-            $simpankunjunganpoli = $this->simpankunjunganpoli($request);
-            $tagihanigd = $this->tagihanadminigd($simpankunjunganpoli['input']->noreg, $request);
-            // if ($simpankunjunganpoli) {
-            //     $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
-            // }
-            // $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
-            // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
-            // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
-
-            DB::commit();
-            return new JsonResponse(
-                [
-                    'message' => 'DATA TERSIMPAN...!!!',
-                    'noreg' => $simpankunjunganpoli ? $simpankunjunganpoli['input']->noreg : 'gagal',
-                    'cek' => $simpankunjunganpoli ? $simpankunjunganpoli['count'] : 'gagal',
-                    'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
-                    'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
-                    'tagihanigd' => $tagihanigd ? $tagihanigd['simpan'] : 'gagal',
-                    // 'karcis' => $karcis ? $karcis : 'gagal',
-                    // 'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
-                    // 'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
-                    // 'addantriantobpjs' => $addantriantobpjs ? $addantriantobpjs : 'gagal',
-                    'master' => $masterpasien,
-                ],
-                200
-            );
-        } catch (\Exception $th) {
-            //throw $th;
-            DB::rollBack();
-            return response()->json(['Gagal tersimpan' => $th], 500);
+        if (!$simpankunjunganpoli) {
+            return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
+        $masterpasien = $this->simpanMpasien($request);
+        return new JsonResponse([
+            'message' => 'data berhasil disimpan',
+            'noreg' => $input->noreg
+        ], 200);
     }
+
+    // public function tagihanadminigd($input, $request)
+    // {
+    //     $taguhanigd = Karcispoli::firstOrcreate(
+    //         ['rs1' => $input, 'rs3' => 'A2#'],
+    //         [
+    //             'rs4' => date('Y-m-d'),
+    //             'rs5' => 'D',
+    //             'rs6' => 'Administrasi IGD',
+    //             'rs7' => 8000
+    //         ]
+    //     );
+    //     return $taguhanigd;
+    // }
+
+    // public function simpandaftar(Request $request)
+    // {
+    //     try {
+    //         //code...
+    //         DB::beginTransaction();
+
+    //         //-----------Masuk Transaksi--------------
+    //         // $user = auth()->user(]);
+    //         $masterpasien = $this->simpanMpasien($request);
+    //         $simpankunjunganpoli = $this->simpankunjunganpoli($request);
+    //         $tagihanigd = $this->tagihanadminigd($simpankunjunganpoli['input']->noreg, $request);
+    //         // if ($simpankunjunganpoli) {
+    //         //     $karcis = $this->simpankarcis($request, $simpankunjunganpoli['input']->noreg);
+    //         // }
+    //         // $updateantrian = $this->updatelogantrian($request, $simpankunjunganpoli['input']->noreg);
+    //         // $bpjs_antrian = $this->bpjs_antrian($request, date('Y-m-d'), $simpankunjunganpoli['input']->noreg);
+    //         // $addantriantobpjs = BridantrianbpjsController::addantriantobpjs($request,$simpankunjunganpoli['input']->noreg);
+
+    //         DB::commit();
+    //         return new JsonResponse(
+    //             [
+    //                 'message' => 'DATA TERSIMPAN...!!!',
+    //                 'noreg' => $simpankunjunganpoli ? $simpankunjunganpoli['input']->noreg : 'gagal',
+    //                 'cek' => $simpankunjunganpoli ? $simpankunjunganpoli['count'] : 'gagal',
+    //                 'masuk' => $simpankunjunganpoli ? $simpankunjunganpoli['masuk'] : 'gagal',
+    //                 'hasil' => $simpankunjunganpoli ? $simpankunjunganpoli['simpan'] : 'gagal',
+    //                 'tagihanigd' => $tagihanigd ? $tagihanigd['simpan'] : 'gagal',
+    //                 // 'karcis' => $karcis ? $karcis : 'gagal',
+    //                 // 'updateantrian' => $updateantrian ? $updateantrian : 'gagal',
+    //                 // 'bpjs_antrian' => $bpjs_antrian ? $bpjs_antrian : 'gagal',
+    //                 // 'addantriantobpjs' => $addantriantobpjs ? $addantriantobpjs : 'gagal',
+    //                 'master' => $masterpasien,
+    //             ],
+    //             200
+    //         );
+    //     } catch (\Exception $th) {
+    //         //throw $th;
+    //         DB::rollBack();
+    //         return response()->json(['Gagal tersimpan' => $th], 500);
+    //     }
+    // }
 
     public function daftarkunjunganpasienbpjs()
     {

@@ -9,5 +9,6 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/pendaftaran/igd'
 ], function () {
-    Route::get('daftarkunjunganpasienbpjs', [DaftarigdController::class, 'daftarkunjunganpasienbpjs']);
+    Route::get('/daftarkunjunganpasienbpjs', [DaftarigdController::class, 'daftarkunjunganpasienbpjs']);
+    Route::post('/simpankunjunganigd', [DaftarigdController::class, 'simpankunjunganigd']);
 });
