@@ -37,6 +37,9 @@ class HargaHelper
         } else {
             $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
         }
-        return $hargajualx;
+        return [
+            'hargaJual' => $hargajualx,
+            'harga' => $harga
+        ];
     }
 }

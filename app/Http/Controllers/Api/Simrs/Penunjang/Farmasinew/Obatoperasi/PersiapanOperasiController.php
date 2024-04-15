@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
 use App\Helpers\FormatingHelper;
+use App\Helpers\HargaHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -454,35 +455,39 @@ class PersiapanOperasiController extends Controller
         if (count($obat) > 0) {
             foreach ($obat as $key) {
                 // cari harga
-                $gudang = ['Gd-05010100', 'Gd-03010100'];
-                $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-                    ->whereIn('kdruang', $gudang)
-                    ->where('kdobat', $key['kd_obat'])
-                    ->orderBy('tglpenerimaan', 'desc')
-                    ->limit(5)
-                    ->get();
-                $harga = $cariharga[0]->harga;
                 $sistemBayar = SistemBayar::select('groups')->where('rs1', $request->kodesistembayar)->first();
                 $gr = $sistemBayar->groups ?? '';
-                if ($gr == 1) {
-                    if ($harga <= 50000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-                    } elseif ($harga > 50000 && $harga <= 250000) {
-                        $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-                    } elseif ($harga > 250000 && $harga <= 500000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-                    } elseif ($harga > 500000 && $harga <= 1000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-                    } elseif ($harga > 1000000 && $harga <= 5000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-                    } elseif ($harga > 5000000 && $harga <= 10000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-                    } elseif ($harga > 10000000) {
-                        $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
-                    }
-                } else {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-                }
+                // $gudang = ['Gd-05010100', 'Gd-03010100'];
+                // $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
+                //     ->whereIn('kdruang', $gudang)
+                //     ->where('kdobat', $key['kd_obat'])
+                //     ->orderBy('tglpenerimaan', 'desc')
+                //     ->limit(5)
+                //     ->get();
+                // $harga = $cariharga[0]->harga;
+                // if ($gr == 1) {
+                //     if ($harga <= 50000) {
+                //         $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
+                //     } elseif ($harga > 50000 && $harga <= 250000) {
+                //         $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
+                //     } elseif ($harga > 250000 && $harga <= 500000) {
+                //         $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
+                //     } elseif ($harga > 500000 && $harga <= 1000000) {
+                //         $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
+                //     } elseif ($harga > 1000000 && $harga <= 5000000) {
+                //         $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
+                //     } elseif ($harga > 5000000 && $harga <= 10000000) {
+                //         $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
+                //     } elseif ($harga > 10000000) {
+                //         $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
+                //     }
+                // } else {
+                //     $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
+                // }
+
+                $har = HargaHelper::getHarga($key['kd_obat'], $gr);
+                $hargajualx = $har['hargaJual'];
+                $harga = $har['harga'];
                 $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
                 $rin = [
                     'noreg' => $request->noreg,
@@ -596,37 +601,42 @@ class PersiapanOperasiController extends Controller
                 $tmp = SistemBayar::select('groups')->where('rs1', $listPasienOp->rs14)->first();
                 $sistemBayar = $tmp->groups;
             }
+            $gr = $sistemBayar ?? '';
             // cari harga
-            $gudang = ['Gd-05010100', 'Gd-03010100'];
-            $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
-                ->whereIn('kdruang', $gudang)
-                ->where('kdobat', $key['kd_obat'])
-                ->orderBy('tglpenerimaan', 'desc')
-                ->limit(5)
-                ->get();
-            $harga = $cariharga[0]->harga;
+            // $gudang = ['Gd-05010100', 'Gd-03010100'];
+            // $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
+            //     ->whereIn('kdruang', $gudang)
+            //     ->where('kdobat', $key['kd_obat'])
+            //     ->orderBy('tglpenerimaan', 'desc')
+            //     ->limit(5)
+            //     ->get();
+            // $harga = $cariharga[0]->harga;
 
             // return $sistemBayar;
-            $gr = $sistemBayar ?? '';
-            if ($gr == 1) {
-                if ($harga <= 50000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
-                } elseif ($harga > 50000 && $harga <= 250000) {
-                    $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
-                } elseif ($harga > 250000 && $harga <= 500000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
-                } elseif ($harga > 500000 && $harga <= 1000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
-                } elseif ($harga > 1000000 && $harga <= 5000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
-                } elseif ($harga > 5000000 && $harga <= 10000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
-                } elseif ($harga > 10000000) {
-                    $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
-                }
-            } else {
-                $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
-            }
+            // if ($gr == 1) {
+            //     if ($harga <= 50000) {
+            //         $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
+            //     } elseif ($harga > 50000 && $harga <= 250000) {
+            //         $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
+            //     } elseif ($harga > 250000 && $harga <= 500000) {
+            //         $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
+            //     } elseif ($harga > 500000 && $harga <= 1000000) {
+            //         $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
+            //     } elseif ($harga > 1000000 && $harga <= 5000000) {
+            //         $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
+            //     } elseif ($harga > 5000000 && $harga <= 10000000) {
+            //         $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
+            //     } elseif ($harga > 10000000) {
+            //         $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
+            //     }
+            // } else {
+            //     $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
+            // }
+
+            $har = HargaHelper::getHarga($key['kd_obat'], $gr);
+            $hargajualx = $har['hargaJual'];
+            $harga = $har['harga'];
+
             $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
             $dist = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
                 ->where('nopermintaan', $key['nopermintaan'])

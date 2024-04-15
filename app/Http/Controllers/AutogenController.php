@@ -2541,7 +2541,7 @@ class AutogenController extends Controller
         // $result = $class->updateHarga($data);
         // return $result;
         $harga = HargaHelper::getHarga('0000054-FAR', '1');
-        return $harga;
+        return $harga['harga'];
     }
 
     public function baru()
