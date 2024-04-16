@@ -228,7 +228,7 @@ class PenerimaanController extends Controller
     public function kuncipenerimaan(Request $request)
     {
         $cek = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
-        if ($cek->jenissurat === 'Faktur') {
+        if (($cek->jenissurat === 'Faktur' && $cek->jenis_penerimaan === 'Pesanan') || ($cek->jenis_penerimaan !== 'Pesanan')) {
             $masukstok = Stokrel::where('nopenerimaan', $request->nopenerimaan)
                 ->update(['flag' => '']);
             if (!$masukstok) {
@@ -241,12 +241,12 @@ class PenerimaanController extends Controller
         if (!$kuncipenerimaan) {
             return new JsonResponse(['message' => 'Gagal Mengunci Penerimaan,Cek Lagi Data Yang Anda Input...!!!'], 500);
         }
-        if ($cek->jenissurat !== 'Faktur') {
-            return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci. Dan Stok Tidak Bertambah. Silahkan Gunakan Menu Pemfakturan Untuk Mnambah Stok'], 200);
+        if (($cek->jenissurat !== 'Faktur' && $cek->jenis_penerimaan === 'Pesanan')) {
+            return new JsonResponse(['message' => 'Penerimaan Sudah Terkunci. Dan Stok Tidak Bertambah. Silahkan Gunakan Menu Pemfakturan Untuk Menambah Stok'], 200);
         }
-        $penerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->where('jenissurat', 'Faktur')->first();
+        $penerimaan = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
         if ($penerimaan) {
-            if ($penerimaan->jenissurat === 'Faktur') {
+            if (($penerimaan->jenissurat === 'Faktur' && $penerimaan->jenis_penerimaan === 'Pesanan') || ($penerimaan->jenis_penerimaan !== 'Pesanan')) {
                 $rin = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil')->where('nopenerimaan', $request->nopenerimaan)->get();
                 if (count($rin) > 0) {
                     $harga = [];
