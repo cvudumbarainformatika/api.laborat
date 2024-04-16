@@ -13,6 +13,8 @@ Route::group([
     Route::get('/list-pemakaian-konsinyasi', [KonsinyasiController::class, 'getListPemakaianKonsinyasi']);
     //pemfakturan
     Route::get('/list-belum-faktur', [PemfakturanController::class, 'getPenerimaanBelumAdaFaktur']);
+    Route::post('/simpan', [PemfakturanController::class, 'simpan']);
+    Route::post('/simpan-header', [PemfakturanController::class, 'simpanHeader']);
 
     // pembayaran
 });

@@ -22,4 +22,14 @@ class PemfakturanController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
+    public function simpan(Request $request)
+    {
+
+        return new JsonResponse($request->all());
+    }
+    public function simpanHeader(Request $request)
+    {
+
+        return new JsonResponse($request->all());
+    }
 }
