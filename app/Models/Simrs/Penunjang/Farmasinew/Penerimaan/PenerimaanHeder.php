@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
 
+use App\Models\Sigarang\Gudang;
 use App\Models\Simrs\Master\Mpihakketiga;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,5 +23,9 @@ class PenerimaanHeder extends Model
     public function pihakketiga()
     {
         return $this->hasOne(Mpihakketiga::class, 'kode', 'kdpbf');
+    }
+    public function gudang()
+    {
+        return $this->hasOne(Gudang::class, 'kode', 'gudang');
     }
 }

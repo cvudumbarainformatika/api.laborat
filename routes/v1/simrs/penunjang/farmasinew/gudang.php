@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang\KonsinyasiController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang\PemfakturanController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -11,5 +12,7 @@ Route::group([
 ], function () {
     Route::get('/list-pemakaian-konsinyasi', [KonsinyasiController::class, 'getListPemakaianKonsinyasi']);
     //pemfakturan
+    Route::get('/list-belum-faktur', [PemfakturanController::class, 'getPenerimaanBelumAdaFaktur']);
+
     // pembayaran
 });

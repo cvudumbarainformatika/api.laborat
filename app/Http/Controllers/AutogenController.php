@@ -2540,8 +2540,13 @@ class AutogenController extends Controller
         // ];
         // $result = $class->updateHarga($data);
         // return $result;
-        $harga = HargaHelper::getHarga('0000054-FAR', '1');
-        return $harga['harga'];
+        // $harga = HargaHelper::getHarga('0000054-FAR', '1');
+        // return $harga['harga'];
+        $jadwaldokter = BridgingbpjsHelper::get_url(
+            'antrean',
+            'jadwaldokter/kodepoli/BDM/tanggal/2024-04-16'
+        );
+        return ($jadwaldokter);
     }
 
     public function baru()
