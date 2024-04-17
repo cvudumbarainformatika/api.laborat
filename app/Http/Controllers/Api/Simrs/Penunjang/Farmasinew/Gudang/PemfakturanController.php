@@ -17,13 +17,15 @@ class PemfakturanController extends Controller
     //
     public function getPenerimaanBelumAdaFaktur()
     {
-        $data = PenerimaanHeder::where('jenis_penerimaan', 'Pesanan')
+        $data = PenerimaanHeder::whereDoesntHave('faktur')
+            ->where('jenis_penerimaan', 'Pesanan')
             ->where('jenissurat', '!=', 'Faktur')
             ->with([
                 'penerimaanrinci.masterobat',
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
                 'gudang:kode,nama',
             ])
+            ->orderBy('tglpenerimaan', 'DESC')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
