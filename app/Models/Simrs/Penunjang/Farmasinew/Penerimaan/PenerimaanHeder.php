@@ -28,4 +28,8 @@ class PenerimaanHeder extends Model
     {
         return $this->hasOne(Gudang::class, 'kode', 'gudang');
     }
+    public function faktur()
+    {
+        return $this->hasOne(Faktur::class, 'nopenerimaan', 'nopenerimaan');
+    }
 }

@@ -220,7 +220,12 @@ class PenerimaanController extends Controller
             ->orWhere('penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')
             ->orWhere('penerimaan_h.jenissurat', 'Like', '%' . request('cari') . '%')
             ->orWhere('penerimaan_h.nomorsurat', 'Like', '%' . request('cari') . '%')
-            ->with(['penerimaanrinci', 'penerimaanrinci.masterobat', 'pihakketiga:kode,nama'])->orderBy('tglpenerimaan', 'desc')
+            ->with([
+                'penerimaanrinci',
+                'penerimaanrinci.masterobat',
+                'pihakketiga:kode,nama',
+                'faktur'
+            ])->orderBy('tglpenerimaan', 'desc')
             ->paginate(request('per_page'));
         return new JsonResponse($listpenerimaan);
     }
