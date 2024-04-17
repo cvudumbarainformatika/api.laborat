@@ -95,6 +95,7 @@ class PemfakturanController extends Controller
             DB::connection('farmasi')->beginTransaction();
 
             $total = PenerimaanRinci::selectRaw('sum(subtotal) as total')->where('nopenerimaan', $request->nopenerimaan)->first();
+            // total nilai faktur harus dikurangi dengan barang yang di retur
             $simpanFaktur = Faktur::updateOrCreate(
                 [
                     'nopenerimaan' => $request->nopenerimaan,
