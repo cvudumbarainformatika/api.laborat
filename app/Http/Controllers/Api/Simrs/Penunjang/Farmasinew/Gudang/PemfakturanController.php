@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Faktur;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -104,10 +105,33 @@ class PemfakturanController extends Controller
                     'total_faktur' => $total->total,
                 ]
             );
+
             $masukstok = Stokrel::where('nopenerimaan', $request->nopenerimaan)
                 ->update(['flag' => '']);
+
             if (!$masukstok) {
                 return new JsonResponse(['message' => 'Stok Tidak Terupdate,mohon segera cek Data Stok Anda...!!!'], 410);
+            }
+            $head = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
+            if ($head) {
+                $head->batasbayar = $request->batasbayar;
+                $head->save();
+            }
+            $rinci = PenerimaanRinci::where('nopenerimaan', $request->nopenerimaan)->get();
+            $harga = [];
+            foreach ($rinci as $key) {
+                $tHarga['nopenerimaan'] = $key['nopenerimaan'];
+                $tHarga['kd_obat'] = $key['kdobat'];
+                $tHarga['harga'] = $key['harga_netto_kecil'];
+                $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
+                $tHarga['created_at'] = date('Y-m-d H:i:s');
+                $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                $harga[] = $tHarga;
+            }
+            if (count($harga) > 0) {
+                foreach (array_chunk($harga, 1000) as $t) {
+                    DaftarHarga::insert($t);
+                }
             }
             DB::connection('farmasi')->commit();
             return new JsonResponse([
