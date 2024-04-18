@@ -32,4 +32,8 @@ class PenerimaanHeder extends Model
     {
         return $this->hasOne(Faktur::class, 'nopenerimaan', 'nopenerimaan');
     }
+    public function retur()
+    {
+        return $this->hasMany(Returpbfheder::class, 'nopenerimaan', 'nopenerimaan');
+    }
 }

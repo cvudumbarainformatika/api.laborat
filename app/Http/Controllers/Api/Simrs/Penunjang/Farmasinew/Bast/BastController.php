@@ -47,7 +47,19 @@ class BastController extends Controller
                     ->orWhere('jumlah_bast', '<=', 0);
             })
             ->where('jenis_penerimaan', 'Pesanan')
-            ->with('penerimaanrinci.masterobat:kd_obat,nama_obat,satuan_b', 'faktur')
+            ->with([
+                'penerimaanrinci' => function ($tr) {
+                    $tr->selectRaw('penerimaan_r.*, sum(retur_penyedia_r.subtotal) as nilai_retur, retur_penyedia_r.jumlah_retur')
+                        ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->leftJoin('retur_penyedia_r', function ($join) {
+                            $join->on('retur_penyedia_r.no_retur', '=', 'retur_penyedia_h.no_retur')
+                                ->on('retur_penyedia_r.kd_obat', '=', 'penerimaan_r.kdobat');
+                        })
+                        ->with('masterobat:kd_obat,nama_obat,satuan_b')
+                        ->groupBy('penerimaan_r.kdobat');
+                },
+                'faktur'
+            ])
             ->get();
         return new JsonResponse($data);
     }
