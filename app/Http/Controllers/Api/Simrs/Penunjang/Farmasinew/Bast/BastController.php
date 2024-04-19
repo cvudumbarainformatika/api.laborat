@@ -94,6 +94,7 @@ class BastController extends Controller
                         'tgl_bast' => $request->tgl_bast,
                         'jumlah_bast' => $request->jumlah_bast,
                         'nilai_retur' => $penerimaan['subtotal_retur'] ?? 0,
+                        'user_bast' => $user['kodesimrs'],
                     ]);
                     $trm[] = $terima;
                 }
@@ -171,10 +172,12 @@ class BastController extends Controller
         $result = PenerimaanHeder::where('nobast', '<>', '')
             ->whereNotNull('tgl_bast')
             ->with(
-                // 'details.satuan',
-                // 'perusahaan',
+                'faktur',
                 'penerimaanrinci',
                 'pihakketiga',
+                'terima:kdpegsimrs,nama',
+                'bast:kdpegsimrs,nama',
+                'bayar:kdpegsimrs,nama',
             )
             ->whereIn('nobast', $pen)
             ->orderBy('tgl_bast', 'DESC')
@@ -194,6 +197,9 @@ class BastController extends Controller
                 'totalSemua' =>  $items[0]->jumlah_bast,
                 'tanggal' => $items[0]->tgl_bast,
                 'nomor' => $items[0]->nopemesanan,
+                'terima' => $items[0]->terima,
+                'bast' => $items[0]->bast,
+                'bayar' => $items[0]->bayar,
                 'penyedia' => $items[0]->pihakketiga->nama ?? '',
                 'penerimaan' => $items,
             ];

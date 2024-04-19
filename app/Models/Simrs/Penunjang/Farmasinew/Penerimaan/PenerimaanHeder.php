@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
 
 use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpihakketiga;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,5 +36,17 @@ class PenerimaanHeder extends Model
     public function retur()
     {
         return $this->hasMany(Returpbfheder::class, 'nopenerimaan', 'nopenerimaan');
+    }
+    public function terima()
+    {
+        return $this->belongsTo(Pegawai::class, 'user', 'kdpegsimrs');
+    }
+    public function bast()
+    {
+        return $this->belongsTo(Pegawai::class, 'user_bast', 'kdpegsimrs');
+    }
+    public function bayar()
+    {
+        return $this->belongsTo(Pegawai::class, 'user_bayar', 'kdpegsimrs');
     }
 }
