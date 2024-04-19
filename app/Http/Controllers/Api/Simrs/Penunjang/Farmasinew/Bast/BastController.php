@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Bast;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,15 +69,87 @@ class BastController extends Controller
     }
     public function simpan(Request $request)
     {
-        return new JsonResponse($request->all());
+        $trm = [];
+        $ba = [];
+        $ret = [];
+        $user = FormatingHelper::session_user();
+        try {
+            DB::connection('farmasi')->beginTransaction();
 
-        if ($request->nobast === '' || $request->nobast === null) {
-            DB::connection('farmasi')->select('call nobast(@nomor)');
-            $x = DB::connection('farmasi')->table('conter')->select('bast')->get();
-            $wew = $x[0]->bast;
-            $nobast = FormatingHelper::penerimaanobat($wew, 'BAST-FAR');
-        } else {
-            $nobast = $request->nobast;
+            if ($request->nobast === '' || $request->nobast === null) {
+                DB::connection('farmasi')->select('call nobast(@nomor)');
+                $x = DB::connection('farmasi')->table('conter')->select('bast')->get();
+                $wew = $x[0]->bast;
+                $nobast = FormatingHelper::penerimaanobat($wew, 'BAST-FAR');
+            } else {
+                $nobast = $request->nobast;
+            }
+            foreach ($request->penerimaans as $penerimaan) {
+
+                // simpan header penerimaan
+                $terima = PenerimaanHeder::where('nopenerimaan', $penerimaan['nopenerimaan'])->first();
+                if ($terima) {
+                    $terima->update([
+                        'nobast' => $nobast,
+                        'tgl_bast' => $request->tgl_bast,
+                        'jumlah_bast' => $request->jumlah_bast,
+                        'nilai_retur' => $penerimaan['subtotal_retur'] ?? 0,
+                    ]);
+                    $trm[] = $terima;
+                }
+                if (!$terima) {
+                    return new JsonResponse(['message' => 'Gagal BAST, Nomor Penerimaan Tidak ditemukan'], 410);
+                }
+                // simpan rinci bast
+                foreach ($penerimaan['penerimaanrinci'] as $rinci) {
+
+                    $tempRinc = BastrinciM::updateOrCreate(
+                        [
+                            'nobast' => $nobast,
+                            'nopenerimaan' => $penerimaan['nopenerimaan'],
+                            'kdobat' => $rinci['kdobat'],
+
+                        ],
+                        [
+                            'jumlah' => $rinci['jml_terima_k'],
+                            'harga' => $rinci['harga_kcl'],
+                            'diskon' => $rinci['diskon'],
+                            'ppn' => $rinci['ppn'],
+                            'harga_net' => $rinci['harga_netto_kecil'],
+                            'subtotal' => $penerimaan['subtotal_bast'],
+                            'user' => $user['kodesimrs'],
+                        ]
+                    );
+                    $ba[] = $tempRinc;
+                    // update retur jika ada
+                    if ((float)$rinci['nilai_retur'] > 0) {
+                        $returHead = Returpbfheder::where('nopenerimaan', $penerimaan['nopenerimaan'])->first();
+                        if ($returHead) {
+                            $returRin = Returpbfrinci::where('no_retur', $returHead->no_retur)
+                                ->where('kd_obat', $rinci['kdobat'])
+                                ->first();
+                            if ($returRin) {
+                                $returRin->update([
+                                    'harga_net' => $rinci['harga_netto_kecil'],
+                                    'subtotal' => $rinci['nilai_retur'],
+                                ]);
+                                $ret[] = $returRin;
+                            }
+                        }
+                    }
+                }
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'BAST Sudah Disimpan',
+                'req' => $request->all(),
+                'head' => $trm,
+                'rinci bast' => $ba,
+                'update retur' => $ret,
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
         }
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Returpbfrinci extends Model
 {
     use HasFactory;
+    protected $connection = 'farmasi';
     protected $table = 'retur_penyedia_r';
     protected $guarded = ['id'];
 

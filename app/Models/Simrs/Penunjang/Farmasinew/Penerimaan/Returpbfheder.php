@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Returpbfheder extends Model
 {
     use HasFactory;
+    protected $connection = 'farmasi';
     protected $table = 'retur_penyedia_h';
     protected $guarded = ['id'];
 
