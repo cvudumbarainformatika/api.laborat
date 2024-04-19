@@ -23,6 +23,7 @@ class BastController extends Controller
                     ->orWhere('jumlah_bast', '<=', 0);
             })
             ->where('jenis_penerimaan', 'Pesanan')
+            ->where('kunci', '1')
             ->get();
         // map kode perusahaan ke bentuk array, biar aman jika nanti ada append
         $temp = collect($raw)->map(function ($y) {
@@ -56,7 +57,7 @@ class BastController extends Controller
                                 ->on('retur_penyedia_r.kd_obat', '=', 'penerimaan_r.kdobat');
                         })
                         ->with('masterobat:kd_obat,nama_obat,satuan_b')
-                        ->groupBy('penerimaan_r.kdobat');
+                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
                 },
                 'faktur'
             ])
