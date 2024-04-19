@@ -152,4 +152,57 @@ class BastController extends Controller
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
         }
     }
+    public function listBast()
+    {
+        $res1 = PenerimaanHeder::select('nobast')
+            ->distinct()
+            ->where('nobast', '<>', '')
+            ->orderBy('tgl_bast', 'DESC')
+            // ->get();
+            ->paginate(request('per_page'));
+
+        $col = collect($res1);
+        $data = $col['data'];
+        $pen = [];
+        foreach ($data as $key) {
+            $item = current((array)$key);
+            $pen[] =  $item;
+        }
+        $result = PenerimaanHeder::where('nobast', '<>', '')
+            ->whereNotNull('tgl_bast')
+            ->with(
+                // 'details.satuan',
+                // 'perusahaan',
+                'penerimaanrinci',
+                'pihakketiga',
+            )
+            ->whereIn('nobast', $pen)
+            ->orderBy('tgl_bast', 'DESC')
+            ->get();
+
+        $groupedResult = $result->groupBy('nobast')->map(function ($group) {
+            return $group->map(function ($item) {
+                return $item;
+            });
+        });
+
+        // Convert the result to the desired format
+        $formattedResult = $groupedResult->map(function ($items, $kwitansi) {
+
+            return [
+                'no_bast' => $kwitansi,
+                'totalSemua' =>  $items[0]->jumlah_bast,
+                'tanggal' => $items[0]->tgl_bast,
+                'nomor' => $items[0]->nopemesanan,
+                'penyedia' => $items[0]->pihakketiga->nama ?? '',
+                'penerimaan' => $items,
+            ];
+        })->values();
+        return new JsonResponse([
+            'data' => $formattedResult,
+            'meta' => $col->except('data'),
+            'res' => $col,
+            'dat' => $data,
+        ]);
+    }
 }
