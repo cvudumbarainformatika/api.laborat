@@ -156,10 +156,10 @@ class BastController extends Controller
     public function listBast()
     {
         $res1 = PenerimaanHeder::select('nobast')
-            ->distinct()
             ->where('nobast', '<>', '')
             ->orderBy('tgl_bast', 'DESC')
             // ->get();
+            ->distinct('nobast')
             ->paginate(request('per_page'));
 
         $col = collect($res1);
