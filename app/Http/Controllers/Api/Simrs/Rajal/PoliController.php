@@ -520,6 +520,15 @@ class PoliController extends Controller
                 'fisio',
                 'laporantindakan',
                 'psikiatri',
+                'pediatri'=> function($neo){
+                    $neo->with(['pegawai:id,nama']);
+                },
+                'dokumenluar'=> function($neo){
+                    $neo->with(['pegawai:id,nama']);
+                },
+                'kandungan'=> function($neo){
+                    $neo->with(['pegawai:id,nama']);
+                },
                 'neonatusmedis'=> function($neo){
                     $neo->with(['pegawai:id,nama']);
                 },
