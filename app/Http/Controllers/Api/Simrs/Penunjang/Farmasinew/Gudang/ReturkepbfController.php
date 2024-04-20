@@ -15,7 +15,7 @@ class ReturkepbfController extends Controller
     public function simpanretur(Request $request)
     {
         if ($request->noretur == '' || $request->noretur == null) {
-            DB::connection('farmasi')->select('call retur_pbf');
+            DB::connection('farmasi')->select('call retur_pbf(@nomor)');
             $x = DB::connection('farmasi')->table('conter')->select('returpbf')->get();
             $wew = $x[0]->returpbf;
             $noretur = FormatingHelper::penerimaanobat($wew, '-RET-PBF');
@@ -23,7 +23,7 @@ class ReturkepbfController extends Controller
             $noretur = $request->noretur;
         }
 
-        $simpan_h = Returpbfheder::updateorcreate(
+        $simpan_h = Returpbfheder::updateOrCreate(
             [
                 'no_retur' => $noretur,
                 'nopenerimaan' => $request->nopenerimaan,
@@ -43,7 +43,7 @@ class ReturkepbfController extends Controller
             return new JsonResponse(['message' => 'Maaf retur Gagal Disimpan...!!!'], 500);
         }
 
-        $simpan_r = Returpbfrinci::updateorcreate(
+        $simpan_r = Returpbfrinci::updateOrCreate(
             [
                 'no_retur' => $noretur,
                 'kd_obat' => $request->kd_obat,

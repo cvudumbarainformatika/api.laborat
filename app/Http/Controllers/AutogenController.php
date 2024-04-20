@@ -11,6 +11,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\BridgingeklaimHelper;
 use App\Helpers\DateHelper;
 use App\Helpers\FormatingHelper;
+use App\Helpers\HargaHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
@@ -97,14 +98,14 @@ class AutogenController extends Controller
     public function index(Request $request)
     {
         $thumb = collect();
-        $dokter = Mpegawaisimpeg::select('id','kdpegsimrs', 'nama')
-        ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
-        ->orderBy('id')
-        ->chunk(50, function($dokters) use ($thumb){
-            foreach ($dokters as $q) {
-                $thumb->push($q);
-            }
-        });
+        $dokter = Mpegawaisimpeg::select('id', 'kdpegsimrs', 'nama')
+            ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
+            ->orderBy('id')
+            ->chunk(50, function ($dokters) use ($thumb) {
+                foreach ($dokters as $q) {
+                    $thumb->push($q);
+                }
+            });
 
 
         return new JsonResponse($thumb);
@@ -2525,20 +2526,27 @@ class AutogenController extends Controller
         // $ant = new BridantrianbpjsController;
         // $temp = $ant->batalantrian('K20240226211236');
         // return $temp;
-        $class = new StockController;
+        // $class = new StockController;
 
         // $data = [
         //     'kode' => 'RS-0852',
         //     'no_penerimaan' => 'DPBHP_00002X/JAN/2023',
         //     'harga' => '8000',
         // ];
-        $data = [
-            'kode' => request('k'),
-            'no_penerimaan' => request('n'),
-            'harga' => request('h'),
-        ];
-        $result = $class->updateHarga($data);
-        return $result;
+        // $data = [
+        //     'kode' => request('k'),
+        //     'no_penerimaan' => request('n'),
+        //     'harga' => request('h'),
+        // ];
+        // $result = $class->updateHarga($data);
+        // return $result;
+        // $harga = HargaHelper::getHarga('0000054-FAR', '1');
+        // return $harga['harga'];
+        $jadwaldokter = BridgingbpjsHelper::get_url(
+            'antrean',
+            'jadwaldokter/kodepoli/BDM/tanggal/2024-04-16'
+        );
+        return ($jadwaldokter);
     }
 
     public function baru()

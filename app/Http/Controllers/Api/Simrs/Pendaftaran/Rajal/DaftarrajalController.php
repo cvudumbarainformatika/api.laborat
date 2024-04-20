@@ -198,6 +198,7 @@ class DaftarrajalController extends Controller
             return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
 
+
         $kode_biaya =  $request->kode_biaya;
         $nama_biaya =  $request->nama_biaya;
         $sarana =  $request->sarana;
@@ -228,10 +229,12 @@ class DaftarrajalController extends Controller
 
         //     array_push($anu, $kar);
         // }
+
         if (!$kar) {
             $hapuskunjunganpoli = KunjunganPoli::where('rs1', $input->noreg)->first()->delete();
             return new JsonResponse(['message' => 'karcis gagal disimpan'], 500);
         }
+
 
         //------------LOG ANTRIAN----------------//
         // $updatelogantrian = self::updatelogantrian($request,$input);
@@ -687,6 +690,12 @@ class DaftarrajalController extends Controller
             if (!$hapuskarcis) {
                 return new JsonResponse(['message' => 'Maaf Pasien Gagal Dihapus...!!!'], 500);
             }
+        }
+
+        // hapus antrian
+        $antrian = Antrianambil::where('noreg', $request->noreg)->first();
+        if ($antrian) {
+            $antrian->delete();
         }
 
         if ($request->nosep != '' || $request->nosep != null) {

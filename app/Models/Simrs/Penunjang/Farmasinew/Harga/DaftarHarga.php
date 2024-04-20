@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Models\Simrs\Penunjang\Farmasinew\Bast;
+namespace App\Models\Simrs\Penunjang\Farmasinew\Harga;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BasthederM extends Model
+class DaftarHarga extends Model
 {
     use HasFactory;
-    protected $table = 'bast_h';
-    protected $guarded = ['id'];
     protected $connection = 'farmasi';
+    protected $guarded = ['id'];
 }
