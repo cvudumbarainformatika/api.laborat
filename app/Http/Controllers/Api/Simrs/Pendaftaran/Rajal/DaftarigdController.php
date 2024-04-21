@@ -331,4 +331,19 @@ class DaftarigdController extends Controller
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
     }
+
+    public function hapuskunjunganpasienigd(Request $request)
+    {
+        $cekflagpatien = KunjunganPoli::where('rs1', $request->noreg)->where('rs19','')->first();
+        if($cekflagpatien === null)
+        {
+            return new JsonResponse(['message' => 'Maaf Pasien Sedang dalam Proses Dilayani Atau Pasien Sudah Pulang Dari IGD...!!!'], 500);
+        }
+        $cekflagpatien->delete();
+        if (!$cekflagpatien) {
+            return new JsonResponse(['message' => 'Maaf Pasien Gagal Dihapus...!!!'], 500);
+        }
+
+        return new JsonResponse(['message' => 'Pasien Berhasil Dihapus...!!!'], 200);
+    }
 }

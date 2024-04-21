@@ -12,5 +12,6 @@ Route::group([
 ], function () {
     Route::get('/kunjunganpasienigd', [IgdController::class, 'kunjunganpasienigd']);
     Route::post('/simpankunjunganigd', [DaftarigdController::class, 'simpankunjunganigd']);
+    Route::post('/hapuspasien', [DaftarigdController::class, 'hapuskunjunganpasienigd']);
 });
 
