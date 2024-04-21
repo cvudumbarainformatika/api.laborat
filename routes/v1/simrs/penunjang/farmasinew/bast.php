@@ -7,11 +7,15 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/farmasinew/bast'
+    'prefix' => 'simrs/penunjang/farmasinew/bast'
 ], function () {
-    Route::get('/dialogsp', [BastController::class, 'dialogsp']);
-    Route::get('/dialogpenerimaan', [BastController::class, 'dialogpenerimaan']);
-    Route::post('/simpanbast', [BastController::class, 'simpanbast']);
+    Route::get('/perusahaan', [BastController::class, 'perusahaan']);
+    Route::get('/pemesanan', [BastController::class, 'pemesanan']);
+    Route::get('/penerimaan', [BastController::class, 'penerimaan']);
+
+    Route::post('/simpan', [BastController::class, 'simpan']);
+
+    Route::get('/list-bast', [BastController::class, 'listBast']);
 
     Route::get('/dialogsppajak', [PembebasanpajakController::class, 'dialogsppajak']);
 });

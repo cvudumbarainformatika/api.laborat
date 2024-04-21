@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Models\Simrs\Penunjang\Farmasinew\Bast;
+namespace App\Models\Simrs\Master;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BasthederM extends Model
+class MdokumenUpload extends Model
 {
     use HasFactory;
-    protected $table = 'bast_h';
+    protected $table = 'm_upload_dok_luar';
     protected $guarded = ['id'];
-    protected $connection = 'farmasi';
 }

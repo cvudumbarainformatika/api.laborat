@@ -16,9 +16,12 @@ use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
+use App\Models\Simrs\Pelayanan\DokumenUpload;
+use App\Models\Simrs\Pelayanan\Kandungan;
 use App\Models\Simrs\Pelayanan\LaporanTindakan;
 use App\Models\Simrs\Pelayanan\NeonatusKeperawatan;
 use App\Models\Simrs\Pelayanan\NeonatusMedis;
+use App\Models\Simrs\Pelayanan\Pediatri;
 use App\Models\Simrs\Pelayanan\PsikiatriPoli;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
@@ -306,5 +309,17 @@ class KunjunganPoli extends Model
     public function neonatuskeperawatan()
     {
         return $this->hasMany(NeonatusKeperawatan::class, 'noreg', 'rs1');
+    }
+    public function pediatri()
+    {
+        return $this->hasMany(Pediatri::class, 'noreg', 'rs1');
+    }
+    public function kandungan()
+    {
+        return $this->hasMany(Kandungan::class, 'noreg', 'rs1');
+    }
+    public function dokumenluar()
+    {
+        return $this->hasMany(DokumenUpload::class, 'noreg', 'rs1');
     }
 }

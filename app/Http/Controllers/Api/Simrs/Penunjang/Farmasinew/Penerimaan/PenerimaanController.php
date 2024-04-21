@@ -44,6 +44,23 @@ class PenerimaanController extends Controller
 
     public function simpanpenerimaan(Request $request)
     {
+        // validasi jumlah terima dengan pesanan
+
+        $penerimaan = PenerimaanHeder::selectRaw('sum(penerimaan_r.jml_terima_k) as terima, penerimaan_r.jml_pesan as pesan')
+            ->leftJoin('penerimaan_r', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+            ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
+            ->where('penerimaan_r.kdobat', $request->kdobat)
+            ->groupBy('penerimaan_r.nopenerimaan', 'penerimaan_r.kdobat')
+            ->first();
+        if ($penerimaan) {
+            $totalAkanTerima = (float)$penerimaan->terima + (float) $request->jml_terima_k;
+            if ($totalAkanTerima > $penerimaan->pesan) {
+                return new JsonResponse([
+                    'message' => 'Jumlah Terima melebihi jumlah dipesan'
+                ], 410);
+            }
+        }
+
         try {
             DB::connection('farmasi')->beginTransaction();
 
@@ -175,6 +192,7 @@ class PenerimaanController extends Controller
                 'heder' => $simpanheder,
                 'rinci' => $simpanrinci,
                 'kunci pesanan' => $pesananDikunci,
+                'penerimaan' => $penerimaan,
             ]);
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
