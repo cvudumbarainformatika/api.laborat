@@ -157,7 +157,8 @@ class BastController extends Controller
     {
         $res1 = PenerimaanHeder::select('nobast')
             ->where('nobast', '<>', '')
-            ->orderBy('tgl_bast', 'DESC')
+            // ->orderBy('nobast', 'DESC')
+            // ->orderBy('tgl_bast', 'DESC')
             // ->get();
             ->distinct('nobast')
             ->paginate(request('per_page'));
@@ -181,6 +182,7 @@ class BastController extends Controller
             )
             ->whereIn('nobast', $pen)
             ->orderBy('tgl_bast', 'DESC')
+            ->orderBy('nobast', 'DESC')
             ->get();
 
         $groupedResult = $result->groupBy('nobast')->map(function ($group) {

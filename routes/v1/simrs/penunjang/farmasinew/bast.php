@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/farmasinew/bast'
+    'prefix' => 'simrs/penunjang/farmasinew/bast'
 ], function () {
     Route::get('/perusahaan', [BastController::class, 'perusahaan']);
     Route::get('/pemesanan', [BastController::class, 'pemesanan']);
