@@ -26,8 +26,8 @@ class CeknoregController extends Controller
     }
 
     $noreg=$split[0];
-    
-    $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs9', 'rs19')->where('rs1', $noreg)
+
+    $cekx = KunjunganPoli::select('rs1', 'rs2','rs3', 'rs9', 'rs19')->where('rs1', $noreg)
     ->with(['datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai'])->first();
     if (!$cekx) {
       return new JsonResponse(['message' => 'invalid'], 500);
