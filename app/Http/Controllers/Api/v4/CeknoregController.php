@@ -26,12 +26,20 @@ class CeknoregController extends Controller
     }
 
     $noreg=$split[0];
+    $dok=$split[1] ?? null;
+    $asal=$split[2] ?? null;
 
     $cekx = KunjunganPoli::select('rs1', 'rs2','rs3', 'rs9', 'rs19')->where('rs1', $noreg)
     ->with(['pegawai'])->first();
     if (!$cekx) {
       return new JsonResponse(['message' => 'invalid'], 500);
     }
-    return new JsonResponse($cekx);
+
+    $ata =[
+      'noreg'=>$noreg,
+      'dok'=>$dok,
+      'asal'=>$asal
+    ];
+    return new JsonResponse($ata);
   }
 }
