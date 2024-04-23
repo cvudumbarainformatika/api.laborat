@@ -124,8 +124,11 @@ class Pegawai extends Model
         // } else {
         //     return null;
         // }
-        $nip = $this->nip;
-        $foto = $this->foto;
+        $nip = '3574041305820002';
+        $foto = 'foto-3574041305820002.jpg';
+
+        // $nip = $this->nip;
+        // $foto = $this->foto;
 
         if ($nip === null || $nip === '' || $foto===null || $foto === '') {
             return null;
