@@ -29,6 +29,7 @@ class IgdController extends Controller
             'rs17.rs8 as kodepoli',
             'rs19.rs2 as poli',
             'rs17.rs9 as kodedokter',
+            'rs17.rs19 as flagpelayanan',
             'kepegx.pegawai.nama as dokter',
             //'rs21.rs2 as dokter',
             'rs17.rs14 as kodesistembayar',
