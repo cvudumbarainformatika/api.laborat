@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Ranap;
 
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
@@ -427,5 +428,10 @@ class Kunjunganranap extends Model
     public function laborats()
     {
         return $this->hasMany(LaboratMeta::class, 'noreg', 'rs1');
+    }
+    //pegawai dari simpeg
+    public function pegawai()
+    {
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs10');
     }
 }
