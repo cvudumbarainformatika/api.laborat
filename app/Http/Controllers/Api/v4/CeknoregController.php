@@ -38,7 +38,8 @@ class CeknoregController extends Controller
     $ata =[
       'noreg'=>$noreg,
       'dok'=>$dok,
-      'asal'=>$asal
+      'asal'=>$asal,
+      'petugas'=>$cekx
     ];
     return new JsonResponse($ata);
   }
