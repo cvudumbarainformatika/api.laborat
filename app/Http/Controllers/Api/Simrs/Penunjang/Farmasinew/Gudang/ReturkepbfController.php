@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +14,26 @@ use Illuminate\Support\Facades\DB;
 
 class ReturkepbfController extends Controller
 {
+
+    public function cariPerusahaan()
+    {
+        // ambil perusahaan yang sedang belum bast
+        $raw = PenerimaanHeder::select('kdpbf')
+            ->where(function ($q) {
+                $q->whereNull('tgl_bast')
+                    ->orWhere('jumlah_bast', '<=', 0);
+            })
+            ->where('jenis_penerimaan', 'Pesanan')
+            ->where('kunci', '1')
+            ->get();
+        // map kode perusahaan ke bentuk array, biar aman jika nanti ada append
+        $temp = collect($raw)->map(function ($y) {
+            return $y->kdpbf;
+        });
+        $data = KontrakPengerjaan::select('kodeperusahaan', 'namaperusahaan')->whereIn('kodeperusahaan', $temp)->distinct()->get();
+
+        return new JsonResponse($data);
+    }
     public function simpanretur(Request $request)
     {
         if ($request->noretur == '' || $request->noretur == null) {
