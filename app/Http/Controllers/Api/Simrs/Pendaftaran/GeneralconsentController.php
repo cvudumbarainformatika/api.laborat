@@ -47,6 +47,8 @@ class GeneralconsentController extends Controller
                 'nikpetugas' => $request->nikpetugas,
                 'ttdpasien' => $ttdpasien,
                 'ttdpetugas' => $ttdpetugas,
+                'wali1'=> $request->wali1,
+                'wali2'=> $request->wali2,
             ]
         );
 
