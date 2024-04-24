@@ -32,12 +32,12 @@ class PenerimaanRinci extends Model
     {
         return $this->hasMany(Stokrel::class, 'nopenerimaan', 'nopenerimaan');
     }
-    public function belumkembali()
-    {
-        return $this->hasMany(BarangRusak::class, 'nopenerimaan', 'nopenerimaan');
-    }
-    public function sudahkembali()
-    {
-        return $this->hasMany(BarangRusak::class, 'nopenerimaan', 'nopenerimaan');
-    }
+    // public function belumkembali()
+    // {
+    //     return $this->hasMany(BarangRusak::class, 'nopenerimaan', 'nopenerimaan');
+    // }
+    // public function sudahkembali()
+    // {
+    //     return $this->hasMany(BarangRusak::class, 'nopenerimaan', 'nopenerimaan');
+    // }
 }
