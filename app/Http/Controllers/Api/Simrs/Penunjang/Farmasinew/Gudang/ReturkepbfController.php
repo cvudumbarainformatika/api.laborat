@@ -76,6 +76,8 @@ class ReturkepbfController extends Controller
             'penerimaan_r.ppn',
             'penerimaan_r.harga_netto_kecil as harga_neto',
             'penerimaan_r.jml_terima_k as jumlah',
+            'penerimaan_r.kondisi_barang',
+            'penerimaan_r.qty_tidak_baik',
         )
             ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
             ->leftJoin('fakturs', 'fakturs.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
@@ -88,16 +90,6 @@ class ReturkepbfController extends Controller
                 'stokadalwarsa' => function ($st) {
                     $st->whereDate('tglexp', '<', date('Y-m-d'))
                         ->where('kdobat', '=', request('kd_obat'));
-                },
-                'belumkembali' => function ($st) {
-                    $st->where('kd_obat', '=', request('kd_obat'))
-                        ->whereNull('tgl_dikembalikan')
-                        ->whereNull('tgl_pemusnahan');
-                },
-                'sudahkembali' => function ($st) {
-                    $st->where('kd_obat', '=', request('kd_obat'))
-                        ->whereNull('tgl_pemusnahan')
-                        ->whereNotNull('tgl_dikembalikan');
                 },
             ])
             ->get();
