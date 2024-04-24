@@ -103,4 +103,13 @@ class IgdController extends Controller
 
         return new JsonResponse( $kunjungan);
     }
+
+    public function terimapasien(Request $request)
+    {
+        $terima = KunjunganPoli::where('rs1', $request->noreg)->first();
+        $terima->rs19 = '1';
+        $terima->save();
+
+        return new JsonResponse(['data' => $terima], 200);
+    }
 }
