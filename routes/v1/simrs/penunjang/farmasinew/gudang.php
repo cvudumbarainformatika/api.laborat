@@ -15,6 +15,4 @@ Route::group([
     Route::get('/list-belum-faktur', [PemfakturanController::class, 'getPenerimaanBelumAdaFaktur']);
     Route::post('/simpan', [PemfakturanController::class, 'simpan']);
     Route::post('/simpan-header', [PemfakturanController::class, 'simpanHeader']);
-
-    // pembayaran
 });

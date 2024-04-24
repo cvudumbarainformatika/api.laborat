@@ -98,8 +98,8 @@ class AutogenController extends Controller
     public function index(Request $request)
     {
         $thumb = collect();
-        $dokter = Mpegawaisimpeg::select('id', 'kdpegsimrs', 'nama')
-            ->where('aktif', 'AKTIF')->where('kdgroupnakes', '1')
+        $dokter = Pegawai::select('id', 'kdpegsimrs', 'nama','nip','nik','foto')
+            ->where('aktif', 'AKTIF')
             ->orderBy('id')
             ->chunk(50, function ($dokters) use ($thumb) {
                 foreach ($dokters as $q) {

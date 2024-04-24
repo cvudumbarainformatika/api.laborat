@@ -10,4 +10,7 @@ Route::group([
 ], function () {
     Route::post('/store', [KandunganController::class, 'store']);
     Route::post('/deletedata', [KandunganController::class, 'deletedata']);
+    Route::get('/masterskrining', [KandunganController::class, 'masterskrining']);
+    Route::get('/skrining', [KandunganController::class, 'skrining']);
+    Route::post('/storeSkrining', [KandunganController::class, 'storeSkrining']);
 });

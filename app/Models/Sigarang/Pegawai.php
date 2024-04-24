@@ -124,6 +124,9 @@ class Pegawai extends Model
         // } else {
         //     return null;
         // }
+        // $nip = '3574041305820002';
+        // $foto = 'foto-3574041305820002.jpg';
+
         $nip = $this->nip;
         $foto = $this->foto;
 
@@ -132,8 +135,12 @@ class Pegawai extends Model
         }
 
         $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
-        $exist = file_exists($image);
-        if (!$image || !$exist) {
+        // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
+        // $exist = file_exists($image);
+        // if (!$image || !$exist) {
+        //     return null;
+        // }
+        if (!$image) {
             return null;
         }
         $handle = @fopen($image, 'r');

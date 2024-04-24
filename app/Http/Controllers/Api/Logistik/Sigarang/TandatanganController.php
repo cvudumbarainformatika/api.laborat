@@ -44,20 +44,22 @@ class TandatanganController extends Controller
 
     public function getPtk()
     {
-        $data = Pegawai::when(request('ptk') ?? function ($wew) {
-            // $wew->where('role_id', 2);
-            $wew->limit(20);
-        }, function ($anu) {
-            $anu->where('nama', 'LIKE', '%' . request('ptk') . '%')
-                ->where('role_id', 2);
-        })
+        $data = Pegawai::where('aktif', 'AKTIF')
+            ->when(request('ptk') ?? function ($wew) {
+                // $wew->where('role_id', 2);
+                $wew->limit(20);
+            }, function ($anu) {
+                $anu->where('nama', 'LIKE', '%' . request('ptk') . '%')
+                    ->where('role_id', 2);
+            })
             ->limit(20)->get();
         return new JsonResponse($data);
     }
     public function getGudang()
     {
         $data =
-            Pegawai::when(request('gudang') ?? function ($wew) {
+            Pegawai::where('aktif', 'AKTIF')
+            ->when(request('gudang') ?? function ($wew) {
                 $wew->where('role_id', 3);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('gudang') . '%')
@@ -69,7 +71,8 @@ class TandatanganController extends Controller
     public function getMengetahui()
     {
         $data =
-            Pegawai::when(request('tahu') ?? function ($wew) {
+            Pegawai::where('aktif', 'AKTIF')
+            ->when(request('tahu') ?? function ($wew) {
                 $wew->limit(20);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('tahu') . '%')
@@ -81,7 +84,8 @@ class TandatanganController extends Controller
     public function getPpk()
     {
         $data =
-            Pegawai::when(request('ppk') ?? function ($wew) {
+            Pegawai::where('aktif', 'AKTIF')
+            ->when(request('ppk') ?? function ($wew) {
                 $wew->limit(20);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('ppk') . '%')
