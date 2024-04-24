@@ -136,10 +136,13 @@ class Pegawai extends Model
 
         $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
         // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
-        $exist = file_exists($image);
+        // $exist = file_exists($image);
         // if (!$image || !$exist) {
         //     return null;
         // }
+        if (!$image) {
+            return null;
+        }
         $handle = @fopen($image, 'r');
         if ($handle) {
             // $manager = new ImageManager(['driver' => 'imagick']);
