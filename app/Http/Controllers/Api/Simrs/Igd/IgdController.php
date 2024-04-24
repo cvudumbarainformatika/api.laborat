@@ -78,8 +78,8 @@ class IgdController extends Controller
             // })
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
-                    if ($status === '') {
-                        $sts->where('rs17.rs19', '!=', '1');
+                    if ($status === null) {
+                        $sts->where('rs17.rs19', 'null');
                     } else {
                         $sts->where('rs17.rs19', '=', $status);
                     }
@@ -107,7 +107,7 @@ class IgdController extends Controller
     public function terimapasien(Request $request)
     {
         $terima = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $terima->rs19 = '1';
+        $terima->rs19 = '2';
         $terima->save();
 
         return new JsonResponse(['data' => $terima], 200);
