@@ -24,6 +24,7 @@ class ReturkepbfController extends Controller
             ->when(request('kd_ruang'), function ($q) {
                 $q->where('gudang', request('kd_ruang'));
             })
+            ->distinct('kdpbf')
             ->where('kunci', '1')
             ->get();
         // map kode perusahaan ke bentuk array, biar aman jika nanti ada append
@@ -65,6 +66,7 @@ class ReturkepbfController extends Controller
             'fakturs.tgl_faktur',
             'penerimaan_h.jenissurat',
             'penerimaan_h.tgl_pembayaran',
+            'penerimaan_h.tglpenerimaan',
             'penerimaan_h.tglsurat',
             'penerimaan_h.nomorsurat',
             'penerimaan_r.kdobat',
@@ -76,27 +78,32 @@ class ReturkepbfController extends Controller
             'penerimaan_r.ppn',
             'penerimaan_r.harga_netto_kecil as harga_neto',
             'penerimaan_r.jml_terima_k as jumlah',
-            'penerimaan_r.kondisi_barang',
-            'penerimaan_r.qty_tidak_baik',
         )
             ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
             ->leftJoin('fakturs', 'fakturs.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
             ->where('penerimaan_h.kdpbf', '=', request('kdpbf'))
             ->where('penerimaan_r.kdobat', '=', request('kd_obat'))
+            ->when(request('nopenerimaan'), function ($q) {
+                $q->where('penerimaan_r.nopenerimaan', 'LIKE', '%' . request('nopenerimaan') . '%');
+            })
             ->with([
                 'stokterima' => function ($st) {
                     $st->where('kdobat', '=', request('kd_obat'));
                 },
-                'stokadalwarsa' => function ($st) {
-                    $st->whereDate('tglexp', '<', date('Y-m-d'))
-                        ->where('kdobat', '=', request('kd_obat'));
-                },
             ])
+            ->orderBy('penerimaan_h.tglpenerimaan', 'DESC')
+            ->orderBy('penerimaan_h.nopenerimaan', 'DESC')
+            ->limit(20)
             ->get();
         return new JsonResponse($data);
     }
     public function simpanretur(Request $request)
     {
+        /**
+         * simpan retur mengurangi jumlah penerimaan, jadi bisa muncul lagi di penrimaan
+         * cek lagi di hapus penerimaan biar bisa muncul di list pemesanan di menu penerimaan
+         */
+
         if ($request->noretur == '' || $request->noretur == null) {
             DB::connection('farmasi')->select('call retur_pbf(@nomor)');
             $x = DB::connection('farmasi')->table('conter')->select('returpbf')->get();
