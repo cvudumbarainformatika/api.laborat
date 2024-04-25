@@ -12,9 +12,9 @@ Route::group([
     Route::get('/perusahaan', [ReturkepbfController::class, 'cariPerusahaan']);
     Route::get('/obat', [ReturkepbfController::class, 'cariObat']);
     Route::get('/ambil-data', [ReturkepbfController::class, 'ambilData']);
+    Route::get('/list-retur', [ReturkepbfController::class, 'listRetur']);
 
     Route::post('/simpan', [ReturkepbfController::class, 'simpanretur']);
-    // Route::post('/simpan-header', [PemfakturanController::class, 'simpanHeader']);
-
-
+    Route::post('/delete-header', [ReturkepbfController::class, 'deleteHeader']);
+    Route::post('/delete-rinci', [ReturkepbfController::class, 'deleteRinci']);
 });

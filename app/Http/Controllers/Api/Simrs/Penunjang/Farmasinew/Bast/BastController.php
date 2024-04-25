@@ -54,9 +54,8 @@ class BastController extends Controller
             ->with([
                 'penerimaanrinci' => function ($tr) {
                     $tr->selectRaw('penerimaan_r.*, sum(retur_penyedia_r.subtotal) as nilai_retur, retur_penyedia_r.jumlah_retur')
-                        ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->leftJoin('retur_penyedia_r', function ($join) {
-                            $join->on('retur_penyedia_r.no_retur', '=', 'retur_penyedia_h.no_retur')
+                            $join->on('retur_penyedia_r.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                                 ->on('retur_penyedia_r.kd_obat', '=', 'penerimaan_r.kdobat');
                         })
                         ->with('masterobat:kd_obat,nama_obat,satuan_b')
@@ -124,19 +123,19 @@ class BastController extends Controller
                     $ba[] = $tempRinc;
                     // update retur jika ada
                     if ((float)$rinci['nilai_retur'] > 0) {
-                        $returHead = Returpbfheder::where('nopenerimaan', $penerimaan['nopenerimaan'])->first();
-                        if ($returHead) {
-                            $returRin = Returpbfrinci::where('no_retur', $returHead->no_retur)
-                                ->where('kd_obat', $rinci['kdobat'])
-                                ->first();
-                            if ($returRin) {
-                                $returRin->update([
-                                    'harga_net' => $rinci['harga_netto_kecil'],
-                                    'subtotal' => $rinci['nilai_retur'],
-                                ]);
-                                $ret[] = $returRin;
-                            }
+                        // $returHead = Returpbfheder::where('nopenerimaan', $penerimaan['nopenerimaan'])->first();
+                        $returRin = Returpbfrinci::where('nopenerimaan', $penerimaan['nopenerimaan'])
+                            ->where('kd_obat', $rinci['kdobat'])
+                            ->first();
+                        if ($returRin) {
+                            $returRin->update([
+                                'harga_net' => $rinci['harga_netto_kecil'],
+                                'subtotal' => $rinci['nilai_retur'],
+                            ]);
+                            $ret[] = $returRin;
                         }
+                        // if ($returHead) {
+                        // }
                     }
                 }
             }
