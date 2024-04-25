@@ -41,11 +41,6 @@ class ReturkepbfController extends Controller
         if (!request('kdpbf')) {
             return new JsonResponse(['message' => 'Tidak ada kode pbf']);
         }
-        $kdruang = [request('kd_ruang')];
-        $gudangs = ['Gd-05010100', 'Gd-03010100'];
-        $ada = array_intersect($kdruang, $gudangs);
-        if (count($ada) > 0) array_push($ada, '');
-        // return new JsonResponse($ada);
 
         $data = Mobatnew::select(
             'new_masterobat.kd_obat',
@@ -55,7 +50,7 @@ class ReturkepbfController extends Controller
             ->leftJoin('penerimaan_r', 'penerimaan_r.kdobat', '=', 'new_masterobat.kd_obat')
             ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
             ->where('penerimaan_h.kdpbf', '=', request('kdpbf'))
-            ->whereIn('new_masterobat.gudang',  $ada)
+            ->whereNotIn('penerimaan_h.jenis_penerimaan', ['APBD', 'APBN'])
             ->groupBy('new_masterobat.kd_obat')
             ->get();
         return new JsonResponse($data);
@@ -91,6 +86,7 @@ class ReturkepbfController extends Controller
             ->with([
                 'stokterima' => function ($st) {
                     $st->where('kdobat', '=', request('kd_obat'));
+                    $st->where('kdruang', '=', request('kd_ruang'));
                 },
             ])
             ->orderBy('penerimaan_h.tglpenerimaan', 'DESC')
@@ -182,7 +178,7 @@ class ReturkepbfController extends Controller
                 return new JsonResponse(['message' => 'Maaf retur Gagal Disimpan...!!!'], 500);
             }
 
-            $simpan_r = Returpbfrinci::updateOrCreate(
+            $simpan_r = Returpbfrinci::create(
                 [
                     'no_retur' => $no_retur,
                     'kd_obat' => $request->item['kdobat'],
@@ -200,22 +196,19 @@ class ReturkepbfController extends Controller
             );
             // mengurangi stok ( pastikan hanya mengurangi satu kali saja)
             // ini belum termasuk jika barang sudah pernah keluar
-            $terimaR = PenerimaanRinci::where('kdobat', $request->item['kdobat'])
+
+
+            $stok = Stokrel::where('kdobat', $request->item['kdobat'])
                 ->where('nopenerimaan', $request->item['nopenerimaan'])
-                ->where('no_batch', $request->item['no_batch'])
+                ->where('nobatch', $request->item['no_batch'])
+                ->where('kdruang', $request->kd_ruang)
                 ->first();
-            if ($terimaR) {
-                $jumlahStok = (float)$terimaR->jml_terima_k - (float)$request->item['jumlah_retur'];
-                $stok = Stokrel::where('kdobat', $request->item['kdobat'])
-                    ->where('nopenerimaan', $request->item['nopenerimaan'])
-                    ->where('nobatch', $request->item['no_batch'])
-                    ->where('kdruang', $request->kd_ruang)
-                    ->first();
-                if ($stok) {
-                    $stok->jumlah = $jumlahStok;
-                    $stok->save();
-                }
+            $jumlahStok = (float)$stok->jumlah - (float)$request->item['jumlah_retur'];
+            if ($stok) {
+                $stok->jumlah = $jumlahStok;
+                $stok->save();
             }
+
             DB::connection('farmasi')->commit();
             return new JsonResponse(
                 [
