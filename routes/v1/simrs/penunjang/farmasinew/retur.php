@@ -13,7 +13,7 @@ Route::group([
     Route::get('/obat', [ReturkepbfController::class, 'cariObat']);
     Route::get('/ambil-data', [ReturkepbfController::class, 'ambilData']);
 
-    // Route::post('/simpan', [PemfakturanController::class, 'simpan']);
+    Route::post('/simpan', [ReturkepbfController::class, 'simpanretur']);
     // Route::post('/simpan-header', [PemfakturanController::class, 'simpanHeader']);
 
 
