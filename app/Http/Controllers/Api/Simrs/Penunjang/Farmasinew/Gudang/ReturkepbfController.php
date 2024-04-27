@@ -299,6 +299,16 @@ class ReturkepbfController extends Controller
         $rinci = Returpbfrinci::where('no_retur', $request->no_retur)->get();
         // $stok = [];
         foreach ($rinci as $key) {
+            // mengembalikan barang rusak
+            if ($key['flag_tbl_rusak'] === '1') {
+                $barangRusak = BarangRusak::where('kd_obat', $key['kd_obat'])
+                    ->where('nopenerimaan', $key['nopenerimaan'])
+                    ->where('nobatch', $key['no_batch'])
+                    ->first();
+                $barangRusak->tgl_retur = null;
+                $barangRusak->user_retur = '';
+                $barangRusak->save();
+            }
             // menambahkan stok setiap obat di rinci
             // $stokNya = Stokrel::where('kdobat', $key['kd_obat'])
             //     ->where('nopenerimaan', $key['nopenerimaan'])
@@ -340,6 +350,14 @@ class ReturkepbfController extends Controller
         if (!$data) {
             return new JsonResponse(['message' => 'Data Obat tidak ditemukan'], 410);
         }
+        // mengembalikan barang rusak
+        $barangRusak = BarangRusak::where('kd_obat', $request->kd_obat)
+            ->where('nopenerimaan', $request->nopenerimaan)
+            ->where('nobatch', $request->no_batch)
+            ->first();
+        $barangRusak->tgl_retur = null;
+        $barangRusak->user_retur = '';
+        $barangRusak->save();
         // mngembalikan stok di rinci
         // $stok = Stokrel::where('kdobat', $request->kd_obat)
         //     ->where('nopenerimaan', $request->nopenerimaan)
