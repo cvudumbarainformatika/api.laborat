@@ -149,12 +149,13 @@ class BarangRusakController extends Controller
             ->when(count($pbf) > 0, function ($q) use ($pbf) {
                 $q->orWhereIn('kdpbf', $pbf);
             })
-            ->with('pihakketiga:kode,nama', 'masterobat:kd_obat,nama_obat')
+            ->with('pihakketiga:kode,nama', 'masterobat:kd_obat,nama_obat,satuan_k')
             ->paginate(request('per_page'));
-
+        $raw = collect($data);
         return new JsonResponse([
-            'data' => $data['data'],
-            'meta' => $data->except('data'),
+            'raw' => $raw,
+            'data' => $raw['data'],
+            'meta' => $raw->except('data'),
             'obat' => $obat,
             'pbf' => $pbf,
         ]);
