@@ -12,6 +12,10 @@ Route::group([
     Route::get('obat', [BarangRusakController::class, 'cariObat']);
     Route::get('bacth', [BarangRusakController::class, 'cariBatch']);
     Route::get('penerimaan', [BarangRusakController::class, 'cariPenerimaan']);
+    Route::get('list-belum', [BarangRusakController::class, 'getListBelumKunci']);
+    Route::get('list-sudah', [BarangRusakController::class, 'getListSudahKunci']);
 
-    // Route::post('/simpan', [ReturkepbfController::class, 'simpanretur']);
+    Route::post('/simpan', [BarangRusakController::class, 'simpan']);
+    Route::post('/hapus', [BarangRusakController::class, 'hapusData']);
+    Route::post('/kunci', [BarangRusakController::class, 'kunci']);
 });

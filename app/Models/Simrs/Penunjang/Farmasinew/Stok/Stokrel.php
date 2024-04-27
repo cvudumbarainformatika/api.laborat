@@ -6,6 +6,7 @@ use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -22,6 +23,10 @@ class Stokrel extends Model
     public function masterobat()
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
+    }
+    public function harga()
+    {
+        return $this->hasOne(DaftarHarga::class, 'nopenerimaan', 'nopenerimaan');
     }
 
     public function permintaanobatrinci()
