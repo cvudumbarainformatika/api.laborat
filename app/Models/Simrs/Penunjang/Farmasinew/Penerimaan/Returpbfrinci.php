@@ -15,6 +15,6 @@ class Returpbfrinci extends Model
 
     public function mobatnew()
     {
-        return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
+        return $this->hasOne(Mobatnew::class, 'kd_obat', 'kd_obat');
     }
 }

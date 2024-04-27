@@ -6,8 +6,10 @@ use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +23,10 @@ class Stokrel extends Model
     public function masterobat()
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
+    }
+    public function harga()
+    {
+        return $this->hasOne(DaftarHarga::class, 'nopenerimaan', 'nopenerimaan');
     }
 
     public function permintaanobatrinci()
@@ -49,5 +55,10 @@ class Stokrel extends Model
     public function ruang()
     {
         return $this->belongsTo(Ruang::class, 'kdruang', 'kode');
+    }
+
+    public function penerimaan()
+    {
+        return $this->belongsTo(PenerimaanHeder::class, 'nopenerimaan', 'nopenerimaan');
     }
 }
