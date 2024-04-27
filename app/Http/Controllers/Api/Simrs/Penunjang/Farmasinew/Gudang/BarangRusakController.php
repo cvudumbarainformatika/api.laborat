@@ -144,12 +144,13 @@ class BarangRusakController extends Controller
         }
         $data = BarangRusak::where('kunci', '1')
             ->when(count($obat) > 0, function ($q) use ($obat) {
-                $q->orWhereIn('kd_obat', $obat);
+                $q->whereIn('kd_obat', $obat);
             })
             ->when(count($pbf) > 0, function ($q) use ($pbf) {
                 $q->orWhereIn('kdpbf', $pbf);
             })
             ->with('pihakketiga:kode,nama', 'masterobat:kd_obat,nama_obat,satuan_k')
+            ->orderBy('tgl_entry', 'DESC')
             ->paginate(request('per_page'));
         $raw = collect($data);
         return new JsonResponse([
