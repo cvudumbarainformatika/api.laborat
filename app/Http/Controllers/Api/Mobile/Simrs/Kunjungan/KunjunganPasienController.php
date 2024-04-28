@@ -14,7 +14,7 @@ class KunjunganPasienController extends Controller
 {
     public function pasienpoli(Request $request)
     {
-      return $request->all();
+      // return $request->all();
       $data=$this->poli($request);
       return new JsonResponse($data);
     }
@@ -55,9 +55,9 @@ class KunjunganPasienController extends Controller
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
 
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
-              ->where('rs19.rs4', '=', 'Poliklinik')
+              // ->where('rs19.rs4', '=', 'Poliklinik')
               ->whereIn('rs17.rs8', $ruangan)
-              ->where('rs17.rs8', '!=', 'POL014')
+              // ->where('rs17.rs8', '!=', 'POL014')
               ->where(function ($query) use($request) {
                 $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
