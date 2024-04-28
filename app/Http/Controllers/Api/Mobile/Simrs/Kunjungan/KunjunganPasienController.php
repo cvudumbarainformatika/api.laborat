@@ -56,9 +56,9 @@ class KunjunganPasienController extends Controller
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
 
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
-                ->where('rs19.rs4', '=', 'Poliklinik')
-              ->where(function ($query) use($request) {
-                $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
+              ->where('rs19.rs4', '=', 'Poliklinik')
+              ->when($request->q, function($search) use($request) {
+                $search->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs17.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs17.rs1', 'LIKE', '%' . $request->q . '%')
