@@ -55,11 +55,13 @@ class KunjunganPasienController extends Controller
           'rs15.rs46 as noka',
           'rs15.rs49 as nktp',
           'rs15.rs55 as nohp',
+          'rs222.rs8 as sep',
           )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
 
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
               ->where('rs19.rs4', '=', 'Poliklinik')
