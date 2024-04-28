@@ -56,7 +56,7 @@ class KunjunganPasienController extends Controller
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
               ->where('rs19.rs4', '=', 'Poliklinik')
               ->where('rs17.rs8', '!=', 'POL014')
-              // ->whereIn('rs17.rs8', $ruangan)
+              ->whereIn('rs17.rs8', $ruangan)
               ->where(function ($query) use($request) {
                 $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
