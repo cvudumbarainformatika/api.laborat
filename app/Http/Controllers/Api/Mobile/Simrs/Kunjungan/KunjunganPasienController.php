@@ -16,9 +16,18 @@ class KunjunganPasienController extends Controller
     {
       $category = $request->category;
       $poli=[];
+      $igd=[];
+      $ranap=[];
       if ($category==='Poliklinik') {
         $poli= $this->poli($request);
       }
+      $data=[
+        'poli'=>$poli,
+        'igd'=>$igd,
+        'ranap'=>$ranap
+      ];
+
+      return new JsonResponse($data);
     }
 
     public function poli($request)
