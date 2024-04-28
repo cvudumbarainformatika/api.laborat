@@ -40,7 +40,7 @@ class KunjunganPasienController extends Controller
           $tglx = $request->tgl_akhir . ' 23:59:59';
       }
         $data = KunjunganPoli::select(
-          'rs17.rs1', 'rs17.rs2','rs17.rs3','rs17.rs4', 'rs17.rs9', 'rs17.rs19',
+          'rs17.rs1', 'rs17.rs2','rs17.rs3','rs17.rs4','rs17.rs4', 'rs17.rs9', 'rs17.rs19',
           'rs17.rs1 as noreg',
           'rs17.rs2 as norm',
           'rs17.rs3 as tgl_kunjungan',
@@ -57,14 +57,14 @@ class KunjunganPasienController extends Controller
 
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
               ->where('rs19.rs4', '=', 'Poliklinik')
-              ->when($request->q, function($search) use($request) {
-                $search->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
-                    ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
-                    ->orWhere('rs17.rs2', 'LIKE', '%' . $request->q . '%')
-                    ->orWhere('rs17.rs1', 'LIKE', '%' . $request->q . '%')
-                    ->orWhere('rs19.rs2', 'LIKE', '%' . $request->q . '%')
-                    ->orWhere('rs9.rs2', 'LIKE', '%' . $request->q . '%');
-              })
+              // ->where(function ($query) use($request) {
+              //   $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
+              //       ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
+              //       ->orWhere('rs17.rs2', 'LIKE', '%' . $request->q . '%')
+              //       ->orWhere('rs17.rs1', 'LIKE', '%' . $request->q . '%')
+              //       ->orWhere('rs19.rs2', 'LIKE', '%' . $request->q . '%')
+              //       ->orWhere('rs9.rs2', 'LIKE', '%' . $request->q . '%');
+              // })
           ->with([
             'dokumenluar'=> function($neo){
               $neo->with(['pegawai:id,nama']);
