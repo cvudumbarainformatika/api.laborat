@@ -21,12 +21,12 @@ class KunjunganPasienController extends Controller
 
     public function poli($request)
     {
-      if ($request->tgl_awal === '' || $request->tgl_akhir === null) {
+      if ($request->tglAwal === '' || $request->tglAkhir === null) {
         $tgl = Carbon::now()->format('Y-m-d 00:00:00');
         $tglx = Carbon::now()->format('Y-m-d 23:59:59');
       } else {
-          $tgl = $request->tgl_awal . ' 00:00:00';
-          $tglx = $request->tgl_akhir . ' 23:59:59';
+          $tgl = $request->tglAwal . ' 00:00:00';
+          $tglx = $request->tglAkhir . ' 23:59:59';
       }
 
       $ruangan = $request->kodepoli;
@@ -56,8 +56,8 @@ class KunjunganPasienController extends Controller
 
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
               // ->where('rs19.rs4', '=', 'Poliklinik')
-              ->whereIn('rs17.rs8', $ruangan)
-              // ->where('rs17.rs8', '!=', 'POL014')
+              // ->whereIn('rs17.rs8', $ruangan)
+              ->where('rs17.rs8', '!=', 'POL014')
               ->where(function ($query) use($request) {
                 $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
