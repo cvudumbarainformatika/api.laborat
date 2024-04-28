@@ -18,7 +18,7 @@ class KunjunganPasienController extends Controller
       $poli=[];
       $igd=[];
       $ranap=[];
-      if ($category==='Poliklinik') {
+      if ($category==='poli') {
         $poli= $this->poli($request);
       }
       $data=[
