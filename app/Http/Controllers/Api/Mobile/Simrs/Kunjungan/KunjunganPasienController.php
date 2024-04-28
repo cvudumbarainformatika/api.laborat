@@ -49,6 +49,12 @@ class KunjunganPasienController extends Controller
           'rs19.rs2 as poli',
           'rs21.rs2 as dokter',
           'rs9.rs2 as sistembayar',
+          'rs15.rs2 as nama',
+          'rs15.rs17 as kelamin',
+          'rs15.rs22 as agama',
+          'rs15.rs46 as noka',
+          'rs15.rs49 as nktp',
+          'rs15.rs55 as nohp',
           )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
