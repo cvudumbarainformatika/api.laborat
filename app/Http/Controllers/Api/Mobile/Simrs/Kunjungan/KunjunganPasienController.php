@@ -29,8 +29,8 @@ class KunjunganPasienController extends Controller
       }
 
       $ruangan = $request->kodepoli;
-        $data = KunjunganPoli::select(
-          'rs17.rs1', 'rs17.rs2','rs17.rs3','rs17.rs4','rs17.rs4','rs17.rs8', 'rs17.rs9', 'rs17.rs19',
+      $data = KunjunganPoli::select(
+          'rs17.rs1', 'rs17.rs2','rs17.rs3','rs17.rs4','rs17.rs8', 'rs17.rs9', 'rs17.rs19',
           'rs17.rs1 as noreg',
           'rs17.rs2 as norm',
           'rs17.rs3 as tgl_kunjungan',
