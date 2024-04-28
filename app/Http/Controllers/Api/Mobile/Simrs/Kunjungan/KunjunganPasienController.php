@@ -58,14 +58,12 @@ class KunjunganPasienController extends Controller
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
               ->where('rs19.rs4', '=', 'Poliklinik')
               ->where(function ($query) use($request) {
-                if ($request->q !==null || $request->q !== 'null' || $request->q !== '') {
-                  $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
+                $query->where('rs15.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs15.rs46', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs17.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs17.rs1', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs19.rs2', 'LIKE', '%' . $request->q . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . $request->q . '%');
-                }
               })
           ->with([
             'dokumenluar'=> function($neo){
