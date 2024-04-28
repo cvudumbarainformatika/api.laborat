@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     // 'middleware' => 'auth:api',
     'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/kunjungan'
+    'prefix' => 'simrs/kunjungan/pasien'
 ], function () {
-    Route::get('/pasien', [KunjunganPasienController::class, 'pasien']);
+    Route::get('/poli', [KunjunganPasienController::class, 'pasienpoli']);
 });

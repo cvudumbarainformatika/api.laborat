@@ -12,21 +12,9 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class KunjunganPasienController extends Controller
 {
-    public function pasien(Request $request)
+    public function pasienpoli(Request $request)
     {
-      $category = $request->category;
-      $poli=[];
-      $igd=[];
-      $ranap=[];
-      if ($category==='poli') {
-        $poli= $this->poli($request);
-      }
-      $data=[
-        'poli'=>$poli,
-        'igd'=>$igd,
-        'ranap'=>$ranap
-      ];
-
+      $data=$this->poli($request);
       return new JsonResponse($data);
     }
 
