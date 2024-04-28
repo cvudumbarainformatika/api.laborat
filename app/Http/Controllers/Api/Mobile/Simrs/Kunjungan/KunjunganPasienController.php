@@ -14,6 +14,7 @@ class KunjunganPasienController extends Controller
 {
     public function pasienpoli(Request $request)
     {
+      return $request->all();
       $data=$this->poli($request);
       return new JsonResponse($data);
     }
