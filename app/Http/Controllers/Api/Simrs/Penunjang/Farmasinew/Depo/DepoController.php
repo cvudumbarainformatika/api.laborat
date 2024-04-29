@@ -27,6 +27,30 @@ class DepoController extends Controller
             DB::raw('sum(stokreal.jumlah) as  jumlah'),
             'new_masterobat.nama_obat'
         )->with([
+            'transnonracikan' => function ($transnonracikan) {
+                $transnonracikan->select(
+                    // 'resep_keluar_r.kdobat as kdobat',
+                    'resep_permintaan_keluar.kdobat as kdobat',
+                    'resep_keluar_h.depo as kdruang',
+                    DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                )
+                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                    ->where('resep_keluar_h.depo', request('kdgudang'))
+                    ->whereIn('flag', ['', '1', '2'])
+                    ->groupBy('resep_permintaan_keluar.kdobat');
+            },
+            'transracikan' => function ($transracikan) {
+                $transracikan->select(
+                    // 'resep_keluar_racikan_r.kdobat as kdobat',
+                    'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                    'resep_keluar_h.depo as kdruang',
+                    DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                )
+                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                    ->where('resep_keluar_h.depo', request('kdgudang'))
+                    ->whereIn('flag', ['', '1', '2'])
+                    ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+            },
             'permintaanobatrinci' => function ($permintaanobatrinci) use ($gudang) {
                 $permintaanobatrinci->select(
                     'permintaan_r.no_permintaan',
@@ -43,7 +67,6 @@ class DepoController extends Controller
 
                     ->where('permintaan_h.tujuan', $gudang)
                     ->whereIn('permintaan_h.flag', ['', '1', '2']);
-                // yang obatnya belum ada di tabel mutasi_gudangdepo
             },
             'minmax' => function ($mimnmax) use ($depo) {
                 $mimnmax->select('kd_obat', 'kd_ruang', 'max')->when($depo, function ($xxx) use ($depo) {
@@ -61,8 +84,10 @@ class DepoController extends Controller
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
             $stolreal = $xxx->jumlah;
+            $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
+            $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
             $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-            $stokalokasi = (int) $stolreal - (int) $permintaantotal;
+            $stokalokasi = (int) $stolreal - (int) $permintaantotal - (int) $jumlahtrans - (int) $jumlahtransx;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaantotal;
             return $xxx;
