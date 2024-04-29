@@ -62,14 +62,16 @@ class DialogrencanapemesananController extends Controller
                                     'harga'
                                 )
                                     ->orderBy('id', 'DESC')
-                                    ->limit(1);
+                                    ->limit(request('per_page'));
                             }
                         ])
                         ->where('flag', '');
                 }
             ])
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
-            ->orderBy('perencana_pebelian_h.tgl')->paginate(request('per_page'));
+            ->orderBy('perencana_pebelian_h.tgl')
+            ->orderBy('new_masterobat.nama_obat')
+            ->paginate(request('per_page'));
 
         // $rencanabeli = RencanabeliH::with(
         //     'rincian',

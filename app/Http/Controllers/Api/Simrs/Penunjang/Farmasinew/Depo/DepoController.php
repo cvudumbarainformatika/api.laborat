@@ -20,19 +20,30 @@ class DepoController extends Controller
 
         $gudang = request('kdgudang');
         $depo = request('kddepo');
+        // $gudang = ['Gd-05010100', 'Gd-03010100'];
         $stokgudang = Stokrel::select(
             'stokreal.*',
             'new_masterobat.*',
             DB::raw('sum(stokreal.jumlah) as  jumlah'),
-            'new_masterobat.nama_obat as nama_obat'
+            'new_masterobat.nama_obat'
         )->with([
-            'permintaanobatrinci' => function ($permintaanobatrinci) {
+            'permintaanobatrinci' => function ($permintaanobatrinci) use ($gudang) {
                 $permintaanobatrinci->select(
+                    'permintaan_r.no_permintaan',
                     'permintaan_r.kdobat',
                     DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
                 )
-                    ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                    ->where('permintaan_h.flag', '');
+                    ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                    // biar yang ada di tabel mutasi ga ke hitung
+                    ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                        $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                            ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                    })
+                    ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                    ->where('permintaan_h.tujuan', $gudang)
+                    ->whereIn('permintaan_h.flag', ['', '1', '2']);
+                // yang obatnya belum ada di tabel mutasi_gudangdepo
             },
             'minmax' => function ($mimnmax) use ($depo) {
                 $mimnmax->select('kd_obat', 'kd_ruang', 'max')->when($depo, function ($xxx) use ($depo) {
@@ -53,6 +64,7 @@ class DepoController extends Controller
             $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
             $stokalokasi = (int) $stolreal - (int) $permintaantotal;
             $xxx['stokalokasi'] = $stokalokasi;
+            $xxx['permintaantotal'] = $permintaantotal;
             return $xxx;
         });
 
@@ -67,7 +79,8 @@ class DepoController extends Controller
         return new JsonResponse(
             [
                 'obat' => $datastok,
-                'stokdewe' => $stokdewe
+                'stokdewe' => $stokdewe,
+                'stokgudang' => $stokgudang,
             ]
         );
     }
@@ -82,7 +95,14 @@ class DepoController extends Controller
         $stokrealx = (int) $stokreal->stok;
         $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
             ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-            ->where('permintaan_h.flag', '')->where('kdobat', $request->kdobat)->where('tujuan', $request->tujuan)
+            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+            })
+            ->whereNull('mutasi_gudangdepo.kd_obat')
+            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+            ->where('kdobat', $request->kdobat)
+            ->where('tujuan', $request->tujuan)
             ->groupby('kdobat')->get();
         $allpermintaanx =  $allpermintaan[0]->allpermintaan ?? '';
         $stokalokasi = $stokrealx - (int) $allpermintaanx;

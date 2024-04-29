@@ -40,7 +40,7 @@ class CutiController extends Controller
 
     public function pegawai()
     {
-        $data = Pegawai::get();
+        $data = Pegawai::where('aktif', 'AKTIF')->get();
         return new JsonResponse($data);
     }
 
