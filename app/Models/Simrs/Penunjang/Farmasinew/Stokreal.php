@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MinmaxobatController;
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Ruang;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -68,5 +69,9 @@ class Stokreal extends Model
     public function daftarharga()
     {
         return $this->hasMany(DaftarHarga::class, 'kd_obat', 'kdobat');
+    }
+    public function permintaanobatrinci()
+    {
+        return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kdobat');
     }
 }

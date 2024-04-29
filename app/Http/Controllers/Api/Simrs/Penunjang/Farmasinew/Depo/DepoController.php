@@ -21,7 +21,7 @@ class DepoController extends Controller
         $gudang = request('kdgudang');
         $depo = request('kddepo');
         // $gudang = ['Gd-05010100', 'Gd-03010100'];
-        $stokgudang = Stokrel::select(
+        $stokgudang = Stokreal::select(
             'stokreal.*',
             'new_masterobat.*',
             DB::raw('sum(stokreal.jumlah) as  jumlah'),
@@ -105,7 +105,7 @@ class DepoController extends Controller
             [
                 'obat' => $datastok,
                 'stokdewe' => $stokdewe,
-                'stokgudang' => $stokgudang,
+                // 'stokgudang' => $stokgudang,
             ]
         );
     }
@@ -116,7 +116,7 @@ class DepoController extends Controller
         if ($cek > 0) {
             return new JsonResponse(['message' => 'Maaf Data ini Sudah Dikunci...!!!'], 500);
         }
-        $stokreal = Stokrel::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
+        $stokreal = Stokreal::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
         $stokrealx = (int) $stokreal->stok;
         $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
             ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
