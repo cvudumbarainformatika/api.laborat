@@ -79,7 +79,7 @@ class KunjunganPasienController extends Controller
           ])
           ->orderby('antrian_ambil.nomor', 'Asc')
           ->groupby('rs17.rs1')
-        ->paginate(20);
+        ->paginate(50);
 
       return $data;
     }
