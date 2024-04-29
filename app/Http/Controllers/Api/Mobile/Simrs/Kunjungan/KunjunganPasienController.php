@@ -48,6 +48,7 @@ class KunjunganPasienController extends Controller
           'rs15.rs49 as nktp',
           'rs15.rs55 as nohp',
           'rs222.rs8 as sep',
+          'antrian_ambil.nomor as noantrian',
           DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
                         TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
                         TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia')
@@ -57,6 +58,7 @@ class KunjunganPasienController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
+            ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
 
               ->whereBetween('rs17.rs3', [$tgl, $tglx])
               // ->where('rs19.rs4', '=', 'Poliklinik')
@@ -75,6 +77,8 @@ class KunjunganPasienController extends Controller
               $neo->with(['pegawai:id,nama']);
             }
           ])
+          ->orderby('antrian_ambil.nomor', 'Asc')
+          ->groupby('rs17.rs1')
         ->paginate(20);
 
       return $data;
