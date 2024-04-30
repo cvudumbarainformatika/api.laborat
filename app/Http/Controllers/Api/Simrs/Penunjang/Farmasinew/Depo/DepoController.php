@@ -83,6 +83,7 @@ class DepoController extends Controller
             })
             ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
             ->where('stokreal.jumlah', '>', 0)
+            ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
@@ -213,7 +214,13 @@ class DepoController extends Controller
         $kuncipermintaan->tgl_kirim = date('Y-m-d H:i:s');
         $kuncipermintaan->save();
 
-        return new JsonResponse(['message' => 'Permintaan Berhasil Dikirim Kegudang...!!!'], 200);
+        $gudang = ['Gd-05010100', 'Gd-03010100'];
+        $tujuan = 'Depo';
+        if (in_array($kuncipermintaan->tujuan, $gudang)) {
+            $tujuan = 'Gudang';
+        }
+
+        return new JsonResponse(['message' => 'Permintaan Berhasil Dikirim ke ' . $tujuan], 200);
     }
     public function hapusHead(Request $request)
     {
