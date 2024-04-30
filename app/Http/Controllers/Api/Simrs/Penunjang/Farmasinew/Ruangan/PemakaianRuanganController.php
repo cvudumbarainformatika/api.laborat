@@ -17,20 +17,28 @@ class PemakaianRuanganController extends Controller
     //
     public function getStokRuangan()
     {
+        $kode = null;
+        if (request('q') !== null) {
+            $raw = Mobatnew::select('kd_obat')
+                ->where('kd_obat', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('nama_obat', 'LIKE', '%' . request('q') . '%')
+                ->get();
+            $it = collect($raw);
+            $kode = $it->map(function ($item) {
+                return $item->kd_obat;
+            });
+        }
         $obat = Stokreal::selectRaw('*, sum(jumlah) as stok')
             ->with('obat:kd_obat,nama_obat,satuan_k', 'ruang:kode,uraian')
             ->where('jumlah', '>', 0)
             ->where('kdruang', request('kdruang'))
-            ->when(request('q'), function ($query) {
-                $kode = Mobatnew::select('kd_obat')
-                    ->where('kd_obat', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('nama_obat', 'LIKE', '%' . request('q') . '%')
-                    ->get();
+            ->when(request('q'), function ($query) use ($kode) {
                 $query->whereIn('kdobat', $kode);
             })
             ->groupBy('kdobat', 'kdruang')
             ->paginate(request('per_page'));
 
+        // return new JsonResponse(['ko' => $kode, 'ob' => $obat]);
         return new JsonResponse($obat);
     }
 

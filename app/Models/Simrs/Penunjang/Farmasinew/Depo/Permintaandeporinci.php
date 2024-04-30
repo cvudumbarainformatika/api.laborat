@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,5 +29,16 @@ class Permintaandeporinci extends Model
     public function stokreal()
     {
         return $this->hasMany(Stokrel::class, 'kdobat', 'kdobat');
+    }
+
+    // ini salah
+    // public function mutasi()
+    // {
+    //     return $this->hasOne(Mutasigudangkedepo::class, ['no_permintaan', 'kdobat'], ['no_permintaan', 'kd_sobat']);
+    // }
+
+    public function mutasi()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'no_permintaan', 'no_permintaan');
     }
 }
