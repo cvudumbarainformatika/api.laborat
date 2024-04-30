@@ -118,7 +118,8 @@ class EresepController extends Controller
                             ->whereNull('mutasi_gudangdepo.kd_obat')
 
                             ->where('permintaan_h.tujuan', request('kdruang'))
-                            ->whereIn('permintaan_h.flag', ['', '1', '2']);
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
                     },
                 ]
             )

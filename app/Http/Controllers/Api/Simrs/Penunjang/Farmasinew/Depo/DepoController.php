@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class DepoController extends Controller
 {
@@ -23,9 +24,10 @@ class DepoController extends Controller
         // $gudang = ['Gd-05010100', 'Gd-03010100'];
         $stokgudang = Stokreal::select(
             'stokreal.*',
-            'new_masterobat.*',
+            'new_masterobat.bentuk_sediaan',
+            'new_masterobat.satuan_k',
+            'new_masterobat.nama_obat',
             DB::raw('sum(stokreal.jumlah) as  jumlah'),
-            'new_masterobat.nama_obat'
         )->with([
             'transnonracikan' => function ($transnonracikan) {
                 $transnonracikan->select(
@@ -66,7 +68,8 @@ class DepoController extends Controller
                     ->whereNull('mutasi_gudangdepo.kd_obat')
 
                     ->where('permintaan_h.tujuan', $gudang)
-                    ->whereIn('permintaan_h.flag', ['', '1', '2']);
+                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                    ->groupBy('permintaan_r.kdobat');
             },
             'minmax' => function ($mimnmax) use ($depo) {
                 $mimnmax->select('kd_obat', 'kd_ruang', 'max')->when($depo, function ($xxx) use ($depo) {
@@ -112,79 +115,95 @@ class DepoController extends Controller
 
     public function simpanpermintaandepo(Request $request)
     {
-        $cek = Permintaandepoheder::where('flag', '!=', '')->where('no_permintaan', $request->no_permintaan)->count();
-        if ($cek > 0) {
-            return new JsonResponse(['message' => 'Maaf Data ini Sudah Dikunci...!!!'], 500);
+        $validator = Validator::make($request->all(), [
+            'kdobat' => 'required',
+            'tujuan' => 'required',
+            'dari' => 'required',
+            'jumlah_minta' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
-        $stokreal = Stokreal::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
-        $stokrealx = (int) $stokreal->stok;
-        $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
-            ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-            ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-            })
-            ->whereNull('mutasi_gudangdepo.kd_obat')
-            ->whereIn('permintaan_h.flag', ['', '1', '2'])
-            ->where('kdobat', $request->kdobat)
-            ->where('tujuan', $request->tujuan)
-            ->groupby('kdobat')->get();
-        $allpermintaanx =  $allpermintaan[0]->allpermintaan ?? '';
-        $stokalokasi = $stokrealx - (int) $allpermintaanx;
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $cek = Permintaandepoheder::where('flag', '!=', '')->where('no_permintaan', $request->no_permintaan)->count();
+            if ($cek > 0) {
+                return new JsonResponse(['message' => 'Maaf Data ini Sudah Dikunci...!!!'], 500);
+            }
+            $stokreal = Stokreal::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
+            $stokrealx = (int) $stokreal->stok;
+            $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
+                ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                    $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                        ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                })
+                ->whereNull('mutasi_gudangdepo.kd_obat')
+                ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                ->where('kdobat', $request->kdobat)
+                ->where('tujuan', $request->tujuan)
+                ->groupby('kdobat')->get();
+            $allpermintaanx =  $allpermintaan[0]->allpermintaan ?? 0;
+            $stokalokasi = $stokrealx - (int) $allpermintaanx;
 
-        if ($request->jumlah_minta > $stokalokasi) {
-            return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak mencukupi...!!!'], 500);
+            if ($request->jumlah_minta > $stokalokasi) {
+                return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak mencukupi...!!!'], 500);
+            }
+
+            if ($request->no_permintaan === '' || $request->no_permintaan === null) {
+                DB::connection('farmasi')->select('call permintaandepo(@nomor) ');
+                $x = DB::connection('farmasi')->table('conter')->select('permintaandepo')->get();
+                $wew = $x[0]->permintaandepo;
+                $nopermintaandepo = FormatingHelper::permintaandepo($wew, 'REQ-DEPO');
+            } else {
+                $nopermintaandepo = $request->no_permintaan;
+            }
+
+            $simpanpermintaandepo = Permintaandepoheder::updateorcreate(
+                [
+                    'no_permintaan' => $nopermintaandepo,
+                ],
+                [
+                    'tgl_permintaan' => $request->tgl_permintaan ? $request->tgl_permintaan . date(' H:i:s') : date('Y-m-d H:i:s'),
+                    'dari' => $request->dari,
+                    'tujuan' => $request->tujuan,
+                    'user' => auth()->user()->pegawai_id
+                ]
+            );
+            if (!$simpanpermintaandepo) {
+                return new JsonResponse(['message' => 'Permintaan Gagal Disimpan...!!!'], 500);
+            }
+
+            $simpanrincipermintaandepo = Permintaandeporinci::updateorcreate(
+                [
+                    'no_permintaan' => $nopermintaandepo,
+                    'kdobat' => $request->kdobat
+                ],
+                [
+                    'stok_alokasi' => $request->stok_alokasi,
+                    'mak_stok' => $request->mak_stok,
+                    'jumlah_minta' => $request->jumlah_minta,
+                    'status_obat' => $request->status_obat
+                ]
+            );
+
+            if (!$simpanrincipermintaandepo) {
+                return new JsonResponse(['message' => 'Permintaan Gagal Disimpan...!!!'], 500);
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil Disimpan...!!!',
+                    'notrans' => $nopermintaandepo,
+                    'heder' => $simpanpermintaandepo,
+                    'rinci' => $simpanrincipermintaandepo,
+                    'stokalokasi' => $stokalokasi
+                ]
+            );
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
         }
-
-        if ($request->no_permintaan === '' || $request->no_permintaan === null) {
-            DB::connection('farmasi')->select('call permintaandepo(@nomor) ');
-            $x = DB::connection('farmasi')->table('conter')->select('permintaandepo')->get();
-            $wew = $x[0]->permintaandepo;
-            $nopermintaandepo = FormatingHelper::permintaandepo($wew, 'REQ-DEPO');
-        } else {
-            $nopermintaandepo = $request->no_permintaan;
-        }
-
-        $simpanpermintaandepo = Permintaandepoheder::updateorcreate(
-            [
-                'no_permintaan' => $nopermintaandepo,
-            ],
-            [
-                'tgl_permintaan' => $request->tgl_permintaan ? $request->tgl_permintaan . date(' H:i:s') : date('Y-m-d H:i:s'),
-                'dari' => $request->dari,
-                'tujuan' => $request->tujuan,
-                'user' => auth()->user()->pegawai_id
-            ]
-        );
-        if (!$simpanpermintaandepo) {
-            return new JsonResponse(['message' => 'Permintaan Gagal Disimpan...!!!'], 500);
-        }
-
-        $simpanrincipermintaandepo = Permintaandeporinci::updateorcreate(
-            [
-                'no_permintaan' => $nopermintaandepo,
-                'kdobat' => $request->kdobat
-            ],
-            [
-                'stok_alokasi' => $request->stok_alokasi,
-                'mak_stok' => $request->mak_stok,
-                'jumlah_minta' => $request->jumlah_minta,
-                'status_obat' => $request->status_obat
-            ]
-        );
-
-        if (!$simpanrincipermintaandepo) {
-            return new JsonResponse(['message' => 'Permintaan Gagal Disimpan...!!!'], 500);
-        }
-        return new JsonResponse(
-            [
-                'message' => 'Data Berhasil Disimpan...!!!',
-                'notrans' => $nopermintaandepo,
-                'heder' => $simpanpermintaandepo,
-                'rinci' => $simpanrincipermintaandepo,
-                'stokalokasi' => $stokalokasi
-            ]
-        );
     }
 
     public function kuncipermintaan(Request $request)
@@ -198,6 +217,10 @@ class DepoController extends Controller
     }
     public function hapusHead(Request $request)
     {
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        //     'message' => 'Data sudah dihapus.'
+        // ]);
         $data = Permintaandepoheder::find($request->id);
         if (!$data) {
             return new JsonResponse(['message' => 'Gagal menghapus permintaan. Data tidak ditemukan.'], 410);
@@ -215,6 +238,10 @@ class DepoController extends Controller
     }
     public function hapusRinci(Request $request)
     {
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        //     'message' => 'Data sudah dihapus.'
+        // ]);
         $data = Permintaandeporinci::find($request->id);
         if (!$data) {
             return new JsonResponse(['message' => 'Gagal menghapus permintaan. Data tidak ditemukan.'], 410);
@@ -240,7 +267,8 @@ class DepoController extends Controller
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('dari', 'like', '%' . $depo . '%')
             ->orderBY('tgl_permintaan', 'desc')
-            ->get();
+            ->paginate(request('per_page'));
+        // ->get();
         return new JsonResponse($listpermintaandepo);
         // }
     }
@@ -253,7 +281,7 @@ class DepoController extends Controller
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('dari', 'like', '%' . $depo . '%')
             ->orderBY('tgl_permintaan', 'desc')
-            ->get();
+            ->paginate(request('per_page'));
         return new JsonResponse($listpermintaandepo);
         // }
     }
