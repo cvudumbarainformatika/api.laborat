@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Pelayanan\DokumenUpload;
+namespace App\Http\Controllers\Api\Mobile\Simrs\Pelayanan\Poli;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\MdokumenUpload;
@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class DokumenUploadController extends Controller
+class UploadController extends Controller
 {
 
     public function master()
