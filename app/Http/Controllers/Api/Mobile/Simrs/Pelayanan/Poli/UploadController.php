@@ -30,10 +30,10 @@ class UploadController extends Controller
 
             if (!empty($files)) {
 
-                for ($i = 0; $i < count($files); $i++) {
-                    $file = $files[$i];
+                // for ($i = 0; $i < count($files); $i++) {
+                    $file = $files;
                     $originalname = $file->getClientOriginalName();
-                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->norm . '.' . $file->getClientOriginalExtension();
+                    $penamaan = date('YmdHis') . '-' .$request->nama. '-' . $request->norm . '.' . $file->getClientOriginalExtension();
                     $data = DokumenUpload::where([
                       ['noreg',$request->noreg],
                       ['original', $originalname]
@@ -58,11 +58,13 @@ class UploadController extends Controller
                     $gallery->original = $originalname;
                     $gallery->user_input = $user;
                     $gallery->save();
-                }
+                // }
 
                 $kirim = DokumenUpload::where([['noreg', '=',$request->noreg]])->get();
                 return new JsonResponse(['message' => 'success','result'=> $kirim->load('pegawai:id,nama')], 200);
             }
+
+            return new JsonResponse(['message' => 'invalid dokumen'], 500);
         }
         return new JsonResponse(['message' => 'invalid dokumen'], 500);
     }

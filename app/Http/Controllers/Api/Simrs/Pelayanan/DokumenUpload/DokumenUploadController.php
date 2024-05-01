@@ -66,7 +66,6 @@ class DokumenUploadController extends Controller
         }
         return new JsonResponse(['message' => 'invalid dokumen'], 500);
     }
-    
 
     public function deletedata(Request $request)
     {
