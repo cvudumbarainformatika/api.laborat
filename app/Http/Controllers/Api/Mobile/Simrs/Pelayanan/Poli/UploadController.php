@@ -33,7 +33,7 @@ class UploadController extends Controller
                 // for ($i = 0; $i < count($files); $i++) {
                     $file = $files;
                     $originalname = $file->getClientOriginalName();
-                    $penamaan = date('YmdHis') . '-' .$request->nama. '-' . $request->norm . '.' . $file->getClientOriginalExtension();
+                    $penamaan = date('YmdHis') . '-xenter-' . $request->norm . '.' . $file->getClientOriginalExtension();
                     $data = DokumenUpload::where([
                       ['noreg',$request->noreg],
                       ['original', $originalname]
