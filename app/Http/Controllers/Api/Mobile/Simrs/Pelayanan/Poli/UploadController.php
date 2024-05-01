@@ -68,6 +68,12 @@ class UploadController extends Controller
         }
         return new JsonResponse(['message' => 'invalid dokumen'], 500);
     }
+
+    public function dokumenBy()
+    {
+        $kirim = DokumenUpload::where([['noreg', '=', request('noreg')]])->get();
+        return new JsonResponse(['message' => 'success','result'=> $kirim->load('pegawai:id,nama')], 200);
+    }
     
 
     public function deletedata(Request $request)
