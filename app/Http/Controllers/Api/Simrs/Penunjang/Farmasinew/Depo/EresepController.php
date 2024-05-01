@@ -88,7 +88,7 @@ class EresepController extends Controller
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->whereIn('flag', ['', '1', '2'])
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar.kdobat');
                     },
                     'transracikan' => function ($transracikan) {
@@ -100,7 +100,7 @@ class EresepController extends Controller
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->whereIn('flag', ['', '1', '2'])
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar_racikan.kdobat');
                     },
                     'permintaanobatrinci' => function ($permintaanobatrinci) {
@@ -147,7 +147,7 @@ class EresepController extends Controller
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
             $mutasiantardepo = $x['permintaanobatrinci'][0]->allpermintaan ?? 0;
-            $x->alokasi = $total - $jumlahtrans - $jumlahtransx - $mutasiantardepo;
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$mutasiantardepo;
             return $x;
         });
         return new JsonResponse(
