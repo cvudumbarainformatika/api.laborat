@@ -62,7 +62,7 @@ class DokumenUploadController extends Controller
 
                     $file = $files;
                     $originalname = $file->getClientOriginalName();
-                    $penamaan = date('YmdHis') . '-' .'0'. '-' . $request->norm . '.' . $file->getClientOriginalExtension();
+                    $penamaan = date('YmdHis') . '-' .$request->nama. '-' . $request->norm . '.' . $file->getClientOriginalExtension();
                     $data = DokumenUpload::where([
                       ['noreg',$request->noreg],
                       ['original', $originalname]
