@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Kasir\DetailbillingbynoregController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFarmasiController;
 use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
 use App\Models\Antrean\Booking;
 use App\Models\Berita;
@@ -2543,11 +2544,14 @@ class AutogenController extends Controller
         // return $result;
         // $harga = HargaHelper::getHarga('0000054-FAR', '1');
         // return $harga['harga'];
-        $jadwaldokter = BridgingbpjsHelper::get_url(
-            'antrean',
-            'jadwaldokter/kodepoli/BDM/tanggal/2024-04-16'
-        );
-        return ($jadwaldokter);
+        // $jadwaldokter = BridgingbpjsHelper::get_url(
+        //     'antrean',
+        //     'jadwaldokter/kodepoli/BDM/tanggal/2024-04-16'
+        // );
+        // return ($jadwaldokter);
+        $opname = new StokOpnameFarmasiController;
+        $data = $opname->storeMonthly();
+        return $data;
     }
 
     public function baru()

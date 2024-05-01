@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFarmasiController;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -20,6 +21,12 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             info('mulai stok opname');
             $opname = new StokOpnameController;
+            $data = $opname->storeMonthly();
+            info($data);
+        })->dailyAt('00:30');
+        $schedule->call(function () {
+            info('mulai stok opname farmasi');
+            $opname = new StokOpnameFarmasiController;
             $data = $opname->storeMonthly();
             info($data);
         })->dailyAt('00:30');
