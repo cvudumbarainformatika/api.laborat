@@ -28,4 +28,5 @@ Route::group([
 
     Route::get('/list-stok-sekarang', [StokrealController::class, 'listStokSekarang']);
     Route::post('/update-stok-sekarang', [StokrealController::class, 'updatehargastok']);
+    Route::get('/data-alokasi', [StokrealController::class, 'dataAlokasi']);
 });

@@ -38,7 +38,7 @@ class DepoController extends Controller
                 )
                     ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
                     ->where('resep_keluar_h.depo', request('kdgudang'))
-                    ->whereIn('flag', ['', '1', '2'])
+                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                     ->groupBy('resep_permintaan_keluar.kdobat');
             },
             'transracikan' => function ($transracikan) {
@@ -50,7 +50,7 @@ class DepoController extends Controller
                 )
                     ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
                     ->where('resep_keluar_h.depo', request('kdgudang'))
-                    ->whereIn('flag', ['', '1', '2'])
+                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                     ->groupBy('resep_permintaan_keluar_racikan.kdobat');
             },
             'permintaanobatrinci' => function ($permintaanobatrinci) use ($gudang) {
@@ -91,7 +91,7 @@ class DepoController extends Controller
             $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
             $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-            $stokalokasi = (int) $stolreal - (int) $permintaantotal - (int) $jumlahtrans - (int) $jumlahtransx;
+            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaantotal;
             return $xxx;
@@ -132,7 +132,7 @@ class DepoController extends Controller
                 return new JsonResponse(['message' => 'Maaf Data ini Sudah Dikunci...!!!'], 500);
             }
             $stokreal = Stokreal::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
-            $stokrealx = (int) $stokreal->stok;
+            $stokrealx = (float) $stokreal->stok;
             $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
                 ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
                 ->leftJoin('mutasi_gudangdepo', function ($anu) {
@@ -145,7 +145,7 @@ class DepoController extends Controller
                 ->where('tujuan', $request->tujuan)
                 ->groupby('kdobat')->get();
             $allpermintaanx =  $allpermintaan[0]->allpermintaan ?? 0;
-            $stokalokasi = $stokrealx - (int) $allpermintaanx;
+            $stokalokasi = $stokrealx - (float) $allpermintaanx;
 
             if ($request->jumlah_minta > $stokalokasi) {
                 return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak mencukupi...!!!'], 500);
