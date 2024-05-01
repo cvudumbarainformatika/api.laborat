@@ -30,39 +30,10 @@ class DokumenUploadController extends Controller
 
             if (!empty($files)) {
 
-                // for ($i = 0; $i < count($files); $i++) {
-                //     $file = $files[$i];
-                //     $originalname = $file->getClientOriginalName();
-                //     $penamaan = date('YmdHis') . '-' . $i . '-' . $request->norm . '.' . $file->getClientOriginalExtension();
-                //     $data = DokumenUpload::where([
-                //       ['noreg',$request->noreg],
-                //       ['original', $originalname]
-                //       ])->first();
-                //     if ($data) {
-                //       Storage::delete($data->path);
-                //     } 
-                    
-                //     $gallery = null;
-                //     if ($data) {
-                //         $gallery = $data;
-                //     } else {
-                //         $gallery = new DokumenUpload();
-                //     }
-                //     $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
-
-                //     $gallery->noreg = $request->noreg;
-                //     $gallery->norm = $request->norm;
-                //     $gallery->nama = $request->nama;
-                //     $gallery->path = $path;
-                //     $gallery->url = 'dokumen_luar_poli/' . $penamaan;
-                //     $gallery->original = $originalname;
-                //     $gallery->user_input = $user;
-                //     $gallery->save();
-                // }
-
-                    $file = $files;
+                for ($i = 0; $i < count($files); $i++) {
+                    $file = $files[$i];
                     $originalname = $file->getClientOriginalName();
-                    $penamaan = date('YmdHis') . '-' .$request->nama. '-' . $request->norm . '.' . $file->getClientOriginalExtension();
+                    $penamaan = date('YmdHis') . '-' . $i . '-' . $request->norm . '.' . $file->getClientOriginalExtension();
                     $data = DokumenUpload::where([
                       ['noreg',$request->noreg],
                       ['original', $originalname]
@@ -87,6 +58,7 @@ class DokumenUploadController extends Controller
                     $gallery->original = $originalname;
                     $gallery->user_input = $user;
                     $gallery->save();
+                }
 
                 $kirim = DokumenUpload::where([['noreg', '=',$request->noreg]])->get();
                 return new JsonResponse(['message' => 'success','result'=> $kirim->load('pegawai:id,nama')], 200);
@@ -94,7 +66,6 @@ class DokumenUploadController extends Controller
         }
         return new JsonResponse(['message' => 'invalid dokumen'], 500);
     }
-    
 
     public function deletedata(Request $request)
     {
