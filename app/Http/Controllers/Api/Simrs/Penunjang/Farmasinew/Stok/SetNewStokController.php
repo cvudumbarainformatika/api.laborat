@@ -195,7 +195,7 @@ class SetNewStokController extends Controller
                 // if ((float)$key['harga'] > 0) {
                 $tHarga['nopenerimaan'] = $key['nopenerimaan'];
                 $tHarga['kd_obat'] = $key['kdobat'];
-                $tHarga['harga'] = (float)$key['harga'] ?? (float)$key['rharga'];
+                $tHarga['harga'] = (float)$key['harga'] > 0 ? (float)$key['harga'] : (float)$key['rharga'];
                 $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
                 $tHarga['created_at'] = date('Y-m-d H:i:s');
                 $tHarga['updated_at'] = date('Y-m-d H:i:s');
