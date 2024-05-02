@@ -172,7 +172,7 @@ class SetNewStokController extends Controller
         // sleep(20);
         return [
             'stok' => $stok,
-            'data harga' => $dataHarga ?? false,
+            'data' => $data ?? false,
         ];
     }
 
