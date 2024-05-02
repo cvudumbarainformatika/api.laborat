@@ -183,7 +183,10 @@ class SetNewStokController extends Controller
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
-        $obAllDep = FarmasinewStokreal::whereIn('kdruang', $allGud)->where('harga', '>', 0)->groupBy('kdobat')->get();
+        $obAllDep = FarmasinewStokreal::whereIn('kdruang', $allGud)
+            ->whereNotNull('harga')
+            ->where('harga', '>', 0)
+            ->groupBy('kdobat')->get();
 
         if (count($obAllDep) > 0) {
             foreach ($obAllDep as $key) {
