@@ -183,7 +183,8 @@ class SetNewStokController extends Controller
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
-        $obAllDep = FarmasinewStokreal::whereNotNull('harga')
+        $obAllDep = FarmasinewStokreal::selectRaw('* ,sum(jumlah) as total, avg(harga) as rharga')
+            ->whereNotNull('harga')
             ->where('harga', '>', 0)
             ->groupBy('kdobat')
             ->get();
@@ -194,7 +195,7 @@ class SetNewStokController extends Controller
                 // if ((float)$key['harga'] > 0) {
                 $tHarga['nopenerimaan'] = $key['nopenerimaan'];
                 $tHarga['kd_obat'] = $key['kdobat'];
-                $tHarga['harga'] = (float)$key['harga'];
+                $tHarga['harga'] = (float)$key['harga'] ?? (float)$key['rharga'];
                 $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
                 $tHarga['created_at'] = date('Y-m-d H:i:s');
                 $tHarga['updated_at'] = date('Y-m-d H:i:s');
