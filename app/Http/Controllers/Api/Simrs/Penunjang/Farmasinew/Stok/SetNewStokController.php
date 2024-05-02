@@ -107,7 +107,7 @@ class SetNewStokController extends Controller
         // }
 
         // $data['mapingObat'] = $mapingObat;
-        sleep(60);
+        sleep(20);
         $data['new stok'] = $newStok;
         $data['har'] = $this->cekHargaGud();
 
@@ -164,7 +164,7 @@ class SetNewStokController extends Controller
                 $data = FarmasinewStokreal::insert($t);
             }
         }
-        sleep(60);
+        sleep(20);
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
