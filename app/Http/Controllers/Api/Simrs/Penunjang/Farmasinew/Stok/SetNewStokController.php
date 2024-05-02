@@ -92,11 +92,13 @@ class SetNewStokController extends Controller
             }
         }
 
-        if (count($newStok) > 0) {
-            FarmasinewStokreal::truncate();
-            foreach (array_chunk($newStok, 1000) as $t) {
-                $data['ins'] = FarmasinewStokreal::insert($t);
-            }
+        if (count($newStok) <= 0) {
+            return new JsonResponse($newStok);
+        }
+
+        FarmasinewStokreal::truncate();
+        foreach (array_chunk($newStok, 1000) as $t) {
+            $data['ins'] = FarmasinewStokreal::insert($t);
         }
         // if (count($daftarHarga) > 0) {
         //     DaftarHarga::truncate();
@@ -159,12 +161,15 @@ class SetNewStokController extends Controller
                 $stok[] = $temp;
             }
         }
-        if (count($stok) > 0) {
-            foreach (array_chunk($stok, 1000) as $t) {
-                $data = FarmasinewStokreal::insert($t);
-            }
+        if (count($stok) <= 0) {
+            return [
+                'stok' => false,
+            ];
         }
-        sleep(20);
+        foreach (array_chunk($stok, 1000) as $t) {
+            $data = FarmasinewStokreal::insert($t);
+        }
+        // sleep(20);
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
@@ -184,11 +189,16 @@ class SetNewStokController extends Controller
                 }
             }
         }
-        if (count($harga) > 0) {
-            DaftarHarga::truncate();
-            foreach (array_chunk($harga, 1000) as $t) {
-                $dataHarga = DaftarHarga::insert($t);
-            }
+        if (count($harga) <= 0) {
+            return [
+                'stok' => $stok,
+                'harga' => false,
+                'data' => $data ?? false,
+            ];
+        }
+        DaftarHarga::truncate();
+        foreach (array_chunk($harga, 1000) as $t) {
+            $dataHarga = DaftarHarga::insert($t);
         }
         return [
             'stok' => $stok,
