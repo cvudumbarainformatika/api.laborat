@@ -133,7 +133,7 @@ class SetNewStokController extends Controller
                 $temp['kdobat'] = $key['kdobat'];
                 $temp['jumlah'] = 0;
                 $temp['kdruang'] = 'Gd-03010100';
-                $temp['harga'] = (float)$key['harga'];
+                $temp['harga'] = (float)$key['harga'] ?? 0;
                 $temp['flag'] = $key['flag'];
                 $temp['tglexp'] = $key['tglexp'];
                 $temp['nobatch'] = $key['nobatch'];
@@ -183,10 +183,10 @@ class SetNewStokController extends Controller
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
-        $obAllDep = FarmasinewStokreal::whereIn('kdruang', $allGud)
-            ->whereNotNull('harga')
+        $obAllDep = FarmasinewStokreal::whereNotNull('harga')
             ->where('harga', '>', 0)
-            ->groupBy('kdobat')->get();
+            ->groupBy('kdobat')
+            ->get();
 
         if (count($obAllDep) > 0) {
             foreach ($obAllDep as $key) {
@@ -194,7 +194,7 @@ class SetNewStokController extends Controller
                 // if ((float)$key['harga'] > 0) {
                 $tHarga['nopenerimaan'] = $key['nopenerimaan'];
                 $tHarga['kd_obat'] = $key['kdobat'];
-                $tHarga['harga'] = $key['harga'];
+                $tHarga['harga'] = (float)$key['harga'];
                 $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
                 $tHarga['created_at'] = date('Y-m-d H:i:s');
                 $tHarga['updated_at'] = date('Y-m-d H:i:s');
