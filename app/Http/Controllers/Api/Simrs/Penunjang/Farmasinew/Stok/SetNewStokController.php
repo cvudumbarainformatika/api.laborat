@@ -111,7 +111,7 @@ class SetNewStokController extends Controller
         // $data['mapingObat'] = $mapingObat;
         // sleep(20);
         $data['new stok'] = $newStok;
-        $data['har'] = $this->cekHargaGud();
+        // $data['har'] = $this->cekHargaGud();
 
         return new JsonResponse($data);
     }
@@ -170,6 +170,15 @@ class SetNewStokController extends Controller
             $data = FarmasinewStokreal::insert($t);
         }
         // sleep(20);
+        return [
+            'stok' => $stok,
+            'data harga' => $dataHarga ?? false,
+        ];
+    }
+
+    public function insertHarga()
+    {
+
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
@@ -191,7 +200,6 @@ class SetNewStokController extends Controller
         }
         if (count($harga) <= 0) {
             return [
-                'stok' => $stok,
                 'harga' => false,
                 'data' => $data ?? false,
             ];
@@ -200,11 +208,10 @@ class SetNewStokController extends Controller
         foreach (array_chunk($harga, 1000) as $t) {
             $dataHarga = DaftarHarga::insert($t);
         }
+
         return [
-            'stok' => $stok,
-            'harga' => $harga,
+            'harga' => $dataHarga,
             'data' => $data ?? false,
-            'data harga' => $dataHarga ?? false,
         ];
     }
 

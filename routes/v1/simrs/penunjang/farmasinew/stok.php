@@ -9,5 +9,7 @@ Route::group([
     'prefix' => 'simrs/farmasinew/stok'
 ], function () {
     Route::get('/new-stok', [SetNewStokController::class, 'setNewStok']);
+    Route::get('/cek-harga', [SetNewStokController::class, 'cekHargaGud']);
+    Route::get('/isi-harga', [SetNewStokController::class, 'cekHargaGud']);
     Route::get('/new-stok-opname', [SetNewStokController::class, 'setStokOpnameAwal']);
 });
