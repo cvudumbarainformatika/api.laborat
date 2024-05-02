@@ -80,9 +80,9 @@ class SetNewStokController extends Controller
                     'nopenerimaan' => '001/' . date('m/Y') . '/awal/' . $nPen,
                     'tglpenerimaan' => $key['rincipenerimaan']['tanggal'] ?? date('Y-m-d H:i:s'),
                     'kdobat' => $key['obatbaru'],
-                    'jumlah' => $st['rs2'],
+                    'jumlah' => (float)$st['rs2'],
                     'kdruang' => $item[$anu],
-                    'harga' => $key['master']['rs4'],
+                    'harga' => (float)$key['master']['rs4'],
                     'tglexp' => $key['rincipenerimaan']['rs7'] ?? null,
                     'nobatch' => $key['rincipenerimaan']['rs6'] ?? '',
                     'created_at' => date('Y-m-d H:i:s'),
@@ -133,7 +133,7 @@ class SetNewStokController extends Controller
                 $temp['kdobat'] = $key['kdobat'];
                 $temp['jumlah'] = 0;
                 $temp['kdruang'] = 'Gd-03010100';
-                $temp['harga'] = $key['harga'];
+                $temp['harga'] = (float)$key['harga'];
                 $temp['flag'] = $key['flag'];
                 $temp['tglexp'] = $key['tglexp'];
                 $temp['nobatch'] = $key['nobatch'];
