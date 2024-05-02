@@ -109,7 +109,7 @@ class SetNewStokController extends Controller
         // }
 
         // $data['mapingObat'] = $mapingObat;
-        sleep(20);
+        // sleep(20);
         $data['new stok'] = $newStok;
         $data['har'] = $this->cekHargaGud();
 
