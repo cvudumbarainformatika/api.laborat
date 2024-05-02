@@ -171,6 +171,7 @@ class SetNewStokController extends Controller
         }
         // sleep(20);
         return [
+            'obDFo' => $obDFo,
             'stok' => $stok,
             'data' => $data ?? false,
         ];
