@@ -211,6 +211,7 @@ class SetNewStokController extends Controller
         }
 
         return [
+            'obAllDep' => $obAllDep,
             'harga' => $dataHarga,
             'data' => $data ?? false,
         ];
