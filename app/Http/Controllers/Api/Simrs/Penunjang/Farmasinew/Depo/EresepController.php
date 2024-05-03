@@ -356,6 +356,11 @@ class EresepController extends Controller
 
     public function listresepbydokter()
     {
+        // $data['c'] = date('m');
+        // $data['c-3'] = (int)date('m') - 3;
+        // $m = (int)date('m') - 3;
+        // $data['all'] = [date('Y') . '-0' . ((int)date('m') - 3) . '-01 00:00:00', date('Y-m-31 23:59:59')];
+        // return new JsonResponse($data);
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
@@ -402,9 +407,17 @@ class EresepController extends Controller
                     ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
-            ->whereBetween('tgl_permintaan', [$tgl, $tglx])
-            ->when(request('tipe'), function ($x) {
-                $x->where('tiperesep', request('tipe'));
+            ->when(!request('tipe') || request('tipe') === null, function ($x) use ($tgl, $tglx) {
+                $x->whereBetween('tgl_permintaan', [$tgl, $tglx]);
+            })
+            ->when(request('tipe'), function ($x) use ($tgl, $tglx) {
+                if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+                    $x->where('tiperesep', request('tipe'))
+                        ->whereBetween('iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59',]);
+                } else {
+                    $x->where('tiperesep', request('tipe'))
+                        ->whereBetween('tgl_permintaan', [$tgl, $tglx]);
+                }
             })
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
