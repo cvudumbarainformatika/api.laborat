@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
@@ -134,8 +135,19 @@ class StokrealController extends Controller
     public function updatehargastok(Request $request)
     {
         $cari = Stokreal::where('id', $request->id)->first();
-        $cari->jumlah = $request->jumlah ?? '';
-        $cari->harga = $request->harga ?? '';
+        $penyesuaian = PenyesuaianStok::create([
+            'tgl_penyesuaian' => date('Y-m-d H:i:s'),
+            'stokreal_id' => $request->id,
+            'nopenerimaan' => $request->nopenerimaan,
+            'kdobat' => $cari->kdobat,
+            'awal' => $request->awal,
+            'penyesuaian' => $request->penyesuaian,
+            'akhir' => $request->akhir,
+
+        ]);
+
+        $cari->jumlah = $request->akhir ?? 0;
+        $cari->harga = $request->harga ?? 0;
         $cari->tglexp = $request->tglexp ?? '';
         $cari->nobatch = $request->nobatch ?? '';
         $cari->save();
@@ -342,5 +354,18 @@ class StokrealController extends Controller
             'permintaan' => $permintaan,
         ];
         return new JsonResponse($data);
+    }
+
+    public function obatMauDisesuaikan()
+    {
+        $data = Stokrel::where('kdobat', request('kdobat'))
+            ->where('kdruang', request('kdruang'))
+            ->where('nopenerimaan', 'LIKE', '%awal%')
+            ->get();
+        // $data->append('harga');
+        return new JsonResponse([
+            'data' => $data,
+            'req' => request()->all(),
+        ]);
     }
 }

@@ -20,6 +20,17 @@ class Stokrel extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    public function getHargaberlakuAttribute()
+    {
+        $kdobat = $this->kdobat;
+        $daftar = DaftarHarga::selectRaw('max(harga) as harga')
+            ->where('kd_obat', $kdobat)
+            ->orderBy('tgl_mulai_berlaku', 'desc')
+            ->limit(5)
+            ->first();
+        $harga = $daftar->harga;
+        return $harga;
+    }
     public function masterobat()
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
