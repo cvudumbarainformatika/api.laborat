@@ -51,7 +51,7 @@ class HistoryController extends Controller
                 $pemesanan->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
             }
             if (request('from')) {
-                $pemesanan->whereBetween('tanggal', [request('from'), request('to')]);
+                $pemesanan->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
             }
             if ($pegawai->role_id !== 1) {
                 if ($pegawai->kode_ruang === 'Gd-02010102') {
@@ -157,7 +157,7 @@ class HistoryController extends Controller
 
 
             if (request('from')) {
-                $distribusidepo->whereBetween('tanggal', [request('from'), request('to')]);
+                $distribusidepo->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
             }
             if ($pegawai->role_id === 4) {
                 $distribusidepo->where('kode_depo', $pegawai->kode_ruang);
@@ -171,7 +171,7 @@ class HistoryController extends Controller
             */
         } else if ($nama === 'Pemakaian Ruangan') {
             if (request('from')) {
-                $pemakaianruangan->whereBetween('tanggal', [request('from'), request('to')]);
+                $pemakaianruangan->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
             }
             $data = $pemakaianruangan->filter(request(['q']))
                 ->with(
@@ -193,7 +193,7 @@ class HistoryController extends Controller
                 $penerimaanruangan->where('no_distribusi', 'LIKE', '%' . request('q') . '%');
             }
             if (request('from')) {
-                $penerimaanruangan->whereBetween('tanggal', [request('from'), request('to')]);
+                $penerimaanruangan->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
             }
             $data = $penerimaanruangan->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
                 ->latest('tanggal')

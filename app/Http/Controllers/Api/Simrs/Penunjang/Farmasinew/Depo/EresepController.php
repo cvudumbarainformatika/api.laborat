@@ -88,7 +88,7 @@ class EresepController extends Controller
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->whereIn('flag', ['', '1', '2'])
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar.kdobat');
                     },
                     'transracikan' => function ($transracikan) {
@@ -100,8 +100,26 @@ class EresepController extends Controller
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->whereIn('flag', ['', '1', '2'])
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                    },
+                    'permintaanobatrinci' => function ($permintaanobatrinci) {
+                        $permintaanobatrinci->select(
+                            'permintaan_r.no_permintaan',
+                            'permintaan_r.kdobat',
+                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                        )
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            // biar yang ada di tabel mutasi ga ke hitung
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                            ->where('permintaan_h.tujuan', request('kdruang'))
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
                     },
                 ]
             )
@@ -128,7 +146,8 @@ class EresepController extends Controller
             $total = $x->total ?? 0;
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-            $x->alokasi = $total - $jumlahtrans - $jumlahtransx;
+            $mutasiantardepo = $x['permintaanobatrinci'][0]->allpermintaan ?? 0;
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$mutasiantardepo;
             return $x;
         });
         return new JsonResponse(
@@ -215,7 +234,7 @@ class EresepController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
-        
+
         $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
         $hargajualx = $har['hargaJual'];
         $harga = $har['harga'];
@@ -337,6 +356,11 @@ class EresepController extends Controller
 
     public function listresepbydokter()
     {
+        // $data['c'] = date('m');
+        // $data['c-3'] = (int)date('m') - 3;
+        // $m = (int)date('m') - 3;
+        // $data['all'] = [date('Y') . '-0' . ((int)date('m') - 3) . '-01 00:00:00', date('Y-m-31 23:59:59')];
+        // return new JsonResponse($data);
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
@@ -383,9 +407,17 @@ class EresepController extends Controller
                     ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
-            ->whereBetween('tgl_permintaan', [$tgl, $tglx])
-            ->when(request('tipe'), function ($x) {
-                $x->where('tiperesep', request('tipe'));
+            ->when(!request('tipe') || request('tipe') === null, function ($x) use ($tgl, $tglx) {
+                $x->whereBetween('tgl_permintaan', [$tgl, $tglx]);
+            })
+            ->when(request('tipe'), function ($x) use ($tgl, $tglx) {
+                if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+                    $x->where('tiperesep', request('tipe'))
+                        ->whereBetween('iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59',]);
+                } else {
+                    $x->where('tiperesep', request('tipe'))
+                        ->whereBetween('tgl_permintaan', [$tgl, $tglx]);
+                }
             })
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));

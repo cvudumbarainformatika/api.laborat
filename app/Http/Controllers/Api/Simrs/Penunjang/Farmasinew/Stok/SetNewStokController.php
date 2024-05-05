@@ -80,9 +80,9 @@ class SetNewStokController extends Controller
                     'nopenerimaan' => '001/' . date('m/Y') . '/awal/' . $nPen,
                     'tglpenerimaan' => $key['rincipenerimaan']['tanggal'] ?? date('Y-m-d H:i:s'),
                     'kdobat' => $key['obatbaru'],
-                    'jumlah' => $st['rs2'],
+                    'jumlah' => (float)$st['rs2'],
                     'kdruang' => $item[$anu],
-                    'harga' => $key['master']['rs4'],
+                    'harga' => (float)$key['master']['rs4'],
                     'tglexp' => $key['rincipenerimaan']['rs7'] ?? null,
                     'nobatch' => $key['rincipenerimaan']['rs6'] ?? '',
                     'created_at' => date('Y-m-d H:i:s'),
@@ -92,11 +92,13 @@ class SetNewStokController extends Controller
             }
         }
 
-        if (count($newStok) > 0) {
-            FarmasinewStokreal::truncate();
-            foreach (array_chunk($newStok, 1000) as $t) {
-                $data['ins'] = FarmasinewStokreal::insert($t);
-            }
+        if (count($newStok) <= 0) {
+            return new JsonResponse($newStok);
+        }
+
+        FarmasinewStokreal::truncate();
+        foreach (array_chunk($newStok, 1000) as $t) {
+            $data['ins'] = FarmasinewStokreal::insert($t);
         }
         // if (count($daftarHarga) > 0) {
         //     DaftarHarga::truncate();
@@ -107,8 +109,9 @@ class SetNewStokController extends Controller
         // }
 
         // $data['mapingObat'] = $mapingObat;
+        // sleep(20);
         $data['new stok'] = $newStok;
-        $data['har'] = $this->cekHargaGud();
+        // $data['har'] = $this->cekHargaGud();
 
         return new JsonResponse($data);
     }
@@ -130,7 +133,7 @@ class SetNewStokController extends Controller
                 $temp['kdobat'] = $key['kdobat'];
                 $temp['jumlah'] = 0;
                 $temp['kdruang'] = 'Gd-03010100';
-                $temp['harga'] = $key['harga'];
+                $temp['harga'] = (float)$key['harga'] ?? 0;
                 $temp['flag'] = $key['flag'];
                 $temp['tglexp'] = $key['tglexp'];
                 $temp['nobatch'] = $key['nobatch'];
@@ -158,42 +161,63 @@ class SetNewStokController extends Controller
                 $stok[] = $temp;
             }
         }
-        if (count($stok) > 0) {
-            foreach (array_chunk($stok, 1000) as $t) {
-                $data = FarmasinewStokreal::insert($t);
-            }
+        if (count($stok) <= 0) {
+            return [
+                'stok' => false,
+            ];
         }
+        foreach (array_chunk($stok, 1000) as $t) {
+            $data = FarmasinewStokreal::insert($t);
+        }
+        // sleep(20);
+        return [
+            'obDFo' => $obDFo,
+            'stok' => $stok,
+            'data' => $data ?? false,
+        ];
+    }
+
+    public function insertHarga()
+    {
 
         // insert harga
         $harga = [];
         $allGud = ['Gd-05010100', 'Gd-03010100'];
-        $obAllDep = FarmasinewStokreal::whereIn('kdruang', $allGud)->groupBy('kdobat')->get();
+        $obAllDep = FarmasinewStokreal::selectRaw('* ,sum(jumlah) as total, avg(harga) as rharga')
+            ->whereNotNull('harga')
+            ->where('harga', '>', 0)
+            ->groupBy('kdobat')
+            ->get();
 
         if (count($obAllDep) > 0) {
             foreach ($obAllDep as $key) {
 
-                if ((float)$key['harga'] > 0) {
-                    $tHarga['nopenerimaan'] = $key['nopenerimaan'];
-                    $tHarga['kd_obat'] = $key['kdobat'];
-                    $tHarga['harga'] = $key['harga'];
-                    $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
-                    $tHarga['created_at'] = date('Y-m-d H:i:s');
-                    $tHarga['updated_at'] = date('Y-m-d H:i:s');
-                    $harga[] = $tHarga;
-                }
+                // if ((float)$key['harga'] > 0) {
+                $tHarga['nopenerimaan'] = $key['nopenerimaan'];
+                $tHarga['kd_obat'] = $key['kdobat'];
+                $tHarga['harga'] = (float)$key['harga'] > 0 ? (float)$key['harga'] : (float)$key['rharga'];
+                $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
+                $tHarga['created_at'] = date('Y-m-d H:i:s');
+                $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                $harga[] = $tHarga;
+                // }
             }
         }
-        if (count($harga) > 0) {
-            DaftarHarga::truncate();
-            foreach (array_chunk($harga, 1000) as $t) {
-                $dataHarga = DaftarHarga::insert($t);
-            }
+        if (count($harga) <= 0) {
+            return [
+                'harga' => false,
+                'data' => $data ?? false,
+            ];
         }
+        DaftarHarga::truncate();
+        foreach (array_chunk($harga, 1000) as $t) {
+            $dataHarga = DaftarHarga::insert($t);
+        }
+
         return [
-            'stok' => $stok,
-            'harga' => $harga,
+            'obAllDep' => $obAllDep,
+            'harga' => $dataHarga,
             'data' => $data ?? false,
-            'data harga' => $dataHarga ?? false,
         ];
     }
 

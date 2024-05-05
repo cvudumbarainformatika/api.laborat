@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
@@ -131,8 +135,19 @@ class StokrealController extends Controller
     public function updatehargastok(Request $request)
     {
         $cari = Stokreal::where('id', $request->id)->first();
-        $cari->jumlah = $request->jumlah ?? '';
-        $cari->harga = $request->harga ?? '';
+        $penyesuaian = PenyesuaianStok::create([
+            'tgl_penyesuaian' => date('Y-m-d H:i:s'),
+            'stokreal_id' => $request->id,
+            'nopenerimaan' => $request->nopenerimaan,
+            'kdobat' => $cari->kdobat,
+            'awal' => $request->awal,
+            'penyesuaian' => $request->penyesuaian,
+            'akhir' => $request->akhir,
+
+        ]);
+
+        $cari->jumlah = $request->akhir ?? 0;
+        $cari->harga = $request->harga ?? 0;
         $cari->tglexp = $request->tglexp ?? '';
         $cari->nobatch = $request->nobatch ?? '';
         $cari->save();
@@ -161,17 +176,91 @@ class StokrealController extends Controller
     public function listStokSekarang()
     {
         $kdruang = request('kdruang');
-        $stokreal = Stokreal::select('stokreal.*', 'new_masterobat.*', 'stokreal.id as idx')->where('stokreal.flag', '')
+        $stokreal = Stokreal::select(
+            'stokreal.id as idx',
+            'stokreal.kdruang',
+            'stokreal.jumlah',
+            'stokreal.tglexp',
+            'stokreal.kdobat',
+            'new_masterobat.kd_obat',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k',
+            'new_masterobat.status_fornas',
+            'new_masterobat.status_forkid',
+            'new_masterobat.status_generik',
+            'new_masterobat.gudang',
+            DB::raw('sum(stokreal.jumlah) as total')
+        )->where('stokreal.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->where('stokreal.kdruang', $kdruang)
+            ->where('stokreal.jumlah', '>', 0)
             ->where(function ($x) {
-                $x->where('stokreal.nopenerimaan', 'like', '%' . request('q') . '%')
-                    ->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+                $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
                     ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
             })
+            ->with([
+                'transnonracikan' => function ($transnonracikan) {
+                    $transnonracikan->select(
+                        // 'resep_keluar_r.kdobat as kdobat',
+                        'resep_permintaan_keluar.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                        ->where('resep_keluar_h.depo', request('kdruang'))
+                        ->whereIn('flag', ['', '1', '2'])
+                        ->groupBy('resep_permintaan_keluar.kdobat');
+                },
+                'transracikan' => function ($transracikan) {
+                    $transracikan->select(
+                        // 'resep_keluar_racikan_r.kdobat as kdobat',
+                        'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                        ->where('resep_keluar_h.depo', request('kdruang'))
+                        ->whereIn('flag', ['', '1', '2'])
+                        ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                },
+                'permintaanobatrinci' => function ($permintaanobatrinci) use ($kdruang) {
+                    $permintaanobatrinci->select(
+                        'permintaan_r.no_permintaan',
+                        'permintaan_r.kdobat',
+                        DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                    )
+                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                        // biar yang ada di tabel mutasi ga ke hitung
+                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        })
+                        ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                        ->where('permintaan_h.tujuan', $kdruang)
+                        ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                        ->groupBy('permintaan_r.kdobat');
+                },
+            ])
+            ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
+            ->orderBy('stokreal.tglexp', 'ASC')
             ->paginate(request('per_page'));
-        return new JsonResponse($stokreal);
+        $stokreal->append('harga');
+        $datastok = $stokreal->map(function ($xxx) {
+            $stolreal = $xxx->total;
+            $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
+            $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
+            $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
+            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
+            $xxx['stokalokasi'] = $stokalokasi;
+            $xxx['permintaantotal'] = $permintaantotal;
+            return $xxx;
+        });
+        return new JsonResponse([
+            'data' => $datastok,
+            'meta' => collect($stokreal)->except('data'),
+        ]);
     }
 
     public static function updatestokdepo($request)
@@ -200,5 +289,83 @@ class StokrealController extends Controller
             $updatestok->save();
         }
         return 200;
+    }
+    public function dataAlokasi()
+    {
+        $transNonRacikan = Permintaanresep::select(
+            'resep_permintaan_keluar.kdobat as kdobat',
+            'resep_keluar_h.depo as kdruang',
+            'resep_keluar_h.ruangan as dari',
+            'resep_keluar_h.tgl',
+            'resep_keluar_h.tgl_permintaan',
+            'resep_keluar_h.flag',
+            'resep_permintaan_keluar.jumlah'
+            // DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+        )
+            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+            ->where('resep_keluar_h.depo', request('kdruang'))
+            ->where('resep_permintaan_keluar.kdobat', request('kdobat'))
+            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+            // ->groupBy('resep_permintaan_keluar.kdobat')
+            ->get();
+        $transRacikan = Permintaanresepracikan::select(
+            'resep_permintaan_keluar_racikan.kdobat as kdobat',
+            'resep_keluar_h.depo as kdruang',
+            'resep_keluar_h.ruangan as dari',
+            'resep_keluar_h.tgl',
+            'resep_keluar_h.tgl_permintaan',
+            'resep_keluar_h.flag',
+            'resep_permintaan_keluar_racikan.jumlah'
+            // DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+        )
+            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+            ->where('resep_keluar_h.depo', request('kdruang'))
+            ->where('resep_permintaan_keluar_racikan.kdobat', request('kdobat'))
+            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+            // ->groupBy('resep_permintaan_keluar_racikan.kdobat')
+            ->get();
+
+        $permintaan = Permintaandeporinci::select(
+            'permintaan_h.tgl_permintaan as tgl',
+            'permintaan_h.flag',
+            'permintaan_h.dari',
+            'permintaan_r.kdobat',
+            'permintaan_r.jumlah_minta as jumlah'
+            // DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+        )
+            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+            // biar yang ada di tabel mutasi ga ke hitung
+            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+            })
+            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+            ->where('permintaan_h.tujuan', request('kdruang'))
+            ->where('permintaan_r.kdobat', request('kdobat'))
+            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+            // ->groupBy('permintaan_r.kdobat')
+            ->get();
+
+        $data = [
+            // 'req' => request()->all(),
+            'transNonRacikan' => $transNonRacikan,
+            'transRacikan' => $transRacikan,
+            'permintaan' => $permintaan,
+        ];
+        return new JsonResponse($data);
+    }
+
+    public function obatMauDisesuaikan()
+    {
+        $data = Stokrel::where('kdobat', request('kdobat'))
+            ->where('kdruang', request('kdruang'))
+            ->where('nopenerimaan', 'LIKE', '%awal%')
+            ->get();
+        // $data->append('harga');
+        return new JsonResponse([
+            'data' => $data,
+            'req' => request()->all(),
+        ]);
     }
 }

@@ -97,18 +97,19 @@ class AutogenController extends Controller
 
     public function index(Request $request)
     {
-        $thumb = collect();
-        $dokter = Pegawai::select('id', 'kdpegsimrs', 'nama','nip','nik','foto')
-            ->where('aktif', 'AKTIF')
-            ->orderBy('id')
-            ->chunk(50, function ($dokters) use ($thumb) {
-                foreach ($dokters as $q) {
-                    $thumb->push($q);
-                }
-            });
+        // $thumb = collect();
+        // $dokter = Pegawai::select('id', 'kdpegsimrs', 'nama','nip','nik','foto')
+        //     ->where('aktif', 'AKTIF')
+        //     ->orderBy('id')
+        //     ->chunk(50, function ($dokters) use ($thumb) {
+        //         foreach ($dokters as $q) {
+        //             $thumb->push($q);
+        //         }
+        //     });
 
 
-        return new JsonResponse($thumb);
+        // return new JsonResponse($thumb);
+        echo 'SELAMAT DATANG';
     }
     public function gennoreg()
     {

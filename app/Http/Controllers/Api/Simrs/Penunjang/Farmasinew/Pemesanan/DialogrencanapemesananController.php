@@ -15,6 +15,36 @@ class DialogrencanapemesananController extends Controller
     {
         $rencanabeli = RencanabeliH::select(
             'perencana_pebelian_h.no_rencbeliobat',
+        )
+            ->leftJoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
+            ->leftJoin('new_masterobat', 'perencana_pebelian_r.kdobat', '=', 'new_masterobat.kd_obat')
+            ->leftJoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
+            ->where('perencana_pebelian_h.flag', '2')
+            ->where('perencana_pebelian_r.flag', '')
+            ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
+
+            ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
+            ->distinct('perencana_pebelian_h.no_rencbeliobat')
+            ->get();
+        $raw = collect($rencanabeli);
+        $nomor = $raw->map(function ($item) {
+
+            return $item->no_rencbeliobat;
+        });
+
+        $data = RencanabeliH::with('gudang:kode,nama')->whereIn('no_rencbeliobat', $nomor)
+            ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+            ->orderBy('tgl', 'desc')
+            ->paginate(request('per_page'));
+
+
+        return new JsonResponse($data);
+    }
+
+    public function dialogrencanabeli_rinci()
+    {
+        $data = RencanabeliH::select(
+            'perencana_pebelian_h.no_rencbeliobat',
             'perencana_pebelian_h.no_rencbeliobat as noperencanaan',
             'perencana_pebelian_h.kd_ruang',
             'perencana_pebelian_h.tgl as tglperencanaan',
@@ -38,9 +68,9 @@ class DialogrencanapemesananController extends Controller
             'perencana_pebelian_h.kd_ruang as gudang',
             DB::raw('sum(pemesanan_r.jumlahdpesan) as jumlahallpesan')
         )
-            ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
-            ->leftjoin('new_masterobat', 'perencana_pebelian_r.kdobat', '=', 'new_masterobat.kd_obat')
-            ->leftjoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
+            ->leftJoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
+            ->leftJoin('new_masterobat', 'perencana_pebelian_r.kdobat', '=', 'new_masterobat.kd_obat')
+            ->leftJoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
             ->where('perencana_pebelian_h.flag', '2')
             ->where('perencana_pebelian_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
@@ -62,28 +92,19 @@ class DialogrencanapemesananController extends Controller
                                     'harga'
                                 )
                                     ->orderBy('id', 'DESC')
-                                    ->limit(1);
+                                    ->limit(request('per_page'));
                             }
                         ])
                         ->where('flag', '');
                 }
             ])
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
-            ->orderBy('perencana_pebelian_h.tgl')->paginate(request('per_page'));
-
-        // $rencanabeli = RencanabeliH::with(
-        //     'rincian',
-        //     'rincian.mobat'
-        // )->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
-        //     ->orderBy('tgl', 'desc')
-        //     ->get();
-
-        return new JsonResponse($rencanabeli);
-    }
-
-    public function dialogrencanabeli_rinci()
-    {
-        $rencanabelirinci = RencanabeliR::with(['mobat'])->where('no_rencbeliobat', request('norencanabeliobat'))->get();
-        return new JsonResponse($rencanabelirinci);
+            ->orderBy('perencana_pebelian_h.tgl')
+            ->orderBy('new_masterobat.nama_obat')
+            ->get();
+        return new JsonResponse($data);
+        // ->paginate(request('per_page'));
+        // $rencanabelirinci = RencanabeliR::with(['mobat'])->where('no_rencbeliobat', request('norencanabeliobat'))->get();
+        // return new JsonResponse($rencanabelirinci);
     }
 }

@@ -424,7 +424,8 @@ class PerencanaanpembelianController extends Controller
                 },
             ])
             ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
-            ->paginate(10);
+            ->orderBy('nama_obat')
+            ->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }

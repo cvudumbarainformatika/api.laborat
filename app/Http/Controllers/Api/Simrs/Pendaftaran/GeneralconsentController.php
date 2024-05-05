@@ -37,6 +37,7 @@ class GeneralconsentController extends Controller
         // simpan ke transaksi general consent pasien
 
         // return $ttdpetugas;
+        $user = auth()->user()->pegawai_id;
         $gencon = Generalconsent::updateOrCreate(
             ['norm' => $request->norm],
             [
@@ -49,6 +50,9 @@ class GeneralconsentController extends Controller
                 'ttdpetugas' => $ttdpetugas,
                 'wali1'=> $request->wali1,
                 'wali2'=> $request->wali2,
+                'hubunganWali1'=> $request->hubunganWali1,
+                'hubunganWali2'=> $request->hubunganWali2,
+                'user_input'=> $user,
             ]
         );
 

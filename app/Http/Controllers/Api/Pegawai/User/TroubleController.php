@@ -43,7 +43,7 @@ class TroubleController extends Controller
             ->whereIn('id', $idpeg)
             ->filter(request(['q']))
             ->with(['ruangan', 'user'])
-            ->paginate(request('per_page'));
+            ->paginate(500);
 
         return new JsonResponse($data);
     }
