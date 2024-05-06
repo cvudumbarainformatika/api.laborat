@@ -10,6 +10,7 @@ use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisikdetail;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisiksubdetail;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -254,5 +255,26 @@ class PemeriksaanfisikController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
+
+    public function historypemeriksaanfisik()
+    {
+        $history = Pemeriksaanfisik::select(
+            'id',
+            'rs1',
+            'rs2 as norm',
+            'user'
+        )
+            ->where('rs2', request('norm'))
+            ->where('rs3', '<', Carbon::now()->toDateString())
+            ->with('pemeriksaanfisik', 'gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp')
+            ->orderby('id', 'DESC')
+            ->get()
+            ->chunk(10);
+
+        $collapsed = $history->collapse();
+
+
+        return new JsonResponse($collapsed->all());
     }
 }

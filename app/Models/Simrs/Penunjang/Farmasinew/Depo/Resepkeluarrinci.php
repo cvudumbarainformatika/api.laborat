@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,5 +22,9 @@ class Resepkeluarrinci extends Model
     public function heder()
     {
         return $this->hasOne(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
+    public function stok()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kdobat');
     }
 }

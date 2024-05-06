@@ -16,9 +16,15 @@ class HargaHelper
             ->first();
         $harga = $data->harga;
         if (!$harga) {
-            return new JsonResponse(['message' => 'Tidak ada harga untuk obat ini'], 410);
+            return [
+                'res' => true,
+                'message' => 'Tidak ada harga untuk obat ini',
+                'data' => $data,
+                'kdobat' => $kdobat,
+                'sistembayar' => $sistembayar,
+            ];
         }
-        if ($sistembayar == 1) {
+        if ($sistembayar == 1 || $sistembayar == '1') {
             if ($harga <= 50000) {
                 $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
             } elseif ($harga > 50000 && $harga <= 250000) {
@@ -38,6 +44,7 @@ class HargaHelper
             $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
         }
         return [
+            'res' => false,
             'hargaJual' => $hargajualx,
             'harga' => $harga
         ];

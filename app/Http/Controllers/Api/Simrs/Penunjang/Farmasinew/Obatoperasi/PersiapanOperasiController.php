@@ -460,6 +460,10 @@ class PersiapanOperasiController extends Controller
 
 
                 $har = HargaHelper::getHarga($key['kd_obat'], $gr);
+                $res = $har['res'];
+                if ($res) {
+                    return new JsonResponse(['message' => $har['message']], 410);
+                }
                 $hargajualx = $har['hargaJual'];
                 $harga = $har['harga'];
                 $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
@@ -580,6 +584,10 @@ class PersiapanOperasiController extends Controller
             $gr = $sistemBayar ?? '';
 
             $har = HargaHelper::getHarga($key['kd_obat'], $gr);
+            $res = $har['res'];
+            if ($res) {
+                return new JsonResponse(['message' => $har['message']], 410);
+            }
             $hargajualx = $har['hargaJual'];
             $harga = $har['harga'];
 

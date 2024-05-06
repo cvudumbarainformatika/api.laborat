@@ -52,6 +52,10 @@ Route::group([
     Route::post('/terima-resep', [EresepController::class, 'terimaResep']);
     Route::post('/resep-selesai', [EresepController::class, 'resepSelesai']);
 
+    Route::post('/ambil-iter', [EresepController::class, 'ambilIter']);
+    Route::post('/copy-resep', [EresepController::class, 'copyResep']);
+    Route::post('/ambil-history', [EresepController::class, 'ambilHistory']);
+
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
     Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
