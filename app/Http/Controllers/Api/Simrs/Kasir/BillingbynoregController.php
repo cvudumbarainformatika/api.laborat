@@ -104,14 +104,20 @@ class BillingbynoregController extends Controller
         $endoscopy = DetailbillingbynoregIgdController::endoscopy($noreg);
         $bdrs = DetailbillingbynoregIgdController::bdrs($noreg);
         $okigd = DetailbillingbynoregIgdController::okigd($noreg);
-
+        $okranap = DetailbillingbynoregIgdController::okranap($noreg);
+        $tindakanokranap = DetailbillingbynoregIgdController::tindakanokranap($noreg);
+        $perawatanjenasah = DetailbillingbynoregIgdController::perawatanjenasah($noreg);
         $laborat = DetailbillingbynoregIgdController::laborat($noreg);
         $radiologi = DetailbillingbynoregIgdController::radiologi($noreg);
         $tindakanokigd = DetailbillingbynoregIgdController::tindakanokigd($noreg);
-
+        $ambulan = DetailbillingbynoregIgdController::ambulan($noreg);
+        $farmasi = DetailbillingbynoregIgdController::farmasi($noreg);
+        $biayamatrei = DetailbillingbynoregIgdController::biayamatrei($noreg);
         $tindakanx = (int) $tindakan->sum('subtotal');
+        $biayamatreix = (int) $biayamatrei->sum('subtotal');
 
-        $totalall = $adminigd + $tindakanx + $laborat + $radiologi + $fisioterapi + $hd + $penunjanglain + $cardio + $eeg + $endoscopy + $bdrs + $okigd +  $tindakanokigd;
+        $totalall = $adminigd + $tindakanx + $laborat + $radiologi + $fisioterapi + $hd + $penunjanglain + $cardio + $eeg + $endoscopy + $bdrs + $okigd +  $tindakanokigd
+                    + $okranap + $tindakanokranap + $perawatanjenasah + $ambulan + $farmasi + $biayamatreix;
         return new JsonResponse(
             [
                 'heder' => $noreg,
@@ -128,6 +134,12 @@ class BillingbynoregController extends Controller
                 'bdrs' => isset($bdrs) ?  $bdrs : 0,
                 'okigd' => isset($okigd) ?  $okigd : 0,
                 'tindakanokigd' => isset($tindakanokigd) ?  $tindakanokigd : 0,
+                'okranap' => isset($okranap) ?  $okranap : 0,
+                'tindakanokranap' => isset($tindakanokranap) ?  $tindakanokranap : 0,
+                'perawatanjenasah' => isset($perawatanjenasah) ?  $perawatanjenasah : 0,
+                'ambulan' => isset($ambulan) ?  $ambulan : 0,
+                'farmasi' => isset($farmasi) ?  $farmasi : 0,
+                'biayamatrei' => isset($biayamatreix) ?  $biayamatreix : 0,
                 'totalall' => isset($totalall) ?  $totalall : 0,
             ]);
     }
