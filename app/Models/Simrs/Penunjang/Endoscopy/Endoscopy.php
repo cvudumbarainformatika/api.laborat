@@ -10,4 +10,5 @@ class Endoscopy extends Model
     use HasFactory;
     protected $table = 'rs246';
     protected $guarded = ['id'];
+
 }
