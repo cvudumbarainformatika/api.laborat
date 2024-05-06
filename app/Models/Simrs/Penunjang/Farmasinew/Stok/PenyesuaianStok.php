@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Models\Simrs\Penunjang\Endoscopy;
+namespace App\Models\Simrs\Penunjang\Farmasinew\Stok;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Endoscopy extends Model
+class PenyesuaianStok extends Model
 {
     use HasFactory;
-    protected $table = 'rs246';
     protected $guarded = ['id'];
-
+    protected $connection = 'farmasi';
 }

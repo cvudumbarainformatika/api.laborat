@@ -83,4 +83,52 @@ class BillingbynoregController extends Controller
             ]
         );
     }
+
+    public function billbynoregigd()
+    {
+        $noreg = request('noreg');
+
+        $adminigd = DetailbillingbynoregIgdController::adminigd($noreg);
+        $tindakan = DetailbillingbynoregIgdController::tindakan($noreg);
+        $tindakanrinci = $tindakan->map(function ($tindakanx, $kunci) {
+            return [
+                'namatindakan' => $tindakanx->keterangan,
+                'subtotal' => $tindakanx->subtotal,
+            ];
+        });
+        $fisioterapi = DetailbillingbynoregIgdController::fisioterapi($noreg);
+        $hd = DetailbillingbynoregIgdController::hd($noreg);
+        $penunjanglain = DetailbillingbynoregIgdController::penunjanglain($noreg);
+        $cardio = DetailbillingbynoregIgdController::cardio($noreg);
+        $eeg = DetailbillingbynoregIgdController::eeg($noreg);
+        $endoscopy = DetailbillingbynoregIgdController::endoscopy($noreg);
+        $bdrs = DetailbillingbynoregIgdController::bdrs($noreg);
+        $okigd = DetailbillingbynoregIgdController::okigd($noreg);
+
+        $laborat = DetailbillingbynoregIgdController::laborat($noreg);
+        $radiologi = DetailbillingbynoregIgdController::radiologi($noreg);
+        $tindakanokigd = DetailbillingbynoregIgdController::tindakanokigd($noreg);
+
+        $tindakanx = (int) $tindakan->sum('subtotal');
+
+        $totalall = $adminigd + $tindakanx + $laborat + $radiologi + $fisioterapi + $hd + $penunjanglain + $cardio + $eeg + $endoscopy + $bdrs + $okigd +  $tindakanokigd;
+        return new JsonResponse(
+            [
+                'heder' => $noreg,
+                'adminigd' => $adminigd,
+                'tindakan' => isset($tindakanrinci) ?  $tindakanrinci : '',
+                'laborat' => isset($laborat) ?  $laborat : 0,
+                'radiologi' => isset($radiologi) ?  $radiologi : 0,
+                'fisioterapi' => isset($fisioterapi) ?  $fisioterapi : 0,
+                'hd' => isset($hd) ?  $hd : 0,
+                'penunjanglain' => $penunjanglain,
+                'cardio' => isset($cardio) ?  $cardio : 0,
+                'eeg' => isset($eeg) ?  $eeg : 0,
+                'endoscopy' => isset($endoscopy) ?  $endoscopy : 0,
+                'bdrs' => isset($bdrs) ?  $bdrs : 0,
+                'okigd' => isset($okigd) ?  $okigd : 0,
+                'tindakanokigd' => isset($tindakanokigd) ?  $tindakanokigd : 0,
+                'totalall' => isset($totalall) ?  $totalall : 0,
+            ]);
+    }
 }
