@@ -88,7 +88,7 @@ class StokOpnameFarmasiController extends Controller
                 }
             }
             return new JsonResponse([
-                'message' => 'data berhasil disimpan',
+                'message' => 'data opname farmasi berhasil disimpan',
                 'recent' => count($recent),
                 'cnewOpname' => count($newOpname),
                 // 'newOpname' => $newOpname,
@@ -100,7 +100,7 @@ class StokOpnameFarmasiController extends Controller
         }
 
         return new JsonResponse([
-            'message' => 'Stok opname dapat dilakukan di hari terakhir tiap bulan',
+            'message' => 'Stok opname farmasi dapat dilakukan di hari terakhir tiap bulan',
             'hari ini' => $yesterday
         ], 410);
     }
