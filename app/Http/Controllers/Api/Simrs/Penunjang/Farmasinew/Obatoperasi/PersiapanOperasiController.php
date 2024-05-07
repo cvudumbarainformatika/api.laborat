@@ -437,6 +437,7 @@ class PersiapanOperasiController extends Controller
             'norm' => $request->norm,
             'tgl_permintaan' => date('Y-m-d H:i:s'),
             'tgl_kirim' => date('Y-m-d H:i:s'),
+            'tgl' => date('Y-m-d'),
             'depo' => 'Gd-04010103',
             'ruangan' => 'R-0101025',
             'dokter' =>  $user['kodesimrs'],

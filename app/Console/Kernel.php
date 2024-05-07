@@ -24,6 +24,7 @@ class Kernel extends ConsoleKernel
             $data = $opname->storeMonthly();
             info($data);
         })->dailyAt('00:30');
+
         $schedule->call(function () {
             info('mulai stok opname farmasi');
             $opname = new StokOpnameFarmasiController;
