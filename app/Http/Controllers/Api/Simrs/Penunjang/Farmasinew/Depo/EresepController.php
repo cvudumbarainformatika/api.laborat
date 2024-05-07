@@ -167,6 +167,13 @@ class EresepController extends Controller
                 return new JsonResponse(['message' => 'Maaf Anda Bukan Dokter...!!!'], 500);
             }
 
+            if ($request->kodedepo === 'Gd-05010101') {
+                $tiperesep = $request->tiperesep ?? 'normal';
+                $iter_expired = $request->iter_expired ?? null;
+            } else {
+                $tiperesep =  'normal';
+                $iter_expired =  null;
+            }
             $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
                 ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '!=', 0)
@@ -217,7 +224,7 @@ class EresepController extends Controller
                 ],
                 [
                     'norm' => $request->norm,
-                    'iter_expired' => $request->iter_expired ?? null,
+                    'iter_expired' => $iter_expired,
                     'tgl_permintaan' => date('Y-m-d H:i:s'),
                     'tgl' => date('Y-m-d'),
                     'depo' => $request->kodedepo,
@@ -228,7 +235,7 @@ class EresepController extends Controller
                     'kodeincbg' => $request->kodeincbg,
                     'uraianinacbg' => $request->uraianinacbg,
                     'tarifina' => $request->tarifina,
-                    'tiperesep' => $request->tiperesep ?? 'normal',
+                    'tiperesep' => $tiperesep,
                     // 'iter_expired' => $request->iter_expired ?? '',
                     'tagihanrs' => $request->tagihanrs ?? 0,
                 ]
