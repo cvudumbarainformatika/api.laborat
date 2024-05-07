@@ -158,7 +158,49 @@ class StokrealController extends Controller
     public function liststokreal()
     {
         $kdruang = request('kdruang');
-        $stokreal = Stokopname::select('stokopname.*', 'new_masterobat.*', 'stokopname.id as idx')->where('stokopname.flag', '')
+
+        // $today = date('Y-m-d');
+        // $dToday = date_create($today);
+        // $dFrom = date_create(request('from'));
+        // $diff = date_diff($dToday, $dFrom);
+        // if ($diff->m === 0) {
+        //     $stokreal = Stokreal::select(
+        //         'stokreal.*',
+        //         'new_masterobat.kd_obat',
+        //         'new_masterobat.nama_obat',
+        //         'new_masterobat.satuan_k',
+        //         'new_masterobat.status_fornas',
+        //         'new_masterobat.status_forkid',
+        //         'new_masterobat.status_generik',
+        //         'new_masterobat.gudang',
+        //         DB::raw('sum(stokreal.jumlah) as total')
+        //     )->where('stokreal.flag', '')
+        //         ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+        //         ->where('stokreal.kdruang', $kdruang)
+        //         ->where(function ($x) {
+        //             $x->where('stokreal.nopenerimaan', 'like', '%' . request('q') . '%')
+        //                 ->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+        //                 ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+        //         })
+
+        //         ->where('stokreal.jumlah', '>', 0)
+        //         ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+        //         ->orderBy('new_masterobat.nama_obat', 'ASC')
+        //         ->paginate(request('per_page'));
+        // } else {
+
+        $stokreal = Stokopname::select(
+            'stokopname.*',
+            'new_masterobat.kd_obat',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k',
+            'new_masterobat.status_fornas',
+            'new_masterobat.status_forkid',
+            'new_masterobat.status_generik',
+            'new_masterobat.gudang',
+            'stokopname.id as idx',
+            DB::raw('sum(stokopname.jumlah) as total')
+        )->where('stokopname.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokopname.kdobat')
             ->where('stokopname.kdruang', $kdruang)
             ->where(function ($x) {
@@ -169,9 +211,17 @@ class StokrealController extends Controller
             ->when(request('from'), function ($q) {
                 $q->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59']);
             })
+            ->groupBy('stokopname.kdobat', 'stokopname.kdruang')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->paginate(request('per_page'));
-        return new JsonResponse($stokreal);
+        // }
+        $raw = collect($stokreal);
+        $data['data'] = $raw['data'];
+        $data['meta'] = $raw->except('data');
+        // $data['diff'] = $diff;
+        // $data['stokreal'] = $stokreal;
+
+        return new JsonResponse($data);
     }
     public function listStokSekarang()
     {

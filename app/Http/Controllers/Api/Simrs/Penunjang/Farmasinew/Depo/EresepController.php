@@ -239,7 +239,7 @@ class EresepController extends Controller
             }
 
 
-            $har = HargaHelper::getHarga($request->kdobat, $request->groupsistembayar);
+            $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
             $res = $har['res'];
             if ($res) {
                 return new JsonResponse(['message' => $har['message'], 'data' => $har], 410);
