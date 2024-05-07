@@ -486,6 +486,14 @@ class EresepController extends Controller
 
             ], 410);
         }
+
+        $flag = $kirimresep->flag;
+        if ((int)$flag >= 1) {
+            return new JsonResponse([
+                'message' => 'Resep sudah dikirimkan',
+
+            ], 410);
+        }
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
