@@ -2,10 +2,19 @@
 namespace App\Http\Controllers\Api\Simrs\Kasir;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
 use App\Models\Simrs\Penunjang\Endoscopy\Endoscopy;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranap;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplalu;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanheder;
+use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanheder;
+use App\Models\Simrs\Penunjang\Kamarjenazah\Kamarjenasahinap;
+use App\Models\Simrs\Penunjang\Kamarjenazah\Kamarjenasahtrans;
+use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
@@ -142,5 +151,100 @@ class DetailbillingbynoregIgdController extends Controller
         $tindakanokigd = Tindakan::where('rs1', $noreg)->where('rs22','OPERASIIRD2')->get();
         $tindakanokigd = $tindakanokigd->sum('biaya');
         return $tindakanokigd;
+    }
+
+    public static function okranap($noreg)
+    {
+        $okranap = Kamaroperasi::where('rs1', $noreg)->where('rs15','POL014')->get();
+        $okranap = $okranap->sum('biaya');
+        return $okranap;
+    }
+
+    public static function tindakanokranap($noreg)
+    {
+        $tindakanokranapx = Tindakan::where('rs1', $noreg)->where('rs22','OPERASI2')->get();
+        $tindakanokranap = $tindakanokranapx->sum('biaya');
+        return $tindakanokranap;
+    }
+
+    public static function perawatanjenasah($noreg)
+    {
+        $perawatanjenasahx = Kamarjenasahinap::select(DB::raw('sum(rs5 + rs6) as subtotal'))->where('rs1', $noreg)->where('rs7','POL014');
+        $perawatanjenasah = Kamarjenasahtrans::select(DB::raw('sum(rs6 + rs7) as subtotal'))->where('rs1', $noreg)-> where('rs14', 'POL014')
+                            ->union($perawatanjenasahx)
+                            ->get();
+        $perawatanjenasahtotal = $perawatanjenasah->sum('subtotal');
+        return $perawatanjenasahtotal;
+    }
+
+    public static function ambulan($noreg)
+    {
+        $ambulan = Ambulan::where('rs1', $noreg)->where('rs20','POL014')->get();
+        $ambulan = $ambulan->sum('biaya');
+        return $ambulan;
+    }
+
+    public static function farmasi($noreg)
+    {
+        $obatsekarang = Apotekranap::where('rs1', $noreg)->where('lunas','!=','1')->where('rs20','POL014')
+                        ->where(function ($query) {
+                            $query->where('rs25','CENTRAL')
+                                  ->orWhere('rs25','IGD');
+                        })
+                        ->get();
+
+        $obatsekaranglalu = Apotekranaplalu::where('rs1', $noreg)->where('lunas','!=','1')->where('rs20','POL014')
+                            ->where(function ($query) {
+                                $query->where('rs25','CENTRAL')
+                                    ->orWhere('rs25','IGD');
+                            })
+                             ->get();
+
+        $obatracikan = Apotekranapracikanheder::select(DB::raw('sum(rs40.rs7*rs40.rs5) as subtotal'))
+                       ->join('rs40','rs39.rs2','rs40.rs2')
+                       ->where('rs39.rs1', $noreg)
+                       ->where('rs39.lunas','!=','1')
+                       ->where('rs39.rs18', 'IRD')
+                       ->where(function ($query) {
+                            $query->where('rs39.rs19','CENTRAL')
+                                ->orWhere('rs39.rs19','IGD');
+                        })
+                        ->get();
+
+        $obatracikanlalu = Apotekranaplaluracikanheder::select(DB::raw('sum(rs64.rs7*rs64.rs5) as subtotal'))
+        ->join('rs64','rs63.rs2','rs64.rs2')
+        ->where('rs63.rs1', $noreg)
+        ->where('rs63.lunas','!=','1')
+        ->where('rs63.rs18', 'IRD')
+        ->where(function ($query) {
+                $query->where('rs63.rs19','CENTRAL')
+                    ->orWhere('rs63.rs19','IGD');
+            })
+        ->get();
+
+        $hederobatracikan = Apotekranapracikanheder::select(DB::raw('sum(rs8) as subtotal'))->where('rs1', $noreg)
+                            ->where('rs18', 'IRD')
+                            ->get();
+
+        $hederobatracikanlalu = Apotekranaplaluracikanheder::select(DB::raw('sum(rs8) as subtotal'))->where('rs1', $noreg)
+                                ->where('rs18', 'IRD')
+                                ->get();
+
+        $obatsekarang = $obatsekarang->sum('subtotal');
+        $obatsekaranglalu = $obatsekaranglalu->sum('subtotal');
+        $obatracikan = $obatracikan->sum('subtotal');
+        $obatracikanlalu = $obatracikanlalu->sum('subtotal');
+        $hederobatracikan = $hederobatracikan->sum('subtotal');
+        $hederobatracikanlalu = $hederobatracikanlalu->sum('subtotal');
+
+        $farmasi = $obatsekarang + $obatsekaranglalu + $obatracikan + $obatracikanlalu + $hederobatracikan + $hederobatracikanlalu;
+
+        return $farmasi;
+    }
+
+    public static function biayamatrei($noreg)
+    {
+        $biayamatrei = Biayamaterai::select('rs5 as subtotal')->where('rs1', $noreg)->where('rs7', 'IRD')->get();
+        return $biayamatrei;
     }
 }
