@@ -20,6 +20,7 @@ class HistorypasienfullController extends Controller
             'rs17.rs3 as tanggal',
             'rs19.rs2 as ruangan',
             'rs21.rs2 as dpjp'
+
         )
             ->join('rs19', 'rs19.rs1', '=', 'rs17.rs8')
             ->join('rs21', 'rs21.rs1', '=', 'rs17.rs9')
@@ -77,7 +78,10 @@ class HistorypasienfullController extends Controller
                     'apotekracikanrajal',
                     'apotekracikanrajal.masterobat',
                     'apotekracikanrajallalu',
-                    'apotekracikanrajallalu.masterobat'
+                    'apotekracikanrajallalu.masterobat',
+                    'dokumenluar'=> function($a){
+                        $a->with(['pegawai:id,nama']);
+                    }
                 ]
             )
             ->orderby('tanggal', 'DESC')

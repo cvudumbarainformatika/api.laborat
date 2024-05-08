@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Ranap;
 
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Kasir\Biayamaterai;
@@ -11,6 +12,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
@@ -433,5 +435,13 @@ class Kunjunganranap extends Model
     public function pegawai()
     {
         return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs10');
+    }
+    public function dokumenluar()
+    {
+        return $this->hasMany(DokumenUpload::class, 'noreg', 'rs1');
+    }
+    public function datasimpeg()
+    {
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
     }
 }
