@@ -27,6 +27,7 @@ class CatatanRawatJalanController extends Controller
                     'edukasi',
                     'pembacaanradiologi',
                     'diagnosakeperawatan.intervensi.masterintervensi',
+                    'diagnosakeperawatan.masterperawat' ,
                     'diagnosa' => function ($a) {
                         $a->with(['masterdiagnosa', 'dokter']);
                     },
