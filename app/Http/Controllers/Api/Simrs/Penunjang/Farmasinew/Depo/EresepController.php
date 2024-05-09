@@ -854,115 +854,253 @@ class EresepController extends Controller
 
     public function ambilIter(Request $request)
     {
-        $noresep = $request->noresep_asal ?? $request->noresep;
+        // $noresep = $request->noresep_asal ?? $request->noresep;
 
         $head = Resepkeluarheder::where('noresep', $request->noresep)
-            ->with([
-                'permintaanresep.mobat',
-                'permintaanresep.stok' => function ($stok) use ($request) {
-                    $stok->selectRaw('kdobat, sum(jumlah) as total')
-                        ->where('kdruang', $request->depo)
-                        ->where('jumlah', '>', 0)
-                        ->with([
-                            'transnonracikan' => function ($transnonracikan) use ($request) {
-                                $transnonracikan->select(
-                                    // 'resep_keluar_r.kdobat as kdobat',
-                                    'resep_permintaan_keluar.kdobat as kdobat',
-                                    'resep_keluar_h.depo as kdruang',
-                                    DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
-                                )
-                                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
-                                    ->where('resep_keluar_h.depo', $request->depo)
-                                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                                    ->groupBy('resep_permintaan_keluar.kdobat');
-                            },
-                            'transracikan' => function ($transracikan) use ($request) {
-                                $transracikan->select(
-                                    // 'resep_keluar_racikan_r.kdobat as kdobat',
-                                    'resep_permintaan_keluar_racikan.kdobat as kdobat',
-                                    'resep_keluar_h.depo as kdruang',
-                                    DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
-                                )
-                                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
-                                    ->where('resep_keluar_h.depo', $request->depo)
-                                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                                    ->groupBy('resep_permintaan_keluar_racikan.kdobat');
-                            },
-                            'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
-                                $permintaanobatrinci->select(
-                                    'permintaan_r.no_permintaan',
-                                    'permintaan_r.kdobat',
-                                    DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
-                                )
-                                    ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                                    // biar yang ada di tabel mutasi ga ke hitung
-                                    ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                                        $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                                            ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                                    })
-                                    ->whereNull('mutasi_gudangdepo.kd_obat')
+            ->when(
+                $request->noresep_asal === null || $request->noresep_asal === '',
+                function ($h) use ($request) {
+                    $h->with([
+                        'permintaanresep.mobat',
+                        'permintaanresep.stok' => function ($stok) use ($request) {
+                            $stok->selectRaw('kdobat, sum(jumlah) as total')
+                                ->where('kdruang', $request->depo)
+                                ->where('jumlah', '>', 0)
+                                ->with([
+                                    'transnonracikan' => function ($transnonracikan) use ($request) {
+                                        $transnonracikan->select(
+                                            // 'resep_keluar_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar.kdobat');
+                                    },
+                                    'transracikan' => function ($transracikan) use ($request) {
+                                        $transracikan->select(
+                                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                                    },
+                                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
+                                        $permintaanobatrinci->select(
+                                            'permintaan_r.no_permintaan',
+                                            'permintaan_r.kdobat',
+                                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                                        )
+                                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                                            // biar yang ada di tabel mutasi ga ke hitung
+                                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                                            })
+                                            ->whereNull('mutasi_gudangdepo.kd_obat')
 
-                                    ->where('permintaan_h.tujuan', $request->depo)
-                                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                                    ->groupBy('permintaan_r.kdobat');
-                            },
+                                            ->where('permintaan_h.tujuan', $request->depo)
+                                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                                            ->groupBy('permintaan_r.kdobat');
+                                    },
 
-                        ])
-                        ->groupBy('kdobat');
-                },
-                'permintaanracikan.mobat',
-                'permintaanracikan.stok' => function ($stok) use ($request) {
-                    $stok->selectRaw('kdobat, sum(jumlah) as total')
-                        ->where('kdruang', $request->depo)
-                        ->where('jumlah', '>', 0)->with([
-                            'transnonracikan' => function ($transnonracikan) use ($request) {
-                                $transnonracikan->select(
-                                    // 'resep_keluar_r.kdobat as kdobat',
-                                    'resep_permintaan_keluar.kdobat as kdobat',
-                                    'resep_keluar_h.depo as kdruang',
-                                    DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
-                                )
-                                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
-                                    ->where('resep_keluar_h.depo', $request->depo)
-                                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                                    ->groupBy('resep_permintaan_keluar.kdobat');
-                            },
-                            'transracikan' => function ($transracikan) use ($request) {
-                                $transracikan->select(
-                                    // 'resep_keluar_racikan_r.kdobat as kdobat',
-                                    'resep_permintaan_keluar_racikan.kdobat as kdobat',
-                                    'resep_keluar_h.depo as kdruang',
-                                    DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
-                                )
-                                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
-                                    ->where('resep_keluar_h.depo', $request->depo)
-                                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                                    ->groupBy('resep_permintaan_keluar_racikan.kdobat');
-                            },
-                            'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
-                                $permintaanobatrinci->select(
-                                    'permintaan_r.no_permintaan',
-                                    'permintaan_r.kdobat',
-                                    DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
-                                )
-                                    ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                                    // biar yang ada di tabel mutasi ga ke hitung
-                                    ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                                        $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                                            ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                                    })
-                                    ->whereNull('mutasi_gudangdepo.kd_obat')
+                                ])
+                                ->groupBy('kdobat');
+                        },
+                        'permintaanracikan.mobat',
+                        'permintaanracikan.stok' => function ($stok) use ($request) {
+                            $stok->selectRaw('kdobat, sum(jumlah) as total')
+                                ->where('kdruang', $request->depo)
+                                ->where('jumlah', '>', 0)->with([
+                                    'transnonracikan' => function ($transnonracikan) use ($request) {
+                                        $transnonracikan->select(
+                                            // 'resep_keluar_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar.kdobat');
+                                    },
+                                    'transracikan' => function ($transracikan) use ($request) {
+                                        $transracikan->select(
+                                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                                    },
+                                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
+                                        $permintaanobatrinci->select(
+                                            'permintaan_r.no_permintaan',
+                                            'permintaan_r.kdobat',
+                                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                                        )
+                                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                                            // biar yang ada di tabel mutasi ga ke hitung
+                                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                                            })
+                                            ->whereNull('mutasi_gudangdepo.kd_obat')
 
-                                    ->where('permintaan_h.tujuan', $request->depo)
-                                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                                    ->groupBy('permintaan_r.kdobat');
-                            },
+                                            ->where('permintaan_h.tujuan', $request->depo)
+                                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                                            ->groupBy('permintaan_r.kdobat');
+                                    },
 
-                        ])
-                        ->groupBy('kdobat');
+                                ])
+                                ->groupBy('kdobat');
+                        }
+                    ]);
                 }
-            ])
+            )
+            ->when($request->noresep_asal !== null, function ($h) use ($request) {
+                $h->where('noresep_asal', $request->noresep_asal)
+                    ->with([
+                        'asalpermintaanresep' => function ($per) {
+                            $per->select('resep_permintaan_keluar.*')
+                                ->leftJoin('resep_keluar_r', function ($join) {
+                                    $join->on('resep_keluar_r.noresep', '=', 'resep_permintaan_keluar.noresep')
+                                        ->on('resep_keluar_r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
+                                })
+                                ->whereNotNull('resep_keluar_r.kdobat');
+                        },
+                        'asalpermintaanracikan' => function ($per) {
+                            $per->select('resep_permintaan_keluar_racikan.*')
+                                ->leftJoin('resep_keluar_racikan_r', function ($join) {
+                                    $join->on('resep_keluar_racikan_r.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+                                        ->on('resep_keluar_racikan_r.kdobat', '=', 'resep_permintaan_keluar_racikan.kdobat');
+                                })
+                                ->whereNotNull('resep_keluar_racikan_r.kdobat');
+                        },
+                        'asalpermintaanresep.mobat',
+                        'asalpermintaanresep.stok' => function ($stok) use ($request) {
+                            $stok->selectRaw('kdobat, sum(jumlah) as total')
+                                ->where('kdruang', $request->depo)
+                                ->where('jumlah', '>', 0)
+                                ->with([
+                                    'transnonracikan' => function ($transnonracikan) use ($request) {
+                                        $transnonracikan->select(
+                                            // 'resep_keluar_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar.kdobat');
+                                    },
+                                    'transracikan' => function ($transracikan) use ($request) {
+                                        $transracikan->select(
+                                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                                    },
+                                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
+                                        $permintaanobatrinci->select(
+                                            'permintaan_r.no_permintaan',
+                                            'permintaan_r.kdobat',
+                                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                                        )
+                                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                                            // biar yang ada di tabel mutasi ga ke hitung
+                                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                                            })
+                                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                                            ->where('permintaan_h.tujuan', $request->depo)
+                                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                                            ->groupBy('permintaan_r.kdobat');
+                                    },
+
+                                ])
+                                ->groupBy('kdobat');
+                        },
+                        'asalpermintaanracikan.mobat',
+                        'asalpermintaanracikan.stok' => function ($stok) use ($request) {
+                            $stok->selectRaw('kdobat, sum(jumlah) as total')
+                                ->where('kdruang', $request->depo)
+                                ->where('jumlah', '>', 0)->with([
+                                    'transnonracikan' => function ($transnonracikan) use ($request) {
+                                        $transnonracikan->select(
+                                            // 'resep_keluar_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar.kdobat');
+                                    },
+                                    'transracikan' => function ($transracikan) use ($request) {
+                                        $transracikan->select(
+                                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                                            'resep_keluar_h.depo as kdruang',
+                                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                                        )
+                                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                                            ->where('resep_keluar_h.depo', $request->depo)
+                                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                                    },
+                                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
+                                        $permintaanobatrinci->select(
+                                            'permintaan_r.no_permintaan',
+                                            'permintaan_r.kdobat',
+                                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                                        )
+                                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                                            // biar yang ada di tabel mutasi ga ke hitung
+                                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                                            })
+                                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                                            ->where('permintaan_h.tujuan', $request->depo)
+                                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                                            ->groupBy('permintaan_r.kdobat');
+                                    },
+
+                                ])
+                                ->groupBy('kdobat');
+                        }
+                    ]);
+            })
             ->first();
+        if ($request->noresep_asal !== null) {
+            $head->permintaanresep = $head->asalpermintaanresep;
+            $head->permintaanracikan = $head->asalpermintaanracikan;
+            // $resp['head'] = $head;
+            // // $resp['noresep'] = $noresep;
+            // // $resp['sistembayar'] = $sistembayar->groups;
+            // $resp['req'] = $request->all();
+            // return new JsonResponse($resp);
+        }
         $sistembayar = SistemBayar::where('rs1', $head->sistembayar)->first();
         if (count($head->permintaanresep) > 0) {
             foreach ($head->permintaanresep as $key) {
@@ -983,7 +1121,7 @@ class EresepController extends Controller
             }
         }
         $resp['head'] = $head;
-        $resp['noresep'] = $noresep;
+        // $resp['noresep'] = $noresep;
         $resp['sistembayar'] = $sistembayar->groups;
         $resp['req'] = $request->all();
         return new JsonResponse($resp);
