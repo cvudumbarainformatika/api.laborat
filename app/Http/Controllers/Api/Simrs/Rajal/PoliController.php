@@ -757,6 +757,11 @@ class PoliController extends Controller
             ]
         );
 
+
+
+        // 09-Mei-2024 aku hari ganti wan disuruh otomatiskan sama keputusan rapat (jare mbak septi)
+        $kdPegSimrs = $request->kddokter_asal ?? '';
+
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $noreg,
             'rs2' => $request->norm,
@@ -766,6 +771,7 @@ class PoliController extends Controller
             'rs6' => '2',
             'rs8' => $request->kdpoli_tujuan,
             //'rs9' => $request->dpjp,
+            'rs9' => $kdPegSimrs,
             'rs10' => 0,
             'rs11' => '',
             'rs12' => 0,

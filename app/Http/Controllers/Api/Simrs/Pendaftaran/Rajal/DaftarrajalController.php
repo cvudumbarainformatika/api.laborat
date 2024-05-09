@@ -6,6 +6,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Mcounter;
@@ -176,6 +177,23 @@ class DaftarrajalController extends Controller
         ]);
 
 
+        // 09-Mei-2024 aku hari ganti wan disuruh otomatiskan sama keputusan rapat (jare mbak septi)
+        // cr dulu di kepegx berdasarkan kddpjp
+        // setelah ktm .... ambil kdpegsimrs
+        // gk ktmu '' (string kosong)
+
+
+        $dpjpDariPendaftaran = $request->dpjp;
+
+        $pegawai = Pegawai::where('kddpjp', $dpjpDariPendaftaran)
+                    ->where('aktif', '=', 'AKTIF')->first();
+
+        $kdPegSimrs = '';
+        if ($pegawai) {
+            $kdPegSimrs = $pegawai->kdpegsimrs ?? '';
+        }
+        
+        
 
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
@@ -184,6 +202,8 @@ class DaftarrajalController extends Controller
             'rs6' => $request->asalrujukan,
             'rs8' => $request->kodepoli,
             //'rs9' => $request->dpjp,
+            'rs9' => $kdPegSimrs,
+            'rs10' => $dpjpDariPendaftaran,
             'rs10' => 0,
             'rs11' => '',
             'rs12' => 0,
