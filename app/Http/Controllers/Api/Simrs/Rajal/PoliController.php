@@ -759,7 +759,7 @@ class PoliController extends Controller
 
 
 
-        // 09-Mei-2024 aku hari ganti wan disuruh otomatiskan sama keputusan rapat (jare mbak septi)
+        // 09-Mei-2024 aku hari ganti atau menambahkan kode ini disuruh otomatiskan DPJP sama keputusan rapat (jare mbak septi)
         $kdPegSimrs = $request->kddokter_asal ?? '';
 
         $simpankunjunganpoli = KunjunganPoli::create([

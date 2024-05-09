@@ -177,7 +177,7 @@ class DaftarrajalController extends Controller
         ]);
 
 
-        // 09-Mei-2024 aku hari ganti wan disuruh otomatiskan sama keputusan rapat (jare mbak septi)
+        // 09-Mei-2024 aku hari ganti atau menambahkan kode ini disuruh otomatiskan DPJP sama keputusan rapat (jare mbak septi)
         // cr dulu di kepegx berdasarkan kddpjp
         // setelah ktm .... ambil kdpegsimrs
         // gk ktmu '' (string kosong)
