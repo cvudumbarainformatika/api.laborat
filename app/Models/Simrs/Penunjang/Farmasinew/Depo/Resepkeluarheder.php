@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\SistemBayar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -65,5 +66,9 @@ class Resepkeluarheder extends Model
     public function ruanganranap()
     {
         return $this->belongsTo(Mruangranap::class, 'ruangan', 'rs1');
+    }
+    public function info()
+    {
+        return $this->belongsTo(PelayananInformasiObat::class, 'noreg', 'noreg');
     }
 }

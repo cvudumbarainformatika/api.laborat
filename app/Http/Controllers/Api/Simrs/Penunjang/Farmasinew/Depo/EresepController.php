@@ -6,6 +6,7 @@ use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
@@ -13,6 +14,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\SistemBayar;
 use Carbon\Carbon;
@@ -406,6 +408,7 @@ class EresepController extends Controller
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
                 'poli',
+                'info',
                 'ruanganranap',
                 'sistembayar',
                 'dokter:kdpegsimrs,nama',
@@ -1439,5 +1442,61 @@ class EresepController extends Controller
             ])
             ->get();
         return new JsonResponse($data);
+    }
+
+    public function getPegawaiFarmasi()
+    {
+        $data = Pegawai::select('nama', 'id', 'kdpegsimrs')
+            ->where('aktif', '=', 'AKTIF')
+
+            ->where('ruang', '=', 'R00025')
+
+
+            ->get();
+
+        return new JsonResponse($data);
+    }
+
+    public function simPelIOnfOb(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $data = PelayananInformasiObat::updateOrCreate(
+                [
+                    'norm' => $request->norm,
+                    'noreg' => $request->noreg,
+                ],
+                [
+                    'tanggal' => $request->tanggal,
+                    'metode' => $request->metode,
+                    'nama_penanya' => $request->nama_penanya,
+                    'status_penanya' => $request->status_penanya,
+                    'tlp_penanya' => $request->tlp_penanya,
+                    'umur_pasien' => $request->umur_pasien,
+                    'kehamilan' => $request->kehamilan,
+                    'kasus_khusus' => $request->kasus_khusus,
+                    'jenis_kelamin' => $request->jenis_kelamin,
+                    'menyusui' => $request->menyusui,
+                    'uraian_pertanyaan' => $request->uraian_pertanyaan,
+                    'jenis_pertanyaan' => $request->jenis_pertanyaan,
+                    'jawaban' => $request->jawaban,
+                    'referensi' => $request->referensi,
+                    'apoteker' => $request->apoteker,
+                    'user_input' => $request->user_input,
+
+                ]
+            );
+            if (!$data) {
+                return new JsonResponse(['message' => 'Pelayanan Infromasi Obat gagal disimpan'], 410);
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Pelayanan Infromasi Obat sudah disimpan',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
+        }
     }
 }

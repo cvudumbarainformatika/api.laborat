@@ -43,6 +43,8 @@ Route::group([
     Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
     Route::get('/get-single-resep', [EresepController::class, 'getSingleResep']);
 
+    Route::get('/ambil-pegawai-farmasi', [EresepController::class, 'getPegawaiFarmasi']);
+
     Route::post('/pembuatanresep', [EresepController::class, 'pembuatanresep']);
     Route::get('/listresepbydokter', [EresepController::class, 'listresepbydokter']);
     Route::post('/kirimresep', [EresepController::class, 'kirimresep']);
@@ -55,6 +57,9 @@ Route::group([
     Route::post('/ambil-iter', [EresepController::class, 'ambilIter']);
     Route::post('/copy-resep', [EresepController::class, 'copyResep']);
     Route::post('/ambil-history', [EresepController::class, 'ambilHistory']);
+
+    // pelayanan informasi Obat
+    Route::post('/simpan-pelayanan-informasi-obat', [EresepController::class, 'simPelIOnfOb']);
 
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
