@@ -119,7 +119,7 @@ class KunjunganPoliController extends Controller
                 'rs17.rs19 as status',
                 'antrian_ambil.nomor as noantrian'
             )
-                ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien 
+                ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
                 ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
                 ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
@@ -134,7 +134,7 @@ class KunjunganPoliController extends Controller
                 ->where(function ($sts) use ($status) {
                     if ($status !== 'all') {
                         if ($status === '') {
-                            $sts->where('rs17.rs19', '!=', '1');
+                            $sts->where('rs17.rs19', '');
                         } else {
                             $sts->where('rs17.rs19', '=', $status);
                         }
