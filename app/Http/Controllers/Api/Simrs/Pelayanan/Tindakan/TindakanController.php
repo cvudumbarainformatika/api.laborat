@@ -44,7 +44,12 @@ class TindakanController extends Controller
         DB::select('call nota_tindakan(@nomor)');
         $x = DB::table('rs1')->select('rs14')->get();
         $wew = $x[0]->rs14;
-        $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
+        if($request->kdpoli === 'POL014'){
+            $notatindakan = FormatingHelper::notatindakan($wew, 'T-IG');
+        }else{
+            $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
+        }
+
 
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
