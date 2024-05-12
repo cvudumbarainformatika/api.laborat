@@ -485,4 +485,15 @@ class PerencanaanpembelianController extends Controller
             'message' => 'Data Berhasil dihapus'
         ]);
     }
+
+    public function listrencanabeliBynomor()
+    {
+        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat,satuan_k', 'rincian.stok','gudang')
+            ->where('no_rencbeliobat', request('no_rencbeliobat'))
+            ->when(request('flag'), function ($x) {
+                $x->whereIn('flag', request('flag'));
+            })
+            ->get();
+        return new JsonResponse($rencanabeli);
+    }
 }
