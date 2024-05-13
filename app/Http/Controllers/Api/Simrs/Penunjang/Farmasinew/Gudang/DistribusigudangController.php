@@ -37,7 +37,9 @@ class DistribusigudangController extends Controller
                     }
                 ]);
             },
-            'mutasigudangkedepo'
+            'mutasigudangkedepo',
+            'asal:kode,nama',
+            'menuju:kode,nama',
         ])
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('flag', '!=', '')
