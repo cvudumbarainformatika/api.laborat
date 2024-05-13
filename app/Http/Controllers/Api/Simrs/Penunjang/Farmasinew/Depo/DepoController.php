@@ -184,7 +184,7 @@ class DepoController extends Controller
                     'stok_alokasi' => $request->stok_alokasi,
                     'mak_stok' => $request->mak_stok,
                     'jumlah_minta' => $request->jumlah_minta,
-                    'status_obat' => $request->status_obat
+                    'status_obat' => $request->status_obat ?? ''
                 ]
             );
 
