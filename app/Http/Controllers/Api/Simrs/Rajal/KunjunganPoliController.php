@@ -134,7 +134,7 @@ class KunjunganPoliController extends Controller
                 ->where(function ($sts) use ($status) {
                     if ($status !== 'all') {
                         if ($status === '') {
-                            $sts->where('rs17.rs19', '!=','1')->orwhere('rs17.rs19', '!=','2');
+                            $sts->where('rs17.rs19', '!=','1');
                         } else {
                             $sts->where('rs17.rs19', '=', $status);
                         }
@@ -159,7 +159,7 @@ class KunjunganPoliController extends Controller
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
                     if ($status === '') {
-                        $sts->where('rs17.rs19', '!=','1')->orwhere('rs17.rs19', '!=','2');
+                        $sts->where('rs17.rs19', '!=','1');
                     } else {
                         $sts->where('rs17.rs19', '=', $status);
                     }
