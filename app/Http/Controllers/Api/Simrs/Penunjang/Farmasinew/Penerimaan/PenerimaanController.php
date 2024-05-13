@@ -494,4 +494,51 @@ class PenerimaanController extends Controller
 
         ]);
     }
+
+    public function listepenerimaanBynomor()
+    {
+        // $idpegawai = auth()->user()->pegawai_id;
+        // $kodegudang = Pegawai::find($idpegawai);
+        $kodegudang = FormatingHelper::session_user();
+
+        $temp = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('cari') . '%')->get('kode');
+        $supl = collect($temp)->map(function ($item, $key) {
+            return $item->kode;
+        });
+        $listpenerimaan = PenerimaanHeder::select(
+            'penerimaan_h.nopenerimaan as nopenerimaan',
+            'penerimaan_h.nopemesanan as nopemesanan',
+            'penerimaan_h.tglpenerimaan as tglpenerimaan',
+            'penerimaan_h.kdpbf',
+            // 'siasik.pihak_ketiga.nama as pbf',
+            'penerimaan_h.pengirim as pengirim',
+            'penerimaan_h.jenissurat as jenissurat',
+            'penerimaan_h.nomorsurat as nomorsurat',
+            'penerimaan_h.tglsurat as tglsurat',
+            'penerimaan_h.batasbayar as batasbayar',
+            'penerimaan_h.kunci as kunci',
+            'penerimaan_h.total_faktur_pbf as total',
+        )
+            // ->leftJoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
+            // ->where('penerimaan_h.nopemesanan', 'Like', '%' . request('cari') . '%')
+            ->when($kodegudang['kdruang'] !== '', function ($e) use ($kodegudang) {
+                $e->where('penerimaan_h.gudang', $kodegudang['kdruang']);
+            })
+            ->when(count($supl) > 0, function ($e) use ($supl) {
+                $e->orWhereIn('penerimaan_h.kdpbf', $supl);
+            })
+            ->where('penerimaan_h.nopenerimaan', request('nomorpenerimaan') )
+            // ->orWhere('penerimaan_h.tglpenerimaan', 'Like', '%' . request('cari') . '%')
+            // ->orWhere('siasik.pihak_ketiga.nama', 'Like', '%' . request('cari') . '%')
+            // ->orWhere('penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')
+            // ->orWhere('penerimaan_h.jenissurat', 'Like', '%' . request('cari') . '%')
+            // ->orWhere('penerimaan_h.nomorsurat', 'Like', '%' . request('cari') . '%')
+            ->with([
+                'penerimaanrinci',
+                'penerimaanrinci.masterobat',
+                'pihakketiga:kode,nama',
+                'faktur'
+            ])->get();
+        return new JsonResponse($listpenerimaan);
+    }
 }

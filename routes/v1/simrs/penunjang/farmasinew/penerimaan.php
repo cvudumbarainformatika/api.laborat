@@ -11,6 +11,7 @@ Route::group([
     'prefix' => 'simrs/farmasinew/penerimaan'
 ], function () {
     Route::get('/listepenerimaan', [PenerimaanController::class, 'listepenerimaan']);
+    Route::get('/listepenerimaanBynomor', [PenerimaanController::class, 'listepenerimaanBynomor']);
     Route::get('/dialogpemesananobat', [PenerimaanController::class, 'listpemesananfix']);
     Route::get('/stokgudang', [ListstokgudangController::class, 'stokgudang']);
     Route::post('/simpan', [PenerimaanController::class, 'simpanpenerimaan']);
