@@ -14,6 +14,7 @@ Route::group([
     Route::get('/dialogperencanaanobatdetail', [PerencanaanpembelianController::class, 'viewrinci']);
     Route::post('/simpanperencanaanbeliobat', [PerencanaanpembelianController::class, 'simpanrencanabeliobat']);
     Route::get('/listrencanabeli', [PerencanaanpembelianController::class, 'listrencanabeli']);
+    Route::get('/listrencanabeliBynomor', [PerencanaanpembelianController::class, 'listrencanabeliBynomor']);
     Route::post('/kuncirencana', [PerencanaanpembelianController::class, 'kuncirencana']);
 
     Route::post('/rencana/update-rinci', [PerencanaanpembelianController::class, 'updateRinci']);
