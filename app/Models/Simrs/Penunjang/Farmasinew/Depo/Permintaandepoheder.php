@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,6 +25,10 @@ class Permintaandepoheder extends Model
     public function user()
     {
         return $this->hasOne(Pegawai::class, 'id', 'user');
+    }
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruang::class, 'dari', 'kode');
     }
     public function asal()
     {

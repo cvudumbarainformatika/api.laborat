@@ -284,7 +284,7 @@ class DepoController extends Controller
         $depo = request('kddepo') ?? 'R-';
         $nopermintaan = request('no_permintaan');
 
-        $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat', 'asal:kode,nama', 'menuju:kode,nama')
+        $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat', 'ruangan:kode,uraian', 'menuju:kode,nama', 'mutasigudangkedepo')
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('dari', 'like', '%' . $depo . '%')
             ->orderBY('tgl_permintaan', 'desc')
