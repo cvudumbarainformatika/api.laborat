@@ -196,4 +196,21 @@ class PemesananController extends Controller
             ]
         );
     }
+
+    public function listpemesananBynomor()
+    {
+        $gud = request('gudang');
+        $gud[] = '';
+        // return new JsonResponse($gud);
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
+            ->with(
+                'gudang:kode,nama',
+                'pihakketiga',
+                'rinci',
+                'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
+            )
+            ->where('nopemesanan', request('nopemesanan'))
+            ->get();
+        return new JsonResponse($listpemesanan);
+    }
 }

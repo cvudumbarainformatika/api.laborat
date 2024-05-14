@@ -15,6 +15,7 @@ Route::group([
     Route::get('/dialogrencanabeli_rinci', [DialogrencanapemesananController::class, 'dialogrencanabeli_rinci']);
     Route::post('/simpanpemesanan', [PemesananController::class, 'simpan']);
     Route::get('/listpemesanan', [PemesananController::class, 'listpemesanan']);
+    Route::get('/listpemesananBynomor', [PemesananController::class, 'listpemesananBynomor']);
     Route::get('/pihakketiga', [PihakketigaController::class, 'pihakketiga']);
     Route::post('/kuncipemesanan', [PemesananController::class, 'kuncipemesanan']);
     Route::post('/batal', [PemesananController::class, 'batal']);
