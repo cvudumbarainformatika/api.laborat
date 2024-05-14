@@ -598,13 +598,22 @@ class PoliController extends Controller
                 },
             ])
             ->first();
-        $flag = $cekx->rs19;
-        if ($flag === '') {
-            $cekx->rs19 = '2';
-            $cekx->save();
-        }
 
-        return new JsonResponse($cekx, 200);
+        if ($cekx) {
+            $flag = $cekx->rs19;
+            
+            if ($flag === '') {
+                $cekx->rs19 = '2';
+                $cekx->save();
+            }
+
+            return new JsonResponse($cekx, 200);
+        } else {
+            return response()->json([
+                'message' => 'Data tidak ditemukan'
+            ], 500);
+        }
+        
     }
 
     public function updatewaktubpjs(Request $request)

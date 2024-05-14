@@ -111,6 +111,8 @@ class AutogenController extends Controller
 
         // return new JsonResponse($thumb);
         echo 'SELAMAT DATANG';
+
+        
     }
     
     public function gennoreg()
