@@ -269,13 +269,23 @@ class DepoController extends Controller
     {
         $depo = request('kddepo');
         $nopermintaan = request('no_permintaan');
-
+        $fl = [''];
+        if (request('nama') === 'penerimaan depo') {
+            $fl[] = request('flag');
+        } else if (request('nama') === 'permintaan depo') {
+            foreach (request('flag') as $key) {
+                $fl[] = $key;
+            }
+        }
+        return new JsonResponse($fl);
         $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat', 'asal:kode,nama', 'menuju:kode,nama', 'mutasigudangkedepo')
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('dari', 'like', '%' . $depo . '%')
+            ->whereIn('flag', $fl)
             ->orderBY('tgl_permintaan', 'desc')
             ->paginate(request('per_page'));
         // ->get();
+
         return new JsonResponse($listpermintaandepo);
         // }
     }

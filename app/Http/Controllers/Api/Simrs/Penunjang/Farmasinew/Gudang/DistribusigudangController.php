@@ -22,6 +22,8 @@ class DistribusigudangController extends Controller
         $nopermintaan = request('no_permintaan');
         $flag = request('flag');
         $depo = request('kddepo');
+
+        // return new JsonResponse(['fl' => $flag, 'type' => $type]);
         $listpermintaandepo = Permintaandepoheder::with([
             'permintaanrinci.masterobat',
             'user:id,nip,nama',
@@ -47,7 +49,12 @@ class DistribusigudangController extends Controller
                 $wew->where('tujuan', $gudang);
             })
             ->when($flag, function ($wew) use ($flag) {
-                $wew->where('flag', $flag);
+                $type = gettype($flag);
+                if ($type === 'array') {
+                    $wew->whereIn('flag', $flag);
+                } else {
+                    $wew->where('flag', $flag);
+                }
             })
             ->when($depo, function ($wew) use ($depo) {
                 $wew->where('dari', $depo);
