@@ -84,7 +84,8 @@ class DistribusigudangController extends Controller
                     }
                 ]);
             },
-            'mutasigudangkedepo'
+            'mutasigudangkedepo',
+            'ruangan:kode,uraian',
         ])
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('flag', '!=', '')
