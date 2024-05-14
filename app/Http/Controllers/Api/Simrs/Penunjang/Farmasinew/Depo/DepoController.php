@@ -360,6 +360,7 @@ class DepoController extends Controller
         $nopermintaan = request('no_permintaan');
         $flag = request('flag');
         $depo = request('kddepo');
+        // return new JsonResponse(!!$flag);
         $listpermintaandepo = Permintaandepoheder::with([
             'permintaanrinci.masterobat',
             'user:id,nip,nama',
@@ -375,7 +376,7 @@ class DepoController extends Controller
                     }
                 ]);
             },
-            'mutasigudangkedepo'
+            'mutasigudangkedepo', 'asal:kode,nama', 'menuju:kode,nama',
         ])
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->when($gudang, function ($wew) use ($gudang) {
@@ -386,12 +387,12 @@ class DepoController extends Controller
                     $wew->where('tujuan', $gudang);
                 }
             })
-            ->when($flag, function ($wew) use ($flag) {
+            ->when($flag || $flag === '0', function ($wew) use ($flag) {
                 $all = ['', '1', '2', '3', '4'];
-                if ($flag === '5') {
-                    $wew->whereIn('flag', $all);
-                } else if ($flag === '0') {
+                if ($flag === '0' || $flag === 0) {
                     $wew->where('flag', '');
+                } else if ($flag === '5' || $flag === 5) {
+                    $wew->whereIn('flag', $all);
                 } else {
                     $wew->where('flag', $flag);
                 }
