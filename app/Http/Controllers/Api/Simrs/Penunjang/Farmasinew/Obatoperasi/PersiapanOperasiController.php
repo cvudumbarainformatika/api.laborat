@@ -756,6 +756,7 @@ class PersiapanOperasiController extends Controller
                 return new JsonResponse(['message' => 'Data Header tidak ditemukan'], 410);
             }
             $head->flag = '4';
+            $head->tgl_retur = date('Y-m-d H:i:s');
             $head->save();
 
             // insert resep keluar

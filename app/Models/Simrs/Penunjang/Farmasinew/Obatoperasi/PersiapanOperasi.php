@@ -20,7 +20,7 @@ class PersiapanOperasi extends Model
     }
     public function distribusi()
     {
-        return $this->hasMany(PersiapanOperasiDistribusi::class, 'kd_obat', 'kd_obat');
+        return $this->hasMany(PersiapanOperasiDistribusi::class, 'nopermintaan', 'nopermintaan');
     }
     public function pasien()
     {
