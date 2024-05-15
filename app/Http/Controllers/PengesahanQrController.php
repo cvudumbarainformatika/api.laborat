@@ -19,8 +19,9 @@ class PengesahanQrController extends Controller
     {
       $noreg = request('noreg');
       $dokumen = request('dokumen');
+      $asal= request('asal');
       
-      $enc = base64_encode($noreg.'|'.$dokumen);
+      $enc = base64_encode($noreg.'|'.$dokumen.'|'.$asal);
 
       // return response()->json([
       //   'noreg'=> $noreg,
