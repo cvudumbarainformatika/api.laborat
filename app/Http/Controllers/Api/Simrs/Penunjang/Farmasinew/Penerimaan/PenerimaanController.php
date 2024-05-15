@@ -121,12 +121,12 @@ class PenerimaanController extends Controller
                     'satuan' => $request->satuan_bsr,
                     'satuan_kcl' => $request->satuan_kcl,
                     'isi' => $request->isi,
-                    'diskon' => $request->diskon,
-                    'diskon_rp' => $request->diskon_rp,
-                    'diskon_rp_kecil' => $request->diskon_rp_kecil,
-                    'ppn' => $request->ppn,
-                    'ppn_rp' => $request->ppn_rp,
-                    'ppn_rp_kecil' => $request->ppn_rp_kecil,
+                    'diskon' => $request->diskon ?? 0,
+                    'diskon_rp' => $request->diskon_rp ?? 0,
+                    'diskon_rp_kecil' => $request->diskon_rp_kecil ?? 0,
+                    'ppn' => $request->ppn ?? 0,
+                    'ppn_rp' => $request->ppn_rp ?? 0,
+                    'ppn_rp_kecil' => $request->ppn_rp_kecil ?? 0,
                     'harga_netto' => $request->harga_netto,
                     'harga_netto_kecil' => $request->harga_netto_kecil,
                     'jml_pesan' => $request->jml_pesan,
@@ -352,12 +352,12 @@ class PenerimaanController extends Controller
                 'satuan' => $request->satuan_bsr,
                 'satuan_kcl' => $request->satuan_kcl,
                 'isi' => $request->isi,
-                'diskon' => $request->diskon,
-                'diskon_rp' => $request->diskon_rp,
-                'diskon_rp_kecil' => $request->diskon_rp_kecil,
-                'ppn' => $request->ppn,
-                'ppn_rp' => $request->ppn_rp,
-                'ppn_rp_kecil' => $request->ppn_rp_kecil,
+                'diskon' => $request->diskon ?? 0,
+                'diskon_rp' => $request->diskon_rp ?? 0,
+                'diskon_rp_kecil' => $request->diskon_rp_kecil ?? 0,
+                'ppn' => $request->ppn ?? 0,
+                'ppn_rp' => $request->ppn_rp ?? 0,
+                'ppn_rp_kecil' => $request->ppn_rp_kecil ?? 0,
                 'harga_netto' => $request->harga_netto,
                 'harga_netto_kecil' => $request->harga_netto_kecil,
                 'jml_pesan' => $request->jml_pesan,
@@ -527,7 +527,7 @@ class PenerimaanController extends Controller
             ->when(count($supl) > 0, function ($e) use ($supl) {
                 $e->orWhereIn('penerimaan_h.kdpbf', $supl);
             })
-            ->where('penerimaan_h.nopenerimaan', request('nomorpenerimaan') )
+            ->where('penerimaan_h.nopenerimaan', request('nomorpenerimaan'))
             // ->orWhere('penerimaan_h.tglpenerimaan', 'Like', '%' . request('cari') . '%')
             // ->orWhere('siasik.pihak_ketiga.nama', 'Like', '%' . request('cari') . '%')
             // ->orWhere('penerimaan_h.pengirim', 'Like', '%' . request('cari') . '%')

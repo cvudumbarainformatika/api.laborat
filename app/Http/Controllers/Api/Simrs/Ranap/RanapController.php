@@ -73,6 +73,11 @@ class RanapController extends Controller
                     $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
                 }
             })
+            ->when(request('q'), function ($q) {
+                $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
+                    ->orWhere('rs23.rs2', 'like',  '%' . request('q') . '%')
+                    ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+            })
             ->with([
                 'newapotekrajal' => function ($newapotekrajal) {
                     $newapotekrajal->with([

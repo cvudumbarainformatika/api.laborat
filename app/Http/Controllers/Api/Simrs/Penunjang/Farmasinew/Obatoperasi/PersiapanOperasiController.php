@@ -270,6 +270,12 @@ class PersiapanOperasiController extends Controller
     public function selesaiObatPermintaan(Request $request)
     {
         $data = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+        if (!$data) {
+            return new JsonResponse([
+                'data' => $data,
+                'message' => 'data tidak ditemukan'
+            ], 410);
+        }
         $data->flag = '1';
         $data->save();
         $data->load('rinci.obat:kd_obat,nama_obat');

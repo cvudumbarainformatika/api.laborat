@@ -226,7 +226,6 @@ class EresepController extends Controller
                 ],
                 [
                     'norm' => $request->norm,
-                    'iter_expired' => $iter_expired,
                     'tgl_permintaan' => date('Y-m-d H:i:s'),
                     'tgl' => date('Y-m-d'),
                     'depo' => $request->kodedepo,
@@ -238,6 +237,7 @@ class EresepController extends Controller
                     'uraianinacbg' => $request->uraianinacbg,
                     'tarifina' => $request->tarifina,
                     'tiperesep' => $tiperesep,
+                    'iter_expired' => $iter_expired,
                     // 'iter_expired' => $request->iter_expired ?? '',
                     'tagihanrs' => $request->tagihanrs ?? 0,
                 ]
@@ -289,7 +289,9 @@ class EresepController extends Controller
                             'user' => $user['kodesimrs']
                         ]
                     );
-                    $simpandtd->load('mobat:kd_obat,nama_obat');
+                    if ($simpandtd) {
+                        $simpandtd->load('mobat:kd_obat,nama_obat');
+                    }
                 } else {
                     $simpannondtd = Permintaanresepracikan::create(
                         [
@@ -322,7 +324,9 @@ class EresepController extends Controller
                             'user' => $user['kodesimrs']
                         ]
                     );
-                    $simpannondtd->load('mobat:kd_obat,nama_obat');
+                    if ($simpannondtd) {
+                        $simpannondtd->load('mobat:kd_obat,nama_obat');
+                    }
                 }
             } else {
                 $simpanrinci = Permintaanresep::create(
@@ -349,7 +353,9 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
-                $simpanrinci->load('mobat:kd_obat,nama_obat');
+                if ($simpanrinci) {
+                    $simpanrinci->load('mobat:kd_obat,nama_obat');
+                }
             }
 
             // $simpan->load(
@@ -500,6 +506,7 @@ class EresepController extends Controller
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
         $kirimresep->save();
+
         $kirimresep->load([
             'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
