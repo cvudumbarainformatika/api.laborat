@@ -259,18 +259,52 @@ class PemeriksaanfisikController extends Controller
 
     public function historypemeriksaanfisik()
     {
+    
         $history = Pemeriksaanfisik::select(
-            'id',
-            'rs1',
-            'rs2 as norm',
-            'user'
+            "id",
+            "rs1",
+            "rs2 as norm",
+            "rs3 as tgl",
+            "rs4",
+            "rs5",
+            "tingkatkesadaran",
+            "pernapasan",
+            "sistole",
+            "diastole",
+            "suhutubuh",
+            "tinggibadan",
+            "beratbadan",
+            "vas",
+            "statuspsikologis",
+            "sosialekonomi",
+            "spiritual",
+            "user",
+            "ruangan",
+            "scorenyeri",
+            "keteranganscorenyeri",
+            "kesadaran",
+            "kesadarane",
+            "kesadaranm",
+            "kesadaranv",
+            "statusneurologis",
+            "muakuloskeletal",
+            "inspeksi",
+            "palpasi",
+            "perkusidadakanan",
+            "perkusidadakiri",
+            "auskultasisuaradasar",
+            "auskultasisuaratambahankanan",
+            "auskultasisuaratambahankiri",
+            "kddokter",
+            "created_at",
+            "updated_at"
         )
-            ->where('rs2', request('norm'))
-            ->where('rs3', '<', Carbon::now()->toDateString())
-            ->with('pemeriksaanfisik', 'gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp')
-            ->orderby('id', 'DESC')
-            ->get()
-            ->chunk(10);
+        ->where('rs2', request('norm'))
+        ->where('rs3', '<', Carbon::now()->toDateString())
+        ->with( 'gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp')
+        ->orderby('id', 'DESC')
+        ->get()
+        ->chunk(10);
 
         $collapsed = $history->collapse();
 

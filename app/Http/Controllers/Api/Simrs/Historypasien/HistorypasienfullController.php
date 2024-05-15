@@ -40,7 +40,7 @@ class HistorypasienfullController extends Controller
                 [
                     'anamnesis',
                     'pemeriksaanfisik' => function ($p) {
-                        $p->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        $p->with(['gambars','detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                             ->orderBy('id', 'DESC');
                     },
                     'diagnosa' => function ($a) {
@@ -48,8 +48,8 @@ class HistorypasienfullController extends Controller
                             ->orderBy('id', 'DESC');
                     },
                     //    'diagnosa.masterdiagnosa:rs1,rs4',
-                    'tindakan' => function ($a) {
-                        $a->with(['mastertindakan'])
+                    'tindakan' => function ($t) {
+                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
                             ->orderBy('id', 'DESC');
                     },
                     //    'tindakan.mastertindakan:rs1,rs2',
@@ -81,6 +81,9 @@ class HistorypasienfullController extends Controller
                     'apotekracikanrajallalu.masterobat',
                     'dokumenluar'=> function($a){
                         $a->with(['pegawai:id,nama']);
+                    },
+                    'kamaroperasi' => function ($kamaroperasi) {
+                        $kamaroperasi->with(['mastertindakanoperasi']);
                     }
                 ]
             )

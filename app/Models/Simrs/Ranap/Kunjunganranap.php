@@ -444,4 +444,8 @@ class Kunjunganranap extends Model
     {
         return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
     }
+    public function kamaroperasi()
+    {
+        return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
+    }
 }
