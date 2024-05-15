@@ -277,7 +277,7 @@ class DepoController extends Controller
                 $fl[] = $key;
             }
         }
-        return new JsonResponse($fl);
+        // return new JsonResponse($fl);
         $listpermintaandepo = Permintaandepoheder::with('permintaanrinci.masterobat', 'asal:kode,nama', 'menuju:kode,nama', 'mutasigudangkedepo')
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->where('dari', 'like', '%' . $depo . '%')
