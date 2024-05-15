@@ -296,6 +296,12 @@ class PenerimaanController extends Controller
 
     public function simpanpenerimaanlangsung(Request $request)
     {
+        $gudang = ['Gd-05010100', 'Gd-03010100'];
+        if (!in_array($request->gudang, $gudang)) {
+            return new JsonResponse([
+                'message' => 'Anda tidak menggunakan user gudang, pastikan anda memiliki user gudang untuk melakukan penerimaan'
+            ], 410);
+        }
         if ($request->gudang === 'Gd-05010100') {
             $procedure = 'penerimaan_obat_ko(@nomor)';
             $colom = 'penerimaanko';
