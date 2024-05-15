@@ -422,8 +422,12 @@ class PerencanaanpembelianController extends Controller
                     )->where('flag', '')
                         ->groupBy('kdobat');
                 },
+
             ])
-            ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+            ->where(function ($q) {
+                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
+            })
             ->orderBy('nama_obat')
             ->paginate(request('per_page'));
 
@@ -488,7 +492,7 @@ class PerencanaanpembelianController extends Controller
 
     public function listrencanabeliBynomor()
     {
-        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat,satuan_k', 'rincian.stok','gudang')
+        $rencanabeli = RencanabeliH::with('rincian.mobat:kd_obat,nama_obat,satuan_k', 'rincian.stok', 'gudang')
             ->where('no_rencbeliobat', request('no_rencbeliobat'))
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
