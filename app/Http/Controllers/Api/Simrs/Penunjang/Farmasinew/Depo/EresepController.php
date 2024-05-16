@@ -172,9 +172,11 @@ class EresepController extends Controller
             if ($request->kodedepo === 'Gd-05010101') {
                 $tiperesep = $request->tiperesep ?? 'normal';
                 $iter_expired = $request->iter_expired ?? null;
+                $iter_jml = $request->iter_jml ?? null;
             } else {
                 $tiperesep =  'normal';
                 $iter_expired =  null;
+                $iter_jml =  null;
             }
             $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
                 ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
@@ -238,6 +240,7 @@ class EresepController extends Controller
                     'tarifina' => $request->tarifina,
                     'tiperesep' => $tiperesep,
                     'iter_expired' => $iter_expired,
+                    'iter_jml' => $iter_jml,
                     // 'iter_expired' => $request->iter_expired ?? '',
                     'tagihanrs' => $request->tagihanrs ?? 0,
                 ]
@@ -289,9 +292,9 @@ class EresepController extends Controller
                             'user' => $user['kodesimrs']
                         ]
                     );
-                    if ($simpandtd) {
-                        $simpandtd->load('mobat:kd_obat,nama_obat');
-                    }
+                    // if ($simpandtd) {
+                    //     $simpandtd->load('mobat:kd_obat,nama_obat');
+                    // }
                 } else {
                     $simpannondtd = Permintaanresepracikan::create(
                         [
@@ -324,9 +327,9 @@ class EresepController extends Controller
                             'user' => $user['kodesimrs']
                         ]
                     );
-                    if ($simpannondtd) {
-                        $simpannondtd->load('mobat:kd_obat,nama_obat');
-                    }
+                    // if ($simpannondtd) {
+                    //     $simpannondtd->load('mobat:kd_obat,nama_obat');
+                    // }
                 }
             } else {
                 $simpanrinci = Permintaanresep::create(
@@ -353,9 +356,9 @@ class EresepController extends Controller
                         'user' => $user['kodesimrs']
                     ]
                 );
-                if ($simpanrinci) {
-                    $simpanrinci->load('mobat:kd_obat,nama_obat');
-                }
+                // if ($simpanrinci) {
+                //     $simpanrinci->load('mobat:kd_obat,nama_obat');
+                // }
             }
 
             // $simpan->load(
@@ -378,6 +381,22 @@ class EresepController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'newapotekrajal' => $endas ?? false,
+                'har' => $har ?? false,
+                'heder' => $simpan ?? false,
+                'rinci' => $simpanrinci ?? 0,
+                'rincidtd' => $simpandtd ?? 0,
+                'rincinondtd' => $simpannondtd ?? 0,
+                'cekjumlahstok' => $cekjumlahstok ?? 0,
+                'noresep' => $noresep ?? 0,
+                'user' => $user['kodesimrs'] ?? 0,
+                'tiperesep' => $tiperesep ?? 0,
+                'iter_expired' => $iter_expired ?? 0,
+                'iter_jml' => $iter_jml ?? 0,
+                'error' => $e,
+                'message' => 'ada kesalahan'
+            ], 410);
         }
     }
 
