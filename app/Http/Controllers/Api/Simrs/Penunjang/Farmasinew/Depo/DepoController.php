@@ -131,7 +131,7 @@ class DepoController extends Controller
             if ($cek > 0) {
                 return new JsonResponse(['message' => 'Maaf Data ini Sudah Dikunci...!!!'], 500);
             }
-            $stokreal = Stokreal::select('jumlah as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
+            $stokreal = Stokreal::selectRaw('sum(jumlah) as stok')->where('kdobat', $request->kdobat)->where('kdruang', $request->tujuan)->first();
             $stokrealx = (float) $stokreal->stok;
             $allpermintaan = Permintaandeporinci::select(DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan'))
                 ->leftjoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
@@ -148,7 +148,12 @@ class DepoController extends Controller
             $stokalokasi = $stokrealx - (float) $allpermintaanx;
 
             if ($request->jumlah_minta > $stokalokasi) {
-                return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak mencukupi...!!!'], 500);
+                return new JsonResponse([
+                    'message' => 'Maaf Stok Alokasi Tidak mencukupi...!!!',
+                    'alokasi' => $stokalokasi,
+                    'stokreal' => $stokreal,
+                    'allpermintaan' => $allpermintaan,
+                ], 500);
             }
 
             if ($request->no_permintaan === '' || $request->no_permintaan === null) {
