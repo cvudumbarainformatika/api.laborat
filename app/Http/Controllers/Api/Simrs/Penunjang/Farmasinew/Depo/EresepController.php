@@ -431,7 +431,7 @@ class EresepController extends Controller
                 'rincian.mobat:kd_obat,nama_obat,satuan_k',
                 'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis',
                 'poli',
                 'info',
                 'ruanganranap',

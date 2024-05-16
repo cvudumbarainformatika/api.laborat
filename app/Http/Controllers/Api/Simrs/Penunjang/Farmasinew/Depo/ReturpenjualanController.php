@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use Carbon\Carbon;
@@ -20,14 +21,27 @@ class ReturpenjualanController extends Controller
     public function caribynoresep()
     {
 
-        if (request('to') === '' || request('from') === null) {
-            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
-            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
-        } else {
-            $tgl = request('from') . ' 00:00:00';
-            $tglx = request('to') . ' 23:59:59';
+        // if (request('to') === '' || request('from') === null) {
+        //     $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+        //     $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        // } else {
+        //     $tgl = request('from') . ' 00:00:00';
+        //     $tglx = request('to') . ' 23:59:59';
+        // }
+
+        // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
+        $nama = [];
+        if (request('nama')) {
+            $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
+            if (count($raw) > 0) {
+                $col = collect($raw);
+                $nama = $col->map(function ($it) {
+                    return $it->kd_obat;
+                });
+            }
         }
         $carinoresep = Resepkeluarheder::select('resep_keluar_h.*', 'resep_keluar_h.dokter as kddokter')
+
             ->with(
                 [
                     'rincian.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
@@ -44,18 +58,36 @@ class ReturpenjualanController extends Controller
                     ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
-            ->whereBetween('tgl_permintaan', [$tgl, $tglx])
+            ->when(request('from'), function ($q) {
+                $tgl = request('from') . ' 00:00:00';
+                $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+                $q->whereBetween('tgl_permintaan', [$tgl, $tglx]);
+            })
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
             ->when(!request('flag'), function ($x) {
                 $x->where('flag', '3');
             })
+            ->when(count($nama) > 0, function ($q) use ($nama) {
+                $q->whereHas(
+                    'rincian',
+                    function ($rin) use ($nama) {
+                        $rin->whereIn('kdobat', $nama);
+                    }
+                )->orWhereHas(
+                    'rincianracik',
+                    function ($rin) use ($nama) {
+                        $rin->whereIn('kdobat', $nama);
+                    }
+                )->where('depo', request('kddepo'));
+            })
             ->orderBy('tgl', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse(
             [
-                'result' => $carinoresep
+                'result' => $carinoresep,
+                'nama' => $nama,
             ]
         );
     }
