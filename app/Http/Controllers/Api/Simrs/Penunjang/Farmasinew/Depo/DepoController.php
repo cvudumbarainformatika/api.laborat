@@ -22,6 +22,18 @@ class DepoController extends Controller
         $gudang = request('kdgudang');
         $depo = request('kddepo');
         // $gudang = ['Gd-05010100', 'Gd-03010100'];
+        $anu = Stokreal::select('stokreal.kdobat')
+            ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+            ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
+            ->where('stokreal.jumlah', '>', 0)
+            ->where('stokreal.kdruang', $gudang)
+            ->orderBy('new_masterobat.nama_obat', 'ASC')
+            ->groupBy('stokreal.kdobat')
+            ->limit(20)
+            ->get();
+        $obat = $anu->map(function ($xxx) {
+            return $xxx->kdobat;
+        });
         $stokgudang = Stokreal::select(
             'stokreal.*',
             'new_masterobat.bentuk_sediaan',
@@ -81,11 +93,11 @@ class DepoController extends Controller
             ->when($gudang, function ($wew) use ($gudang) {
                 $wew->where('stokreal.kdruang', $gudang);
             })
-            ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
+            // ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
             ->where('stokreal.jumlah', '>', 0)
+            ->whereIn('stokreal.kdobat', $obat)
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
-            ->limit(20)
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
             $stolreal = $xxx->jumlah;
@@ -97,9 +109,7 @@ class DepoController extends Controller
             $xxx['permintaantotal'] = $permintaantotal;
             return $xxx;
         });
-        $obat = $stokgudang->map(function ($xxx) {
-            return $xxx->kdobat;
-        });
+
         $stokdewe = Stokrel::select('kdobat', DB::raw('sum(stokreal.jumlah) as  jumlah'), 'kdruang')
             ->when($depo, function ($wew) use ($depo) {
                 $wew->where('stokreal.kdruang', $depo);
