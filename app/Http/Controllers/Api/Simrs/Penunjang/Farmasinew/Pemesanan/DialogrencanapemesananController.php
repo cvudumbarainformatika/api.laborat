@@ -66,14 +66,21 @@ class DialogrencanapemesananController extends Controller
             'new_masterobat.satuan_k as satuan_k',
             'perencana_pebelian_r.flag as flagperobat',
             'perencana_pebelian_h.kd_ruang as gudang',
+            'pemesanan_r.flag as flag_pesan',
             DB::raw('sum(pemesanan_r.jumlahdpesan) as jumlahallpesan')
         )
             ->leftJoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', '=', 'perencana_pebelian_r.no_rencbeliobat')
             ->leftJoin('new_masterobat', 'perencana_pebelian_r.kdobat', '=', 'new_masterobat.kd_obat')
-            ->leftJoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
+            ->leftJoin('pemesanan_r', function ($q) {
+                $q->on('pemesanan_r.kdobat', '=', 'perencana_pebelian_r.kdobat')
+                    ->on('pemesanan_r.noperencanaan', '=', 'perencana_pebelian_r.no_rencbeliobat');
+            })
             ->where('perencana_pebelian_h.flag', '2')
             ->where('perencana_pebelian_r.flag', '')
-            ->where('pemesanan_r.flag', '')
+            ->where(function ($anu) {
+                $anu->whereNull('pemesanan_r.flag')
+                    ->orWhere('pemesanan_r.flag', '2');
+            })
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
             ->with([
                 'rincian' => function ($re) {

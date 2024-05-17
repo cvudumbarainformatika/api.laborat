@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliR;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +27,7 @@ class PenerimaanController extends Controller
             ->with([
                 'gudang:kode,nama',
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
-                'rinci:nopemesanan,kdobat,jumlahdpesan,harga as harga_kcl',
+                'rinci:nopemesanan,kdobat,jumlahdpesan,harga as harga_kcl,flag',
                 'rinci.masterobat:kd_obat,nama_obat,merk,kandungan,bentuk_sediaan,satuan_b,satuan_k,kekuatan_dosis,volumesediaan,kelas_terapi',
                 //'penerimaan'
                 'penerimaan' => function ($penerimaan) {
@@ -157,16 +158,19 @@ class PenerimaanController extends Controller
                 return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
             }
 
+            // cari rinci pesanan
             $jumlahpesan = PemesananRinci::select('jumlahdpesan')
                 ->with(['pemesananheder'])
                 ->where('nopemesanan', $request->nopemesanan)
                 ->where('kdobat', $request->kdobat)->sum('jumlahdpesan');
 
+            // cari sudah berapa dari pesanan tsb yang diterima
             $jumlahterima = PenerimaanRinci::select('penerimaan_r.jml_terima_k')
                 ->join('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                 ->where('penerimaan_h.nopemesanan', $request->nopemesanan)
                 ->where('penerimaan_r.kdobat', $request->kdobat)->sum('penerimaan_r.jml_terima_k');
 
+            // jika jumlah dipesan sudah sama dengan jumlah diterima maka pemesanan ditutup
             if ((int) $jumlahpesan === (int)$jumlahterima) {
                 PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('kdobat', $request->kdobat)
                     ->update(['flag' => '1']);
@@ -177,6 +181,8 @@ class PenerimaanController extends Controller
                 $rinciTrm->jml_all_penerimaan = $jumlahterima;
                 $rinciTrm->save();
             }
+
+            // jika sudah tidak ada rincian pemesanan yang perlu diterima maka kunci header
             $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
             $pesananDikunci = false;
             if (count($pesan) === 0) {
@@ -198,6 +204,42 @@ class PenerimaanController extends Controller
             DB::connection('farmasi')->rollBack();
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
+    }
+
+    public function tolakRinciPesanan(Request $request)
+    {
+        // cari pesanan rinci
+        $rinciPesanan = PemesananRinci::where('nopemesanan', $request->nopemesanan)
+            ->where('kdobat', $request->kdobat)
+            ->first();
+        if (!$rinciPesanan) {
+            return new JsonResponse([
+                'req' => $request->all(),
+                'message' => 'Obat Pesanan tidak ditemukan'
+            ], 410);
+        }
+        // cari rencana
+        $rinciRencana = RencanabeliR::where('no_rencbeliobat', $rinciPesanan->noperencanaan)
+            ->where('kdobat', $request->kdobat)
+            ->first();
+        if (!$rinciRencana) {
+            return new JsonResponse([
+                'req' => $request->all(),
+                'message' => 'Rencana Pesanan Obat tidak ditemukan'
+            ], 410);
+        }
+        // flag pemesanan adalah 2
+        $rinciPesanan->flag = '2';
+        $rinciPesanan->save();
+        // flag perencanaan di kosongkan
+        $rinciRencana->flag = '';
+        $rinciRencana->save();
+        return new JsonResponse([
+            'req' => $request->all(),
+            'rinciPesanan' => $rinciPesanan,
+            'rinciRencana' => $rinciRencana,
+            'message' => 'Pesanan sudah ditolak'
+        ]);
     }
 
     public function listepenerimaan()

@@ -18,6 +18,7 @@ class PemesananController extends Controller
     {
         $cekjumlaha = PemesananRinci::select('jumlahdpesan')->where('noperencanaan', $request->noperencanaan)
             ->where('kdobat', $request->kdobat)
+            ->whereIn('flag', ['', '1'])
             ->sum('jumlahdpesan');
         $jumlaha = $cekjumlaha + $request->jumlahdpesan;
 
