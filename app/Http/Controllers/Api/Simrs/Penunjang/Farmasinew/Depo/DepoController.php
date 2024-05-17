@@ -83,6 +83,16 @@ class DepoController extends Controller
                     ->whereIn('permintaan_h.flag', ['', '1', '2'])
                     ->groupBy('permintaan_r.kdobat');
             },
+            'persiapanrinci' => function ($res) {
+                $res->select(
+                    'persiapan_operasi_rincis.kd_obat',
+
+                    DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                )
+                    ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                    ->whereIn('persiapan_operasis.flag', ['', '1'])
+                    ->groupBy('persiapan_operasi_rincis.kd_obat');
+            },
             'minmax' => function ($mimnmax) use ($depo) {
                 $mimnmax->select('kd_obat', 'kd_ruang', 'max')->when($depo, function ($xxx) use ($depo) {
                     $xxx->where('kd_ruang', $depo);
@@ -101,10 +111,11 @@ class DepoController extends Controller
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
             $stolreal = $xxx->jumlah;
+            $jumlahper = request('kdgudang') === 'Gd-04010103' ? $xxx['persiapanrinci'][0]->jumlah ?? 0 : 0;
             $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
             $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
+            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx - (float)$jumlahper;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaantotal;
             return $xxx;

@@ -124,6 +124,16 @@ class EresepController extends Controller
                             ->whereIn('permintaan_h.flag', ['', '1', '2'])
                             ->groupBy('permintaan_r.kdobat');
                     },
+                    'persiapanrinci' => function ($res) {
+                        $res->select(
+                            'persiapan_operasi_rincis.kd_obat',
+
+                            DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                        )
+                            ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                            ->whereIn('persiapan_operasis.flag', ['', '1'])
+                            ->groupBy('persiapan_operasi_rincis.kd_obat');
+                    },
                 ]
             )
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
@@ -147,10 +157,11 @@ class EresepController extends Controller
             ->get();
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
+            $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-            $mutasiantardepo = $x['permintaanobatrinci'][0]->allpermintaan ?? 0;
-            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$mutasiantardepo;
+            $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
             return $x;
         });
         return new JsonResponse(

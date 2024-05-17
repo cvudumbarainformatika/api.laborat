@@ -154,6 +154,24 @@ class PersiapanOperasiController extends Controller
                             ->whereIn('flag', ['', '1', '2'])
                             ->groupBy('resep_permintaan_keluar_racikan.kdobat');
                     },
+                    'permintaanobatrinci' => function ($permintaanobatrinci) {
+                        $permintaanobatrinci->select(
+                            'permintaan_r.no_permintaan',
+                            'permintaan_r.kdobat',
+                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                        )
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            // biar yang ada di tabel mutasi ga ke hitung
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                            ->where('permintaan_h.tujuan', request('kdruang'))
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
+                    },
                 ]
             )
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
@@ -173,7 +191,8 @@ class PersiapanOperasiController extends Controller
             $jumlahper = $x['persiapanrinci'][0]->jumlah ?? 0;
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-            $x->alokasi = $total - $jumlahtrans - $jumlahtransx - $jumlahper;
+            $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+            $x->alokasi = (float)$total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$jumlahper - (float)$permintaanobatrinci;
             return $x;
         });
         return new JsonResponse(
