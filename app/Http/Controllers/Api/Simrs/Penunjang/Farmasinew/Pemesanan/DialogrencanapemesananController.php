@@ -73,6 +73,7 @@ class DialogrencanapemesananController extends Controller
             ->leftJoin('pemesanan_r', 'new_masterobat.kd_obat', '=', 'pemesanan_r.kdobat')
             ->where('perencana_pebelian_h.flag', '2')
             ->where('perencana_pebelian_r.flag', '')
+            ->where('pemesanan_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
             ->with([
                 'rincian' => function ($re) {
