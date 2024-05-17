@@ -123,12 +123,23 @@ class PemesananController extends Controller
         $gud[] = '';
         // return new JsonResponse($gud);
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
-            ->with(
+            ->with([
                 'gudang:kode,nama',
                 'pihakketiga',
-                'rinci',
-                'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
-            )
+                'rinci' => function ($ren) {
+                    $ren->select('pemesanan_r.*', 'perencana_pebelian_r.jumlah_diverif')
+                        ->leftJoin('perencana_pebelian_r', function ($q) {
+                            $q->on('perencana_pebelian_r.no_rencbeliobat', '=', 'pemesanan_r.noperencanaan')
+                                ->on('perencana_pebelian_r.kdobat', '=', 'pemesanan_r.kdobat');
+                        })
+                        ->with([
+                            // 'rencanar',
+                            'masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
+                        ]);
+                },
+                // 'rinci.rencanar',
+                // 'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
+            ])
             ->whereIn('kd_ruang', $gud)
             ->orderBy('tgl_pemesanan', 'desc')
             ->paginate(request('per_page'));
