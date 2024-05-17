@@ -85,6 +85,7 @@ class DepoController extends Controller
             ->where('stokreal.jumlah', '>', 0)
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+            ->limit(20)
             ->get();
         $datastok = $stokgudang->map(function ($xxx) {
             $stolreal = $xxx->jumlah;
@@ -96,12 +97,15 @@ class DepoController extends Controller
             $xxx['permintaantotal'] = $permintaantotal;
             return $xxx;
         });
-
+        $obat = $stokgudang->map(function ($xxx) {
+            return $xxx->kdobat;
+        });
         $stokdewe = Stokrel::select('kdobat', DB::raw('sum(stokreal.jumlah) as  jumlah'), 'kdruang')
             ->when($depo, function ($wew) use ($depo) {
                 $wew->where('stokreal.kdruang', $depo);
             })
             ->where('jumlah', '>', 0)
+            ->whereIn('kdobat', $obat)
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
 
@@ -109,6 +113,7 @@ class DepoController extends Controller
             [
                 'obat' => $datastok,
                 'stokdewe' => $stokdewe,
+                'obat l' => $obat,
                 // 'stokgudang' => $stokgudang,
             ]
         );
