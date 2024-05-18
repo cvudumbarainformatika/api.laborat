@@ -146,7 +146,7 @@ class LaboratController extends Controller
 
         $auth = Pegawai::find(auth()->user()->pegawai_id);
         $user = $auth->kdpegsimrs ?? '';
-        $ruangan = $request->kodepoli;
+        $ruangan = $request->unit_pengirim;
 
         try {
             // begin transaction

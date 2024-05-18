@@ -106,10 +106,107 @@ class IgdController extends Controller
 
     public function terimapasien(Request $request)
     {
-        $terima = KunjunganPoli::where('rs1', $request->noreg)->first();
-        $terima->rs19 = '2';
-        $terima->save();
+        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
+        ->with([
+            'anamnesis',
+            'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+            'permintaanperawatanjenazah',
+            // 'gambars',
+            // 'fisio',
+            // 'laporantindakan',
+            // 'psikiatri',
+            // 'pediatri'=> function($neo){
+            //     $neo->with(['pegawai:id,nama']);
+            // },
+            // 'dokumenluar'=> function($neo){
+            //     $neo->with(['pegawai:id,nama']);
+            // },
+            // 'kandungan'=> function($neo){
+            //     $neo->with(['pegawai:id,nama']);
+            // },
+            // 'neonatusmedis'=> function($neo){
+            //     $neo->with(['pegawai:id,nama']);
+            // },
+            // 'neonatuskeperawatan'=> function($neo){
+            //     $neo->with(['pegawai:id,nama']);
+            // },
+            // 'diagnosakeperawatan' => function ($diag) {
+            //     $diag->with('intervensi.masterintervensi');
+            // },
+            // 'diagnosakebidanan' => function ($diag) {
+            //     $diag->with('intervensi.masterintervensi');
+            // },
+            'laborats' => function ($t) {
+                $t->with('details.pemeriksaanlab')
+                    ->orderBy('id', 'DESC');
+            },
+            'radiologi' => function ($t) {
+                $t->orderBy('id', 'DESC');
+            },
+            'penunjanglain' => function ($t) {
+                $t->with('masterpenunjang')->orderBy('id', 'DESC');
+            },
+            'tindakan' => function ($t) {
+                $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+                    ->orderBy('id', 'DESC');
+            },
+            'diagnosa' => function ($d) {
+                $d->with('masterdiagnosa');
+            },
+            'pemeriksaanfisik' => function ($a) {
+                $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                    ->orderBy('id', 'DESC');
+            },
+            'ok' => function ($q) {
+                $q->orderBy('id', 'DESC');
+            },
+            // 'taskid' => function ($q) {
+            //     $q->orderBy('taskid', 'DESC');
+            // },
+            // 'planning' => function ($p) {
+            //     $p->with(
+            //         'masterpoli',
+            //         'rekomdpjp',
+            //         'transrujukan',
+            //         'listkonsul',
+            //         'spri',
+            //         'ranap',
+            //         'kontrol',
+            //         'operasi',
+            //     )->orderBy('id', 'DESC');
+            // },
+            // 'edukasi' => function ($x) {
+            //     $x->orderBy('id', 'DESC');
+            // },
+            // 'diet' => function ($diet) {
+            //     $diet->orderBy('id', 'DESC');
+            // },
+            // 'sharing' => function ($sharing) {
+            //     $sharing->orderBy('id', 'DESC');
+            // },
+            'newapotekrajal' => function ($newapotekrajal) {
+                $newapotekrajal->with([
+                    'permintaanresep.mobat:kd_obat,nama_obat',
+                    'permintaanracikan.mobat:kd_obat,nama_obat',
+                ])
+                    ->orderBy('id', 'DESC');
+            }
+        ])
+        ->first();
 
-        return new JsonResponse(['data' => $terima], 200);
+        if ($cekx) {
+            $flag = $cekx->rs19;
+
+            if ($flag === '') {
+                $cekx->rs19 = '2';
+                $cekx->save();
+            }
+
+            return new JsonResponse($cekx, 200);
+        } else {
+            return response()->json([
+                'message' => 'Data tidak ditemukan'
+            ], 500);
+        }
     }
 }

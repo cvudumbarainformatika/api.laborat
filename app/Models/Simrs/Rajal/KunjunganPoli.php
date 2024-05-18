@@ -41,6 +41,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
+use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
@@ -321,5 +322,9 @@ class KunjunganPoli extends Model
     public function dokumenluar()
     {
         return $this->hasMany(DokumenUpload::class, 'noreg', 'rs1');
+    }
+    public function permintaanperawatanjenazah()
+    {
+        return $this->hasMany(KamarjenazahPermintaan::class, 'rs1', 'rs1');
     }
 }

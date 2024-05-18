@@ -16,7 +16,12 @@ class FisioterapiController extends Controller
         DB::select('call nota_permintaanfisio(@nomor)');
         $x = DB::table('rs1')->select('rs14')->get();
         $wew = $x[0]->rs14;
-        $notapermintaanfisioterapi = $request->nota ?? FormatingHelper::notatindakan($wew, '/PFIS-RJ');
+        if($request->kodepoli === 'POL014')
+        {
+            $notapermintaanfisioterapi = $request->nota ?? FormatingHelper::notatindakan($wew, '/PFIS-IG');
+        }else{
+            $notapermintaanfisioterapi = $request->nota ?? FormatingHelper::notatindakan($wew, '/PFIS-RJ');
+        }
 
         $user = FormatingHelper::session_user();
         $simpanpermintaan = Fisioterapipermintaan::firstOrCreate(
