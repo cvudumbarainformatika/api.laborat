@@ -18,7 +18,11 @@ class KamaroperasiController extends Controller
         DB::select('call nota_tindakan(@nomor)');
         $x = DB::table('rs1')->select('rs14')->get();
         $wew = $x[0]->rs14;
-        $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-RJ');
+        if($request->kodepoli === 'POL014'){
+            $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-IG');
+        }else{
+            $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-RJ');
+        }
 
         $userid = FormatingHelper::session_user();
         $requestoperasi = PermintaanOperasi::create(
