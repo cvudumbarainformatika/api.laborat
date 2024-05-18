@@ -189,14 +189,84 @@ class EresepController extends Controller
                 $iter_expired =  null;
                 $iter_jml =  null;
             }
-            $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
-                ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kodedepo)
-                ->where('jumlah', '!=', 0)
+            $cekjumlahstok = Stokreal::select('kdobat', DB::raw('sum(jumlah) as jumlahstok'))
+                ->where('kdobat', $request->kodeobat)
+                ->where('kdruang', $request->kodedepo)
+                ->where('jumlah', '>', 0)
+                ->with([
+                    'transnonracikan' => function ($transnonracikan) use ($request) {
+                        $transnonracikan->select(
+                            // 'resep_keluar_r.kdobat as kdobat',
+                            'resep_permintaan_keluar.kdobat as kdobat',
+                            'resep_keluar_h.depo as kdruang',
+                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                        )
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                            ->where('resep_keluar_h.depo', $request->kodedepo)
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                            ->groupBy('resep_permintaan_keluar.kdobat');
+                    },
+                    'transracikan' => function ($transracikan) use ($request) {
+                        $transracikan->select(
+                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                            'resep_keluar_h.depo as kdruang',
+                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                        )
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                            ->where('resep_keluar_h.depo', $request->kodedepo)
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                    },
+                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
+                        $permintaanobatrinci->select(
+                            'permintaan_r.no_permintaan',
+                            'permintaan_r.kdobat',
+                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                        )
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            // biar yang ada di tabel mutasi ga ke hitung
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                            ->where('permintaan_h.tujuan', $request->kodedepo)
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
+                    },
+                    'persiapanrinci' => function ($res) use ($request) {
+                        $res->select(
+                            'persiapan_operasi_rincis.kd_obat',
+
+                            DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                        )
+                            ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                            ->whereIn('persiapan_operasis.flag', ['', '1'])
+                            ->groupBy('persiapan_operasi_rincis.kd_obat');
+                    },
+                ])
                 ->orderBy('tglexp')
+                ->groupBy('kdobat')
                 ->get();
-            $jumlahstok = $cekjumlahstok[0]->jumlahstok;
-            if ($request->jumlah > $jumlahstok) {
-                return new JsonResponse(['message' => 'Maaf Stok Tidak Mencukupi...!!!'], 500);
+            $wew = collect($cekjumlahstok)->map(function ($x, $y) use ($request) {
+                $total = $x->jumlahstok ?? 0;
+                $jumlahper = $request->kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+                $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+                $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+                $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+                $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+                return $x;
+            });
+            // $jumlahstok = $cekjumlahstok[0]->jumlahstok;
+            $alokasi = $wew[0]->alokasi;
+            // return new JsonResponse([
+            //     'alokasi' => $alokasi,
+            //     'wew' => $wew,
+            // ]);
+            if ($request->jumlah > $alokasi) {
+                return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!'], 500);
             }
 
             if ($request->kodedepo === 'Gd-04010102') {
@@ -209,7 +279,7 @@ class EresepController extends Controller
                 $lebel = 'D-KO';
             } elseif ($request->kodedepo === 'Gd-05010101') {
                 $lanjut = $request->lanjuTr ?? '';
-                $cekpemberian = self::cekpemberianobat($request, $jumlahstok);
+                $cekpemberian = self::cekpemberianobat($request, $alokasi);
                 if ($cekpemberian['status'] == 1 && $lanjut !== '1') {
                     return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
                 }
