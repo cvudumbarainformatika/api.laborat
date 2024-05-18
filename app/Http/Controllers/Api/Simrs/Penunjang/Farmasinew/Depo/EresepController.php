@@ -439,10 +439,10 @@ class EresepController extends Controller
         // return $rm;
         $listresep = Resepkeluarheder::with(
             [
-                'rincian.mobat:kd_obat,nama_obat,satuan_k',
-                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
-                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis',
+                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis',
                 'poli',
                 'info',
                 'ruanganranap',
@@ -495,10 +495,10 @@ class EresepController extends Controller
 
         $listresep = Resepkeluarheder::with(
             [
-                'rincian.mobat:kd_obat,nama_obat,satuan_k',
-                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
-                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'poli',
                 'ruanganranap',
                 'sistembayar',
@@ -538,8 +538,8 @@ class EresepController extends Controller
         $kirimresep->save();
 
         $kirimresep->load([
-            'permintaanresep.mobat:kd_obat,nama_obat,satuan_k',
-            'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k',
+            'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
         ]);
 
         $msg = [
