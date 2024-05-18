@@ -159,7 +159,12 @@ class LaboratController extends Controller
             DB::select('call nota_permintaanlab(@nomor)');
             $x = DB::table('rs1')->select('rs28')->get();
             $wew = $x[0]->rs28;
-            $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
+            if($ruangan === 'POL014')
+            {
+                $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
+            }else{
+                $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
+            }
 
             // $thumb = [];
             // foreach ($request->form as $key => $value) {

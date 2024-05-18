@@ -41,7 +41,12 @@ class RadiologimetaController extends Controller
         DB::select('call nota_permintaanradio(@nomor)');
         $x = DB::table('rs1')->select('rs41')->get();
         $wew = $x[0]->rs41;
-        $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
+        if($request->kodepoli === 'POL014')
+        {
+            $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'G-RAD');
+        }else{
+            $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
+        }
 
         $userid = FormatingHelper::session_user();
         $simpanpermintaanradiologi = Transpermintaanradiologi::create(
