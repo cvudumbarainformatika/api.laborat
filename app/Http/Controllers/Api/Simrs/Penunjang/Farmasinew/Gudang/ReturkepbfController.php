@@ -184,6 +184,7 @@ class ReturkepbfController extends Controller
                 ],
                 [
                     'tgl_retur' => $request->tgl_retur,
+                    'opsiretur' => $request->opsiretur,
                     'no_faktur_retur_pbf' => $request->no_faktur_retur_pbf ?? '',
                     'tgl_faktur_retur_pbf' => $request->tgl_faktur_retur_pbf ?? null,
 
