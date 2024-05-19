@@ -38,7 +38,11 @@ class BastController extends Controller
     }
     public function pemesanan()
     {
-        $data = PemesananHeder::where('kdpbf', request('kdpbf'))->get();
+        $data = PemesananHeder::select('pemesanan_h.*')
+            ->leftJoin('penerimaan_h', 'penerimaan_h.nopemesanan', '=', 'pemesanan_h.nopemesanan')
+            ->where('pemesanan_h.kdpbf', request('kdpbf'))
+            ->whereNull('penerimaan_h.tgl_bast')
+            ->get();
         return new JsonResponse($data);
     }
     public function penerimaan()
