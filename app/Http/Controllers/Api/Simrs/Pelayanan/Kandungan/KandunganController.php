@@ -25,7 +25,7 @@ class KandunganController extends Controller
         return new JsonResponse(['message'=> 'failed'], 500);
       }
 
-      return new JsonResponse($saved, 200);   
+      return new JsonResponse($saved->load('pegawai'), 200);   
     }
     public function deletedata(Request $request)
     {
