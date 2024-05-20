@@ -10,4 +10,5 @@ Route::group([
 ], function () {
     Route::post('/store', [PediatriController::class, 'store']);
     Route::post('/deletedata', [PediatriController::class, 'deletedata']);
+    Route::get('/master-who-cdc', [PediatriController::class, 'master_who_cdc']);
 });

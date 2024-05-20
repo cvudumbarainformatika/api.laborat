@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Pediatri;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\MwhocdcAnak;
 use App\Models\Simrs\Pelayanan\Pediatri;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,21 @@ class PediatriController extends Controller
       }
 
       return new JsonResponse(['message'=> 'Data Berhasil dihapus'], 200); 
+    }
+
+    public function master_who_cdc()
+    {
+       $thumb = collect();
+        MwhocdcAnak::where('dr_tanggal', '=', null)
+          ->orderBy('id')
+          ->chunk(50, function ($dokters) use ($thumb) {
+              foreach ($dokters as $q) {
+                  $thumb->push($q);
+              }
+          });
+
+
+        return new JsonResponse($thumb);
     }
 
     
