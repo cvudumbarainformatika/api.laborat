@@ -674,6 +674,22 @@ class EresepController extends Controller
             //     ]
             // ];
             // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+
+            /**
+             * update waktu
+             */
+            // $input = new Request([
+            //     'noreg' => $request->noreg
+            // ]);
+            // $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+
+            // if ($cek === 0 || $cek === '') {
+            //     //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+            //     //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+
+            //     BridantrianbpjsController::updateWaktu($input, 6);
+            // }
+
             return new JsonResponse(['message' => 'Resep Selesai', 'data' => $data], 200);
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
@@ -1625,6 +1641,9 @@ class EresepController extends Controller
         $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
 
         if ($cek === 0 || $cek === '') {
+            //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+            //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+
             BridantrianbpjsController::updateWaktu($input, 5);
         }
         $user = Pegawai::find(auth()->user()->pegawai_id);

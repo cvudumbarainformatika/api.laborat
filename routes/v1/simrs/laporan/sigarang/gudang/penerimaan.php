@@ -14,4 +14,5 @@ Route::group([
     Route::get('/lappenerimaan-gudang', [LaporanPenerimaanController::class, 'lapPenerimaanGudang']);
     Route::get('/lappenerimaan-depo', [LaporanPenerimaanController::class, 'lapPenerimaanDepo']);
     Route::get('/lappenerimaan-depo-new', [LaporanPenerimaanController::class, 'lapPenerimaanDepoNew']);
+    Route::get('/gudang/stok-opname', [LaporanPenerimaanController::class, 'stokOpnameGudang']);
 });

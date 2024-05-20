@@ -315,4 +315,169 @@ class LaporanPenerimaanController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
+    public function stokOpnameGudang()
+    {
+
+        $date = date_create(request('tahun') . '-' . request('bulan'));
+        $date2 = date_create(request('tahun') . '-' . request('bulan'));
+        $anu = date_format($date2, 'Y-m');
+        $comp = $anu === date('Y-m');
+        $temp = date_modify($date, '-1 months');
+        $prev = date_format($temp, 'Y-m');
+        $from = request('tahun') . '-' . request('bulan') . '-01 00:00:00';
+        $to = request('tahun') . '-' . request('bulan') . '-31 23:59:59';
+        $fromN = request('tahun') . '-' . request('bulan') . '-01';
+        $toN = request('tahun') . '-' . request('bulan') . '-31';
+        $fromA = $prev . '-01 00:00:00';
+        $toA = $prev . '-31 23:59:59';
+        $kodeDepo = ['Gd-02010101', 'Gd-02010102', 'Gd-02010103', 'Gd-02010100'];
+        $kodeGudang = ['Gd-02010100'];
+        if ($comp) {
+            $recent = RecentStokUpdate::select('kode_rs')
+                ->where('sisa_stok', '>', 0)
+                ->whereIn('kode_ruang', $kodeGudang)
+                ->distinct('kode_rs')->get();
+        } else {
+            $recent = MonthlyStokUpdate::select('kode_rs')->distinct('kode_rs')
+                ->where('sisa_stok', '>', 0)
+                ->whereIn('kode_ruang', $kodeDepo)
+                ->whereBetween('tanggal', [$from, $to])->get();
+        }
+        $col = collect($recent)->map(function ($y) {
+            return $y->kode_rs;
+        });
+        $trm = DetailPenerimaan::select('kode_rs')
+            ->leftJoin('penerimaans', function ($p) {
+                $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
+            })
+
+            ->whereBetween('penerimaans.tanggal', [$fromN, $toN])
+            ->where('penerimaans.status', '>', 2)->distinct('kode_rs')->get();
+        $clTrm = collect($trm)->map(function ($y) {
+            return $y->kode_rs;
+        });
+        $dist = DetailDistribusiDepo::select('kode_rs')
+            ->leftJoin('distribusi_depos', function ($p) {
+                $p->on('distribusi_depos.id', '=', 'detail_distribusi_depos.distribusi_depo_id');
+            })
+            ->whereBetween('distribusi_depos.tanggal', [$fromN, $toN])
+            ->where('distribusi_depos.status', '>', 1)->distinct('kode_rs')->get();
+        $clDist = collect($dist)->map(function ($y) {
+            return $y->kode_rs;
+        });
+
+        $mrg = [];
+        // array_merge($mrg, $col, $clTrm, $clDist);
+        foreach ($col as $key) {
+            $mrg[] = $key;
+        }
+        foreach ($clTrm as $key) {
+            $mrg[] = $key;
+        }
+        foreach ($clDist as $key) {
+            $mrg[] = $key;
+        }
+        $disti = array_unique($mrg);
+        $thumb = collect();
+        $barang = BarangRS::select('kode', 'nama', 'kode_satuan', 'kode_108', 'uraian_108', 'kode_depo')
+            ->whereIn('kode', $disti)
+            ->filter(request(['q']))
+            ->with([
+                'depo:kode,nama',
+                'satuan:kode,nama',
+                'monthly' => function ($m) use ($from, $to, $kodeGudang) {
+                    $m->select('tanggal', DB::raw('sum(sisa_stok) as totalStok'), 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
+                        // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                        ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        ->whereIn('kode_ruang', $kodeGudang)
+                        ->whereBetween('tanggal', [$from, $to])
+                        ->groupBy('kode_rs', 'harga');
+                },
+                'recent' => function ($m) use ($kodeGudang) {
+                    $m->select(DB::raw('sum(sisa_stok) as totalStok'), 'harga', 'kode_rs', 'kode_ruang',  'no_penerimaan')
+                        // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                        ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        ->whereIn('kode_ruang', $kodeGudang)
+                        ->where('sisa_stok', '>', 0)
+                        ->groupBy('kode_rs', 'harga', 'kode_ruang');
+                },
+                'stok_awal' => function ($m) use ($fromA, $toA, $kodeGudang) {
+                    $m->select('tanggal', DB::raw('sum(sisa_stok) as totalStok'), 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
+                        // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
+                        // ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        ->whereIn('kode_ruang', $kodeGudang)
+                        ->whereBetween('tanggal', [$fromA, $toA])
+                        ->groupBy('kode_rs', 'harga', 'kode_ruang');
+                },
+                'detailDistribusiDepo' => function ($m) use ($fromN, $toN, $col) {
+                    $m->select(
+                        'detail_distribusi_depos.kode_rs',
+                        'detail_distribusi_depos.no_penerimaan',
+                        'detail_distribusi_depos.jumlah as total',
+                        'gudangs.nama as depo',
+                        'distribusi_depos.kode_depo'
+                    )
+                        // ->selectRaw('round(sum(qty),2) as total')
+                        // ->selectRaw('round(qty*harga_jadi,2) as totalRp')
+                        ->leftJoin('distribusi_depos', function ($p) {
+                            $p->on('distribusi_depos.id', '=', 'detail_distribusi_depos.distribusi_depo_id');
+                        })
+                        ->leftJoin('gudangs', function ($p) {
+                            $p->on('gudangs.kode', '=', 'distribusi_depos.kode_depo');
+                        })
+                        ->with([
+                            'recent' => function ($q) use ($col) {
+                                $q->select('kode_rs', 'kode_ruang', 'no_penerimaan', 'harga')
+                                    ->whereIn('kode_rs', $col)
+                                    ->groupBy('kode_rs', 'no_penerimaan');
+                            }
+                        ])
+                        ->whereBetween('distribusi_depos.tanggal', [$fromN, $toN])
+                        ->where('distribusi_depos.status', '>', 1);
+                },
+                'detailPenerimaan' => function ($m) use ($fromN, $toN, $col) {
+                    $m->select(
+                        'detail_penerimaans.kode_rs',
+                        'penerimaans.no_penerimaan',
+                        'detail_penerimaans.qty as total',
+                    )
+                        // ->selectRaw('round(sum(qty),2) as total')
+                        // ->selectRaw('round(qty*harga_jadi,2) as totalRp')
+                        ->leftJoin('penerimaans', function ($p) {
+                            $p->on('penerimaans.id', '=', 'detail_penerimaans.penerimaan_id');
+                        })
+
+                        ->whereBetween('penerimaans.tanggal', [$fromN, $toN])
+                        ->where('penerimaans.status', '>=', 2);
+                },
+
+
+
+            ]);
+
+
+        // $barang->orderBy('kode_depo', 'ASC')->orderBy('uraian_108', 'ASC')->orderBy('nama', 'ASC')
+        //     ->chunk(50, function ($dokters) use ($thumb) {
+        //         foreach ($dokters as $q) {
+        //             $thumb->push($q);
+        //         }
+        //     });
+        $data = $barang->orderBy('kode_depo', 'ASC')->orderBy('uraian_108', 'ASC')->orderBy('nama', 'ASC')->get();
+        // foreach ($data as $barang) {
+        //     foreach ($barang->detailPemakaianruangan as $det) {
+        //         $det->append('harga');
+        //     }
+        // }
+
+        // return new JsonResponse($data);
+        return new JsonResponse([
+            'data' => $data,
+            // 'data' => $thumb,
+            'col' => $col,
+            'clTrm' => $clTrm,
+            'clDist' => $clDist,
+            'mrg' => $mrg,
+            'disti' => $disti,
+        ]);
+    }
 }
