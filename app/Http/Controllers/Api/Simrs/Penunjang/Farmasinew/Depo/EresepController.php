@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -16,6 +18,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\SistemBayar;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -588,6 +591,8 @@ class EresepController extends Controller
 
     public function kirimresep(Request $request)
     {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();
         if (!$kirimresep) {
             return new JsonResponse([
@@ -602,6 +607,9 @@ class EresepController extends Controller
                 'message' => 'Resep sudah dikirimkan',
 
             ], 410);
+        }
+        if ((int)$user->kdgroupnakes !== 1) {
+            return new JsonResponse(['message' => 'MAAF KIRIM RESEP HARUS OLEH DOKTER'], 500);
         }
         $kirimresep->flag = '1';
         $kirimresep->tgl_kirim = date('Y-m-d H:i:s');
@@ -623,11 +631,13 @@ class EresepController extends Controller
         ];
         event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
+        // self::kirimResepDanSelesaiLayanan($request);
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
         ], 200);
     }
+
 
     public function terimaResep(Request $request)
     {
@@ -1605,6 +1615,27 @@ class EresepController extends Controller
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
+        }
+    }
+    public static function kirimResepDanSelesaiLayanan($request)
+    {
+        $input = new Request([
+            'noreg' => $request->noreg
+        ]);
+        $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
+
+        if ($cek === 0 || $cek === '') {
+            BridantrianbpjsController::updateWaktu($input, 5);
+        }
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+            $updatekunjungan->rs19 = '1';
+            $updatekunjungan->rs24 = '1';
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        } else {
+            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
     }
 }
