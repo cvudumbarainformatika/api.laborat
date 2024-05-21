@@ -340,7 +340,7 @@ class LaporanPenerimaanController extends Controller
         } else {
             $recent = MonthlyStokUpdate::select('kode_rs')->distinct('kode_rs')
                 ->where('sisa_stok', '>', 0)
-                ->whereIn('kode_ruang', $kodeDepo)
+                ->whereIn('kode_ruang', $kodeGudang)
                 ->whereBetween('tanggal', [$from, $to])->get();
         }
         $col = collect($recent)->map(function ($y) {
@@ -386,17 +386,17 @@ class LaporanPenerimaanController extends Controller
                 'depo:kode,nama',
                 'satuan:kode,nama',
                 'monthly' => function ($m) use ($from, $to, $kodeGudang) {
-                    $m->select('tanggal', DB::raw('sum(sisa_stok) as totalStok'), 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
+                    $m->select('tanggal', DB::raw('sum(sisa_stok) as totalStok'), DB::raw('round(sisa_stok*harga,2) as totalRp'), 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
-                        ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        // ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->whereIn('kode_ruang', $kodeGudang)
                         ->whereBetween('tanggal', [$from, $to])
                         ->groupBy('kode_rs', 'harga');
                 },
                 'recent' => function ($m) use ($kodeGudang) {
-                    $m->select(DB::raw('sum(sisa_stok) as totalStok'), 'harga', 'kode_rs', 'kode_ruang',  'no_penerimaan')
+                    $m->select(DB::raw('sum(sisa_stok) as totalStok'), DB::raw('round(sisa_stok*harga,2) as totalRp'), 'harga', 'kode_rs', 'kode_ruang',  'no_penerimaan')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
-                        ->selectRaw('round(sisa_stok*harga,2) as totalRp')
+                        // ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->whereIn('kode_ruang', $kodeGudang)
                         ->where('sisa_stok', '>', 0)
                         ->groupBy('kode_rs', 'harga', 'kode_ruang');
