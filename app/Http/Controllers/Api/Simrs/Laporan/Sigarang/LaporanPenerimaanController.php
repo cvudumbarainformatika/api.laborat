@@ -378,9 +378,11 @@ class LaporanPenerimaanController extends Controller
             $mrg[] = $key;
         }
         $disti = array_unique($mrg);
+        $brg = BarangRS::select('kode')->orderBy('kode_depo', 'ASC')->orderBy('uraian_108', 'ASC')->orderBy('nama', 'ASC')->get();
         $thumb = collect();
         $barang = BarangRS::select('kode', 'nama', 'kode_satuan', 'kode_108', 'uraian_108', 'kode_depo')
-            ->whereIn('kode', $disti)
+            // ->whereIn('kode', $disti)
+            ->whereIn('kode', $brg)
             ->filter(request(['q']))
             ->with([
                 'depo:kode,nama',
@@ -457,12 +459,12 @@ class LaporanPenerimaanController extends Controller
 
 
         // $barang->orderBy('kode_depo', 'ASC')->orderBy('uraian_108', 'ASC')->orderBy('nama', 'ASC')
-        //     ->chunk(50, function ($dokters) use ($thumb) {
-        //         foreach ($dokters as $q) {
-        //             $thumb->push($q);
-        //         }
-        //     });
-        $data = $barang->orderBy('kode_depo', 'ASC')->orderBy('uraian_108', 'ASC')->orderBy('nama', 'ASC')->get();
+        $barang->chunk(50, function ($dokters) use ($thumb) {
+            foreach ($dokters as $q) {
+                $thumb->push($q);
+            }
+        });
+        // $data = $barang->orderBy('kode_depo', 'ASC')->orderBy('uraian_108', 'ASC')->orderBy('nama', 'ASC')->get();
         // foreach ($data as $barang) {
         //     foreach ($barang->detailPemakaianruangan as $det) {
         //         $det->append('harga');
@@ -471,8 +473,8 @@ class LaporanPenerimaanController extends Controller
 
         // return new JsonResponse($data);
         return new JsonResponse([
-            'data' => $data,
-            // 'data' => $thumb,
+            // 'data' => $data,
+            'data' => $thumb,
             'col' => $col,
             'clTrm' => $clTrm,
             'clDist' => $clDist,
