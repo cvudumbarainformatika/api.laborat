@@ -234,6 +234,15 @@ class PenerimaanController extends Controller
         // flag perencanaan di kosongkan
         $rinciRencana->flag = '';
         $rinciRencana->save();
+        // jika sudah tidak ada rincian pemesanan yang perlu diterima maka kunci header
+        $pesan = PemesananRinci::where('nopemesanan', $request->nopemesanan)->where('flag', '')->get();
+        // $pesananDikunci = false;
+        if (count($pesan) === 0) {
+            $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
+            $kuncipermintaan->flag = '2';
+            $kuncipermintaan->save();
+            // $pesananDikunci = true;
+        }
         return new JsonResponse([
             'req' => $request->all(),
             'rinciPesanan' => $rinciPesanan,
