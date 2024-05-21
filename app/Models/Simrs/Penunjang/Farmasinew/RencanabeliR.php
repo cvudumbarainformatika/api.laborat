@@ -2,6 +2,9 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
+use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +31,10 @@ class RencanabeliR extends Model
     {
         return $this->hasMany(Stokrel::class, 'kdobat', 'kdobat');
     }
+    public function harga()
+    {
+        return $this->hasOne(DaftarHarga::class, 'kd_obat', 'kdobat')->orderBy('tgl_mulai_berlaku', 'DESC');
+    }
     public function minmax()
     {
         return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kdobat');
@@ -35,5 +42,9 @@ class RencanabeliR extends Model
     public function penerimaan()
     {
         return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kdobat');
+    }
+    public function pesanan()
+    {
+        return $this->hasMany(PemesananRinci::class, 'noperencanaan', 'no_rencbeliobat');
     }
 }

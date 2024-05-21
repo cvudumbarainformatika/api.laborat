@@ -26,7 +26,8 @@ class PemesananController extends Controller
             return new JsonResponse(['message' => 'Maaf jumlah yang anda pesan melebihi jumlah yg di rencankan...!!!'], 500);
         }
 
-        if ($jumlaha === $request->jumlahdirencanakan) {
+
+        if ((float)$jumlaha >= (float)$request->jumlahdirencanakan) {
             RencanabeliR::where('no_rencbeliobat', $request->noperencanaan)->where('kdobat', $request->kdobat)
                 ->update(['flag' => '1']);
         }
@@ -79,7 +80,8 @@ class PemesananController extends Controller
                 'message' => 'ok',
                 'notrans' => $nopemesanan,
                 'heder' => $simpanheder,
-                'rinci' => $simpanrinci
+                'rinci' => $simpanrinci,
+                'jumlaha' => $jumlaha,
             ],
             200
         );

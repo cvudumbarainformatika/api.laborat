@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Pemesanan;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliR;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,5 +28,9 @@ class PemesananRinci extends Model
     public function rencanar()
     {
         return $this->hasMany(RencanabeliR::class, 'no_rencbeliobat', 'noperencanaan');
+    }
+    public function penerimaan()
+    {
+        return $this->hasMany(PenerimaanHeder::class, 'nopemesanan', 'nopemesanan');
     }
 }
