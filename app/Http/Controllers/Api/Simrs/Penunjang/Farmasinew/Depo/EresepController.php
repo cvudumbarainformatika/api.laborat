@@ -88,8 +88,8 @@ class EresepController extends Controller
                     'transnonracikan' => function ($transnonracikan) {
                         $transnonracikan->select(
                             // 'resep_keluar_r.kdobat as kdobat',
-                            'resep_permintaan_keluar.kdobat as kdobat',
-                            'resep_keluar_h.depo as kdruang',
+                            // 'resep_permintaan_keluar.kdobat as kdobat',
+                            // 'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
@@ -100,8 +100,8 @@ class EresepController extends Controller
                     'transracikan' => function ($transracikan) {
                         $transracikan->select(
                             // 'resep_keluar_racikan_r.kdobat as kdobat',
-                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
-                            'resep_keluar_h.depo as kdruang',
+                            // 'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                            // 'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                         )
                             ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
@@ -111,8 +111,8 @@ class EresepController extends Controller
                     },
                     'permintaanobatrinci' => function ($permintaanobatrinci) {
                         $permintaanobatrinci->select(
-                            'permintaan_r.no_permintaan',
-                            'permintaan_r.kdobat',
+                            // 'permintaan_r.no_permintaan',
+                            // 'permintaan_r.kdobat',
                             DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
                         )
                             ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
@@ -129,7 +129,7 @@ class EresepController extends Controller
                     },
                     'persiapanrinci' => function ($res) {
                         $res->select(
-                            'persiapan_operasi_rincis.kd_obat',
+                            // 'persiapan_operasi_rincis.kd_obat',
 
                             DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                         )
@@ -139,7 +139,7 @@ class EresepController extends Controller
                     },
                 ]
             )
-            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
             ->where('stokreal.kdruang', request('kdruang'))
             ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
@@ -156,7 +156,7 @@ class EresepController extends Controller
                     ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
             ->groupBy('stokreal.kdobat')
-            ->limit(30)
+            ->limit(10)
             ->get();
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
