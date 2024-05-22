@@ -211,20 +211,20 @@ class PerencanaanpembelianController extends Controller
     {
         //$cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
         $xxx = FormatingHelper::session_user();
-        $cekflag = RencanabeliH::select(
-            'perencana_pebelian_h.no_rencbeliobat as notrans',
-            'perencana_pebelian_h.kd_ruang as gudang',
-            'perencana_pebelian_r.no_rencbeliobat'
-        )
-            ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.no_rencbeliobat')
-            ->where('perencana_pebelian_h.kd_ruang', $request->kd_ruang)
-            ->where('perencana_pebelian_r.kdobat', $request->kdobat)
-            ->where('perencana_pebelian_r.flag', '')
-            ->count();
+        // $cekflag = RencanabeliH::select(
+        //     'perencana_pebelian_h.no_rencbeliobat as notrans',
+        //     'perencana_pebelian_h.kd_ruang as gudang',
+        //     'perencana_pebelian_r.no_rencbeliobat'
+        // )
+        //     ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.no_rencbeliobat')
+        //     ->where('perencana_pebelian_h.kd_ruang', $request->kd_ruang)
+        //     ->where('perencana_pebelian_r.kdobat', $request->kdobat)
+        //     ->where('perencana_pebelian_r.flag', '')
+        //     ->count();
 
-        if ($cekflag > 0) {
-            return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
-        }
+        // if ($cekflag > 0) {
+        //     return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
+        // }
 
         $cekminmax = Mminmaxobat::select(DB::raw('sum(max) as max'))
             ->where('kd_obat', $request->kdobat)

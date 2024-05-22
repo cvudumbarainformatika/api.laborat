@@ -87,7 +87,9 @@ class DialogrencanapemesananController extends Controller
             //     $anu->whereNull('pemesanan_r.flag')
             //         ->orWhere('pemesanan_r.flag', '2');
             // })
-            ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
+            // ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
+            ->where('perencana_pebelian_h.no_rencbeliobat', '=',  request('no_rencbeliobat'))
+            // ->where('pemesanan_r.noperencanaan', '=',  request('no_rencbeliobat'))
             ->with([
                 'rincian' => function ($re) {
                     $re->select('no_rencbeliobat', 'kdobat', 'jumlah_diverif', 'flag')
