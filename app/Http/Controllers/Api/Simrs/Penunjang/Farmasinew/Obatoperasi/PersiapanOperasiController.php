@@ -25,11 +25,18 @@ class PersiapanOperasiController extends Controller
     public function getPermintaan()
     {
         $flag = request('flag') ?? [];
-        $data = PersiapanOperasi::with('rinci.obat:kd_obat,nama_obat,satuan_k', 'pasien:rs1,rs2')
+        $data = PersiapanOperasi::with(
+            'rinci.obat:kd_obat,nama_obat,satuan_k',
+            'rinci.susulan:kdpegsimrs,nama',
+            'pasien:rs1,rs2',
+            'list:rs1,rs14',
+            'list.sistembayar:rs1,groups'
+        )
             ->whereIn('flag', $flag)
             ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->orderBy('tgl_permintaan', "desc")
-            ->paginate(request('per_page'));
+            ->simplePaginate(request('per_page'));
+        // ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
     public function getPermintaanForDokter()
@@ -330,7 +337,7 @@ class PersiapanOperasiController extends Controller
             }
         }
         try {
-            DB::beginTransaction();
+            DB::connection('farmasi')->beginTransaction();
             $rinci = $request->rinci;
             $user = FormatingHelper::session_user();
             $kode = $user['kodesimrs'];
@@ -423,7 +430,7 @@ class PersiapanOperasiController extends Controller
                 $stok->save();
             }
 
-            DB::commit();
+            DB::connection('farmasi')->commit();
 
             return new JsonResponse([
                 'rinci' => $rinci,
@@ -432,7 +439,137 @@ class PersiapanOperasiController extends Controller
                 'message' => 'Data berhasil di simpan'
             ]);
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan...!!!',
+                'result' => $e,
+            ], 410);
+        }
+    }
+    public function tambahDistribusi(Request $request)
+    {
+        $stok = Stokreal::selectRaw('sum(jumlah) as total')
+            ->where('kdobat', $request->kodeobat)
+            ->where('kdruang', 'Gd-04010103')
+            ->where('jumlah', '>', 0)
+            ->groupBy('kdobat')
+            ->first();
+
+        if (!$stok) {
+            $obat = Mobatnew::select('nama_obat', 'satuan_k')->where('kd_obat', $request->kodeobat)->first();
+            return new JsonResponse([
+                'message' => 'Stok Obat' . $obat->nama_obat  . ' tidak tersedia',
+                'request' => $request->all(),
+            ], 410);
+        }
+        if ($stok->total < $request->jumlah_distribusi) {
+            $obat = Mobatnew::select('nama_obat', 'satuan_k')->where('kd_obat', $request->kodeobat)->first();
+            return new JsonResponse([
+                'message' => 'stok ' . $obat->nama_obat . ' tidak mencukupi, stok tersisa ' . $stok->total . ' ' . $obat->satuan_k . ' silahkan kurangi jumlah distribusi',
+                'request' => $request->all(),
+            ], 410);
+        }
+        $ada = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $request->kodeobat)->first();
+        if ($ada) {
+            return new JsonResponse([
+                'message' => 'Obat Sudah di distribusikan, sebaiknya dibuatkan permintaan baru jika akan menambahkan jumlah obat yang telah di distribusikan',
+                'request' => $request->all(),
+            ], 410);
+        }
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $data = PersiapanOperasiRinci::create(
+                [
+                    'nopermintaan' => $request->nopermintaan,
+                    'kd_obat' => $request->kodeobat,
+                ],
+                [
+                    'jumlah_minta' => 0,
+                    'jumlah_distribusi' => $request->jumlah_distribusi,
+                    'susulan' => $request->susulan ?? '',
+                    'status_konsinyasi' => $request->status_konsinyasi ?? '',
+                ]
+            );
+            if (!$data) {
+                return new JsonResponse([
+                    'message' => 'Data Gagal Disimpan...!!!',
+                ], 410);
+            }
+            $rinci = PersiapanOperasiRinci::with('obat:kd_obat,nama_obat,satuan_k', 'susulan:kdpegsimrs,nama')->find($data->id);
+            if (!$rinci) {
+                return new JsonResponse([
+                    'message' => 'Data Tersimpan gagal ditemukan',
+                    'data' => $data
+                ], 410);
+            }
+
+            // lanjut ngisi data by fifo
+            $dist = [];
+            $distribusi = (float)$request->jumlah_distribusi;
+            if ($distribusi > 0) {
+                $stok = Stokreal::where('kdobat', $request->kodeobat)
+                    ->where('kdruang', 'Gd-04010103')
+                    ->where('jumlah', '>', 0)
+                    ->orderBy('tglExp', 'ASC')
+                    ->get();
+                $index = 0;
+                while ($distribusi > 0) {
+                    $ada = (float)$stok[$index]->jumlah;
+                    if ($ada < $distribusi) {
+                        $temp = [
+                            'nopermintaan' => $request->nopermintaan,
+                            'kd_obat' => $request->kodeobat,
+                            'nopenerimaan' => $stok[$index]->nopenerimaan,
+                            'jumlah' => $ada,
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ];
+                        $dist[] = $temp;
+                        $sisa = $distribusi - $ada;
+                        $index += 1;
+                        $distribusi = $sisa;
+                    } else {
+                        $temp = [
+                            'nopermintaan' => $request->nopermintaan,
+                            'kd_obat' => $request->kodeobat,
+                            'nopenerimaan' => $stok[$index]->nopenerimaan,
+                            'jumlah' => $distribusi,
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ];
+                        $dist[] = $temp;
+                        $distribusi = 0;
+                    }
+                }
+            }
+            //simpan ditribusi
+            $dist = PersiapanOperasiDistribusi::insert($dist); // ini hasilnya kalo berhasil itu true
+            if (!$dist) {
+                return new JsonResponse(['message' => 'Data gagal disimpan!'], 410);
+            }
+            // update stok
+            $dataDist = PersiapanOperasiDistribusi::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $request->kodeobat)->get();
+            foreach ($dataDist as $rin) {
+                $stok = Stokreal::where('kdobat', $rin['kd_obat'])
+                    ->where('kdruang', 'Gd-04010103')
+                    ->where('nopenerimaan', $rin['nopenerimaan'])
+                    ->first();
+
+                if ($stok->jumlah <= 0) {
+                    return new JsonResponse(['message' => 'Data stok kurang dari 0'], 410);
+                }
+                $sisa = $stok->jumlah - $rin['jumlah'];
+                $stok->jumlah = $sisa;
+                $stok->save();
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Sudah disimpan dan di ditribusikan',
+                'request' => $request->all(),
+                'rinci' => $rinci,
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan...!!!',
                 'result' => $e,

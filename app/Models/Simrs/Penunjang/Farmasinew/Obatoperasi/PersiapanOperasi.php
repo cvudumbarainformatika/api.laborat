@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,6 +15,10 @@ class PersiapanOperasi extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    public function list()
+    {
+        return $this->hasOne(PermintaanOperasi::class, 'rs1', 'noreg');
+    }
     public function rinci()
     {
         return $this->hasMany(PersiapanOperasiRinci::class, 'nopermintaan', 'nopermintaan');

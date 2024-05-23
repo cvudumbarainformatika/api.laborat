@@ -15,6 +15,7 @@ class PermintaanOperasi extends Model
 {
     use HasFactory;
     protected $table = 'rs200';
+    protected $connection = 'mysql';
     protected $guarded = ['id'];
 
     public function kunjunganranap()

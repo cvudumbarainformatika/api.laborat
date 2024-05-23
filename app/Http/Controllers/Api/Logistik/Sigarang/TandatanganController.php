@@ -44,53 +44,70 @@ class TandatanganController extends Controller
 
     public function getPtk()
     {
-        $data = Pegawai::where('aktif', 'AKTIF')
+
+        $data = Pegawai::select('id', 'nama', 'nip')
+            ->where('aktif', 'AKTIF')
             ->when(request('ptk') ?? function ($wew) {
                 // $wew->where('role_id', 2);
-                $wew->limit(20);
+                $wew->where('nama', 'LIKE', '%' . request('ptk') . '%')->limit(10);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('ptk') . '%')
-                    ->where('role_id', 2);
+                    ->where('role_id', 2)
+                    ->limit(10);
             })
-            ->limit(20)->get();
+            ->get();
         return new JsonResponse($data);
     }
     public function getGudang()
     {
-        $data =
-            Pegawai::where('aktif', 'AKTIF')
+        $data = Pegawai::select('id', 'nama', 'nip')
+            ->where('aktif', 'AKTIF')
             ->when(request('gudang') ?? function ($wew) {
                 $wew->where('role_id', 3);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('gudang') . '%')
                     ->where('role_id', 3);
             })
-            ->limit(20)->get();
+            ->limit(10)->get();
         return new JsonResponse($data);
     }
     public function getMengetahui()
     {
-        $data =
-            Pegawai::where('aktif', 'AKTIF')
+        $data = Pegawai::select('id', 'nama', 'nip')
+            ->where('aktif', 'AKTIF')
             ->when(request('tahu') ?? function ($wew) {
-                $wew->limit(20);
+                $wew->limit(10);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('tahu') . '%')
-                    ->limit(20);
+                    ->limit(10);
             })
             ->get();
         return new JsonResponse($data);
     }
     public function getPpk()
     {
-        $data =
-            Pegawai::where('aktif', 'AKTIF')
+        $data = Pegawai::select('id', 'nama', 'nip')
+            ->where('aktif', 'AKTIF')
             ->when(request('ppk') ?? function ($wew) {
-                $wew->limit(20);
+                $wew->limit(10);
             }, function ($anu) {
                 $anu->where('nama', 'LIKE', '%' . request('ppk') . '%')
-                    ->limit(20);
+                    ->limit(10);
             })
+            ->get();
+        return new JsonResponse($data);
+    }
+    public function getPegawai()
+    {
+        $data = Pegawai::select('id', 'nama', 'nip', 'kdpegsimrs')
+            ->where('aktif', 'AKTIF')
+            ->when(request('q') ?? function ($wew) {
+                $wew->limit(10);
+            }, function ($anu) {
+                $anu->where('nama', 'LIKE', '%' . request('q') . '%')
+                    ->limit(10);
+            })
+            ->orderBy('nama', 'ASC')
             ->get();
         return new JsonResponse($data);
     }

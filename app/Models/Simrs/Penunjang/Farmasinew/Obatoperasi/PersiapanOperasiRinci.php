@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,5 +22,9 @@ class PersiapanOperasiRinci extends Model
     public function penerimaan()
     {
         return $this->belongsTo(PenerimaanHeder::class, 'nopenerimaan', 'nopenerimaan');
+    }
+    public function susulan()
+    {
+        return $this->belongsTo(Pegawai::class, 'susulan', 'kdpegsimrs');
     }
 }
