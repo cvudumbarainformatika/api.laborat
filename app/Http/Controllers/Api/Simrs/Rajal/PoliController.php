@@ -529,12 +529,12 @@ class PoliController extends Controller
                 'kandungan'=> function($neo){
                     $neo->with(['pegawai:id,nama']);
                 },
-                'neonatusmedis'=> function($neo){
-                    $neo->with(['pegawai:id,nama']);
-                },
-                'neonatuskeperawatan'=> function($neo){
-                    $neo->with(['pegawai:id,nama']);
-                },
+                // 'neonatusmedis'=> function($neo){
+                //     $neo->with(['pegawai:id,nama']);
+                // },
+                // 'neonatuskeperawatan'=> function($neo){
+                //     $neo->with(['pegawai:id,nama']);
+                // },
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },

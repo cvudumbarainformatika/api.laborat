@@ -13,7 +13,7 @@ class PediatriController extends Controller
 {
   public function index(Request $request)
   {
-    $data = Pediatri::where('norm', $request->norm)->with('pegawai')->get();
+    $data = Pediatri::where('norm', $request->norm)->with('pegawai:id,nama')->get();
     return new JsonResponse($data, 200);
   }
     public function store(Request $request)

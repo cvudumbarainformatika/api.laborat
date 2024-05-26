@@ -10,18 +10,27 @@ use Illuminate\Support\Facades\DB;
 
 class NeonatusKeperawatanController extends Controller
 {
+  public function index(Request $request)
+  {
+    $data = NeonatusKeperawatan::where('norm', $request->norm)->with('pegawai:id,nama')->first();
+    return new JsonResponse($data, 200);
+  }
     public function store(Request $request)
     {
       $user = auth()->user()->pegawai_id;
+
       $request->request->add(['user_input' => $user]);
       $formSave = $request->all();
-      $saved = NeonatusKeperawatan::create($formSave);
+      
+      $saved = NeonatusKeperawatan::updateOrCreate(['norm' => $request->norm],$formSave);
 
       if (!$saved) {
         return new JsonResponse(['message'=> 'failed'], 500);
       }
 
-      return new JsonResponse($saved->load('pegawai'), 200);  
+      $data = NeonatusKeperawatan::where('norm', $request->norm)->with('pegawai:id,nama')->first();
+
+      return new JsonResponse($data, 200);  
     }
 
     public function deletedata(Request $request)

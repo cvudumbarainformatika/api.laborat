@@ -305,11 +305,11 @@ class KunjunganPoli extends Model
 
     public function neonatusmedis()
     {
-        return $this->hasMany(NeonatusMedis::class, 'noreg', 'rs1');
+        return $this->hasMany(NeonatusMedis::class, 'norm', 'rs2');
     }
     public function neonatuskeperawatan()
     {
-        return $this->hasMany(NeonatusKeperawatan::class, 'noreg', 'rs1');
+        return $this->hasMany(NeonatusKeperawatan::class, 'norm', 'rs2');
     }
     public function pediatri()
     {
