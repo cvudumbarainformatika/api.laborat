@@ -526,9 +526,9 @@ class PoliController extends Controller
                 'dokumenluar'=> function($neo){
                     $neo->with(['pegawai:id,nama']);
                 },
-                'kandungan'=> function($neo){
-                    $neo->with(['pegawai:id,nama']);
-                },
+                // 'kandungan'=> function($neo){
+                //     $neo->with(['pegawai:id,nama']);
+                // },
                 // 'neonatusmedis'=> function($neo){
                 //     $neo->with(['pegawai:id,nama']);
                 // },
