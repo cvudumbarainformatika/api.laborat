@@ -10,6 +10,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/pelayanan/neonatusmedis'
 ], function () {
+    Route::get('/neonatusmedis-by-norm', [NeonatusMedisController::class, 'index']);
     Route::post('/store', [NeonatusMedisController::class, 'store']);
     Route::post('/deletedata', [NeonatusMedisController::class, 'deletedata']);
     Route::post('/storeRiwayatKehamilan', [NeonatusMedisController::class, 'storeRiwayatKehamilan']);

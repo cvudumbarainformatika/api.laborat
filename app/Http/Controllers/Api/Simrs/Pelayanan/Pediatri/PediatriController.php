@@ -11,18 +11,30 @@ use Illuminate\Support\Facades\DB;
 
 class PediatriController extends Controller
 {
+  public function index(Request $request)
+  {
+    $data = Pediatri::where('norm', $request->norm)->with('pegawai:id,nama')->get();
+    return new JsonResponse($data, 200);
+  }
     public function store(Request $request)
     {
       $user = auth()->user()->pegawai_id;
       $request->request->add(['user_input' => $user]);
+
       $formSave = $request->all();
-      $saved = Pediatri::create($formSave);
+
+
+      // $saved = Pediatri::create($formSave);
+
+      $saved = Pediatri::updateOrCreate(['noreg'=>$request->noreg], $request->all());
 
       if (!$saved) {
         return new JsonResponse(['message'=> 'failed'], 500);
       }
 
-      return new JsonResponse($saved->load('pegawai'), 200);  
+      $data = Pediatri::where('norm', $request->norm)->with('pegawai:id,nama')->get();
+
+      return new JsonResponse($data, 200);  
     }
 
     public function deletedata(Request $request)
@@ -46,7 +58,8 @@ class PediatriController extends Controller
     public function master_who_cdc()
     {
        $thumb = collect();
-        MwhocdcAnak::where('dr_tanggal', '=', null)
+        MwhocdcAnak::select('id','age_m','3rd','10rd','25rd','50rd','75rd','85rd','90rd','95rd','97rd','gender','jns','dr_tanggal')
+        ->where('dr_tanggal', '=', null)
           ->orderBy('id')
           ->chunk(50, function ($dokters) use ($thumb) {
               foreach ($dokters as $q) {

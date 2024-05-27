@@ -11,18 +11,27 @@ use Illuminate\Support\Facades\DB;
 
 class NeonatusMedisController extends Controller
 {
+  public function index(Request $request)
+  {
+    $data = NeonatusMedis::where('norm', $request->norm)->with('pegawai:id,nama')->first();
+    return new JsonResponse($data, 200);
+  }
     public function store(Request $request)
     {
       $user = auth()->user()->pegawai_id;
       $request->request->add(['user_input' => $user]);
+
       $formSave = $request->except(['riwayatKehamilan']);
-      $saved = NeonatusMedis::create($formSave);
+
+      $saved = NeonatusMedis::updateOrCreate(['norm' => $request->norm],$formSave);
 
       if (!$saved) {
         return new JsonResponse(['message'=> 'failed'], 500);
       }
 
-      return new JsonResponse($saved->load('pegawai'), 200);  
+      $data = NeonatusMedis::where('norm', $request->norm)->with('pegawai:id,nama')->first();
+
+      return new JsonResponse($data, 200);  
     }
 
     public function deletedata(Request $request)

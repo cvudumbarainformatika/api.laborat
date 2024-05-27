@@ -6,6 +6,7 @@ use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\MskriningKehamilan;
 use App\Models\Simrs\Pelayanan\Kandungan;
+use App\Models\Simrs\Pelayanan\RiwayatObsetri;
 use App\Models\Simrs\Pelayanan\SkriningKehamilan;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -15,17 +16,28 @@ use Illuminate\Support\Facades\DB;
 class KandunganController extends Controller
 {
 
+  public function index()
+  {
+    $data = Kandungan::where('norm', request('norm'))->with('pegawai:id,nama')->orderBy('created_at', 'desc')->get();
+    return new JsonResponse($data, 200);
+  }
+
     public function store(Request $request)
     {
       $user = auth()->user()->pegawai_id;
       $request->request->add(['user_input' => $user]);
+
+
+      // $saved = Kandungan::updateOrCreate(['noreg' => $request->noreg],$request->all());
       $saved = Kandungan::create($request->all());
 
       if (!$saved) {
         return new JsonResponse(['message'=> 'failed'], 500);
       }
 
-      return new JsonResponse($saved->load('pegawai'), 200);   
+      // $data = Kandungan::where('noreg', $request->noreg)->with('pegawai:id,nama')->first();
+
+      return new JsonResponse($saved->load('pegawai:id,nama'), 200);   
     }
     public function deletedata(Request $request)
     {
@@ -99,5 +111,50 @@ class KandunganController extends Controller
         return new JsonResponse(['message'=> 'data sdh dihapus'],200);
       }
       
+  }
+
+
+
+  // OBSETRI
+
+  public function riwayatObsetri()
+  {
+     $data = RiwayatObsetri::where('norm', request('norm'))->with('pegawai:id,nama')->get();
+     return response()->json($data, 200);
+  }
+
+  public function storeObsetri(Request $request)
+  {
+    $user = auth()->user()->pegawai_id;
+    $request->request->add(['user_input' => $user]);
+
+
+    // $saved = Kandungan::updateOrCreate(['noreg' => $request->noreg],$request->all());
+    $saved = RiwayatObsetri::create($request->all());
+
+    if (!$saved) {
+      return new JsonResponse(['message'=> 'failed'], 500);
+    }
+
+    // $data = Kandungan::where('noreg', $request->noreg)->with('pegawai:id,nama')->first();
+
+    return new JsonResponse($saved->load('pegawai:id,nama'), 200);  
+  }
+
+  public function deleteObsetri(Request $request)
+  {
+    $data = RiwayatObsetri::find($request->id);
+
+    if (!$data) {
+      return new JsonResponse(['message'=> 'Data tidak ditemukan'], 500);
+    }
+
+    $del = $data->delete();
+
+    if (!$del) {
+      return new JsonResponse(['message'=> 'Failed'], 500);
+    }
+
+    return new JsonResponse(['message'=> 'Data Berhasil dihapus'], 200); 
   }
 }
