@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Siasik\Laporan;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\PejabatTeknis;
 use App\Models\Siasik\TransaksiLS\Contrapost;
@@ -413,7 +414,7 @@ class BKUController extends Controller
 
     // coba appends
     public function kode(){
-        $awal=request('tglmulai', '2024-01-01');
+        $awal=request('tglmulai', '2024-03-01');
         $akhir=request('tglakhir', '2024-03-31');
 
         // $pencairanls = NpkLS_heder::whereHas('npklsrinci.npdlshead',function($hed)
@@ -438,45 +439,41 @@ class BKUController extends Controller
         //     ->get();
 
 
-        $kode = Akun_Kepmendg50::
+        // $kodecoba = Akun50_2024::
         // whereHas('npdls_rinci.headerls',function ($cair){
         //     $cair->where('nopencairan', '!=', '');
-        // })->
-        with(['npdls_rinci' => function ($head){
-            $head->whereHas('headerls',function ($cair){
-                $cair->where('nopencairan', '!=', '');
-            })->with('headerls');
-        },
-        'spjpanjar','cp'])
-        // ->where('kodeall')
-        ->where('kode1', '5')
-        // ->where('kode2', '1')
-        // ->where('kode3', '02')
-        ->limit(100)->get()
-
-        ->map(function ($kode) {
-            return $kode->append('kodeall');
-        });
+        // })
+        // ->with(['npdls_rinci' => function ($head){
+        //     $head->whereHas('headerls',function ($cair){
+        //         $cair->where('nopencairan', '!=', '');
+        //     })->with('headerls',function($npk) {
+        //         $npk->with('npkrinci',function($header) {
+        //             $header->with('header',function($tgl){
+        //                 $tgl->whereBetween('tglpencairan')->get();
+        //             });
+        //         });
+        //     });
+        // },
+        // 'spjpanjar','cp'])
+        // ->get();
 
 
-
-
-        $ls = Akun_Kepmendg50::with(['npdls_rinci'=> function($head)
-        {
-            $head->whereHas('headerls',function($cair)
-            {
-                $cair->where('nopencairan', '!=', '');
-            })->with(['headerls'=> function($where)
-            {
-                $where->where('kodebidang', request('kode')
-            );
-                // ->whereBetween('tglpencairan', [$awal, $akhir]);
-            }]);
-        }])
-        ->where('kode1', '5')
-        // ->where('kode3', '02')
-        // ->limit(100)
-        ->get();
+        // $ls = Akun_Kepmendg50::with(['npdls_rinci'=> function($head)
+        // {
+        //     $head->whereHas('headerls',function($cair)
+        //     {
+        //         $cair->where('nopencairan', '!=', '');
+        //     })->with(['headerls'=> function($where)
+        //     {
+        //         $where->where('kodebidang', request('kode')
+        //     );
+        //         // ->whereBetween('tglpencairan', [$awal, $akhir]);
+        //     }]);
+        // }])
+        // ->where('kode1', '5')
+        // // ->where('kode3', '02')
+        // // ->limit(100)
+        // ->get();
 
         // return ($kode);
         // $npd=NpdLS_rinci::with('cp')
@@ -489,10 +486,10 @@ class BKUController extends Controller
             $anu->whereHas('npklsrinci.npdlshead',function($hed){
                 $hed->where('kodebidang', request('kode'));
             });
-        })->when(request('ptk'),function($anu){
+        })->when(request('keg'),function($anu){
             $anu->whereHas('npklsrinci.npdlshead',function($hed){
                 $hed->where('kodebidang', request('kode'))
-                ->where('kodepptk', request('ptk'));
+                ->where('kegiatanblud', request('keg'));
             });
         })->with(['npklsrinci'=> function($npk)
                 {
@@ -500,49 +497,52 @@ class BKUController extends Controller
                         $anu->whereHas('npdlshead',function($hed){
                             $hed->where('kodebidang', request('kode'));
                         });
-                    })->when(request('ptk'),function($anu){
+                    })->when(request('keg'),function($anu){
                         $anu->whereHas('npdlshead',function($hed){
                             $hed->where('kodebidang', request('kode'))
-                            ->where('kodepptk', request('ptk'));
+                            ->where('kegiatanblud', request('keg'));
                         });
                     })
                     ->with(['npdlshead'=> function ($npdrinci){
-                        $npdrinci->with(['npdlsrinci']);
+                        $npdrinci->with('npdlsrinci',function($kode){
+                            $kode->with('akun50');
+                        });
                     }]);
                 }])
-            ->whereBetween('tglnpk', [$awal, $akhir])
+            ->whereBetween('tglpencairan', [$awal, $akhir])
             ->get();
 
         return new JsonResponse($pencairanls);
     }
 
     public function coba(){
-        $coba = NpdLS_rinci::where('koderek50')->with(['akun'=> function($kode){
-            $kode->where('kode1', '5')->get();
-        }]);
-
-
-        $npd = NpdLS_rinci::with(['akun' => function($akun){
-            $akun->where('kode1', '5')
-            ->map(function ($kode) {
-                return $kode->append('kodeall');
-            });
+        // $coba = NpdLS_rinci::with(['akun'=> function($kode){
+        //     $kode->where('kode1', '5')->get();
+        // }]);
+        // $x = NpdLS_rinci::where('koderek50');
+        $kode = Akun50_2024::with(['npdrinci'=>function($hed){
+            $hed->where('koderek50');
         }])
-        ->where('koderek50')
+        ->where('akun', '5')
+        // // ->where('kode4', '!=', '')
+        // // ->where('kode5', '!=', '')
+        // ->where('kode6', '!=', '')
+        ->limit(100)
         ->get();
 
-        return($coba);
-    }
-
-    // CETAK
-    public function cetak()
-    {
-        $data=NpkLS_heder::with(['npklsrinci'])
+        $npd = NpdLS_rinci::with('akun50')
         ->get();
 
-        return view('bku.cetak.bku')
-        ->with('npklsrinci', $data);
+        // $akun=Akun_Kepmendg50::all();
+        // $filter = $akun->filter(function($kode){
+        //     return $kode->kodeall == true;
+        // });
+        // $npd = NpdLS_rinci::where('koderek50')->with('akun', function($x) use ($filter){
+        //     $x->where('kodeall', $filter);
+        // })
+        // ->get();
 
+        return($npd);
     }
 
 }

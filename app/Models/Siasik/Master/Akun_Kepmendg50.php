@@ -20,7 +20,9 @@ class Akun_Kepmendg50 extends Model
     public function getKodeallAttribute(){
         return "{$this->kode1}.{$this->kode2}.{$this->kode3}.{$this->kode4}.{$this->kode5}.{$this->kode6}";
     }
-
+    // public function kodeall(){
+    //     return $kodeall->append('kodeall')->ToArray();
+    // }
     public function npdls_rinci(){
         return $this->hasOne(NpdLS_rinci::class,'koderek50', 'kodeall');
     }

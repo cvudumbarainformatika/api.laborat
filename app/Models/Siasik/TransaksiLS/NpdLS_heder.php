@@ -16,5 +16,10 @@ class NpdLS_heder extends Model
         return $this->hasMany(NpdLS_rinci::class, 'nonpdls', 'nonpdls');
     }
 
+    public function npkrinci()
+    {
+        return $this->belongsTo(NpkLS_rinci::class, 'nonpdls', 'nonpdls');
+    }
+
 
 }

@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group([
-    // 'middleware' => 'auth:api',
+    'middleware' => 'auth:api',
     'prefix' => 'laporan/laporan_bku'
 ], function () {
     Route::get('/ptk', [BKUController::class, 'ptk']);
@@ -19,8 +19,6 @@ Route::group([
     // coba
     Route::get('/coba', [BKUController::class,'coba']);
     Route::get('/kode', [BKUController::class,'kode']);
-    Route::get('/panjar', [BKUController::class,'panjar']);
-    Route::get('/nihil', [BKUController::class,'nihil']);
 });
 
 

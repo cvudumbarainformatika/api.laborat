@@ -12,4 +12,8 @@ class SpjPanjar_Rinci extends Model
     protected $guarded = ['id'];
     protected $table = 'spjpanjar_rinci';
     protected $timestamp = false;
+    public function spjheader()
+    {
+        return $this->belongsTo(SpjPanjar_Header::class, 'nospjpanjar', 'nospjpanjar');
+    }
 }
