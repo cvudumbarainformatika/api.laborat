@@ -16,6 +16,7 @@ class KartustokController extends Controller
 
     public function index()
     {
+        $koderuangan = request('koderuangan');
         $bulan = request('bulan');
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
@@ -29,19 +30,66 @@ class KartustokController extends Controller
         // return new JsonResponse($blnLaluAwal);
 
         $list = Mobatnew::with([
-            'mkelasterapi',
+            // 'mkelasterapi', ini tidak ada hubungan nya dengan trasaksi..
             'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
                 $saldo->whereBetween('tglpenerimaan', [$blnLaluAwal, $blnLaluAkhir])
                     ->where('kdruang', request('koderuangan'));
             },
-            'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir) {
-                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir) {
-                    $x->whereBetween('tglpenerimaan', [$tglAwal, $tglAkhir]);
+            // hanya ada jika koderuang itu adalah gudang
+            'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tglpenerimaan', [$tglAwal, $tglAkhir])
+                        ->where('gudang', $koderuangan);
                 });
             },
-            'mutasi' => function ($mts) use ($tglAwal, $tglAkhir) {
-                $mts->whereBetween('created_at', [$tglAwal, $tglAkhir]);
-            }
+            // mutasi masuk baik dari gudang, ataupun depo termasuk didalamnya mutasi antar depo dan antar gudang
+            'mutasimasuk' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tgl_terima_depo', [$tglAwal, $tglAkhir])
+                        ->where('dari', $koderuangan);
+                });
+            },
+            // mutasi keluar baik ke gudang(mutasi antar gudang), ataupun ke depo dan juga ke ruangan
+            'mutasikeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tgl_kirim_depo', [$tglAwal, $tglAkhir])
+                        ->where('tujuan', $koderuangan);
+                });
+            },
+            // ini jika $koderuangan = Gd-04010103 (Depo OK)
+            'persiapanoperasiretur' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tgl_retur', [$tglAwal, $tglAkhir]);
+                    // ->where('tujuan', $koderuangan);
+                });
+            },
+            // ini jika $koderuangan = Gd-04010103 (Depo OK)
+            // ini keluarnya nanti jumlah_distribusi harus dikurangi jumlah_resep karena resep nanti akan di ambil juga
+            'persiapanoperasikeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tgl_distribusi', [$tglAwal, $tglAkhir]);
+                    // ->where('tujuan', $koderuangan);
+                });
+            },
+            'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
+                        ->where('depo', $koderuangan);
+                })
+                    ->with('retur.rinci');
+            },
+
+            'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
+                        ->where('depo', $koderuangan);
+                })
+                    ->with('retur.rinci');
+            },
+            // 'mutasi' => function ($mts) use ($tglAwal, $tglAkhir) {
+            //     $mts->whereBetween('created_at', [$tglAwal, $tglAkhir]);
+            // }
+
         ])
             ->where(function ($q) {
                 $q->where('nama_obat', 'Like', '%' . request('q') . '%')

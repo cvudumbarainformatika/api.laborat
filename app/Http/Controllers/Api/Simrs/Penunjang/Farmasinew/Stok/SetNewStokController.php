@@ -97,7 +97,7 @@ class SetNewStokController extends Controller
         }
 
         FarmasinewStokreal::truncate();
-        foreach (array_chunk($newStok, 1000) as $t) {
+        foreach (array_chunk($newStok, 100) as $t) {
             $data['ins'] = FarmasinewStokreal::insert($t);
         }
         // if (count($daftarHarga) > 0) {
@@ -319,7 +319,7 @@ class SetNewStokController extends Controller
         }
         if (count($newOpname) > 0) {
             StokStokopname::truncate();
-            foreach (array_chunk($newOpname, 1000) as $t) {
+            foreach (array_chunk($newOpname, 100) as $t) {
                 $data['ins'] = StokStokopname::insert($t);
             }
         }

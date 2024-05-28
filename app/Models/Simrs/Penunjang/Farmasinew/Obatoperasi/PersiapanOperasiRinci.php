@@ -14,6 +14,10 @@ class PersiapanOperasiRinci extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    public function header()
+    {
+        return $this->belongsTo(PersiapanOperasi::class, 'nopermintaan', 'nopermintaan');
+    }
 
     public function obat()
     {

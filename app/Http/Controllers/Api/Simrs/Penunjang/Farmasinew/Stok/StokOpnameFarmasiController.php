@@ -83,7 +83,7 @@ class StokOpnameFarmasiController extends Controller
                 // if (count($stoktgl) > 0) {
                 //     $stoktgl->delete();
                 // }
-                foreach (array_chunk($newOpname, 1000) as $t) {
+                foreach (array_chunk($newOpname, 100) as $t) {
                     $data = Stokopname::insert($t);
                 }
             }

@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Mutasi;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,4 +12,9 @@ class Mutasigudangkedepo extends Model
     protected $table = 'mutasi_gudangdepo';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
+
+    public function header()
+    {
+        return $this->belongsTo(Permintaandepoheder::class, 'no_permintaan', 'no_permintaan');
+    }
 }
