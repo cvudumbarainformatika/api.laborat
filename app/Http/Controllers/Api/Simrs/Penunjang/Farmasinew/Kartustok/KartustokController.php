@@ -75,19 +75,16 @@ class KartustokController extends Controller
                 $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
                         ->where('depo', $koderuangan);
-                });
+                })
+                    ->with('retur.rinci');
             },
-            'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
-                        ->where('depo', $koderuangan);
-                });
-            },
+
             'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                 $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
                         ->where('depo', $koderuangan);
-                });
+                })
+                    ->with('retur.rinci');
             },
             // 'mutasi' => function ($mts) use ($tglAwal, $tglAkhir) {
             //     $mts->whereBetween('created_at', [$tglAwal, $tglAkhir]);

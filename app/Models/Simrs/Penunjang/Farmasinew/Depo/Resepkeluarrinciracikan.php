@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,5 +26,9 @@ class Resepkeluarrinciracikan extends Model
     public function header()
     {
         return $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
+    public function retur()
+    {
+        return $this->hasMany(Returpenjualan_h::class, 'noresep', 'noresep');
     }
 }
