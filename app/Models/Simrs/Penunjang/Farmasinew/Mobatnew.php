@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
@@ -104,9 +106,33 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
     }
+    public function mutasimasuk()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
+    }
+    public function mutasikeluar()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
+    }
 
     public function persiapanoperasirinci()
     {
         return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function persiapanoperasiretur()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function persiapanoperasikeluar()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function resepkeluar()
+    {
+        return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
+    }
+    public function resepkeluarracikan()
+    {
+        return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kd_obat');
     }
 }

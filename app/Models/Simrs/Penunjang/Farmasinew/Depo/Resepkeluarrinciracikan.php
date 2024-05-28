@@ -22,4 +22,8 @@ class Resepkeluarrinciracikan extends Model
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kdobat');
     }
+    public function header()
+    {
+        return $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
 }

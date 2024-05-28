@@ -23,6 +23,10 @@ class Resepkeluarrinci extends Model
     {
         return $this->hasOne(Resepkeluarheder::class, 'noresep', 'noresep');
     }
+    public function header()
+    {
+        return $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
     public function stok()
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kdobat');
