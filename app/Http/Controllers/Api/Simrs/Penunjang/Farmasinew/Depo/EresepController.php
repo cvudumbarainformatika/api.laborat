@@ -520,11 +520,14 @@ class EresepController extends Controller
                 'info',
                 'ruanganranap',
                 'sistembayar',
+                'sep:rs1,rs8',
                 'dokter:kdpegsimrs,nama',
                 'datapasien' => function ($quer) {
                     $quer->select(
                         'rs1',
-                        'rs2 as nama'
+                        'rs2 as nama',
+                        'rs46 as noka',
+                        DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
                     );
                 }
             ]
