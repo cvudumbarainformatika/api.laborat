@@ -42,6 +42,10 @@ class Mobatnew extends Model
         );
     }
 
+    public function indikasi()
+    {
+        return $this->hasMany(IndikasiObat::class, 'kd_obat', 'kd_obat');
+    }
     public function mkelasterapi()
     {
         return $this->hasMany(Mapingkelasterapi::class, 'kd_obat', 'kd_obat');

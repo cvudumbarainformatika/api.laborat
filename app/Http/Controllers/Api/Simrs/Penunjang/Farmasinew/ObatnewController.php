@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\IndikasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mapingkelasterapi;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
@@ -71,6 +72,14 @@ class ObatnewController extends Controller
                 ]);
             }
         }
+        if ($request->has('indikasis')) {
+            foreach ($request->indikasis as $key) {
+                $simpanrinci = IndikasiObat::firstOrCreate([
+                    'kd_obat' => $simpan->kd_obat,
+                    'indikasi' => $key['indikasi']
+                ]);
+            }
+        }
         if (!$simpan) {
             return new JsonResponse(['message' => 'data gagal disimpan'], 500);
         }
@@ -90,7 +99,7 @@ class ObatnewController extends Controller
     public function list()
     {
 
-        $list = Mobatnew::with('mkelasterapi')
+        $list = Mobatnew::with('mkelasterapi', 'indikasi')
             ->where(function ($list) {
                 $list->where('nama_obat', 'Like', '%' . request('q') . '%')
                     ->orWhere('merk', 'Like', '%' . request('q') . '%')
@@ -154,5 +163,14 @@ class ObatnewController extends Controller
         }
         $data->delete();
         return new JsonResponse(['message' => 'Kelas Terapi dihapus'], 200);
+    }
+    public function hapusMapingIndikasi(Request $request)
+    {
+        $data = IndikasiObat::find($request->id);
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data belum masuk server'], 422);
+        }
+        $data->delete();
+        return new JsonResponse(['message' => 'Indikasi dihapus'], 200);
     }
 }
