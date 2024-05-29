@@ -515,7 +515,7 @@ class EresepController extends Controller
                 'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
                 'poli',
                 'info',
                 'ruanganranap',
@@ -1659,5 +1659,31 @@ class EresepController extends Controller
         } else {
             return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
+    }
+
+    public function tolakResep(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            $data2 = Resepkeluarheder::where($request->noresep)->first();
+            if (!$data2) {
+                return new JsonResponse([
+                    'message' => 'Resep Tidak Ditemukan',
+                    'data' => $data
+                ]);
+            }
+            $data2->flag = '5';
+            $data2->save();
+            return new JsonResponse([
+                'message' => 'Resep sudah ditolak',
+                'data' => $data2
+            ]);
+        }
+        $data->flag = '5';
+        $data->save();
+        return new JsonResponse([
+            'message' => 'Resep sudah ditolak',
+            'data' => $data
+        ]);
     }
 }
