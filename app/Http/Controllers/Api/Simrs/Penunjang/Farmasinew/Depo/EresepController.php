@@ -644,7 +644,7 @@ class EresepController extends Controller
         ];
         event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
-        self::kirimResepDanSelesaiLayanan($request);
+        //self::kirimResepDanSelesaiLayanan($request);
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
