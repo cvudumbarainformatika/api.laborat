@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\DvlpController;
+use App\Http\Controllers\NotifRefreshController;
 use App\Http\Controllers\PengesahanQrController;
 use App\Http\Controllers\PrintController;
 use App\Websockets\SocketHandler\UpdatePostSocketHandler;
@@ -69,6 +70,8 @@ Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller
 Route::get('/print/page', [PrintController::class, 'index']);
 
 Route::get('/qr-document', [PengesahanQrController::class, 'index']);
+
+Route::get('/notif-refresh',[NotifRefreshController::class, 'index']);
 
 
 
