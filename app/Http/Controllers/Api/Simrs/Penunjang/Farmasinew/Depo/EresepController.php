@@ -644,7 +644,7 @@ class EresepController extends Controller
         ];
         event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
-        // self::kirimResepDanSelesaiLayanan($request);
+        self::kirimResepDanSelesaiLayanan($request);
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
@@ -670,6 +670,25 @@ class EresepController extends Controller
             //     ]
             // ];
             // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+
+            /**
+             * update waktu
+             */
+            $input = new Request([
+                'noreg' => $request->noreg
+            ]);
+            $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+
+            if ($cek === 0 || $cek === '') {
+                //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                //7 (akhir waktu obat selesai dibuat),
+
+                BridantrianbpjsController::updateWaktu($input, 6);
+            }
+            /**
+             * update waktu end
+             */
             return new JsonResponse(['message' => 'Resep Diterima', 'data' => $data], 200);
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
@@ -695,17 +714,21 @@ class EresepController extends Controller
             /**
              * update waktu
              */
-            // $input = new Request([
-            //     'noreg' => $request->noreg
-            // ]);
-            // $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+            $input = new Request([
+                'noreg' => $request->noreg
+            ]);
+            $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 7)->count();
 
-            // if ($cek === 0 || $cek === '') {
-            //     //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
-            //     //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+            if ($cek === 0 || $cek === '') {
+                //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                //7 (akhir waktu obat selesai dibuat),
 
-            //     BridantrianbpjsController::updateWaktu($input, 6);
-            // }
+                BridantrianbpjsController::updateWaktu($input, 7);
+            }
+            /**
+             * update waktu end
+             */
 
             return new JsonResponse(['message' => 'Resep Selesai', 'data' => $data], 200);
         }
