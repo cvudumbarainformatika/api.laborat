@@ -64,10 +64,10 @@ class AuthController extends Controller
             $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.depoSim:kode,nama']);
         }
 
-        // $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
-        $apps = Cache::rememberForever('menu-sso-xenter', function () {
-            return Aplikasi::with(['menus', 'menus.submenus'])->get();
-        });
+        $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
+        // $apps = Cache::rememberForever('menu-sso-xenter', function () {
+        //     return Aplikasi::with(['menus', 'menus.submenus'])->get();
+        // });
 
         $akses = 'all';
         $allAccess = array('sa', 'coba');
