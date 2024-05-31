@@ -14,6 +14,7 @@ use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiPendapatan\DataSTS;
 use App\Models\Siasik\TransaksiPendapatan\PendapatanLain;
 use App\Models\Siasik\TransaksiPendapatan\PendapatanLainRinci;
+use App\Models\Siasik\TransaksiPendapatan\TranskePPK;
 use App\Models\Siasik\TransaksiPjr\CpPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\CpSisaPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\GeserKas_Header;
@@ -32,7 +33,8 @@ class BKUController extends Controller
 {
     public function ptk()
     {
-        $ptk = PejabatTeknis::where('tahun', '=', '2024')->get();
+        $thn= date('Y');
+        $ptk = PejabatTeknis::where('tahun', $thn)->get();
         return new JsonResponse($ptk);
     }
     public function bkuppk()
@@ -43,21 +45,31 @@ class BKUController extends Controller
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
-        $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
-            $rinci -> with('plainlain',function($tgl){
-                $tgl->orderBy('rs2','desc');
-            });
-         }])
-        ->whereBetween('tgl', [[$awal. ' 00:00:00', $akhir. ' 23:59:59']])
+        $setor=TranskePPK::orderBy('tgltrans', 'asc')
+        ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
-        $pendapatan = PendapatanLainRinci::whereHas('pendapatanlain',function($null) use ($awal, $akhir){
-            $null->whereNull('noSetor')->orderBy('rs2','desc')->whereBetween('rs2', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
-        })->with('pendapatanlain')
-        ->get();
-        // BKU PPK utk transaksi Keluar
-        // relasi bertahap dengan select
-        // $awal=request('tglmulai');
-        // $akhir=request('tglakhir');
+
+        // $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
+        //     $rinci -> with('plainlain',function($tgl){
+        //         $tgl->orderBy('rs2','desc');
+        //     });
+        //  }])
+        // ->whereBetween('tgl', [[$awal. ' 00:00:00', $akhir. ' 23:59:59']])
+        // ->get();
+        // $pendapatan = PendapatanLainRinci::select('rs260.*')
+        // // ->join('rs258', 'rs258.rs1', '=', 'rs260.rs1', function($null) use ($awal, $akhir){
+        // //     $null->whereNull('rs258.noSetor')
+        // //     ->orderBy('rs258.rs2', 'desc')
+        // //     ->whereBetween('rs258.rs2', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
+        // // })
+        // ->whereHas('pendapatanlain',function($null) use ($awal, $akhir){
+        //     $null->whereNull('noSetor')
+        //         ->orderBy('rs2','desc')
+        //         ->whereBetween('rs2', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
+        // })
+        // ->with('pendapatanlain')
+        // ->get();
+
         $npkls = NpkLS_heder::with(['npklsrinci'=> function($npk)
             {
                 $npk->with(['npdlshead'=> function ($npdrinci){
@@ -101,8 +113,9 @@ class BKUController extends Controller
 
         $ppk = [
             'saldo' => $saldo,
-            'sts' => $sts,
-            'pendapatan' => $pendapatan,
+            'setor' => $setor,
+            // 'sts' => $sts,
+            // 'pendapatan' => $pendapatan,
             'spm' => $spm,
             'spmgu' => $spmgu,
             'nihil' => $nihil,
@@ -210,22 +223,29 @@ class BKUController extends Controller
         $akhir=request('tahun').'-'. request('bulan').'-31';
 
         // cari where ... relasi pertma kedua tidak tampil jika kosong
-        $pencairanls = NpkLS_heder::when(request('ptk'),function($anu)
+        $pencairanls = NpkLS_heder::select('npkls_heder.*')
+            ->when(request('ptk'),function($anu)
         {
-            $anu->whereHas('npklsrinci.npdlshead',function($hed){
-                $hed->where('kodepptk', request('ptk'));
-            });
+            // $anu->whereHas('npklsrinci.npdlshead',function($hed){
+            //     $hed->where('kodepptk', request('ptk'));
+            // });
+
+            $anu->join('npkls_rinci', 'npkls_rinci.nonpk','=','npkls_heder.nonpk')
+                ->join('npdls_heder', 'npkls_rinci.nonpdls','=','npdls_heder.nonpdls')
+                ->where('npdls_heder.kodepptk', request('ptk'));
         })->with(['npklsrinci'=> function($npk)
                 {
                     $npk->when(request('ptk'),function($anu){
-                        $anu->whereHas('npdlshead',function($hed){
-                            $hed->where('kodepptk', request('ptk'));
-                        });
+                        // $anu->whereHas('npdlshead',function($hed){
+                        //     $hed->where('kodepptk', request('ptk'));
+                        // });
+                        $anu->join('npdls_heder', 'npdls_heder.nonpdls', '=','npkls_rinci.nonpdls')
+                            ->where('npdls_heder.kodepptk', request('ptk'));
                     })->with(['npdlshead'=> function ($npdrinci){
                         $npdrinci->with(['npdlsrinci']);
                     }]);
                 }])
-            ->whereBetween('tglnpk', [$awal, $akhir])
+            ->whereBetween('npkls_heder.tglnpk', [$awal, $akhir])
             ->get();
 
         // $pencairanls = NpkLS_heder::when(request('ptk'),function($ada){
@@ -248,21 +268,27 @@ class BKUController extends Controller
         // ->get();
 
 
-        $npkpanjar = NpkPanjar_Header::when(request('ptk'),function($anu){
-            $anu->whereHas('npkrinci.npdpjr_head',function($hed){
-                $hed->where('kodepptk', request('ptk'));
-            });
+        $npkpanjar = NpkPanjar_Header::select('npkpanjar_heder.*')
+        ->when(request('ptk'),function($anu){
+            // $anu->whereHas('npkrinci.npdpjr_head',function($hed){
+            //     $hed->where('kodepptk', request('ptk'));
+            // });
+            $anu->join('npkpanjar_rinci', 'npkpanjar_rinci.nonpk', '=', 'npkpanjar_heder.nonpk')
+                ->join('npdpanjar_heder', 'npdpanjar_heder.nonpdpanjar', '=', 'npkpanjar_rinci.nonpd')
+                ->where('npdpanjar_heder.kodepptk', request('ptk'));
         })->with(['npkrinci'=> function($npk)
                 {
                     $npk->when(request('ptk'),function($anu){
-                        $anu->whereHas('npdpjr_head',function($hed){
-                            $hed->where('kodepptk', request('ptk'));
-                        });
+                        // $anu->whereHas('npdpjr_head',function($hed){
+                        //     $hed->where('kodepptk', request('ptk'));
+                        // });
+                        $anu->join('npdpanjar_heder', 'npdpanjar_heder.nonpdpanjar', '=', 'npkpanjar_rinci.nonpd')
+                            ->where('npdpanjar_heder.kodepptk', request('ptk'));
                     })->with(['npdpjr_head'=> function ($npdrinci){
                         $npdrinci->with(['npdpjr_rinci']);
                     }]);
                 }])
-            ->whereBetween('tglnpk', [$awal, $akhir])
+            ->whereBetween('npkpanjar_heder.tglnpk', [$awal, $akhir])
             ->get();
 
         $spjpanjar=SpjPanjar_Header::with(['spj_rinci'])
@@ -520,18 +546,24 @@ class BKUController extends Controller
         //     $kode->where('kode1', '5')->get();
         // }]);
         // $x = NpdLS_rinci::where('koderek50');
-        $kode = Akun50_2024::with(['npdrinci'=>function($hed){
-            $hed->where('koderek50');
-        }])
-        ->where('akun', '5')
-        // // ->where('kode4', '!=', '')
-        // // ->where('kode5', '!=', '')
-        // ->where('kode6', '!=', '')
-        ->limit(100)
+        // $kode = Akun50_2024::with(['npdrinci'=>function($hed){
+        //     $hed->where('koderek50');
+        // }])
+        // ->where('akun', '5')
+        // // // ->where('kode4', '!=', '')
+        // // // ->where('kode5', '!=', '')
+        // // ->where('kode6', '!=', '')
+        // ->limit(100)
+        // ->get();
+
+        $awal=request('tglmulai', '2024-03-01');
+        $akhir=request('tglakhir', '2024-03-31');
+        $setor=TranskePPK::orderBy('tgltrans', 'asc')
+        ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
 
-        $npd = NpdLS_rinci::with('akun50')
-        ->get();
+        // $npd = NpdLS_rinci::with('akun50')
+        // ->get();
 
         // $akun=Akun_Kepmendg50::all();
         // $filter = $akun->filter(function($kode){
@@ -542,7 +574,7 @@ class BKUController extends Controller
         // })
         // ->get();
 
-        return($npd);
+        return($setor);
     }
 
 }

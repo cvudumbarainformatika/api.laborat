@@ -8,7 +8,9 @@ Route::group([
     // 'middleware' => 'auth:api',
     'prefix' => 'laporan/lra'
 ], function () {
-    Route::get('/lra', [LRAController::class, 'lra']);
+    Route::get('/bidang', [LRAController::class, 'bidang']);
+    Route::get('/kegiatan', [LRAController::class, 'kegiatan']);
+    Route::get('/laplra', [LRAController::class, 'laplra']);
     Route::get('/coba', [LRAController::class, 'coba']);
 
 });
