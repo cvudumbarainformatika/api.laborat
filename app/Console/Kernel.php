@@ -17,17 +17,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
-        $schedule->call(function () {
-            info('mulai stok opname');
-            $opname = new StokOpnameController;
-            $data = $opname->storeMonthly();
-            info($data);
-        })->dailyAt('00:30');
 
         $schedule->call(function () {
             info('mulai stok opname farmasi');
             $opname = new StokOpnameFarmasiController;
+            $data = $opname->storeMonthly();
+            info($data);
+        })->dailyAt('00:20');
+        // $schedule->command('inspire')->hourly();
+        $schedule->call(function () {
+            info('mulai stok opname');
+            $opname = new StokOpnameController;
             $data = $opname->storeMonthly();
             info($data);
         })->dailyAt('00:30');
