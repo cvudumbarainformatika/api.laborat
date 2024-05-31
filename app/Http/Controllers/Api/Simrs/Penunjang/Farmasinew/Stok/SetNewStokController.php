@@ -17,6 +17,7 @@ class SetNewStokController extends Controller
 
     public function setNewStok()
     {
+        $create = date('Y-m-d H:i:s');
         $mapingGudang = [
             ['nama' => 'Gudang Farmasi ( Kamar Obat )', 'kode' => 'Gd-05010100', 'lama' => 'GU0001'],
             ['nama' => 'Gudang Farmasi (Floor Stok)', 'kode' => 'Gd-03010100', 'lama' => 'GU0002'],
@@ -78,14 +79,14 @@ class SetNewStokController extends Controller
                 else  $nPen = 'NDF';
                 $temp = [
                     'nopenerimaan' => '001/' . date('m/Y') . '/awal/' . $nPen,
-                    'tglpenerimaan' => $key['rincipenerimaan']['tanggal'] ?? date('Y-m-d H:i:s'),
+                    'tglpenerimaan' => $key['rincipenerimaan']['tanggal'] ?? $create,
                     'kdobat' => $key['obatbaru'],
                     'jumlah' => (float)$st['rs2'],
                     'kdruang' => $item[$anu],
                     'harga' => (float)$key['master']['rs4'],
                     'tglexp' => $key['rincipenerimaan']['rs7'] ?? null,
                     'nobatch' => $key['rincipenerimaan']['rs6'] ?? '',
-                    'created_at' => date('Y-m-d H:i:s'),
+                    'created_at' => $create,
                     'updated_at' => date('Y-m-d H:i:s'),
                 ];
                 $newStok[] = $temp;
