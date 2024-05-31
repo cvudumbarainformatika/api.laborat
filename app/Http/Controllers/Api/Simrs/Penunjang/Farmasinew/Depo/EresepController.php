@@ -491,6 +491,11 @@ class EresepController extends Controller
         // $m = (int)date('m') - 3;
         // $data['all'] = [date('Y') . '-0' . ((int)date('m') - 3) . '-01 00:00:00', date('Y-m-31 23:59:59')];
         // return new JsonResponse($data);
+        // if (request('flag') === 'semua') {
+        //     $flag = ['1', '2', '3', '4', '5'];
+        // } else {
+        //     $flag = [request('flag')];
+        // }
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
@@ -515,6 +520,7 @@ class EresepController extends Controller
                 'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanresep.aturansigna:signa,jumlah',
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
                 'poli',
                 'info',
@@ -555,7 +561,11 @@ class EresepController extends Controller
                 }
             })
             ->when(request('flag'), function ($x) {
-                $x->whereIn('flag', request('flag'));
+                if (request('flag') === 'semua') {
+                    $x->whereIn('flag', ['1', '2', '3', '4', '5']);
+                } else {
+                    $x->where('flag', request('flag'));
+                }
             })
             ->when(!request('flag'), function ($x) {
                 $x->where('flag', '2');
@@ -665,8 +675,10 @@ class EresepController extends Controller
     public function resepSelesai(Request $request)
     {
         $data = Resepkeluarheder::find($request->id);
+        $user = auth()->user()->pegawai_id;
+        // return new JsonResponse(['user' => $user, 'data' => $data], 410);
         if ($data) {
-            $data->update(['flag' => '3', 'tgl' => date('Y-m-d')]);
+            $data->update(['flag' => '3', 'tgl' => date('Y-m-d'), 'user' => $user]);
             // $msg = [
             //     'data' => [
             //         'id' => $data->id,
@@ -758,6 +770,7 @@ class EresepController extends Controller
                                 'namaracikan' => $request->namaracikan,
                                 'kdobat' => $request->kdobat,
                                 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
                                 'jumlah' => $caristok[$index]->jumlah,
                                 'harga_beli' => $caristok[$index]->harga,
                                 'hpp' => $harga,
@@ -814,6 +827,7 @@ class EresepController extends Controller
                                 'tiperacikan' => $request->tiperacikan,
                                 'kdobat' => $request->kdobat,
                                 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
                                 'jumlah' => $masuk,
                                 'harga_beli' => $caristok[$index]->harga,
                                 'hpp' => $harga,
@@ -1417,7 +1431,7 @@ class EresepController extends Controller
                             $key['hpp'] = $harga;
                             $key['harga_jual'] = $hargajual;
 
-
+                            $key['jumlahdibutuhkan'] = $key['jumlahdibutuhkan'] ?? 0;
                             $key['noresep'] = $noresep;
                             $key['satuan_racik'] = $key['satuan_racik'] ?? '';
                             $key['created_at'] = date('Y-m-d H:i:s');
