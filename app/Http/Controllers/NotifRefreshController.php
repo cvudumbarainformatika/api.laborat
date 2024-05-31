@@ -20,7 +20,7 @@ class NotifRefreshController extends Controller
     {
       
       $message = [
-        'data' => 'Ada Update Aplikasi , Silahkan Reload Halaman Anda',
+        'data' => 'Ada Update Aplikasi , Silahkan Reload Halaman Anda'
       ];
       event(new RefreshEvent($message));
       echo 'ok';

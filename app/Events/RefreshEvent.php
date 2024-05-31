@@ -33,7 +33,7 @@ class RefreshEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new Channel('public.refresh.page');
+        return new Channel('public.refresh-page');
     }
 
     public function broadcastAs()

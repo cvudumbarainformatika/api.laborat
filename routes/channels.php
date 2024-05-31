@@ -28,3 +28,7 @@ Broadcast::channel('private.notif.{roomId}', function ($user, $roomId) {
 Broadcast::channel('qrcode', function () {
     return true;
 });
+
+Broadcast::channel('refresh-page', function () {
+    return true;
+});
