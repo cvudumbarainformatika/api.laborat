@@ -54,6 +54,7 @@ Route::group([
     Route::post('/terima-resep', [EresepController::class, 'terimaResep']);
     Route::post('/resep-selesai', [EresepController::class, 'resepSelesai']);
     Route::post('/tolak-resep', [EresepController::class, 'tolakResep']);
+    Route::post('/isi-alasan', [EresepController::class, 'isiAlasan']);
 
     Route::post('/ambil-iter', [EresepController::class, 'ambilIter']);
     Route::post('/copy-resep', [EresepController::class, 'copyResep']);

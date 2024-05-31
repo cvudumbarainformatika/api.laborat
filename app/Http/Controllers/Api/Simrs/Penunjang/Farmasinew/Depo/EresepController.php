@@ -1673,6 +1673,7 @@ class EresepController extends Controller
                 ]);
             }
             $data2->flag = '5';
+            $data->alasan = $request->alasan ?? null;
             $data2->save();
             return new JsonResponse([
                 'message' => 'Resep sudah ditolak',
@@ -1680,9 +1681,35 @@ class EresepController extends Controller
             ]);
         }
         $data->flag = '5';
+        $data->alasan = $request->alasan ?? null;
         $data->save();
         return new JsonResponse([
             'message' => 'Resep sudah ditolak',
+            'data' => $data
+        ]);
+    }
+    public function isiAlasan(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            $data2 = Resepkeluarheder::where($request->noresep)->first();
+            if (!$data2) {
+                return new JsonResponse([
+                    'message' => 'Resep Tidak Ditemukan',
+                    'data' => $data
+                ]);
+            }
+            $data->alasan = $request->alasan ?? null;
+            $data2->save();
+            return new JsonResponse([
+                'message' => 'Alasan Sudah Di Isi',
+                'data' => $data2
+            ]);
+        }
+        $data->alasan = $request->alasan ?? null;
+        $data->save();
+        return new JsonResponse([
+            'message' => 'Alasan Sudah Di Isi',
             'data' => $data
         ]);
     }
