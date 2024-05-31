@@ -656,7 +656,9 @@ class EresepController extends Controller
     {
         $data = Resepkeluarheder::find($request->id);
         if ($data) {
+            $user = auth()->user()->pegawai_id;
             $data->flag = '2';
+            $data->user = $user;
             $data->save();
             // $msg = [
             //     'data' => [
