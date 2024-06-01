@@ -318,9 +318,20 @@ class EresepController extends Controller
             ->groupBy('new_masterobat.kd_obat')
             ->limit(10)
             ->get();
+
+            $wew = collect($listobat)->map(function ($x, $y) {
+                $total = $x->total ?? 0;
+                $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+                $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+                $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+                $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
+                $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+                return $x;
+            });
+
             return new JsonResponse(
                 [
-                    'dataobat' => $listobat
+                    'dataobat' => $wew
                 ]
             );
     }
