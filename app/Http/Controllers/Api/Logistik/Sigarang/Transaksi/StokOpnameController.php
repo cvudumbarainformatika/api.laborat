@@ -513,7 +513,7 @@ class StokOpnameController extends Controller
 
             $total = [];
             $fisik = [];
-            $tanggal = $yesterday . ' 23:59:59';
+            $tanggal = $yesterday . ' 23:59:58';
             foreach ($recent as $key) {
                 // $data = MonthlyStokUpdate::updateOrCreate([
                 $data = [

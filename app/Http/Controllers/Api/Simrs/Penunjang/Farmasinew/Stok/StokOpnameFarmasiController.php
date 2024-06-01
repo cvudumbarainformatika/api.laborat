@@ -47,7 +47,7 @@ class StokOpnameFarmasiController extends Controller
                     'stok' => $recent
                 ], 410);
             }
-            $tanggal = $yesterday . ' 23:59:59';
+            $tanggal = $yesterday . ' 23:59:58';
             $newOpname = [];
             foreach ($recent as $key) {
                 $item = [
