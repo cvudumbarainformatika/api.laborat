@@ -40,7 +40,8 @@ Route::group([
     Route::get('/listjenisresep', [ResepkeluarController::class, 'listjenisresep']);
 
     //--------------ERESEP----------------//
-    Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
+    // Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
+    Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'pencarianObatResep']);
     Route::get('/get-single-resep', [EresepController::class, 'getSingleResep']);
 
     Route::get('/ambil-pegawai-farmasi', [EresepController::class, 'getPegawaiFarmasi']);

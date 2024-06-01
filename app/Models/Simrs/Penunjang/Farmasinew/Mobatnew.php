@@ -2,6 +2,9 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
@@ -138,5 +141,27 @@ class Mobatnew extends Model
     public function resepkeluarracikan()
     {
         return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kd_obat');
+    }
+
+    public function permintaandeporinci()
+    {
+        return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
+    }
+
+    public function transnonracikan()
+    {
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); diganti ke permintaan
+        return $this->hasMany(Permintaanresep::class, 'kdobat', 'kd_obat');
+    }
+
+    public function transracikan()
+    {
+        // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+        return $this->hasMany(Permintaanresepracikan::class, 'kdobat', 'kd_obat');
+    }
+
+    public function persiapanrinci()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
     }
 }

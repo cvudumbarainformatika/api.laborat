@@ -75,6 +75,7 @@ Route::get('/qr-document', [PengesahanQrController::class, 'index']);
 
 Route::get('/notif-refresh', function() {
     $message = [
+        'menu' => 'refresh-page',
         'data' => 'Ada Update Aplikasi , Silahkan Reload Halaman Anda'
       ];
       event(new PlaygroundEvent($message));
