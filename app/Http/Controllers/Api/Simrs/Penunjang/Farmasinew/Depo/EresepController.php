@@ -644,7 +644,7 @@ class EresepController extends Controller
         ];
         event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
-        //self::kirimResepDanSelesaiLayanan($request);
+        self::kirimResepDanSelesaiLayanan($request);
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
@@ -671,24 +671,27 @@ class EresepController extends Controller
             // ];
             // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
 
-            /**
-             * update waktu
-             */
-            $input = new Request([
-                'noreg' => $request->noreg
-            ]);
-            $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+            $kunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($kunjunganpoli) {
+                /**
+                 * update waktu
+                 */
+                $input = new Request([
+                    'noreg' => $request->noreg
+                ]);
+                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
 
-            if ($cek === 0 || $cek === '') {
-                //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
-                //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
-                //7 (akhir waktu obat selesai dibuat),
+                if ($cek === 0 || $cek === '') {
+                    //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                    //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                    //7 (akhir waktu obat selesai dibuat),
 
-                BridantrianbpjsController::updateWaktu($input, 6);
+                    BridantrianbpjsController::updateWaktu($input, 6);
+                }
+                /**
+                 * update waktu end
+                 */
             }
-            /**
-             * update waktu end
-             */
             return new JsonResponse(['message' => 'Resep Diterima', 'data' => $data], 200);
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
@@ -711,24 +714,27 @@ class EresepController extends Controller
             // ];
             // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
 
-            /**
-             * update waktu
-             */
-            $input = new Request([
-                'noreg' => $request->noreg
-            ]);
-            $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 7)->count();
+            $kunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($kunjunganpoli) {
+                /**
+                 * update waktu
+                 */
+                $input = new Request([
+                    'noreg' => $request->noreg
+                ]);
+                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 7)->count();
 
-            if ($cek === 0 || $cek === '') {
-                //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
-                //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
-                //7 (akhir waktu obat selesai dibuat),
+                if ($cek === 0 || $cek === '') {
+                    //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                    //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                    //7 (akhir waktu obat selesai dibuat),
 
-                BridantrianbpjsController::updateWaktu($input, 7);
+                    BridantrianbpjsController::updateWaktu($input, 7);
+                }
+                /**
+                 * update waktu end
+                 */
             }
-            /**
-             * update waktu end
-             */
 
             return new JsonResponse(['message' => 'Resep Selesai', 'data' => $data], 200);
         }
@@ -1677,26 +1683,29 @@ class EresepController extends Controller
     }
     public static function kirimResepDanSelesaiLayanan($request)
     {
-        $input = new Request([
-            'noreg' => $request->noreg
-        ]);
-        $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+        if ($updatekunjungan) {
+            $input = new Request([
+                'noreg' => $request->noreg
+            ]);
+            $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
 
-        if ($cek === 0 || $cek === '') {
-            //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
-            //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+            if ($cek === 0 || $cek === '') {
+                //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
 
-            BridantrianbpjsController::updateWaktu($input, 5);
-        }
-        $user = Pegawai::find(auth()->user()->pegawai_id);
-        if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
-            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
-            $updatekunjungan->rs19 = '1';
-            $updatekunjungan->rs24 = '1';
-            $updatekunjungan->save();
-            return new JsonResponse(['message' => 'ok'], 200);
-        } else {
-            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+                BridantrianbpjsController::updateWaktu($input, 5);
+            }
+            $user = Pegawai::find(auth()->user()->pegawai_id);
+            if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
+                // $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
+                $updatekunjungan->rs19 = '1';
+                $updatekunjungan->rs24 = '1';
+                $updatekunjungan->save();
+                return new JsonResponse(['message' => 'ok'], 200);
+            } else {
+                return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
+            }
         }
     }
 
