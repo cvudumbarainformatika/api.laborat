@@ -234,6 +234,7 @@ class EresepController extends Controller
                 'new_masterobat.uraian50',
                 'new_masterobat.kekuatan_dosis as kekuatandosis',
                 'new_masterobat.volumesediaan as volumesediaan',
+                'new_masterobat.kelompok_psikotropika as psikotropika',
                 'stokreal.kdobat as kdobat',
                 'stokreal.jumlah as jumlah',
                 DB::raw('sum(stokreal.jumlah) as total')
@@ -694,6 +695,7 @@ class EresepController extends Controller
                         'rs1',
                         'rs2 as nama',
                         'rs46 as noka',
+                        'rs16 as tgllahir',
                         DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
                     );
                 }
