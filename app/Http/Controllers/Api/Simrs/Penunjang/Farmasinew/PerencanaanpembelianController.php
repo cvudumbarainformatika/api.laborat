@@ -382,6 +382,7 @@ class PerencanaanpembelianController extends Controller
                     ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
                     ->havingRaw('balance >= stok');
             })
+            ->orDoesntHave('stokrealallrs')
             ->with([
                 'stokmaxrs' => function ($mm) {
                     $mm->select(
