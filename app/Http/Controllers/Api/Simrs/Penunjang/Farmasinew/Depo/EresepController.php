@@ -337,6 +337,11 @@ class EresepController extends Controller
 
     public function pembuatanresep(Request $request)
     {
+        $request->validate([
+            'kodeobat' => 'required',
+            // 'jumlah' => 'required',
+            'kdruangan' => 'required',
+        ]);
         try {
             DB::connection('farmasi')->beginTransaction();
             $user = FormatingHelper::session_user();
@@ -429,8 +434,15 @@ class EresepController extends Controller
             //     'alokasi' => $alokasi,
             //     'wew' => $wew,
             // ]);
-            if ($request->jumlah > $alokasi) {
-                return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!'], 500);
+            if ($request->jenisresep == 'Racikan') {
+                if ($request->jumlah > $alokasi) {
+                    return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!', 'cek' => $cekjumlahstok], 500);
+                }
+            } else {
+
+                if ($request->jumlah_diminta > $alokasi) {
+                    return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!', 'cek' => $cekjumlahstok], 500);
+                }
             }
 
             if ($request->kodedepo === 'Gd-04010102') {
@@ -640,7 +652,7 @@ class EresepController extends Controller
                 'iter_expired' => $iter_expired ?? 0,
                 'iter_jml' => $iter_jml ?? 0,
                 'error' => $e,
-                'message' => 'ada kesalahan'
+                'message' => 'rolled back ada kesalahan'
             ], 410);
         }
     }
