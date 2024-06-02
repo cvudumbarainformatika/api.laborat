@@ -105,11 +105,11 @@ class EresepController extends Controller
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                         )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep','=', 'resep_permintaan_keluar_racikan.noresep')
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
                             ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                             // ->groupBy('resep_permintaan_keluar_racikan.kdobat')
-                            ;
+                        ;
                     },
                     // 'permintaanobatrinci' => function ($permintaanobatrinci) {
                     //     $permintaanobatrinci->select(
@@ -128,7 +128,7 @@ class EresepController extends Controller
                     //         ->where('permintaan_h.tujuan', request('kdruang'))
                     //         ->whereIn('permintaan_h.flag', ['', '1', '2'])
                     //         ->groupBy('permintaan_r.kdobat');
-                        
+
                     // },
                     'permintaanobatrinci' => function ($permintaanobatrinci) {
                         $permintaanobatrinci->select(
@@ -138,33 +138,31 @@ class EresepController extends Controller
                             'permintaan_h.tujuan as kdruang',
                             DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
                         )
-                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                        })
-                        ->where('permintaan_h.tujuan', request('kdruang'))
-                        // ->whereNull('mutasi_gudangdepo.kd_obat')
-                        ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                        ->groupBy('permintaan_r.kdobat');
-                        ;
-                            // ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                            // // biar yang ada di tabel mutasi ga ke hitung
-                            // ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                            //     $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                            //         ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                            // })
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->where('permintaan_h.tujuan', request('kdruang'))
                             // ->whereNull('mutasi_gudangdepo.kd_obat')
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');;
+                        // ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                        // // biar yang ada di tabel mutasi ga ke hitung
+                        // ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                        //     $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                        //         ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        // })
+                        // ->whereNull('mutasi_gudangdepo.kd_obat')
 
-                            // ->where('permintaan_h.tujuan', request('kdruang'))
-                            // ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                            // ->groupBy('permintaan_r.kdobat');
-                        
+                        // ->where('permintaan_h.tujuan', request('kdruang'))
+                        // ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                        // ->groupBy('permintaan_r.kdobat');
+
                     },
                     'persiapanrinci' => function ($res) {
                         $res->select(
-                            // 'persiapan_operasi_rincis.kd_obat',
-
+                            'persiapan_operasi_rincis.kd_obat',
                             DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                         )
                             ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
@@ -210,7 +208,7 @@ class EresepController extends Controller
 
     public function pencarianObatResep()
     {
-       // penccarian termasuk tiperesep
+        // penccarian termasuk tiperesep
         $groupsistembayar = request('groups');
         if ($groupsistembayar == '1') {
             $sistembayar = ['SEMUA', 'BPJS'];
@@ -244,12 +242,12 @@ class EresepController extends Controller
             ->where('stokreal.kdruang', request('kdruang'))
             ->where('new_masterobat.status_konsinyasi', '')
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
-            ->when(request('tiperesep'),function ($q) {
+            ->when(request('tiperesep'), function ($q) {
                 if (request('tiperesep') === 'prb') {
                     $q->where('new_masterobat.status_prb', '!=', '');
                 } elseif (request('tiperesep') === 'iter') {
                     $q->where('new_masterobat.status_kronis', '!=', '');
-                } 
+                }
                 // else {
                 //     # code...
                 // }
@@ -257,7 +255,7 @@ class EresepController extends Controller
             ->where(function ($query) {
                 $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%');
-                    // ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
+                // ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
             ->with('permintaandeporinci', function ($q) {
                 $q->select(
@@ -267,15 +265,15 @@ class EresepController extends Controller
                     'permintaan_h.tujuan as kdruang',
                     DB::raw('sum(permintaan_r.jumlah_minta) as jumlah_minta')
                 )
-                ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                    $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                        ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                })
-                ->where('permintaan_h.tujuan', request('kdruang'))
-                // ->whereNull('mutasi_gudangdepo.kd_obat')
-                ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                ->groupBy('permintaan_r.kdobat');
+                    ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                    ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                        $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                            ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                    })
+                    ->where('permintaan_h.tujuan', request('kdruang'))
+                    // ->whereNull('mutasi_gudangdepo.kd_obat')
+                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                    ->groupBy('permintaan_r.kdobat');
             })
 
             ->with('transracikan', function ($q) {
@@ -285,7 +283,7 @@ class EresepController extends Controller
                     'resep_keluar_h.depo as kdruang',
                     DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                 )
-                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep','=', 'resep_permintaan_keluar_racikan.noresep')
+                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
                     ->where('resep_keluar_h.depo', request('kdruang'))
                     ->whereIn('resep_keluar_h.flag', ['', '1', '2']);
             })
@@ -301,17 +299,17 @@ class EresepController extends Controller
                     ->where('resep_keluar_h.depo', request('kdruang'))
                     ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
                     ->groupBy('resep_permintaan_keluar.kdobat');
-            }) 
-            
+            })
+
             ->with('persiapanrinci', function ($q) {
                 $q->select(
                     'persiapan_operasi_rincis.kd_obat',
                     'persiapan_operasi_rincis.jumlah_minta',
                     DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                 )
-                ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
-                ->whereIn('persiapan_operasis.flag', ['', '1'])
-                ->groupBy('persiapan_operasi_rincis.kd_obat');
+                    ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                    ->whereIn('persiapan_operasis.flag', ['', '1'])
+                    ->groupBy('persiapan_operasi_rincis.kd_obat');
             })
 
 
@@ -319,21 +317,21 @@ class EresepController extends Controller
             ->limit(10)
             ->get();
 
-            $wew = collect($listobat)->map(function ($x, $y) {
-                $total = $x->total ?? 0;
-                $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
-                $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
-                $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-                $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
-                $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
-                return $x;
-            });
+        $wew = collect($listobat)->map(function ($x, $y) {
+            $total = $x->total ?? 0;
+            $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+            $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+            return $x;
+        });
 
-            return new JsonResponse(
-                [
-                    'dataobat' => $wew
-                ]
-            );
+        return new JsonResponse(
+            [
+                'dataobat' => $wew
+            ]
+        );
     }
 
     public function pembuatanresep(Request $request)
@@ -648,6 +646,7 @@ class EresepController extends Controller
 
     public function listresepbydokter()
     {
+        // return new JsonResponse(request()->all());
         // $data['c'] = date('m');
         // $data['c-3'] = (int)date('m') - 3;
         // $m = (int)date('m') - 3;
@@ -724,14 +723,17 @@ class EresepController extends Controller
             })
             ->when(request('flag'), function ($x) {
                 if (request('flag') === 'semua') {
-                    $x->whereIn('flag', ['1', '2', '3', '4', '5']);
+                    $x->whereIn('flag', ['', '1', '2', '3', '4', '5']);
+                } else if (request('flag') === null || request('flag') === '') {
+                    $x->where('flag', '');
                 } else {
                     $x->where('flag', request('flag'));
                 }
             })
             ->when(!request('flag'), function ($x) {
-                $x->where('flag', '2');
+                $x->where('flag', '');
             })
+
             ->orderBy('flag', 'ASC')
             ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
