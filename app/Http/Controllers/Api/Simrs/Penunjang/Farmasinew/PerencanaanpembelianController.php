@@ -362,14 +362,16 @@ class PerencanaanpembelianController extends Controller
     public function ambilRencana()
     {
         $data = Mobatnew::select(
-            'kd_obat',
-            'nama_obat',
-            'status_generik',
-            'status_fornas',
-            'status_forkid',
-            'satuan_k',
-            'sistembayar',
-            'gudang'
+            'new_masterobat.kd_obat',
+            'new_masterobat.nama_obat',
+            'new_masterobat.status_generik',
+            'new_masterobat.status_fornas',
+            'new_masterobat.status_forkid',
+            'new_masterobat.satuan_k',
+            'new_masterobat.sistembayar',
+            'new_masterobat.gudang',
+            db::raw('sum(min_max_ruang.min) as balance'),
+            db::raw('sum(stokreal.jumlah) as stok')
         )
             // ->where(function ($query) {
             //     $query
@@ -387,6 +389,9 @@ class PerencanaanpembelianController extends Controller
             //         })
             //         ->orDoesntHave('stokmaxrs');
             // })
+            ->leftJoin('min_max_ruang', 'new_masterobat.kd_obat', '=', 'min_max_ruang.kd_obat')
+            ->leftJoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+            ->havingRaw('SUM(min_max_ruang.min) >= SUM(stokreal.jumlah) OR SUM(stokreal.jumlah) IS NULL or SUM(min_max_ruang.min) is NULL')
 
             ->where(function ($q) {
                 $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
@@ -433,8 +438,8 @@ class PerencanaanpembelianController extends Controller
                 },
 
             ])
-
-            ->orderBy('nama_obat')
+            ->groupBy('new_masterobat.kd_obat')
+            ->orderBy('new_masterobat.nama_obat')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
