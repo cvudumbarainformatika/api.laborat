@@ -413,19 +413,20 @@ class PerencanaanpembelianController extends Controller
 
             ])
             ->where(function ($query) {
-                $query->whereHas('stokmaxrs', function ($q) {
-                    $q->select(
-                        'min_max_ruang.kd_obat',
-                        'min_max_ruang.min',
-                        db::raw('sum(min_max_ruang.min) as balance'),
-                        db::raw('sum(stokreal.jumlah) as stok')
+                $query
+                    ->doesntHave('stokrealallrs')
+                    ->orWhereHas('stokmaxrs', function ($q) {
+                        $q->select(
+                            'min_max_ruang.kd_obat',
+                            'min_max_ruang.min',
+                            db::raw('sum(min_max_ruang.min) as balance'),
+                            db::raw('sum(stokreal.jumlah) as stok')
 
-                    )
-                        ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
-                        ->havingRaw('balance >= stok');
-                })
-                    ->orDoesntHave('stokmaxrs')
-                    ->orDoesntHave('stokrealallrs');
+                        )
+                            ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
+                            ->havingRaw('balance >= stok');
+                    })
+                    ->orDoesntHave('stokmaxrs');
             })
 
             ->where(function ($q) {
