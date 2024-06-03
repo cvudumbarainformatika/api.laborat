@@ -362,16 +362,14 @@ class PerencanaanpembelianController extends Controller
     public function ambilRencana()
     {
         $data = Mobatnew::select(
-            'new_masterobat.kd_obat',
-            'new_masterobat.nama_obat',
-            'new_masterobat.status_generik',
-            'new_masterobat.status_fornas',
-            'new_masterobat.status_forkid',
-            'new_masterobat.satuan_k',
-            'new_masterobat.sistembayar',
-            'new_masterobat.gudang',
-            db::raw('sum(min_max_ruang.min) as balance'),
-            db::raw('sum(stokreal.jumlah) as stok')
+            'kd_obat',
+            'nama_obat',
+            'status_generik',
+            'status_fornas',
+            'status_forkid',
+            'satuan_k',
+            'sistembayar',
+            'gudang'
         )
             // ->where(function ($query) {
             //     $query
@@ -389,17 +387,10 @@ class PerencanaanpembelianController extends Controller
             //         })
             //         ->orDoesntHave('stokmaxrs');
             // })
-            ->leftJoin('min_max_ruang', 'new_masterobat.kd_obat', '=', 'min_max_ruang.kd_obat')
-            ->leftJoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-            ->havingRaw('
-            (SUM(min_max_ruang.min) >= SUM(stokreal.jumlah) AND SUM(stokreal.jumlah) IS NOT NULL AND SUM(min_max_ruang.min) IS NOT NULL)
-            OR SUM(stokreal.jumlah) IS NULL
-            OR SUM(min_max_ruang.min) IS NULL
-            ')
 
             ->where(function ($q) {
-                $q->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('new_masterobat.kd_obat', 'LIKE', '%' . request('q') . '%');
+                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
             })
             ->with([
                 'stokmaxrs' => function ($mm) {
@@ -442,8 +433,8 @@ class PerencanaanpembelianController extends Controller
                 },
 
             ])
-            ->groupBy('new_masterobat.kd_obat')
-            ->orderBy('new_masterobat.nama_obat')
+
+            ->orderBy('nama_obat')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
