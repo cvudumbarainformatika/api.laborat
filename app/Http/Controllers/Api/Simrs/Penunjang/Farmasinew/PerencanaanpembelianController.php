@@ -371,6 +371,27 @@ class PerencanaanpembelianController extends Controller
             'sistembayar',
             'gudang'
         )
+            ->where(function ($query) {
+                $query
+                    ->orDoesntHave('stokrealallrs')
+                    ->orWhereHas('stokmaxrs', function ($q) {
+                        $q->select(
+                            'min_max_ruang.kd_obat',
+                            'min_max_ruang.min',
+                            db::raw('sum(min_max_ruang.min) as balance'),
+                            db::raw('sum(stokreal.jumlah) as stok')
+
+                        )
+                            ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
+                            ->havingRaw('balance >= stok');
+                    })
+                    ->orDoesntHave('stokmaxrs');
+            })
+
+            ->where(function ($q) {
+                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
+            })
             ->with([
                 'stokmaxrs' => function ($mm) {
                     $mm->select(
@@ -412,27 +433,7 @@ class PerencanaanpembelianController extends Controller
                 },
 
             ])
-            ->where(function ($query) {
-                $query
-                    ->doesntHave('stokrealallrs')
-                    ->orWhereHas('stokmaxrs', function ($q) {
-                        $q->select(
-                            'min_max_ruang.kd_obat',
-                            'min_max_ruang.min',
-                            db::raw('sum(min_max_ruang.min) as balance'),
-                            db::raw('sum(stokreal.jumlah) as stok')
 
-                        )
-                            ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
-                            ->havingRaw('balance >= stok');
-                    })
-                    ->orDoesntHave('stokmaxrs');
-            })
-
-            ->where(function ($q) {
-                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
-            })
             ->orderBy('nama_obat')
             ->paginate(request('per_page'));
 
