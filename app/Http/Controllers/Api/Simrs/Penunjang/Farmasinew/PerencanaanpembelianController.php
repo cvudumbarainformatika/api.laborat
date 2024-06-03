@@ -371,22 +371,22 @@ class PerencanaanpembelianController extends Controller
             'sistembayar',
             'gudang'
         )
-            ->where(function ($query) {
-                $query
-                    ->orDoesntHave('stokrealallrs')
-                    ->orWhereHas('stokmaxrs', function ($q) {
-                        $q->select(
-                            'min_max_ruang.kd_obat',
-                            'min_max_ruang.min',
-                            db::raw('sum(min_max_ruang.min) as balance'),
-                            db::raw('sum(stokreal.jumlah) as stok')
+            // ->where(function ($query) {
+            //     $query
+            //         ->orDoesntHave('stokrealallrs')
+            //         ->orWhereHas('stokmaxrs', function ($q) {
+            //             $q->select(
+            //                 'min_max_ruang.kd_obat',
+            //                 'min_max_ruang.min',
+            //                 db::raw('sum(min_max_ruang.min) as balance'),
+            //                 db::raw('sum(stokreal.jumlah) as stok')
 
-                        )
-                            ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
-                            ->havingRaw('balance >= stok');
-                    })
-                    ->orDoesntHave('stokmaxrs');
-            })
+            //             )
+            //                 ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
+            //                 ->havingRaw('balance >= stok');
+            //         })
+            //         ->orDoesntHave('stokmaxrs');
+            // })
 
             ->where(function ($q) {
                 $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
