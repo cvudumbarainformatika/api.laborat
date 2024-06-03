@@ -214,20 +214,27 @@ class PersiapanOperasiController extends Controller
         $user = FormatingHelper::session_user();
         $kode = $user['kodesimrs'];
         if (!$request->nopermintaan) {
-            $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->latest('id')->get();
-            // $jum = PersiapanOperasi::whereMonth('tgl_permintaan', '01')->latest('id')->get();
-            $num = 0;
-            if (count($jum) >= 1) {
-                $expl = explode('/', $jum[0]->nopermintaan);
-                $num = (int) $expl[0] ?? 0;
-            }
-            $jmlChar = count(str_split(strval($num)));
-            $nol = [];
-            for ($i = 0; $i < 8 - $jmlChar; $i++) {
-                $nol[] = '0';
-            }
-            $imp = implode('', $nol) . ($num + 1);
-            $nopermintaan = $imp  . '/OP/' . date('dmY');
+            // $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->latest('id')->get();
+            // // $jum = PersiapanOperasi::whereMonth('tgl_permintaan', '01')->latest('id')->get();
+            // $num = 0;
+            // if (count($jum) >= 1) {
+            //     $expl = explode('/', $jum[0]->nopermintaan);
+            //     $num = (int) $expl[0] ?? 0;
+            // }
+            // $jmlChar = count(str_split(strval($num)));
+            // $nol = [];
+            // for ($i = 0; $i < 8 - $jmlChar; $i++) {
+            //     $nol[] = '0';
+            // }
+            // $imp = implode('', $nol) . ($num + 1);
+            $procedure = 'resepkeluardepook(@nomor)';
+            $colom = 'depook';
+            $lebel = 'OP-KO';
+            DB::connection('farmasi')->select('call ' . $procedure);
+            $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
+            $wew = $x[0]->$colom;
+            $nopermintaan = FormatingHelper::resep($wew, $lebel);
+            // $nopermintaan = $imp  . '/OP/' . date('dmY');
         } else {
             $nopermintaan = $request->nopermintaan;
         }
