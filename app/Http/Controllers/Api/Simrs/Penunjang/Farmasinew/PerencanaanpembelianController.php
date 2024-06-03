@@ -371,21 +371,6 @@ class PerencanaanpembelianController extends Controller
             'sistembayar',
             'gudang'
         )
-            ->where(function ($query) {
-                $query->whereHas('stokmaxrs', function ($q) {
-                    $q->select(
-                        'min_max_ruang.kd_obat',
-                        'min_max_ruang.min',
-                        db::raw('sum(min_max_ruang.min) as balance'),
-                        db::raw('sum(stokreal.jumlah) as stok')
-
-                    )
-                        ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
-                        ->havingRaw('balance >= stok');
-                })
-                    ->orDoesntHave('stokmaxrs')
-                    ->orDoesntHave('stokrealallrs');
-            })
             ->with([
                 'stokmaxrs' => function ($mm) {
                     $mm->select(
@@ -427,6 +412,22 @@ class PerencanaanpembelianController extends Controller
                 },
 
             ])
+            ->where(function ($query) {
+                $query->whereHas('stokmaxrs', function ($q) {
+                    $q->select(
+                        'min_max_ruang.kd_obat',
+                        'min_max_ruang.min',
+                        db::raw('sum(min_max_ruang.min) as balance'),
+                        db::raw('sum(stokreal.jumlah) as stok')
+
+                    )
+                        ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
+                        ->havingRaw('balance >= stok');
+                })
+                    ->orDoesntHave('stokmaxrs')
+                    ->orDoesntHave('stokrealallrs');
+            })
+
             ->where(function ($q) {
                 $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
