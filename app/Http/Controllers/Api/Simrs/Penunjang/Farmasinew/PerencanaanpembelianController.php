@@ -391,7 +391,7 @@ class PerencanaanpembelianController extends Controller
             // })
             ->leftJoin('min_max_ruang', 'new_masterobat.kd_obat', '=', 'min_max_ruang.kd_obat')
             ->leftJoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-            ->havingRaw('SUM(min_max_ruang.min) >= SUM(stokreal.jumlah) OR SUM(stokreal.jumlah) IS NULL or SUM(min_max_ruang.min) is NULL')
+            ->havingRaw('SUM(min_max_ruang.min) >= SUM(stokreal.jumlah) OR SUM(stokreal.jumlah) IS NULL OR SUM(min_max_ruang.min) IS NULL OR SUM(stokreal.jumlah) IS NOT NULL OR SUM(min_max_ruang.min) IS NOT NULL')
 
             ->where(function ($q) {
                 $q->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
