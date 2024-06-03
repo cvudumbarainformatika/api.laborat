@@ -28,4 +28,8 @@ class Permintaanresep extends Model
     {
         return $this->belongsTo(Msigna::class, 'aturan', 'signa');
     }
+    public function head()
+    {
+        $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
 }
