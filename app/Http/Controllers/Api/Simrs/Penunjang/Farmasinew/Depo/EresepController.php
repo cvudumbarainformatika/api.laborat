@@ -679,10 +679,12 @@ class EresepController extends Controller
             if (preg_match('~[0-9]+~', request('q'))) {
                 $rm = [];
             } else {
-                $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
-                $rm = collect($data)->map(function ($x) {
-                    return $x->norm;
-                });
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
             }
         }
         if (request('to') === '' || request('from') === null) {
