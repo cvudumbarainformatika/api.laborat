@@ -394,8 +394,8 @@ class PerencanaanpembelianController extends Controller
             ->havingRaw('SUM(min_max_ruang.min) >= SUM(stokreal.jumlah) OR SUM(stokreal.jumlah) IS NULL or SUM(min_max_ruang.min) is NULL')
 
             ->where(function ($q) {
-                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
+                $q->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('new_masterobat.kd_obat', 'LIKE', '%' . request('q') . '%');
             })
             ->with([
                 'stokmaxrs' => function ($mm) {
