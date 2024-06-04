@@ -92,6 +92,11 @@ class RanapController extends Controller
                         ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
                 });
             })
+
+
+            ->where(function ($q) use ($status) {
+                $q->whereIn('rs23.rs22', $status);
+            })
             ->with([
                 'newapotekrajal' => function ($newapotekrajal) {
                     $newapotekrajal->with([
