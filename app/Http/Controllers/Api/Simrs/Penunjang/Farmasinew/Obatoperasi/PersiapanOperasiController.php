@@ -430,7 +430,8 @@ class PersiapanOperasiController extends Controller
                     ->first();
 
                 if ($stok->jumlah <= 0) {
-                    return new JsonResponse(['message' => 'Data stok kurang dari 0'], 410);
+                    $obat = Mobatnew::where('kd_obat', $rin['kd_obat'])->first();
+                    return new JsonResponse(['message' => 'Data stok ' . $obat->nama_obat . ' kurang dari 0'], 410);
                 }
                 $sisa = $stok->jumlah - $rin['jumlah'];
                 $stok->jumlah = $sisa;
