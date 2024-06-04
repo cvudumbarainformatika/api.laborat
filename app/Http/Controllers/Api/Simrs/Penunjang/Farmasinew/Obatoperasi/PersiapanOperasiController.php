@@ -945,13 +945,17 @@ class PersiapanOperasiController extends Controller
                     $ind = 0;
                     $anu = (float)$sudahKembali;
                     while ($anu > 0) {
-                        if ($getDataDistribusi[$ind]->tgl_retur !== null) {
-                            if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
-                                $ind += 1;
-                                $sisa = $anu - ($getDataDistribusi[$ind]->jumlah ?? 0);
-                                $anu = $sisa;
+                        $getDataDistribusi[$ind];
+                        if ($getDataDistribusi[$ind]) {
+
+                            if ($getDataDistribusi[$ind]->tgl_retur !== null) {
+                                if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
+                                    $ind += 1;
+                                    $sisa = $anu - ($getDataDistribusi[$ind]->jumlah ?? 0);
+                                    $anu = $sisa;
+                                } else $anu = 0;
                             } else $anu = 0;
-                        } else $anu = 0;
+                        }
                     }
 
                     if ($kurang > 0) {

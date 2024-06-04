@@ -244,7 +244,7 @@ class StokrealController extends Controller
         )->where('stokreal.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->where('stokreal.kdruang', $kdruang)
-            ->where('stokreal.jumlah', '>', 0)
+            // ->where('stokreal.jumlah', '>', 0)
             ->where(function ($x) {
                 $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
                     ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
