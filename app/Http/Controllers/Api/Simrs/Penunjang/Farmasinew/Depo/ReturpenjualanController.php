@@ -50,7 +50,29 @@ class ReturpenjualanController extends Controller
                     'dokter:kdpegsimrs,nama',
                     'ruanganranap:rs1,rs2',
                     'poli:rs1,rs2',
-                    'sistembayar:rs1,rs2'
+                    'sistembayar:rs1,rs2',
+                    'rincianwret' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_r.noresep',
+                            'resep_keluar_r.kdobat',
+                            'retur_penjualan_r.jumlah_retur',
+                        )
+                            ->leftjoin('retur_penjualan_r', function ($j) {
+                                $j->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep')
+                                    ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat');
+                            });
+                    },
+                    'rincianracikwret' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_racikan_r.noresep',
+                            'resep_keluar_racikan_r.kdobat',
+                            'retur_penjualan_r.jumlah_retur',
+                        )
+                            ->leftjoin('retur_penjualan_r', function ($j) {
+                                $j->on('retur_penjualan_r.noresep', '=', 'resep_keluar_racikan_r.noresep')
+                                    ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_racikan_r.kdobat');
+                            });
+                    }
                 ]
             )
             ->where(function ($query) {
