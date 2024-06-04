@@ -22,4 +22,8 @@ class Permintaanresepracikan extends Model
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kdobat');
     }
+    public function head()
+    {
+        $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
 }

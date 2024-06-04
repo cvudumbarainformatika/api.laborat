@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -343,6 +344,8 @@ class StokrealController extends Controller
     public function dataAlokasi()
     {
         $transNonRacikan = Permintaanresep::select(
+            'resep_permintaan_keluar.noreg',
+            'resep_permintaan_keluar.noresep',
             'resep_permintaan_keluar.kdobat as kdobat',
             'resep_keluar_h.depo as kdruang',
             'resep_keluar_h.ruangan as dari',
@@ -356,9 +359,15 @@ class StokrealController extends Controller
             ->where('resep_keluar_h.depo', request('kdruang'))
             ->where('resep_permintaan_keluar.kdobat', request('kdobat'))
             ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+            // ->with(['head'])
+            // ->with(['head' => function ($he) {
+            //     $he->select('noresep', 'noreg');
+            // }])
             // ->groupBy('resep_permintaan_keluar.kdobat')
             ->get();
         $transRacikan = Permintaanresepracikan::select(
+            'resep_permintaan_keluar_racikan.noreg',
+            'resep_permintaan_keluar_racikan.noresep',
             'resep_permintaan_keluar_racikan.kdobat as kdobat',
             'resep_keluar_h.depo as kdruang',
             'resep_keluar_h.ruangan as dari',
@@ -405,7 +414,15 @@ class StokrealController extends Controller
         ];
         return new JsonResponse($data);
     }
-
+    public function getRuangRanap()
+    {
+        $data = Mruangranap::select(
+            'rs1 as kdruang',
+            'rs2 as nama',
+        )
+            ->get();
+        return new JsonResponse($data);
+    }
     public function obatMauDisesuaikan()
     {
         $data = Stokrel::where('kdobat', request('kdobat'))

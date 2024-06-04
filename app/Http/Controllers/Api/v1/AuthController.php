@@ -11,6 +11,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -51,19 +52,31 @@ class AuthController extends Controller
     public function authuser()
     {
         $me = auth()->user();
+        $pegawaiId = $me->pegawai_id;
+
+        // $keycache = 'authuser' . $pegawaiId;
+
         $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+
         $loadGudang = array(3, 4, 7);
+
         if (in_array($user->pegawai->role_id, $loadGudang)) {
             $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.depoSim:kode,nama']);
         }
 
         $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
+        // $apps = Cache::rememberForever('menu-sso-xenter', function () {
+        //     return Aplikasi::with(['menus', 'menus.submenus'])->get();
+        // });
+
         $akses = 'all';
         $allAccess = array('sa', 'coba');
 
         if (!in_array(auth()->user()->username, $allAccess)) {
             $akses = AksesUser::where('user_id', $me->id)->get();
         }
+
+        
 
         $result = [
             'apps' => $apps,

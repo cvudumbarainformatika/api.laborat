@@ -40,8 +40,10 @@ class HargaHelper
             } elseif ($harga > 10000000) {
                 $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
             }
-        } else {
+        } else if ($sistembayar == 2 || $sistembayar == '2') {
             $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
+        } else {
+            $hargajualx = (int) $harga + (int) $harga * (int) 30 / (int)100;
         }
         return [
             'res' => false,
