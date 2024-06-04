@@ -945,7 +945,7 @@ class PersiapanOperasiController extends Controller
                     $ind = 0;
                     $anu = (float)$sudahKembali;
                     while ($anu > 0) {
-                        $getDataDistribusi[$ind];
+                        // $getDataDistribusi[$ind];
                         if ($getDataDistribusi[$ind]) {
 
                             if ($getDataDistribusi[$ind]->tgl_retur !== null) {
