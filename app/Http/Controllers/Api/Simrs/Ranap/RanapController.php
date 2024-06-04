@@ -73,17 +73,17 @@ class RanapController extends Controller
             ->where(function ($q) use ($status) {
                 $q->whereIn('rs23.rs22', $status);
             })
-            ->where(function ($x) {
-                $x->orWhereNull('dokterdpjp');
-            })
+            // ->where(function ($x) {
+            //     $x->orWhereNull('dokterdpjp');
+            // })
 
-            ->where(function ($query) use ($ruangan) {
-                $query->where(function ($query) use ($ruangan) {
-                    for ($i = 0; $i < count($ruangan); $i++) {
-                        $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                    }
-                });
-            })
+            // ->where(function ($query) use ($ruangan) {
+            //     $query->where(function ($query) use ($ruangan) {
+            //         for ($i = 0; $i < count($ruangan); $i++) {
+            //             $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+            //         }
+            //     });
+            // })
 
 
 
