@@ -331,12 +331,12 @@ class PersiapanOperasiController extends Controller
                     ->where('jumlah', '>', 0)
                     ->groupBy('kdobat')
                     ->first();
-                $namaobat = $key['obat']['nama_obat'] ?? '';
+                // $namaobat = $key['obat']['nama_obat'] ?? '';
+                $obat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
                 if (!$stok) {
-                    return new JsonResponse(['message' => 'Stok Obat' . $namaobat . ' tidak tersedia'], 410);
+                    return new JsonResponse(['message' => 'Stok Obat' . $obat->nama_obat . ' tidak tersedia'], 410);
                 }
                 if ($stok->total < $key['jumlah_distribusi']) {
-                    $obat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
                     return new JsonResponse([
                         'message' => 'stok ' . $obat->nama_obat . ' tidak mencukupi, stok tersisa' . $stok->total . ' silahkan kurangi jumlah distribusi'
                     ], 410);
