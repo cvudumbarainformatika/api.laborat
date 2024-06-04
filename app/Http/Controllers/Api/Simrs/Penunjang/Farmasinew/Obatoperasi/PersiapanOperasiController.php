@@ -948,7 +948,7 @@ class PersiapanOperasiController extends Controller
                         if ($getDataDistribusi[$ind]->tgl_retur !== null) {
                             if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
                                 $ind += 1;
-                                $sisa = $anu - $getDataDistribusi[$ind]->jumlah;
+                                $sisa = $anu - ($getDataDistribusi[$ind]->jumlah ?? 0);
                                 $anu = $sisa;
                             } else $anu = 0;
                         } else $anu = 0;

@@ -73,6 +73,9 @@ class RanapController extends Controller
             ->where(function ($q) use ($status) {
                 $q->whereIn('rs23.rs22', $status);
             })
+            ->where(function ($x) {
+                $x->orWhereNull('rs277.rs1');
+            })
 
             ->where(function ($query) use ($ruangan) {
                 $query->where(function ($query) use ($ruangan) {
