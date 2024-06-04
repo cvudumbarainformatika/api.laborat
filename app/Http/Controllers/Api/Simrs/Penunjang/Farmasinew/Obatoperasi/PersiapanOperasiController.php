@@ -849,157 +849,53 @@ class PersiapanOperasiController extends Controller
     {
         // $resepKeluar = self::resepKeluar($key, $request);
         // return new JsonResponse($request->all());
-        // try {
-        //     DB::connection('farmasi')->beginTransaction();
-        $rinci = $request->rinci;
-        $noresep = '';
-        $user = FormatingHelper::session_user();
-        $kode = $user['kodesimrs'];
-        $resepKeluar = [];
-        $alurNurmal = true;
-        if (count($rinci) > 0) {
-            foreach ($rinci as $key) {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $rinci = $request->rinci;
+            $noresep = '';
+            $user = FormatingHelper::session_user();
+            $kode = $user['kodesimrs'];
+            $resepKeluar = [];
+            $alurNurmal = true;
+            if (count($rinci) > 0) {
+                foreach ($rinci as $key) {
 
-                // update data rinci
-                $kembali = (float)$key['jumlah_kembali'];
-                $jmlResep = (float) $key['jumlah_resep'];
-                $dataDistribusi = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
-                    ->where('nopermintaan', $key['nopermintaan'])
-                    ->orderBy('id', 'DESC')
-                    ->get();
-                //cek sudah pernah ada pengembalian atau belum
-                $dataDistribusisudah = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
-                    ->where('nopermintaan', $key['nopermintaan'])
-                    ->whereNotNull('tgl_retur')
-                    ->orderBy('id', 'DESC')
-                    ->count();
-                if ((int)$dataDistribusisudah > 0) $alurNurmal = false;
-                // ini alur normal
-                if ($alurNurmal) {
-                    if ($kembali > 0) {
-                        $dataRinci = PersiapanOperasiRinci::find($key['id']);
-                        if (!$dataRinci) {
-                            return new JsonResponse(['message' => 'Data Rinci tidak ditemukan']);
-                        }
-                        $dataRinci->jumlah_kembali = $key['jumlah_kembali'];
-                        $dataRinci->save();
-                        // update data distribusi
-
-                        $index = 0;
-                        while ($kembali > 0) {
-                            $ada = (float)$dataDistribusi[$index]->jumlah;
-                            if ($ada < $kembali) {
-                                $dataDistribusi[$index]->jumlah_retur = $ada;
-                                $dataDistribusi[$index]->tgl_retur = date('Y-m_d H:i:s');
-                                $dataDistribusi[$index]->save();
-
-                                // update stok
-                                $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
-                                    ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
-                                    ->where('kdruang', 'Gd-04010103')
-                                    ->first();
-
-                                $totalStok = (float)$stok->jumlah + $ada;
-                                $stok->jumlah = $totalStok;
-                                $stok->save();
-
-                                $sisa = $kembali - $ada;
-                                $index += 1;
-                                $kembali = $sisa;
-                            } else {
-
-                                $dataDistribusi[$index]->jumlah_retur = $kembali;
-                                $dataDistribusi[$index]->tgl_retur = date('Y-m_d H:i:s');
-                                $dataDistribusi[$index]->save();
-
-                                // update stok
-                                $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
-                                    ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
-                                    ->where('kdruang', 'Gd-04010103')
-                                    ->first();
-                                $totalStok = (float)$stok->jumlah + $kembali;
-                                $stok->jumlah = $totalStok;
-                                $stok->save();
-
-                                $kembali = 0;
-                            }
-                        }
-                    } else if ($kembali == 0) {
-
-                        foreach ($dataDistribusi as $key) {
-                            $key['tgl_retur'] = date('Y-m_d H:i:s');
-                            $key->save();
-                        }
-                    }
-                } else {
-                    // jika sudah di retur, ada tgl retur
-                    // maka bisa dipastikan yang ada tanggal returnya itu yang terakhir dikembalikan
-                    //cek sudah pernah ada pengembalian atau belum
-                    $getDataDistribusi = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
+                    // update data rinci
+                    $kembali = (float)$key['jumlah_kembali'];
+                    $jmlResep = (float) $key['jumlah_resep'];
+                    $dataDistribusi = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
                         ->where('nopermintaan', $key['nopermintaan'])
                         ->orderBy('id', 'DESC')
                         ->get();
-                    $det = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $key['kd_obat'])->first();
-                    $sudahKembali = $det->jumlah_kembali;
-                    $kurang = (float)$kembali - (float)$sudahKembali;
-                    $ind = 0;
-                    $anu = (float)$sudahKembali;
-                    while ($anu > 0) {
-                        // $getDataDistribusi[$ind];
-                        if ($getDataDistribusi[$ind]) {
+                    //cek sudah pernah ada pengembalian atau belum
+                    $dataDistribusisudah = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
+                        ->where('nopermintaan', $key['nopermintaan'])
+                        ->whereNotNull('tgl_retur')
+                        ->orderBy('id', 'DESC')
+                        ->count();
+                    if ((int)$dataDistribusisudah > 0) $alurNurmal = false;
+                    // ini alur normal
+                    if ($alurNurmal) {
+                        if ($kembali > 0) {
+                            $dataRinci = PersiapanOperasiRinci::find($key['id']);
+                            if (!$dataRinci) {
+                                return new JsonResponse(['message' => 'Data Rinci tidak ditemukan']);
+                            }
+                            $dataRinci->jumlah_kembali = $key['jumlah_kembali'];
+                            $dataRinci->save();
+                            // update data distribusi
 
-                            if ($getDataDistribusi[$ind]->tgl_retur !== null) {
-                                if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
-                                    $ind += 1;
-                                    $sisa = $anu - ($getDataDistribusi[$ind]->jumlah ?? 0);
-                                    $anu = $sisa;
-                                } else $anu = 0;
-                            } else $anu = 0;
-                        }
-                    }
-
-                    if ($kurang > 0) {
-                        $dataRinci = PersiapanOperasiRinci::find($key['id']);
-                        if (!$dataRinci) {
-                            return new JsonResponse(['message' => 'Data Rinci tidak ditemukan']);
-                        }
-                        $dataRinci->jumlah_kembali = $key['jumlah_kembali'];
-                        $dataRinci->save();
-                        // update data distribusi
-
-
-                        while ($kurang > 0) {
-                            if ($getDataDistribusi[$ind]->tgl_retur !== null) {
-                                $adasikit = (float)$getDataDistribusi[$ind]->jumlah - $getDataDistribusi[$ind]->jumlah_retur;
-                                $retur = (float)$getDataDistribusi[$ind]->jumlah_retur;
-
-                                $getDataDistribusi[$ind]->jumlah_retur = $adasikit + $retur;
-                                $getDataDistribusi[$ind]->tgl_retur = date('Y-m_d H:i:s');
-                                $getDataDistribusi[$ind]->save();
-
-                                // update stok
-                                $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
-                                    ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
-                                    ->where('kdruang', 'Gd-04010103')
-                                    ->first();
-
-                                $totalStok = (float)$stok->jumlah + $adasikit;
-                                $stok->jumlah = $totalStok;
-                                $stok->save();
-
-                                $sisa = $kurang - $adasikit;
-                                $ind += 1;
-                                $kurang = $sisa;
-                            } else {
-                                $ada = (float)$getDataDistribusi[$ind]->jumlah;
-                                if ($ada < $kurang) {
-                                    $getDataDistribusi[$ind]->jumlah_retur = $ada;
-                                    $getDataDistribusi[$ind]->tgl_retur = date('Y-m_d H:i:s');
-                                    $getDataDistribusi[$ind]->save();
+                            $index = 0;
+                            while ($kembali > 0) {
+                                $ada = (float)$dataDistribusi[$index]->jumlah;
+                                if ($ada < $kembali) {
+                                    $dataDistribusi[$index]->jumlah_retur = $ada;
+                                    $dataDistribusi[$index]->tgl_retur = date('Y-m_d H:i:s');
+                                    $dataDistribusi[$index]->save();
 
                                     // update stok
-                                    $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
-                                        ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
+                                    $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
+                                        ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
 
@@ -1007,12 +903,80 @@ class PersiapanOperasiController extends Controller
                                     $stok->jumlah = $totalStok;
                                     $stok->save();
 
-                                    $sisa = $kurang - $ada;
-                                    $ind += 1;
-                                    $kurang = $sisa;
+                                    $sisa = $kembali - $ada;
+                                    $index += 1;
+                                    $kembali = $sisa;
                                 } else {
 
-                                    $getDataDistribusi[$ind]->jumlah_retur = $kurang;
+                                    $dataDistribusi[$index]->jumlah_retur = $kembali;
+                                    $dataDistribusi[$index]->tgl_retur = date('Y-m_d H:i:s');
+                                    $dataDistribusi[$index]->save();
+
+                                    // update stok
+                                    $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
+                                        ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
+                                        ->where('kdruang', 'Gd-04010103')
+                                        ->first();
+                                    $totalStok = (float)$stok->jumlah + $kembali;
+                                    $stok->jumlah = $totalStok;
+                                    $stok->save();
+
+                                    $kembali = 0;
+                                }
+                            }
+                        } else if ($kembali == 0) {
+
+                            foreach ($dataDistribusi as $key) {
+                                $key['tgl_retur'] = date('Y-m_d H:i:s');
+                                $key->save();
+                            }
+                        }
+                    } else {
+                        // jika sudah di retur, ada tgl retur
+                        // maka bisa dipastikan yang ada tanggal returnya itu yang terakhir dikembalikan
+                        //cek sudah pernah ada pengembalian atau belum
+                        $getDataDistribusi = PersiapanOperasiDistribusi::where('kd_obat', $key['kd_obat'])
+                            ->where('nopermintaan', $key['nopermintaan'])
+                            ->orderBy('id', 'DESC')
+                            ->get();
+                        $countDist = count($getDataDistribusi);
+                        $det = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $key['kd_obat'])->first();
+                        $sudahKembali = $det->jumlah_kembali;
+                        $kurang = (float)$kembali - (float)$sudahKembali;
+                        $ind = 0;
+                        $anu = (float)$sudahKembali;
+                        while ($anu > 0) {
+                            // return new JsonResponse($getDataDistribusi[$ind]);
+                            // $getDataDistribusi[$ind];
+                            if ($getDataDistribusi[$ind]) {
+                                if ($getDataDistribusi[$ind]->tgl_retur !== null) {
+                                    if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
+                                        if ($countDist > 1) {
+                                            $ind += 1;
+                                            $sisa = $anu - ($getDataDistribusi[$ind]->jumlah ?? 0);
+                                            $anu = $sisa;
+                                        } else $anu = 0;
+                                    } else $anu = 0;
+                                } else $anu = 0;
+                            }
+                        }
+
+                        if ($kurang > 0) {
+                            $dataRinci = PersiapanOperasiRinci::find($key['id']);
+                            if (!$dataRinci) {
+                                return new JsonResponse(['message' => 'Data Rinci tidak ditemukan']);
+                            }
+                            $dataRinci->jumlah_kembali = $key['jumlah_kembali'];
+                            $dataRinci->save();
+                            // update data distribusi
+
+
+                            while ($kurang > 0) {
+                                if ($getDataDistribusi[$ind]->tgl_retur !== null) {
+                                    $adasikit = (float)$getDataDistribusi[$ind]->jumlah - $getDataDistribusi[$ind]->jumlah_retur;
+                                    $retur = (float)$getDataDistribusi[$ind]->jumlah_retur;
+
+                                    $getDataDistribusi[$ind]->jumlah_retur = $adasikit + $retur;
                                     $getDataDistribusi[$ind]->tgl_retur = date('Y-m_d H:i:s');
                                     $getDataDistribusi[$ind]->save();
 
@@ -1021,120 +985,160 @@ class PersiapanOperasiController extends Controller
                                         ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
-                                    $totalStok = (float)$stok->jumlah + $kurang;
+
+                                    $totalStok = (float)$stok->jumlah + $adasikit;
                                     $stok->jumlah = $totalStok;
                                     $stok->save();
 
-                                    $kurang = 0;
+                                    $sisa = $kurang - $adasikit;
+                                    $ind += 1;
+                                    $kurang = $sisa;
+                                } else {
+                                    $ada = (float)$getDataDistribusi[$ind]->jumlah;
+                                    if ($ada < $kurang) {
+                                        $getDataDistribusi[$ind]->jumlah_retur = $ada;
+                                        $getDataDistribusi[$ind]->tgl_retur = date('Y-m_d H:i:s');
+                                        $getDataDistribusi[$ind]->save();
+
+                                        // update stok
+                                        $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
+                                            ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
+                                            ->where('kdruang', 'Gd-04010103')
+                                            ->first();
+
+                                        $totalStok = (float)$stok->jumlah + $ada;
+                                        $stok->jumlah = $totalStok;
+                                        $stok->save();
+
+                                        $sisa = $kurang - $ada;
+                                        $ind += 1;
+                                        $kurang = $sisa;
+                                    } else {
+
+                                        $getDataDistribusi[$ind]->jumlah_retur = $kurang;
+                                        $getDataDistribusi[$ind]->tgl_retur = date('Y-m_d H:i:s');
+                                        $getDataDistribusi[$ind]->save();
+
+                                        // update stok
+                                        $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
+                                            ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
+                                            ->where('kdruang', 'Gd-04010103')
+                                            ->first();
+                                        $totalStok = (float)$stok->jumlah + $kurang;
+                                        $stok->jumlah = $totalStok;
+                                        $stok->save();
+
+                                        $kurang = 0;
+                                    }
                                 }
                             }
+                        } else if ($kurang < 0) {
+                            return new JsonResponse([
+                                'message' => 'Jumlah kembali harus lebih besar dari jumlah kembali sebelumnya',
+                                'data' => $getDataDistribusi,
+                                'kembali' => $kembali,
+                                'kurang' => $kurang,
+                                'det' => $det,
+                                'ind' => $ind,
+                                'sudahKembali' => $sudahKembali,
+                            ], 410);
                         }
-                    } else if ($kurang < 0) {
-                        return new JsonResponse([
-                            'message' => 'Jumlah kembali harus lebih besar dari jumlah kembali sebelumnya',
-                            'data' => $getDataDistribusi,
-                            'kembali' => $kembali,
-                            'kurang' => $kurang,
-                            'det' => $det,
-                            'ind' => $ind,
-                            'sudahKembali' => $sudahKembali,
-                        ], 410);
                     }
                 }
-            }
 
-            // jika alur normal maka ini jalan
-            if ($alurNurmal) {
-                $keluar = self::resepKeluar($key, $request, $kode, $rinci);
-                foreach ($keluar as $kel) {
-                    $resepKeluar[] = $kel;
+                // jika alur normal maka ini jalan
+                if ($alurNurmal) {
+                    $keluar = self::resepKeluar($key, $request, $kode, $rinci);
+                    foreach ($keluar as $kel) {
+                        $resepKeluar[] = $kel;
+                    }
+                    // return new JsonResponse([
+                    //     'key' => $resepKeluar
+                    // ]);
                 }
-                // return new JsonResponse([
-                //     'key' => $resepKeluar
-                // ]);
             }
-        }
 
-        // update header jika jumlah resep dikurang jumlah kembali sama dengan jumlah distribusi
-        $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
-        if (!$head) {
-            return new JsonResponse(['message' => 'Data Header tidak ditemukan'], 410);
-        }
-        $flag = '4';
-        // Ambil semua detail yang berhubungan dengan header ini berdasarkan relasi nya
-        $detail = PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->get();
-        foreach ($detail as $key) {
-            $resepNretur = (float)$key->jumlah_resep + (float)$key->jumlah_kembali;
-            // Jika ada satu saja obat yang jumlah resep + retur != distribusi, set flag ke 3
-            if ((float)$resepNretur != (float)$key->jumlah_distribusi) {
-                $flag = '3';
-                break;
+            // update header jika jumlah resep dikurang jumlah kembali sama dengan jumlah distribusi
+            $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+            if (!$head) {
+                return new JsonResponse(['message' => 'Data Header tidak ditemukan'], 410);
             }
-        }
-
-        $head->flag = $flag;
-        $head->tgl_retur = date('Y-m-d H:i:s');
-        $head->save();
-
-        // jika alur normal maka ini jalan ------
-        if ($alurNurmal && count($resepKeluar) > 0) {
-
-            $nores = [];
-            foreach ($resepKeluar as $key) {
-
-                $nores[] = $key['noresep'];
+            $flag = '4';
+            // Ambil semua detail yang berhubungan dengan header ini berdasarkan relasi nya
+            $detail = PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->get();
+            foreach ($detail as $key) {
+                $resepNretur = (float)$key->jumlah_resep + (float)$key->jumlah_kembali;
+                // Jika ada satu saja obat yang jumlah resep + retur != distribusi, set flag ke 3
+                if ((float)$resepNretur != (float)$key->jumlah_distribusi) {
+                    $flag = '3';
+                    break;
+                }
             }
-            //  $col->map(function ($it, $key) {
-            //     return $it['noresep'];
-            // });
-            $uniNores = array_unique($nores);
-            $resepH = [];
-            // hapus jika ada
-            // foreach ($uniNores as $nor) {
-            //     Resepkeluarrinci::where('noresep', $nor)->delete();
-            // }
-            // insert resep keluar
-            $resepK = Resepkeluarrinci::insert($resepKeluar);
 
-            // update header resep
-            foreach ($uniNores as $nor) {
-                $temp = Resepkeluarheder::where('noresep', $nor)->first();
-                $temp->flag = '3';
-                $temp->tgl = date('Y-m-d');
-                $temp->save();
-                $resepH[] = $temp;
+            $head->flag = $flag;
+            $head->tgl_retur = date('Y-m-d H:i:s');
+            $head->save();
+
+            // jika alur normal maka ini jalan ------
+            if ($alurNurmal && count($resepKeluar) > 0) {
+
+                $nores = [];
+                foreach ($resepKeluar as $key) {
+
+                    $nores[] = $key['noresep'];
+                }
+                //  $col->map(function ($it, $key) {
+                //     return $it['noresep'];
+                // });
+                $uniNores = array_unique($nores);
+                $resepH = [];
+                // hapus jika ada
+                // foreach ($uniNores as $nor) {
+                //     Resepkeluarrinci::where('noresep', $nor)->delete();
+                // }
+                // insert resep keluar
+                $resepK = Resepkeluarrinci::insert($resepKeluar);
+
+                // update header resep
+                foreach ($uniNores as $nor) {
+                    $temp = Resepkeluarheder::where('noresep', $nor)->first();
+                    $temp->flag = '3';
+                    $temp->tgl = date('Y-m-d');
+                    $temp->save();
+                    $resepH[] = $temp;
+                }
             }
+            // jika alur normal maka ini jalan sampai sini------
+
+            // return new JsonResponse([
+            //     'noresep U' => $uniNores,
+            //     'resepH' => $resepH,
+            //     'data' => $resepKeluar,
+            // ], 410);
+
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'rinci' => $rinci,
+                'head' => $head,
+                'kurang' => $kurang ?? 0,
+                'resepKeluar' => $resepKeluar,
+                'resepH' => $resepH ?? '',
+                'dataDistribusi' => $dataDistribusi ?? [],
+                'message' => 'Data berhasil di simpan'
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan ' . $e,
+                'result' => $e,
+                'rinci' => $rinci ?? '',
+                'head' => $head ?? '',
+                'resepKeluar' => $resepKeluar ?? '',
+                'resepH' => $resepH ?? "",
+                'dataDistribusi' => $dataDistribusi ?? [],
+                'getDataDistribusi' => $getDataDistribusi ?? [],
+                'countDist' => $countDist ?? null,
+            ], 410);
         }
-        // jika alur normal maka ini jalan sampai sini------
-
-        // return new JsonResponse([
-        //     'noresep U' => $uniNores,
-        //     'resepH' => $resepH,
-        //     'data' => $resepKeluar,
-        // ], 410);
-
-        // DB::connection('farmasi')->commit();
-        return new JsonResponse([
-            'rinci' => $rinci,
-            'head' => $head,
-            'kurang' => $kurang ?? 0,
-            'resepKeluar' => $resepKeluar,
-            'resepH' => $resepH ?? '',
-            'dataDistribusi' => $dataDistribusi ?? [],
-            'message' => 'Data berhasil di simpan'
-        ]);
-        // } catch (\Exception $e) {
-        //     DB::connection('farmasi')->rollBack();
-        //     return new JsonResponse([
-        //         'message' => 'Data Gagal Disimpan...!!!',
-        //         'result' => $e,
-        //         'rinci' => $rinci ?? '',
-        //         'head' => $head ?? '',
-        //         'resepKeluar' => $resepKeluar ?? '',
-        //         'resepH' => $resepH ?? "",
-        //         'dataDistribusi' => $dataDistribusi ?? [],
-        //         'getDataDistribusi' => $getDataDistribusi ?? [],
-        //     ], 410);
-        // }
     }
 }
