@@ -70,21 +70,21 @@ class RanapController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->where('rs23.rs3', '<=', $tgl)
             // ->whereIn('rs23.rs22', $status)
-            ->where(function($q) use ($status) {
+            ->where(function ($q) use ($status) {
                 $q->whereIn('rs23.rs22', $status);
             })
-            
-            ->where(function($query) use($ruangan) {
+
+            ->where(function ($query) use ($ruangan) {
                 $query->where(function ($query) use ($ruangan) {
                     for ($i = 0; $i < count($ruangan); $i++) {
-                        $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                        $query->orwhere('rs24.groups', 'like',  '%' . $ruangan[$i] . '%');
                     }
                 });
             })
-            
-            
 
-            ->where(function($query){
+
+
+            ->where(function ($query) {
                 $query->when(request('q'), function ($q) {
                     $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
                         ->orWhere('rs15.rs1', 'like',  '%' . request('q') . '%')
