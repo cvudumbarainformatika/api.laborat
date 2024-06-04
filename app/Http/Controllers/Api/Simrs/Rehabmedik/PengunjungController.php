@@ -62,6 +62,9 @@ class PengunjungController extends Controller
         'rs17.rs2 as norm',
         'rs17.rs3 as tgl_kunjungan',
         'rs17.rs8 as koderuangan',
+        'rs17.rs8 as kodepoli',
+        'rs17.rs14 as kodesistembayar',
+        'rs17.rs19 as status',
 
         DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
         DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
@@ -92,9 +95,8 @@ class PengunjungController extends Controller
         // 'rs17.rs9 as kodedokter',
         // // 'master_poli_bpjs.nama as polibpjs',
         // 'rs21.rs2 as dokter',
-        // 'rs17.rs14 as kodesistembayar',
         'rs9.rs2 as sistembayar',
-        // 'rs9.groups as groups',
+        'rs9.groups as groups',
         
         
         
@@ -108,7 +110,6 @@ class PengunjungController extends Controller
         // 'rs24.rs2 as ruangan',
         // 'rs23.rs2 as status_masuk',
         // 'antrian_ambil.nomor as noantrian'
-        // 'rs17.rs19 as status',
       )
         ->leftjoin('rs201 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
@@ -127,15 +128,15 @@ class PengunjungController extends Controller
         $q = $select
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs17.rs8', '=', 'PEN004')
-            // ->where(function ($sts) use ($status) {
-            //     if ($status !== 'Semua') {
-            //         if ($status === 'Terlayani') {
-            //             $sts->where('rs17.rs19', '=','1');
-            //         } else {
-            //             $sts->where('rs17.rs19', '=', '');
-            //         }
-            //     }
-            // })
+            ->where(function ($sts) use ($status) {
+                if ($status !== 'Semua') {
+                    if ($status === 'Terlayani') {
+                        $sts->where('rs17.rs19', '=','1');
+                    } else {
+                        $sts->where('rs17.rs19', '=', '');
+                    }
+                }
+            })
             ->where(function ($query) {
                 $query->where('rs17.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
@@ -177,6 +178,11 @@ class PengunjungController extends Controller
         DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
         'rs201.rs3 as tgl_kunjungan',
         'rs201.rs10 as koderuangan',
+        'rs201.rs10 as kodepoli',
+        DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
+        // DB::raw('coalesce(rs17.rs19, rs23.rs22) as status'),
+        // 'rs201.rs9 as status',
+        DB::raw('CASE WHEN rs201.rs9 = "2" THEN "1" ELSE "" END as status'),
 
         DB::raw('coalesce(
           concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang), 
@@ -201,7 +207,7 @@ class PengunjungController extends Controller
         DB::raw('coalesce(pasien17.rs16, pasien23.rs16) as tgllahir'),
         DB::raw('coalesce(pasien17.rs17, pasien23.rs17) as kelamin'),
         DB::raw('coalesce(pasien17.rs18, pasien23.rs18) as pendidikan'),
-        DB::raw('coalesce(pasien17.rs19, pasien23.rs19) as agama'),
+        DB::raw('coalesce(pasien17.rs22, pasien23.rs22) as agama'),
         DB::raw('coalesce(pasien17.rs37, pasien23.rs37) as templahir'),
         DB::raw('coalesce(pasien17.rs39, pasien23.rs39) as suku'),
         DB::raw('coalesce(pasien17.rs40, pasien23.rs40) as jenispasien'),
@@ -230,9 +236,8 @@ class PengunjungController extends Controller
         // 'rs17.rs9 as kodedokter',
         // // 'master_poli_bpjs.nama as polibpjs',
         // 'rs21.rs2 as dokter',
-        // 'rs17.rs14 as kodesistembayar',
         'rs9.rs2 as sistembayar',
-        // 'rs9.groups as groups',
+        'rs9.groups as groups',
         // 'rs15.rs2 as nama_panggil',
         // DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
         // DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
@@ -291,15 +296,15 @@ class PengunjungController extends Controller
             ->where('rs201.rs2', '!=', '')
             ->whereNotNull('rs201.rs2')
             // ->whereNull('rs201.rs13')
-            // ->where(function ($sts) use ($status) {
-            //     if ($status !== 'Semua') {
-            //         if ($status === 'Terlayani') {
-            //             $sts->where('rs17.rs19', '=','1');
-            //         } else {
-            //             $sts->where('rs17.rs19', '=', '');
-            //         }
-            //     }
-            // })
+            ->where(function ($sts) use ($status) {
+                if ($status !== 'Semua') {
+                    if ($status === 'Terlayani') {
+                        $sts->where('rs201.rs9', '=','2');
+                    } else {
+                        $sts->where('rs201.rs9', '=', '1');
+                    }
+                }
+            })
             ->where(function ($query) {
                 $query->where('rs201.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs201.rs2', 'LIKE', '%' . request('q') . '%')
@@ -309,7 +314,7 @@ class PengunjungController extends Controller
                     // ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%')
                     ;
             })
-            // ->groupBy('rs201.rs2')
+            ->groupBy('rs201.rs2')
             ;
             // ->orderby('rs17.rs3', $sort);
 
