@@ -9,7 +9,6 @@ Route::group([
     'prefix' => 'laporan/lra'
 ], function () {
     Route::get('/bidang', [LRAController::class, 'bidang']);
-    Route::get('/kegiatan', [LRAController::class, 'kegiatan']);
     Route::get('/laplra', [LRAController::class, 'laplra']);
     Route::get('/coba', [LRAController::class, 'coba']);
 
