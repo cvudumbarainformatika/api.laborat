@@ -93,7 +93,7 @@ class PengunjungController extends Controller
         // // 'master_poli_bpjs.nama as polibpjs',
         // 'rs21.rs2 as dokter',
         // 'rs17.rs14 as kodesistembayar',
-        // 'rs9.rs2 as sistembayar',
+        'rs9.rs2 as sistembayar',
         // 'rs9.groups as groups',
         
         
@@ -114,7 +114,7 @@ class PengunjungController extends Controller
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
         // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
-        // ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
         // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
         // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
         // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
@@ -224,14 +224,14 @@ class PengunjungController extends Controller
                 WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
             END
         ) as ruangan'
-        )
+          ),
         // 'rs19.rs6 as kodepolibpjs',
         // 'rs19.panggil_antrian as panggil_antrian',
         // 'rs17.rs9 as kodedokter',
         // // 'master_poli_bpjs.nama as polibpjs',
         // 'rs21.rs2 as dokter',
         // 'rs17.rs14 as kodesistembayar',
-        // 'rs9.rs2 as sistembayar',
+        'rs9.rs2 as sistembayar',
         // 'rs9.groups as groups',
         // 'rs15.rs2 as nama_panggil',
         // DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
@@ -274,7 +274,7 @@ class PengunjungController extends Controller
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs13') //poli
         // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
         // // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs201.rs8') //mboh
-        // ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
         // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
         // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
         // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan

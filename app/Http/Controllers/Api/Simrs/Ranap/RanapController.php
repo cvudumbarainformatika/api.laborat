@@ -68,7 +68,7 @@ class RanapController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
-            ->where('rs23.rs3', '<=', $tgl)
+            ->whereDate('rs23.rs3', '<=', $tgl)
             // ->whereIn('rs23.rs22', $status)
 
             // ->where(function ($x) {
@@ -80,7 +80,7 @@ class RanapController extends Controller
                     for ($i = 0; $i < count($ruangan); $i++) {
                         $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
                     }
-                });
+                })->orWhere('rs23.rs5', 'like',  '%ICC%');
             })
 
 
