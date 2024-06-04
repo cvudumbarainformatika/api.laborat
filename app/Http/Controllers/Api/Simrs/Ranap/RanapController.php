@@ -80,7 +80,7 @@ class RanapController extends Controller
                     for ($i = 0; $i < count($ruangan); $i++) {
                         $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
                     }
-                });
+                })->orWhere('rs23.rs5', 'like',  '%ICC%');
             })
 
 
