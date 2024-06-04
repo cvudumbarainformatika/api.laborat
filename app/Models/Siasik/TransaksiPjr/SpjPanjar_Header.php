@@ -16,4 +16,10 @@ class SpjPanjar_Header extends Model
     {
         return $this->hasMany(SpjPanjar_Rinci::class, 'nospjpanjar', 'nospjpanjar');
     }
+
+
+    public function nota()
+    {
+        return $this->belongsTo(NotaPanjar_Header::class, 'notapanjar', 'nonotapanjar');
+    }
 }

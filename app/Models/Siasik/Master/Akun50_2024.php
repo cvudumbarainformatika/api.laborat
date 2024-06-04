@@ -16,12 +16,12 @@ class Akun50_2024 extends Model
     protected $table = 'akun50_2024';
     public $timestamp = false;
     public function npdls_rinci(){
-        return $this->hasOne(NpdLS_rinci::class,'koderek50', 'kodeall2');
+        return $this->hasMany(NpdLS_rinci::class,'koderek50', 'kodeall2');
     }
     public function spjpanjar(){
-        return $this->hasOne(SpjPanjar_Rinci::class,'koderek50', 'kodeall2');
+        return $this->hasMany(SpjPanjar_Rinci::class,'koderek50', 'kodeall2');
     }
     public function cp(){
-        return $this->hasOne(Contrapost::class,'koderek50', 'kodeall2');
+        return $this->hasMany(Contrapost::class,'koderek50', 'kodeall2');
     }
 }

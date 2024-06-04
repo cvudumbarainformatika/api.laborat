@@ -232,7 +232,8 @@ class BKUController extends Controller
 
             $anu->join('npkls_rinci', 'npkls_rinci.nonpk','=','npkls_heder.nonpk')
                 ->join('npdls_heder', 'npkls_rinci.nonpdls','=','npdls_heder.nonpdls')
-                ->where('npdls_heder.kodepptk', request('ptk'));
+                ->where('npdls_heder.kodepptk', request('ptk'))
+                ->groupBy('npkls_rinci.nonpk');
         })->with(['npklsrinci'=> function($npk)
                 {
                     $npk->when(request('ptk'),function($anu){
@@ -240,7 +241,8 @@ class BKUController extends Controller
                         //     $hed->where('kodepptk', request('ptk'));
                         // });
                         $anu->join('npdls_heder', 'npdls_heder.nonpdls', '=','npkls_rinci.nonpdls')
-                            ->where('npdls_heder.kodepptk', request('ptk'));
+                            ->where('npdls_heder.kodepptk', request('ptk'))
+                            ->groupBy('npdls_heder.nonpdls');
                     })->with(['npdlshead'=> function ($npdrinci){
                         $npdrinci->with(['npdlsrinci']);
                     }]);
@@ -275,7 +277,8 @@ class BKUController extends Controller
             // });
             $anu->join('npkpanjar_rinci', 'npkpanjar_rinci.nonpk', '=', 'npkpanjar_heder.nonpk')
                 ->join('npdpanjar_heder', 'npdpanjar_heder.nonpdpanjar', '=', 'npkpanjar_rinci.nonpd')
-                ->where('npdpanjar_heder.kodepptk', request('ptk'));
+                ->where('npdpanjar_heder.kodepptk', request('ptk'))
+                ->groupBy('npkpanjar_rinci.nonpk');
         })->with(['npkrinci'=> function($npk)
                 {
                     $npk->when(request('ptk'),function($anu){
@@ -283,7 +286,8 @@ class BKUController extends Controller
                         //     $hed->where('kodepptk', request('ptk'));
                         // });
                         $anu->join('npdpanjar_heder', 'npdpanjar_heder.nonpdpanjar', '=', 'npkpanjar_rinci.nonpd')
-                            ->where('npdpanjar_heder.kodepptk', request('ptk'));
+                            ->where('npdpanjar_heder.kodepptk', request('ptk'))
+                            ->groupBy('npdpanjar_heder.nonpdpanjar');
                     })->with(['npdpjr_head'=> function ($npdrinci){
                         $npdrinci->with(['npdpjr_rinci']);
                     }]);
