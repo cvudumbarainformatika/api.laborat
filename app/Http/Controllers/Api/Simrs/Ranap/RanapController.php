@@ -75,11 +75,12 @@ class RanapController extends Controller
             })
 
             ->where(function ($query) use ($ruangan) {
-                $query->where(function ($query) use ($ruangan) {
-                    for ($i = 0; $i < count($ruangan); $i++) {
-                        $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                    }
-                });
+                $query->whereIn('rs23.rs5',  $ruangan);
+                // $query->where(function ($query) use ($ruangan) {
+                // for ($i = 0; $i < count($ruangan); $i++) {
+                //     $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                // }
+                // });
             })
 
 
