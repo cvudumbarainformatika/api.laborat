@@ -20,8 +20,8 @@ class RanapController extends Controller
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = request('to') . ' 00:00:00';
-            $tglx = request('from') . ' 23:59:59';
+            $tgl = request('to') ;
+            $tglx = request('from') ;
         }
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
@@ -80,7 +80,7 @@ class RanapController extends Controller
                     for ($i = 0; $i < count($ruangan); $i++) {
                         $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
                     }
-                })->orWhere('rs23.rs5', 'like',  '%ICC%');
+                });
             })
 
 
