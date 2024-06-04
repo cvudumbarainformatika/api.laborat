@@ -13,6 +13,7 @@ class RanapController extends Controller
 {
     public function kunjunganpasien()
     {
+        // return request()->all();
         $dokter = request('kddokter');
 
         if (request('to') === '' || request('from') === null) {
@@ -34,6 +35,7 @@ class RanapController extends Controller
             'rs23.rs6 as ketruangan',
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
+            'rs21.rs2 as dokter',
             'rs23.rs19 as kdsistembayar',
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
             'rs15.rs2 as nama_panggil',
@@ -59,7 +61,7 @@ class RanapController extends Controller
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
-            'rs24.rs5 as ruangan'
+            'rs24.rs5 as group_ruangan'
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
@@ -67,16 +69,27 @@ class RanapController extends Controller
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->where('rs23.rs3', '<=', $tgl)
-            ->whereIn('rs23.rs22', $status)
-            ->where(function ($query) use ($ruangan) {
-                for ($i = 0; $i < count($ruangan); $i++) {
-                    $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                }
+            // ->whereIn('rs23.rs22', $status)
+            ->where(function($q) use ($status) {
+                $q->whereIn('rs23.rs22', $status);
             })
-            ->when(request('q'), function ($q) {
-                $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
-                    ->orWhere('rs23.rs2', 'like',  '%' . request('q') . '%')
-                    ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+            
+            ->where(function($query) use($ruangan) {
+                $query->where(function ($query) use ($ruangan) {
+                    for ($i = 0; $i < count($ruangan); $i++) {
+                        $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                    }
+                });
+            })
+            
+            
+
+            ->where(function($query){
+                $query->when(request('q'), function ($q) {
+                    $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
+                        ->orWhere('rs15.rs1', 'like',  '%' . request('q') . '%')
+                        ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+                });
             })
             ->with([
                 'newapotekrajal' => function ($newapotekrajal) {
@@ -109,6 +122,7 @@ class RanapController extends Controller
             //         ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             // })
             ->orderby('rs23.rs3', 'ASC')
+            // ->groupBy('rs23.rs1')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
