@@ -129,7 +129,7 @@ class RanapController extends Controller
             // })
             ->orderby('rs23.rs3', 'ASC')
             // ->groupBy('rs23.rs1')
-            ->paginate(request('per_page'));
+            ->paginate(20);
 
         return new JsonResponse($data);
     }
