@@ -427,6 +427,7 @@ class PersiapanOperasiController extends Controller
                 $stok = Stokreal::where('kdobat', $rin['kd_obat'])
                     ->where('kdruang', 'Gd-04010103')
                     ->where('nopenerimaan', $rin['nopenerimaan'])
+                    ->where('jumlah', '>', 0)
                     ->first();
 
                 if ($stok->jumlah <= 0) {
