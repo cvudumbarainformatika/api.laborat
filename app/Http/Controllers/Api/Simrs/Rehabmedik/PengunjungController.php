@@ -63,6 +63,7 @@ class PengunjungController extends Controller
         'rs17.rs3 as tgl_kunjungan',
         'rs17.rs8 as kdruangan',
         'rs17.rs8 as koderuangan',
+        'rs17.rs8 as kodepoli',
         'rs17.rs14 as kodesistembayar',
         'rs17.rs19 as status',
 
@@ -179,6 +180,7 @@ class PengunjungController extends Controller
         'rs201.rs3 as tgl_kunjungan',
         'rs201.rs10 as kdruangan',
         'rs201.rs10 as koderuangan',
+        'rs201.rs10 as kodepoli',
         DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
         // DB::raw('coalesce(rs17.rs19, rs23.rs22) as status'),
         // 'rs201.rs9 as status',
