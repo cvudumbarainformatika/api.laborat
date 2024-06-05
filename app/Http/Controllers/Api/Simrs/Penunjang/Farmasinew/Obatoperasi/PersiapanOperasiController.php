@@ -951,7 +951,8 @@ class PersiapanOperasiController extends Controller
                             if ($getDataDistribusi[$ind]) {
                                 if ($getDataDistribusi[$ind]->tgl_retur !== null) {
                                     if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
-                                        if ($countDist > 1) { // masalah yang munkin timbul : pada array terakhir jika array terakhir sudah ada tgl retur
+                                        // if ($countDist > 1) { // masalah yang munkin timbul : pada array terakhir jika array terakhir sudah ada tgl retur
+                                        if ($countDist > $ind) { // jumlah data tidak boleh kurang dari index. kalo jumlah datanya 5, maksimal index nya kan 4
                                             $ind += 1;
                                             $sisa = $anu - ($getDataDistribusi[$ind]->jumlah ?? 0);
                                             $anu = $sisa;
