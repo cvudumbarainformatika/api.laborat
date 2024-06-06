@@ -306,6 +306,7 @@ class StokrealController extends Controller
             $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaantotal;
+            $xxx['lain'] = [];
             return $xxx;
         });
         return new JsonResponse([
