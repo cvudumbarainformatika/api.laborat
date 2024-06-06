@@ -134,7 +134,6 @@ class PersiapanOperasiController extends Controller
                     'persiapanrinci' => function ($res) {
                         $res->select(
                             'persiapan_operasi_rincis.kd_obat',
-
                             DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                         )
                             ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
@@ -143,7 +142,6 @@ class PersiapanOperasiController extends Controller
                     },
                     'transnonracikan' => function ($transnonracikan) {
                         $transnonracikan->select(
-                            // 'resep_keluar_r.kdobat as kdobat',
                             'resep_permintaan_keluar.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
@@ -155,7 +153,6 @@ class PersiapanOperasiController extends Controller
                     },
                     'transracikan' => function ($transracikan) {
                         $transracikan->select(
-                            // 'resep_keluar_racikan_r.kdobat as kdobat',
                             'resep_permintaan_keluar_racikan.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
@@ -195,7 +192,7 @@ class PersiapanOperasiController extends Controller
                     ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
             ->groupBy('stokreal.kdobat')
-            ->limit(30)
+            ->limit(10)
             ->get();
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
