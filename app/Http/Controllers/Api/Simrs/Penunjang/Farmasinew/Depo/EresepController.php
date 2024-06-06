@@ -237,10 +237,13 @@ class EresepController extends Controller
                 'new_masterobat.kelompok_psikotropika as psikotropika',
                 'stokreal.kdobat as kdobat',
                 'stokreal.jumlah as jumlah',
-                DB::raw('sum(stokreal.jumlah) as total')
+                // DB::raw('sum(stokreal.jumlah) as total')
+                DB::raw('SUM(
+                    CASE When stokreal.kdruang="'.request('kdruang').'" Then stokreal.jumlah Else 0 End )
+                     as total')
             )
-            ->join('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-            ->where('stokreal.kdruang', request('kdruang'))
+            ->leftjoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+            // ->where('stokreal.kdruang', request('kdruang'))
             ->where('new_masterobat.status_konsinyasi', '')
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
             ->when(request('tiperesep'), function ($q) {
@@ -433,7 +436,7 @@ class EresepController extends Controller
                 return $x;
             });
             // $jumlahstok = $cekjumlahstok[0]->jumlahstok;
-            $alokasi = $wew[0]->alokasi;
+            $alokasi = $wew[0]->alokasi??0;
             // return new JsonResponse([
             //     'alokasi' => $alokasi,
             //     'wew' => $wew,
