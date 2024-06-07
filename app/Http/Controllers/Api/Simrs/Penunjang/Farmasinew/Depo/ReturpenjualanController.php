@@ -45,13 +45,15 @@ class ReturpenjualanController extends Controller
 
         // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
         $nama = [];
-        if (request('nama')) {
-            $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
-            if (count($raw) > 0) {
-                $col = collect($raw);
-                $nama = $col->map(function ($it) {
-                    return $it->kd_obat;
-                });
+        if (request('nama') !== null) {
+            if (strlen(request('q')) >= 3) {
+                $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
+                if (count($raw) > 0) {
+                    $col = collect($raw);
+                    $nama = $col->map(function ($it) {
+                        return $it->kd_obat;
+                    });
+                }
             }
         }
         $carinoresep = Resepkeluarheder::select('resep_keluar_h.*', 'resep_keluar_h.dokter as kddokter')
@@ -89,9 +91,17 @@ class ReturpenjualanController extends Controller
                     }
                 ]
             )
-            ->where(function ($query) {
-                $query->where('noresep', 'like', '%' . request('q') . '%')
-                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
+            // ->where(function ($query) {
+            //     $query->where('noresep', 'like', '%' . request('q') . '%')
+            //         ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
+            // })
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('norm', $rm);
+                })
+                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
             ->when(request('from'), function ($q) {
@@ -118,14 +128,7 @@ class ReturpenjualanController extends Controller
                     }
                 )->where('depo', request('kddepo'));
             })
-            ->where(function ($query) use ($rm) {
-                $query->when(count($rm) > 0, function ($wew) use ($rm) {
-                    $wew->whereIn('norm', $rm);
-                })
-                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
-            })
+
             ->orderBy('tgl', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse(

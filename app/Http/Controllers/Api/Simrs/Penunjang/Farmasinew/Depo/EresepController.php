@@ -239,7 +239,7 @@ class EresepController extends Controller
                 'stokreal.jumlah as jumlah',
                 // DB::raw('sum(stokreal.jumlah) as total')
                 DB::raw('SUM(
-                    CASE When stokreal.kdruang="'.request('kdruang').'" Then stokreal.jumlah Else 0 End )
+                    CASE When stokreal.kdruang="' . request('kdruang') . '" Then stokreal.jumlah Else 0 End )
                      as total')
             )
             ->leftjoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
@@ -437,7 +437,7 @@ class EresepController extends Controller
                 return $x;
             });
             // $jumlahstok = $cekjumlahstok[0]->jumlahstok;
-            $alokasi = $wew[0]->alokasi??0;
+            $alokasi = $wew[0]->alokasi ?? 0;
             // return new JsonResponse([
             //     'alokasi' => $alokasi,
             //     'wew' => $wew,
@@ -1027,8 +1027,10 @@ class EresepController extends Controller
             // $harga = $cariharga[0]->harga;
 
             $jmldiminta = $request->jumlah;
-            $caristok = Stokreal::where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
+            $caristok = Stokreal::select('kdobat', 'nopenerimaan', 'tglpenerimaan', 'kdruang', 'harga', 'tglexp', 'nobatch', 'nodistribusi', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $request->kdobat)
+                ->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '!=', 0)
+                ->groupBy('kdobat', 'nopenerimaan')
                 ->orderBy('tglexp')
                 ->get();
 

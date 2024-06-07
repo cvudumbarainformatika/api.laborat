@@ -353,23 +353,25 @@ class DepoController extends Controller
                 $x->on('mutasi_gudangdepo.nopenerimaan', '=', 'stokreal.nopenerimaan')
                     ->on('mutasi_gudangdepo.kd_obat', '=', 'stokreal.kdobat');
             })
-            ->where('no_permintaan', $request->no_permintaan)
-            ->where('kdruang', $request->kdruang)
+            ->where('mutasi_gudangdepo.no_permintaan', $request->no_permintaan)
+            ->where('stokreal.kdruang', $request->kdruang)
             ->orderBy('stokreal.tglexp')
             ->get();
         foreach ($obatditerima as $wew) {
 
-            Stokreal::create(
+            Stokreal::updateOrCreate(
                 [
                     'nopenerimaan' => $wew->nopenerimaan,
-                    'tglpenerimaan' => $wew->tglpenerimaan,
+                    'nodistribusi' => $request->no_permintaan,
                     'kdobat' => $wew->kodeobat,
+                ],
+                [
+                    'tglpenerimaan' => $wew->tglpenerimaan,
                     'jumlah' => $wew->jml,
                     'kdruang' => $request->tujuan,
                     'harga' => $wew->harga,
                     'tglexp' => $wew->tglexp,
                     'nobatch' => $wew->nobatch,
-                    'nodistribusi' => $request->no_permintaan
                 ]
             );
         }
