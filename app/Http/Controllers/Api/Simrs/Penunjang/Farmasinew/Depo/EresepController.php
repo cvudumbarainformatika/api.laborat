@@ -241,7 +241,7 @@ class EresepController extends Controller
                 DB::raw('SUM(
                     CASE When stokreal.kdruang="' . request('kdruang') . '" AND stokreal.kdobat = new_masterobat.kd_obat Then stokreal.jumlah Else 0 End )
                      as total'),
-                DB::raw('MAX(stokreal.jumlah) as terbesar')
+                // DB::raw('MAX(stokreal.jumlah) as terbesar')
             )
             ->leftjoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
             // ->where('stokreal.kdruang', request('kdruang'))
@@ -319,7 +319,7 @@ class EresepController extends Controller
 
 
             ->groupBy('new_masterobat.kd_obat')
-            ->orderBy('terbesar', 'ASC')
+            ->orderBy('total', 'DESC')
             ->limit(20)
             ->get();
 
