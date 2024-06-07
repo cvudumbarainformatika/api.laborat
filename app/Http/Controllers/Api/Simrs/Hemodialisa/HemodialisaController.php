@@ -137,7 +137,7 @@ class HemodialisaController extends Controller
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
-                        $sts->where('rs17.rs19', '=',1);
+                        $sts->where('rs17.rs19', '=', '1');
                     } else {
                         $sts->where('rs17.rs19', '=', '');
                     }
@@ -146,8 +146,8 @@ class HemodialisaController extends Controller
             ->where(function ($query) {
                 $query->where('rs17.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
-                    // ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
-                    // ->orWhere('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs15.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
@@ -284,10 +284,10 @@ class HemodialisaController extends Controller
         //   $q->on('rs17.rs2', '=', 'rs15.rs1');
         //   $q->on('rs23.rs2','=', 'rs15.rs1');
         // }) //pasien
-        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs107.rs14') //poli
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs107.rs10') //poli
         // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
         // // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs107.rs8') //mboh
-        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs107.rs15') //sistembayar
         // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
         // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
         // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
@@ -307,15 +307,17 @@ class HemodialisaController extends Controller
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
-                        $sts->where('rs107.rs9', '=',2);
+                        $sts->where('rs107.rs9', '=','2');
                     } else {
-                        $sts->where('rs107.rs9', '=', '');
+                        $sts->where('rs107.rs9', '=', '1');
                     }
                 }
             })
             ->where(function ($query) {
                 $query->where('rs107.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs107.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien17.rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien17.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
