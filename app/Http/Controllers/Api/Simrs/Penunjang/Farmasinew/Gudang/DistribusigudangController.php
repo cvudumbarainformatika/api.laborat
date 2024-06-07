@@ -170,11 +170,17 @@ class DistribusigudangController extends Controller
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'kd_obat' => $caristok[$index]->kdobat,
-                        'jml' => $sisa
+                        'jml' => $sisa,
+
+                        'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                        'harga' => $caristok[$index]->harga,
+                        'tglexp' => $caristok[$index]->tglexp,
+                        'nobatch' => $caristok[$index]->nobatch ?? '-',
                     ]
                 );
                 Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                     ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('nodistribusi', $caristok[$index]->nodistribusi)
                     ->where('kdruang', $request->kdgudang)
                     ->update(['jumlah' => 0]);
 
@@ -188,11 +194,17 @@ class DistribusigudangController extends Controller
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'kd_obat' => $caristok[$index]->kdobat,
-                        'jml' => $masuk
+                        'jml' => $masuk,
+
+                        'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                        'harga' => $caristok[$index]->harga,
+                        'tglexp' => $caristok[$index]->tglexp,
+                        'nobatch' => $caristok[$index]->nobatch ?? '-',
                     ]
                 );
                 Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                     ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('nodistribusi', $caristok[$index]->nodistribusi)
                     ->where('kdruang', $request->kdgudang)
                     ->update(['jumlah' => $sisax]);
                 $masuk = 0;

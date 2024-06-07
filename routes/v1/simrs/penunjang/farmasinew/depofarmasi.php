@@ -19,7 +19,7 @@ Route::group([
     Route::get('/list-permintaan-ruangan', [DepoController::class, 'listPermintaanRuangan']);
 
     Route::post('/kuncipermintaan', [DepoController::class, 'kuncipermintaan']);
-    Route::post('/terimadistribusi', [DepoController::class, 'terimadistribusi']);
+    Route::post('/terimadistribusi', [DepoController::class, 'newterimadistribusi']);
 
     Route::post('/hapus-permintaan-head', [DepoController::class, 'hapusHead']);
     Route::post('/hapus-permintaan-rinci', [DepoController::class, 'hapusRinci']);

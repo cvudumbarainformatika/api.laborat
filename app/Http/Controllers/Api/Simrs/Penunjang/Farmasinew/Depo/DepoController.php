@@ -385,6 +385,39 @@ class DepoController extends Controller
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
     }
+    public function newterimadistribusi(Request $request)
+    {
+        $obatditerima = Mutasigudangkedepo::where('mutasi_gudangdepo.no_permintaan', $request->no_permintaan)
+            ->get();
+        // return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!', 'data' => $obatditerima], 410);
+        foreach ($obatditerima as $wew) {
+
+            Stokreal::firstOrCreate(
+                [
+                    'nopenerimaan' => $wew->nopenerimaan,
+                    'nodistribusi' => $wew->no_permintaan,
+                    'kdobat' => $wew->kd_obat,
+                ],
+                [
+                    'tglpenerimaan' => $wew->tglpenerimaan,
+                    'jumlah' => $wew->jml,
+                    'kdruang' => $request->tujuan,
+                    'harga' => $wew->harga,
+                    'tglexp' => $wew->tglexp,
+                    'nobatch' => $wew->nobatch,
+                ]
+            );
+        }
+
+        $user = FormatingHelper::session_user();
+        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
+        $kuncipermintaan->flag = '4';
+        $kuncipermintaan->tgl_terima_depo = date('Y-m-d H:i:s');
+        $kuncipermintaan->user_terima_depo = $user['kodesimrs'];
+        $kuncipermintaan->save();
+
+        return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
+    }
 
     public function listMutasi()
     {
