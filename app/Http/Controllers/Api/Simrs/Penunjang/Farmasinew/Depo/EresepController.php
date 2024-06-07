@@ -1031,7 +1031,7 @@ class EresepController extends Controller
             $caristok = Stokreal::select('kdobat', 'nopenerimaan', 'tglpenerimaan', 'kdruang', 'harga', 'tglexp', 'nobatch', 'nodistribusi', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $request->kdobat)
                 ->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '!=', 0)
-                ->groupBy('kdobat', 'nopenerimaan')
+                ->groupBy('kdobat', 'nopenerimaan', 'nodistribusi')
                 ->orderBy('tglexp')
                 ->get();
 
