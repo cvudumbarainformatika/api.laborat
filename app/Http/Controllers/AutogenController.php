@@ -113,8 +113,19 @@ class AutogenController extends Controller
         // return new JsonResponse($thumb);
         // echo 'SELAMAT DATANG';
         
-        $coba = $this->lihatstokobateresepBydokter();
-        return new JsonResponse($coba);
+        // $coba = $this->lihatstokobateresepBydokter();
+        // return new JsonResponse($coba);
+        User::updateOrCreate(
+            ['username' => 'entrier'],
+            [
+                'nama' => 'Entrier',
+                'email' => 'entrier@app.com',
+                'pegawai_id' => '4',
+                'password' => bcrypt('entrihutang'),
+            ]
+        );
+
+        echo 'ok';
         
     }
 
