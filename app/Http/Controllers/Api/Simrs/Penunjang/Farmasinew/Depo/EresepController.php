@@ -305,29 +305,30 @@ class EresepController extends Controller
                     ->groupBy('resep_permintaan_keluar.kdobat');
             })
 
-            ->with('persiapanrinci', function ($q) {
-                $q->select(
-                    'persiapan_operasi_rincis.kd_obat',
-                    'persiapan_operasi_rincis.jumlah_minta',
-                    DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
-                )
-                    ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
-                    ->whereIn('persiapan_operasis.flag', ['', '1'])
-                    ->groupBy('persiapan_operasi_rincis.kd_obat');
-            })
+            // ->with('persiapanrinci', function ($q) {
+            //     $q->select(
+            //         'persiapan_operasi_rincis.kd_obat',
+            //         'persiapan_operasi_rincis.jumlah_minta',
+            //         DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+            //     )
+            //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+            //         ->whereIn('persiapan_operasis.flag', ['', '1'])
+            //         ->groupBy('persiapan_operasi_rincis.kd_obat');
+            // })
 
 
             ->groupBy('new_masterobat.kd_obat')
-            ->limit(10)
+            // ->orderBy('stokreal.jumlah', 'ASC')
+            ->limit(20)
             ->get();
 
         $wew = collect($listobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
-            $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+            // $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
             $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
             $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
-            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci;
             return $x;
         });
 

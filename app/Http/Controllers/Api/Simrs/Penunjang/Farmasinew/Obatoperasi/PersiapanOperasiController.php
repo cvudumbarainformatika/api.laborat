@@ -29,8 +29,12 @@ class PersiapanOperasiController extends Controller
             'rinci.obat:kd_obat,nama_obat,satuan_k',
             'rinci.susulan:kdpegsimrs,nama',
             'pasien:rs1,rs2',
-            'list:rs1,rs14',
-            'list.sistembayar:rs1,groups'
+            'list:rs1,rs4,rs14',
+            'list.sistembayar:rs1,rs2,groups',
+            'list.kunjunganranap:rs1,rs5,rs6',
+            'list.kunjunganranap.relmasterruangranap:rs1,rs2',
+            'list.kunjunganrajal:rs1,rs8',
+            'list.kunjunganrajal.relmpoli:rs1,rs2'
         )
             ->whereIn('flag', $flag)
             ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
@@ -130,7 +134,6 @@ class PersiapanOperasiController extends Controller
                     'persiapanrinci' => function ($res) {
                         $res->select(
                             'persiapan_operasi_rincis.kd_obat',
-
                             DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                         )
                             ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
@@ -139,7 +142,6 @@ class PersiapanOperasiController extends Controller
                     },
                     'transnonracikan' => function ($transnonracikan) {
                         $transnonracikan->select(
-                            // 'resep_keluar_r.kdobat as kdobat',
                             'resep_permintaan_keluar.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
@@ -151,7 +153,6 @@ class PersiapanOperasiController extends Controller
                     },
                     'transracikan' => function ($transracikan) {
                         $transracikan->select(
-                            // 'resep_keluar_racikan_r.kdobat as kdobat',
                             'resep_permintaan_keluar_racikan.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
@@ -191,7 +192,7 @@ class PersiapanOperasiController extends Controller
                     ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
             ->groupBy('stokreal.kdobat')
-            ->limit(30)
+            ->limit(10)
             ->get();
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
@@ -949,10 +950,10 @@ class PersiapanOperasiController extends Controller
                             // return new JsonResponse($getDataDistribusi[$ind]);
                             // $getDataDistribusi[$ind];
                             if ($getDataDistribusi[$ind]) {
-                                if ($getDataDistribusi[$ind]->tgl_retur !== null) {
+                                if (!is_Null($getDataDistribusi[$ind]->tgl_retur)) {
                                     if ($getDataDistribusi[$ind]->jumlah === $getDataDistribusi[$ind]->jumlah_retur) {
                                         // if ($countDist > 1) { // masalah yang munkin timbul : pada array terakhir jika array terakhir sudah ada tgl retur
-                                        if ($countDist > $ind) { // jumlah data tidak boleh kurang dari index. kalo jumlah datanya 5, maksimal index nya kan 4
+                                        if ($countDist > ($ind + 1)) { // jumlah data tidak boleh kurang dari index. kalo jumlah datanya 5, maksimal index nya kan 4
                                             $ind += 1;
                                             $sisa = $anu - $getDataDistribusi[$ind]->jumlah;
                                             $anu = $sisa;

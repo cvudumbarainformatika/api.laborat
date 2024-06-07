@@ -85,6 +85,7 @@ class PengunjungController extends Controller
         'rs15.rs55 as nohp',
         // 'permintaan.rs2 as nota_permintaan',
         DB::raw('(CASE WHEN permintaan.rs2 ="" THEN NULL ELSE permintaan.rs2 END) as nota_permintaan'),
+        DB::raw('(CASE WHEN rs17.rs8 ="" THEN "rjl" ELSE "rjl" END) as flagdepo'),
         
         // 'rs17.rs4 as penanggungjawab',
         // 'rs17.rs6 as kodeasalrujukan',
@@ -218,6 +219,8 @@ class PengunjungController extends Controller
         DB::raw('coalesce(pasien17.rs55, pasien23.rs55) as nohp'),
         DB::raw('(CASE WHEN rs201.rs2 ="" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
         // 'rs201.rs2 as nota_permintaan',
+        DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN "rjl" ELSE "rnp" END) as flagdepo'),
+        // DB::raw('COUNT(CASE WHEN rs17.rs1 > 0 THEN "rjl" ELSE "rnp" END) as flagdepo'),
 
 
         // 'rs17.rs8 as koderuangan',
@@ -226,13 +229,10 @@ class PengunjungController extends Controller
         // 'rs17.rs20 as asalpendaftaran',
         // 'rs17.rs7 as namaperujuk',
         // 'rs19.rs2 as ruangan',
-        DB::raw(
-          '( 
-            CASE 
-                WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
-            END
-        ) as ruangan'
-          ),
+        // DB::raw('( CASE 
+        //         WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
+        //     END) as ruangan'),
+        DB::raw('coalesce(rs19.rs2, rs24.rs2) as ruangan'),
         // 'rs19.rs6 as kodepolibpjs',
         // 'rs19.panggil_antrian as panggil_antrian',
         // 'rs17.rs9 as kodedokter',
@@ -278,10 +278,10 @@ class PengunjungController extends Controller
         //   $q->on('rs17.rs2', '=', 'rs15.rs1');
         //   $q->on('rs23.rs2','=', 'rs15.rs1');
         // }) //pasien
-        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs13') //poli
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs10') //poli
         // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
         // // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs201.rs8') //mboh
-        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
         // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
         // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
         // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
