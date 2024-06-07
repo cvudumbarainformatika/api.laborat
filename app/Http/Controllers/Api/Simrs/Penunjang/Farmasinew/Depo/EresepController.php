@@ -1100,6 +1100,7 @@ class EresepController extends Controller
 
                         Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                             ->where('kdobat', $caristok[$index]->kdobat)
+                            ->where('nodistribusi', $caristok[$index]->nodistribusi)
                             ->where('kdruang', $request->kodedepo)
                             ->update(['jumlah' => 0]);
 
@@ -1157,6 +1158,7 @@ class EresepController extends Controller
 
                         Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                             ->where('kdobat', $caristok[$index]->kdobat)
+                            ->where('nodistribusi', $caristok[$index]->nodistribusi)
                             ->where('kdruang', $request->kodedepo)
                             ->update(['jumlah' => $sisax]);
                         $masuk = 0;
