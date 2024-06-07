@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
@@ -28,6 +29,19 @@ class ReturpenjualanController extends Controller
         //     $tgl = request('from') . ' 00:00:00';
         //     $tglx = request('to') . ' 23:59:59';
         // }
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
+            }
+        }
 
         // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
         $nama = [];
@@ -104,12 +118,21 @@ class ReturpenjualanController extends Controller
                     }
                 )->where('depo', request('kddepo'));
             })
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('norm', $rm);
+                })
+                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
+            })
             ->orderBy('tgl', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse(
             [
                 'result' => $carinoresep,
                 'nama' => $nama,
+                'rm' => $rm,
             ]
         );
     }
