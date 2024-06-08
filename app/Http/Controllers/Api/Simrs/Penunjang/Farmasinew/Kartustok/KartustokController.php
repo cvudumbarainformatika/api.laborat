@@ -155,7 +155,7 @@ class KartustokController extends Controller
                     ->orWhere('kandungan', 'Like', '%' . request('q') . '%');
             })->orderBy('id', 'asc')
             ->where('flag', '')
-            ->paginate(request('per_page'));
+            ->paginate(request('rowsPerPage'));
 
         return new JsonResponse($list);
     }
