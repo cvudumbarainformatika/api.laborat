@@ -46,7 +46,7 @@ class ReturpenjualanController extends Controller
         // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
         $nama = [];
         if (request('nama') !== null) {
-            if (strlen(request('q')) >= 3) {
+            if (strlen(request('nama')) >= 3) {
                 $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
                 if (count($raw) > 0) {
                     $col = collect($raw);
@@ -112,9 +112,9 @@ class ReturpenjualanController extends Controller
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
-            ->when(!request('flag'), function ($x) {
-                $x->where('flag', '3');
-            })
+            // ->when(!request('flag'), function ($x) {
+            //     $x->where('flag', '3');
+            // })
             ->when(count($nama) > 0, function ($q) use ($nama) {
                 $q->whereHas(
                     'rincian',
@@ -129,7 +129,7 @@ class ReturpenjualanController extends Controller
                 )->where('depo', request('kddepo'));
             })
 
-            ->orderBy('tgl', 'ASC')
+            ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse(
             [
