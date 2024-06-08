@@ -45,6 +45,7 @@ class ReturpenjualanController extends Controller
 
         // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
         $nama = [];
+        $noresep = [];
         if (request('nama') !== null) {
             if (strlen(request('nama')) >= 3) {
                 $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
@@ -54,10 +55,18 @@ class ReturpenjualanController extends Controller
                         return $it->kd_obat;
                     });
                 }
+                $resRinc = Resepkeluarrinci::select('noresep')->whereIn('kdobat', $nama)->distinct()->get();
+                $resRac = Resepkeluarrinciracikan::select('noresep')->whereIn('kdobat', $nama)->distinct()->get();
+                foreach ($resRinc as $key) {
+                    $noresep[] = $key['noresep'];
+                }
+                foreach ($resRac as $key) {
+                    $noresep[] = $key['noresep'];
+                }
+                array_unique($noresep);
             }
         }
         $carinoresep = Resepkeluarheder::select('resep_keluar_h.*', 'resep_keluar_h.dokter as kddokter')
-
             ->with(
                 [
                     'rincian.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
@@ -112,22 +121,10 @@ class ReturpenjualanController extends Controller
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
-            // ->when(!request('flag'), function ($x) {
-            //     $x->where('flag', '3');
-            // })
-            ->when(count($nama) > 0, function ($q) use ($nama) {
-                $q->whereHas(
-                    'rincian',
-                    function ($rin) use ($nama) {
-                        $rin->whereIn('kdobat', $nama);
-                    }
-                )->orWhereHas(
-                    'rincianracik',
-                    function ($rin) use ($nama) {
-                        $rin->whereIn('kdobat', $nama);
-                    }
-                )->where('depo', request('kddepo'));
+            ->when(count($noresep) > 0, function ($q) use ($noresep) {
+                $q->whereIn('noresep', $noresep);
             })
+
 
             ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
@@ -136,6 +133,7 @@ class ReturpenjualanController extends Controller
                 'result' => $carinoresep,
                 'nama' => $nama,
                 'rm' => $rm,
+                'noresep' => $noresep,
             ]
         );
     }
