@@ -60,6 +60,9 @@ class PemakaianRuanganController extends Controller
                 }
                 $q->whereIn('flag', $anu);
             })
+            ->when(request('kdruang'), function ($q) {
+                $q->where('kdruang', request('kdruang'));
+            })
             ->whereBetween('tgl', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->paginate(request('per_page'));
 
@@ -149,6 +152,7 @@ class PemakaianRuanganController extends Controller
                 $stok = Stokreal::where('kdobat', $rin['kd_obat'])
                     ->where('kdruang', $request->kdruang)
                     ->where('nopenerimaan', $rin['nopenerimaan'])
+                    ->where('nodistribusi', $rin['nodistribusi'])
                     ->first();
                 $st[] = $stok;
                 if ($stok->jumlah > 0) {
