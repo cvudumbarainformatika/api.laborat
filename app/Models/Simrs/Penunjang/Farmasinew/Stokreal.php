@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -73,5 +74,9 @@ class Stokreal extends Model
     public function permintaanobatrinci()
     {
         return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kdobat');
+    }
+    public function ssw()
+    {
+        return $this->hasMany(PenyesuaianStok::class);
     }
 }
