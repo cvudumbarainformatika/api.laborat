@@ -355,6 +355,7 @@ class StokrealController extends Controller
                         'permintaan_r.jumlah_minta',
                         'permintaan_h.dari',
                         'permintaan_h.flag',
+                        'permintaan_h.no_permintaan',
                         'mutasi_gudangdepo.jml',
                     )
                         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', 'permintaan_r.no_permintaan')

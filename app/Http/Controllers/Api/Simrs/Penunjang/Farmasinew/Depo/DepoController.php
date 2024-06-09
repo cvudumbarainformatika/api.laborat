@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
@@ -142,6 +143,9 @@ class DepoController extends Controller
 
     public function simpanpermintaandepo(Request $request)
     {
+
+
+        // return new JsonResponse($request->all());
         $validator = Validator::make($request->all(), [
             'kdobat' => 'required',
             'tujuan' => 'required',
@@ -222,6 +226,18 @@ class DepoController extends Controller
             if (!$simpanrincipermintaandepo) {
                 return new JsonResponse(['message' => 'Permintaan Gagal Disimpan...!!!'], 500);
             }
+            $msg = [
+                'data' => [
+                    'aksi' => 'simpan',
+                    'dari' => $simpanpermintaandepo->dari,
+                    'no_permintaan' => $nopermintaandepo,
+                    'kdobat' => $simpanrincipermintaandepo->kdobat,
+                    'depo' => $simpanpermintaandepo->dari,
+                    'jumlah_minta' => $simpanrincipermintaandepo->jumlah_minta,
+                    'flag' => $simpanpermintaandepo->flag
+                ]
+            ];
+            event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
             DB::connection('farmasi')->commit();
             return new JsonResponse(
                 [
@@ -250,7 +266,19 @@ class DepoController extends Controller
         if (in_array($kuncipermintaan->tujuan, $gudang)) {
             $tujuan = 'Gudang';
         }
+        $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
+        $msg = [
+            'data' => [
+                'aksi' => 'kunci',
+                'dari' => $kuncipermintaan->dari,
+                'no_permintaan' => $kuncipermintaan->no_permintaan,
+                'depo' => $kuncipermintaan->dari,
+                'flag' => $kuncipermintaan->flag,
+                'kodeobats' => $kdobat,
 
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         return new JsonResponse(['message' => 'Permintaan Berhasil Dikirim ke ' . $tujuan], 200);
     }
     public function hapusHead(Request $request)
@@ -416,6 +444,19 @@ class DepoController extends Controller
         $kuncipermintaan->user_terima_depo = $user['kodesimrs'];
         $kuncipermintaan->save();
 
+        // $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
+        $msg = [
+            'data' => [
+                'aksi' => 'kunci',
+                'dari' => $kuncipermintaan->dari,
+                'no_permintaan' => $kuncipermintaan->no_permintaan,
+                'depo' => $kuncipermintaan->dari,
+                'flag' => $kuncipermintaan->flag,
+                // 'kodeobats' => $kdobat,
+
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
     }
 
