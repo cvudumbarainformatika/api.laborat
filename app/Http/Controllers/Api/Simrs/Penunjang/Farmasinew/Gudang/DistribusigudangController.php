@@ -224,6 +224,17 @@ class DistribusigudangController extends Controller
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima...!!!'], 200);
     }
+    public function tolakpermintaandaridepo(Request $request)
+    {
+        $user = FormatingHelper::session_user();
+        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
+        $kuncipermintaan->flag = '5';
+        // $kuncipermintaan->tgl_terima = date('Y-m-d H:i:s');
+        // $kuncipermintaan->user_terima = $user['kodesimrs'];
+        $kuncipermintaan->save();
+
+        return new JsonResponse(['message' => 'Permintaan Ditolak '], 200);
+    }
 
     public function distribusikan(Request $request)
     {
