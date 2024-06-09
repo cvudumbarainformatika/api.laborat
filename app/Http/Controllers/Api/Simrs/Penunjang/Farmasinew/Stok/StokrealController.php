@@ -314,6 +314,60 @@ class StokrealController extends Controller
             'meta' => collect($stokreal)->except('data'),
         ]);
     }
+    public function listStokMinDepo()
+    {
+        $kdruang = request('kdruang');
+        $stokreal = Stokreal::select(
+            'stokreal.id as idx',
+            'stokreal.kdruang',
+            'stokreal.jumlah',
+            'stokreal.tglexp',
+            'stokreal.kdobat',
+            'new_masterobat.kd_obat',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k',
+            'new_masterobat.status_fornas',
+            'new_masterobat.status_forkid',
+            'new_masterobat.status_generik',
+            'new_masterobat.gudang',
+            'min_max_ruang.min as minvalue',
+            DB::raw('sum(stokreal.jumlah) as total'),
+            DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
+
+        )->where('stokreal.flag', '')
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->leftjoin('min_max_ruang', function ($anu) {
+                $anu->on('min_max_ruang.kd_obat', 'stokreal.kdobat')
+                    ->on('min_max_ruang.kd_ruang', 'stokreal.kdruang');
+            })
+            ->where('stokreal.kdruang', $kdruang)
+            // ->where('stokreal.jumlah', '>', 0)
+            ->where(function ($x) {
+                $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
+            ->havingRaw('minvalue >= total')
+            ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+            ->orderBy(DB::raw('(min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100'), 'DESC')
+            ->paginate(request('per_page'));
+        $stokreal->append('harga');
+        // $datastok = $stokreal->map(function ($xxx) {
+        //     $stolreal = $xxx->total;
+        //     $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
+        //     $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
+        //     $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
+        //     $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
+        //     $xxx['stokalokasi'] = $stokalokasi;
+        //     $xxx['permintaantotal'] = $permintaantotal;
+        //     $xxx['lain'] = [];
+        //     return $xxx;
+        // });
+        $nu = collect($stokreal);
+        return new JsonResponse([
+            'data' => $nu['data'],
+            'meta' => collect($stokreal)->except('data'),
+        ]);
+    }
 
     public static function updatestokdepo($request)
     {
