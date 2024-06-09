@@ -382,6 +382,7 @@ class PersiapanOperasiController extends Controller
                                     'nopermintaan' => $key['nopermintaan'],
                                     'kd_obat' => $key['kd_obat'],
                                     'nopenerimaan' => $stok[$index]->nopenerimaan,
+                                    'nodistribusi' => $stok[$index]->nodistribusi,
                                     'jumlah' => $ada,
                                     'created_at' => date('Y-m-d H:i:s'),
                                     'updated_at' => date('Y-m-d H:i:s'),
@@ -395,6 +396,7 @@ class PersiapanOperasiController extends Controller
                                     'nopermintaan' => $key['nopermintaan'],
                                     'kd_obat' => $key['kd_obat'],
                                     'nopenerimaan' => $stok[$index]->nopenerimaan,
+                                    'nodistribusi' => $stok[$index]->nodistribusi,
                                     'jumlah' => $distribusi,
                                     'created_at' => date('Y-m-d H:i:s'),
                                     'updated_at' => date('Y-m-d H:i:s'),
@@ -428,6 +430,7 @@ class PersiapanOperasiController extends Controller
                 $stok = Stokreal::where('kdobat', $rin['kd_obat'])
                     ->where('kdruang', 'Gd-04010103')
                     ->where('nopenerimaan', $rin['nopenerimaan'])
+                    ->where('nodistribusi', $rin['nodistribusi'])
                     ->where('jumlah', '>', 0)
                     ->first();
 
@@ -783,7 +786,9 @@ class PersiapanOperasiController extends Controller
 
             while ($masuk > 0) {
                 $ada = (float)$dist[$index]->jumlah;
-                $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])->where('nopenerimaan', $dist[$index]->nopenerimaan)->where('kdruang', 'Gd-04010103')->first();
+                $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])
+                    ->where('nopenerimaan', $dist[$index]->nopenerimaan)
+                    ->where('kdruang', 'Gd-04010103')->first();
                 if ($ada < $masuk) {
                     $rin = [
                         'noreg' => $request->noreg,
@@ -897,6 +902,7 @@ class PersiapanOperasiController extends Controller
                                     // update stok
                                     $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
                                         ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
+                                        ->where('nodistribusi', $dataDistribusi[$index]->nodistribusi)
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
 
@@ -916,6 +922,7 @@ class PersiapanOperasiController extends Controller
                                     // update stok
                                     $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
                                         ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
+                                        ->where('nodistribusi', $dataDistribusi[$index]->nodistribusi)
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
                                     $totalStok = (float)$stok->jumlah + $kembali;
@@ -941,7 +948,9 @@ class PersiapanOperasiController extends Controller
                             ->orderBy('id', 'DESC')
                             ->get();
                         $countDist = count($getDataDistribusi);
-                        $det = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $key['kd_obat'])->first();
+                        $det = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)
+                            ->where('kd_obat', $key['kd_obat'])
+                            ->first();
                         $sudahKembali = $det->jumlah_kembali;
                         $kurang = (float)$kembali - (float)$sudahKembali;
                         $ind = 0;
@@ -985,6 +994,7 @@ class PersiapanOperasiController extends Controller
                                     // update stok
                                     $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
                                         ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
+                                        ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
 
@@ -1005,6 +1015,7 @@ class PersiapanOperasiController extends Controller
                                         // update stok
                                         $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
                                             ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
+                                            ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                             ->where('kdruang', 'Gd-04010103')
                                             ->first();
 
@@ -1024,6 +1035,7 @@ class PersiapanOperasiController extends Controller
                                         // update stok
                                         $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
                                             ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
+                                            ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                             ->where('kdruang', 'Gd-04010103')
                                             ->first();
                                         $totalStok = (float)$stok->jumlah + $kurang;
