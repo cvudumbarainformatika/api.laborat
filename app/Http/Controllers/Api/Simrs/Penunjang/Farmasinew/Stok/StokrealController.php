@@ -334,7 +334,8 @@ class StokrealController extends Controller
             DB::raw('sum(stokreal.jumlah) as total'),
             DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
 
-        )->where('stokreal.flag', '')
+        )
+            ->where('stokreal.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->leftjoin('min_max_ruang', function ($anu) {
                 $anu->on('min_max_ruang.kd_obat', 'stokreal.kdobat')
@@ -347,21 +348,30 @@ class StokrealController extends Controller
                     ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
             })
             ->havingRaw('minvalue >= total')
+            ->with([
+                'permintaanobatrinci' => function ($pr) use ($kdruang) {
+                    $pr->select(
+                        'permintaan_r.kdobat',
+                        'permintaan_r.jumlah_minta',
+                        'permintaan_h.dari',
+                        'permintaan_h.flag',
+                        'mutasi_gudangdepo.jml',
+                    )
+                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', 'permintaan_r.no_permintaan')
+                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        })
+                        ->where('permintaan_h.dari', $kdruang)
+                        ->whereIn('permintaan_h.flag', ['', '1', '2', '3']);
+                }
+            ])
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->orderBy(DB::raw('(min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100'), 'DESC')
+            ->orderBy(DB::raw('min_max_ruang.min'), 'DESC')
             ->paginate(request('per_page'));
         $stokreal->append('harga');
-        // $datastok = $stokreal->map(function ($xxx) {
-        //     $stolreal = $xxx->total;
-        //     $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
-        //     $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
-        //     $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-        //     $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
-        //     $xxx['stokalokasi'] = $stokalokasi;
-        //     $xxx['permintaantotal'] = $permintaantotal;
-        //     $xxx['lain'] = [];
-        //     return $xxx;
-        // });
+
         $nu = collect($stokreal);
         return new JsonResponse([
             'data' => $nu['data'],

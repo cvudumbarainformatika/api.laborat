@@ -151,7 +151,7 @@ class Mobatnew extends Model
 
     public function transnonracikan()
     {
-        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); diganti ke permintaan
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); //diganti ke permintaan
         return $this->hasMany(Permintaanresep::class, 'kdobat', 'kd_obat');
     }
 

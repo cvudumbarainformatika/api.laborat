@@ -452,7 +452,7 @@ class PersiapanOperasiController extends Controller
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan...!!!',
-                'result' => $e,
+                'result' => '' . $e,
             ], 410);
         }
     }
