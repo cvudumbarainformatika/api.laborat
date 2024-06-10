@@ -2089,4 +2089,15 @@ class EresepController extends Controller
             'data' => $data
         ]);
     }
+
+    public function getResepDokter()
+    {
+
+        $data = request()->all();
+
+
+        return new JsonResponse([
+            'data' => $data
+        ]);
+    }
 }
