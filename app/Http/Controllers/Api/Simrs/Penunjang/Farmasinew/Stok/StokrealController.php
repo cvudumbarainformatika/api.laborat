@@ -488,7 +488,7 @@ class StokrealController extends Controller
                 'persiapan_operasis.nopermintaan',
                 'persiapan_operasis.tgl_permintaan',
                 'persiapan_operasis.flag',
-                'persiapan_operasi_rincis.jumlah_minta',
+                'persiapan_operasi_rincis.jumlah_minta as jumlah',
                 'persiapan_operasi_rincis.kd_obat',
             )
                 ->leftJoin('persiapan_operasi_rincis', 'persiapan_operasi_rincis.nopermintaan', 'persiapan_operasis.nopermintaan')
