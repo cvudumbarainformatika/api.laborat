@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
@@ -292,18 +293,28 @@ class StokrealController extends Controller
                         ->whereIn('permintaan_h.flag', ['', '1', '2'])
                         ->groupBy('permintaan_r.kdobat');
                 },
+                'persiapanrinci' => function ($res) {
+                    $res->select(
+                        'persiapan_operasi_rincis.kd_obat',
+                        DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                    )
+                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                        ->whereIn('persiapan_operasis.flag', ['', '1'])
+                        ->groupBy('persiapan_operasi_rincis.kd_obat');
+                },
             ])
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->orderBy('stokreal.tglexp', 'ASC')
             ->paginate(request('per_page'));
         $stokreal->append('harga');
-        $datastok = $stokreal->map(function ($xxx) {
+        $datastok = $stokreal->map(function ($xxx) use ($kdruang) {
             $stolreal = $xxx->total;
+            $jumlahper = $kdruang === 'Gd-04010103' ? $xxx['persiapanrinci'][0]->jumlah ?? 0 : 0;
             $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
             $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
+            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx - (int)$jumlahper;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaantotal;
             $xxx['lain'] = [];
@@ -471,12 +482,35 @@ class StokrealController extends Controller
             ->whereIn('permintaan_h.flag', ['', '1', '2'])
             // ->groupBy('permintaan_r.kdobat')
             ->get();
+        if (request('kdruang') === 'Gd-04010103') {
+            $operasi = PersiapanOperasi::select(
+                'persiapan_operasis.noreg',
+                'persiapan_operasis.nopermintaan',
+                'persiapan_operasis.tgl_permintaan',
+                'persiapan_operasis.flag',
+                'persiapan_operasi_rincis.jumlah_minta',
+                'persiapan_operasi_rincis.kd_obat',
+            )
+                ->leftJoin('persiapan_operasi_rincis', 'persiapan_operasi_rincis.nopermintaan', 'persiapan_operasis.nopermintaan')
+                ->whereIn('persiapan_operasis.flag', ['', '1'])
+                ->where('persiapan_operasi_rincis.kd_obat', request('kdobat'))
+                ->with(
+                    'list:rs1,rs4,rs14',
+                    'list.sistembayar:rs1,rs2,groups',
+                    'list.kunjunganranap:rs1,rs5,rs6',
+                    'list.kunjunganranap.relmasterruangranap:rs1,rs2',
+                    'list.kunjunganrajal:rs1,rs8',
+                    'list.kunjunganrajal.relmpoli:rs1,rs2'
+                )
+                ->get();
+        }
 
         $data = [
             // 'req' => request()->all(),
             'transNonRacikan' => $transNonRacikan,
             'transRacikan' => $transRacikan,
             'permintaan' => $permintaan,
+            'operasi' => $operasi ?? null,
         ];
         return new JsonResponse($data);
     }

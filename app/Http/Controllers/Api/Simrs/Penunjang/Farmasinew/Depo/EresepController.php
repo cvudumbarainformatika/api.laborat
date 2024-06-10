@@ -2092,12 +2092,89 @@ class EresepController extends Controller
 
     public function getResepDokter()
     {
+        $user = FormatingHelper::session_user();
+        $kdDok = [];
+        if ($user['kodesimrs'] === 'sa') {
+            if (request('dokter')) {
+                $dokter = Pegawai::select('kdpegsimrs')->where('nama', 'LIKE', '%' . request('dokter') . '%')->where('aktif', 'AKTIF')->get();
+                $kdDok = collect($dokter)->map(function ($dk) {
+                    return $dk->kdpegsimrs;
+                });
+                // return new JsonResponse($dokter);
+            }
+        } else {
+            $kdDok = [$user['kodesimrs']];
+        }
 
-        $data = request()->all();
+        // return new JsonResponse($kdDok);
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
+            }
+        }
 
+        $listresep = Resepkeluarheder::with(
+            [
+                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanresep.aturansigna:signa,jumlah',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+                'poli',
+                'info',
+                'ruanganranap',
+                'sistembayar',
+                'sep:rs1,rs8',
+                'dokter:kdpegsimrs,nama',
+                'datapasien' => function ($quer) {
+                    $quer->select(
+                        'rs1',
+                        'rs2 as nama',
+                        'rs46 as noka',
+                        'rs16 as tgllahir',
+                        DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
+                    );
+                }
+            ]
+        )
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('norm', $rm);
+                })
+                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
+            })
+            // ->where('depo', request('kddepo'))
+            ->when(count($kdDok) > 0, function ($q) use ($kdDok) {
+                $q->whereIn('dokter', $kdDok);
+            })
 
-        return new JsonResponse([
-            'data' => $data
-        ]);
+            ->when(request('flag'), function ($x) {
+                if (request('flag') === 'semua') {
+                    $x->whereIn('flag', ['', '1', '2', '3', '4', '5']);
+                } else if (request('flag') === null || request('flag') === '') {
+                    $x->where('flag', '');
+                } else {
+                    $x->where('flag', request('flag'));
+                }
+            })
+            ->when(!request('flag'), function ($x) {
+                $x->where('flag', '');
+            })
+
+            ->orderBy('flag', 'ASC')
+            ->orderBy('tgl_permintaan', 'ASC')
+            ->paginate(request('per_page'));
+        // return new JsonResponse(request()->all());
+        return new JsonResponse($listresep);
     }
 }
