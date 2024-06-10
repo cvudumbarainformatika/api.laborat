@@ -902,7 +902,9 @@ class PersiapanOperasiController extends Controller
                                     // update stok
                                     $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
                                         ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
-                                        ->where('nodistribusi', $dataDistribusi[$index]->nodistribusi)
+                                        ->when($dataDistribusi[$index]->nodistribusi !== '', function ($x) use ($dataDistribusi, $index) {
+                                            $x->where('nodistribusi', $dataDistribusi[$index]->nodistribusi);
+                                        })
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
 
@@ -922,7 +924,9 @@ class PersiapanOperasiController extends Controller
                                     // update stok
                                     $stok = Stokreal::where('kdobat', $dataDistribusi[$index]->kd_obat)
                                         ->where('nopenerimaan', $dataDistribusi[$index]->nopenerimaan)
-                                        ->where('nodistribusi', $dataDistribusi[$index]->nodistribusi)
+                                        ->when($dataDistribusi[$index]->nodistribusi !== '', function ($x) use ($dataDistribusi, $index) {
+                                            $x->where('nodistribusi', $dataDistribusi[$index]->nodistribusi);
+                                        })
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
                                     $totalStok = (float)$stok->jumlah + $kembali;
@@ -994,11 +998,15 @@ class PersiapanOperasiController extends Controller
                                     // update stok
                                     $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
                                         ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
-                                        ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
+                                        ->when($getDataDistribusi[$ind]->nodistribusi !== '', function ($x) use ($getDataDistribusi, $ind) {
+                                            $x->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi);
+                                        })
+                                        // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                         ->where('kdruang', 'Gd-04010103')
                                         ->first();
 
                                     $totalStok = (float)$stok->jumlah + $adasikit;
+
                                     $stok->jumlah = $totalStok;
                                     $stok->save();
 
@@ -1015,11 +1023,15 @@ class PersiapanOperasiController extends Controller
                                         // update stok
                                         $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
                                             ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
-                                            ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
+                                            ->when($getDataDistribusi[$ind]->nodistribusi !== '', function ($x) use ($getDataDistribusi, $ind) {
+                                                $x->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi);
+                                            })
+                                            // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                             ->where('kdruang', 'Gd-04010103')
                                             ->first();
 
                                         $totalStok = (float)$stok->jumlah + $ada;
+
                                         $stok->jumlah = $totalStok;
                                         $stok->save();
 
@@ -1035,7 +1047,10 @@ class PersiapanOperasiController extends Controller
                                         // update stok
                                         $stok = Stokreal::where('kdobat', $getDataDistribusi[$ind]->kd_obat)
                                             ->where('nopenerimaan', $getDataDistribusi[$ind]->nopenerimaan)
-                                            ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
+                                            ->when($getDataDistribusi[$ind]->nodistribusi !== '', function ($x) use ($getDataDistribusi, $ind) {
+                                                $x->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi);
+                                            })
+                                            // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                             ->where('kdruang', 'Gd-04010103')
                                             ->first();
                                         $totalStok = (float)$stok->jumlah + $kurang;
@@ -1107,9 +1122,9 @@ class PersiapanOperasiController extends Controller
                 $uniNores = array_unique($nores);
                 $resepH = [];
                 // hapus jika ada
-                // foreach ($uniNores as $nor) {
-                //     Resepkeluarrinci::where('noresep', $nor)->delete();
-                // }
+                foreach ($uniNores as $nor) {
+                    Resepkeluarrinci::where('noresep', $nor)->delete();
+                }
                 // insert resep keluar
                 $resepK = Resepkeluarrinci::insert($resepKeluar);
 
@@ -1143,8 +1158,8 @@ class PersiapanOperasiController extends Controller
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
-                'message' => 'Data Gagal Disimpan ' . $e,
-                'result' => $e,
+                'message' => 'Data Gagal Disimpan ',
+                'result' => '' . $e,
                 'rinci' => $rinci ?? '',
                 'head' => $head ?? '',
                 'resepKeluar' => $resepKeluar ?? '',
@@ -1152,6 +1167,7 @@ class PersiapanOperasiController extends Controller
                 'dataDistribusi' => $dataDistribusi ?? [],
                 'getDataDistribusi' => $getDataDistribusi ?? [],
                 'countDist' => $countDist ?? null,
+                'stok' => $stok ?? null,
             ], 410);
         }
     }

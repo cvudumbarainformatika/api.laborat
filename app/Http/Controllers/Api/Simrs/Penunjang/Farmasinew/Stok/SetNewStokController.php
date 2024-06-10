@@ -335,6 +335,10 @@ class SetNewStokController extends Controller
 
     public function perbaikanStok(Request $request)
     {
+        return new JsonResponse([
+            // 'data' => $data,
+            'message' => 'Cek Stok Untuk penenyesuaian sudan ditutup'
+        ], 410);
 
         $depo = $request->kdruang;
         $obat = $request->kdobat;
