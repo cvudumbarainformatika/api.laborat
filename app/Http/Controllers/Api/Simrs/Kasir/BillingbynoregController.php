@@ -48,6 +48,7 @@ class BillingbynoregController extends Controller
         $eeg = DetailbillingbynoregController::eeg($noreg);
         $endoscopy = DetailbillingbynoregController::endoscopy($noreg);
         $obat = DetailbillingbynoregController::farmasi($noreg);
+        $farmasi = DetailbillingbynoregController::farmasinew($noreg);
 
         $pelayananrm = (int) isset($pelayananrm[0]->subtotal) ? $pelayananrm[0]->subtotal : 0;
         $kartuidentitas = (int) isset($kartuidentitas[0]->subtotal) ? $kartuidentitas[0]->subtotal : 0;
@@ -57,7 +58,7 @@ class BillingbynoregController extends Controller
 
         $totalall =  $pelayananrm + $kartuidentitas + $konsulantarpoli + $poliklinik + $tindakanx + $laborat + $radiologi + $onedaycare
             + $fisioterapi + $hd + $penunjanglain
-            + $psikologi + $cardio + $eeg + $endoscopy + $obat;
+            + $psikologi + $cardio + $eeg + $endoscopy + $obat + $farmasi;
         return new JsonResponse(
             [
                 'heder' => $query,
@@ -79,6 +80,7 @@ class BillingbynoregController extends Controller
                 'eeg' => isset($eeg) ?  $eeg : 0,
                 'endoscopy' => isset($endoscopy) ?  $endoscopy : 0,
                 'obat' => isset($obat) ?  $obat : 0,
+                'farmasinew' => isset($farmasi) ?  $farmasi : 0,
                 'totalall' => isset($totalall) ?  $totalall : 0,
             ]
         );
@@ -143,4 +145,6 @@ class BillingbynoregController extends Controller
                 'totalall' => isset($totalall) ?  $totalall : 0,
             ]);
     }
+
+
 }
