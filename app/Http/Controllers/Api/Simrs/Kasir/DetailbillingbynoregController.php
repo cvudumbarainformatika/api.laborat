@@ -197,7 +197,7 @@ class DetailbillingbynoregController extends Controller
     public static function farmasinew($noreg)
     {
         $nonracikan = Resepkeluarheder::select(
-        DB::raw('round(sum(resep_keluar_r.jumlah*resep_keluar_r.harga_jual+resep_keluar_r.nilai_r)) as subtotal'))
+        DB::raw('round((resep_keluar_r.jumlah*resep_keluar_r.harga_jual+resep_keluar_r.nilai_r)) as subtotal'))
         ->join('resep_keluar_r', 'resep_keluar_r.noresep', 'resep_keluar_h.noresep')
         ->where('resep_keluar_h.noreg', $noreg)
         ->get();
