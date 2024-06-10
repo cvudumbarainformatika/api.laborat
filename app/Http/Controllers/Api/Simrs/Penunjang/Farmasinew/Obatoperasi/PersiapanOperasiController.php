@@ -140,28 +140,28 @@ class PersiapanOperasiController extends Controller
                             ->whereIn('persiapan_operasis.flag', ['', '1'])
                             ->groupBy('persiapan_operasi_rincis.kd_obat');
                     },
-                    'transnonracikan' => function ($transnonracikan) {
-                        $transnonracikan->select(
-                            'resep_permintaan_keluar.kdobat as kdobat',
-                            'resep_keluar_h.depo as kdruang',
-                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
-                        )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
-                            ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->whereIn('flag', ['', '1', '2'])
-                            ->groupBy('resep_permintaan_keluar.kdobat');
-                    },
-                    'transracikan' => function ($transracikan) {
-                        $transracikan->select(
-                            'resep_permintaan_keluar_racikan.kdobat as kdobat',
-                            'resep_keluar_h.depo as kdruang',
-                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
-                        )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
-                            ->where('resep_keluar_h.depo', request('kdruang'))
-                            ->whereIn('flag', ['', '1', '2'])
-                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
-                    },
+                    // 'transnonracikan' => function ($transnonracikan) {
+                    //     $transnonracikan->select(
+                    //         'resep_permintaan_keluar.kdobat as kdobat',
+                    //         'resep_keluar_h.depo as kdruang',
+                    //         DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                    //     )
+                    //         ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                    //         ->where('resep_keluar_h.depo', request('kdruang'))
+                    //         ->whereIn('flag', ['', '1', '2'])
+                    //         ->groupBy('resep_permintaan_keluar.kdobat');
+                    // },
+                    // 'transracikan' => function ($transracikan) {
+                    //     $transracikan->select(
+                    //         'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                    //         'resep_keluar_h.depo as kdruang',
+                    //         DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                    //     )
+                    //         ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                    //         ->where('resep_keluar_h.depo', request('kdruang'))
+                    //         ->whereIn('flag', ['', '1', '2'])
+                    //         ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                    // },
                     'permintaanobatrinci' => function ($permintaanobatrinci) {
                         $permintaanobatrinci->select(
                             'permintaan_r.no_permintaan',
@@ -197,10 +197,11 @@ class PersiapanOperasiController extends Controller
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
             $jumlahper = $x['persiapanrinci'][0]->jumlah ?? 0;
-            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
-            $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+            // $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            // $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
             $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
-            $x->alokasi = (float)$total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$jumlahper - (float)$permintaanobatrinci;
+            // $x->alokasi = (float)$total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$jumlahper - (float)$permintaanobatrinci;
+            $x->alokasi = (float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
             return $x;
         });
         return new JsonResponse(
@@ -471,14 +472,14 @@ class PersiapanOperasiController extends Controller
         if (!$stok) {
             $obat = Mobatnew::select('nama_obat', 'satuan_k')->where('kd_obat', $request->kodeobat)->first();
             return new JsonResponse([
-                'message' => 'Stok Obat' . $obat->nama_obat  . ' tidak tersedia',
+                'message' => 'Stok Obat' . $obat->nama_obat ?? 'obat tidak ditemukan'  . ' tidak tersedia',
                 'request' => $request->all(),
             ], 410);
         }
         if ((float)$stok->total < (float)$request->jumlah_distribusi) {
             $obat = Mobatnew::select('nama_obat', 'satuan_k')->where('kd_obat', $request->kodeobat)->first();
             return new JsonResponse([
-                'message' => 'stok ' . $obat->nama_obat . ' tidak mencukupi, stok tersisa ' . $stok->total . ' ' . $obat->satuan_k . ' silahkan kurangi jumlah distribusi',
+                'message' => 'stok ' . $obat->nama_obat ?? 'obat tidak ditemukan' . ' tidak mencukupi, stok tersisa ' . $stok->total . ' ' . $obat->satuan_k . ' silahkan kurangi jumlah distribusi',
                 'request' => $request->all(),
             ], 410);
         }
@@ -539,6 +540,7 @@ class PersiapanOperasiController extends Controller
                             'nopermintaan' => $request->nopermintaan,
                             'kd_obat' => $request->kodeobat,
                             'nopenerimaan' => $stok[$index]->nopenerimaan,
+                            'nodistribusi' => $stok[$index]->nodistribusi,
                             'jumlah' => $ada,
                             'created_at' => date('Y-m-d H:i:s'),
                             'updated_at' => date('Y-m-d H:i:s'),
@@ -552,6 +554,7 @@ class PersiapanOperasiController extends Controller
                             'nopermintaan' => $request->nopermintaan,
                             'kd_obat' => $request->kodeobat,
                             'nopenerimaan' => $stok[$index]->nopenerimaan,
+                            'nodistribusi' => $stok[$index]->nodistribusi,
                             'jumlah' => $distribusi,
                             'created_at' => date('Y-m-d H:i:s'),
                             'updated_at' => date('Y-m-d H:i:s'),
@@ -572,6 +575,9 @@ class PersiapanOperasiController extends Controller
                 $stok = Stokreal::where('kdobat', $rin['kd_obat'])
                     ->where('kdruang', 'Gd-04010103')
                     ->where('nopenerimaan', $rin['nopenerimaan'])
+                    ->when($rin['nodistribusi'] !== '', function ($x) use ($rin) {
+                        $x->where('nodistribusi', $rin['nodistribusi']);
+                    })
                     ->first();
 
                 if ($stok->jumlah <= 0) {
@@ -591,7 +597,7 @@ class PersiapanOperasiController extends Controller
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan...!!!',
-                'result' => $e,
+                'result' => '' . $e,
             ], 410);
         }
     }

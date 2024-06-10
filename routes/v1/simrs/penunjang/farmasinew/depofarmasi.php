@@ -64,6 +64,10 @@ Route::group([
     // pelayanan informasi Obat
     Route::post('/simpan-pelayanan-informasi-obat', [EresepController::class, 'simPelIOnfOb']);
 
+    // list resep by dokter
+
+    Route::get('/ambil-resep-dokter', [EresepController::class, 'getResepDokter']);
+
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
     Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
