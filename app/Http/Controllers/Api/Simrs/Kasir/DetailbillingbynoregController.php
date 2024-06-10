@@ -203,12 +203,19 @@ class DetailbillingbynoregController extends Controller
         ->get();
 
         $racikan = Resepkeluarheder::select(
-        DB::raw('round((resep_keluar_racikan_r.jumlah*resep_keluar_racikan_r.harga_jual)+resep_keluar_racikan_r.nilai_r) as subtotal'))
+        DB::raw('round((resep_keluar_racikan_r.jumlah*resep_keluar_racikan_r.harga_jual)) as subtotal'))
         ->join('resep_keluar_racikan_r', 'resep_keluar_racikan_r.noresep', 'resep_keluar_h.noresep')
         ->where('resep_keluar_h.noreg', $noreg)
         ->get();
 
-        $farmasi = $nonracikan->sum('subtotal')+$racikan->sum('subtotal');
+        $racikan_R = Resepkeluarheder::select(
+            DB::raw('resep_keluar_racikan_r.nilai_r as subtotal'))
+            ->join('resep_keluar_racikan_r', 'resep_keluar_racikan_r.noresep', 'resep_keluar_h.noresep')
+            ->where('resep_keluar_h.noreg', $noreg)
+            ->groupBy('resep_keluar_h.noresep')
+            ->get();
+
+        $farmasi = $nonracikan->sum('subtotal')+$racikan->sum('subtotal')+$racikan_R->sum('subtotal');
         return $farmasi;
     }
 
