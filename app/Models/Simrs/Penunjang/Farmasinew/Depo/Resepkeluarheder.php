@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\SistemBayar;
@@ -22,7 +23,15 @@ class Resepkeluarheder extends Model
     {
         return $this->hasMany(Resepkeluarrinci::class, 'noresep', 'noresep');
     }
+    public function rincianwret()
+    {
+        return $this->hasMany(Resepkeluarrinci::class, 'noresep', 'noresep');
+    }
     public function rincianracik()
+    {
+        return $this->hasMany(Resepkeluarrinciracikan::class, 'noresep', 'noresep');
+    }
+    public function rincianracikwret()
     {
         return $this->hasMany(Resepkeluarrinciracikan::class, 'noresep', 'noresep');
     }
@@ -70,5 +79,9 @@ class Resepkeluarheder extends Model
     public function info()
     {
         return $this->belongsTo(PelayananInformasiObat::class, 'noreg', 'noreg');
+    }
+    public function sep()
+    {
+        return $this->belongsTo(Seprajal::class, 'noreg', 'rs1');
     }
 }

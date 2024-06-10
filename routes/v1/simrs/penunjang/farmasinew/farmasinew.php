@@ -55,6 +55,8 @@ Route::group([
     Route::get('/listobat', [ObatnewController::class, 'list']);
     // hapus maping list kelas terapi
     Route::post('/hapus-maping-terapi', [ObatnewController::class, 'hapusMapingTerapi']);
+    // hapus maping indikasi
+    Route::post('/hapus-maping-indikasi', [ObatnewController::class, 'hapusMapingIndikasi']);
 
     Route::post('/simpanmerk', [MerkController::class, 'simpan']);
     Route::post('/hapusmerk', [MerkController::class, 'hapus']);

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Seprajal extends Model
 {
     use HasFactory;
+
+    protected $connection = 'mysql';
     protected $table = 'rs222';
     protected $guarded = ['id'];
     protected $appends = ['noref'];

@@ -14,5 +14,6 @@ Route::group([
     Route::get('/get-ppk', [TandatanganController::class, 'getPpk']);
     Route::get('/get-gudang', [TandatanganController::class, 'getGudang']);
     Route::get('/get-mengetahui', [TandatanganController::class, 'getMengetahui']);
+    Route::get('/get-pegawai', [TandatanganController::class, 'getPegawai']);
     Route::post('/store', [TandatanganController::class, 'store']);
 });

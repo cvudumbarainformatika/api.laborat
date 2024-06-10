@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalretur;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
@@ -191,6 +192,23 @@ class DetailbillingbynoregController extends Controller
 
         $obat = $nonracikan->sum('subtotal') + $nonracikanlalu->sum('subtotal') + $racikan->sum('subtotal') + $racikanlalu->sum('subtotal') - $retur->sum('subtotal');
         return $obat;
+    }
+
+    public static function farmasinew($noreg)
+    {
+        $nonracikan = Resepkeluarheder::select(
+        DB::raw('round(sum(resep_keluar_r.jumlah*resep_keluar_r.harga_jual+resep_keluar_r.nilai_r)) as subtotal'))
+        ->join('resep_keluar_r', 'resep_keluar_r.noresep', 'resep_keluar_h.noresep')
+        ->where('resep_keluar_h.noreg', $noreg)
+        ->get();
+
+        // $racikan = Resepkeluarheder::select(DB::raw('(resep_keluar_racikan_r.jumlah*resep_keluar_racikan_r.harga_jual)+resep_keluar_racikan_r.nilai_r) as subtotal'))
+        // ->join('resep_keluar_racikan_r', 'resep_keluar_racikan_r.noresep', 'resep_keluar_h.noresep')
+        // ->where('resep_keluar_h.noreg', $noreg)
+        // ->get();
+
+        $farmasi = $nonracikan->sum('subtotal');
+        return $farmasi;
     }
 
     // public static function totalall()

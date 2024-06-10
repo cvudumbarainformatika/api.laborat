@@ -211,20 +211,20 @@ class PerencanaanpembelianController extends Controller
     {
         //$cekflag = RencanabeliR::where('kdobat', $request->kdobat)->where('flag', '')->count();
         $xxx = FormatingHelper::session_user();
-        $cekflag = RencanabeliH::select(
-            'perencana_pebelian_h.no_rencbeliobat as notrans',
-            'perencana_pebelian_h.kd_ruang as gudang',
-            'perencana_pebelian_r.no_rencbeliobat'
-        )
-            ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.no_rencbeliobat')
-            ->where('perencana_pebelian_h.kd_ruang', $request->kd_ruang)
-            ->where('perencana_pebelian_r.kdobat', $request->kdobat)
-            ->where('perencana_pebelian_r.flag', '')
-            ->count();
+        // $cekflag = RencanabeliH::select(
+        //     'perencana_pebelian_h.no_rencbeliobat as notrans',
+        //     'perencana_pebelian_h.kd_ruang as gudang',
+        //     'perencana_pebelian_r.no_rencbeliobat'
+        // )
+        //     ->leftjoin('perencana_pebelian_r', 'perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.no_rencbeliobat')
+        //     ->where('perencana_pebelian_h.kd_ruang', $request->kd_ruang)
+        //     ->where('perencana_pebelian_r.kdobat', $request->kdobat)
+        //     ->where('perencana_pebelian_r.flag', '')
+        //     ->count();
 
-        if ($cekflag > 0) {
-            return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
-        }
+        // if ($cekflag > 0) {
+        //     return new JsonResponse(['message' => 'maaf obat ini masih dalam proses pemesanan...!!!'], 500);
+        // }
 
         $cekminmax = Mminmaxobat::select(DB::raw('sum(max) as max'))
             ->where('kd_obat', $request->kdobat)
@@ -371,16 +371,26 @@ class PerencanaanpembelianController extends Controller
             'sistembayar',
             'gudang'
         )
-            ->whereHas('stokmaxrs', function ($q) {
-                $q->select(
-                    'min_max_ruang.kd_obat',
-                    'min_max_ruang.min',
-                    db::raw('sum(min_max_ruang.min) as balance'),
-                    db::raw('sum(stokreal.jumlah) as stok')
+            // ->where(function ($query) {
+            //     $query
+            //         ->orDoesntHave('stokrealallrs')
+            //         ->orWhereHas('stokmaxrs', function ($q) {
+            //             $q->select(
+            //                 'min_max_ruang.kd_obat',
+            //                 'min_max_ruang.min',
+            //                 db::raw('sum(min_max_ruang.min) as balance'),
+            //                 db::raw('sum(stokreal.jumlah) as stok')
 
-                )
-                    ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
-                    ->havingRaw('balance >= stok');
+            //             )
+            //                 ->leftJoin('stokreal', 'min_max_ruang.kd_obat', '=', 'stokreal.kdobat')
+            //                 ->havingRaw('balance >= stok');
+            //         })
+            //         ->orDoesntHave('stokmaxrs');
+            // })
+
+            ->where(function ($q) {
+                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
             })
             ->with([
                 'stokmaxrs' => function ($mm) {
@@ -401,8 +411,7 @@ class PerencanaanpembelianController extends Controller
                         // db::raw('sum(jumlah) as stok')
 
                     )
-                        ->where('jumlah', '>=', 0)
-                        ->where('jumlah', '!=', 0);
+                        ->where('jumlah', '>', 0);
                 },
                 'perencanaanrinci' => function ($perencanaanrinci) {
                     $perencanaanrinci->select(
@@ -424,10 +433,7 @@ class PerencanaanpembelianController extends Controller
                 },
 
             ])
-            ->where(function ($q) {
-                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
-            })
+
             ->orderBy('nama_obat')
             ->paginate(request('per_page'));
 

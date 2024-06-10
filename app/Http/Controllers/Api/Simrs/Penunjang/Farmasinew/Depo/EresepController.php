@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -104,33 +105,64 @@ class EresepController extends Controller
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                         )
-                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
                             ->where('resep_keluar_h.depo', request('kdruang'))
                             ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                            // ->groupBy('resep_permintaan_keluar_racikan.kdobat')
+                        ;
                     },
+                    // 'permintaanobatrinci' => function ($permintaanobatrinci) {
+                    //     $permintaanobatrinci->select(
+                    //         // 'permintaan_r.no_permintaan',
+                    //         // 'permintaan_r.kdobat',
+                    //         DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                    //     )
+                    //         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                    //         // biar yang ada di tabel mutasi ga ke hitung
+                    //         ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                    //             $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    //                 ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                    //         })
+                    //         ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                    //         ->where('permintaan_h.tujuan', request('kdruang'))
+                    //         ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                    //         ->groupBy('permintaan_r.kdobat');
+
+                    // },
                     'permintaanobatrinci' => function ($permintaanobatrinci) {
                         $permintaanobatrinci->select(
                             'permintaan_r.no_permintaan',
                             'permintaan_r.kdobat',
+                            'permintaan_r.jumlah_minta',
+                            'permintaan_h.tujuan as kdruang',
                             DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
                         )
                             ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                            // biar yang ada di tabel mutasi ga ke hitung
                             ->leftJoin('mutasi_gudangdepo', function ($anu) {
                                 $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                                     ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
                             })
-                            ->whereNull('mutasi_gudangdepo.kd_obat')
-
                             ->where('permintaan_h.tujuan', request('kdruang'))
+                            // ->whereNull('mutasi_gudangdepo.kd_obat')
                             ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                            ->groupBy('permintaan_r.kdobat');
+                            ->groupBy('permintaan_r.kdobat');;
+                        // ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                        // // biar yang ada di tabel mutasi ga ke hitung
+                        // ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                        //     $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                        //         ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        // })
+                        // ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                        // ->where('permintaan_h.tujuan', request('kdruang'))
+                        // ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                        // ->groupBy('permintaan_r.kdobat');
+
                     },
                     'persiapanrinci' => function ($res) {
                         $res->select(
                             'persiapan_operasi_rincis.kd_obat',
-
                             DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                         )
                             ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
@@ -139,7 +171,7 @@ class EresepController extends Controller
                     },
                 ]
             )
-            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
             ->where('stokreal.kdruang', request('kdruang'))
             ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
@@ -156,7 +188,7 @@ class EresepController extends Controller
                     ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
             ->groupBy('stokreal.kdobat')
-            ->limit(30)
+            ->limit(10)
             ->get();
         $wew = collect($cariobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
@@ -174,8 +206,147 @@ class EresepController extends Controller
         );
     }
 
+    public function pencarianObatResep()
+    {
+        // penccarian termasuk tiperesep
+        $groupsistembayar = request('groups');
+        if ($groupsistembayar == '1') {
+            $sistembayar = ['SEMUA', 'BPJS'];
+        } else {
+            $sistembayar = ['SEMUA', 'UMUM'];
+        }
+
+        $listobat = Mobatnew::query()
+            ->select(
+                'new_masterobat.kd_obat',
+                'new_masterobat.nama_obat as namaobat',
+                'new_masterobat.kandungan as kandungan',
+                'new_masterobat.bentuk_sediaan as bentuk_sediaan',
+                'new_masterobat.satuan_k as satuankecil',
+                'new_masterobat.status_fornas as fornas',
+                'new_masterobat.status_forkid as forkit',
+                'new_masterobat.status_generik as generik',
+                'new_masterobat.status_kronis as kronis',
+                'new_masterobat.status_prb as prb',
+                'new_masterobat.kode108',
+                'new_masterobat.uraian108',
+                'new_masterobat.kode50',
+                'new_masterobat.uraian50',
+                'new_masterobat.kekuatan_dosis as kekuatandosis',
+                'new_masterobat.volumesediaan as volumesediaan',
+                'new_masterobat.kelompok_psikotropika as psikotropika',
+                'stokreal.kdobat as kdobat',
+                'stokreal.jumlah as jumlah',
+                // DB::raw('sum(stokreal.jumlah) as total')
+                DB::raw('SUM(
+                    CASE When stokreal.kdruang="' . request('kdruang') . '" AND stokreal.kdobat = new_masterobat.kd_obat Then stokreal.jumlah Else 0 End )
+                     as total'),
+                // DB::raw('MAX(stokreal.jumlah) as terbesar')
+            )
+            ->leftjoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+            // ->where('stokreal.kdruang', request('kdruang'))
+            ->where('new_masterobat.status_konsinyasi', '')
+            ->whereIn('new_masterobat.sistembayar', $sistembayar)
+            ->when(request('tiperesep'), function ($q) {
+                if (request('tiperesep') === 'prb') {
+                    $q->where('new_masterobat.status_prb', '!=', '');
+                } elseif (request('tiperesep') === 'iter') {
+                    $q->where('new_masterobat.status_kronis', '!=', '');
+                }
+                // else {
+                //     # code...
+                // }
+            })
+            ->where(function ($query) {
+                $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%');
+                // ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
+            })
+            ->with('permintaandeporinci', function ($q) {
+                $q->select(
+                    'permintaan_r.no_permintaan',
+                    'permintaan_r.kdobat',
+                    // 'permintaan_r.jumlah_minta',
+                    'permintaan_h.tujuan as kdruang',
+                    DB::raw('sum(permintaan_r.jumlah_minta) as jumlah_minta')
+                )
+                    ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                    ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                        $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                            ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                    })
+                    ->where('permintaan_h.tujuan', request('kdruang'))
+                    // ->whereNull('mutasi_gudangdepo.kd_obat')
+                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                    ->groupBy('permintaan_r.kdobat');
+            })
+
+            ->with('transracikan', function ($q) {
+                $q->select(
+                    // 'resep_keluar_racikan_r.kdobat as kdobat',
+                    'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                    'resep_keluar_h.depo as kdruang',
+                    DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                )
+                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+                    ->where('resep_keluar_h.depo', request('kdruang'))
+                    ->whereIn('resep_keluar_h.flag', ['', '1', '2']);
+            })
+
+            ->with('transnonracikan', function ($q) {
+                $q->select(
+                    // 'resep_keluar_r.kdobat as kdobat',
+                    'resep_permintaan_keluar.kdobat as kdobat',
+                    'resep_keluar_h.depo as kdruang',
+                    DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                )
+                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                    ->where('resep_keluar_h.depo', request('kdruang'))
+                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                    ->groupBy('resep_permintaan_keluar.kdobat');
+            })
+
+            // ->with('persiapanrinci', function ($q) {
+            //     $q->select(
+            //         'persiapan_operasi_rincis.kd_obat',
+            //         'persiapan_operasi_rincis.jumlah_minta',
+            //         DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+            //     )
+            //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+            //         ->whereIn('persiapan_operasis.flag', ['', '1'])
+            //         ->groupBy('persiapan_operasi_rincis.kd_obat');
+            // })
+
+
+            ->groupBy('new_masterobat.kd_obat')
+            ->orderBy('total', 'DESC')
+            ->limit(20)
+            ->get();
+
+        $wew = collect($listobat)->map(function ($x, $y) {
+            $total = $x->total ?? 0;
+            // $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+            $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci;
+            return $x;
+        });
+
+        return new JsonResponse(
+            [
+                'dataobat' => $wew
+            ]
+        );
+    }
+
     public function pembuatanresep(Request $request)
     {
+        $request->validate([
+            'kodeobat' => 'required',
+            // 'jumlah' => 'required',
+            'kdruangan' => 'required',
+        ]);
         try {
             DB::connection('farmasi')->beginTransaction();
             $user = FormatingHelper::session_user();
@@ -187,6 +358,10 @@ class EresepController extends Controller
                 $tiperesep = $request->tiperesep ?? 'normal';
                 $iter_expired = $request->iter_expired ?? null;
                 $iter_jml = $request->iter_jml ?? null;
+                if ($request->tiperesep === 'normal') {
+                    $iter_expired =  null;
+                    $iter_jml =  null;
+                }
             } else {
                 $tiperesep =  'normal';
                 $iter_expired =  null;
@@ -263,13 +438,20 @@ class EresepController extends Controller
                 return $x;
             });
             // $jumlahstok = $cekjumlahstok[0]->jumlahstok;
-            $alokasi = $wew[0]->alokasi;
+            $alokasi = $wew[0]->alokasi ?? 0;
             // return new JsonResponse([
             //     'alokasi' => $alokasi,
             //     'wew' => $wew,
             // ]);
-            if ($request->jumlah > $alokasi) {
-                return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!'], 500);
+            if ($request->jenisresep == 'Racikan') {
+                if ($request->jumlah > $alokasi) {
+                    return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!', 'cek' => $cekjumlahstok], 500);
+                }
+            } else {
+
+                if ($request->jumlah_diminta > $alokasi) {
+                    return new JsonResponse(['message' => 'Maaf Stok Alokasi Tidak Mencukupi...!!!', 'cek' => $cekjumlahstok], 500);
+                }
             }
 
             if ($request->kodedepo === 'Gd-04010102') {
@@ -356,10 +538,10 @@ class EresepController extends Controller
                             'konsumsi' => $request->konsumsi,
                             'keterangan' => $request->keterangan,
                             'kdobat' => $request->kodeobat,
-                            'kandungan' => $request->kandungan,
-                            'fornas' => $request->fornas,
-                            'forkit' => $request->forkit,
-                            'generik' => $request->generik,
+                            'kandungan' => $request->kandungan ?? '',
+                            'fornas' => $request->fornas ?? '',
+                            'forkit' => $request->forkit ?? '',
+                            'generik' => $request->generik ?? '',
                             'r' => 500,
                             'hpp' => $harga,
                             'harga_jual' => $hargajualx,
@@ -368,8 +550,8 @@ class EresepController extends Controller
                             'kode50' => $request->kode50,
                             'uraian50' => $request->uraian50,
                             'stokalokasi' => $request->stokalokasi,
-                            'dosisobat' => $request->dosisobat,
-                            'dosismaksimum' => $request->dosismaksimum, // dosis resep
+                            'dosisobat' => $request->dosisobat ?? 0,
+                            'dosismaksimum' => $request->dosismaksimum ?? 0, // dosis resep
                             'jumlah' => $request->jumlah, // jumlah obat
                             'satuan_racik' => $request->satuan_racik, // jumlah obat
                             'keteranganx' => $request->keteranganx, // keterangan obat
@@ -391,10 +573,10 @@ class EresepController extends Controller
                             'konsumsi' => $request->konsumsi,
                             'keterangan' => $request->keterangan,
                             'kdobat' => $request->kodeobat,
-                            'kandungan' => $request->kandungan,
-                            'fornas' => $request->fornas,
-                            'forkit' => $request->forkit,
-                            'generik' => $request->generik,
+                            'kandungan' => $request->kandungan ?? '',
+                            'fornas' => $request->fornas ?? '',
+                            'forkit' => $request->forkit ?? '',
+                            'generik' => $request->generik ?? '',
                             'r' => 500,
                             'hpp' => $harga,
                             'harga_jual' => $hargajualx,
@@ -421,10 +603,10 @@ class EresepController extends Controller
                         'noreg' => $request->noreg,
                         'noresep' => $noresep,
                         'kdobat' => $request->kodeobat,
-                        'kandungan' => $request->kandungan,
-                        'fornas' => $request->fornas,
-                        'forkit' => $request->forkit,
-                        'generik' => $request->generik,
+                        'kandungan' => $request->kandungan ?? '',
+                        'fornas' => $request->fornas ?? '',
+                        'forkit' => $request->forkit ?? '',
+                        'generik' => $request->generik ?? '',
                         'kode108' => $request->kode108,
                         'uraian108' => $request->uraian108,
                         'kode50' => $request->kode50,
@@ -479,27 +661,35 @@ class EresepController extends Controller
                 'iter_expired' => $iter_expired ?? 0,
                 'iter_jml' => $iter_jml ?? 0,
                 'error' => $e,
-                'message' => 'ada kesalahan'
+                'message' => 'rolled back ada kesalahan'
             ], 410);
         }
     }
 
     public function listresepbydokter()
     {
+        // return new JsonResponse(request()->all());
         // $data['c'] = date('m');
         // $data['c-3'] = (int)date('m') - 3;
         // $m = (int)date('m') - 3;
         // $data['all'] = [date('Y') . '-0' . ((int)date('m') - 3) . '-01 00:00:00', date('Y-m-31 23:59:59')];
         // return new JsonResponse($data);
+        // if (request('flag') === 'semua') {
+        //     $flag = ['1', '2', '3', '4', '5'];
+        // } else {
+        //     $flag = [request('flag')];
+        // }
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
                 $rm = [];
             } else {
-                $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
-                $rm = collect($data)->map(function ($x) {
-                    return $x->norm;
-                });
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
             }
         }
         if (request('to') === '' || request('from') === null) {
@@ -515,16 +705,21 @@ class EresepController extends Controller
                 'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis',
+                'permintaanresep.aturansigna:signa,jumlah',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
                 'poli',
                 'info',
                 'ruanganranap',
                 'sistembayar',
+                'sep:rs1,rs8',
                 'dokter:kdpegsimrs,nama',
                 'datapasien' => function ($quer) {
                     $quer->select(
                         'rs1',
-                        'rs2 as nama'
+                        'rs2 as nama',
+                        'rs46 as noka',
+                        'rs16 as tgllahir',
+                        DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
                     );
                 }
             ]
@@ -552,11 +747,18 @@ class EresepController extends Controller
                 }
             })
             ->when(request('flag'), function ($x) {
-                $x->whereIn('flag', request('flag'));
+                if (request('flag') === 'semua') {
+                    $x->whereIn('flag', ['', '1', '2', '3', '4', '5']);
+                } else if (request('flag') === null || request('flag') === '') {
+                    $x->where('flag', '');
+                } else {
+                    $x->where('flag', request('flag'));
+                }
             })
             ->when(!request('flag'), function ($x) {
-                $x->where('flag', '2');
+                $x->where('flag', '');
             })
+
             ->orderBy('flag', 'ASC')
             ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
@@ -631,7 +833,10 @@ class EresepController extends Controller
         ];
         event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
-        // self::kirimResepDanSelesaiLayanan($request);
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+        if ($updatekunjungan) {
+            self::kirimResepDanSelesaiLayanan($request);
+        }
         return new JsonResponse([
             'message' => 'Resep Berhasil Dikirim Kedepo Farmasi...!!!',
             'data' => $kirimresep
@@ -643,7 +848,9 @@ class EresepController extends Controller
     {
         $data = Resepkeluarheder::find($request->id);
         if ($data) {
+            $user = auth()->user()->pegawai_id;
             $data->flag = '2';
+            $data->user = $user;
             $data->save();
             // $msg = [
             //     'data' => [
@@ -655,6 +862,28 @@ class EresepController extends Controller
             //     ]
             // ];
             // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+
+            $kunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($kunjunganpoli) {
+                /**
+                 * update waktu
+                 */
+                $input = new Request([
+                    'noreg' => $request->noreg
+                ]);
+                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+
+                if ($cek === 0 || $cek === '') {
+                    //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                    //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                    //7 (akhir waktu obat selesai dibuat),
+
+                    BridantrianbpjsController::updateWaktu($input, 6);
+                }
+                /**
+                 * update waktu end
+                 */
+            }
             return new JsonResponse(['message' => 'Resep Diterima', 'data' => $data], 200);
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
@@ -662,8 +891,10 @@ class EresepController extends Controller
     public function resepSelesai(Request $request)
     {
         $data = Resepkeluarheder::find($request->id);
+        $user = auth()->user()->pegawai_id;
+        // return new JsonResponse(['user' => $user, 'data' => $data], 410);
         if ($data) {
-            $data->update(['flag' => '3', 'tgl' => date('Y-m-d')]);
+            $data->update(['flag' => '3', 'tgl' => date('Y-m-d'), 'user' => $user]);
             // $msg = [
             //     'data' => [
             //         'id' => $data->id,
@@ -675,20 +906,27 @@ class EresepController extends Controller
             // ];
             // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
 
-            /**
-             * update waktu
-             */
-            // $input = new Request([
-            //     'noreg' => $request->noreg
-            // ]);
-            // $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+            $kunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($kunjunganpoli) {
+                /**
+                 * update waktu
+                 */
+                $input = new Request([
+                    'noreg' => $request->noreg
+                ]);
+                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 7)->count();
 
-            // if ($cek === 0 || $cek === '') {
-            //     //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
-            //     //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                if ($cek === 0 || $cek === '') {
+                    //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                    //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                    //7 (akhir waktu obat selesai dibuat),
 
-            //     BridantrianbpjsController::updateWaktu($input, 6);
-            // }
+                    BridantrianbpjsController::updateWaktu($input, 7);
+                }
+                /**
+                 * update waktu end
+                 */
+            }
 
             return new JsonResponse(['message' => 'Resep Selesai', 'data' => $data], 200);
         }
@@ -712,7 +950,73 @@ class EresepController extends Controller
         try {
             DB::connection('farmasi')->beginTransaction();
 
+            // $jmldiminta = $request->jumlah;
+            if ($request->jumlah == 0) {
 
+                if ($request->jenisresep == 'Racikan') {
+                    $simpanrinci = Resepkeluarrinciracikan::create(
+                        [
+                            'noreg' => $request->noreg,
+                            'noresep' => $request->noresep,
+                            'tiperacikan' => $request->tiperacikan,
+                            'namaracikan' => $request->namaracikan,
+                            'kdobat' => $request->kdobat,
+                            // 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'nopenerimaan' => 0,
+                            'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                            'jumlah' => $request->jumlah,
+                            // 'harga_beli' => $caristok[$index]->harga,
+                            'harga_beli' => 0,
+                            // 'hpp' => $harga,
+                            'hpp' => 0,
+                            // 'harga_jual' => $hargajual,
+                            'harga_jual' => 0,
+                            // 'nilai_r' => $request->nilai_r,
+                            'nilai_r' => 0,
+                            'user' => $user['kodesimrs']
+                        ]
+                    );
+                } else {
+                    $simpanrinci = Resepkeluarrinci::create(
+                        [
+                            'noreg' => $request->noreg,
+                            'noresep' => $request->noresep,
+                            'kdobat' => $request->kdobat,
+                            'kandungan' => $request->kandungan ?? '',
+                            'fornas' => $request->fornas ?? '',
+                            'forkit' => $request->forkit ?? '',
+                            'generik' => $request->generik ?? '',
+                            'kode108' => $request->kode108,
+                            'uraian108' => $request->uraian108,
+                            'kode50' => $request->kode50,
+                            'uraian50' => $request->uraian50,
+                            // 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'nopenerimaan' => '',
+                            // 'jumlah' => $caristok[$index]->jumlah,
+                            'jumlah' => $request->jumlah,
+                            // 'harga_beli' => $caristok[$index]->harga,
+                            'harga_beli' => 0,
+                            // 'hpp' => $harga,
+                            'hpp' => 0,
+                            // 'harga_jual' => $hargajual,
+                            'harga_jual' => 0,
+                            // 'nilai_r' => $request->nilai_r,
+                            'nilai_r' => 0,
+                            'aturan' => $request->aturan,
+                            // 'konsumsi' => $request->konsumsi,
+                            'konsumsi' => 0,
+                            'keterangan' => $request->keterangan ?? '',
+                            'user' => $user['kodesimrs']
+                        ]
+                    );
+                }
+                $simpanrinci->load('mobat:kd_obat,nama_obat');
+                DB::connection('farmasi')->commit();
+                return new JsonResponse([
+                    'rinci' => $simpanrinci,
+                    'message' => 'Data Disimpan dengan jumlah 0'
+                ], 200);
+            }
 
             // $gudang = ['Gd-05010100', 'Gd-03010100'];
             // $cariharga = Stokreal::select(DB::raw('max(harga) as harga'))
@@ -724,140 +1028,213 @@ class EresepController extends Controller
             // $harga = $cariharga[0]->harga;
 
             $jmldiminta = $request->jumlah;
-            $caristok = Stokreal::where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
+            $caristok = Stokreal::select('kdobat', 'nopenerimaan', 'tglpenerimaan', 'kdruang', 'harga', 'tglexp', 'nobatch', 'nodistribusi', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $request->kdobat)
+                ->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '!=', 0)
+                ->groupBy('kdobat', 'nopenerimaan', 'nodistribusi')
                 ->orderBy('tglexp')
                 ->get();
 
             $index = 0;
             $masuk = $jmldiminta;
+            if ($masuk > 0) {
+                while ($masuk > 0) {
+                    $sisa = $caristok[$index]->jumlah;
 
-            while ($masuk > 0) {
-                $sisa = $caristok[$index]->jumlah;
-
-                $har = HargaHelper::getHarga($request->kdobat, $request->groupsistembayar);
-                $res = $har['res'];
-                if ($res) {
-                    return new JsonResponse(['message' => $har['message'], 'data' => $har], 410);
-                }
-                $hargajual = $har['hargaJual'];
-                $harga = $har['harga'];
-
-                if ($sisa < $masuk) {
-                    $sisax = $masuk - $sisa;
-
-                    if ($request->jenisresep == 'Racikan') {
-                        $simpanrinci = Resepkeluarrinciracikan::create(
-                            [
-                                'noreg' => $request->noreg,
-                                'noresep' => $request->noresep,
-                                'tiperacikan' => $request->tiperacikan,
-                                'namaracikan' => $request->namaracikan,
-                                'kdobat' => $request->kdobat,
-                                'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                                'jumlah' => $caristok[$index]->jumlah,
-                                'harga_beli' => $caristok[$index]->harga,
-                                'hpp' => $harga,
-                                'harga_jual' => $hargajual,
-                                'nilai_r' => $request->nilai_r,
-                                'user' => $user['kodesimrs']
-                            ]
-                        );
-                    } else {
-                        $simpanrinci = Resepkeluarrinci::create(
-                            [
-                                'noreg' => $request->noreg,
-                                'noresep' => $request->noresep,
-                                'kdobat' => $request->kdobat,
-                                'kandungan' => $request->kandungan,
-                                'fornas' => $request->fornas,
-                                'forkit' => $request->forkit,
-                                'generik' => $request->generik,
-                                'kode108' => $request->kode108,
-                                'uraian108' => $request->uraian108,
-                                'kode50' => $request->kode50,
-                                'uraian50' => $request->uraian50,
-                                'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                                'jumlah' => $caristok[$index]->jumlah,
-                                'harga_beli' => $caristok[$index]->harga,
-                                'hpp' => $harga,
-                                'harga_jual' => $hargajual,
-                                'nilai_r' => $request->nilai_r,
-                                'aturan' => $request->aturan,
-                                'konsumsi' => $request->konsumsi,
-                                'keterangan' => $request->keterangan ?? '',
-                                'user' => $user['kodesimrs']
-                            ]
-                        );
+                    $har = HargaHelper::getHarga($request->kdobat, $request->groupsistembayar);
+                    $res = $har['res'];
+                    if ($res) {
+                        return new JsonResponse(['message' => $har['message'], 'data' => $har], 410);
                     }
+                    $hargajual = $har['hargaJual'];
+                    $harga = $har['harga'];
 
-                    Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                        ->where('kdobat', $caristok[$index]->kdobat)
-                        ->where('kdruang', $request->kodedepo)
-                        ->update(['jumlah' => 0]);
+                    if ($sisa < $masuk) {
+                        $sisax = $masuk - $sisa;
 
-                    $masuk = $sisax;
-                    $index = $index + 1;
-                    $simpanrinci->load('mobat:kd_obat,nama_obat');
-                } else {
-                    $sisax = $sisa - $masuk;
+                        if ($request->jenisresep == 'Racikan') {
+                            $simpanrinci = Resepkeluarrinciracikan::create(
+                                [
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'tiperacikan' => $request->tiperacikan,
+                                    'namaracikan' => $request->namaracikan,
+                                    'kdobat' => $request->kdobat,
+                                    'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                    'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                                    'jumlah' => $caristok[$index]->jumlah,
+                                    'harga_beli' => $caristok[$index]->harga,
+                                    'hpp' => $harga,
+                                    'harga_jual' => $hargajual,
+                                    'nilai_r' => $request->nilai_r,
+                                    'user' => $user['kodesimrs']
+                                ]
+                            );
+                        } else {
+                            $simpanrinci = Resepkeluarrinci::create(
+                                [
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'kdobat' => $request->kdobat,
+                                    'kandungan' => $request->kandungan ?? '',
+                                    'fornas' => $request->fornas ?? '',
+                                    'forkit' => $request->forkit ?? '',
+                                    'generik' => $request->generik ?? '',
+                                    'kode108' => $request->kode108,
+                                    'uraian108' => $request->uraian108,
+                                    'kode50' => $request->kode50,
+                                    'uraian50' => $request->uraian50,
+                                    'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                    'jumlah' => $caristok[$index]->jumlah,
+                                    'harga_beli' => $caristok[$index]->harga,
+                                    'hpp' => $harga,
+                                    'harga_jual' => $hargajual,
+                                    'nilai_r' => $request->nilai_r,
+                                    'aturan' => $request->aturan,
+                                    'konsumsi' => $request->konsumsi,
+                                    'keterangan' => $request->keterangan ?? '',
+                                    'user' => $user['kodesimrs']
+                                ]
+                            );
+                        }
 
-                    if ($request->jenisresep == 'Racikan') {
-                        $simpanrinci = Resepkeluarrinciracikan::create(
-                            [
-                                'noreg' => $request->noreg,
-                                'noresep' => $request->noresep,
-                                'namaracikan' => $request->namaracikan,
-                                'tiperacikan' => $request->tiperacikan,
-                                'kdobat' => $request->kdobat,
-                                'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                                'jumlah' => $masuk,
-                                'harga_beli' => $caristok[$index]->harga,
-                                'hpp' => $harga,
-                                'harga_jual' => $hargajual,
-                                'nilai_r' => $request->nilai_r,
-                                'user' => $user['kodesimrs']
-                            ]
-                        );
+                        Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                            ->where('kdobat', $caristok[$index]->kdobat)
+                            ->where('nodistribusi', $caristok[$index]->nodistribusi)
+                            ->where('kdruang', $request->kodedepo)
+                            ->update(['jumlah' => 0]);
+
+                        $masuk = $sisax;
+                        $index = $index + 1;
+                        $simpanrinci->load('mobat:kd_obat,nama_obat');
                     } else {
-                        $simpanrinci = Resepkeluarrinci::create(
-                            [
-                                'noreg' => $request->noreg,
-                                'noresep' => $request->noresep,
-                                'kdobat' => $request->kdobat,
-                                'kandungan' => $request->kandungan,
-                                'fornas' => $request->fornas,
-                                'forkit' => $request->forkit,
-                                'generik' => $request->generik,
-                                'kode108' => $request->kode108,
-                                'uraian108' => $request->uraian108,
-                                'kode50' => $request->kode50,
-                                'uraian50' => $request->uraian50,
-                                'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                                'jumlah' => $masuk,
-                                'harga_beli' => $caristok[$index]->harga,
-                                'hpp' => $harga,
-                                'harga_jual' => $hargajual,
-                                'nilai_r' => $request->nilai_r,
-                                'aturan' => $request->aturan,
-                                'konsumsi' => $request->konsumsi,
-                                'keterangan' => $request->keterangan ?? '',
-                                'user' => $user['kodesimrs']
-                            ]
-                        );
-                    }
+                        $sisax = $sisa - $masuk;
 
-                    Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                        ->where('kdobat', $caristok[$index]->kdobat)
-                        ->where('kdruang', $request->kodedepo)
-                        ->update(['jumlah' => $sisax]);
-                    $masuk = 0;
-                    $simpanrinci->load('mobat:kd_obat,nama_obat');
+                        if ($request->jenisresep == 'Racikan') {
+                            $simpanrinci = Resepkeluarrinciracikan::create(
+                                [
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'namaracikan' => $request->namaracikan,
+                                    'tiperacikan' => $request->tiperacikan,
+                                    'kdobat' => $request->kdobat,
+                                    'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                    'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                                    'jumlah' => $masuk,
+                                    'harga_beli' => $caristok[$index]->harga,
+                                    'hpp' => $harga,
+                                    'harga_jual' => $hargajual,
+                                    'nilai_r' => $request->nilai_r,
+                                    'user' => $user['kodesimrs']
+                                ]
+                            );
+                        } else {
+                            $simpanrinci = Resepkeluarrinci::create(
+                                [
+                                    'noreg' => $request->noreg,
+                                    'noresep' => $request->noresep,
+                                    'kdobat' => $request->kdobat,
+                                    'kandungan' => $request->kandungan ?? '',
+                                    'fornas' => $request->fornas ?? '',
+                                    'forkit' => $request->forkit ?? '',
+                                    'generik' => $request->generik ?? '',
+                                    'kode108' => $request->kode108,
+                                    'uraian108' => $request->uraian108,
+                                    'kode50' => $request->kode50,
+                                    'uraian50' => $request->uraian50,
+                                    'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                    'jumlah' => $masuk,
+                                    'harga_beli' => $caristok[$index]->harga,
+                                    'hpp' => $harga,
+                                    'harga_jual' => $hargajual,
+                                    'nilai_r' => $request->nilai_r,
+                                    'aturan' => $request->aturan,
+                                    'konsumsi' => $request->konsumsi,
+                                    'keterangan' => $request->keterangan ?? '',
+                                    'user' => $user['kodesimrs']
+                                ]
+                            );
+                        }
+
+                        Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                            ->where('kdobat', $caristok[$index]->kdobat)
+                            ->where('nodistribusi', $caristok[$index]->nodistribusi)
+                            ->where('kdruang', $request->kodedepo)
+                            ->update(['jumlah' => $sisax]);
+                        $masuk = 0;
+                        $simpanrinci->load('mobat:kd_obat,nama_obat');
+                    }
                 }
                 DB::connection('farmasi')->commit();
                 return new JsonResponse([
                     'rinci' => $simpanrinci,
                     'message' => 'Data Berhasil Disimpan...!!!'
+                ], 200);
+            }
+            if ($request->jumlah == 0) {
+
+                if ($request->jenisresep == 'Racikan') {
+                    $simpanrinci = Resepkeluarrinciracikan::create(
+                        [
+                            'noreg' => $request->noreg,
+                            'noresep' => $request->noresep,
+                            'tiperacikan' => $request->tiperacikan,
+                            'namaracikan' => $request->namaracikan,
+                            'kdobat' => $request->kdobat,
+                            // 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'nopenerimaan' => 0,
+                            'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                            'jumlah' => $request->jumlah,
+                            // 'harga_beli' => $caristok[$index]->harga,
+                            'harga_beli' => 0,
+                            // 'hpp' => $harga,
+                            'hpp' => 0,
+                            // 'harga_jual' => $hargajual,
+                            'harga_jual' => 0,
+                            // 'nilai_r' => $request->nilai_r,
+                            'nilai_r' => 0,
+                            'user' => $user['kodesimrs']
+                        ]
+                    );
+                } else {
+                    $simpanrinci = Resepkeluarrinci::create(
+                        [
+                            'noreg' => $request->noreg,
+                            'noresep' => $request->noresep,
+                            'kdobat' => $request->kdobat,
+                            'kandungan' => $request->kandungan ?? '',
+                            'fornas' => $request->fornas ?? '',
+                            'forkit' => $request->forkit ?? '',
+                            'generik' => $request->generik ?? '',
+                            'kode108' => $request->kode108,
+                            'uraian108' => $request->uraian108,
+                            'kode50' => $request->kode50,
+                            'uraian50' => $request->uraian50,
+                            // 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'nopenerimaan' => '',
+                            // 'jumlah' => $caristok[$index]->jumlah,
+                            'jumlah' => $request->jumlah,
+                            // 'harga_beli' => $caristok[$index]->harga,
+                            'harga_beli' => 0,
+                            // 'hpp' => $harga,
+                            'hpp' => 0,
+                            // 'harga_jual' => $hargajual,
+                            'harga_jual' => 0,
+                            // 'nilai_r' => $request->nilai_r,
+                            'nilai_r' => 0,
+                            'aturan' => $request->aturan,
+                            // 'konsumsi' => $request->konsumsi,
+                            'konsumsi' => 0,
+                            'keterangan' => $request->keterangan ?? '',
+                            'user' => $user['kodesimrs']
+                        ]
+                    );
+                }
+                $simpanrinci->load('mobat:kd_obat,nama_obat');
+                DB::connection('farmasi')->commit();
+                return new JsonResponse([
+                    'rinci' => $simpanrinci,
+                    'message' => 'Data Disimpan dengan jumlah 0'
                 ], 200);
             }
         } catch (\Exception $e) {
@@ -1414,7 +1791,7 @@ class EresepController extends Controller
                             $key['hpp'] = $harga;
                             $key['harga_jual'] = $hargajual;
 
-
+                            $key['jumlahdibutuhkan'] = $key['jumlahdibutuhkan'] ?? 0;
                             $key['noresep'] = $noresep;
                             $key['satuan_racik'] = $key['satuan_racik'] ?? '';
                             $key['created_at'] = date('Y-m-d H:i:s');
@@ -1635,6 +2012,8 @@ class EresepController extends Controller
     }
     public static function kirimResepDanSelesaiLayanan($request)
     {
+
+
         $input = new Request([
             'noreg' => $request->noreg
         ]);
@@ -1656,5 +2035,69 @@ class EresepController extends Controller
         } else {
             return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
+    }
+
+    public function tolakResep(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            $data2 = Resepkeluarheder::where($request->noresep)->first();
+            if (!$data2) {
+                return new JsonResponse([
+                    'message' => 'Resep Tidak Ditemukan',
+                    'data' => $data
+                ]);
+            }
+            $data2->flag = '5';
+            $data->alasan = $request->alasan ?? null;
+            $data2->save();
+            return new JsonResponse([
+                'message' => 'Resep sudah ditolak',
+                'data' => $data2
+            ]);
+        }
+        $data->flag = '5';
+        $data->alasan = $request->alasan ?? null;
+        $data->save();
+        return new JsonResponse([
+            'message' => 'Resep sudah ditolak',
+            'data' => $data
+        ]);
+    }
+    public function isiAlasan(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            $data2 = Resepkeluarheder::where($request->noresep)->first();
+            if (!$data2) {
+                return new JsonResponse([
+                    'message' => 'Resep Tidak Ditemukan',
+                    'data' => $data
+                ]);
+            }
+            $data->alasan = $request->alasan ?? null;
+            $data2->save();
+            return new JsonResponse([
+                'message' => 'Alasan Sudah Di Isi',
+                'data' => $data2
+            ]);
+        }
+        $data->alasan = $request->alasan ?? null;
+        $data->save();
+        return new JsonResponse([
+            'message' => 'Alasan Sudah Di Isi',
+            'data' => $data
+        ]);
+    }
+
+    public function getResepDokter()
+    {
+
+        $data = request()->all();
+
+
+        return new JsonResponse([
+            'data' => $data
+        ]);
     }
 }

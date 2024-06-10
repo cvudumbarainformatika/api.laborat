@@ -2,11 +2,13 @@
 
 use App\Events\NotifMessageEvent;
 use App\Events\PlaygroundEvent;
+use App\Events\RefreshEvent;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\DvlpController;
+use App\Http\Controllers\NotifRefreshController;
 use App\Http\Controllers\PengesahanQrController;
 use App\Http\Controllers\PrintController;
 use App\Websockets\SocketHandler\UpdatePostSocketHandler;
@@ -32,7 +34,8 @@ use Illuminate\Support\Facades\Route;
 // WebSocketsRouter::webSocket('/socket/update-post', UpdatePostSocketHandler::class);
 
 Route::get('/', function () {
-    return view('welcome');
+    // return view('welcome');
+    echo 'SELAMAT DATANG';
 });
 
 
@@ -69,6 +72,15 @@ Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller
 Route::get('/print/page', [PrintController::class, 'index']);
 
 Route::get('/qr-document', [PengesahanQrController::class, 'index']);
+
+Route::get('/notif-refresh', function() {
+    $message = [
+        'menu' => 'refresh-page',
+        'data' => 'Ada Update Aplikasi , Silahkan Reload Halaman Anda'
+      ];
+      event(new PlaygroundEvent($message));
+      return null;
+});
 
 
 

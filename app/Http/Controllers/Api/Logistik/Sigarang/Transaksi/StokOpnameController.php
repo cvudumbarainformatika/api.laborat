@@ -513,24 +513,21 @@ class StokOpnameController extends Controller
 
             $total = [];
             $fisik = [];
-            $tanggal = $yesterday . ' 23:59:59';
+            $tanggal = $yesterday . ' 23:59:58';
             foreach ($recent as $key) {
-                $data = MonthlyStokUpdate::updateOrCreate([
+                // $data = MonthlyStokUpdate::updateOrCreate([
+                $data = [
                     'tanggal' => $tanggal,
                     'kode_rs' => $key->kode_rs,
                     'kode_ruang' => $key->kode_ruang,
                     'no_penerimaan' => $key->no_penerimaan,
                     'sisa_stok' => $key->sisa_stok,
                     'harga' => $key->harga !== '' ? $key->harga : 0,
-                ], [
-                    // 'tanggal' => $tanggal,
-                    // 'kode_rs' => $key->kode_rs,
-                    // 'kode_ruang' => $key->kode_ruang,
-                    // 'no_penerimaan' => $key->no_penerimaan,
+
                     'satuan' => $key->satuan !== '' ? $key->satuan : 'Belum ada satuan',
                     'kode_satuan' => $key->kode_satuan !== '' ? ($key->barang ? $key->barang->kode_satuan : '71') : '71',
-                ]);
-
+                ];
+                $total[] = $data;
                 // $anu = MonthlyStokUpdate::find($data->id);
 
                 // if ($anu->stok_fisik == 0) {
@@ -539,9 +536,11 @@ class StokOpnameController extends Controller
                 //     ]);
                 //     array_push($fisik, $anu);
                 // }
-                array_push($total, $data);
+                // array_push($total, $data);
             }
-
+            foreach (array_chunk($total, 100) as $t) {
+                $result = MonthlyStokUpdate::insert($t);
+            }
             if (count($recent) !== count($total)) {
                 return new JsonResponse(['message' => 'ada kesalahan dalam penyimpanan data stok opname, hubungi tim IT'], 409);
             }

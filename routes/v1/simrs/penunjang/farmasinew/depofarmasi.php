@@ -19,7 +19,7 @@ Route::group([
     Route::get('/list-permintaan-ruangan', [DepoController::class, 'listPermintaanRuangan']);
 
     Route::post('/kuncipermintaan', [DepoController::class, 'kuncipermintaan']);
-    Route::post('/terimadistribusi', [DepoController::class, 'terimadistribusi']);
+    Route::post('/terimadistribusi', [DepoController::class, 'newterimadistribusi']);
 
     Route::post('/hapus-permintaan-head', [DepoController::class, 'hapusHead']);
     Route::post('/hapus-permintaan-rinci', [DepoController::class, 'hapusRinci']);
@@ -40,7 +40,8 @@ Route::group([
     Route::get('/listjenisresep', [ResepkeluarController::class, 'listjenisresep']);
 
     //--------------ERESEP----------------//
-    Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
+    // Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
+    Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'pencarianObatResep']);
     Route::get('/get-single-resep', [EresepController::class, 'getSingleResep']);
 
     Route::get('/ambil-pegawai-farmasi', [EresepController::class, 'getPegawaiFarmasi']);
@@ -53,6 +54,8 @@ Route::group([
     Route::post('/hapus-permintaan-obat', [EresepController::class, 'hapusPermintaanObat']);
     Route::post('/terima-resep', [EresepController::class, 'terimaResep']);
     Route::post('/resep-selesai', [EresepController::class, 'resepSelesai']);
+    Route::post('/tolak-resep', [EresepController::class, 'tolakResep']);
+    Route::post('/isi-alasan', [EresepController::class, 'isiAlasan']);
 
     Route::post('/ambil-iter', [EresepController::class, 'ambilIter']);
     Route::post('/copy-resep', [EresepController::class, 'copyResep']);
@@ -60,6 +63,10 @@ Route::group([
 
     // pelayanan informasi Obat
     Route::post('/simpan-pelayanan-informasi-obat', [EresepController::class, 'simPelIOnfOb']);
+
+    // list resep by dokter
+
+    Route::get('/ambil-resep-dokter', [EresepController::class, 'getResepDokter']);
 
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);

@@ -2,10 +2,16 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +46,10 @@ class Mobatnew extends Model
         );
     }
 
+    public function indikasi()
+    {
+        return $this->hasMany(IndikasiObat::class, 'kd_obat', 'kd_obat');
+    }
     public function mkelasterapi()
     {
         return $this->hasMany(Mapingkelasterapi::class, 'kd_obat', 'kd_obat');
@@ -104,9 +114,59 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
     }
+    public function mutasimasuk()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
+    }
+    public function mutasikeluar()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
+    }
 
     public function persiapanoperasirinci()
     {
         return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function persiapanoperasiretur()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function persiapanoperasikeluar()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function resepkeluar()
+    {
+        return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
+    }
+    public function resepkeluarracikan()
+    {
+        return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kd_obat');
+    }
+
+    public function permintaandeporinci()
+    {
+        return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
+    }
+
+    public function transnonracikan()
+    {
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); //diganti ke permintaan
+        return $this->hasMany(Permintaanresep::class, 'kdobat', 'kd_obat');
+    }
+
+    public function transracikan()
+    {
+        // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+        return $this->hasMany(Permintaanresepracikan::class, 'kdobat', 'kd_obat');
+    }
+
+    public function persiapanrinci()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function returpenjualan()
+    {
+        return $this->hasMany(Returpenjualan_r::class, 'kdobat', 'kd_obat');
     }
 }

@@ -75,6 +75,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Exception;
@@ -110,9 +111,152 @@ class AutogenController extends Controller
 
 
         // return new JsonResponse($thumb);
-        echo 'SELAMAT DATANG';
-
+        // echo 'SELAMAT DATANG';
         
+        // $coba = $this->lihatstokobateresepBydokter();
+        // return new JsonResponse($coba);
+        User::updateOrCreate(
+            ['username' => 'entrier'],
+            [
+                'nama' => 'Entrier',
+                'email' => 'entrier@app.com',
+                'pegawai_id' => '4',
+                'password' => bcrypt('entrihutang'),
+            ]
+        );
+
+        echo 'ok';
+        
+    }
+
+    public function lihatstokobateresepBydokter()
+    {
+        // return request()->groups;
+        // $req = new Request();
+        // $req->request->add([
+        //     'groups' => '1',
+        //     'kdruang' => 'Gd-05010101',
+        //     'q'=>'para',
+        //     'tiperesep' => 'normal'
+        // ]);
+        // penccarian termasuk tiperesep
+        $groupsistembayar = request()->groups;
+        if ($groupsistembayar == '1') {
+            $sistembayar = ['SEMUA', 'BPJS'];
+        } else {
+            $sistembayar = ['SEMUA', 'UMUM'];
+        }
+        $cariobat = Stokreal::select(
+            'stokreal.kdobat as kdobat',
+            'stokreal.kdruang as kdruang',
+            'stokreal.tglexp',
+            'new_masterobat.nama_obat as namaobat',
+            'new_masterobat.kandungan as kandungan',
+            'new_masterobat.bentuk_sediaan as bentuk_sediaan',
+            'new_masterobat.satuan_k as satuankecil',
+            'new_masterobat.status_fornas as fornas',
+            'new_masterobat.status_forkid as forkit',
+            'new_masterobat.status_generik as generik',
+            'new_masterobat.status_kronis as kronis',
+            'new_masterobat.status_prb as prb',
+            'new_masterobat.kode108',
+            'new_masterobat.uraian108',
+            'new_masterobat.kode50',
+            'new_masterobat.uraian50',
+            'new_masterobat.kekuatan_dosis as kekuatandosis',
+            'new_masterobat.volumesediaan as volumesediaan',
+            DB::raw('sum(stokreal.jumlah) as total')
+        )
+            ->with(
+                [
+                    'minmax',
+                    'transnonracikan' => function ($transnonracikan) {
+                        $transnonracikan->select(
+                            // 'resep_keluar_r.kdobat as kdobat',
+                            // 'resep_permintaan_keluar.kdobat as kdobat',
+                            // 'resep_keluar_h.depo as kdruang',
+                            DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                        )
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                            ->where('resep_keluar_h.depo', request()->kdruang)
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                            ->groupBy('resep_permintaan_keluar.kdobat');
+                    },
+                    'transracikan' => function ($transracikan) {
+                        $transracikan->select(
+                            // 'resep_keluar_racikan_r.kdobat as kdobat',
+                            // 'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                            // 'resep_keluar_h.depo as kdruang',
+                            DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                        )
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                            ->where('resep_keluar_h.depo', request()->kdruang)
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                    },
+                    'permintaanobatrinci' => function ($permintaanobatrinci) {
+                        $permintaanobatrinci->select(
+                            // 'permintaan_r.no_permintaan',
+                            // 'permintaan_r.kdobat',
+                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                        )
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            // biar yang ada di tabel mutasi ga ke hitung
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                            ->where('permintaan_h.tujuan', request()->kdruang)
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
+                    },
+                    'persiapanrinci' => function ($res) {
+                        $res->select(
+                            // 'persiapan_operasi_rincis.kd_obat',
+
+                            DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                        )
+                            ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                            ->whereIn('persiapan_operasis.flag', ['', '1'])
+                            ->groupBy('persiapan_operasi_rincis.kd_obat');
+                    },
+                ]
+            )
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+            ->where('stokreal.kdruang', request()->kdruang)
+            ->where('stokreal.jumlah', '>', 0)
+            ->whereIn('new_masterobat.sistembayar', $sistembayar)
+            ->where('new_masterobat.status_konsinyasi', '')
+            ->when(request()->tiperesep === 'prb', function ($q) {
+                $q->where('new_masterobat.status_prb', '!=', '');
+            })
+            ->when(request()->tiperesep === 'iter', function ($q) {
+                $q->where('new_masterobat.status_kronis', '!=', '');
+            })
+            ->where(function ($query) {
+                $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request()->q . '%')
+                    ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request()->q  . '%')
+                    ->orWhere('stokreal.kdobat', 'LIKE', '%' . request()->q . '%');
+            })
+            ->groupBy('stokreal.kdobat')
+            ->limit(10)
+            ->get();
+        $wew = collect($cariobat)->map(function ($x, $y) {
+            $total = $x->total ?? 0;
+            $jumlahper = request()->kdruang === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+            $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+            return $x;
+        });
+        return new JsonResponse(
+            [
+                'dataobat' => $wew
+            ]
+        );
     }
     
     public function gennoreg()
