@@ -79,6 +79,10 @@ class GeneralconsentController extends Controller
         return response()->json($data);
     }
 
+    // public function saveTtdPasien(Request $request){
+
+    // }
+
     public function createImage($img, $norm)
     {
 
