@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
+use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
@@ -709,6 +710,7 @@ class EresepController extends Controller
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
                 'poli',
                 'info',
+                'antrian',
                 'ruanganranap',
                 'sistembayar',
                 'sep:rs1,rs8',
@@ -719,6 +721,7 @@ class EresepController extends Controller
                         'rs2 as nama',
                         'rs46 as noka',
                         'rs16 as tgllahir',
+                        'rs2 as nama_panggil',
                         DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
                     );
                 }
@@ -2013,10 +2016,17 @@ class EresepController extends Controller
     public static function kirimResepDanSelesaiLayanan($request)
     {
 
-
+        $newData = new Request([
+            'norm' => $request->norm,
+            'kodepoli' => 'AP0001',
+            // 'kodepoli' => $request->kodepoli,
+        ]);
         $input = new Request([
             'noreg' => $request->noreg
         ]);
+
+        AntrianController::ambilnoantrian($newData, $input);
+
         $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
 
         if ($cek === 0 || $cek === '') {

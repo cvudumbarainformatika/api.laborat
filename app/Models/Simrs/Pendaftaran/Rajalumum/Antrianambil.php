@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Antrianambil extends Model
 {
     use HasFactory;
+    protected $connection = 'mysql';
     protected $table = 'antrian_ambil';
     protected $guarded = ['id'];
 }

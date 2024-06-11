@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Ranap\Mruangranap;
@@ -83,5 +84,9 @@ class Resepkeluarheder extends Model
     public function sep()
     {
         return $this->belongsTo(Seprajal::class, 'noreg', 'rs1');
+    }
+    public function antrian()
+    {
+        return $this->hasOne(Antrianambil::class, 'noreg', 'noreg');
     }
 }
