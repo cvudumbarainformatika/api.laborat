@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\Siasik\Laporan;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PhpParser\Node\Expr\AssignOp\Concat;
 
 class LRAController extends Controller
@@ -26,8 +28,13 @@ class LRAController extends Controller
     public function laplra(){
         $awal=request('tgl');
         $akhir=request('tglx');
+        $thn= date('Y');
 
-        $kode = Akun50_2024::select('akun50_2024.*')
+
+        $kode = Akun50_2024::where('akun50_2024.akun','5')->select('akun50_2024.kodeall2',
+        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'))
+        // ->leftJoin('akun50_2024 as wawa', 'SUBSTRING_INDEX(wawa.kodeall2, ".", 1)', '=', 'kode.akun')
+        // ->leftJoin('akun50_2024 as wawa', 'kode1', '=', 'ko.akun')
         ->join('npdls_rinci', 'npdls_rinci.koderek50', '=', 'akun50_2024.kodeall2')
         ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
         ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
@@ -84,7 +91,8 @@ class LRAController extends Controller
             $head->select('spjpanjar_rinci.nospjpanjar',
                         'spjpanjar_rinci.koderek50',
                         'spjpanjar_rinci.rincianbelanja50',
-                        'spjpanjar_rinci.sisapanjar')
+                        'spjpanjar_rinci.sisapanjar',
+                        'spjpanjar_rinci.jumlahbelanjapanjar')
             ->join('spjpanjar_heder','spjpanjar_heder.nospjpanjar', '=', 'spjpanjar_rinci.nospjpanjar')
             ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir])
             ->with('spjheader', function($nota){
@@ -129,66 +137,37 @@ class LRAController extends Controller
                 'mappingpptkkegiatan.bidang');
             });
 
+        },'anggaran' => function($tgl) use ($thn) {
+            $tgl->select('t_tampung.*')->where('tgl', $thn)
+            ->when(request('bidang'),function($x) {
+                $x->where('t_tampung.bidang', request('bidang'));
+            })->when(request('kegiatan'),function($y) {
+                $y->where('t_tampung.bidang', request('bidang'))
+                ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
+            });
+
         }])
+
         ->groupBy('akun50_2024.kodeall2')
         ->get();
 
-        // $kode = Akun50_2024::
-        // whereHas('npdls_rinci.headerls.npkrinci.header',function($zzz) use ($awal, $akhir){
-        //     $zzz->where('nopencairan', '!=', '')
-        //     ->when(request('bidang'),function($x) {
-        //         $x->where('kodebidang', request('bidang'));
-        //     })->when(request('kegiatan'),function($y) {
-        //         $y->where('kodebidang', request('bidang'))
-        //         ->where('kodekegiatanblud', request('kegiatan'));
-        //     })
-        //     ->whereBetween('tglpencairan', [$awal, $akhir]);
-        // })
-        // ->whereHas('npdls_rinci.headerls',function ($cair) {
-        //     $cair->where('nopencairan', '!=', '')
-        //         ->when(request('bidang'),function($x) {
-        //             $x->where('kodebidang', request('bidang'));
-        //         })->when(request('kegiatan'),function($y) {
-        //             $y->where('kodebidang', request('bidang'))
-        //             ->where('kodekegiatanblud', request('kegiatan'));
-        //         });
-        // })
-        // ->with(['npdls_rinci' => function ($head) use ($awal, $akhir){
-        //     $head->whereHas('headerls.npkrinci.header',function($zzz) use ($awal, $akhir){
-        //         $zzz->whereBetween('tglpencairan', [$awal, $akhir]);
-        //     })
-        //     ->whereHas('headerls',function ($cair) {
-        //         $cair->where('nopencairan', '!=', '')
-        //         ->when(request('bidang'),function($x) {
-        //             $x->where('kodebidang', request('bidang'));
-        //         })
-        //         ->when(request('kegiatan'),function($y) {
-        //             $y->where('kodebidang', request('bidang'))
-        //             ->where('kodekegiatanblud', request('kegiatan'));
-        //         });
-        //     })
-        //     ->with('headerls',function($npk) use ($awal, $akhir) {
-        //         $npk->whereHas('npkrinci.header',function($zzz) use ($awal, $akhir){
-        //             $zzz->whereBetween('tglpencairan', [$awal, $akhir]);
-        //         })
-        //         ->with('npkrinci',function($header) use ($awal, $akhir) {
-        //             $header->whereHas('header',function($zzz) use ($awal, $akhir){
-        //                 $zzz->whereBetween('tglpencairan', [$awal, $akhir]);
-        //             })->with('header');
-        //         });
-        //     });
-        // },
-        // 'spjpanjar'=>function($head) use ($awal,$akhir){
-        //     $head->whereHas('spjheader',function($cair) use ($awal,$akhir){
-        //         $cair->whereBetween('tglspjpanjar', [$awal, $akhir]);
-        //     })->with('spjheader');
-        // },'cp' => function($tgl) use ($awal, $akhir){
-        //     $tgl->whereBetween('tglcontrapost', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
-        // }])
-        // ->get();
+       $akun = Akun50_2024::where('akun', '5')
+       ->groupBy('akun50_2024.akun')
+       ->get();
+
+       $kelompok = Akun50_2024::where('akun', '5')
+       ->groupBy('akun50_2024.kelompok')
+       ->get();
 
 
-        return new JsonResponse ($kode);
+       $all = [
+        'data' => $kode,
+        'akun' => $akun,
+        'kelompok' => $kelompok,
+       ];
+
+
+        return new JsonResponse ($all);
     }
     public function coba(){
         $awal=request('tgl');
@@ -296,7 +275,11 @@ class LRAController extends Controller
         ->get();
 
 
-        return new JsonResponse ($kode);
+        $latest=Akun_Kepmendg50::with('npdls_rinci')
+        ->where('kode1', '5')
+        ->get();
+
+        return new JsonResponse ($latest);
 
     }
 }

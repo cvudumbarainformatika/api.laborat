@@ -24,12 +24,12 @@ class Akun_Kepmendg50 extends Model
     //     return $kodeall->append('kodeall')->ToArray();
     // }
     public function npdls_rinci(){
-        return $this->hasOne(NpdLS_rinci::class,'koderek50', 'kodeall');
+        return $this->hasMany(NpdLS_rinci::class,'koderek50', 'kodeall');
     }
     public function spjpanjar(){
-        return $this->hasOne(SpjPanjar_Rinci::class,'koderek50', 'kodeall');
+        return $this->hasMany(SpjPanjar_Rinci::class,'koderek50', 'kodeall');
     }
     public function cp(){
-        return $this->hasOne(Contrapost::class,'koderek50', 'kodeall');
+        return $this->hasMany(Contrapost::class,'koderek50', 'kodeall');
     }
 }
