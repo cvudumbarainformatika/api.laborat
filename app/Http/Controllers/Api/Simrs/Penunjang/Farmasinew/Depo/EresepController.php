@@ -710,7 +710,9 @@ class EresepController extends Controller
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
                 'poli',
                 'info',
-                'antrian',
+                'antrian' => function ($q) {
+                    $q->where('pelayanan_id', 'AP0001');
+                },
                 'ruanganranap',
                 'sistembayar',
                 'sep:rs1,rs8',
