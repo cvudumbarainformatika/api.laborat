@@ -30,7 +30,8 @@ class VerifController extends Controller
             [
                 'message' => 'Data Berhasil Disimpan',
                 'noperencanaan' => $request->no_rencbeliobat,
-                'kdobat' => $request->kdobat
+                'kdobat' => $request->kdobat,
+                'data' => $verifrinci
             ],
             200
         );

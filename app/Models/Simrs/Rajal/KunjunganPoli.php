@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Rajal;
 
+use App\Models\Pasien;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Satset\Satset;
 use App\Models\Sigarang\Pegawai;
@@ -326,5 +327,9 @@ class KunjunganPoli extends Model
     public function permintaanperawatanjenazah()
     {
         return $this->hasMany(KamarjenazahPermintaan::class, 'rs1', 'rs1');
+    }
+
+    public function pasien(){
+        return $this->belongsTo(Pasien::class, 'rs2', 'rs1');
     }
 }

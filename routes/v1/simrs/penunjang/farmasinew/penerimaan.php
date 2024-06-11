@@ -33,4 +33,5 @@ Route::group([
     Route::post('/update-stok-sekarang', [StokrealController::class, 'updatehargastok']);
     Route::get('/data-alokasi', [StokrealController::class, 'dataAlokasi']);
     Route::get('/list-ruang-ranap', [StokrealController::class, 'getRuangRanap']);
+    Route::get('/list-stok-min-depo', [StokrealController::class, 'listStokMinDepo']);
 });

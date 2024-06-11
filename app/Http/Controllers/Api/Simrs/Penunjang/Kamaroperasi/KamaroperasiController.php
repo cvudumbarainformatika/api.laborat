@@ -18,9 +18,9 @@ class KamaroperasiController extends Controller
         DB::select('call nota_tindakan(@nomor)');
         $x = DB::table('rs1')->select('rs14')->get();
         $wew = $x[0]->rs14;
-        if($request->kodepoli === 'POL014'){
+        if ($request->kodepoli === 'POL014') {
             $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-IG');
-        }else{
+        } else {
             $notapermintaanok = $request->nota ?? FormatingHelper::notatindakan($wew, '/POK-RJ');
         }
 
@@ -92,24 +92,7 @@ class KamaroperasiController extends Controller
             $tglx = request('from') . ' 23:59:59';
         }
         $status = request('status') ?? '';
-        $listkamaroperasi = PermintaanOperasi::with(
-            [
-                'kunjunganranap.masterpasien',
-                'kunjunganrajal.masterpasien',
-                'sistembayar',
-                'dokter',
-                'kunjunganranap.relmasterruangranap',
-                'kunjunganrajal.relmpoli',
-                'permintaanobatoperasi.rinci.obat:kd_obat,nama_obat',
-                'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->with([
-                        'permintaanresep.mobat:kd_obat,nama_obat',
-                        'permintaanracikan.mobat:kd_obat,nama_obat',
-                    ])->whereIn('flag', ['', '1', '2', '3', '4'])
-                        ->orderBy('id', 'DESC');
-                },
-            ]
-        )->where(function ($sts) use ($status) {
+        $listkamaroperasi = PermintaanOperasi::where(function ($sts) use ($status) {
             if ($status !== 'all') {
                 if ($status === '') {
                     $sts->where('rs9', '!=', '1');
@@ -118,7 +101,26 @@ class KamaroperasiController extends Controller
                 }
             }
         })
+            ->where('rs1', 'LIKE', '%' . request('q') . '%')
             ->whereBetween('rs3', [$tgl, $tglx])
+            ->with(
+                [
+                    'kunjunganranap.masterpasien',
+                    'kunjunganrajal.masterpasien',
+                    'sistembayar',
+                    'dokter',
+                    'kunjunganranap.relmasterruangranap',
+                    'kunjunganrajal.relmpoli',
+                    'permintaanobatoperasi.rinci.obat:kd_obat,nama_obat',
+                    'newapotekrajal' => function ($newapotekrajal) {
+                        $newapotekrajal->with([
+                            'permintaanresep.mobat:kd_obat,nama_obat',
+                            'permintaanracikan.mobat:kd_obat,nama_obat',
+                        ])->whereIn('flag', ['', '1', '2', '3', '4'])
+                            ->orderBy('id', 'DESC');
+                    },
+                ]
+            )
             ->paginate(request('per_page'));
         return new JsonResponse($listkamaroperasi);
     }

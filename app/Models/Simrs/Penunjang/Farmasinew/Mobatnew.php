@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ class Mobatnew extends Model
     //   use SoftDeletes;
     protected $table = 'new_masterobat';
     protected $guarded = ['id'];
-    protected $connection = 'farmasi'; 
+    protected $connection = 'farmasi';
 
     public function scopeMobat($data)
     {
@@ -150,7 +151,7 @@ class Mobatnew extends Model
 
     public function transnonracikan()
     {
-        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); diganti ke permintaan
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); //diganti ke permintaan
         return $this->hasMany(Permintaanresep::class, 'kdobat', 'kd_obat');
     }
 
@@ -163,5 +164,9 @@ class Mobatnew extends Model
     public function persiapanrinci()
     {
         return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function returpenjualan()
+    {
+        return $this->hasMany(Returpenjualan_r::class, 'kdobat', 'kd_obat');
     }
 }

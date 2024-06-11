@@ -17,4 +17,5 @@ Route::group([
     Route::post('/distribusikan', [DistribusigudangController::class, 'distribusikan']);
 
     Route::post('/kuncipermintaandaridepo', [DistribusigudangController::class, 'kuncipermintaandaridepo']);
+    Route::post('/tolak', [DistribusigudangController::class, 'tolakpermintaandaridepo']);
 });

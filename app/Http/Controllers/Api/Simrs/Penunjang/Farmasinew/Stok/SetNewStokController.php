@@ -7,8 +7,12 @@ use App\Models\Simrs\Penunjang\Farmasi\MapingObat;
 use App\Models\Simrs\Penunjang\Farmasi\StokOpname;
 use App\Models\Simrs\Penunjang\Farmasi\StokReal;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname as StokStokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal as FarmasinewStokreal;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -327,5 +331,298 @@ class SetNewStokController extends Controller
         // $data['mapingObat'] = $mapingObat;
         $data['newOpname'] = $newOpname;
         return new JsonResponse($data);
+    }
+
+    public function perbaikanStok(Request $request)
+    {
+        return new JsonResponse([
+            // 'data' => $data,
+            'message' => 'Cek Stok Untuk penenyesuaian sudan ditutup'
+        ], 410);
+
+        $depo = $request->kdruang;
+        $obat = $request->kdobat;
+
+        // CARI PENYESUAIAN
+        $caristok = FarmasinewStokreal::where('kdobat', $obat)->where('kdruang', $depo)->get();
+        $idtok = collect($caristok)->map(function ($st) {
+            return $st->id;
+        });
+        $penye = PenyesuaianStok::whereIn('stokreal_id', $idtok)->sum('penyesuaian');
+        $data['penyesuaian'] = $penye;
+
+        $raw = self::kertuStok($depo, $obat);
+        $col = collect($raw);
+
+        $data['dataAll'] = $col;
+        $data['awal'] = $col[0]->saldoawal[0]->jumlah ?? 0;
+        // $data['stok_id'] = $col->map(function ($st) {
+        //     return $st->stok->map(function ($an) {
+        //         return $an->id;
+        //     });
+        // });
+        $data['stok'] = $col->sum(function ($sa) {
+            return $sa->stok->sum('jumlah');
+        });
+        $data['masuk'] = $col->sum(function ($sa) {
+            return $sa->mutasimasuk->sum('jml');
+        });
+        $data['keluar'] = $col->sum(function ($sa) {
+            return $sa->mutasikeluar->sum('jml');
+        });
+        $data['resep'] = $col->sum(function ($sa) {
+            return $sa->resepkeluar->sum('jumlah');
+        });
+        $data['returres'] = $col->sum(function ($sa) {
+            return $sa->resepkeluar->sum(function ($he) {
+                return $he->retur->sum(function ($ri) {
+                    return $ri->rinci->sum('jumlah_retur');
+                });
+            });
+        });
+        $data['racikan'] = $col->sum(function ($sa) {
+            return $sa->resepkeluarracikan->sum('jumlah');
+        });
+        $data['returrrac'] = $col->sum(function ($sa) {
+            return $sa->resepkeluarracikan->sum(function ($he) {
+                return $he->retur->sum(function ($ri) {
+                    return $ri->rinci->sum('jumlah_retur');
+                });
+            });
+        });
+        $data['operasidist'] = $col->sum(function ($sa) {
+            return $sa->persiapanoperasiretur->sum('jumlah_distribusi');
+        });
+        $data['operasiret'] = $col->sum(function ($sa) {
+            return $sa->persiapanoperasiretur->sum('jumlah_kembali');
+        });
+        $data['allmasuk'] = (int)$data['masuk'] + (int)$data['returres'] + (int)$data['returrrac'];
+        $data['allkeluar'] = (int)$data['keluar'] + (int)$data['resep'] + (int)$data['racikan'];
+        $data['op'] = (int)$data['operasidist'] - (int)$data['operasiret'];
+        $data['awalandmas'] = (int)$data['awal'] + (int)$data['allmasuk'] + (int)$penye;
+        if ($depo === 'Gd-04010103') {
+            $data['akhir'] = (int)$data['awalandmas'] - (int)+(int)$data['allkeluar'] - (int)$data['op'];
+        } else {
+            $data['akhir'] = (int)$data['awalandmas'] - (int)+(int)$data['allkeluar'];
+        }
+        if ((int)$data['stok'] === (int)$data['akhir']) {
+            return new JsonResponse(['message' => 'Data Sudah sesuai, tidak perlu penyesuaian']);
+        }
+        $stok = FarmasinewStokreal::where('kdobat', $obat)->where('kdruang', $depo)->orderBy('tglexp', 'DESC')->orderBy('nodistribusi', 'DESC')->get();
+        $data['mutasiantar'] = [];
+
+        $sisa = $data['akhir'];
+        if (count($stok) > 0) {
+            foreach ($stok as $st) {
+                $distribusi = Mutasigudangkedepo::where('kd_obat', $st['kdobat'])->where('no_permintaan', $st['nodistribusi'])->first();
+                $jmldist = $distribusi->jml ?? 0;
+                if ($sisa > 0) {
+                    if ($jmldist < $sisa) {
+                        $st['jumlah'] =  $jmldist;
+                        $st->save();
+                        $sisa -=  $jmldist;
+                    } else {
+                        $st['jumlah'] = $sisa;
+                        $st->save();
+                        $sisa = 0;
+                    }
+                } else {
+                    $st['jumlah'] = 0;
+                    $st->save();
+                }
+                $data['mutasiantar'][] = $distribusi;
+                // $data['mutasiantar'][] = $st['nodistribusi'];
+            }
+            $data['getStok'] = $stok;
+        }
+
+        return new JsonResponse([
+            'data' => $data,
+            'message' => 'Data Sudah disesuaikan'
+        ]);
+    }
+
+    public static function kertuStok($koderuangan, $kdobat)
+    {
+        $koderuangan = $koderuangan;
+        $bulan = date('m');
+        $tahun = date('Y');
+        // $bulan = request('bulan');
+        // $tahun = request('tahun');
+        $x = $tahun . '-' . $bulan;
+        $tglAwal = $x . '-01';
+        $tglAkhir = $x . '-31';
+        $dateAwal = Carbon::parse($tglAwal);
+        $dateAkhir = Carbon::parse($tglAkhir);
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
+        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
+
+
+        $list = Mobatnew::query()
+            ->select('kd_obat', 'nama_obat', 'satuan_k', 'satuan_b', 'id', 'flag', 'merk', 'kandungan')
+            ->with([
+                'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir, $koderuangan) {
+                    $saldo->whereBetween('tglopname', [$blnLaluAwal, $blnLaluAkhir])
+                        ->where('kdruang', $koderuangan)->select('tglopname', 'jumlah', 'kdobat');
+                },
+                'stok' => function ($st) use ($koderuangan) {
+                    $st->select(
+                        'id',
+                        'kdobat',
+                        'nopenerimaan',
+                        'jumlah',
+                        'kdruang',
+                        'nodistribusi',
+                    )
+                        ->where('kdruang', $koderuangan);
+                    // ->with('ssw:stokreal_id,penyesuaian');
+                },
+                // hanya ada jika koderuang itu adalah gudang
+                'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $q->select(
+                        'penerimaan_r.kdobat as kdobat',
+                        'penerimaan_r.jml_all_penerimaan as jml_all_penerimaan',
+                        'penerimaan_r.jml_terima_b as jml_terima_b',
+                        'penerimaan_r.jml_terima_k as jml_terima_k',
+                        'penerimaan_h.nopenerimaan as nopenerimaan',
+                        'penerimaan_h.tglpenerimaan as tglpenerimaan',
+                        'penerimaan_h.gudang as gudang',
+                        'penerimaan_h.jenissurat as jenissurat',
+                        'penerimaan_h.jenis_penerimaan as jenis_penerimaan',
+                        'penerimaan_h.kunci as kunci',
+
+                    )
+                        ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+                        // ->join('sigarang.gudangs as gudangs', 'penerimaan_h.gudang', '=', 'gudangs.kode')
+                        ->whereBetween('penerimaan_h.tglpenerimaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('penerimaan_h.gudang', $koderuangan);
+                },
+
+
+                // mutasi masuk baik dari gudang, ataupun depo termasuk didalamnya mutasi antar depo dan antar gudang÷
+                'mutasimasuk' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+
+                    $q->select(
+                        'mutasi_gudangdepo.kd_obat as kd_obat',
+                        'mutasi_gudangdepo.jml as jml',
+                        'mutasi_gudangdepo.no_permintaan as no_permintaan',
+                        'permintaan_h.tgl_permintaan as tgl_permintaan',
+                        'permintaan_h.tujuan as tujuan',
+                        'permintaan_h.dari as dari',
+                    )
+                        ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                        ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('dari', $koderuangan);
+                },
+
+
+                // mutasi keluar baik ke gudang(mutasi antar gudang), ataupun ke depo dan juga ke ruangan
+                'mutasikeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+
+                    $q->select(
+                        'mutasi_gudangdepo.kd_obat as kd_obat',
+                        'mutasi_gudangdepo.jml as jml',
+                        'mutasi_gudangdepo.no_permintaan as no_permintaan',
+                        'permintaan_h.tgl_permintaan as tgl_permintaan',
+                        'permintaan_h.tujuan as tujuan',
+                        'permintaan_h.dari as dari',
+                    )
+                        ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                        ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('tujuan', $koderuangan);
+                },
+
+                'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan, $kdobat) {
+                    $q->select(
+                        'resep_keluar_h.depo',
+                        'resep_keluar_r.noresep',
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_r.nopenerimaan',
+                        'resep_keluar_r.jumlah',
+                    )
+                        ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+
+                        ->with([
+                            'retur' => function ($ret) use ($kdobat) {
+                                $ret->select(
+                                    'noretur',
+                                    'noresep',
+                                )
+                                    ->with([
+                                        'rinci' => function ($ri) use ($kdobat) {
+                                            $ri->select(
+                                                'noretur',
+                                                'kdobat',
+                                                'jumlah_retur',
+                                            )
+                                                ->where('kdobat', $kdobat);
+                                        }
+                                    ]);
+                            }
+                        ]);
+                },
+
+                'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan, $kdobat) {
+                    $q->select(
+                        'resep_keluar_h.depo',
+                        'resep_keluar_racikan_r.noresep',
+                        'resep_keluar_racikan_r.kdobat',
+                        'resep_keluar_racikan_r.nopenerimaan',
+                        'resep_keluar_racikan_r.jumlah',
+                    )
+                        ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+
+                        ->with([
+                            'retur' => function ($ret) use ($kdobat) {
+                                $ret->select(
+                                    'noretur',
+                                    'noresep',
+                                )
+                                    ->with([
+                                        'rinci' => function ($ri) use ($kdobat) {
+                                            $ri->select(
+                                                'noretur',
+                                                'kdobat',
+                                                'jumlah_retur',
+                                            )
+                                                ->where('kdobat', $kdobat);
+                                        }
+                                    ]);
+                            }
+                        ]);
+                },
+
+                // ini jika $koderuangan = Gd-04010103 (Depo OK) ini nanti di front end
+                'persiapanoperasiretur' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $q->select(
+                        'persiapan_operasi_rincis.kd_obat',
+                        'persiapan_operasi_rincis.jumlah_distribusi',
+                        'persiapan_operasi_rincis.jumlah_kembali'
+                    )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                },
+                // ini jika $koderuangan = Gd-04010103 (Depo OK)
+                // ini keluarnya nanti jumlah_distribusi harus dikurangi jumlah_resep karena resep nanti akan di ambil juga
+                // 'persiapanoperasikeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                //     $q->select(
+                //         'persiapan_operasi_rincis.kd_obat',
+                //         'persiapan_operasi_rincis.jumlah_kembali',
+                //     )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                //         ->whereBetween('persiapan_operasis.tgl_distribusi', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                // },
+                // 'returpenjualan'
+
+            ])
+
+            ->orderBy('id', 'asc')
+            ->where('flag', '')
+            ->where('kd_obat', $kdobat)
+            ->get();
+
+        return $list;
     }
 }

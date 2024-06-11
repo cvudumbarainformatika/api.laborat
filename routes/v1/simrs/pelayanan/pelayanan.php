@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKebidananControlle
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi\EdukasiController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Eresep\EresepController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\PemeriksaanRMKhusus\PemeriksaankhususMataController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
@@ -95,4 +96,6 @@ Route::group([
     Route::post('/hapusprocedure', [ProcedureController::class, 'hapusprocedure']);
 
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
+
+    Route::get('/listresepbynorm', [EresepController::class, 'listresepbynorm']);
 });

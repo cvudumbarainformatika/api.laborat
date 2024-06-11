@@ -13,14 +13,15 @@ class RanapController extends Controller
 {
     public function kunjunganpasien()
     {
+        // return request()->all();
         $dokter = request('kddokter');
 
         if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tgl = request('to') . ' 00:00:00';
-            $tglx = request('from') . ' 23:59:59';
+            $tgl = request('to') ;
+            $tglx = request('from') ;
         }
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
@@ -34,8 +35,9 @@ class RanapController extends Controller
             'rs23.rs6 as ketruangan',
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
+            'rs21.rs2 as dokter',
             'rs23.rs19 as kdsistembayar',
-            'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
+            'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG 
             'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
@@ -59,24 +61,41 @@ class RanapController extends Controller
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
-            'rs24.rs5 as ruangan'
+            'rs24.rs5 as group_ruangan'
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
-            ->where('rs23.rs3', '<=', $tgl)
-            ->whereIn('rs23.rs22', $status)
+            ->whereDate('rs23.rs3', '<=', $tgl)
+            // ->whereIn('rs23.rs22', $status)
+
+            // ->where(function ($x) {
+            //     $x->orWhereNull('dokterdpjp');
+            // })
+
             ->where(function ($query) use ($ruangan) {
-                for ($i = 0; $i < count($ruangan); $i++) {
-                    $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                }
+                $query->where(function ($query) use ($ruangan) {
+                    for ($i = 0; $i < count($ruangan); $i++) {
+                        $query->orwhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                    }
+                });
             })
-            ->when(request('q'), function ($q) {
-                $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
-                    ->orWhere('rs23.rs2', 'like',  '%' . request('q') . '%')
-                    ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+
+
+
+            ->where(function ($query) {
+                $query->when(request('q'), function ($q) {
+                    $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
+                        ->orWhere('rs23.rs2', 'like',  '%' . request('q') . '%')
+                        ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+                });
+            })
+
+
+            ->where(function ($q) use ($status) {
+                $q->whereIn('rs23.rs22', $status);
             })
             ->with([
                 'newapotekrajal' => function ($newapotekrajal) {
@@ -109,7 +128,8 @@ class RanapController extends Controller
             //         ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             // })
             ->orderby('rs23.rs3', 'ASC')
-            ->paginate(request('per_page'));
+            // ->groupBy('rs23.rs1')
+            ->paginate(20);
 
         return new JsonResponse($data);
     }

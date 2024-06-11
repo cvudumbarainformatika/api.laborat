@@ -3,12 +3,22 @@
 namespace App\Helpers;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
 
 class HargaHelper
 {
     public static function getHarga($kdobat, $sistembayar)
     {
+        // cek obat program
+        $obatProgram = Mobatnew::where('kd_obat', $kdobat)->where('obat_program', '1')->first();
+        if ($obatProgram) {
+            return [
+                'res' => false,
+                'hargaJual' => 0,
+                'harga' => 0
+            ];
+        }
         $data = DaftarHarga::selectRaw('max(harga) as harga')
             ->where('kd_obat', $kdobat)
             ->orderBy('tgl_mulai_berlaku', 'desc')
@@ -18,7 +28,7 @@ class HargaHelper
         if (!$harga) {
             return [
                 'res' => true,
-                'message' => 'Tidak ada harga untuk obat ini',
+                'message' => 'Tidak ada harga untuk obat ini, dan ini bukan obat program',
                 'data' => $data,
                 'kdobat' => $kdobat,
                 'sistembayar' => $sistembayar,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
@@ -161,7 +162,6 @@ class DistribusigudangController extends Controller
         $index = 0;
         $masuk = $jmldiminta;
         while ($masuk > 0) {
-
             $sisa = $caristok[$index]->jumlah;
             if ($sisa < $masuk) {
                 $sisax = $masuk - $sisa;
@@ -170,11 +170,17 @@ class DistribusigudangController extends Controller
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'kd_obat' => $caristok[$index]->kdobat,
-                        'jml' => $sisa
+                        'jml' => $sisa,
+
+                        'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                        'harga' => $caristok[$index]->harga,
+                        'tglexp' => $caristok[$index]->tglexp,
+                        'nobatch' => $caristok[$index]->nobatch ?? '-',
                     ]
                 );
                 Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                     ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('nodistribusi', $caristok[$index]->nodistribusi)
                     ->where('kdruang', $request->kdgudang)
                     ->update(['jumlah' => 0]);
 
@@ -188,16 +194,34 @@ class DistribusigudangController extends Controller
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'kd_obat' => $caristok[$index]->kdobat,
-                        'jml' => $masuk
+                        'jml' => $masuk,
+
+                        'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                        'harga' => $caristok[$index]->harga,
+                        'tglexp' => $caristok[$index]->tglexp,
+                        'nobatch' => $caristok[$index]->nobatch ?? '-',
                     ]
                 );
                 Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                     ->where('kdobat', $caristok[$index]->kdobat)
+                    ->where('nodistribusi', $caristok[$index]->nodistribusi)
                     ->where('kdruang', $request->kdgudang)
                     ->update(['jumlah' => $sisax]);
                 $masuk = 0;
             }
         }
+        $msg = [
+            'data' => [
+                'aksi' => 'distribusi',
+                'dari' =>  $request->dari,
+                'no_permintaan' => $request->nopermintaan,
+                'kdobat' => $request->kodeobat,
+                'depo' =>  $request->dari,
+                'jml' => $jmldiminta,
+                // 'flag' => $simpanpermintaandepo->flag
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
         return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'data' => $mutasi], 200);
     }
 
@@ -210,7 +234,45 @@ class DistribusigudangController extends Controller
         $kuncipermintaan->user_terima = $user['kodesimrs'];
         $kuncipermintaan->save();
 
+        $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
+        $msg = [
+            'data' => [
+                'aksi' => 'kunci',
+                'dari' => $kuncipermintaan->dari,
+                'no_permintaan' => $kuncipermintaan->no_permintaan,
+                'depo' => $kuncipermintaan->dari,
+                'flag' => $kuncipermintaan->flag,
+                'kodeobats' => $kdobat,
+
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+
         return new JsonResponse(['message' => 'Permintaan Berhasil Diterima...!!!'], 200);
+    }
+    public function tolakpermintaandaridepo(Request $request)
+    {
+        $user = FormatingHelper::session_user();
+        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
+        $kuncipermintaan->flag = '5';
+        // $kuncipermintaan->tgl_terima = date('Y-m-d H:i:s');
+        // $kuncipermintaan->user_terima = $user['kodesimrs'];
+        $kuncipermintaan->save();
+
+        $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
+        $msg = [
+            'data' => [
+                'aksi' => 'kunci',
+                'dari' => $kuncipermintaan->dari,
+                'no_permintaan' => $kuncipermintaan->no_permintaan,
+                'depo' => $kuncipermintaan->dari,
+                'flag' => $kuncipermintaan->flag,
+                'kodeobats' => $kdobat,
+
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+        return new JsonResponse(['message' => 'Permintaan Ditolak '], 200);
     }
 
     public function distribusikan(Request $request)
@@ -221,6 +283,20 @@ class DistribusigudangController extends Controller
         $kuncipermintaan->tgl_kirim_depo = date('Y-m-d H:i:s');
         $kuncipermintaan->user_kirim_depo = $user['kodesimrs'];
         $kuncipermintaan->save();
+
+        $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
+        $msg = [
+            'data' => [
+                'aksi' => 'kunci',
+                'dari' => $kuncipermintaan->dari,
+                'no_permintaan' => $kuncipermintaan->no_permintaan,
+                'depo' => $kuncipermintaan->dari,
+                'flag' => $kuncipermintaan->flag,
+                'kodeobats' => $kdobat,
+
+            ]
+        ];
+        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
 
         return new JsonResponse(['message' => 'Permintaan Berhasil Didistribusikan...!!!'], 200);
     }

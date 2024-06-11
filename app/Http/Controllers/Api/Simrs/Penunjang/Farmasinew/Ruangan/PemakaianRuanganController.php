@@ -60,6 +60,9 @@ class PemakaianRuanganController extends Controller
                 }
                 $q->whereIn('flag', $anu);
             })
+            ->when(request('kdruang'), function ($q) {
+                $q->where('kdruang', request('kdruang'));
+            })
             ->whereBetween('tgl', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->paginate(request('per_page'));
 
@@ -96,7 +99,8 @@ class PemakaianRuanganController extends Controller
                     $stok = Stokreal::where('kdobat', $rin['kdobat'])
                         ->where('kdruang', $request->kdruang)
                         ->where('jumlah', '>', 0)
-                        ->orderBy('tglexp', 'ASC')->get();
+                        ->orderBy('tglexp', 'ASC')
+                        ->get();
                     $index = 0;
                     $dipakai = (float)$rin['dipakai'];
                     while ($dipakai > 0) {
@@ -107,6 +111,7 @@ class PemakaianRuanganController extends Controller
                                 'kd_obat' => $rin['kdobat'],
                                 'nopenerimaan' => $stok[$index]->nopenerimaan,
                                 'nobatch' => $stok[$index]->nobatch,
+                                'nodistribusi' => $stok[$index]->nodistribusi,
                                 'jumlah' => $ada,
                                 'flag' => '',
                                 'created_at' => date('Y-m-d H:i:s'),
@@ -122,6 +127,7 @@ class PemakaianRuanganController extends Controller
                                 'kd_obat' => $rin['kdobat'],
                                 'nopenerimaan' => $stok[$index]->nopenerimaan,
                                 'nobatch' => $stok[$index]->nobatch,
+                                'nodistribusi' => $stok[$index]->nodistribusi,
                                 'jumlah' => $dipakai,
                                 'flag' => '',
                                 'created_at' => date('Y-m-d H:i:s'),
@@ -149,6 +155,7 @@ class PemakaianRuanganController extends Controller
                 $stok = Stokreal::where('kdobat', $rin['kd_obat'])
                     ->where('kdruang', $request->kdruang)
                     ->where('nopenerimaan', $rin['nopenerimaan'])
+                    ->where('nodistribusi', $rin['nodistribusi'])
                     ->first();
                 $st[] = $stok;
                 if ($stok->jumlah > 0) {
@@ -171,7 +178,7 @@ class PemakaianRuanganController extends Controller
             DB::rollback();
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan...!!!',
-                'result' => $e,
+                'result' => 'err' . $e,
                 'rinc' => $rinc ?? 'tidak ada',
                 'st' => $st ?? 'tidak ada',
                 'ss' => $ss ?? 'tidak ada',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
@@ -244,7 +245,7 @@ class StokrealController extends Controller
         )->where('stokreal.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->where('stokreal.kdruang', $kdruang)
-            ->where('stokreal.jumlah', '>', 0)
+            // ->where('stokreal.jumlah', '>', 0)
             ->where(function ($x) {
                 $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
                     ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
@@ -292,24 +293,100 @@ class StokrealController extends Controller
                         ->whereIn('permintaan_h.flag', ['', '1', '2'])
                         ->groupBy('permintaan_r.kdobat');
                 },
+                'persiapanrinci' => function ($res) {
+                    $res->select(
+                        'persiapan_operasi_rincis.kd_obat',
+                        DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                    )
+                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                        ->whereIn('persiapan_operasis.flag', ['', '1'])
+                        ->groupBy('persiapan_operasi_rincis.kd_obat');
+                },
             ])
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->orderBy('stokreal.tglexp', 'ASC')
             ->paginate(request('per_page'));
         $stokreal->append('harga');
-        $datastok = $stokreal->map(function ($xxx) {
+        $datastok = $stokreal->map(function ($xxx) use ($kdruang) {
             $stolreal = $xxx->total;
+            $jumlahper = $kdruang === 'Gd-04010103' ? $xxx['persiapanrinci'][0]->jumlah ?? 0 : 0;
             $jumlahtrans = $xxx['transnonracikan'][0]->jumlah ?? 0;
             $jumlahtransx = $xxx['transracikan'][0]->jumlah ?? 0;
             $permintaantotal = count($xxx->permintaanobatrinci) > 0 ? $xxx->permintaanobatrinci[0]->allpermintaan : 0;
-            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx;
+            $stokalokasi = (float) $stolreal - (float) $permintaantotal - (float) $jumlahtrans - (float) $jumlahtransx - (int)$jumlahper;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaantotal;
+            $xxx['lain'] = [];
             return $xxx;
         });
         return new JsonResponse([
             'data' => $datastok,
+            'meta' => collect($stokreal)->except('data'),
+        ]);
+    }
+    public function listStokMinDepo()
+    {
+        $kdruang = request('kdruang');
+        $stokreal = Stokreal::select(
+            'stokreal.id as idx',
+            'stokreal.kdruang',
+            'stokreal.jumlah',
+            'stokreal.tglexp',
+            'stokreal.kdobat',
+            'new_masterobat.kd_obat',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k',
+            'new_masterobat.status_fornas',
+            'new_masterobat.status_forkid',
+            'new_masterobat.status_generik',
+            'new_masterobat.gudang',
+            'min_max_ruang.min as minvalue',
+            DB::raw('sum(stokreal.jumlah) as total'),
+            DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
+
+        )
+            ->where('stokreal.flag', '')
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->leftjoin('min_max_ruang', function ($anu) {
+                $anu->on('min_max_ruang.kd_obat', 'stokreal.kdobat')
+                    ->on('min_max_ruang.kd_ruang', 'stokreal.kdruang');
+            })
+            ->where('stokreal.kdruang', $kdruang)
+            // ->where('stokreal.jumlah', '>', 0)
+            ->where(function ($x) {
+                $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
+            ->havingRaw('minvalue >= total')
+            ->with([
+                'permintaanobatrinci' => function ($pr) use ($kdruang) {
+                    $pr->select(
+                        'permintaan_r.kdobat',
+                        'permintaan_r.jumlah_minta',
+                        'permintaan_h.dari',
+                        'permintaan_h.flag',
+                        'permintaan_h.no_permintaan',
+                        'mutasi_gudangdepo.jml',
+                    )
+                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', 'permintaan_r.no_permintaan')
+                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        })
+                        ->where('permintaan_h.dari', $kdruang)
+                        ->whereIn('permintaan_h.flag', ['', '1', '2', '3']);
+                }
+            ])
+            ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
+            ->orderBy(DB::raw('(min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100'), 'DESC')
+            ->orderBy(DB::raw('min_max_ruang.min'), 'DESC')
+            ->paginate(request('per_page'));
+        $stokreal->append('harga');
+
+        $nu = collect($stokreal);
+        return new JsonResponse([
+            'data' => $nu['data'],
             'meta' => collect($stokreal)->except('data'),
         ]);
     }
@@ -405,12 +482,35 @@ class StokrealController extends Controller
             ->whereIn('permintaan_h.flag', ['', '1', '2'])
             // ->groupBy('permintaan_r.kdobat')
             ->get();
+        if (request('kdruang') === 'Gd-04010103') {
+            $operasi = PersiapanOperasi::select(
+                'persiapan_operasis.noreg',
+                'persiapan_operasis.nopermintaan',
+                'persiapan_operasis.tgl_permintaan',
+                'persiapan_operasis.flag',
+                'persiapan_operasi_rincis.jumlah_minta as jumlah',
+                'persiapan_operasi_rincis.kd_obat',
+            )
+                ->leftJoin('persiapan_operasi_rincis', 'persiapan_operasi_rincis.nopermintaan', 'persiapan_operasis.nopermintaan')
+                ->whereIn('persiapan_operasis.flag', ['', '1'])
+                ->where('persiapan_operasi_rincis.kd_obat', request('kdobat'))
+                ->with(
+                    'list:rs1,rs4,rs14',
+                    'list.sistembayar:rs1,rs2,groups',
+                    'list.kunjunganranap:rs1,rs5,rs6',
+                    'list.kunjunganranap.relmasterruangranap:rs1,rs2',
+                    'list.kunjunganrajal:rs1,rs8',
+                    'list.kunjunganrajal.relmpoli:rs1,rs2'
+                )
+                ->get();
+        }
 
         $data = [
             // 'req' => request()->all(),
             'transNonRacikan' => $transNonRacikan,
             'transRacikan' => $transRacikan,
             'permintaan' => $permintaan,
+            'operasi' => $operasi ?? null,
         ];
         return new JsonResponse($data);
     }

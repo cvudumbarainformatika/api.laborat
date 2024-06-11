@@ -14,3 +14,4 @@ Route::group([
     Route::post('/simpanpdf', [GeneralconsentController::class, 'simpanpdf']);
     Route::post('/simpanmaster', [GeneralconsentController::class, 'simpanmaster']);
 });
+    

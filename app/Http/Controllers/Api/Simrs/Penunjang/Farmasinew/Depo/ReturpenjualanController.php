@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
@@ -28,20 +29,44 @@ class ReturpenjualanController extends Controller
         //     $tgl = request('from') . ' 00:00:00';
         //     $tglx = request('to') . ' 23:59:59';
         // }
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
+            }
+        }
 
         // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
         $nama = [];
-        if (request('nama')) {
-            $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
-            if (count($raw) > 0) {
-                $col = collect($raw);
-                $nama = $col->map(function ($it) {
-                    return $it->kd_obat;
-                });
+        $noresep = [];
+        if (request('nama') !== null) {
+            if (strlen(request('nama')) >= 3) {
+                $raw = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->get('kd_obat');
+                if (count($raw) > 0) {
+                    $col = collect($raw);
+                    $nama = $col->map(function ($it) {
+                        return $it->kd_obat;
+                    });
+                }
+                $resRinc = Resepkeluarrinci::select('noresep')->whereIn('kdobat', $nama)->distinct()->get();
+                $resRac = Resepkeluarrinciracikan::select('noresep')->whereIn('kdobat', $nama)->distinct()->get();
+                foreach ($resRinc as $key) {
+                    $noresep[] = $key['noresep'];
+                }
+                foreach ($resRac as $key) {
+                    $noresep[] = $key['noresep'];
+                }
+                array_unique($noresep);
             }
         }
         $carinoresep = Resepkeluarheder::select('resep_keluar_h.*', 'resep_keluar_h.dokter as kddokter')
-
             ->with(
                 [
                     'rincian.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
@@ -50,12 +75,42 @@ class ReturpenjualanController extends Controller
                     'dokter:kdpegsimrs,nama',
                     'ruanganranap:rs1,rs2',
                     'poli:rs1,rs2',
-                    'sistembayar:rs1,rs2'
+                    'sistembayar:rs1,rs2',
+                    'rincianwret' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_r.noresep',
+                            'resep_keluar_r.kdobat',
+                            'retur_penjualan_r.jumlah_retur',
+                        )
+                            ->leftjoin('retur_penjualan_r', function ($j) {
+                                $j->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep')
+                                    ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat');
+                            });
+                    },
+                    'rincianracikwret' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_racikan_r.noresep',
+                            'resep_keluar_racikan_r.kdobat',
+                            'retur_penjualan_r.jumlah_retur',
+                        )
+                            ->leftjoin('retur_penjualan_r', function ($j) {
+                                $j->on('retur_penjualan_r.noresep', '=', 'resep_keluar_racikan_r.noresep')
+                                    ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_racikan_r.kdobat');
+                            });
+                    }
                 ]
             )
-            ->where(function ($query) {
-                $query->where('noresep', 'like', '%' . request('q') . '%')
-                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
+            // ->where(function ($query) {
+            //     $query->where('noresep', 'like', '%' . request('q') . '%')
+            //         ->orWhere('norm', 'LIKE', '%' . request('q') . '%');
+            // })
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('norm', $rm);
+                })
+                    ->orWhere('noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
             ->when(request('from'), function ($q) {
@@ -66,28 +121,19 @@ class ReturpenjualanController extends Controller
             ->when(request('flag'), function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
-            ->when(!request('flag'), function ($x) {
-                $x->where('flag', '3');
+            ->when(count($noresep) > 0, function ($q) use ($noresep) {
+                $q->whereIn('noresep', $noresep);
             })
-            ->when(count($nama) > 0, function ($q) use ($nama) {
-                $q->whereHas(
-                    'rincian',
-                    function ($rin) use ($nama) {
-                        $rin->whereIn('kdobat', $nama);
-                    }
-                )->orWhereHas(
-                    'rincianracik',
-                    function ($rin) use ($nama) {
-                        $rin->whereIn('kdobat', $nama);
-                    }
-                )->where('depo', request('kddepo'));
-            })
-            ->orderBy('tgl', 'ASC')
+
+
+            ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse(
             [
                 'result' => $carinoresep,
                 'nama' => $nama,
+                'rm' => $rm,
+                'noresep' => $noresep,
             ]
         );
     }
