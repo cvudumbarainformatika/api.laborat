@@ -680,6 +680,114 @@ class EresepController extends Controller
         // } else {
         //     $flag = [request('flag')];
         // }
+
+        //     $rm = [];
+        //     if (request('q') !== null) {
+        //         if (preg_match('~[0-9]+~', request('q'))) {
+        //             $rm = [];
+        //         } else {
+        //             if (strlen(request('q')) >= 3) {
+        //                 $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+        //                 $rm = collect($data)->map(function ($x) {
+        //                     return $x->norm;
+        //                 })->toArray();
+        //             } else $rm = [];
+        //         }
+        //     }
+        //     if (request('to') === '' || request('from') === null) {
+        //         $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+        //         $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        //     } else {
+        //         $tgl = request('from') . ' 00:00:00';
+        //         $tglx = request('to') . ' 23:59:59';
+        //     }
+
+        //     // Define database names
+        //     $mysqlDb = config('database.connections.mysql.database');
+        //     $farmasiDb = config('database.connections.farmasi.database');
+
+        //     // Construct the base query
+        //     $query = "
+        //     SELECT resep_keluar_h.*
+        //     FROM {$farmasiDb}.resep_keluar_h
+        //     LEFT JOIN {$mysqlDb}.antrian_ambil ON antrian_ambil.noreg = resep_keluar_h.noreg
+        //     WHERE (resep_keluar_h.noresep LIKE :noresep OR resep_keluar_h.norm LIKE :norm OR resep_keluar_h.noreg LIKE :noreg)
+        //     AND resep_keluar_h.depo = :depo
+        //     AND resep_keluar_h.tgl_permintaan BETWEEN :start_date AND :end_date
+        // ";
+
+        //     $bindings = [
+        //         'noresep' => '%' . request('q') . '%',
+        //         'norm' => '%' . request('q') . '%',
+        //         'noreg' => '%' . request('q') . '%',
+        //         'depo' => request('kddepo'),
+        //         'start_date' => $tgl,
+        //         'end_date' => $tglx,
+        //     ];
+
+        //     // Handle 'rm' array if it's not empty
+        //     if (count($rm) > 0) {
+        //         $query .= " AND resep_keluar_h.norm IN (" . implode(',', array_fill(0, count($rm), '?')) . ")";
+        //         $bindings = array_merge($bindings, $rm);
+        //     }
+
+        //     // Handle 'tipe' parameter
+        //     if (request('tipe')) {
+        //         if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+        //             $query .= "
+        //             AND resep_keluar_h.tiperesep = :tipe
+        //             AND resep_keluar_h.noresep_asal = ''
+        //             AND resep_keluar_h.iter_expired BETWEEN :iter_start AND :iter_end
+        //         ";
+        //             $bindings['tipe'] = request('tipe');
+        //             $bindings['iter_start'] = date('Y-m-d 00:00:00');
+        //             $bindings['iter_end'] = date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59';
+        //         } else {
+        //             $query .= " AND resep_keluar_h.tiperesep = :tipe";
+        //             $bindings['tipe'] = request('tipe');
+        //         }
+        //     }
+
+        //     // Handle 'flag' parameter
+        //     if (request('flag')) {
+        //         if (request('flag') === 'semua') {
+        //             $query .= " AND resep_keluar_h.flag IN ('', '1', '2', '3', '4', '5')";
+        //         } else {
+        //             $query .= " AND resep_keluar_h.flag = :flag";
+        //             $bindings['flag'] = request('flag');
+        //         }
+        //     } else {
+        //         $query .= " AND resep_keluar_h.flag = ''";
+        //     }
+
+        //     // Add the ORDER BY clause
+        //     $query .= " ORDER BY antrian_ambil.nomor ASC, resep_keluar_h.flag ASC, resep_keluar_h.tgl_permintaan ASC";
+
+        //     // Get results with pagination
+        //     $perPage = request('per_page', 15);
+        //     $page = request('page', 1);
+        //     $offset = ($page - 1) * $perPage;
+
+        //     $paginatedQuery = $query . " LIMIT :limit OFFSET :offset";
+        //     $bindings['limit'] = $perPage;
+        //     $bindings['offset'] = $offset;
+
+        //     // Execute the query
+        //     $results = DB::connection('farmasi')->select($paginatedQuery, $bindings);
+
+        //     // Count total records for pagination
+        //     $countQuery = "SELECT COUNT(*) as total FROM ({$query}) as count_table";
+        //     $totalBindings = $bindings;
+        //     unset($totalBindings['limit'], $totalBindings['offset']);
+        //     $total = DB::connection('farmasi')->select($countQuery, $totalBindings)[0]->total;
+
+        //     // Create pagination response
+        //     $paginatedResults = new \Illuminate\Pagination\LengthAwarePaginator($results, $total, $perPage, $page, [
+        //         'path' => request()->url(),
+        //         'query' => request()->query(),
+        //     ]);
+
+        //     return new JsonResponse($paginatedResults);
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
@@ -701,34 +809,38 @@ class EresepController extends Controller
             $tglx = request('to') . ' 23:59:59';
         }
         // return $rm;
-        $listresep = Resepkeluarheder::with(
-            [
-                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanresep.aturansigna:signa,jumlah',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
-                'poli',
-                'info',
-                'antrian' => function ($q) {
-                    $q->where('pelayanan_id', 'AP0001');
-                },
-                'ruanganranap',
-                'sistembayar',
-                'sep:rs1,rs8',
-                'dokter:kdpegsimrs,nama',
-                'datapasien' => function ($quer) {
-                    $quer->select(
-                        'rs1',
-                        'rs2 as nama',
-                        'rs46 as noka',
-                        'rs16 as tgllahir',
-                        'rs2 as nama_panggil',
-                        DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
-                    );
-                }
-            ]
+        $listresep = Resepkeluarheder::select(
+            'resep_keluar_h.*'
         )
+            ->leftJoin('antrian_ambil', 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
+            ->with(
+                [
+                    'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                    'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                    'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                    'permintaanresep.aturansigna:signa,jumlah',
+                    'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+                    'poli',
+                    'info',
+                    'antrian' => function ($q) {
+                        $q->where('pelayanan_id', 'AP0001');
+                    },
+                    'ruanganranap',
+                    'sistembayar',
+                    'sep:rs1,rs8',
+                    'dokter:kdpegsimrs,nama',
+                    'datapasien' => function ($quer) {
+                        $quer->select(
+                            'rs1',
+                            'rs2 as nama',
+                            'rs46 as noka',
+                            'rs16 as tgllahir',
+                            'rs2 as nama_panggil',
+                            DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
+                        );
+                    }
+                ]
+            )
             ->where(function ($query) use ($rm) {
                 $query->when(count($rm) > 0, function ($wew) use ($rm) {
                     $wew->whereIn('norm', $rm);
@@ -768,6 +880,106 @@ class EresepController extends Controller
             ->orderBy('tgl_permintaan', 'ASC')
             ->paginate(request('per_page'));
         // return new JsonResponse(request()->all());
+        return new JsonResponse($listresep);
+    }
+    public function newlistresepbydokter()
+    {
+
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    })->toArray();
+                } else $rm = [];
+            }
+        }
+        if (request('to') === '' || request('from') === null) {
+            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
+            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+        } else {
+            $tgl = request('from') . ' 00:00:00';
+            $tglx = request('to') . ' 23:59:59';
+        }
+
+        // Construct the query using Eloquent
+        $query = Resepkeluarheder::with([
+            'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'permintaanresep.aturansigna:signa,jumlah',
+            'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+            'poli',
+            'info',
+            'antrian' => function ($q) {
+                $q->where('pelayanan_id', 'AP0001');
+            },
+            'ruanganranap',
+            'sistembayar',
+            'sep:rs1,rs8',
+            'dokter:kdpegsimrs,nama',
+            'datapasien' => function ($quer) {
+                $quer->select(
+                    'rs1',
+                    'rs2 as nama',
+                    'rs46 as noka',
+                    'rs16 as tgllahir',
+                    'rs2 as nama_panggil',
+                    DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
+                );
+            }
+        ])
+            ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), function ($q) {
+                $q->on('antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
+                    ->where('antrian_ambil.pelayanan_id', '=', 'AP0001');
+            })
+            // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
+            // ->where('antrian_ambil.pelayanan_id', '=', 'AP0001')
+            ->select('resep_keluar_h.*', 'antrian_ambil.nomor')
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('resep_keluar_h.norm', $rm);
+                })
+                    ->orWhere('resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
+            })
+            ->where('resep_keluar_h.depo', request('kddepo'))
+            ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+
+        if (request('tipe')) {
+            if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+                $query->where('resep_keluar_h.tiperesep', request('tipe'))
+                    ->where('resep_keluar_h.noresep_asal', '')
+                    ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
+            } else {
+                $query->where('resep_keluar_h.tiperesep', request('tipe'));
+            }
+        }
+
+        if (request('flag')) {
+            if (request('flag') === 'semua') {
+                $query->whereIn('resep_keluar_h.flag', ['', '1', '2', '3', '4', '5']);
+            } else {
+                $query->where('resep_keluar_h.flag', request('flag'));
+            }
+        } else {
+            $query->where('resep_keluar_h.flag', '');
+        }
+
+        // Add the ORDER BY clause
+        $query
+            ->orderBy('resep_keluar_h.flag', 'ASC')
+            ->orderBy('antrian_ambil.nomor', 'ASC')
+            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC');
+
+        // Get paginated results
+        $listresep = $query->paginate(request('per_page'));
+
         return new JsonResponse($listresep);
     }
     public function getSingleResep()

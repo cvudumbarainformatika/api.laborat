@@ -47,7 +47,8 @@ Route::group([
     Route::get('/ambil-pegawai-farmasi', [EresepController::class, 'getPegawaiFarmasi']);
 
     Route::post('/pembuatanresep', [EresepController::class, 'pembuatanresep']);
-    Route::get('/listresepbydokter', [EresepController::class, 'listresepbydokter']);
+    // Route::get('/listresepbydokter', [EresepController::class, 'listresepbydokter']);
+    Route::get('/listresepbydokter', [EresepController::class, 'newlistresepbydokter']);
     Route::post('/kirimresep', [EresepController::class, 'kirimresep']);
     Route::get('/conterracikan', [EresepController::class, 'conterracikan']);
     Route::post('/eresepobatkeluar', [EresepController::class, 'eresepobatkeluar']);
