@@ -67,6 +67,8 @@ class KonsinyasiController extends Controller
                         'penerimaan_r.harga_kcl',
                         'penerimaan_r.ppn',
                         'penerimaan_r.ppn_rp_kecil',
+                        'penerimaan_r.diskon',
+                        'penerimaan_r.diskon_rp_kecil',
                         'penerimaan_r.harga_netto_kecil',
                         'penerimaan_r.jml_terima_k',
                     )

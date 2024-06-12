@@ -1128,9 +1128,9 @@ class PersiapanOperasiController extends Controller
                 $uniNores = array_unique($nores);
                 $resepH = [];
                 // hapus jika ada
-                foreach ($uniNores as $nor) {
-                    Resepkeluarrinci::where('noresep', $nor)->delete();
-                }
+                // foreach ($uniNores as $nor) {
+                //     Resepkeluarrinci::where('noresep', $nor)->delete();
+                // }
                 // insert resep keluar
                 $resepK = Resepkeluarrinci::insert($resepKeluar);
 
