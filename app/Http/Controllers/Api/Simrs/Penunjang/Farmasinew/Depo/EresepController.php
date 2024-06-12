@@ -2239,7 +2239,6 @@ class EresepController extends Controller
             'noreg' => $request->noreg
         ]);
 
-        AntrianController::ambilnoantrian($newData, $input);
 
         $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
 
@@ -2249,6 +2248,7 @@ class EresepController extends Controller
 
             BridantrianbpjsController::updateWaktu($input, 5);
         }
+        AntrianController::ambilnoantrian($newData, $input);
         $user = Pegawai::find(auth()->user()->pegawai_id);
         if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
             $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
