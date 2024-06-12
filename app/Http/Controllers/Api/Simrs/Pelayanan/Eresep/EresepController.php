@@ -39,8 +39,7 @@ class EresepController extends Controller
             ]
         )
             ->where('norm', request('norm'))
-            ->orderBy('flag', 'ASC')
-            ->orderBy('tgl_permintaan', 'ASC')
+            ->orderBy('tgl_permintaan', 'DESC')
             ->get()
             ->chunk(10);
         // return new JsonResponse(request()->all());
