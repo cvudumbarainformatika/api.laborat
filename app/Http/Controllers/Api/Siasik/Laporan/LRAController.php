@@ -31,10 +31,29 @@ class LRAController extends Controller
         $thn= date('Y');
 
 
-        $kode = Akun50_2024::where('akun50_2024.akun','5')->select('akun50_2024.kodeall2',
-        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'))
-        // ->leftJoin('akun50_2024 as wawa', 'SUBSTRING_INDEX(wawa.kodeall2, ".", 1)', '=', 'kode.akun')
-        // ->leftJoin('akun50_2024 as wawa', 'kode1', '=', 'ko.akun')
+        $kode = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3'
+        )->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 4) as kode4'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 5) as kode5'))
+        // ->leftJoin('akun50_2024 as wew', DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2)'),'=','wew.kodeall3')
+        ->with('kode1',function($gg){
+            $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+            })
+            ->with('kode2',function($gg){
+                $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                })
+                ->with('kode3',function($gg){
+                    $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                    })
+                    ->with('kode4',function($gg){
+                        $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                        })
+                        ->with('kode5',function($gg){
+                            $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                            })
         ->join('npdls_rinci', 'npdls_rinci.koderek50', '=', 'akun50_2024.kodeall2')
         ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
         ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
@@ -55,6 +74,7 @@ class LRAController extends Controller
                         'npdls_rinci.koderek50',
                         'npdls_rinci.rincianbelanja',
                         'npdls_rinci.nominalpembayaran')
+                        ->groupBy('npdls_rinci.koderek50')
             ->join('npdls_heder', 'npdls_heder.nonpdls', '=', 'npdls_rinci.nonpdls')
             ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
             ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
@@ -86,8 +106,7 @@ class LRAController extends Controller
                     });
                 });
             });
-        },
-        'spjpanjar'=>function($head) use ($awal,$akhir){
+        },'spjpanjar'=>function($head) use ($awal,$akhir){
             $head->select('spjpanjar_rinci.nospjpanjar',
                         'spjpanjar_rinci.koderek50',
                         'spjpanjar_rinci.rincianbelanja50',
@@ -146,9 +165,14 @@ class LRAController extends Controller
                 ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
             });
 
-        }])
-
+        }
+        // ,'ko'=>function($gg){
+        //     $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+        // }
+        ])
+        ->where('akun50_2024.akun', '5')
         ->groupBy('akun50_2024.kodeall2')
+        // ->limit(100)
         ->get();
 
        $akun = Akun50_2024::where('akun', '5')
@@ -274,9 +298,21 @@ class LRAController extends Controller
         }])
         ->get();
 
+        $ff = DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1');
+        $latest=Akun50_2024::select('akun50_2024.kodeall2',
+                                    'akun50_2024.kodeall3',
+                                    'akun50_2024.uraian', DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1')
+    )
+        ->leftJoin('akun50_2024 as wew', DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1)'),'=','wew.kodeall2')
+        ->join('npdls_rinci', 'npdls_rinci.koderek50', '=', 'akun50_2024.kodeall2')
 
-        $latest=Akun_Kepmendg50::with('npdls_rinci')
-        ->where('kode1', '5')
+        ->with('npdls_rinci', function($a){
+            $a->select('npdls_rinci.*')
+
+            ->groupBy('npdls_rinci.koderek50');
+        })
+        // ->where('akun50_2024.kodeall2', $ff)
+        // ->where('akun50_2024.akun', '5')
         ->get();
 
         return new JsonResponse ($latest);
