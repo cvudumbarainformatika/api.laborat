@@ -156,6 +156,7 @@ class PemakaianRuanganController extends Controller
                     ->where('kdruang', $request->kdruang)
                     ->where('nopenerimaan', $rin['nopenerimaan'])
                     ->where('nodistribusi', $rin['nodistribusi'])
+                    ->where('jumlah', '>', 0)
                     ->first();
                 $st[] = $stok;
                 if ($stok->jumlah > 0) {
