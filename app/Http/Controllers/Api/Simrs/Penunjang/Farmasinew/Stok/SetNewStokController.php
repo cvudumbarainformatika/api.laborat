@@ -335,12 +335,28 @@ class SetNewStokController extends Controller
 
     public function perbaikanStok(Request $request)
     {
-        return new JsonResponse([
-            // 'data' => $data,
-            'message' => 'Cek Stok Untuk penenyesuaian sudan ditutup'
-        ], 410);
-
+        // $mapingGudang = [
+        //     ['nama' => 'Gudang Farmasi ( Kamar Obat )', 'kode' => 'Gd-05010100', 'lama' => 'GU0001'],
+        //     ['nama' => 'Gudang Farmasi (Floor Stok)', 'kode' => 'Gd-03010100', 'lama' => 'GU0002'],
+        //     ['nama' => 'Floor Stock 1 (AKHP)', 'kode' => 'Gd-03010101', 'lama' => 'RC0001'],
+        //     ['nama' => 'Depo Rawat inap', 'kode' => 'Gd-04010102', 'lama' => 'AP0002'],
+        //     ['nama' => 'Depo OK', 'kode' => 'Gd-04010103', 'lama' => 'AP0005'],
+        //     ['nama' => 'Depo Rawat Jalan', 'kode' => 'Gd-05010101', 'lama' => 'AP0001'],
+        //     ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
+        // ];
+        // return new JsonResponse([
+        //     // 'data' => $data,
+        //     'message' => 'Cek Stok Untuk penenyesuaian sudan ditutup'
+        // ], 410);
         $depo = $request->kdruang;
+        $forbid = ['Gd-05010100', 'Gd-03010100', 'Gd-04010103'];
+        if (in_array($depo, $forbid)) {
+
+            return new JsonResponse([
+                // 'data' => $data,
+                'message' => 'Cek Stok Tidak Untuk Gudang dan atau Depo OK'
+            ], 410);
+        }
         $obat = $request->kdobat;
 
         // CARI PENYESUAIAN

@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,10 @@ class PersiapanOperasi extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    public function resep()
+    {
+        return $this->hasOne(Resepkeluarheder::class, 'noreg', 'noreg');
+    }
     public function list()
     {
         return $this->hasOne(PermintaanOperasi::class, 'rs1', 'noreg');
