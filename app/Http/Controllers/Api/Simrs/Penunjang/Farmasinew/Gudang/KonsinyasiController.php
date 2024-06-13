@@ -38,8 +38,10 @@ class KonsinyasiController extends Controller
         $resep = collect($res)->map(function ($q) {
             return $q->nopenerimaan;
         });
-        return new JsonResponse($resep);
-        $rwpenye = PenerimaanHeder::select('kdpbf')->where('jenis_penerimaan', '=', 'Konsinyasi')->whereNull('tgl_bast')->distinct('kdpbf')->get();
+        // return new JsonResponse($resep);
+        $rwpenye = PenerimaanHeder::select('kdpbf')->where('jenis_penerimaan', '=', 'Konsinyasi')
+            ->whereIn('nopenerimaan', $resep)
+            ->distinct('kdpbf')->get();
         $penye = collect($rwpenye)->map(function ($p) {
             return $p->kdpbf;
         });
@@ -74,7 +76,7 @@ class KonsinyasiController extends Controller
                 'resep.dokter:kdpegsimrs,nama',
                 'resep.datapasien:rs1,rs2',
                 'rincian',
-                'penerimaanrinci'
+                // 'penerimaanrinci'
                 // 'rincian' => function ($r) {
                 //     $r->select('resep_keluar_r.noresep', 'resep_keluar_r.kdobat', 'resep_keluar_r.jumlah', 'resep_keluar_r.harga_beli')
                 //         ->leftJoin('persiapan_operasi_rincis', function ($j) {
@@ -82,26 +84,26 @@ class KonsinyasiController extends Controller
                 //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'resep_keluar_r.kdobat');
                 //         });
                 // },
-                // 'penerimaanrinci' => function ($p) {
-                //     $p->select(
-                //         'penerimaan_r.nopenerimaan',
-                //         'penerimaan_r.bebaspajak',
-                //         'penerimaan_r.kdobat',
-                //         'penerimaan_r.satuan_kcl',
-                //         'penerimaan_r.harga_kcl',
-                //         'penerimaan_r.ppn',
-                //         'penerimaan_r.ppn_rp_kecil',
-                //         'penerimaan_r.diskon',
-                //         'penerimaan_r.diskon_rp_kecil',
-                //         'penerimaan_r.harga_netto_kecil',
-                //         'penerimaan_r.jml_terima_k',
-                //     )
-                //         ->leftJoin('persiapan_operasi_distribusis', function ($j) {
-                //             $j->on('persiapan_operasi_distribusis.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
-                //                 ->on('persiapan_operasi_distribusis.kd_obat', '=', 'penerimaan_r.kdobat');
-                //         })
-                //         ->with('header:nopenerimaan,tglpenerimaan');
-                // }
+                'penerimaanrinci' => function ($p) {
+                    $p->select(
+                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_r.bebaspajak',
+                        'penerimaan_r.kdobat',
+                        'penerimaan_r.satuan_kcl',
+                        'penerimaan_r.harga_kcl',
+                        'penerimaan_r.ppn',
+                        'penerimaan_r.ppn_rp_kecil',
+                        'penerimaan_r.diskon',
+                        'penerimaan_r.diskon_rp_kecil',
+                        'penerimaan_r.harga_netto_kecil',
+                        'penerimaan_r.jml_terima_k',
+                    )
+                        ->leftJoin('persiapan_operasi_distribusis', function ($j) {
+                            $j->on('persiapan_operasi_distribusis.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                                ->on('persiapan_operasi_distribusis.kd_obat', '=', 'penerimaan_r.kdobat');
+                        })
+                        ->with('header:nopenerimaan,tglpenerimaan');
+                }
 
             ])
             ->leftJoin('persiapan_operasi_distribusis', function ($q) {

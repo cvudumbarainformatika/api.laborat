@@ -687,6 +687,7 @@ class PersiapanOperasiController extends Controller
                 }
                 $adaRinci->noresep = $noresep;
                 $adaRinci->jumlah_resep = $key['jumlah_resep'];
+                $adaRinci->jumlah_resep = $key['jumlah_resep'];
                 $adaRinci->save();
             }
         } else {
@@ -712,6 +713,10 @@ class PersiapanOperasiController extends Controller
                 $he->flag = '3';
                 $he->save();
             }
+        }
+        $per = PersiapanOperasi::where('nopermintaan', $key)->first();
+        if ($per) {
+            $per->tgl_resep = date('Y-m-d H:i:s');
         }
         return new JsonResponse([
             'message' => 'resep sudah di dimpan',
@@ -1138,7 +1143,7 @@ class PersiapanOperasiController extends Controller
                 foreach ($uniNores as $nor) {
                     $temp = Resepkeluarheder::where('noresep', $nor)->first();
                     $temp->flag = '3';
-                    $temp->tgl_resep = date('Y-m-d');
+                    $temp->tgl = date('Y-m-d');
                     $temp->save();
                     $resepH[] = $temp;
                 }
