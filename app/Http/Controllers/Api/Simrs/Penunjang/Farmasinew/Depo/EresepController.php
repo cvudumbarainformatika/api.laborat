@@ -973,6 +973,7 @@ class EresepController extends Controller
 
         // Add the ORDER BY clause
         $query
+            ->gropuBy('resep_keluar_h.noresep')
             ->orderBy('resep_keluar_h.flag', 'ASC')
             ->orderBy('antrian_ambil.nomor', 'ASC')
             ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC');

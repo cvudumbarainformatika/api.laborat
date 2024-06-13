@@ -1138,7 +1138,7 @@ class PersiapanOperasiController extends Controller
                 foreach ($uniNores as $nor) {
                     $temp = Resepkeluarheder::where('noresep', $nor)->first();
                     $temp->flag = '3';
-                    $temp->tgl = date('Y-m-d');
+                    $temp->tgl_resep = date('Y-m-d');
                     $temp->save();
                     $resepH[] = $temp;
                 }

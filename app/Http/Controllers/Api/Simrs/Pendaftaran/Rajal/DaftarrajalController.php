@@ -186,14 +186,14 @@ class DaftarrajalController extends Controller
         $dpjpDariPendaftaran = $request->dpjp;
 
         $pegawai = Pegawai::where('kddpjp', $dpjpDariPendaftaran)
-                    ->where('aktif', '=', 'AKTIF')->first();
+            ->where('aktif', '=', 'AKTIF')->first();
 
         $kdPegSimrs = '';
         if ($pegawai) {
             $kdPegSimrs = $pegawai->kdpegsimrs ?? '';
         }
-        
-        
+
+
 
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
@@ -345,6 +345,7 @@ class DaftarrajalController extends Controller
             } else {
                 $cetakantrian = AntrianController::ambilnoantrian($request, $input);
             }
+            // ini juga harus di tambah task id 1 dan 2 yang dari mjkn
             BridantrianbpjsController::updateWaktu($input, 3);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
