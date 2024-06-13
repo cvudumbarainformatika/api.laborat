@@ -93,7 +93,7 @@ class PenerimaanController extends Controller
                     'gudang' => $request->gudang
                 ],
                 [
-                    'tglpenerimaan' => $request->tglpenerimaan,
+                    'tglpenerimaan' => $request->tglpenerimaan . date(' H:i:s'),
                     'pengirim' => $request->pengirim,
                     'jenissurat' => $request->jenissurat,
                     'jenis_penerimaan' => 'Pesanan',
