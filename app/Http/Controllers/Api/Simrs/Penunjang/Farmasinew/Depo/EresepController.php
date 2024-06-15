@@ -975,8 +975,8 @@ class EresepController extends Controller
         $query
             ->groupBy('resep_keluar_h.noresep')
             ->orderBy('resep_keluar_h.flag', 'ASC')
-            ->orderBy('antrian_ambil.nomor', 'ASC')
-            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC');
+            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC')
+            ->orderBy('antrian_ambil.nomor', 'ASC');
 
         // Get paginated results
         $listresep = $query->paginate(request('per_page'));
