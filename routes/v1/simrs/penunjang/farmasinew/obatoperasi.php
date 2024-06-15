@@ -22,4 +22,6 @@ Route::group([
     Route::post('/simpan-resep', [PersiapanOperasiController::class, 'simpanEresep']);
     Route::post('/selesai-resep', [PersiapanOperasiController::class, 'selesaiEresep']);
     Route::post('/batal-obat-resep', [PersiapanOperasiController::class, 'batalObatResep']);
+
+    Route::post('/batal-operasi', [PersiapanOperasiController::class, 'batalOperasi']);
 });
