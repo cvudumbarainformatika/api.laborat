@@ -251,6 +251,9 @@ class PersiapanOperasiController extends Controller
             //     $nol[] = '0';
             // }
             // $imp = implode('', $nol) . ($num + 1);
+
+            // $procedure = 'persiapanok(@nomor)';
+            // $colom = 'persiapanok';
             $procedure = 'resepkeluardepook(@nomor)';
             $colom = 'depook';
             $lebel = 'OP-KO';
