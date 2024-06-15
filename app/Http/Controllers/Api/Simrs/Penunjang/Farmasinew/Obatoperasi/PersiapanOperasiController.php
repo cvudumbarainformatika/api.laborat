@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Obatoperasi;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -25,6 +26,19 @@ class PersiapanOperasiController extends Controller
     public function getPermintaan()
     {
         $flag = request('flag') ?? [];
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
+            }
+        }
         $data = PersiapanOperasi::with(
             'rinci.obat:kd_obat,nama_obat,satuan_k',
             'rinci.susulan:kdpegsimrs,nama',
@@ -38,6 +52,14 @@ class PersiapanOperasiController extends Controller
         )
             ->whereIn('flag', $flag)
             ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('norm', $rm);
+                })
+                    ->orWhere('nopermintaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
+            })
             ->orderBy('tgl_permintaan', "desc")
             ->simplePaginate(request('per_page'));
         // ->paginate(request('per_page'));
@@ -787,38 +809,42 @@ class PersiapanOperasiController extends Controller
         } else if ($head->flag === '2') {
             $rinci = PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->get();
             $dist = PersiapanOperasiDistribusi::where('nopermintaan', $head->nopermintaan)->get();
-            if (count($dist) <= 0 || count($rinci) <= 0) {
-                return new JsonResponse([
-                    'message' => 'Rincian persiapan untuk operasi tidak ditemukan',
-                    'head' => $head,
-                    'rinci' => $rinci,
-                    'dist' => $dist,
-                    // 'data' => $data,
-                    'req' => $request->all(),
-                ], 410);
+            // if (count($dist) <= 0 || count($rinci) <= 0) {
+            //     return new JsonResponse([
+            //         'message' => 'Rincian persiapan untuk operasi tidak ditemukan',
+            //         'head' => $head,
+            //         'rinci' => $rinci,
+            //         'dist' => $dist,
+            //         // 'data' => $data,
+            //         'req' => $request->all(),
+            //     ], 410);
+            // }
+            if (count($rinci) > 0) {
+                foreach ($rinci as $key) {
+                    $key->update(['jumlah_kembali' => $key->jumlah_distribusi]);
+                }
             }
-            foreach ($rinci as $key) {
-                $key->update(['jumlah_kembali' => $key->jumlah_distribusi]);
-            }
-            foreach ($dist as $key) {
-                $key->update([
-                    'jumlah_retur' => $key->jumlah,
-                    'tgl_retur' => date('Y-m-d H:i:s')
-                ]);
-                $stok = Stokreal::where('kdobat', $key->kd_obat)
-                    ->where('nopenerimaan', $key->nopenerimaan)
-                    ->when($key->nodistribusi !== '', function ($x) use ($key) {
-                        $x->where('nodistribusi', $key->nodistribusi);
-                    })
-                    // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
-                    ->where('kdruang', 'Gd-04010103')
-                    ->first();
-                $totalStok = (float)$stok->jumlah + $key->jumlah;
-                $stok->update([
-                    'jumlah' => $totalStok
-                ]);
-                // $stok->jumlah = $totalStok;
-                // $stok->save();
+            if (count($dist) > 0) {
+                foreach ($dist as $key) {
+                    $key->update([
+                        'jumlah_retur' => $key->jumlah,
+                        'tgl_retur' => date('Y-m-d H:i:s')
+                    ]);
+                    $stok = Stokreal::where('kdobat', $key->kd_obat)
+                        ->where('nopenerimaan', $key->nopenerimaan)
+                        ->when($key->nodistribusi !== '', function ($x) use ($key) {
+                            $x->where('nodistribusi', $key->nodistribusi);
+                        })
+                        // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
+                        ->where('kdruang', 'Gd-04010103')
+                        ->first();
+                    $totalStok = (float)$stok->jumlah + $key->jumlah;
+                    $stok->update([
+                        'jumlah' => $totalStok
+                    ]);
+                    // $stok->jumlah = $totalStok;
+                    // $stok->save();
+                }
             }
             $head->update(['flag' => '5']);
             return new JsonResponse([
