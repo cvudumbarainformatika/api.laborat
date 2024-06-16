@@ -424,7 +424,9 @@ class SetNewStokController extends Controller
         if ((int)$data['stok'] === (int)$data['akhir']) {
             return new JsonResponse(['message' => 'Data Sudah sesuai, tidak perlu penyesuaian']);
         }
-        $stok = FarmasinewStokreal::where('kdobat', $obat)->where('kdruang', $depo)->orderBy('tglexp', 'DESC')->orderBy('nodistribusi', 'DESC')->get();
+        $stok = FarmasinewStokreal::where('kdobat', $obat)
+            ->where('kdruang', $depo)->orderBy('tglexp', 'DESC')
+            ->orderBy('nodistribusi', 'DESC')->get();
         $data['mutasiantar'] = [];
 
         $sisa = $data['akhir'];

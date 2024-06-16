@@ -973,9 +973,10 @@ class EresepController extends Controller
 
         // Add the ORDER BY clause
         $query
+            ->groupBy('resep_keluar_h.noresep')
             ->orderBy('resep_keluar_h.flag', 'ASC')
-            ->orderBy('antrian_ambil.nomor', 'ASC')
-            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC');
+            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC')
+            ->orderBy('antrian_ambil.nomor', 'ASC');
 
         // Get paginated results
         $listresep = $query->paginate(request('per_page'));
@@ -1247,9 +1248,9 @@ class EresepController extends Controller
             $jmldiminta = $request->jumlah;
             $caristok = Stokreal::select('kdobat', 'nopenerimaan', 'tglpenerimaan', 'kdruang', 'harga', 'tglexp', 'nobatch', 'nodistribusi', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $request->kdobat)
                 ->where('kdruang', $request->kodedepo)
-                ->where('jumlah', '!=', 0)
-                ->groupBy('kdobat', 'nopenerimaan', 'nodistribusi')
-                ->orderBy('tglexp')
+                ->where('jumlah', '>', 0)
+                ->groupBy('kdobat', 'nopenerimaan', 'kdruang')
+                ->orderBy('tglexp', 'ASC')
                 ->get();
 
             $index = 0;
@@ -1315,11 +1316,19 @@ class EresepController extends Controller
                             );
                         }
 
-                        Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        // Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        //     ->where('kdobat', $caristok[$index]->kdobat)
+                        //     ->where('nodistribusi', $caristok[$index]->nodistribusi)
+                        //     ->where('kdruang', $request->kodedepo)
+                        //     ->update(['jumlah' => 0]);
+                        $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                             ->where('kdobat', $caristok[$index]->kdobat)
-                            ->where('nodistribusi', $caristok[$index]->nodistribusi)
                             ->where('kdruang', $request->kodedepo)
-                            ->update(['jumlah' => 0]);
+                            ->get();
+                        foreach ($dataStok as $key) {
+                            $key->jumlah = 0;
+                            $key->save();
+                        }
 
                         $masuk = $sisax;
                         $index = $index + 1;
@@ -1373,11 +1382,30 @@ class EresepController extends Controller
                             );
                         }
 
-                        Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        // Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        //     ->where('kdobat', $caristok[$index]->kdobat)
+                        //     ->where('nodistribusi', $caristok[$index]->nodistribusi)
+                        //     ->where('kdruang', $request->kodedepo)
+                        //     ->update(['jumlah' => $sisax]);
+                        // nol kan semua
+                        $getStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                             ->where('kdobat', $caristok[$index]->kdobat)
-                            ->where('nodistribusi', $caristok[$index]->nodistribusi)
                             ->where('kdruang', $request->kodedepo)
-                            ->update(['jumlah' => $sisax]);
+                            ->get();
+                        foreach ($getStok as $key) {
+                            $key->jumlah = 0;
+                            $key->save();
+                        }
+                        // ambil data dengan nopenerimaan yang sama di yang terakhir
+                        $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                            ->where('kdobat', $caristok[$index]->kdobat)
+                            ->where('kdruang', $request->kodedepo)
+                            ->latest()
+                            ->first();
+                        // tumpuk di situ stok nya
+                        $dataStok->jumlah = $sisax;
+                        $dataStok->save();
+
                         $masuk = 0;
                         $simpanrinci->load('mobat:kd_obat,nama_obat');
                     }
@@ -1385,9 +1413,11 @@ class EresepController extends Controller
                 DB::connection('farmasi')->commit();
                 return new JsonResponse([
                     'rinci' => $simpanrinci,
+                    'stok' => $caristok ?? [],
                     'message' => 'Data Berhasil Disimpan...!!!'
                 ], 200);
             }
+
             if ($request->jumlah == 0) {
 
                 if ($request->jenisresep == 'Racikan') {
@@ -1456,7 +1486,11 @@ class EresepController extends Controller
             }
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
+            return response()->json([
+                'message' => 'ada kesalahan',
+                'error' => '' . $e,
+                'stok' => $dataStok ?? null
+            ], 410);
         }
     }
 

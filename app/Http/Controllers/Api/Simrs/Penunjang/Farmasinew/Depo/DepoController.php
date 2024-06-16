@@ -415,7 +415,9 @@ class DepoController extends Controller
     }
     public function newterimadistribusi(Request $request)
     {
-        $obatditerima = Mutasigudangkedepo::where('mutasi_gudangdepo.no_permintaan', $request->no_permintaan)
+        $obatditerima = Mutasigudangkedepo::select('*', DB::raw('sum(jml) as jumlah'))
+            ->where('no_permintaan', $request->no_permintaan)
+            ->groupBy('no_permintaan', 'kd_obat', 'nopenerimaan')
             ->get();
         // return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!', 'data' => $obatditerima], 410);
         foreach ($obatditerima as $wew) {
@@ -428,7 +430,7 @@ class DepoController extends Controller
                 ],
                 [
                     'tglpenerimaan' => $wew->tglpenerimaan,
-                    'jumlah' => $wew->jml,
+                    'jumlah' => $wew->jumlah,
                     'kdruang' => $request->tujuan,
                     'harga' => $wew->harga,
                     'tglexp' => $wew->tglexp,
