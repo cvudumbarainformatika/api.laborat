@@ -16,10 +16,10 @@ class Akun50_2024 extends Model
     protected $guarded = ['id'];
     protected $table = 'akun50_2024';
     public $timestamp = false;
-    // protected $appends = ['kodeall'];
-    // public function getKodeallAttribute(){
-    //     return "{$this->akun}.{$this->kelompok}.{$this->jenis}.{$this->objek}.{$this->rincian_objek}.{$this->subrincian_objek}";
-    // }
+    protected $appends = ['kodeall'];
+    public function getKodeallAttribute(){
+        return "{$this->akun}.{$this->kelompok}.{$this->jenis}.{$this->objek}.{$this->rincian_objek}.{$this->subrincian_objek}";
+    }
     public function npdls_rinci(){
         return $this->hasMany(NpdLS_rinci::class,'koderek50', 'kodeall2');
     }
