@@ -16,6 +16,15 @@ class SignaController extends Controller
         $data = Msigna::paginate(request('per_page'));
         return new JsonResponse($data);
     }
+    public function getAutocompleteSigna()
+    {
+        $q = Msigna::query();
+        $data = $q->select('signa','jumlah')
+        ->when(request('q'), function ($query) {
+            $query->where('signa', 'like', '%' . request('q') . '%');
+        })->limit(10)->get();
+        return new JsonResponse($data);
+    }
 
     public function store(Request $request)
     {
