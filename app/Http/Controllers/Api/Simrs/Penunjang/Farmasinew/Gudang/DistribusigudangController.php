@@ -177,8 +177,10 @@ class DistribusigudangController extends Controller
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'kd_obat' => $caristok[$index]->kdobat,
-                        'jml' => $sisa,
 
+                    ],
+                    [
+                        'jml' => $sisa,
                         'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                         'harga' => $hargaBeli->harga_netto_kecil ?? 0,
                         'tglexp' => $caristok[$index]->tglexp,
@@ -190,11 +192,11 @@ class DistribusigudangController extends Controller
                     ->where('kdruang', $request->kdgudang)
                     ->get();
                 foreach ($dataStok as $key) {
-                    $key->jumlah = 0;
-                    $key->save();
+                    // $key->jumlah = 0;
+                    // $key->save();
+                    $key->update(['jumlah' => 0]);
                 }
 
-                // ->update(['jumlah' => 0]);
 
                 $masuk = $sisax;
                 $index = $index + 1;
@@ -202,13 +204,14 @@ class DistribusigudangController extends Controller
             } else {
                 $sisax = $sisa - $masuk;
                 $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')->where('nopenerimaan', $caristok[$index]->nopenerimaan)->where('kdobat', $caristok[$index]->kdobat)->first();
-                $mutasi = Mutasigudangkedepo::create(
+                $mutasi = Mutasigudangkedepo::updateOrCreate(
                     [
                         'no_permintaan' => $request->nopermintaan,
                         'nopenerimaan' => $caristok[$index]->nopenerimaan,
                         'kd_obat' => $caristok[$index]->kdobat,
+                    ],
+                    [
                         'jml' => $masuk,
-
                         'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                         'harga' => $hargaBeli->harga_netto_kecil ?? 0,
                         'tglexp' => $caristok[$index]->tglexp,
@@ -222,8 +225,9 @@ class DistribusigudangController extends Controller
                     ->where('kdruang', $request->kdgudang)
                     ->get();
                 foreach ($getStok as $key) {
-                    $key->jumlah = 0;
-                    $key->save();
+                    // $key->jumlah = 0;
+                    // $key->save();
+                    $key->update(['jumlah' => 0]);
                 }
                 // ambil data dengan nopenerimaan yang sama di yang terakhir
                 $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
@@ -233,9 +237,9 @@ class DistribusigudangController extends Controller
                     ->latest()
                     ->first();
                 // tumpuk di situ stok nya
-                $data->jumlah = $sisax;
-                $data->save();
-                // ->update(['jumlah' => $sisax]);
+                // $data->jumlah = $sisax;
+                // $data->save();
+                $data->update(['jumlah' => $sisax]);
                 $masuk = 0;
             }
         }

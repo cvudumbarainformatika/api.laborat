@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpihakketiga;
+use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastKonsinyasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
@@ -11,6 +13,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KonsinyasiController extends Controller
 {
@@ -117,5 +120,37 @@ class KonsinyasiController extends Controller
         $data = $resep;
         // $data['pene'] = $pene;
         return new JsonResponse($data);
+    }
+    public function simpanListKonsinyasi(Request $request)
+    {
+        if (!$request->notranskonsi) {
+            $procedure = 'nokonsinyasi(@nomor)';
+            $colom = 'konsinyasi';
+            $lebel = '/TR/KONS';
+            DB::connection('farmasi')->select('call ' . $procedure);
+            $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
+            $wew = $x[0]->$colom;
+            $notranskonsi = FormatingHelper::resep($wew, $lebel);
+        } else {
+            $notranskonsi = $request->notranskonsi;
+        }
+        $head = BastKonsinyasi::updateOrCreate(
+            [
+                'notranskonsi' => $notranskonsi,
+                'kdpbf' => $notranskonsi,
+            ],
+            [
+                'tgl_trans' => $notranskonsi,
+                'jumlah_konsi' => $notranskonsi,
+                'user_konsi' => $notranskonsi,
+
+            ]
+        );
+
+        return new JsonResponse([
+            'message' => 'List Sudah Disimpan',
+            'notranskonsi' => $notranskonsi,
+            $request->all()
+        ]);
     }
 }
