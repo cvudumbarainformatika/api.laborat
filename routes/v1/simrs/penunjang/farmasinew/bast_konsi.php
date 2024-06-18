@@ -14,5 +14,5 @@ Route::group([
 
     Route::post('/simpan-list', [KonsinyasiController::class, 'simpanListKonsinyasi']);
 
-    // Route::get('/list-bast', [BastController::class, 'listBast']);
+    Route::get('/list-konsi', [KonsinyasiController::class, 'listKonsinyasi']);
 });

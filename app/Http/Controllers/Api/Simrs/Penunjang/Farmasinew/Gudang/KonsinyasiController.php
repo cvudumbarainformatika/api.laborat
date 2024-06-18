@@ -233,4 +233,19 @@ class KonsinyasiController extends Controller
             ], 410);
         }
     }
+    public function listKonsinyasi()
+    {
+        $data = BastKonsinyasi::with([
+            'rinci.obat:kd_obat,nama_obat,satuan_k',
+            'rinci.iddokter:kdpegsimrs,nama',
+            'rinci.pasien:rs1,rs2',
+            'penyedia:kode,nama',
+            'konsi:kdpegsimrs,nama',
+            'bast:kdpegsimrs,nama',
+            'bayar:kdpegsimrs,nama',
+        ])
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
 }
