@@ -12,6 +12,10 @@ class TemplateResepRinci extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    public function getRacikanAttribute($value){
+        return $value === 1 ? true : false;
+    }
+
     public function rincian()
     {
         return $this->hasMany(TemplateResepRacikan::class, 'obat_id', 'id');
