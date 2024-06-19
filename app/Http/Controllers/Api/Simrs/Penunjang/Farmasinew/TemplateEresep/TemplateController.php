@@ -126,4 +126,14 @@ class TemplateController extends Controller
           return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th], 500);
         }
     }
+
+    public function gettemplate()
+    {
+        $data = Templateresep::where('pegawai_id', auth()->user()->pegawai_id)
+        ->where('kodedepo', request('kodedepo'))
+        ->with('rincian.rincian')
+        ->get();
+
+        return new JsonResponse($data, 200);
+    }
 }

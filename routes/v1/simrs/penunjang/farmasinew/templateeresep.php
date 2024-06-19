@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('cariobat', [TemplateController::class, 'cariobat']);
     Route::post('simpantemplate', [TemplateController::class, 'simpantemplate']);
+    Route::get('gettemplate', [TemplateController::class, 'gettemplate']);
 });
