@@ -119,7 +119,7 @@ class TemplateController extends Controller
             
         };
           DB::commit();
-          return new JsonResponse($saved->load(['rincian.racikanrinci']), 200);
+          return new JsonResponse($saved->load(['rincian.rincian']), 200);
 
         } catch (\Throwable $th) {
           DB::rollback();

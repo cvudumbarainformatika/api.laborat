@@ -12,7 +12,7 @@ class TemplateResepRinci extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
-    public function racikanrinci()
+    public function rincian()
     {
         return $this->hasMany(TemplateResepRacikan::class, 'obat_id', 'id');
     }
