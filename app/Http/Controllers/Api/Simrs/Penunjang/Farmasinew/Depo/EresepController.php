@@ -543,7 +543,7 @@ class EresepController extends Controller
                             'fornas' => $request->fornas ?? '',
                             'forkit' => $request->forkit ?? '',
                             'generik' => $request->generik ?? '',
-                            'r' => 500,
+                            'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
                             'hpp' => $harga,
                             'harga_jual' => $hargajualx,
                             'kode108' => $request->kode108,
@@ -578,7 +578,7 @@ class EresepController extends Controller
                             'fornas' => $request->fornas ?? '',
                             'forkit' => $request->forkit ?? '',
                             'generik' => $request->generik ?? '',
-                            'r' => 500,
+                            'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
                             'hpp' => $harga,
                             'harga_jual' => $hargajualx,
                             'kode108' => $request->kode108,
@@ -613,7 +613,7 @@ class EresepController extends Controller
                         'kode50' => $request->kode50,
                         'uraian50' => $request->uraian50,
                         'stokalokasi' => $request->stokalokasi,
-                        'r' => 300,
+                        'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 300 : 0,
                         'jumlah' => $request->jumlah_diminta,
                         'hpp' => $harga,
                         'hargajual' => $hargajualx,
@@ -1284,7 +1284,7 @@ class EresepController extends Controller
                                     'harga_beli' => $caristok[$index]->harga,
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajual,
-                                    'nilai_r' => $request->nilai_r,
+                                    'nilai_r' => $request->nilai_r ?? 0,
                                     'user' => $user['kodesimrs']
                                 ]
                             );
@@ -1307,7 +1307,7 @@ class EresepController extends Controller
                                     'harga_beli' => $caristok[$index]->harga,
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajual,
-                                    'nilai_r' => $request->nilai_r,
+                                    'nilai_r' => $request->nilai_r ?? 0,
                                     'aturan' => $request->aturan,
                                     'konsumsi' => $request->konsumsi,
                                     'keterangan' => $request->keterangan ?? '',
@@ -1350,7 +1350,7 @@ class EresepController extends Controller
                                     'harga_beli' => $caristok[$index]->harga,
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajual,
-                                    'nilai_r' => $request->nilai_r,
+                                    'nilai_r' => $request->nilai_r ?? 0,
                                     'user' => $user['kodesimrs']
                                 ]
                             );
@@ -1373,7 +1373,7 @@ class EresepController extends Controller
                                     'harga_beli' => $caristok[$index]->harga,
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajual,
-                                    'nilai_r' => $request->nilai_r,
+                                    'nilai_r' => $request->nilai_r ?? 0,
                                     'aturan' => $request->aturan,
                                     'konsumsi' => $request->konsumsi,
                                     'keterangan' => $request->keterangan ?? '',
