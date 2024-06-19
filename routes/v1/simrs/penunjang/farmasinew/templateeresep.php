@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/penunjang/farmasinew/templateeresep/'
 ], function () {
     Route::get('cariobat', [TemplateController::class, 'cariobat']);
+    Route::post('simpantemplate', [TemplateController::class, 'simpantemplate']);
 });
