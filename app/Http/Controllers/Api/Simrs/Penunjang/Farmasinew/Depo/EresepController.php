@@ -2497,13 +2497,13 @@ class EresepController extends Controller
         $groupsistembayar = $request->groupsistembayar;
 
         // ambil template
-        $nonRacik = TemplateResepRinci::select('kodeobat', DB::raw('sum(jumlah_diminta) as jumlah_diminta'))->where('template_id', $templateId)->where('racikan', 0)->groupby('kodeobat')->get();
+        $nonRacik = TemplateResepRinci::select('kodeobat', 'namaobat', DB::raw('sum(jumlah_diminta) as jumlah_diminta'))->where('template_id', $templateId)->where('racikan', 0)->groupby('kodeobat')->get();
         $racik = TemplateResepRinci::where('template_id', $templateId)->where('racikan', 1)->get();
         $racikan = [];
         $kdobat = [];
         if (count($racik) > 0) {
             foreach ($racik as $key) {
-                $temp = TemplateResepRacikan::select('kodeobat', DB::raw('sum(jumlah_diminta) as jumlah_diminta'))->where('obat_id', $key['id'])->groupby('kodeobat')->get();
+                $temp = TemplateResepRacikan::select('kodeobat', 'namaobat', DB::raw('sum(jumlah_diminta) as jumlah_diminta'))->where('obat_id', $key['id'])->groupby('kodeobat')->get();
                 $key['rinci'] = $temp;
                 $racikan[] = $key;
                 foreach ($temp as $kd) {
