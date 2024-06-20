@@ -36,7 +36,7 @@ class KonsinyasiController extends Controller
     }
     public function transkonsiwithrinci()
     {
-        $data = BastKonsinyasi::with('rinci')
+        $data = BastKonsinyasi::with('rinci.obat:kd_obat,nama_obat,satuan_k')
             ->whereNull('tgl_bast')
             ->where('kdpbf', request('kdpbf'))
             ->where('notranskonsi', request('notranskonsi'))
@@ -256,6 +256,66 @@ class KonsinyasiController extends Controller
                 'message' => 'Ada Kesalahan, Semua Data Gagal Disimpan',
                 'result' => 'err ' . $e,
             ], 410);
+        }
+    }
+
+    public function simpanBast(Request $request)
+    {
+        // return new JsonResponse($request->all());
+        $user = FormatingHelper::session_user();
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            if ($request->nobast === '' || $request->nobast === null) {
+                DB::connection('farmasi')->select('call nobast(@nomor)');
+                $x = DB::connection('farmasi')->table('conter')->select('bast')->get();
+                $wew = $x[0]->bast;
+                $nobast = FormatingHelper::penerimaanobat($wew, 'BAST-KONS-FAR');
+            } else {
+                $nobast = $request->nobast;
+            }
+
+            $head = BastKonsinyasi::where('notranskonsi', $request->notranskonsi)->first();
+            if (!$head) {
+                return new JsonResponse([
+                    'message' => 'Transaksi Konsinyasi Tidak Ditemukan',
+                    'req' => $request->all(),
+                ], 410);
+            }
+            $head->update([
+                'nobast' => $nobast,
+                'tgl_bast' => $request->tgl_bast,
+                'jumlah_bast' => $request->jumlah_bast,
+                'user_bast' => $user['kodesimrs'],
+            ]);
+            $rinci = [];
+            foreach ($request->list as $list) {
+                foreach ($list['rinci'] as $key) {
+                    $temp = DetailBastKonsinyasi::find($key['id']);
+                    if ($temp) {
+                        $temp->update([
+                            'harga' => $key['harga'],
+                            'harga_net' => $key['harga_net'],
+                            'ppn' => $key['ppn'],
+                            'ppn_rp' => $key['ppn_rp'],
+                            'diskon' => $key['diskon'],
+                            'diskon_rp' => $key['diskon_rp'],
+                            'subtotal' => $key['subtotal'],
+                        ]);
+                    }
+                    $rinci[] = $temp;
+                }
+            }
+
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'BAST Sudah Disimpan',
+                'req' => $request->all(),
+                'head' => $head,
+                'rinci bast' => $rinci,
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => ' ' . $e, 'rinci' => $rinci], 410);
         }
     }
     public function listKonsinyasi()

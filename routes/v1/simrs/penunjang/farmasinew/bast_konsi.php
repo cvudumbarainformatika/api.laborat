@@ -14,6 +14,7 @@ Route::group([
     Route::get('/transaksi', [KonsinyasiController::class, 'transkonsiwithrinci']);
 
     Route::post('/simpan-list', [KonsinyasiController::class, 'simpanListKonsinyasi']);
+    Route::post('/simpan-bast', [KonsinyasiController::class, 'simpanBast']);
 
     Route::get('/list-konsi', [KonsinyasiController::class, 'listKonsinyasi']);
     Route::get('/bast-konsi', [KonsinyasiController::class, 'bastKonsinyasi']);
