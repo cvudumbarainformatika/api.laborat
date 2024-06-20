@@ -20,6 +20,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRacikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRinci;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\SistemBayar;
 use Carbon\Carbon;
@@ -2485,5 +2487,187 @@ class EresepController extends Controller
             ->paginate(request('per_page'));
         // return new JsonResponse(request()->all());
         return new JsonResponse($listresep);
+    }
+
+
+    public function cekTemplateResep(Request $request)
+    {
+        $templateId = $request->template_id;
+        $kodedepo = $request->kodedepo;
+        $groupsystembayar = $request->groupsystembayar;
+
+        // ambil template
+        $nonRacik = TemplateResepRinci::select('kodeobat', DB::raw('sum(jumlah_diminta) as jumlah'))->where('template_id', $templateId)->where('racikan', 0)->groupby('kodeobat')->get();
+        $racik = TemplateResepRinci::where('template_id', $templateId)->where('racikan', 1)->get();
+        $racikan = [];
+        $kdobat = [];
+        if (count($racik) > 0) {
+            foreach ($racik as $key) {
+                $temp = TemplateResepRacikan::select('kodeobat', DB::raw('sum(jumlah_diminta) as jumlah'))->where('obat_id', $key['id'])->groupby('kodeobat')->get();
+                $key['rinci'] = $temp;
+                $racikan[] = $key;
+                foreach ($temp as $kd) {
+                    $kdobat[] = $kd['kodeobat'];
+                }
+            }
+        }
+        foreach ($nonRacik as $kd) {
+            $kdobat[] = $kd['kodeobat'];
+        }
+        $uniqueObat = array_unique($kdobat);
+        $cekjumlahstok = Stokreal::select('kdobat', DB::raw('sum(jumlah) as jumlahstok'))
+            ->whereIn('kdobat', $uniqueObat)
+            ->where('kdruang', $request->kodedepo)
+            ->where('jumlah', '>', 0)
+            ->with([
+                'transnonracikan' => function ($transnonracikan) use ($request) {
+                    $transnonracikan->select(
+                        // 'resep_keluar_r.kdobat as kdobat',
+                        'resep_permintaan_keluar.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                        ->where('resep_keluar_h.depo', $request->kodedepo)
+                        ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                        ->groupBy('resep_permintaan_keluar.kdobat');
+                },
+                'transracikan' => function ($transracikan) use ($request) {
+                    $transracikan->select(
+                        // 'resep_keluar_racikan_r.kdobat as kdobat',
+                        'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                        ->where('resep_keluar_h.depo', $request->kodedepo)
+                        ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                        ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                },
+                'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
+                    $permintaanobatrinci->select(
+                        'permintaan_r.no_permintaan',
+                        'permintaan_r.kdobat',
+                        DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                    )
+                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                        // biar yang ada di tabel mutasi ga ke hitung
+                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        })
+                        ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                        ->where('permintaan_h.tujuan', $request->kodedepo)
+                        ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                        ->groupBy('permintaan_r.kdobat');
+                },
+                'persiapanrinci' => function ($res) use ($request) {
+                    $res->select(
+                        'persiapan_operasi_rincis.kd_obat',
+
+                        DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                    )
+                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                        ->whereIn('persiapan_operasis.flag', ['', '1'])
+                        ->groupBy('persiapan_operasi_rincis.kd_obat');
+                },
+            ])
+            ->orderBy('tglexp')
+            ->groupBy('kdobat')
+            ->get();
+        if (count($cekjumlahstok) <= 0) {
+            return new JsonResponse([
+                'message' => 'Tidak Ada Stok untuk semua Obat',
+                'cekjumlahstok' => $cekjumlahstok,
+                'uniqueObat' => $uniqueObat,
+                'req' => $request->all()
+
+            ], 410);
+        }
+        $alokasinya = collect($cekjumlahstok)->map(function ($x, $y) use ($request) {
+            $total = $x->jumlahstok ?? 0;
+            $jumlahper = $request->kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+            $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+            $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+            return $x;
+        });
+        $adaraw = [];
+        $adaAlokasi = [];
+        $tidakAdaAlokasi = [];
+        $adaAlokasiRacikan = [];
+        $tidakAdaAlokasiRacikan = [];
+        foreach ($nonRacik as $non) {
+            $obat = $non;
+            $raw = $alokasinya->where('kdobat', $non['kodeobat']);
+            $adaraw[] = $raw;
+            if (count($raw) > 0) {
+                $item = current((array)$raw); // value of current object
+                $anu = key((array)$item); // key of the object value
+                $alokasi = $item[$anu]->alokasi;
+                $obat->alokasi = $alokasi;
+                if ((int) $non->jumlah > (int)$alokasi) {
+                    $obat->error = 'Alokasi tidak mencukupi';
+                    $tidakAdaAlokasi[] = $obat;
+                } else {
+                    $adaAlokasi[] = $obat;
+                }
+            } else {
+                $obat->alokasi = 0;
+                $obat->error = 'Alokasi tidak mencukupi';
+                $tidakAdaAlokasi[] = $obat;
+            }
+            // return new JsonResponse([
+            //     'item' => $item[$anu],
+            //     'alokasi' => $alokasi,
+            //     'non' => $non->jumlah,
+            // ]);
+        }
+        foreach ($racikan as $rac) {
+            foreach ($rac['rinci'] as $rin) {
+                $obat = $rin;
+                $raw = $alokasinya->where('kdobat', $rin['kodeobat']);
+                $adaraw[] = $raw;
+                if (count($raw) > 0) {
+                    $item = current((array)$raw); // value of current object
+                    $anu = key((array)$item); // key of the object value
+                    $alokasi = $item[$anu]->alokasi;
+                    $obat->alokasi = $alokasi;
+                    if ((int) $rin->jumlah > (int)$alokasi) {
+                        $obat->error = 'Alokasi tidak mencukupi';
+                        $tidakAdaAlokasiRacikan[] = $obat;
+                    } else {
+                        $adaAlokasiRacikan[] = $obat;
+                    }
+                } else {
+                    $obat->alokasi = 0;
+                    $obat->error = 'Alokasi tidak mencukupi';
+                    $tidakAdaAlokasiRacikan[] = $obat;
+                }
+                // return new JsonResponse([
+                //     // 'item' => $item[$anu],
+                //     // 'alokasi' => $alokasi,
+                //     'rin' => $rin,
+                // ]);
+            }
+        }
+
+
+        return new JsonResponse([
+            'message' => 'ok',
+            // 'adaraw' => $adaraw,
+            'adaAlokasi' => $adaAlokasi,
+            'tidakAdaAlokasi' => $tidakAdaAlokasi,
+            'adaAlokasiRacikan' => $adaAlokasiRacikan,
+            'tidakAdaAlokasiRacikan' => $tidakAdaAlokasiRacikan,
+            // 'nonRacik' => $nonRacik,
+            // 'racikan' => $racikan,
+            // 'kdobat' => $kdobat,
+            // 'uniqueObat' => $uniqueObat,
+            // 'alokasinya' => $alokasinya,
+            // 'cekjumlahstok' => $cekjumlahstok,
+        ]);
     }
 }
