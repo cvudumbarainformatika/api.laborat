@@ -1573,6 +1573,31 @@ class EresepController extends Controller
             }
         }
     }
+    public function hapusPermintaanResep(Request $request)
+    {
+        $head = Resepkeluarheder::where('noresep', $request->noresep)->where('flag', '')->first();
+        if (!$head) {
+            return new JsonResponse([
+                'message' => 'Permintaan resep tidak ditemukan atau sudah dikirimkan',
+            ], 410);
+        }
+        $head->delete();
+        $racik = Permintaanresepracikan::where('noresep', $request->noresep)->get();
+        if (count($racik) > 0) {
+            foreach ($racik as $key) {
+                $key->delete();
+            }
+        }
+        $nonracik = Permintaanresep::where('noresep', $request->noresep)->get();
+        if (count($nonracik) > 0) {
+            foreach ($nonracik as $key) {
+                $key->delete();
+            }
+        }
+        return new JsonResponse([
+            'message' => 'Permintaan resep telah dihapus',
+        ]);
+    }
     public static function cekpemberianobat($request, $jumlahstok)
     {
         // ini tujuannya mencari sisa obat pasien dengan dihitung jumlah konsumsi obat per hari bersasarkan signa
