@@ -1112,6 +1112,9 @@ class EresepController extends Controller
         $user = auth()->user()->pegawai_id;
         // return new JsonResponse(['user' => $user, 'data' => $data], 410);
         if ($data) {
+            if ($data->flag === '3') {
+                return new JsonResponse(['message' => 'Resep Sudah Diselesaikan', 'data' => $data], 200);
+            }
             $data->update(['flag' => '3', 'tgl' => date('Y-m-d'), 'user' => $user]);
             // $msg = [
             //     'data' => [
@@ -1153,6 +1156,29 @@ class EresepController extends Controller
 
     public function eresepobatkeluar(Request $request)
     {
+        if ($request->jenisresep == 'Racikan') {
+            $simpanrinci = Resepkeluarrinciracikan::with('mobat:kd_obat,nama_obat')
+                ->where('noresep', $request->noresep)
+                ->where('kdobat', $request->kdobat)
+                ->first();
+            if ($simpanrinci) {
+                return new JsonResponse([
+                    'rinci' => $simpanrinci,
+                    'message' => 'Data Sudah Disimpan'
+                ], 201);
+            }
+        } else {
+            $simpanrinci = Resepkeluarrinci::with('mobat:kd_obat,nama_obat')
+                ->where('noresep', $request->noresep)
+                ->where('kdobat', $request->kdobat)
+                ->first();
+            if ($simpanrinci) {
+                return new JsonResponse([
+                    'rinci' => $simpanrinci,
+                    'message' => 'Data Sudah Disimpan'
+                ], 201);
+            }
+        }
         // return new JsonResponse($request->all());
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
             ->where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
@@ -1275,9 +1301,9 @@ class EresepController extends Controller
                                 [
                                     'noreg' => $request->noreg,
                                     'noresep' => $request->noresep,
+                                    'kdobat' => $request->kdobat,
                                     'tiperacikan' => $request->tiperacikan,
                                     'namaracikan' => $request->namaracikan,
-                                    'kdobat' => $request->kdobat,
                                     'nopenerimaan' => $caristok[$index]->nopenerimaan,
                                     'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
                                     'jumlah' => $caristok[$index]->jumlah,
