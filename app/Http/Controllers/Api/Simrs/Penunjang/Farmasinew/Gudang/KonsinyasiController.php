@@ -19,6 +19,31 @@ use Illuminate\Support\Facades\DB;
 class KonsinyasiController extends Controller
 {
     //
+    public function perusahaan()
+    {
+        $raw = BastKonsinyasi::select('kdpbf')->whereNull('tgl_bast')->distinct()->get();
+        $penye = collect($raw)->map(function ($p) {
+            return $p->kdpbf;
+        });
+        $penyedia = Mpihakketiga::select('kode', 'nama')->whereIn('kode', $penye)->get();
+        return new JsonResponse($penyedia);
+    }
+    public function notranskonsi()
+    {
+        $data = BastKonsinyasi::whereNull('tgl_bast')->where('kdpbf', request('kdpbf'))->get();
+
+        return new JsonResponse($data);
+    }
+    public function transkonsiwithrinci()
+    {
+        $data = BastKonsinyasi::with('rinci')
+            ->whereNull('tgl_bast')
+            ->where('kdpbf', request('kdpbf'))
+            ->where('notranskonsi', request('notranskonsi'))
+            ->get();
+
+        return new JsonResponse($data);
+    }
     public function getPenyedia()
     {
         $res = PersiapanOperasiRinci::select(
@@ -244,6 +269,22 @@ class KonsinyasiController extends Controller
             'bast:kdpegsimrs,nama',
             'bayar:kdpegsimrs,nama',
         ])
+            ->paginate(request('per_page'));
+
+        return new JsonResponse($data);
+    }
+    public function bastKonsinyasi()
+    {
+        $data = BastKonsinyasi::with([
+            'rinci.obat:kd_obat,nama_obat,satuan_k',
+            'rinci.iddokter:kdpegsimrs,nama',
+            'rinci.pasien:rs1,rs2',
+            'penyedia:kode,nama',
+            'konsi:kdpegsimrs,nama',
+            'bast:kdpegsimrs,nama',
+            'bayar:kdpegsimrs,nama',
+        ])
+            ->whereNotNull('tgl_bast')
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);

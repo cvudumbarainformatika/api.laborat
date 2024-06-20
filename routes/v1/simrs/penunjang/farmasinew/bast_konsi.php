@@ -9,10 +9,12 @@ Route::group([
     'prefix' => 'simrs/penunjang/farmasinew/bast-konsi'
 ], function () {
     Route::get('/penyedia', [KonsinyasiController::class, 'getPenyedia']);
-    // Route::get('/pemesanan', [BastController::class, 'pemesanan']);
-    // Route::get('/penerimaan', [BastController::class, 'penerimaan']);
+    Route::get('/perusahaan', [KonsinyasiController::class, 'perusahaan']);
+    Route::get('/notrans', [KonsinyasiController::class, 'notranskonsi']);
+    Route::get('/transaksi', [KonsinyasiController::class, 'transkonsiwithrinci']);
 
     Route::post('/simpan-list', [KonsinyasiController::class, 'simpanListKonsinyasi']);
 
     Route::get('/list-konsi', [KonsinyasiController::class, 'listKonsinyasi']);
+    Route::get('/bast-konsi', [KonsinyasiController::class, 'bastKonsinyasi']);
 });
