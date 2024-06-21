@@ -2612,6 +2612,11 @@ class EresepController extends Controller
                     $obat->error = 'Alokasi tidak mencukupi';
                     $tidakAdaAlokasi[] = $obat;
                 } else {
+                    $cekpemberian = self::cekpemberianobat($request, $alokasi);
+                    if ($cekpemberian['status'] == 1) {
+                        return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
+                    }
+                    $item[$anu]->alokasi = (int)$alokasi - (int) $non->jumlah_diminta;
                     $mobat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
                     if ($mobat) {
                         $obat->kandungan = $mobat->kandungan ?? '';
@@ -2671,6 +2676,7 @@ class EresepController extends Controller
                         $obat->error = 'Alokasi tidak mencukupi';
                         $tidakAdaAlokasiRacikan[] = $obat;
                     } else {
+                        $item[$anu]->alokasi = (int)$alokasi - (int) $rin->jumlah_diminta;
                         $mobat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
                         if ($mobat) {
                             $obat->kandungan = $mobat->kandungan ?? '';
@@ -2716,6 +2722,14 @@ class EresepController extends Controller
                         $adaAlokasiRacikan[] = $obat;
                     }
                 } else {
+                    $templateRac = TemplateResepRinci::select('id')->where('template_id', $templateId)
+                        ->where('racikan', 1)
+                        ->get();
+                    $obatRac = TemplateResepRacikan::whereIn('obat_id', $templateRac)
+                        ->where('kodeobat', $obat->kodeobat)
+                        ->first();
+                    $racikannya = TemplateResepRinci::find($obatRac->obat_id);
+                    $obat->koderacikan = $racikannya->kodeobat;
                     $obat->alokasi = 0;
                     $obat->error = 'Alokasi tidak mencukupi';
                     $tidakAdaAlokasiRacikan[] = $obat;
@@ -2729,7 +2743,6 @@ class EresepController extends Controller
         }
         if (count($tidakAdaAlokasi) > 0 || count($tidakAdaAlokasiRacikan) > 0) {
 
-
             return new JsonResponse([
                 'message' => 'Gagal Alokasi Kurang',
 
@@ -2740,6 +2753,7 @@ class EresepController extends Controller
 
             ], 410);
         }
+
 
         return new JsonResponse([
             'message' => 'ok',
