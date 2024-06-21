@@ -271,7 +271,7 @@ class PersiapanOperasiController extends Controller
                         'message' => 'Nomor Permintaan Bukan draft, silakan ganti nomor permintaan',
                     ], 410);
                 }
-                if ($ada->noreg !== $request->noreg) {
+                if ($ada->flag === '' && $ada->noreg !== $request->noreg) {
                     return new JsonResponse([
                         'message' => 'Nomor Permintaan Sudah dipakai pasien yang lain, silakan ganti nomor permintaan',
                     ], 410);
