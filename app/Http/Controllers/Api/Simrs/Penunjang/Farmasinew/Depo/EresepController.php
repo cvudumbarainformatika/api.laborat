@@ -2576,15 +2576,7 @@ class EresepController extends Controller
             ->orderBy('tglexp')
             ->groupBy('kdobat')
             ->get();
-        // if (count($cekjumlahstok) <= 0) {
-        //     return new JsonResponse([
-        //         'message' => 'Tidak Ada Stok untuk semua Obat',
-        //         'cekjumlahstok' => $cekjumlahstok,
-        //         'uniqueObat' => $uniqueObat,
-        //         'req' => $request->all()
 
-        //     ], 410);
-        // }
         $alokasinya = collect($cekjumlahstok)->map(function ($x, $y) use ($request) {
             $total = $x->jumlahstok ?? 0;
             $jumlahper = $request->kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
@@ -2594,6 +2586,7 @@ class EresepController extends Controller
             $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
             return $x;
         });
+
         $adaraw = [];
         $adaAlokasi = [];
         $tidakAdaAlokasi = [];
@@ -2612,10 +2605,10 @@ class EresepController extends Controller
                     $obat->error = 'Alokasi tidak mencukupi';
                     $tidakAdaAlokasi[] = $obat;
                 } else {
-                    $cekpemberian = self::cekpemberianobat($request, $alokasi);
-                    if ($cekpemberian['status'] == 1) {
-                        return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
-                    }
+                    // $cekpemberian = self::cekpemberianobat($request, $alokasi);
+                    // if ($cekpemberian['status'] == 1) {
+                    //     return new JsonResponse(['message' => '', 'cek' => $cekpemberian], 202);
+                    // }
                     $item[$anu]->alokasi = (int)$alokasi - (int) $non->jumlah_diminta;
                     $mobat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
                     if ($mobat) {
@@ -2753,6 +2746,34 @@ class EresepController extends Controller
 
             ], 410);
         }
+
+
+        if ($request->kodedepo === 'Gd-04010102') {
+            $procedure = 'resepkeluardeporanap(@nomor)';
+            $colom = 'deporanap';
+            $lebel = 'D-RI';
+        } elseif ($request->kodedepo === 'Gd-04010103') {
+            $procedure = 'resepkeluardepook(@nomor)';
+            $colom = 'depook';
+            $lebel = 'D-KO';
+        } elseif ($request->kodedepo === 'Gd-05010101') {
+
+
+            $procedure = 'resepkeluardeporajal(@nomor)';
+            $colom = 'deporajal';
+            $lebel = 'D-RJ';
+        } else {
+            $procedure = 'resepkeluardepoigd(@nomor)';
+            $colom = 'depoigd';
+            $lebel = 'D-IR';
+        }
+
+
+        DB::connection('farmasi')->select('call ' . $procedure);
+        $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
+        $wew = $x[0]->$colom;
+        $noresep = FormatingHelper::resep($wew, $lebel);
+
 
 
         return new JsonResponse([
