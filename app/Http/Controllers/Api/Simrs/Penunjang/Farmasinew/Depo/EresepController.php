@@ -2774,7 +2774,149 @@ class EresepController extends Controller
         $wew = $x[0]->$colom;
         $noresep = FormatingHelper::resep($wew, $lebel);
 
+        $user = FormatingHelper::session_user();
 
+        // $simpan = Resepkeluarheder::updateOrCreate(
+        //     [
+        //         'noresep' => $noresep,
+        //         'noreg' => $request->noreg,
+        //     ],
+        //     [
+        //         'norm' => $request->norm,
+        //         'tgl_permintaan' => date('Y-m-d H:i:s'),
+        //         'tgl' => date('Y-m-d'),
+        //         'depo' => $request->kodedepo,
+        //         'ruangan' => $request->kdruangan,
+        //         'dokter' =>  $user['kodesimrs'],
+        //         'sistembayar' => $request->sistembayar,
+
+        //         'diagnosa' => $request->diagnosa,
+        //         'kodeincbg' => $request->kodeincbg,
+        //         'uraianinacbg' => $request->uraianinacbg,
+        //         'tarifina' => $request->tarifina,
+        //         'tiperesep' => 'normal',
+        //         // 'iter_expired' => $iter_expired,
+        //         // 'iter_jml' => $iter_jml,
+        //         // 'iter_expired' => $request->iter_expired ?? '',
+        //         'tagihanrs' => $request->tagihanrs ?? 0,
+        //     ]
+        // );
+
+        // if (!$simpan) {
+        //     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        // }
+
+        // ini ranah detail
+
+        $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
+        $res = $har['res'];
+        // if ($res) {
+        //     return new JsonResponse(['message' => $har['message'], 'data' => $har], 410);
+        // }
+        $hargajualx = $har['hargaJual'];
+        $harga = $har['harga'];
+
+        if ($request->jenisresep == 'Racikan') {
+            if ($request->tiperacikan == 'DTD') {
+                $simpandtd = Permintaanresepracikan::create(
+                    [
+                        'noreg' => $request->noreg,
+                        'noresep' => $noresep,
+                        'namaracikan' => $request->namaracikan,
+                        'tiperacikan' => $request->tiperacikan,
+                        'jumlahdibutuhkan' => $request->jumlahdibutuhkan, // jumlah racikan
+                        'aturan' => $request->aturan,
+                        'konsumsi' => $request->konsumsi,
+                        'keterangan' => $request->keterangan,
+                        'kdobat' => $request->kodeobat,
+                        'kandungan' => $request->kandungan ?? '',
+                        'fornas' => $request->fornas ?? '',
+                        'forkit' => $request->forkit ?? '',
+                        'generik' => $request->generik ?? '',
+                        'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
+                        'hpp' => $harga,
+                        'harga_jual' => $hargajualx,
+                        'kode108' => $request->kode108,
+                        'uraian108' => $request->uraian108,
+                        'kode50' => $request->kode50,
+                        'uraian50' => $request->uraian50,
+                        'stokalokasi' => $request->stokalokasi,
+                        'dosisobat' => $request->dosisobat ?? 0,
+                        'dosismaksimum' => $request->dosismaksimum ?? 0, // dosis resep
+                        'jumlah' => $request->jumlah, // jumlah obat
+                        'satuan_racik' => $request->satuan_racik, // jumlah obat
+                        'keteranganx' => $request->keteranganx, // keterangan obat
+                        'user' => $user['kodesimrs']
+                    ]
+                );
+                // if ($simpandtd) {
+                //     $simpandtd->load('mobat:kd_obat,nama_obat');
+                // }
+            } else {
+                $simpannondtd = Permintaanresepracikan::create(
+                    [
+                        'noreg' => $request->noreg,
+                        'noresep' => $noresep,
+                        'namaracikan' => $request->namaracikan,
+                        'tiperacikan' => $request->tiperacikan,
+                        'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                        'aturan' => $request->aturan,
+                        'konsumsi' => $request->konsumsi,
+                        'keterangan' => $request->keterangan,
+                        'kdobat' => $request->kodeobat,
+                        'kandungan' => $request->kandungan ?? '',
+                        'fornas' => $request->fornas ?? '',
+                        'forkit' => $request->forkit ?? '',
+                        'generik' => $request->generik ?? '',
+                        'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
+                        'hpp' => $harga,
+                        'harga_jual' => $hargajualx,
+                        'kode108' => $request->kode108,
+                        'uraian108' => $request->uraian108,
+                        'kode50' => $request->kode50,
+                        'uraian50' => $request->uraian50,
+                        'stokalokasi' => $request->stokalokasi,
+                        // 'dosisobat' => $request->dosisobat,
+                        // 'dosismaksimum' => $request->dosismaksimum,
+                        'jumlah' => $request->jumlah,
+                        'satuan_racik' => $request->satuan_racik,
+                        'keteranganx' => $request->keteranganx,
+                        'user' => $user['kodesimrs']
+                    ]
+                );
+                // if ($simpannondtd) {
+                //     $simpannondtd->load('mobat:kd_obat,nama_obat');
+                // }
+            }
+        } else {
+            $simpanrinci = Permintaanresep::create(
+                [
+                    'noreg' => $request->noreg,
+                    'noresep' => $noresep,
+                    'kdobat' => $request->kodeobat,
+                    'kandungan' => $request->kandungan ?? '',
+                    'fornas' => $request->fornas ?? '',
+                    'forkit' => $request->forkit ?? '',
+                    'generik' => $request->generik ?? '',
+                    'kode108' => $request->kode108,
+                    'uraian108' => $request->uraian108,
+                    'kode50' => $request->kode50,
+                    'uraian50' => $request->uraian50,
+                    'stokalokasi' => $request->stokalokasi,
+                    'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 300 : 0,
+                    'jumlah' => $request->jumlah_diminta,
+                    'hpp' => $harga,
+                    'hargajual' => $hargajualx,
+                    'aturan' => $request->aturan,
+                    'konsumsi' => $request->konsumsi,
+                    'keterangan' => $request->keterangan ?? '',
+                    'user' => $user['kodesimrs']
+                ]
+            );
+            // if ($simpanrinci) {
+            //     $simpanrinci->load('mobat:kd_obat,nama_obat');
+            // }
+        }
 
         return new JsonResponse([
             'message' => 'ok',
