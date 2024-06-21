@@ -2576,15 +2576,15 @@ class EresepController extends Controller
             ->orderBy('tglexp')
             ->groupBy('kdobat')
             ->get();
-        if (count($cekjumlahstok) <= 0) {
-            return new JsonResponse([
-                'message' => 'Tidak Ada Stok untuk semua Obat',
-                'cekjumlahstok' => $cekjumlahstok,
-                'uniqueObat' => $uniqueObat,
-                'req' => $request->all()
+        // if (count($cekjumlahstok) <= 0) {
+        //     return new JsonResponse([
+        //         'message' => 'Tidak Ada Stok untuk semua Obat',
+        //         'cekjumlahstok' => $cekjumlahstok,
+        //         'uniqueObat' => $uniqueObat,
+        //         'req' => $request->all()
 
-            ], 410);
-        }
+        //     ], 410);
+        // }
         $alokasinya = collect($cekjumlahstok)->map(function ($x, $y) use ($request) {
             $total = $x->jumlahstok ?? 0;
             $jumlahper = $request->kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
@@ -2612,6 +2612,38 @@ class EresepController extends Controller
                     $obat->error = 'Alokasi tidak mencukupi';
                     $tidakAdaAlokasi[] = $obat;
                 } else {
+                    $mobat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
+                    if ($mobat) {
+                        $obat->kandungan = $mobat->kandungan ?? '';
+                        $obat->fornas = $mobat->fornas ?? '';
+                        $obat->forkit = $mobat->forkit ?? '';
+                        $obat->generik = $mobat->generik ?? '';
+                        $obat->kode108 = $mobat->kode108;
+                        $obat->uraian108 = $mobat->uraian108;
+                        $obat->kode50 = $mobat->kode50;
+                        $obat->uraian50 = $mobat->uraian50;
+                    }
+                    $har = HargaHelper::getHarga($obat->kodeobat, $request->groupsistembayar);
+                    $res = $har['res'];
+                    if ($res) {
+                        $obat->error = 'tidak ada harga untuk obat ini';
+                        $hargajualx = 0;
+                        $harga = 0;
+                    } else {
+                        $hargajualx = $har['hargaJual'];
+                        $harga = $har['harga'];
+                    }
+                    $obat->hpp = $harga;
+                    $obat->hargajual = $hargajualx;
+
+                    $templateNon = TemplateResepRinci::where('template_id', $templateId)
+                        ->where('racikan', 0)
+                        ->where('kodeobat', $obat->kodeobat)
+                        ->first();
+
+                    $obat->aturan = $templateNon->signa;
+                    $obat->konsumsi = $templateNon->konsumsi ?? 1;
+                    $obat->keterangan = $templateNon->keterangan ?? '';
                     $adaAlokasi[] = $obat;
                 }
             } else {
@@ -2639,6 +2671,48 @@ class EresepController extends Controller
                         $obat->error = 'Alokasi tidak mencukupi';
                         $tidakAdaAlokasiRacikan[] = $obat;
                     } else {
+                        $mobat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
+                        if ($mobat) {
+                            $obat->kandungan = $mobat->kandungan ?? '';
+                            $obat->fornas = $mobat->fornas ?? '';
+                            $obat->forkit = $mobat->forkit ?? '';
+                            $obat->generik = $mobat->generik ?? '';
+                            $obat->kode108 = $mobat->kode108;
+                            $obat->uraian108 = $mobat->uraian108;
+                            $obat->kode50 = $mobat->kode50;
+                            $obat->uraian50 = $mobat->uraian50;
+                        }
+                        $har = HargaHelper::getHarga($obat->kodeobat, $request->groupsistembayar);
+                        $res = $har['res'];
+                        if ($res) {
+                            $obat->error = 'tidak ada harga untuk obat ini';
+                            $hargajualx = 0;
+                            $harga = 0;
+                        } else {
+                            $hargajualx = $har['hargaJual'];
+                            $harga = $har['harga'];
+                        }
+                        $obat->hpp = $harga;
+                        $obat->hargajual = $hargajualx;
+
+                        $templateRac = TemplateResepRinci::select('id')->where('template_id', $templateId)
+                            ->where('racikan', 1)
+                            ->get();
+                        $obatRac = TemplateResepRacikan::whereIn('obat_id', $templateRac)
+                            ->where('kodeobat', $obat->kodeobat)
+                            ->first();
+
+                        $obat->konsumsi = $obatRac->konsumsi ?? 1;
+                        $obat->keterangan = $obatRac->keterangan ?? '';
+
+                        $racikannya = TemplateResepRinci::find($obatRac->obat_id);
+
+                        $obat->aturan = $racikannya->signa;
+                        $obat->namaracikan = $racikannya->namaobat;
+                        $obat->satuan_racik = $racikannya->satuan_kcl;
+                        $obat->tiperacikan = $racikannya->tiperacikan;
+                        $obat->jumlahdibutuhkan = $racikannya->jumlah_diminta;
+
                         $adaAlokasiRacikan[] = $obat;
                     }
                 } else {
@@ -2654,87 +2728,7 @@ class EresepController extends Controller
             }
         }
         if (count($tidakAdaAlokasi) > 0 || count($tidakAdaAlokasiRacikan) > 0) {
-            if (count($adaAlokasi) > 0) {
-                foreach ($adaAlokasi as $non) {
-                    $obat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
-                    if ($obat) {
-                        $non['kandungan'] = $obat->kandungan ?? '';
-                        $non['fornas'] = $obat->fornas ?? '';
-                        $non['forkit'] = $obat->forkit ?? '';
-                        $non['generik'] = $obat->generik ?? '';
-                        $non['kode108'] = $obat->kode108;
-                        $non['uraian108'] = $obat->uraian108;
-                        $non['kode50'] = $obat->kode50;
-                        $non['uraian50'] = $obat->uraian50;
-                    }
-                    $har = HargaHelper::getHarga($non['kodeobat'], $request->groupsistembayar);
-                    $res = $har['res'];
-                    if ($res) {
-                        $non['error'] = 'tidak ada harga untuk obat ini';
-                        $hargajualx = 0;
-                        $harga = 0;
-                    } else {
-                        $hargajualx = $har['hargaJual'];
-                        $harga = $har['harga'];
-                    }
-                    $non['hpp'] = $harga;
-                    $non['hargajual'] = $hargajualx;
 
-                    $templateNon = TemplateResepRinci::where('template_id', $templateId)
-                        ->where('racikan', 0)
-                        ->where('kodeobat', $non['kodeobat'])
-                        ->first();
-
-                    $non['aturan'] = $templateNon->signa;
-                    $non['konsumsi'] = $templateNon->konsumsi ?? 1;
-                    $non['keterangan'] = $templateNon->keterangan ?? '';
-                }
-            }
-            if (count($adaAlokasiRacikan) > 0) {
-                foreach ($adaAlokasiRacikan as $non) {
-                    $obat = Mobatnew::where('kd_obat', $non['kodeobat'])->first();
-                    if ($obat) {
-                        $non['kandungan'] = $obat->kandungan ?? '';
-                        $non['fornas'] = $obat->fornas ?? '';
-                        $non['forkit'] = $obat->forkit ?? '';
-                        $non['generik'] = $obat->generik ?? '';
-                        $non['kode108'] = $obat->kode108;
-                        $non['uraian108'] = $obat->uraian108;
-                        $non['kode50'] = $obat->kode50;
-                        $non['uraian50'] = $obat->uraian50;
-                    }
-                    $har = HargaHelper::getHarga($non['kodeobat'], $request->groupsistembayar);
-                    $res = $har['res'];
-                    if ($res) {
-                        $non['error'] = 'tidak ada harga untuk obat ini';
-                        $hargajualx = 0;
-                        $harga = 0;
-                    } else {
-                        $hargajualx = $har['hargaJual'];
-                        $harga = $har['harga'];
-                    }
-                    $non['hpp'] = $harga;
-                    $non['hargajual'] = $hargajualx;
-
-                    $templateRac = TemplateResepRinci::select('id')->where('template_id', $templateId)
-                        ->where('racikan', 1)
-                        ->get();
-                    $obatRac = TemplateResepRacikan::whereIn('obat_id', $templateRac)
-                        ->where('kodeobat', $non['kodeobat'])
-                        ->first();
-
-                    $non['konsumsi'] = $obatRac->konsumsi ?? 1;
-                    $non['keterangan'] = $obatRac->keterangan ?? '';
-
-                    $racikannya = TemplateResepRinci::find($obatRac->obat_id);
-
-                    $non['aturan'] = $racikannya->signa;
-                    $non['namaracikan'] = $racikannya->namaobat;
-                    $non['satuan_racik'] = $racikannya->satuan_kcl;
-                    $non['tiperacikan'] = $racikannya->tiperacikan;
-                    $non['jumlahdibutuhkan'] = $racikannya->jumlah_diminta;
-                }
-            }
 
             return new JsonResponse([
                 'message' => 'Gagal Alokasi Kurang',
