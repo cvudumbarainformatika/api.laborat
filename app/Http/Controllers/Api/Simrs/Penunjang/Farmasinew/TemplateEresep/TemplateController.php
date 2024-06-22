@@ -296,6 +296,16 @@ class TemplateController extends Controller
       ->groupBy('kdobat')
       ->get();
 
-      return $cekjumlahstok;
+      $alokasinya = collect($cekjumlahstok)->map(function ($x, $y) use ($kodedepo) {
+        $total = $x->jumlahstok ?? 0;
+        $jumlahper = $kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+        $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+        $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+        $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+        $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+        return $x;
+    });
+
+      return $alokasinya;
     }
 }
