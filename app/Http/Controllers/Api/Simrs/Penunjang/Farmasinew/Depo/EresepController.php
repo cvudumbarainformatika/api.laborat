@@ -1019,7 +1019,6 @@ class EresepController extends Controller
         if (!$kirimresep) {
             return new JsonResponse([
                 'message' => 'Resep tidak ditemukan',
-
             ], 410);
         }
 
@@ -2325,6 +2324,7 @@ class EresepController extends Controller
         $input = new Request([
             'noreg' => $request->noreg
         ]);
+        AntrianController::ambilnoantrian($newData, $input);
 
 
         $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 5)->count();
@@ -2335,7 +2335,6 @@ class EresepController extends Controller
 
             BridantrianbpjsController::updateWaktu($input, 5);
         }
-        AntrianController::ambilnoantrian($newData, $input);
         $user = Pegawai::find(auth()->user()->pegawai_id);
         if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
             $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->first();
@@ -2961,7 +2960,28 @@ class EresepController extends Controller
             if (count($rinciaja) > 0) {
                 Permintaanresep::insert($rinciaja);
             }
+
             DB::connection('farmasi')->commit();
+            $simpan->load([
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            ]);
+
+            $msg = [
+                'data' => [
+                    'id' => $simpan->id,
+                    'noreg' => $simpan->noreg,
+                    'depo' => $simpan->depo,
+                    'noresep' => $simpan->noresep,
+                    'status' => '1',
+                ]
+            ];
+            event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($updatekunjungan) {
+                self::kirimResepDanSelesaiLayanan($request);
+            }
             return new JsonResponse([
                 'message' => 'Resep Berhasil dibuat',
                 // 'adaraw' => $adaraw,
