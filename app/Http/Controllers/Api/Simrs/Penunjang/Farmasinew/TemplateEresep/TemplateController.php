@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\TemplateEresep;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\Templateresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRacikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRinci;
@@ -205,5 +206,96 @@ class TemplateController extends Controller
         ->get();
 
         return new JsonResponse($data, 200);
+    }
+
+
+    public function order(Request $request)
+    {
+        $user = auth()->user()->pegawai_id;
+        $request->request->add(['pegawai_id' => $user]);
+
+        $items = collect($request->items);
+        $racikan = $items->where('racikan', true);
+        $nonRacikan = $items->where('racikan', false);
+
+        $cekNonRacikan = self::cekStokNonRacikan($nonRacikan, $request->kodedepo);
+
+
+        return new JsonResponse([
+            'nonRacikan' => $cekNonRacikan, 'racikan' => $racikan], 200);
+    }
+
+    public static function cekStokNonRacikan($nonRacikan, $kodedepo)
+    {
+        $kodeobat = $nonRacikan->pluck('kodeobat');
+        return self::cekJumlahStok($kodeobat, $kodedepo);
+    }
+
+    public static function cekJumlahStok($obat, $kodedepo)
+    {
+      $uniqueObat = $obat;
+      $cekjumlahstok = Stokreal::select('kdobat', DB::raw('sum(jumlah) as jumlahstok'))
+      ->whereIn('kdobat', $uniqueObat)
+      ->where('kdruang', $kodedepo)
+      ->where('jumlah', '>', 0)
+      ->with([
+          'transnonracikan' => function ($transnonracikan) use ($kodedepo) {
+              $transnonracikan->select(
+                  // 'resep_keluar_r.kdobat as kdobat',
+                  'resep_permintaan_keluar.kdobat as kdobat',
+                  'resep_keluar_h.depo as kdruang',
+                  DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+              )
+                  ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                  ->where('resep_keluar_h.depo', $kodedepo)
+                  ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                  ->groupBy('resep_permintaan_keluar.kdobat');
+          },
+          'transracikan' => function ($transracikan) use ($kodedepo) {
+              $transracikan->select(
+                  // 'resep_keluar_racikan_r.kdobat as kdobat',
+                  'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                  'resep_keluar_h.depo as kdruang',
+                  DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+              )
+                  ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                  ->where('resep_keluar_h.depo', $kodedepo)
+                  ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                  ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+          },
+          'permintaanobatrinci' => function ($permintaanobatrinci) use ($kodedepo) {
+              $permintaanobatrinci->select(
+                  'permintaan_r.no_permintaan',
+                  'permintaan_r.kdobat',
+                  DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+              )
+                  ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                  // biar yang ada di tabel mutasi ga ke hitung
+                  ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                      $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                          ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                  })
+                  ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                  ->where('permintaan_h.tujuan', $kodedepo)
+                  ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                  ->groupBy('permintaan_r.kdobat');
+          },
+          'persiapanrinci' => function ($res) use ($kodedepo) {
+              $res->select(
+                  'persiapan_operasi_rincis.kd_obat',
+
+                  DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+              )
+                  ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                  ->whereIn('persiapan_operasis.flag', ['', '1'])
+                  ->groupBy('persiapan_operasi_rincis.kd_obat');
+          },
+      ])
+      ->orderBy('tglexp')
+      ->groupBy('kdobat')
+      ->get();
+
+      return $cekjumlahstok;
     }
 }
