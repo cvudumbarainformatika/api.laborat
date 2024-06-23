@@ -14,6 +14,7 @@ Route::group(
         Route::get('/akses', [AksesUserController::class, 'userAkses']);
         Route::get('/role', [AksesUserController::class, 'userRole']);
         Route::get('/poli', [AksesUserController::class, 'getPoli']);
+        Route::get('/penunjang', [AksesUserController::class, 'getPenunjang']);
         Route::post('/store-akses', [AksesUserController::class, 'storeAkses']);
         Route::post('/store-role', [AksesUserController::class, 'storeRole']);
         Route::post('/store-poli', [AksesUserController::class, 'storePoli']);
