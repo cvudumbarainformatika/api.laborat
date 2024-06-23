@@ -158,13 +158,13 @@ class DisplayController extends Controller
                             'antrian_ambil.nomor as noantrian'
                         )
                             ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
-                            // ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
                             ->where('antrian_ambil.nomor', 'LIKE', '%FJ%')
                             ->orderby('antrian_ambil.nomor', 'ASC');
                     },
                     'poli.panggilan' => function ($q) use ($hr_ini) {
-                        // $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59']);
-                        $q->orderby('updated_at', 'DESC');
+                        $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->orderby('updated_at', 'DESC');
                     }
                 ]);
             })
@@ -181,13 +181,13 @@ class DisplayController extends Controller
                             'antrian_ambil.nomor as noantrian'
                         )
                             ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
-                            // ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
                             ->where('antrian_ambil.nomor', 'NOT LIKE', '%FJ%')
                             ->orderby('antrian_ambil.nomor', 'ASC');
                     },
                     'poli.panggilan' => function ($q) use ($hr_ini) {
-                        // $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59']);
-                        $q->orderby('updated_at', 'DESC');
+                        $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->orderby('updated_at', 'DESC');
                     }
                 ]);
             })
