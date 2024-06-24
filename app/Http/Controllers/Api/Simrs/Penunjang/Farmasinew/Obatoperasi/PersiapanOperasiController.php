@@ -15,6 +15,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
+use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\SistemBayar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -650,6 +652,16 @@ class PersiapanOperasiController extends Controller
     }
     public function simpanEresep(Request $request)
     {
+        // $list = PermintaanOperasi::where('rs1', $request->noreg)->first();
+        // $ranap = Kunjunganranap::where('rs1', $request->noreg)->first();
+        // $rajal = KunjunganPoli::where('rs1', $request->noreg)->first();
+        // return new JsonResponse([
+        //     'ranap' => $ranap,
+        //     'rajal' => $rajal,
+        //     'list' => $list,
+        //     'req' => $request->all()
+        // ]);
+        // list di rs 10
         // cek user
         $user = FormatingHelper::session_user();
         if ($user['kdgroupnakes'] != '1') {
@@ -673,7 +685,7 @@ class PersiapanOperasiController extends Controller
             'tgl_kirim' => date('Y-m-d H:i:s'),
             'tgl' => date('Y-m-d'),
             'depo' => 'Gd-04010103',
-            'ruangan' => 'R-0101025',
+            'ruangan' => $request->ruangan,
             'dokter' =>  $user['kodesimrs'],
             'sistembayar' => $request->sistembayar,
             'diagnosa' => $request->diagnosa ?? '',
