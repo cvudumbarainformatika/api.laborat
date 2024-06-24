@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\TemplateEresep;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
@@ -218,23 +219,93 @@ class TemplateController extends Controller
         $racikan = $items->where('racikan', true);
         $nonRacikan = $items->where('racikan', false);
 
-        $cekNonRacikan = self::cekStokNonRacikan($nonRacikan, $request->kodedepo);
+        $cekNonRacikan = self::cekStokNonRacikan($nonRacikan, $request->kodedepo, $request->groupsistembayar);
+        // return $cekNonRacikan;
+        $cekRacikan = self::cekStokRacikan($racikan, $request->kodedepo, $request->groupsistembayar);
+
+        
+
+        $a = count($cekNonRacikan) > 0 ? collect($cekNonRacikan)->pluck('isError')->toArray() : []; 
+        $b = count($cekRacikan) > 0 ? collect($cekRacikan)->pluck('isError')->toArray() : []; 
+        $merged = array_merge(array_values($a), array_values($b));
+        // if (count($a) > 0 && count($b) > 0) {
+        //   # code...
+        //   $merged = $a->merge($b);
+        // }
+
+        // return $merged;
+        $msg = 'ok';
+        $isError = false;
+        if (in_array(true, (array)$merged)) {
+            $isError= true;
+            $msg = 'Gagal Alokasi Kurang';
+        } else {
+            $isError= false;
+        }
 
 
-        return new JsonResponse([
-            'nonRacikan' => $cekNonRacikan, 'racikan' => $racikan], 200);
+
+        $data = [
+          'message' => $msg,
+          'isError' => $isError,
+          'nonRacikan' => $cekNonRacikan,
+          'racikan' => $cekRacikan
+        ];
+
+        return new JsonResponse(
+            $data ,
+            $isError? 410 : 200);
     }
 
-    public static function cekStokNonRacikan($nonRacikan, $kodedepo)
+    public static function cekStokNonRacikan($nonRacikan, $kodedepo, $sistembayar)
     {
         $kodeobat = $nonRacikan->pluck('kodeobat');
-        return self::cekJumlahStok($kodeobat, $kodedepo);
+        $adaRaw = self::cekJumlahStok($kodeobat, $kodedepo, $sistembayar, false);
+        return self::outputRaw($adaRaw, $nonRacikan, $sistembayar);
+        // return $adaRaw;
     }
 
-    public static function cekJumlahStok($obat, $kodedepo)
+    public static function cekStokRacikan($racikan, $kodedepo, $sistembayar)
+    {
+        $racik = $racikan->map(function ($x) use ($kodedepo, $sistembayar) {
+          $obat['koderacikan'] = $x['kodeobat'];
+          $obat['sistembayar'] = $sistembayar;
+          $rincian = collect($x['rincian']);
+          $obat['rincian'] = count($rincian) > 0 ? $rincian->implode('kodeobat', ','): null;
+          $obat['kodedepo'] = $kodedepo;
+          return $obat;
+        });
+
+        $kode = $racik->pluck('rincian')
+        ->map(function (string $kd) {
+            return explode(',', $kd);
+        })
+        ->flatten();
+
+        $adaRaw = self::cekJumlahStok($kode, $kodedepo, $sistembayar, true);
+        return self::outputRaw($adaRaw, $racikan, $sistembayar);
+    }
+
+    public static function cekJumlahStok($obat, $kodedepo, $sistembayar, $racikan)
     {
       $uniqueObat = $obat;
-      $cekjumlahstok = Stokreal::select('kdobat', DB::raw('sum(jumlah) as jumlahstok'))
+      $limitHargaTertinggi = 5;
+      $cekjumlahstok = Stokreal::query()
+      ->select(
+        'stokreal.kdobat as kdobat',
+        DB::raw('sum(stokreal.jumlah) as jumlahstok'),
+        'new_masterobat.nama_obat as nama_obat',
+        'new_masterobat.kandungan as kandungan',
+        'new_masterobat.status_fornas as fornas',
+        'new_masterobat.status_forkid as forkit',
+        'new_masterobat.status_generik as generik',
+        'new_masterobat.kode108 as kode108',
+        'new_masterobat.uraian108 as uraian108',
+        'new_masterobat.kode50 as kode50',
+        'new_masterobat.uraian50 as uraian50',
+        'new_masterobat.obat_program as obat_program',
+      )
+      ->leftJoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
       ->whereIn('kdobat', $uniqueObat)
       ->where('kdruang', $kodedepo)
       ->where('jumlah', '>', 0)
@@ -291,21 +362,230 @@ class TemplateController extends Controller
                   ->whereIn('persiapan_operasis.flag', ['', '1'])
                   ->groupBy('persiapan_operasi_rincis.kd_obat');
           },
+          // 'daftarharga'=>function($q){
+          //   $q->select(
+          //     DB::raw('MAX(harga) as harga'), 
+          //     'tgl_mulai_berlaku', 
+          //     'kd_obat'
+          //     )
+          //   ->orderBy('tgl_mulai_berlaku','desc')
+          //   ->take(5);
+          // }
       ])
+      // ->withCount(['daftarharga' => function ($q){
+      //       $q->select(
+      //         DB::raw('MAX(harga) as harga'), 
+      //         'tgl_mulai_berlaku', 
+      //         'kd_obat'
+      //         )
+      //       ->orderBy('tgl_mulai_berlaku','desc')
+      //       ->limit(5);
+      // }])
+      // ->addSelect([
+      //   'harga_tertinggi_ids' => DaftarHarga::query()
+      //           ->selectRaw("SUBSTRING_INDEX(GROUP_CONCAT(daftar_hargas.id order by tgl_mulai_berlaku desc, ','), ',', {$limitHargaTertinggi})")
+      //           ->whereColumn('daftar_hargas.kd_obat','=', 'stokreal.kdobat')
+      //           ->limit($limitHargaTertinggi)
+      //   ])
+      ->addSelect([
+        'harga_tertinggi' => DaftarHarga::query()
+                ->selectRaw("MAX(harga)")
+                ->whereColumn('daftar_hargas.kd_obat','=', 'stokreal.kdobat')
+                ->orderBy('daftar_hargas.tgl_mulai_berlaku','desc')
+                ->limit($limitHargaTertinggi)
+        ])
       ->orderBy('tglexp')
       ->groupBy('kdobat')
       ->get();
 
-      $alokasinya = collect($cekjumlahstok)->map(function ($x, $y) use ($kodedepo) {
+      // $ht = $cekjumlahstok->value('harga_tertinggi');
+      // $hrg = self::penentuanHarga($ht, $sistembayar,$cekjumlahstok->pluck('obat_program'));
+
+
+      // $hrgTertinggiIds = $cekjumlahstok->pluck('harga_tertinggi_ids')
+      // ->map(function (string $daftarHargaKodes) {
+      //     return explode(',', $daftarHargaKodes);
+      // })
+      // ->flatten();
+
+      // $hargaTertinggi = DaftarHarga::select('id','kd_obat','tgl_mulai_berlaku','harga')
+      // ->whereIn('id', $hrgTertinggiIds)
+      // ->orderBy('tgl_mulai_berlaku', 'desc')
+      // ->get();
+
+      // $ht = collect($hargaTertinggi);
+
+      // foreach ($cekjumlahstok as $stok) {
+      //   // menjadikan array dari string $stok->harga_tertinggi_ids
+      //   $ids = explode(',', $stok->harga_tertinggi_ids);
+
+      //   $stokHargaTertinggi = $hargaTertinggi
+      //       ->whereIn('id', $ids)
+      //       ->sortBy(fn (DaftarHarga $daftarHarga) => array_flip($ids)[$daftarHarga->id])
+      //       ->values();
+     
+      //   // masukkan ke object harga_teringgi_kodes
+      //   $stok->setRelation('harga_tertinggi_ids', $stokHargaTertinggi);
+      // }
+
+
+
+      $alokasiNharga = collect($cekjumlahstok)->map(function ($x, $y) use ($kodedepo) {
         $total = $x->jumlahstok ?? 0;
         $jumlahper = $kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
         $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
         $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
         $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
         $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+        // $ids = explode(',', $x->harga_tertinggi_ids);
+        // $x->setRelation('harga_tertinggi_ids', $ht->whereIn('id', $ids)
+        //   ->sortByDesc('tgl_mulai_berlaku')->values());// = $ht->whereIn('id', $x['ids_harga'])->values();?
+        // $x->harga = $ht->whereIn('id', $ids)->max('harga') ?? 0;
+        // $x->harga = $hrg;
         return $x;
-    });
+      });
+      
+      return $alokasiNharga->toArray();
+    }
 
-      return $alokasinya;
+    public static function outputRaw($adaraw, $requestnya, $sistembayar)
+    {
+      // return $requestnya;
+        $obatYgDiminta = [];
+        foreach ($requestnya as $key) {
+          // mapping racikan =============================================================================
+          if ($key['racikan'] === true) {
+            $obat['kdobat'] = $key['kodeobat'];
+            $obat['jumlah_diminta'] = $key['jumlah_diminta'];
+            $obat['sistembayar'] = $sistembayar;
+            $rincian = $key['rincian'];
+            $rinci = [];
+            foreach ($rincian as $sub) {
+              $data = collect($adaraw)->firstWhere('kdobat', $key['kodeobat']);
+              $rinci[] = self::mappingObat($data, $sub, $sistembayar);
+            }
+            $obat['rincian'] = $rinci;
+            $ceks = collect($rinci)->pluck('isError');
+            $valueToCheck = true;
+            $obat['isError'] = false;
+            if (in_array($valueToCheck, (array)$ceks)) {
+                $obat['isError'] = true;
+            } else {
+                $obat['isError'] = false;
+            }
+            $obatYgDiminta[] = $obat;
+          } else {
+            // mapping non racikan =============================================================================
+            $data = collect($adaraw)->firstWhere('kdobat', $key['kodeobat']);
+            $obatYgDiminta[] = self::mappingObat($data, $key, $sistembayar);
+            // $data = $adaraw;
+            // $obatYgDiminta[] = $data;
+          }
+        }
+
+      
+
+      // $raw = collect($adaraw);
+      // $obatYgDiminta = collect($requestnya)->map(function ($x) use ($raw, $sistembayar) {
+      //   $obat['kdobat'] = $x['kodeobat'];
+      //   $isError = $raw->where('kdobat', $x['kodeobat'])->isEmpty();
+      //   $obat['isError'] = $isError;
+      //   $obat['errors'] = $isError ? 'Stok Obat Tidak Tersedia' : null;
+      //   $obat['sistembayar'] = $sistembayar;
+      //   $data  = $raw->where('kdobat', $x['kodeobat'])->first();
+      //   $obat['data'] = $raw->where('kdobat', $x['kodeobat'])->first();
+
+      //   $alokasi = $isError ? false : (int)$data['alokasi'];
+      //   $jumlahDiminta = $isError ? false : (int)$x['jumlah_diminta'];
+      //   $jumlahstok = $isError ? false : $data['jumlahstok'];
+      //   $obat['jumlahstok'] = $jumlahstok;
+      //   $obat['alokasi'] = $alokasi;
+      //   $obat['jumlah_diminta'] = $jumlahDiminta;
+      //   if ($alokasi ) {
+      //     if ($jumlahDiminta > $alokasi) {
+      //       $obat['isError'] = true;
+      //       $obat['errors'] = 'Jumlah diminta melebihi Alokasi yang tersedia';
+      //     }
+      //   }
+
+      //   $harga = $isError ? false : $data['harga_tertinggi'];
+      //   if (!$harga) {
+      //     $obat['isError'] = true;
+      //     $obat['errors'] = 'Belum Ada Harga pada Obat ini';
+      //   }
+  
+      //   $hargajual = $isError ? false : self::penentuanHarga($harga, $sistembayar, $data['obat_program']);
+      //   $obat['hargajual'] = $hargajual;
+      //   $obat['harga'] = $harga;
+      //   return $obat;
+      // });
+          
+      return $obatYgDiminta;
+    }
+
+    public static function mappingObat($data, $key, $sistembayar)
+    {
+      $isError = $data ? false : true;
+      $obat['isError'] = $isError;
+      $obat['errors'] = $isError ? ['obat'=> 'Stok Obat Tidak Tersedia'] : [];
+      $obat['kdobat'] = $key['kodeobat'];
+      $obat['sistembayar'] = $sistembayar;
+      $obat['data'] = $data;
+
+      $alokasi = $isError ? false : (int)$data['alokasi'];
+      $jumlahDiminta = $isError ? false : (int)$key['jumlah_diminta'];
+      $jumlahstok = $isError ? false : $data['jumlahstok'];
+      $obat['jumlahstok'] = $jumlahstok;
+      $obat['alokasi'] = $alokasi;
+      $obat['jumlah_diminta'] = $jumlahDiminta;
+
+      // $validasiJmldiminta = (int)$key['jumlah_diminta'] > $alokasi;
+      if ($alokasi ) {
+        if ($jumlahDiminta > $alokasi) {
+          $obat['isError'] = true;
+          $obat['errors'] = ['alokasi'=> 'Jumlah diminta melebihi Alokasi yang tersedia'];
+        }
+        
+      }
+
+      $harga = $isError ? false : $data['harga_tertinggi'];
+      $hargajual = $isError ? false : self::penentuanHarga($harga, $sistembayar, $data['obat_program']);
+      $obat['hargajual'] = $hargajual;
+      $obat['harga'] = $harga;
+
+      return $obat;
+    }
+
+    public static function penentuanHarga($harga, $sistembayar, $obatprogram)
+    {
+      $hargajualx = 0;
+      if ($obatprogram === '1') {
+        $hargajualx = 0;
+      } else {
+        if ($sistembayar===null || $sistembayar==='1' || $sistembayar===1 || !$sistembayar) {
+              if ($harga <= 50000) {
+                $hargajualx = (int) $harga + (int) $harga * (int) 28 / (int) 100;
+            } elseif ($harga > 50000 && $harga <= 250000) {
+                $hargajualx = (int) $harga + ((int) $harga * (int) 26 / (int) 100);
+            } elseif ($harga > 250000 && $harga <= 500000) {
+                $hargajualx = (int) $harga + (int) $harga * (int) 21 / (int) 100;
+            } elseif ($harga > 500000 && $harga <= 1000000) {
+                $hargajualx = (int) $harga + (int) $harga * (int) 16 / (int)100;
+            } elseif ($harga > 1000000 && $harga <= 5000000) {
+                $hargajualx = (int) $harga + (int) $harga * (int) 11 /  (int)100;
+            } elseif ($harga > 5000000 && $harga <= 10000000) {
+                $hargajualx = (int) $harga + (int) $harga * (int) 9 / (int) 100;
+            } elseif ($harga > 10000000) {
+                $hargajualx = (int) $harga + (int) $harga * (int) 7 / (int) 100;
+            }
+        } else if ($sistembayar == 2 || $sistembayar == '2') {
+            $hargajualx = (int) $harga + (int) $harga * (int) 25 / (int)100;
+        } else {
+            $hargajualx = (int) $harga + (int) $harga * (int) 30 / (int)100;
+        }
+      }
+      
+
+      return $hargajualx;
     }
 }
