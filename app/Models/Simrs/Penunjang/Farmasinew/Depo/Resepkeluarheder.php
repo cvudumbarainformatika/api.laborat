@@ -8,6 +8,7 @@ use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\SistemBayar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -88,5 +89,9 @@ class Resepkeluarheder extends Model
     public function antrian()
     {
         return $this->hasOne(Antrianambil::class, 'noreg', 'noreg');
+    }
+    public function kunjunganranap()
+    {
+        return $this->hasOne(Kunjunganranap::class, 'rs1', 'noreg');
     }
 }

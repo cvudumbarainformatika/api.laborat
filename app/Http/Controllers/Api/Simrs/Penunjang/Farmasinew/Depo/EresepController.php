@@ -924,6 +924,8 @@ class EresepController extends Controller
             'sistembayar',
             'sep:rs1,rs8',
             'dokter:kdpegsimrs,nama',
+            'kunjunganranap:rs1,titipan' ,
+            'kunjunganranap.ruangtitipan:rs1,rs2' ,
             'datapasien' => function ($quer) {
                 $quer->select(
                     'rs1',
