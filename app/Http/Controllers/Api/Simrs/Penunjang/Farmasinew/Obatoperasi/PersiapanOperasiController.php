@@ -676,6 +676,10 @@ class PersiapanOperasiController extends Controller
             $noresep = FormatingHelper::resep($wew, 'D-KO');
         } else {
             $noresep = $request->noresep;
+            // $ada = Resepkeluarheder::where('noresep', $request->noresep)->where('flag', '<>', '9')->first();
+            // if ($ada) {
+            //     return new JsonResponse(['message' => 'Resep Sudah Selesai silahkan buat resep baru'], 410);
+            // }
         }
         $head =            [
             // 'noresep' => $noresep,
