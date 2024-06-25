@@ -159,6 +159,7 @@ class StokrealController extends Controller
 
     public function liststokreal()
     {
+        if (!request('from')) return [];
         $kdruang = request('kdruang');
 
         // $today = date('Y-m-d');
