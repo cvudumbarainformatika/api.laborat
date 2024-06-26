@@ -843,7 +843,7 @@ class TemplateController extends Controller
             ]
         ];
         event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
-        // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi
+        // cek apakah pasien rawat jalan, dan ini nanti jadi pasien selesai layanan dan ambil antrian farmasi iki
         $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
         if ($updatekunjungan) {
             self::kirimResepDanSelesaiLayanan($request);
