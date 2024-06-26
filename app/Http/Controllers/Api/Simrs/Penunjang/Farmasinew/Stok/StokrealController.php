@@ -632,4 +632,10 @@ class StokrealController extends Controller
             'req' => $request->all()
         ]);
     }
+    public function listBlangko()
+    {
+
+        $data = request()->all();
+        return new JsonResponse($data);
+    }
 }
