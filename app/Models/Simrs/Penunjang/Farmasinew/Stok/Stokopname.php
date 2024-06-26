@@ -17,4 +17,8 @@ class Stokopname extends Model
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
     }
+    public function tutup()
+    {
+        return $this->hasOne(TutupOpname::class, 'tglopname', 'tglopname');
+    }
 }

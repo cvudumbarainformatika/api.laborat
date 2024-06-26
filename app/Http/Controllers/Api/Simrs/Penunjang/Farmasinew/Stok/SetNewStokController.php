@@ -344,10 +344,10 @@ class SetNewStokController extends Controller
         //     ['nama' => 'Depo Rawat Jalan', 'kode' => 'Gd-05010101', 'lama' => 'AP0001'],
         //     ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
         // ];
-        // return new JsonResponse([
-        //     // 'data' => $data,
-        //     'message' => 'Cek Stok Untuk penenyesuaian sudan ditutup'
-        // ], 410);
+        return new JsonResponse([
+            // 'data' => $data,
+            'message' => 'Cek Stok Untuk penenyesuaian sudan ditutup'
+        ], 410);
         $depo = $request->kdruang;
         $forbid = ['Gd-05010100', 'Gd-03010100', 'Gd-04010103'];
         if (in_array($depo, $forbid)) {

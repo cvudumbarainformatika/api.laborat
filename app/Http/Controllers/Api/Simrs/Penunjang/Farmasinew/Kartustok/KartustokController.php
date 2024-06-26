@@ -99,6 +99,7 @@ class KartustokController extends Controller
                         'permintaan_h.tgl_permintaan as tgl_permintaan',
                         'permintaan_h.tujuan as tujuan',
                         'permintaan_h.dari as dari',
+                        'permintaan_h.no_permintaan as no_permintaan'
                     )
                         ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])

@@ -30,8 +30,15 @@ Route::group([
 
     Route::get('/list-stok-sekarang', [StokrealController::class, 'listStokSekarang']);
     Route::get('/obat-mau-disesuaikan', [StokrealController::class, 'obatMauDisesuaikan']);
+
     Route::post('/update-stok-sekarang', [StokrealController::class, 'updatehargastok']);
+
     Route::get('/data-alokasi', [StokrealController::class, 'dataAlokasi']);
     Route::get('/list-ruang-ranap', [StokrealController::class, 'getRuangRanap']);
     Route::get('/list-stok-min-depo', [StokrealController::class, 'listStokMinDepo']);
+
+    // simpan fisik
+    Route::post('/simpan-fisik', [StokrealController::class, 'simpanFisik']);
+    Route::post('/simpan-baru', [StokrealController::class, 'simpanBaru']);
+    Route::post('/tutup-opname', [StokrealController::class, 'tutupOpname']);
 });

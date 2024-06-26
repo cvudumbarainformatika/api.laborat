@@ -56,10 +56,16 @@ class Kunjunganranap extends Model
     public $timestamps = false;
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
+    protected $connection = 'mysql';
 
     public function relmasterruangranap()
     {
         return $this->hasOne(Mruangranap::class, 'rs1', 'rs5');
+    }
+
+    public function ruangtitipan()
+    {
+        return $this->hasOne(Mruangranap::class, 'rs1', 'titipan');
     }
 
     public function relsistembayar()

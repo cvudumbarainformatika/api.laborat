@@ -15,6 +15,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
+use App\Models\Simrs\Rajal\KunjunganPoli;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\SistemBayar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -252,10 +254,10 @@ class PersiapanOperasiController extends Controller
             // }
             // $imp = implode('', $nol) . ($num + 1);
 
-            // $procedure = 'persiapanok(@nomor)';
-            // $colom = 'persiapanok';
-            $procedure = 'resepkeluardepook(@nomor)';
-            $colom = 'depook';
+            $procedure = 'persiapanok(@nomor)';
+            $colom = 'persiapanok';
+            // $procedure = 'resepkeluardepook(@nomor)';
+            // $colom = 'depook';
             $lebel = 'OP-KO';
             DB::connection('farmasi')->select('call ' . $procedure);
             $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
@@ -263,6 +265,26 @@ class PersiapanOperasiController extends Controller
             $nopermintaan = FormatingHelper::resep($wew, $lebel);
             // $nopermintaan = $imp  . '/OP/' . date('dmY');
         } else {
+            $ada = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+            if ($ada) {
+                $flag = (int)$ada->flag;
+                if ($flag >= 1) {
+                    return new JsonResponse([
+                        'message' => 'Nomor Permintaan Bukan draft, silakan ganti nomor permintaan',
+                    ], 410);
+                }
+                if ($ada->flag === '' && $ada->noreg !== $request->noreg) {
+                    return new JsonResponse([
+                        'message' => 'Nomor Permintaan Sudah dipakai pasien yang lain, silakan ganti nomor permintaan',
+                    ], 410);
+                }
+            }
+            $adaDist = PersiapanOperasiDistribusi::where('nopermintaan', $request->nopermintaan)->get();
+            if (count($adaDist)) {
+                return new JsonResponse([
+                    'message' => 'Nomor Permintaan Ini sudah pernah di distribusikan silahkan pilin nomor yang lain',
+                ], 410);
+            }
             $nopermintaan = $request->nopermintaan;
         }
         // return new JsonResponse([
@@ -294,10 +316,12 @@ class PersiapanOperasiController extends Controller
         if ($rinci) {
             $rinci->load('obat:kd_obat,nama_obat');
         }
+        $all = PersiapanOperasi::with('rinci.obat:kd_obat,nama_obat')->find($head->id);
         return new JsonResponse(
             [
                 'message' => 'Data Berhasil Disimpan',
                 'heder' => $head,
+                'all' => $all,
                 'rinci' => $rinci,
                 'nota' => $nopermintaan,
             ],
@@ -628,6 +652,16 @@ class PersiapanOperasiController extends Controller
     }
     public function simpanEresep(Request $request)
     {
+        // $list = PermintaanOperasi::where('rs1', $request->noreg)->first();
+        // $ranap = Kunjunganranap::where('rs1', $request->noreg)->first();
+        // $rajal = KunjunganPoli::where('rs1', $request->noreg)->first();
+        // return new JsonResponse([
+        //     'ranap' => $ranap,
+        //     'rajal' => $rajal,
+        //     'list' => $list,
+        //     'req' => $request->all()
+        // ]);
+        // list di rs 10
         // cek user
         $user = FormatingHelper::session_user();
         if ($user['kdgroupnakes'] != '1') {
@@ -642,6 +676,10 @@ class PersiapanOperasiController extends Controller
             $noresep = FormatingHelper::resep($wew, 'D-KO');
         } else {
             $noresep = $request->noresep;
+            // $ada = Resepkeluarheder::where('noresep', $request->noresep)->where('flag', '<>', '9')->first();
+            // if ($ada) {
+            //     return new JsonResponse(['message' => 'Resep Sudah Selesai silahkan buat resep baru'], 410);
+            // }
         }
         $head =            [
             // 'noresep' => $noresep,
@@ -651,7 +689,7 @@ class PersiapanOperasiController extends Controller
             'tgl_kirim' => date('Y-m-d H:i:s'),
             'tgl' => date('Y-m-d'),
             'depo' => 'Gd-04010103',
-            'ruangan' => 'R-0101025',
+            'ruangan' => $request->ruangan,
             'dokter' =>  $user['kodesimrs'],
             'sistembayar' => $request->sistembayar,
             'diagnosa' => $request->diagnosa ?? '',

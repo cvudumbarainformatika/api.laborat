@@ -141,6 +141,63 @@ class DisplayController extends Controller
 
         return response()->json($data);
     }
+    public function displayWithFarmasi()
+    {
+        $hr_ini = date('Y-m-d');
+        $data = Display::where('kode', request('kode'))
+            ->when(request('kode') === "B", function ($q) use ($hr_ini) {
+                $q->with([
+                    'poli.jumlahkunjunganpoli' => function ($q) use ($hr_ini) {
+                        $q->select(
+                            'rs17.rs1',
+                            'rs17.rs1 as noreg',
+                            'rs17.rs2',
+                            'rs17.rs3',
+                            'rs17.rs8',
+                            'rs17.rs19 as status',
+                            'antrian_ambil.nomor as noantrian'
+                        )
+                            ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                            ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->where('antrian_ambil.nomor', 'LIKE', '%FJ%')
+                            ->orderby('antrian_ambil.nomor', 'ASC');
+                    },
+                    'poli.panggilan' => function ($q) use ($hr_ini) {
+                        $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->orderby('updated_at', 'DESC');
+                    }
+                ]);
+            })
+            ->when(request('kode') !== "B", function ($q) use ($hr_ini) {
+                $q->with([
+                    'poli.jumlahkunjunganpoli' => function ($q) use ($hr_ini) {
+                        $q->select(
+                            'rs17.rs1',
+                            'rs17.rs1 as noreg',
+                            'rs17.rs2',
+                            'rs17.rs3',
+                            'rs17.rs8',
+                            'rs17.rs19 as status',
+                            'antrian_ambil.nomor as noantrian'
+                        )
+                            ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                            ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->where('antrian_ambil.nomor', 'NOT LIKE', '%FJ%')
+                            ->orderby('antrian_ambil.nomor', 'ASC');
+                    },
+                    'poli.panggilan' => function ($q) use ($hr_ini) {
+                        $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                            ->orderby('updated_at', 'DESC');
+                    }
+                ]);
+            })
+            ->first();
+        if (!$data) {
+            return response()->json(['message' => 'Maaf display belum ada'], 500);
+        }
+
+        return response()->json($data);
+    }
 
     public function send_panggilan(Request $request)
     {

@@ -402,13 +402,13 @@ class PenerimaanController extends Controller
             [
                 'nopenerimaan' => $request->nopenerimaan ?? $nopenerimaan,
                 'kdobat' => $request->kdobat,
+            ],
+            [
                 'no_batch' => $request->no_batch,
                 'jml_terima_b' => $request->jml_terima_b,
                 'jml_terima_k' => $request->jml_terima_k,
                 'harga' => $request->harga,
                 'harga_kcl' => $request->harga_kcl,
-            ],
-            [
                 'no_retur_rs' => $request->no_retur_rs ?? '',
                 'tgl_exp' => $request->tgl_exp,
                 'satuan' => $request->satuan_bsr,

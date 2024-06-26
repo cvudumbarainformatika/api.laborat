@@ -58,6 +58,12 @@ Route::group([
     Route::post('/tolak-resep', [EresepController::class, 'tolakResep']);
     Route::post('/isi-alasan', [EresepController::class, 'isiAlasan']);
 
+    // hapus head
+    Route::post('/hapus-permintaan-resep', [EresepController::class, 'hapusPermintaanResep']);
+
+    // Copy Template
+    Route::post('/cek-template-resep', [EresepController::class, 'cekTemplateResep']);
+
     Route::post('/ambil-iter', [EresepController::class, 'ambilIter']);
     Route::post('/copy-resep', [EresepController::class, 'copyResep']);
     Route::post('/ambil-history', [EresepController::class, 'ambilHistory']);
