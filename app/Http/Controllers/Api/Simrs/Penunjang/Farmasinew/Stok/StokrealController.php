@@ -7,6 +7,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
@@ -630,6 +631,43 @@ class StokrealController extends Controller
             'message' => 'Stok Opname Sudah Ditutup',
             'data' => $data,
             'req' => $request->all()
+        ]);
+    }
+    public function listBlangko()
+    {
+        $from = request('from') . ' 00:00:00';
+        $to = request('to') . ' 23:59:59';
+        $data = Mobatnew::select('kd_obat', 'nama_obat', 'satuan_k')
+            ->with([
+                'onestok' => function ($q) {
+                    $q->select(
+                        'kdobat',
+                        'kdruang',
+                        DB::raw('sum(jumlah) as total')
+                    )
+                        ->where('kdruang', request('kdruang'))
+                        ->groupBy('kdobat', 'kdruang');
+                },
+                'oneopname' => function ($q) {
+                    $q->select(
+                        'kdobat',
+                        'kdruang',
+                        'tglopname',
+                        DB::raw('sum(jumlah) as total')
+                    )->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59'])
+                        ->where('kdruang', request('kdruang'))
+                        ->groupBy('kdobat', 'kdruang');
+                }
+                // 'oneopname'
+
+            ])
+            ->orderBy('nama_obat', 'ASC')
+            ->get();
+        return new JsonResponse([
+            'data' => $data,
+            'from' => $from,
+            'to' => $to,
+
         ]);
     }
 }

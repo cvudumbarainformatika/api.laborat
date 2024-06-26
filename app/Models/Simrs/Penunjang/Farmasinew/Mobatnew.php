@@ -105,6 +105,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kd_obat');
     }
+    public function oneopname()
+    {
+        return $this->hasOne(Stokopname::class, 'kdobat', 'kd_obat');
+    }
 
     public function penerimaanrinci()
     {
