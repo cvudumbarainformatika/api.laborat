@@ -32,6 +32,7 @@ class RanapController extends Controller
             'rs23.rs3 as tglmasuk',
             'rs23.rs4 as tglkeluar',
             'rs23.rs5 as kdruangan',
+            'rs23.rs5 as kodepoli', // ini khusus resep jangan diganti .... memang namanya aneh kok ranap ada kodepoli? ya? jangan dihapus yaaa.....
             'rs23.rs6 as ketruangan',
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
