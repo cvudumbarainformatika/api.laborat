@@ -11,6 +11,7 @@ Route::group([
     Route::get('/bidang', [LRAController::class, 'bidang']);
     Route::get('/laplra', [LRAController::class, 'laplra']);
     Route::get('/coba', [LRAController::class, 'coba']);
+    Route::get('/pendapatan', [LRAController::class, 'pendapatan']);
 
 });
 
