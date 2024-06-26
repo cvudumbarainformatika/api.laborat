@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\TutupOpname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
@@ -219,6 +220,7 @@ class StokrealController extends Controller
             ->when(request('from'), function ($q) {
                 $q->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59']);
             })
+            ->with('tutup')
             ->groupBy('stokopname.kdobat', 'stokopname.kdruang')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->paginate(request('per_page'));
@@ -609,6 +611,23 @@ class StokrealController extends Controller
 
         return new JsonResponse([
             'message' => 'Stok Fisik sudah disimpan',
+            'data' => $data,
+            'req' => $request->all()
+        ]);
+    }
+
+    public function tutupOpname(Request $request)
+    {
+        $data = TutupOpname::firstOrCreate(
+            [
+                'tglopname' => $request->tglopname
+            ],
+            [
+                'status' => '1'
+            ]
+        );
+        return new JsonResponse([
+            'message' => 'Stok Opname Sudah Ditutup',
             'data' => $data,
             'req' => $request->all()
         ]);

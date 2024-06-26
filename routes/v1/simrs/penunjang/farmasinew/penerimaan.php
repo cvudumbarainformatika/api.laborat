@@ -40,4 +40,5 @@ Route::group([
     // simpan fisik
     Route::post('/simpan-fisik', [StokrealController::class, 'simpanFisik']);
     Route::post('/simpan-baru', [StokrealController::class, 'simpanBaru']);
+    Route::post('/tutup-opname', [StokrealController::class, 'tutupOpname']);
 });
