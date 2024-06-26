@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
@@ -205,7 +206,8 @@ class StokrealController extends Controller
             'new_masterobat.status_konsinyasi',
             'new_masterobat.gudang',
             'stokopname.id as idx',
-            DB::raw('sum(stokopname.jumlah) as total')
+            DB::raw('sum(stokopname.jumlah) as total'),
+            DB::raw('sum(stokopname.fisik) as totalFisik')
         )->where('stokopname.flag', '')
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokopname.kdobat')
             ->where('stokopname.kdruang', $kdruang)
@@ -555,6 +557,34 @@ class StokrealController extends Controller
                 'tglopname' => $request->tglopname,
             ],
             [
+                // 'harga' => $request->harga,
+                // 'jumlah' => $request->jumlah,
+                // 'tglexp' => $request->tglexp,
+                // 'nobatch' => $request->nobatch,
+                'fisik' => $request->totalFisik,
+                'tgl_input_fisik' => $tglInput,
+
+            ]
+        );
+
+        return new JsonResponse([
+            'message' => 'Stok Fisik sudah disimpan',
+            'data' => $data,
+            'req' => $request->all()
+        ]);
+    }
+    public function simpanBaru(Request $request)
+    {
+        $tglInput = $request->tgl_input_fisik ? $request->tgl_input_fisik . ' ' . ($request->jamInput ?? date('H:i:s')) : null;
+        $data = Stokopname::updateOrCreate(
+            [
+                'nopenerimaan' => $request->nopenerimaan,
+                'kdobat' => $request->kdobat,
+                'kdruang' => $request->kdruang,
+                'tglopname' => $request->tglopname,
+            ],
+            [
+                'tglpenerimaan' => $request->tglpenerimaan,
                 'harga' => $request->harga,
                 'jumlah' => $request->jumlah,
                 'tglexp' => $request->tglexp,
@@ -563,6 +593,18 @@ class StokrealController extends Controller
                 'tgl_input_fisik' => $tglInput,
 
             ]
+        );
+        $daftarHarga = DaftarHarga::firstOrCreate(
+            [
+                'nopenerimaan' => $request->nopenerimaan,
+                'kd_obat' => $request->kdobat,
+            ],
+            [
+                'harga' => $request->harga,
+                'tgl_mulai_berlaku' => date('Y-m-d H:i:s'),
+
+            ]
+
         );
 
         return new JsonResponse([
