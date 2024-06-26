@@ -200,6 +200,9 @@ class StokrealController extends Controller
             'new_masterobat.status_fornas',
             'new_masterobat.status_forkid',
             'new_masterobat.status_generik',
+            'new_masterobat.kelompok_psikotropika',
+            'new_masterobat.status_kronis',
+            'new_masterobat.status_konsinyasi',
             'new_masterobat.gudang',
             'stokopname.id as idx',
             DB::raw('sum(stokopname.jumlah) as total')
@@ -241,6 +244,10 @@ class StokrealController extends Controller
             'new_masterobat.status_fornas',
             'new_masterobat.status_forkid',
             'new_masterobat.status_generik',
+            'new_masterobat.kelompok_psikotropika',
+            'new_masterobat.status_kronis',
+            'new_masterobat.sistembayar',
+            'new_masterobat.status_konsinyasi',
             'new_masterobat.gudang',
             DB::raw('sum(stokreal.jumlah) as total')
         )->where('stokreal.flag', '')
