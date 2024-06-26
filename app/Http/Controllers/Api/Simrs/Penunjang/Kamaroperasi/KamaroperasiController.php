@@ -92,7 +92,11 @@ class KamaroperasiController extends Controller
             $tglx = request('from') . ' 23:59:59';
         }
         $status = request('status') ?? '';
-        $listkamaroperasi = PermintaanOperasi::where(function ($sts) use ($status) {
+        $listkamaroperasi = PermintaanOperasi::select(
+            'rs200.*',
+            'rs200.rs10 as kodepoli', // untuk ruangan template
+            'rs200.rs10 as kdruangan', // untuk ruangan resep
+        )->where(function ($sts) use ($status) {
             if ($status !== 'all') {
                 if ($status === '') {
                     $sts->where('rs9', '!=', '1');
