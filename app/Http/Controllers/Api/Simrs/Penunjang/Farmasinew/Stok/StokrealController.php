@@ -543,4 +543,32 @@ class StokrealController extends Controller
             'req' => request()->all(),
         ]);
     }
+
+    public function simpanFisik(Request $request)
+    {
+        $tglInput = $request->tgl_input_fisik ? $request->tgl_input_fisik . ' ' . ($request->jamInput ?? date('H:i:s')) : null;
+        $data = Stokopname::updateOrCreate(
+            [
+                'nopenerimaan' => $request->nopenerimaan,
+                'kdobat' => $request->kdobat,
+                'kdruang' => $request->kdruang,
+                'tglopname' => $request->tglopname,
+            ],
+            [
+                'harga' => $request->harga,
+                'jumlah' => $request->jumlah,
+                'tglexp' => $request->tglexp,
+                'nobatch' => $request->nobatch,
+                'fisik' => $request->fisik,
+                'tgl_input_fisik' => $tglInput,
+
+            ]
+        );
+
+        return new JsonResponse([
+            'message' => 'Stok Fisik sudah disimpan',
+            'data' => $data,
+            'req' => $request->all()
+        ]);
+    }
 }
