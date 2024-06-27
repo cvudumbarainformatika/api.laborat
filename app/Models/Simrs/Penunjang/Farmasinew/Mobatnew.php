@@ -13,6 +13,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFisik;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -58,6 +59,10 @@ class Mobatnew extends Model
     public function onestok()
     {
         return $this->hasOne(Stokreal::class, 'kdobat', 'kd_obat');
+    }
+    public function onefisik()
+    {
+        return $this->hasOne(StokOpnameFisik::class, 'kdobat', 'kd_obat');
     }
     public function stok()
     {
