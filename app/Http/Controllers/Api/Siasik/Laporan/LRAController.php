@@ -188,7 +188,7 @@ class LRAController extends Controller
         ->get();
         $nilaipendapatan = Anggaran_Pendapatan::where('tahun', $thn)->select('anggaran_pendapatan.nilai')
         ->get();
-        $realisasipendapatan=TranskePPK::select('t_terima_ppk.nilai')
+        $realisasipendapatan=TranskePPK::select('t_terima_ppk.nilai','t_terima_ppk.tgltrans')
         ->orderBy('tgltrans', 'asc')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
