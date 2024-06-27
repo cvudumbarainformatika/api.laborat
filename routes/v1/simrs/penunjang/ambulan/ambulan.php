@@ -9,4 +9,5 @@ Route::group([
     'prefix' => 'simrs/penunjang/ambulan/'
 ], function (){
     Route::get('gettujuanambulan',[AmbulanController::class, 'getTujuanAmbulan']);
+    Route::post('simpanreqambulan',[AmbulanController::class, 'simpanreqambulan']);
 });

@@ -535,6 +535,7 @@ class DaftarrajalController extends Controller
             }, 'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,pdf'])
 
             ->orderby('rs17.rs3', 'DESC')
+            ->groupBy('rs17.rs1')
             ->paginate(request('per_page'));
 
         return new JsonResponse($daftarkunjunganpasienbpjs);
