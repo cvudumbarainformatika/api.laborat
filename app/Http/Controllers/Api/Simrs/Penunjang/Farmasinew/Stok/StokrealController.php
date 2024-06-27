@@ -260,7 +260,7 @@ class StokrealController extends Controller
         $raw = collect($stokreal);
         $data['data'] = $raw['data'];
         $data['meta'] = $raw->except('data');
-        // $data['diff'] = $diff;
+        $data['now'] = date('Y-m-d H:i:s');
         // $data['stokreal'] = $stokreal;
 
         return new JsonResponse($data);
