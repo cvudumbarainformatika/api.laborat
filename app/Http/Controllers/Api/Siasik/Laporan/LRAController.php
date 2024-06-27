@@ -67,6 +67,7 @@ class LRAController extends Controller
                             })
         ->join('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
         ->where('tgl', $thn)
+        ->where('pagu', '!=', '0' )
         ->when(request('bidang'),function($x) {
             $x->where('t_tampung.bidang', request('bidang'));
         })->when(request('kegiatan'),function($y) {
@@ -75,6 +76,7 @@ class LRAController extends Controller
         })
         ->with(['anggaran' => function($tgl) use ($thn) {
             $tgl->where('tgl', $thn)
+            ->where('pagu', '!=', '0' )
             ->select('t_tampung.koderek50',
                     't_tampung.pagu',
                     't_tampung.kodekegiatanblud',
