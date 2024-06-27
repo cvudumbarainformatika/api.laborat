@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFisik;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\TutupOpname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
@@ -165,37 +166,8 @@ class StokrealController extends Controller
         if (!request('from')) return [];
         $kdruang = request('kdruang');
 
-        // $today = date('Y-m-d');
-        // $dToday = date_create($today);
-        // $dFrom = date_create(request('from'));
-        // $diff = date_diff($dToday, $dFrom);
-        // if ($diff->m === 0) {
-        //     $stokreal = Stokreal::select(
-        //         'stokreal.*',
-        //         'new_masterobat.kd_obat',
-        //         'new_masterobat.nama_obat',
-        //         'new_masterobat.satuan_k',
-        //         'new_masterobat.status_fornas',
-        //         'new_masterobat.status_forkid',
-        //         'new_masterobat.status_generik',
-        //         'new_masterobat.gudang',
-        //         DB::raw('sum(stokreal.jumlah) as total')
-        //     )->where('stokreal.flag', '')
-        //         ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
-        //         ->where('stokreal.kdruang', $kdruang)
-        //         ->where(function ($x) {
-        //             $x->where('stokreal.nopenerimaan', 'like', '%' . request('q') . '%')
-        //                 ->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
-        //                 ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
-        //         })
 
-        //         ->where('stokreal.jumlah', '>', 0)
-        //         ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
-        //         ->orderBy('new_masterobat.nama_obat', 'ASC')
-        //         ->paginate(request('per_page'));
-        // } else {
-
-        $stokreal = Stokopname::select(
+        $stokreal = Mobatnew::select(
             'stokopname.*',
             'new_masterobat.kd_obat',
             'new_masterobat.nama_obat',
@@ -211,7 +183,7 @@ class StokrealController extends Controller
             DB::raw('sum(stokopname.jumlah) as total'),
             DB::raw('sum(stokopname.fisik) as totalFisik')
         )->where('stokopname.flag', '')
-            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokopname.kdobat')
+            ->leftjoin('stokopname', 'new_masterobat.kd_obat', 'stokopname.kdobat')
             ->where('stokopname.kdruang', $kdruang)
             ->where(function ($x) {
                 $x->where('stokopname.nopenerimaan', 'like', '%' . request('q') . '%')
@@ -221,9 +193,68 @@ class StokrealController extends Controller
             ->when(request('from'), function ($q) {
                 $q->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59']);
             })
-            ->with('tutup')
+            // ->with('tutup')
             ->groupBy('stokopname.kdobat', 'stokopname.kdruang')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
+            ->paginate(request('per_page'));
+        // }
+        $raw = collect($stokreal);
+        $data['data'] = $raw['data'];
+        $data['meta'] = $raw->except('data');
+        // $data['diff'] = $diff;
+        // $data['stokreal'] = $stokreal;
+
+        return new JsonResponse($data);
+    }
+    public function liststokopname()
+    {
+        if (!request('from')) return [];
+
+
+        $stokreal = Mobatnew::select(
+            'kd_obat',
+            'nama_obat',
+            'satuan_k',
+            'status_fornas',
+            'status_forkid',
+            'status_generik',
+            'kelompok_psikotropika',
+            'status_kronis',
+            'status_konsinyasi',
+            'gudang',
+        )->with([
+            'onestok' => function ($q) {
+                $q->select(
+                    'kdobat',
+                    'kdruang',
+                    'harga',
+                    'tglexp',
+                    DB::raw('sum(jumlah) as total')
+                )
+                    ->where('kdruang', request('kdruang'))
+                    ->groupBy('kdobat', 'kdruang');
+            },
+            'oneopname' => function ($q) {
+                $q->select(
+                    'kdobat',
+                    'kdruang',
+                    'harga',
+                    'tglexp',
+                    'tglopname',
+                    DB::raw('sum(jumlah) as total')
+                )->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59'])
+                    ->where('kdruang', request('kdruang'))
+                    ->groupBy('kdobat', 'kdruang');
+            },
+            'onefisik' => function ($q) {
+                $q->whereBetween('tglopname', [request('from') . ' 23:00:00', request('to') . ' 23:59:59'])
+                    ->where('kdruang', request('kdruang'));
+            }
+            // 'oneopname'
+
+        ])
+            ->where('nama_obat', 'like', '%' . request('q') . '%')
+            ->orderBy('nama_obat', 'ASC')
             ->paginate(request('per_page'));
         // }
         $raw = collect($stokreal);
@@ -551,21 +582,15 @@ class StokrealController extends Controller
 
     public function simpanFisik(Request $request)
     {
-        $tglInput = $request->tgl_input_fisik ? $request->tgl_input_fisik . ' ' . ($request->jamInput ?? date('H:i:s')) : null;
-        $data = Stokopname::updateOrCreate(
+
+        $data = StokOpnameFisik::updateOrCreate(
             [
-                'nopenerimaan' => $request->nopenerimaan,
-                'kdobat' => $request->kdobat,
+                'kdobat' => $request->kd_obat,
                 'kdruang' => $request->kdruang,
                 'tglopname' => $request->tglopname,
             ],
             [
-                // 'harga' => $request->harga,
-                // 'jumlah' => $request->jumlah,
-                // 'tglexp' => $request->tglexp,
-                // 'nobatch' => $request->nobatch,
-                'fisik' => $request->totalFisik,
-                'tgl_input_fisik' => $tglInput,
+                'jumlah' => $request->fisik,
 
             ]
         );
@@ -578,37 +603,18 @@ class StokrealController extends Controller
     }
     public function simpanBaru(Request $request)
     {
-        $tglInput = $request->tgl_input_fisik ? $request->tgl_input_fisik . ' ' . ($request->jamInput ?? date('H:i:s')) : null;
-        $data = Stokopname::updateOrCreate(
+        $data = StokOpnameFisik::updateOrCreate(
             [
-                'nopenerimaan' => $request->nopenerimaan,
-                'kdobat' => $request->kdobat,
+                'kdobat' => $request->kd_obat,
                 'kdruang' => $request->kdruang,
                 'tglopname' => $request->tglopname,
             ],
             [
-                'tglpenerimaan' => $request->tglpenerimaan,
-                'harga' => $request->harga,
-                'jumlah' => $request->jumlah,
-                'tglexp' => $request->tglexp,
-                'nobatch' => $request->nobatch,
-                'fisik' => $request->fisik,
-                'tgl_input_fisik' => $tglInput,
+                'jumlah' => $request->fisik,
 
             ]
         );
-        $daftarHarga = DaftarHarga::firstOrCreate(
-            [
-                'nopenerimaan' => $request->nopenerimaan,
-                'kd_obat' => $request->kdobat,
-            ],
-            [
-                'harga' => $request->harga,
-                'tgl_mulai_berlaku' => date('Y-m-d H:i:s'),
 
-            ]
-
-        );
 
         return new JsonResponse([
             'message' => 'Stok Fisik sudah disimpan',
