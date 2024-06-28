@@ -171,7 +171,8 @@ class DistribusigudangController extends Controller
             $sisa = $caristok[$index]->total;
             if ($sisa < $masuk) {
                 $sisax = $masuk - $sisa;
-                $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')->where('nopenerimaan', $caristok[$index]->nopenerimaan)->where('kdobat', $caristok[$index]->kdobat)->first();
+                $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')
+                    ->where('nopenerimaan', $caristok[$index]->nopenerimaan)->where('kdobat', $caristok[$index]->kdobat)->first();
                 $mutasi = Mutasigudangkedepo::updateOrCreate(
                     [
                         'no_permintaan' => $request->nopermintaan,
@@ -242,6 +243,19 @@ class DistribusigudangController extends Controller
                 $data->update(['jumlah' => $sisax]);
                 $masuk = 0;
             }
+        }
+        $user = FormatingHelper::session_user();
+        $rinciPer = Permintaandeporinci::where('no_permintaan', $request->nopermintaan)
+            ->where('kdobat', $request->kdobat)
+            ->first();
+        if ($rinciPer) {
+            $rinciPer->update(
+                [
+                    'jumlah_diverif' => $request->jumlah_minta,
+                    'user_verif' => $user['kodesimrs'],
+                    'tgl_verif' => date('Y-m-d H:i:s'),
+                ]
+            );
         }
         $msg = [
             'data' => [

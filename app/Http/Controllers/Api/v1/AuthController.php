@@ -70,13 +70,13 @@ class AuthController extends Controller
         // });
 
         $akses = 'all';
-        $allAccess = array('sa', 'coba');
+        $allAccess = array('sa', 'coba', 'wan');
 
         if (!in_array(auth()->user()->username, $allAccess)) {
             $akses = AksesUser::where('user_id', $me->id)->get();
         }
 
-        
+
 
         $result = [
             'apps' => $apps,

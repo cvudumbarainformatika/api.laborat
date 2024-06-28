@@ -924,8 +924,8 @@ class EresepController extends Controller
             'sistembayar',
             'sep:rs1,rs8',
             'dokter:kdpegsimrs,nama',
-            'kunjunganranap:rs1,titipan' ,
-            'kunjunganranap.ruangtitipan:rs1,rs2' ,
+            'kunjunganranap:rs1,titipan',
+            'kunjunganranap.ruangtitipan:rs1,rs2',
             'datapasien' => function ($quer) {
                 $quer->select(
                     'rs1',
@@ -1118,7 +1118,12 @@ class EresepController extends Controller
             if ($data->flag === '3') {
                 return new JsonResponse(['message' => 'Resep Sudah Diselesaikan', 'data' => $data], 200);
             }
-            $data->update(['flag' => '3', 'tgl' => date('Y-m-d'), 'user' => $user]);
+            $data->update([
+                'flag' => '3',
+                'tgl' => date('Y-m-d'),
+                'tgl_selesai' => date('Y-m-d H:i:s'),
+                'user' => $user
+            ]);
             // $msg = [
             //     'data' => [
             //         'id' => $data->id,
