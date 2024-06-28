@@ -213,7 +213,11 @@ class TemplateController extends Controller
     {
         $data = Templateresep::where('pegawai_id', auth()->user()->pegawai_id)
         ->where('kodedepo', request('kodedepo'))
+        ->when(request('q'), function ($q) {
+            $q->where('nama', 'like', '%' . request('q') . '%');
+        })
         ->with('rincian.rincian')
+        ->limit(20)
         ->get();
 
         return new JsonResponse($data, 200);
