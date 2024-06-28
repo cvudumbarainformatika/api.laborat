@@ -434,40 +434,53 @@ class SetNewStokController extends Controller
             $keluar = (int)$mutkel;
             $sisa = (int)$masuk - (int)$keluar;
             if ((int)$sisa != (int)$tts) {
-                $masuk = $sisa;
+                $masukin = $sisa;
                 $index = 0;
                 $stok = FarmasinewStokreal::where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)
                     ->orderBy('tglexp', 'DESC')
                     ->orderBy('nodistribusi', 'DESC')
                     ->get();
-                while ($masuk > 0) {
+                while ($masukin > 0) {
                     $penrimaanrinci = PenerimaanRinci::where('nopenerimaan', $stok[$index]['nopenerimaan'])
                         ->where('kdobat', $stok[$index]['kdobat'])
+                        ->where('no_batch', $stok[$index]['nobatch'])
                         ->first();
                     if ($penrimaanrinci) {
                         $ada = $penrimaanrinci->jml_terima_k;
-                        if ($ada > $masuk) {
+                        if ($ada > $masukin) {
                             $stok[$index]->update([
-                                'jumlah' => $masuk
+                                'jumlah' => $masukin
                             ]);
-                            $masuk = 0;
+                            $masukin = 0;
                         } else {
-                            $sisax = $masuk - $ada;
+                            $sisax = $masukin - $ada;
                             $stok[$index]->update([
                                 'jumlah' => $ada
                             ]);
-                            $masuk = $sisax;
+                            $masukin = $sisax;
                             $index += 1;
                         }
                     } else {
                         $stok[$index]->update([
-                            'jumlah' => $masuk
+                            'jumlah' => $masukin
                         ]);
-                        $masuk = 0;
+                        $masukin = 0;
                     }
+                    $message = 'Cek Stok Gudang selesai, Stok sudah di update';
                 }
-                $message = 'Cek Stok Gudang selesai, Stok sudah di update';
+                if ($sisa == 0) {
+                    foreach ($stok as $st) {
+                        $st->update([
+                            'jumlah' => $sisa
+                        ]);
+                    }
+                    $message = 'Cek Stok Gudang selesai, Stok Tidak berubah';
+                }
+                if ($sisa < 0) {
+
+                    $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
+                }
             }
 
 
@@ -481,6 +494,7 @@ class SetNewStokController extends Controller
                 'totalStok' => $totalStok,
                 'masuk' => $masuk,
                 'keluar' => $keluar,
+                'tts' => $tts,
                 'sisa' => $sisa,
                 'sal' => $sal,
                 'peny' => $peny,
@@ -714,6 +728,18 @@ class SetNewStokController extends Controller
                         }
                     }
                     $message = 'Cek Stok Depo Ok selesai, Stok sudah di update';
+                    if ($sisa == 0) {
+                        foreach ($stok as $st) {
+                            $st->update([
+                                'jumlah' => $sisa
+                            ]);
+                        }
+                        $message = 'Cek Stok Depo Ok selesai, Stok Tidak berubah';
+                    }
+                    if ($sisa < 0) {
+
+                        $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
+                    }
                 }
             } else {
                 $masuk = (int)$sal + (int)$peny + (int)$mutma + (int) $ret;
@@ -784,6 +810,18 @@ class SetNewStokController extends Controller
                         }
                     }
                     $message = 'Cek Stok Depo selesai, Stok sudah di update';
+                    if ($sisa == 0) {
+                        foreach ($stok as $st) {
+                            $st->update([
+                                'jumlah' => $sisa
+                            ]);
+                        }
+                        $message = 'Cek Stok Depo selesai, Stok Tidak berubah';
+                    }
+                    if ($sisa < 0) {
+
+                        $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
+                    }
                 }
             }
 
@@ -800,8 +838,8 @@ class SetNewStokController extends Controller
                 'resepKeluar' => $resepKeluar,
                 'retur' => $retur,
                 'resepKeluarRacikan' => $resepKeluarRacikan,
-                'persiapanOperasi' => $persiapanOperasi,
-                'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi,
+                'persiapanOperasi' => $persiapanOperasi ?? null,
+                'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi ?? null,
                 'tts' => $tts,
                 'sal' => $sal,
                 'peny' => $peny,
