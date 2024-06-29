@@ -1280,10 +1280,20 @@ class EresepController extends Controller
             // $harga = $cariharga[0]->harga;
 
             $jmldiminta = $request->jumlah;
-            $caristok = Stokreal::select('kdobat', 'nopenerimaan', 'tglpenerimaan', 'kdruang', 'harga', 'tglexp', 'nobatch', 'nodistribusi', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $request->kdobat)
+            $caristok = Stokreal::select(
+                'kdobat',
+                'nopenerimaan',
+                'tglpenerimaan',
+                'kdruang',
+                'harga',
+                'tglexp',
+                'nobatch',
+                'nodistribusi',
+                DB::raw('sum(jumlah) as jumlah')
+            )->where('kdobat', $request->kdobat)
                 ->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '>', 0)
-                ->groupBy('kdobat', 'nopenerimaan', 'kdruang')
+                ->groupBy('kdobat', 'nopenerimaan', 'kdruang', 'nobatch')
                 ->orderBy('tglexp', 'ASC')
                 ->get();
 
@@ -1358,10 +1368,14 @@ class EresepController extends Controller
                         $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                             ->where('kdobat', $caristok[$index]->kdobat)
                             ->where('kdruang', $request->kodedepo)
+                            ->where('nobatch', $caristok[$index]->nobatch)
                             ->get();
                         foreach ($dataStok as $key) {
-                            $key->jumlah = 0;
-                            $key->save();
+                            // $key->jumlah = 0;
+                            // $key->save();
+                            $key->update([
+                                'jumlah' => 0
+                            ]);
                         }
 
                         $masuk = $sisax;
@@ -1421,24 +1435,36 @@ class EresepController extends Controller
                         //     ->where('nodistribusi', $caristok[$index]->nodistribusi)
                         //     ->where('kdruang', $request->kodedepo)
                         //     ->update(['jumlah' => $sisax]);
-                        // nol kan semua
-                        $getStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                            ->where('kdobat', $caristok[$index]->kdobat)
-                            ->where('kdruang', $request->kodedepo)
-                            ->get();
-                        foreach ($getStok as $key) {
-                            $key->jumlah = 0;
-                            $key->save();
-                        }
+                        // // nol kan semua
+                        // $getStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        //     ->where('kdobat', $caristok[$index]->kdobat)
+                        //     ->where('kdruang', $request->kodedepo)
+                        //     ->where('nobatch', $caristok[$index]->nobatch)
+                        //     ->get();
+                        // foreach ($getStok as $key) {
+                        //     // $key->jumlah = 0;
+                        //     // $key->save();
+                        //     $key->update(['jumlah' => 0]);
+                        // }
                         // ambil data dengan nopenerimaan yang sama di yang terakhir
                         $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
                             ->where('kdobat', $caristok[$index]->kdobat)
                             ->where('kdruang', $request->kodedepo)
-                            ->latest()
-                            ->first();
+                            ->where('nobatch', $caristok[$index]->nobatch)
+                            ->oldest()
+                            ->get();
+                        //jumlah datanya ada berapa
+                        $jumlah = count($dataStok);
+                        // nolkan nomor distribusi yang lain
+                        foreach ($dataStok as $st) {
+                            $st->update(['jumlah' => 0]);
+                        }
+                        // tumpuk di index terakhir stok nya
+                        $dataStok[$jumlah - 1]->update(['jumlah' => $sisax]);
                         // tumpuk di situ stok nya
-                        $dataStok->jumlah = $sisax;
-                        $dataStok->save();
+                        // $dataStok->jumlah = $sisax;
+                        // $dataStok->save();
+
 
                         $masuk = 0;
                         $simpanrinci->load('mobat:kd_obat,nama_obat');

@@ -463,6 +463,37 @@ class StokrealController extends Controller
         }
         return 200;
     }
+    public static function newupdatestokdepo($request)
+    {
+        $kembalikan = Stokreal::select(
+            'stokreal.nopenerimaan as nopenerimaan',
+            'stokreal.kdobat as kdobat',
+            'stokreal.harga as harga',
+            // 'stokreal.jumlah as jumlah',
+            DB::raw('(stokreal.jumlah + retur_penjualan_r.jumlah_retur) as masuk')
+        )
+            ->leftjoin('retur_penjualan_r', function ($e) {
+                $e->on('retur_penjualan_r.nopenerimaan', 'stokreal.nopenerimaan')
+                    ->on('retur_penjualan_r.kdobat', 'stokreal.kdobat')
+                    ->on('retur_penjualan_r.harga_beli', 'stokreal.harga');
+            })
+            ->where('retur_penjualan_r.kdobat', $request->kdobat)
+            ->where('stokreal.kdruang', $request->koderuang)
+            ->where('retur_penjualan_r.noresep', $request->noresep)
+            // ->where('stokreal.jumlah ', '>', 0)
+            // ->latest('stokreal.id')
+            ->first();
+        // foreach ($kembalikan as $e) {
+        $updatestok = Stokreal::where('nopenerimaan', $kembalikan->nopenerimaan)
+            ->where('kdobat', $kembalikan->kdobat)
+            ->where('kdruang', $request->koderuang)
+            ->where('harga', $kembalikan->harga)
+            ->first();
+        $updatestok->jumlah = $kembalikan->masuk;
+        $updatestok->save();
+        // }
+        return 200;
+    }
     public function dataAlokasi()
     {
         $transNonRacikan = Permintaanresep::select(
