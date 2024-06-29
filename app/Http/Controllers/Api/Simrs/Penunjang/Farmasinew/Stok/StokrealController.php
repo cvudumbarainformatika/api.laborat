@@ -253,6 +253,7 @@ class StokrealController extends Controller
             // 'oneopname'
 
         ])
+            ->where('flag', '')
             ->where('nama_obat', 'like', '%' . request('q') . '%')
             ->orderBy('nama_obat', 'ASC')
             ->paginate(request('per_page'));

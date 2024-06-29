@@ -405,8 +405,9 @@ class ReturpenjualanController extends Controller
             }
             $permintaanHead = Resepkeluarheder::where('noresep', $request->noresep)->where('noreg', $request->noreg)->first();
             if ($permintaanHead) {
-                $permintaanHead->flag = '4';
-                $permintaanHead->save();
+                // $permintaanHead->flag = '4';
+                // $permintaanHead->save();
+                $permintaanHead->update(['flag' => '4']);
             }
 
             $simpanHeader->load('rinci');

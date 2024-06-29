@@ -111,9 +111,9 @@ class PenerimaanController extends Controller
                 [
                     'nopenerimaan' => $nopenerimaan,
                     'kdobat' => $request->kdobat,
+                    'no_batch' => $request->no_batch,
                 ],
                 [
-                    'no_batch' => $request->no_batch,
                     'jml_terima_b' => $request->jml_terima_b,
                     'jml_terima_k' => $request->jml_terima_k,
                     'harga' => $request->harga,
@@ -274,6 +274,7 @@ class PenerimaanController extends Controller
             'nomorsurat',
             'tglsurat',
             'batasbayar',
+            'jenis_penerimaan',
             'kunci',
             'total_faktur_pbf as total',
         )
@@ -402,9 +403,9 @@ class PenerimaanController extends Controller
             [
                 'nopenerimaan' => $request->nopenerimaan ?? $nopenerimaan,
                 'kdobat' => $request->kdobat,
+                'no_batch' => $request->no_batch,
             ],
             [
-                'no_batch' => $request->no_batch,
                 'jml_terima_b' => $request->jml_terima_b,
                 'jml_terima_k' => $request->jml_terima_k,
                 'harga' => $request->harga,

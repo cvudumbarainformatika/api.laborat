@@ -152,124 +152,205 @@ class DistribusigudangController extends Controller
 
     public function simpandistribusidepo(Request $request)
     {
-        $jmldiminta = $request->jumlah_minta;
-        $caristok = Stokreal::select('*', DB::raw('sum(jumlah) as total'))
-            ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kdgudang)
-            ->where('jumlah', '>', 0)
-            ->groupBy('nopenerimaan', 'kdobat', 'kdruang', 'tglexp')
-            ->orderBy('tglexp', 'ASC')
-            ->get();
-        // $sisaStok = collect($caristok)->sum('jumlah');
-        // $stok = $caristok[0]->jumlah;
-        // $sisa = $stok - $jmldiminta;
-        if (count($caristok) <= 0) {
-            return new JsonResponse(['message' => 'Stok Tidak ditemukan, apakah stok sudah habis?'], 410);
-        }
-        $index = 0;
-        $masuk = $jmldiminta;
-        while ($masuk > 0) {
-            $sisa = $caristok[$index]->total;
-            if ($sisa < $masuk) {
-                $sisax = $masuk - $sisa;
-                $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')
-                    ->where('nopenerimaan', $caristok[$index]->nopenerimaan)->where('kdobat', $caristok[$index]->kdobat)->first();
-                $mutasi = Mutasigudangkedepo::updateOrCreate(
-                    [
-                        'no_permintaan' => $request->nopermintaan,
-                        'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                        'kd_obat' => $caristok[$index]->kdobat,
-
-                    ],
-                    [
-                        'jml' => $sisa,
-                        'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                        'harga' => $hargaBeli->harga_netto_kecil ?? 0,
-                        'tglexp' => $caristok[$index]->tglexp,
-                        'nobatch' => $caristok[$index]->nobatch ?? '-',
-                    ]
-                );
-                $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    ->where('kdobat', $caristok[$index]->kdobat)
-                    ->where('kdruang', $request->kdgudang)
-                    ->get();
-                foreach ($dataStok as $key) {
-                    // $key->jumlah = 0;
-                    // $key->save();
-                    $key->update(['jumlah' => 0]);
-                }
-
-
-                $masuk = $sisax;
-                $index = $index + 1;
-                //return $jmldiminta;
-            } else {
-                $sisax = $sisa - $masuk;
-                $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')->where('nopenerimaan', $caristok[$index]->nopenerimaan)->where('kdobat', $caristok[$index]->kdobat)->first();
-                $mutasi = Mutasigudangkedepo::updateOrCreate(
-                    [
-                        'no_permintaan' => $request->nopermintaan,
-                        'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                        'kd_obat' => $caristok[$index]->kdobat,
-                    ],
-                    [
-                        'jml' => $masuk,
-                        'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                        'harga' => $hargaBeli->harga_netto_kecil ?? 0,
-                        'tglexp' => $caristok[$index]->tglexp,
-                        'nobatch' => $caristok[$index]->nobatch ?? '-',
-                    ]
-                );
-                // nol kan semua
-                $getStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    ->where('kdobat', $caristok[$index]->kdobat)
-                    // ->where('nodistribusi', $caristok[$index]->nodistribusi)
-                    ->where('kdruang', $request->kdgudang)
-                    ->get();
-                foreach ($getStok as $key) {
-                    // $key->jumlah = 0;
-                    // $key->save();
-                    $key->update(['jumlah' => 0]);
-                }
-                // ambil data dengan nopenerimaan yang sama di yang terakhir
-                $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    ->where('kdobat', $caristok[$index]->kdobat)
-                    // ->where('nodistribusi', $caristok[$index]->nodistribusi)
-                    ->where('kdruang', $request->kdgudang)
-                    ->latest()
-                    ->first();
-                // tumpuk di situ stok nya
-                // $data->jumlah = $sisax;
-                // $data->save();
-                $data->update(['jumlah' => $sisax]);
-                $masuk = 0;
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $jmldiminta = $request->jumlah_minta;
+            $caristok = Stokreal::select('*', DB::raw('sum(jumlah) as total'))
+                ->where('kdobat', $request->kodeobat)->where('kdruang', $request->kdgudang)
+                ->where('jumlah', '>', 0)
+                ->groupBy('nopenerimaan', 'kdobat', 'kdruang', 'nobatch')
+                ->orderBy('tglexp', 'ASC')
+                ->get();
+            // $caristok = Stokreal::where('kdobat', $request->kodeobat)->where('kdruang', $request->kdgudang)
+            //     ->where('jumlah', '>', 0)
+            //     ->orderBy('tglexp', 'ASC')
+            //     ->get();
+            // $sisaStok = collect($caristok)->sum('jumlah');
+            // $stok = $caristok[0]->jumlah;
+            // $sisa = $stok - $jmldiminta;
+            if (count($caristok) <= 0) {
+                return new JsonResponse(['message' => 'Stok Tidak ditemukan, apakah stok sudah habis?'], 410);
             }
-        }
-        $user = FormatingHelper::session_user();
-        $rinciPer = Permintaandeporinci::where('no_permintaan', $request->nopermintaan)
-            ->where('kdobat', $request->kdobat)
-            ->first();
-        if ($rinciPer) {
-            $rinciPer->update(
-                [
-                    'jumlah_diverif' => $request->jumlah_minta,
-                    'user_verif' => $user['kodesimrs'],
-                    'tgl_verif' => date('Y-m-d H:i:s'),
+            $index = 0;
+            $masuk = $jmldiminta;
+            while ($masuk > 0) {
+                $sisa = $caristok[$index]->total;
+                if ($sisa < $masuk) {
+                    $sisax = $masuk - $sisa;
+                    $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')
+                        ->where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        ->where('kdobat', $caristok[$index]->kdobat)
+                        ->where('no_batch', $caristok[$index]->nobatch)
+                        ->first();
+                    $mutasi = Mutasigudangkedepo::updateOrCreate(
+                        [
+                            'no_permintaan' => $request->nopermintaan,
+                            'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'kd_obat' => $caristok[$index]->kdobat,
+                            'nobatch' => $caristok[$index]->nobatch,
+                        ],
+                        [
+                            'jml' => $sisa,
+                            'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                            'harga' => $hargaBeli->harga_netto_kecil ?? 0,
+                            'tglexp' => $caristok[$index]->tglexp,
+                        ]
+                    );
+                    // $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    //     ->where('kdobat', $caristok[$index]->kdobat)
+                    //     ->where('kdruang', $request->kdgudang)
+                    //     ->get();
+                    // foreach ($dataStok as $key) {
+                    //     // $key->jumlah = 0;
+                    //     // $key->save();
+                    //     $key->update(['jumlah' => 0]);
+                    // }
+                    $dataStok =  Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        ->where('kdobat', $caristok[$index]->kdobat)
+                        ->where('kdruang', $request->kdgudang)
+                        ->where('nobatch', $caristok[$index]->nobatch)
+                        ->get();
+                    foreach ($dataStok as $st) {
+                        $st->update(['jumlah' => 0]);
+                    }
+
+
+                    $masuk = $sisax;
+                    $index = $index + 1;
+                    //return $jmldiminta;
+                } else {
+                    $sisax = $sisa - $masuk;
+                    $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')
+                        ->where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        ->where('kdobat', $caristok[$index]->kdobat)
+                        ->where('no_batch', $caristok[$index]->nobatch)
+                        ->first();
+                    $mutasi = Mutasigudangkedepo::updateOrCreate(
+                        [
+                            'no_permintaan' => $request->nopermintaan,
+                            'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'kd_obat' => $caristok[$index]->kdobat,
+                            'nobatch' => $caristok[$index]->nobatch,
+                        ],
+                        [
+                            'jml' => $masuk,
+                            'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                            'harga' => $hargaBeli->harga_netto_kecil ?? 0,
+                            'tglexp' => $caristok[$index]->tglexp,
+                        ]
+                    );
+                    // // nol kan semua
+                    // $getStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    //     ->where('kdobat', $caristok[$index]->kdobat)
+                    //     // ->where('nodistribusi', $caristok[$index]->nodistribusi)
+                    //     ->where('kdruang', $request->kdgudang)
+                    //     ->get();
+                    // foreach ($getStok as $key) {
+                    //     // $key->jumlah = 0;
+                    //     // $key->save();
+                    //     $key->update(['jumlah' => 0]);
+                    // }
+                    // // ambil data dengan nopenerimaan yang sama di yang terakhir
+                    // $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    //     ->where('kdobat', $caristok[$index]->kdobat)
+                    //     // ->where('nodistribusi', $caristok[$index]->nodistribusi)
+                    //     ->where('kdruang', $request->kdgudang)
+                    //     ->latest()
+                    //     ->first();
+                    // // tumpuk di situ stok nya
+                    // // $data->jumlah = $sisax;
+                    // // $data->save();
+                    // $data->update(['jumlah' => $sisax]);
+
+                    // ambil data dengan nopenerimaan yang sama di yang terakhir
+                    // $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                    //     ->where('kdobat', $caristok[$index]->kdobat)
+                    //     ->where('kdruang', $request->kdgudang)
+                    //     ->where('nobatch', $caristok[$index]->nobatch)
+                    //     ->when($caristok[$index]->nodistribusi === null || $caristok[$index]->nodistribusi === '', function ($q) use ($caristok, $index) {
+                    //         $q->where('nodistribusi', '');
+                    //     })
+                    //     ->when($caristok[$index]->nodistribusi, function ($q) use ($caristok, $index) {
+                    //         $q->where('nodistribusi', $caristok[$index]->nodistribusi);
+                    //     })
+                    //     ->latest()
+                    //     ->first();
+                    // ambil data dengan nopenerimaan yang sama di yang terakhir
+                    $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
+                        ->where('kdobat', $caristok[$index]->kdobat)
+                        ->where('kdruang', $request->kdgudang)
+                        ->where('nobatch', $caristok[$index]->nobatch)
+                        ->oldest()
+                        ->get();
+                    //jumlah datanya ada berapa
+                    $jumlah = count($data);
+                    // nolkan nomor distribusi yang lain
+                    foreach ($data as $st) {
+                        $st->update(['jumlah' => 0]);
+                    }
+                    // tumpuk di index terakhir stok nya
+                    $data[$jumlah - 1]->update(['jumlah' => $sisax]);
+
+                    $masuk = 0;
+                }
+            }
+            $user = FormatingHelper::session_user();
+            $rinciPer = Permintaandeporinci::where('no_permintaan', $request->nopermintaan)
+                ->where('kdobat', $request->kodeobat)
+                ->first();
+            if ($rinciPer) {
+                $rinciPer->update(
+                    [
+                        'jumlah_diverif' => $request->jumlah_minta,
+                        'user_verif' => $user['kodesimrs'],
+                        'tgl_verif' => date('Y-m-d H:i:s'),
+                    ]
+                );
+            }
+            $msg = [
+                'data' => [
+                    'aksi' => 'distribusi',
+                    'dari' =>  $request->dari,
+                    'no_permintaan' => $request->nopermintaan,
+                    'kdobat' => $request->kodeobat,
+                    'depo' =>  $request->dari,
+                    'jml' => $jmldiminta,
+                    // 'flag' => $simpanpermintaandepo->flag
                 ]
-            );
+            ];
+            event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            DB::connection('farmasi')->commit();
+            $nyamuta = Mutasigudangkedepo::select('kd_obat', DB::raw('sum(jml) as jml'))->where('no_permintaan', $request->nopermintaan)
+                ->where('kd_obat', $request->kodeobat)
+                ->first();
+            // [
+            //     'no_permintaan' => $request->nopermintaan,
+            //     'nopenerimaan' => $caristok[$index]->nopenerimaan,
+            //     'kd_obat' => $caristok[$index]->kdobat,
+            //     'nobatch' => $caristok[$index]->nobatch,
+
+            //     'jml' => $masuk,
+            //     'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+            //     'harga' => $hargaBeli->harga_netto_kecil ?? 0,
+            //     'tglexp' => $caristok[$index]->tglexp,
+            // ]);
+            return new JsonResponse([
+                'message' => 'Data Berhasil Disimpan',
+                'data' => $nyamuta,
+                'jumlah' => $jumlah ?? 'none'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan ',
+                'result' => '' . $e,
+                'err' =>  $e,
+                'caristok' => $caristok ?? '',
+                'mutasi' => $mutasi ?? '',
+                'stoknya' => $data ?? '',
+                'rinciPer' => $rinciPer ?? '',
+            ], 410);
         }
-        $msg = [
-            'data' => [
-                'aksi' => 'distribusi',
-                'dari' =>  $request->dari,
-                'no_permintaan' => $request->nopermintaan,
-                'kdobat' => $request->kodeobat,
-                'depo' =>  $request->dari,
-                'jml' => $jmldiminta,
-                // 'flag' => $simpanpermintaandepo->flag
-            ]
-        ];
-        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
-        return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'data' => $mutasi], 200);
     }
 
     public function kuncipermintaandaridepo(Request $request)
