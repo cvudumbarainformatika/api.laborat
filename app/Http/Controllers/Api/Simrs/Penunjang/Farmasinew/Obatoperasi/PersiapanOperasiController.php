@@ -776,10 +776,10 @@ class PersiapanOperasiController extends Controller
                 $he->flag = '3';
                 $he->save();
             }
-        }
-        $per = PersiapanOperasi::where('nopermintaan', $key)->first();
-        if ($per) {
-            $per->tgl_resep = date('Y-m-d H:i:s');
+            $per = PersiapanOperasi::where('nopermintaan', $key)->first();
+            if ($per) {
+                $per->update(['tgl_resep' => date('Y-m-d H:i:s')]);
+            }
         }
         return new JsonResponse([
             'message' => 'resep sudah di dimpan',
@@ -952,6 +952,7 @@ class PersiapanOperasiController extends Controller
                         'uraian108' => $masterObat->uraian108,
                         'kode50' => $masterObat->kode50,
                         'uraian50' => $masterObat->uraian50,
+                        'nopenerimaan' => $dist[$index]->nopenerimaan,
                         'nilai_r' => 300,
                         'jumlah' => $ada,
                         'harga_beli' => $hargaBeli->harga ?? 0,
@@ -981,6 +982,7 @@ class PersiapanOperasiController extends Controller
                         'uraian108' => $masterObat->uraian108,
                         'kode50' => $masterObat->kode50,
                         'uraian50' => $masterObat->uraian50,
+                        'nopenerimaan' => $dist[$index]->nopenerimaan,
                         'nilai_r' => 300,
                         'jumlah' => $masuk,
                         'harga_beli' => $hargaBeli->harga ?? 0,
