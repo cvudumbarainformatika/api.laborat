@@ -439,8 +439,13 @@ class SetNewStokController extends Controller
                 $stok = FarmasinewStokreal::where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)
                     ->orderBy('tglexp', 'DESC')
-                    ->orderBy('nodistribusi', 'DESC')
                     ->get();
+                // nolkan semua stok
+                foreach ($stok as $st) {
+                    $st->update([
+                        'jumlah' => 0
+                    ]);
+                }
                 while ($masukin > 0) {
                     $penrimaanrinci = PenerimaanRinci::where('nopenerimaan', $stok[$index]['nopenerimaan'])
                         ->where('kdobat', $stok[$index]['kdobat'])
