@@ -46,7 +46,7 @@ class KartustokController extends Controller
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
                 },
                 'fisik' => function ($saldo) use ($tglAwal, $tglAkhir) {
-                    $saldo->whereBetween('tglopname', [$tglAwal, $tglAkhir])
+                    $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
                 },
                 // untuk ambil penyesuaian stok awal
@@ -122,6 +122,7 @@ class KartustokController extends Controller
                     $q->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
+                        ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
@@ -133,6 +134,8 @@ class KartustokController extends Controller
                     $q->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
+
+                        ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
@@ -140,21 +143,54 @@ class KartustokController extends Controller
                         ->with('retur.rinci');
                 },
 
-                // ini jika $koderuangan = Gd-04010103 (Depo OK) ini nanti di front end
-                'persiapanoperasiretur' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $q->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                        ->whereBetween('persiapan_operasis.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
-                },
-                // ini jika $koderuangan = Gd-04010103 (Depo OK)
-                // ini keluarnya nanti jumlah_distribusi harus dikurangi jumlah_resep karena resep nanti akan di ambil juga
-                'persiapanoperasikeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    $q->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                        ->whereBetween('persiapan_operasis.tgl_distribusi', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
-                    // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
-                    //     $x->whereBetween('tgl_distribusi', [$tglAwal, $tglAkhir]);
-                    //     // ->where('tujuan', $koderuangan);
-                    // });
-                },
+                // // ini jika $koderuangan = Gd-04010103 (Depo OK) ini nanti di front end
+                // 'persiapanoperasiretur' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                //     $q->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                //         ->whereBetween('persiapan_operasis.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                // },
+                // // ini jika $koderuangan = Gd-04010103 (Depo OK)
+                // // ini keluarnya nanti jumlah_distribusi harus dikurangi jumlah_resep karena resep nanti akan di ambil juga
+                // 'persiapanoperasikeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                //     $q->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                //         ->whereBetween('persiapan_operasis.tgl_distribusi', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                //     // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
+                //     //     $x->whereBetween('tgl_distribusi', [$tglAwal, $tglAkhir]);
+                //     //     // ->where('tujuan', $koderuangan);
+                //     // });
+                // },
+                'distribusipersiapan' => function ($dist) use ($tglAwal, $tglAkhir) {
+                    $dist->join('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                        ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                            $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        })
+                        ->whereBetween('persiapan_operasis.tgl_distribusi', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->select(
+                            'persiapan_operasi_distribusis.kd_obat',
+                            'persiapan_operasis.nopermintaan',
+                            'persiapan_operasis.tgl_distribusi',
+                            'persiapan_operasi_distribusis.tgl_retur',
+                            'persiapan_operasi_rincis.noresep',
+                            DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                            DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+
+                        )
+                        // ->with([
+                        //     'rinci' => function ($ri) {
+                        //         $ri->select(
+                        //             'persiapan_operasi_rincis.kd_obat',
+                        //             'persiapan_operasi_rincis.nopermintaan',
+                        //             'persiapan_operasi_rincis.noresep',
+                        //         )
+                        //             ->join('persiapan_operasi_distribusis', function ($jo) {
+                        //                 $jo->on('persiapan_operasi_distribusis.kd_obat', '=', 'persiapan_operasi_rincis.kd_obat')
+                        //                     ->on('persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan');
+                        //             });
+                        //     }
+                        // ])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
+                }
 
             ])
 

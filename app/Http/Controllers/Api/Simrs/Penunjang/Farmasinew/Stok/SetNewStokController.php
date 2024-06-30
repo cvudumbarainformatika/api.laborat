@@ -18,6 +18,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname as StokStokopname;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal as FarmasinewStokreal;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -341,6 +342,25 @@ class SetNewStokController extends Controller
         return new JsonResponse($data);
     }
 
+    public function PerbaikanStokPerDepo(Request $request)
+    {
+        $depo = $request->kdruang;
+        // $obat = $request->kdobat;
+        $stok = Stokrel::select('kdobat')
+            ->where('kdruang', $depo)
+            ->distinct('kdobat')
+            ->orderBy('kdobat', 'ASC')
+            ->pluck('kdobat');
+        $data = [];
+        foreach ($stok as $obat) {
+            // return new JsonResponse($obat);
+
+            $temp = self::getDataTrans($depo, $obat);
+            if ($temp['tts'] !== $temp['sisa']) $data[] = $temp;
+        }
+
+        return new JsonResponse($data);
+    }
     public function newPerbaikanStok(Request $request)
     {
         $depo = $request->kdruang;
@@ -440,6 +460,7 @@ class SetNewStokController extends Controller
                     ->where('kdruang', $koderuangan)
                     ->orderBy('tglexp', 'DESC')
                     ->get();
+                $tolalIndex = count($stok) - 1;
                 // nolkan semua stok
                 foreach ($stok as $st) {
                     $st->update([
@@ -453,18 +474,32 @@ class SetNewStokController extends Controller
                         ->first();
                     if ($penrimaanrinci) {
                         $ada = $penrimaanrinci->jml_terima_k;
-                        if ($ada > $masukin) {
+                        if ($penrimaanrinci->no_batch == '-') {
                             $stok[$index]->update([
                                 'jumlah' => $masukin
                             ]);
                             $masukin = 0;
                         } else {
-                            $sisax = $masukin - $ada;
-                            $stok[$index]->update([
-                                'jumlah' => $ada
-                            ]);
-                            $masukin = $sisax;
-                            $index += 1;
+
+                            if ($ada > $masukin) {
+                                $stok[$index]->update([
+                                    'jumlah' => $masukin
+                                ]);
+                                $masukin = 0;
+                            } else {
+                                $sisax = $masukin - $ada;
+                                $stok[$index]->update([
+                                    'jumlah' => $ada
+                                ]);
+                                $masukin = $sisax;
+                                $index += 1;
+                                // if ($index < $tolalIndex) $index += 1;
+                                // else {
+                                //     $stok[$index]->update([
+                                //         'jumlah' => $ada + $sisax
+                                //     ]);
+                                // }
+                            }
                         }
                     } else {
                         $stok[$index]->update([
@@ -628,16 +663,16 @@ class SetNewStokController extends Controller
                     ->groupBy('resep_keluar_racikan_r.kdobat')
                     ->first();
 
-                $persiapanOperasi = PersiapanOperasiRinci::select(
-                    'persiapan_operasi_rincis.kd_obat',
-                    DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as minta'),
-                    DB::raw('sum(persiapan_operasi_rincis.jumlah_distribusi) as distribusi'),
-                    DB::raw('sum(persiapan_operasi_rincis.jumlah_kembali) as kembali'),
-                    DB::raw('sum(persiapan_operasi_rincis.jumlah_resep) as resep'),
-                )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                    ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
-                    ->first();
+                // $persiapanOperasi = PersiapanOperasiRinci::select(
+                //     'persiapan_operasi_rincis.kd_obat',
+                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as minta'),
+                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_distribusi) as distribusi'),
+                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_kembali) as kembali'),
+                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_resep) as resep'),
+                // )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                //     ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                //     ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
+                //     ->first();
 
                 $persiapanOperasiDistribusi = PersiapanOperasiDistribusi::select(
                     'persiapan_operasi_distribusis.kd_obat',
@@ -646,6 +681,7 @@ class SetNewStokController extends Controller
                 )->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
                     ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                     ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                    ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                     ->first();
             }
 
@@ -678,6 +714,7 @@ class SetNewStokController extends Controller
                         ->orderBy('tglexp', 'DESC')
                         ->orderBy('nodistribusi', 'DESC')
                         ->get();
+                    $tolalIndex = count($stok) - 1;
                     foreach ($stok as $st) {
                         $st->update([
                             'jumlah' => 0
@@ -843,7 +880,7 @@ class SetNewStokController extends Controller
                 'resepKeluar' => $resepKeluar,
                 'retur' => $retur,
                 'resepKeluarRacikan' => $resepKeluarRacikan,
-                'persiapanOperasi' => $persiapanOperasi ?? null,
+                // 'persiapanOperasi' => $persiapanOperasi ?? null,
                 'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi ?? null,
                 'tts' => $tts,
                 'sal' => $sal,

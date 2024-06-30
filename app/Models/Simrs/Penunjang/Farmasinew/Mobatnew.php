@@ -8,6 +8,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -177,6 +178,10 @@ class Mobatnew extends Model
     public function persiapanrinci()
     {
         return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
+    }
+    public function distribusipersiapan()
+    {
+        return $this->hasMany(PersiapanOperasiDistribusi::class, 'kd_obat', 'kd_obat');
     }
     public function returpenjualan()
     {
