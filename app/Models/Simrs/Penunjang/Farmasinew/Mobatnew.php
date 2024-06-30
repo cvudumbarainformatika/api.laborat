@@ -64,6 +64,10 @@ class Mobatnew extends Model
     {
         return $this->hasOne(StokOpnameFisik::class, 'kdobat', 'kd_obat');
     }
+    public function fisik()
+    {
+        return $this->hasMany(StokOpnameFisik::class, 'kdobat', 'kd_obat');
+    }
     public function stok()
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');

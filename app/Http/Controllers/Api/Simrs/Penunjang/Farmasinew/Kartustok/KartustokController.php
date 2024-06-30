@@ -31,7 +31,7 @@ class KartustokController extends Controller
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
         // $date->format('Y-m-d')
-        // return new JsonResponse($blnLaluAwal);
+        // return new JsonResponse($dateAwal);
 
         // $ruangan = Ruang::select('uraian')->where('kode', $koderuangan)->first()->uraian ?? null ;
         // $gudang=Gudang::select('nama')->where('kode', $koderuangan)->first()->nama ?? null;
@@ -44,6 +44,18 @@ class KartustokController extends Controller
                 'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
                     $saldo->whereBetween('tglopname', [$blnLaluAwal, $blnLaluAkhir])
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
+                },
+                'fisik' => function ($saldo) use ($tglAwal, $tglAkhir) {
+                    $saldo->whereBetween('tglopname', [$tglAwal, $tglAkhir])
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
+                },
+                // untuk ambil penyesuaian stok awal
+                'stok' => function ($stok) use ($koderuangan) {
+                    $stok->select('id', 'kdobat', 'nopenerimaan', 'nobatch', 'jumlah')
+                        ->with([
+                            'ssw'
+                        ])
+                        ->where('kdruang', $koderuangan);
                 },
                 // hanya ada jika koderuang itu adalah gudang
                 'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
