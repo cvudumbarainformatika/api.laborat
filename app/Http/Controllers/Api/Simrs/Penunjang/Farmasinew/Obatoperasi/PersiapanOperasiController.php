@@ -1290,7 +1290,7 @@ class PersiapanOperasiController extends Controller
                         'flag' => '3',
                         'tgl' => date('Y-m-d'),
                         'tgl_selesai' => date('Y-m-d H:i:s'),
-                        // 'user' => $user
+                        'user' => $user['kodesimrs']
                     ]);
                     $resepH[] = $temp;
                 }

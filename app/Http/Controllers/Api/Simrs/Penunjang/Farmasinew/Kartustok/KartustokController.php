@@ -49,6 +49,10 @@ class KartustokController extends Controller
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
                 },
+                'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir) {
+                    $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
+                },
                 // untuk ambil penyesuaian stok awal
                 'stok' => function ($stok) use ($koderuangan) {
                     $stok->select('id', 'kdobat', 'nopenerimaan', 'nobatch', 'jumlah')
@@ -120,11 +124,11 @@ class KartustokController extends Controller
 
                 'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
-                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
-                        //     $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
+                        //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
                         // })
                         ->with('retur.rinci');
@@ -132,12 +136,12 @@ class KartustokController extends Controller
 
                 'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
-                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
 
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
-                        //     $x->whereBetween('tgl_permintaan', [$tglAwal, $tglAkhir])
+                        //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
                         // })
                         ->with('retur.rinci');
