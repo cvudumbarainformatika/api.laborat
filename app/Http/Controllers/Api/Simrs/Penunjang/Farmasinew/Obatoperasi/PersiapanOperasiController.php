@@ -1283,9 +1283,15 @@ class PersiapanOperasiController extends Controller
                 // update header resep
                 foreach ($uniNores as $nor) {
                     $temp = Resepkeluarheder::where('noresep', $nor)->first();
-                    $temp->flag = '3';
-                    $temp->tgl = date('Y-m-d');
-                    $temp->save();
+                    // $temp->flag = '3';
+                    // $temp->tgl = date('Y-m-d');
+                    // $temp->save();
+                    $temp->update([
+                        'flag' => '3',
+                        'tgl' => date('Y-m-d'),
+                        'tgl_selesai' => date('Y-m-d H:i:s'),
+                        // 'user' => $user
+                    ]);
                     $resepH[] = $temp;
                 }
             }

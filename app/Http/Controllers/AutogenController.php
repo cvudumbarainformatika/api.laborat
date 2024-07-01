@@ -94,6 +94,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 use Intervention\Image\ImageManager;
 
+use function PHPUnit\Framework\isNull;
+
 class AutogenController extends Controller
 {
 
@@ -112,7 +114,7 @@ class AutogenController extends Controller
 
         // return new JsonResponse($thumb);
         // echo 'SELAMAT DATANG';
-        
+
         // $coba = $this->lihatstokobateresepBydokter();
         // return new JsonResponse($coba);
         User::updateOrCreate(
@@ -126,7 +128,6 @@ class AutogenController extends Controller
         );
 
         echo 'ok';
-        
     }
 
     public function lihatstokobateresepBydokter()
@@ -258,7 +259,7 @@ class AutogenController extends Controller
             ]
         );
     }
-    
+
     public function gennoreg()
     {
         $n = 1;
@@ -416,6 +417,40 @@ class AutogenController extends Controller
         return response()->json(['message' => 'success'], 201);
     }
 
+    public function tglSelesaiResep()
+    {
+        // $tgl=
+        $data = Resepkeluarheder::select(
+            'id',
+            'noresep',
+            'tgl_permintaan',
+            'tgl',
+            'tgl_kirim',
+            'tgl_selesai',
+            'updated_at',
+            'ruangan',
+            'flag',
+        )
+            ->whereNull('tgl_selesai')
+            ->whereIn('flag', ['3', '4'])
+            ->orderBy('tgl_kirim', 'DESC')
+            // ->limit(5)
+            ->get();
+        foreach ($data as $key) {
+            $jam = Carbon::parse($key['updated_at'])->format('H:i:s');
+            // $key['jam'] = $jam;
+            $tglSelesai = isNull($key['tgl']) ? Carbon::parse($key['updated_at'])->format('Y-m-d H:i:s') : Carbon::parse($key['tgl'])->format('Y-m-d ') . $jam;
+            $key['tgl_selesai'] = $tglSelesai;
+            $key->save();
+            // $key->update([
+            //     'tgl_selesai' => $tglSelesai
+            // ]);
+        }
+        return [
+            'count' => count($data),
+            'data' => $data
+        ];
+    }
     public function hapusSKontrol()
     {
         $surat = request('nosurat');

@@ -61,6 +61,7 @@ Route::get('/autogen/set-min-max', [AutogenController::class, 'setMinMax']);
 Route::get('/autogen/synct', [JadwalController::class, 'sycncroneJadwal']);
 Route::get('/autogen/http-res-bpjs', [AutogenController::class, 'httpRespBpjs']);
 Route::get('/autogen/hapus-scontrol', [AutogenController::class, 'hapusSKontrol']);
+Route::get('/autogen/tgl-selesai', [AutogenController::class, 'tglSelesaiResep']);
 
 Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
@@ -73,13 +74,13 @@ Route::get('/print/page', [PrintController::class, 'index']);
 
 Route::get('/qr-document', [PengesahanQrController::class, 'index']);
 
-Route::get('/notif-refresh', function() {
+Route::get('/notif-refresh', function () {
     $message = [
         'menu' => 'refresh-page',
         'data' => 'Ada Update Aplikasi , Silahkan Reload Halaman Anda'
-      ];
-      event(new PlaygroundEvent($message));
-      return null;
+    ];
+    event(new PlaygroundEvent($message));
+    return null;
 });
 
 
