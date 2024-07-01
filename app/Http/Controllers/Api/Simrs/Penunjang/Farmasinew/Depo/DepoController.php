@@ -415,9 +415,11 @@ class DepoController extends Controller
     }
     public function newterimadistribusi(Request $request)
     {
-        $obatditerima = Mutasigudangkedepo::select('*', DB::raw('sum(jml) as jumlah'))
-            ->where('no_permintaan', $request->no_permintaan)
-            ->groupBy('no_permintaan', 'kd_obat', 'nopenerimaan')
+        // $obatditerima = Mutasigudangkedepo::select('*', DB::raw('sum(jml) as jumlah'))
+        //     ->where('no_permintaan', $request->no_permintaan)
+        //     ->groupBy('no_permintaan', 'kd_obat', 'nopenerimaan')
+        //     ->get();
+        $obatditerima = Mutasigudangkedepo::where('no_permintaan', $request->no_permintaan)
             ->get();
         // return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!', 'data' => $obatditerima], 410);
         foreach ($obatditerima as $wew) {
@@ -427,24 +429,27 @@ class DepoController extends Controller
                     'nopenerimaan' => $wew->nopenerimaan,
                     'nodistribusi' => $wew->no_permintaan,
                     'kdobat' => $wew->kd_obat,
+                    'nobatch' => $wew->nobatch,
                 ],
                 [
                     'tglpenerimaan' => $wew->tglpenerimaan,
-                    'jumlah' => $wew->jumlah,
+                    'jumlah' => $wew->jml,
                     'kdruang' => $request->tujuan,
                     'harga' => $wew->harga,
                     'tglexp' => $wew->tglexp,
-                    'nobatch' => $wew->nobatch,
                 ]
             );
         }
 
         $user = FormatingHelper::session_user();
         $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
-        $kuncipermintaan->flag = '4';
-        $kuncipermintaan->tgl_terima_depo = date('Y-m-d H:i:s');
-        $kuncipermintaan->user_terima_depo = $user['kodesimrs'];
-        $kuncipermintaan->save();
+
+        $kuncipermintaan->update([
+            'flag' => '4',
+            'tgl_terima_depo' => date('Y-m-d H:i:s'),
+            'user_terima_depo' => $user['kodesimrs'],
+
+        ]);
 
         // $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
         $msg = [

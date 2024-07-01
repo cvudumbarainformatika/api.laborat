@@ -253,6 +253,7 @@ class StokrealController extends Controller
             // 'oneopname'
 
         ])
+            ->where('flag', '')
             ->where('nama_obat', 'like', '%' . request('q') . '%')
             ->orderBy('nama_obat', 'ASC')
             ->paginate(request('per_page'));
@@ -260,7 +261,7 @@ class StokrealController extends Controller
         $raw = collect($stokreal);
         $data['data'] = $raw['data'];
         $data['meta'] = $raw->except('data');
-        // $data['diff'] = $diff;
+        $data['now'] = date('Y-m-d H:i:s');
         // $data['stokreal'] = $stokreal;
 
         return new JsonResponse($data);
@@ -460,6 +461,37 @@ class StokrealController extends Controller
             $updatestok->jumlah = $e->masuk;
             $updatestok->save();
         }
+        return 200;
+    }
+    public static function newupdatestokdepo($request)
+    {
+        $kembalikan = Stokreal::select(
+            'stokreal.nopenerimaan as nopenerimaan',
+            'stokreal.kdobat as kdobat',
+            'stokreal.harga as harga',
+            // 'stokreal.jumlah as jumlah',
+            DB::raw('(stokreal.jumlah + retur_penjualan_r.jumlah_retur) as masuk')
+        )
+            ->leftjoin('retur_penjualan_r', function ($e) {
+                $e->on('retur_penjualan_r.nopenerimaan', 'stokreal.nopenerimaan')
+                    ->on('retur_penjualan_r.kdobat', 'stokreal.kdobat')
+                    ->on('retur_penjualan_r.harga_beli', 'stokreal.harga');
+            })
+            ->where('retur_penjualan_r.kdobat', $request->kdobat)
+            ->where('stokreal.kdruang', $request->koderuang)
+            ->where('retur_penjualan_r.noresep', $request->noresep)
+            // ->where('stokreal.jumlah ', '>', 0)
+            // ->latest('stokreal.id')
+            ->first();
+        // foreach ($kembalikan as $e) {
+        $updatestok = Stokreal::where('nopenerimaan', $kembalikan->nopenerimaan)
+            ->where('kdobat', $kembalikan->kdobat)
+            ->where('kdruang', $request->koderuang)
+            ->where('harga', $kembalikan->harga)
+            ->first();
+        $updatestok->jumlah = $kembalikan->masuk;
+        $updatestok->save();
+        // }
         return 200;
     }
     public function dataAlokasi()

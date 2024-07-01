@@ -12,5 +12,6 @@ Route::group([
     Route::get('/cek-harga', [SetNewStokController::class, 'cekHargaGud']);
     Route::get('/isi-harga', [SetNewStokController::class, 'insertHarga']);
     Route::get('/new-stok-opname', [SetNewStokController::class, 'setStokOpnameAwal']);
-    Route::post('/perbaikan-stok', [SetNewStokController::class, 'perbaikanStok']);
+    Route::post('/perbaikan-stok', [SetNewStokController::class, 'newPerbaikanStok']);
+    Route::post('/perbaikan-stok-per-depo', [SetNewStokController::class, 'PerbaikanStokPerDepo']);
 });
