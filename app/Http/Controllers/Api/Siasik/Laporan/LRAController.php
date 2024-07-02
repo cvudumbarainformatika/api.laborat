@@ -198,6 +198,15 @@ class LRAController extends Controller
         ->orderBy('tgltrans', 'asc')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
+        $pembiayaan = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3'
+        )->whereIn('akun50_2024.kodeall3', ['6',
+                                        '6.1',
+                                        '6.1.01',
+                                        '6.1.01.08',
+                                        '6.1.01.08.01',
+                                        '6.1.01.08.01.0001'])
+        ->get();
         $pegawai = Mpegawaisimpeg::where('jabatan', 'J00001')
         ->where('aktif', 'AKTIF')
         ->select('pegawai.nip',
@@ -208,6 +217,7 @@ class LRAController extends Controller
             'pendapatan' => $pendapatan,
             'nilaipendapatan' => $nilaipendapatan,
             'realisasipendapatan' => $realisasipendapatan,
+            'pembiayaan' => $pembiayaan,
             'pa' => $pegawai
         ];
         return new JsonResponse ($lra);
@@ -244,20 +254,20 @@ class LRAController extends Controller
         $awal=request('tgl');
         $akhir=request('tglx');
         $thn= date('Y');
-        // $pendapatan = Akun50_2024::select('akun50_2024.kodeall2',
-        // 'akun50_2024.uraian', 'akun50_2024.kodeall3'
-        // )->whereIn('akun50_2024.kodeall3', ['4',
-        //                                 '4.1',
-        //                                 '4.1.04',
-        //                                 '4.1.04.16',
-        //                                 '4.1.04.16.01',
-        //                                 '4.1.04.16.01.0001'])
-        // ->get();
-        $pegawai = Mpegawaisimpeg::where('jabatan', 'J00001')
-        ->where('aktif', 'AKTIF')
-        ->select('pegawai.nip',
-                'pegawai.nama')
+        $pembiayaan = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3'
+        )->whereIn('akun50_2024.kodeall3', ['6',
+                                        '6.1',
+                                        '6.1.01',
+                                        '6.1.01.08',
+                                        '6.1.01.08.01',
+                                        '6.1.01.08.01.0001'])
         ->get();
+        // $pegawai = Mpegawaisimpeg::where('jabatan', 'J00001')
+        // ->where('aktif', 'AKTIF')
+        // ->select('pegawai.nip',
+        //         'pegawai.nama')
+        // ->get();
 
         // $kode = Akun50_2024::select('akun50_2024.kodeall2',
         // 'akun50_2024.uraian', 'akun50_2024.kodeall3')
@@ -401,7 +411,7 @@ class LRAController extends Controller
         // ->groupBy('akun50_2024.kodeall2')
         // ->get();
 
-        return new JsonResponse ($pegawai);
+        return new JsonResponse ($pembiayaan);
 
     }
 }
