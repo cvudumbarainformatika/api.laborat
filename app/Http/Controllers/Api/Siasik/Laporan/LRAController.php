@@ -108,7 +108,7 @@ class LRAController extends Controller
                     $y->where('npdls_heder.kodebidang', request('bidang'))
                     ->where('npdls_heder.kodekegiatanblud', request('kegiatan'));
                 })
-                ->whereBetween('npkls_heder.tglpencairan', [$awal, $akhir])
+                ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
 
             ->with('headerls',function($npk) use ($awal, $akhir) {
                 $npk->select('npdls_heder.nonpdls',
@@ -119,13 +119,13 @@ class LRAController extends Controller
                             'npdls_heder.kodebidang')
                 ->join('npkls_rinci', 'npkls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
                 ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
-                ->whereBetween('npkls_heder.tglpencairan', [$awal, $akhir])
+                ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
                 ->with('npkrinci',function($header) use ($awal, $akhir) {
                     $header->select('npkls_rinci.nonpk','npkls_rinci.nonpdls')
                     ->join('npkls_heder', 'npkls_heder.nonpk', '=', 'npkls_rinci.nonpk')
-                    ->whereBetween('npkls_heder.tglpencairan', [$awal, $akhir])
+                    ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
                     ->with('header',function($kd){
-                        $kd->select('npkls_heder.tglpencairan','npkls_heder.nonpk');
+                        $kd->select('npkls_heder.tglpindahbuku','npkls_heder.nonpk');
                     });
                 });
             });
