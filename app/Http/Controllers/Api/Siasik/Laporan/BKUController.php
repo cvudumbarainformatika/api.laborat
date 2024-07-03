@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Siasik\Laporan;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\PejabatTeknis;
@@ -111,6 +112,11 @@ class BKUController extends Controller
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
 
+        $pegawai = Mpegawaisimpeg::whereIn('jabatan', ['J00001','J00005','J00034','J00035'])
+        ->where('aktif', 'AKTIF')
+        ->select('pegawai.nip',
+                'pegawai.nama')
+        ->get();
         $ppk = [
             'saldo' => $saldo,
             'setor' => $setor,
@@ -120,6 +126,7 @@ class BKUController extends Controller
             'spmgu' => $spmgu,
             'nihil' => $nihil,
             'npkls' => $npkls,
+            'pegawai' => $pegawai
         ];
 
         return new JsonResponse($ppk);
@@ -188,6 +195,12 @@ class BKUController extends Controller
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
 
+        $pegawai = Mpegawaisimpeg::whereIn('jabatan', ['J00001','J00005','J00034','J00035'])
+        ->where('aktif', 'AKTIF')
+        ->select('pegawai.nip',
+                'pegawai.nama')
+        ->get();
+
         $nihil = Nihil::select(
             'nopengembalian',
             'tgltrans',
@@ -212,6 +225,7 @@ class BKUController extends Controller
             'cpsisapjr' => $cpsisapjr,
             'pergeserankas' => $pergeserankas,
             'nihil' => $nihil,
+            'pegawai' => $pegawai
         ];
 
         return new JsonResponse($bkupengeluaran);
@@ -374,7 +388,11 @@ class BKUController extends Controller
         $spmgu = SPM_GU::orderBy('tglSpm','desc')
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
-
+        $pegawai = Mpegawaisimpeg::whereIn('jabatan', ['J00001','J00005','J00034','J00035'])
+        ->where('aktif', 'AKTIF')
+        ->select('pegawai.nip',
+                'pegawai.nama')
+        ->get();
         $bukubank = [
             'pencairanls' => $pencairanls,
             'cp' => $cp,
@@ -384,6 +402,7 @@ class BKUController extends Controller
             'spjpanjar' => $spjpanjar,
             'nihil' => $nihil,
             'spmgu' => $spmgu,
+            'pegawai' => $pegawai
         ];
         return new JsonResponse($bukubank);
 
@@ -430,6 +449,12 @@ class BKUController extends Controller
         ->whereBetween('tglcontrapost', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->get();
 
+        $pegawai = Mpegawaisimpeg::whereIn('jabatan', ['J00001','J00005','J00034','J00035'])
+        ->where('aktif', 'AKTIF')
+        ->select('pegawai.nip',
+                'pegawai.nama')
+        ->get();
+
         $bukutunai = [
             // 'pergeserankas' => $pergeserankas,
             'bankkekas' => $bankkekas,
@@ -438,6 +463,7 @@ class BKUController extends Controller
             'pengembalianpjr' => $pengembalianpjr,
             'cpsisapjr' => $cpsisapjr,
             'cp' => $cp,
+            'pegawai' => $pegawai
         ];
         return new JsonResponse($bukutunai);
     }
