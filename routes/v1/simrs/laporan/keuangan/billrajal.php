@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllbillrajalController;
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllbillrajalperpoliController;
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllbillranapController;
+use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllBillRekapByRuanganController;
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\InacbgController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,7 @@ Route::group([
 
     //RANAP
     Route::get('/allbillranap', [AllbillranapController::class, 'allbillranap']);
+    Route::get('/allBillRekapByRuangan', [AllBillRekapByRuanganController::class, 'allBillRekapByRuangan']);
 
     //incbg
     Route::get('/incbglap', [InacbgController::class, 'incbglap']);
