@@ -17,6 +17,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Sistembayarlain;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
@@ -490,6 +491,12 @@ class EresepController extends Controller
                 $noresep = $request->noresep;
             }
 
+
+
+            // =======================================================================================================================================================================
+                // WAN ..... Sistem Bayar  tak ganti kabeh yoooo ...... cek dibawah sing tak ganti tak komen
+            // =======================================================================================================================================================================
+
             $simpan = Resepkeluarheder::updateOrCreate(
                 [
                     'noresep' => $noresep,
@@ -502,7 +509,8 @@ class EresepController extends Controller
                     'depo' => $request->kodedepo,
                     'ruangan' => $request->kdruangan,
                     'dokter' =>  $user['kodesimrs'],
-                    'sistembayar' => $request->sistembayar,
+                    // 'sistembayar' => $request->sistembayar,
+                    'sistembayar' => $request->sistembayarlain, // tak ganti iki wan
                     'diagnosa' => $request->diagnosa,
                     'kodeincbg' => $request->kodeincbg,
                     'uraianinacbg' => $request->uraianinacbg,
@@ -519,8 +527,27 @@ class EresepController extends Controller
                 return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
             }
 
+            // IKI TAMBAHANE WAN JIKA ADA SISTEM BAYAR LAIN (update or create berdasarkan noresep dan noreg)
 
-            $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
+            if ($request->groupsistembayarlain !== $request->groupsistembayar) {
+                Sistembayarlain::updateOrCreate(
+                    [
+                        'noresep' => $noresep,
+                        'noreg' => $request->noreg,
+                    ],
+                    [
+                        'kodeawal' => $request->sistembayar,
+                        'kodeganti' => $request->sistembayarlain,
+                        'groupawal' => $request->groupsistembayar,
+                        'groupganti' => $request->groupsistembayarlain,
+                        'user' => $user['kodesimrs']
+                    ]
+                );
+            }
+
+
+            // $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
+            $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayarlain); // tak ganti iki wan
             $res = $har['res'];
             if ($res) {
                 return new JsonResponse(['message' => $har['message'], 'data' => $har], 410);
@@ -545,7 +572,8 @@ class EresepController extends Controller
                             'fornas' => $request->fornas ?? '',
                             'forkit' => $request->forkit ?? '',
                             'generik' => $request->generik ?? '',
-                            'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
+                            // 'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
+                            'r' => $request->groupsistembayarlain === '1' || $request->groupsistembayarlain === 1 ? 500 : 0, // tak ganti iki wan
                             'hpp' => $harga,
                             'harga_jual' => $hargajualx,
                             'kode108' => $request->kode108,
@@ -580,7 +608,8 @@ class EresepController extends Controller
                             'fornas' => $request->fornas ?? '',
                             'forkit' => $request->forkit ?? '',
                             'generik' => $request->generik ?? '',
-                            'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
+                            // 'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
+                            'r' => $request->groupsistembayarlain === '1' || $request->groupsistembayarlain === 1 ? 500 : 0,
                             'hpp' => $harga,
                             'harga_jual' => $hargajualx,
                             'kode108' => $request->kode108,
@@ -615,7 +644,8 @@ class EresepController extends Controller
                         'kode50' => $request->kode50,
                         'uraian50' => $request->uraian50,
                         'stokalokasi' => $request->stokalokasi,
-                        'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 300 : 0,
+                        // 'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 300 : 0,
+                        'r' => $request->groupsistembayarlain === '1' || $request->groupsistembayarlain === 1 ? 300 : 0,
                         'jumlah' => $request->jumlah_diminta,
                         'hpp' => $harga,
                         'hargajual' => $hargajualx,
@@ -1604,6 +1634,10 @@ class EresepController extends Controller
             $head = Resepkeluarheder::where('noresep', $request->noresep)->first();
             if ($head) {
                 $head->delete();
+            }
+            $sistembayarlain = Sistembayarlain::where('noresep', $request->noresep)->first();
+            if ($sistembayarlain) {
+                $sistembayarlain->delete();
             }
         }
     }
