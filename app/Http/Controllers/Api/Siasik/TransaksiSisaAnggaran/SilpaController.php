@@ -7,6 +7,7 @@ use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SilpaController extends Controller
 {
@@ -27,19 +28,51 @@ class SilpaController extends Controller
     }
     public function transSilpa(Request $request){
 
-        $data = SisaAnggaran::create([
-        'notrans'=> self::buatnomor(),
-        'tanggal' => $request->tanggal,
-        'tahun' => $request->tahun,
-        'nominal'=> $request->nominal,
-        'koderek50'=> '6.1.01.08.01.0001',
-        'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
-        'kode79' => '6.1.1',
-        'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
-        ]);
+        try{
+            DB::beginTransaction();
+            if (!$request->has('id')){
+                SisaAnggaran::firstOrCreate([
+                    'notrans'=> self::buatnomor(),
+                    'tanggal' => $request->tanggal,
+                    'tahun' => $request->tahun,
+                    'nominal'=> $request->nominal,
+                    'koderek50'=> '6.1.01.08.01.0001',
+                    'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
+                    'kode79' => '6.1.1',
+                    'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
+                ]);
+            } else {
+                $data = SisaAnggaran::find($request->id);
+                $data->update([
+                    'notrans'=> self::buatnomor(),
+                    'tanggal' => $request->tanggal,
+                    'tahun' => $request->tahun,
+                    'nominal'=> $request->nominal,
+                    'koderek50'=> '6.1.01.08.01.0001',
+                    'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
+                    'kode79' => '6.1.1',
+                    'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
+                ]);
+            }
+            DB::commit();
+            return response()->json(['message' => 'Succes'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
+        }
+        // $data = SisaAnggaran::create([
+        // 'notrans'=> self::buatnomor(),
+        // 'tanggal' => $request->tanggal,
+        // 'tahun' => $request->tahun,
+        // 'nominal'=> $request->nominal,
+        // 'koderek50'=> '6.1.01.08.01.0001',
+        // 'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
+        // 'kode79' => '6.1.1',
+        // 'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
+        // ]);
         // ($request->only('bulan','tahun','rekening','nilaisaldo'));
 
-        return new JsonResponse(['message' => 'berhasil disimpan', 'data' => $data], 200);
+        // return new JsonResponse(['message' => 'berhasil disimpan', 'data' => $data], 200);
     }
     public static function buatnomor(){
         $huruf = ('SILPA-BLUD');
@@ -77,4 +110,18 @@ class SilpaController extends Controller
 
         return $sambung;
     }
+    public function hapussaldo(Request $request){
+        $id=$request->id;
+        $data=SisaAnggaran::find($id);
+        $del=$data->delete();
+        if(!$del){
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
+        return response()->json([
+            'message' => 'Data sukses terhapus'
+        ], 200);
+    }
+
 }

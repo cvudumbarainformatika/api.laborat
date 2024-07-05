@@ -10,6 +10,7 @@ use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use App\Models\Siasik\TransaksiPendapatan\TranskePPK;
+use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -207,6 +208,12 @@ class LRAController extends Controller
                                         '6.1.01.08.01',
                                         '6.1.01.08.01.0001'])
         ->get();
+
+        $silpa = SisaAnggaran::where('tahun', $thn)->select('silpa.koderek50',
+        'silpa.kode79',
+        'silpa.tanggal',
+        'silpa.nominal')->get();
+
         $pegawai = Mpegawaisimpeg::where('jabatan', 'J00001')
         ->where('aktif', 'AKTIF')
         ->select('pegawai.nip',
@@ -218,7 +225,8 @@ class LRAController extends Controller
             'nilaipendapatan' => $nilaipendapatan,
             'realisasipendapatan' => $realisasipendapatan,
             'pembiayaan' => $pembiayaan,
-            'pa' => $pegawai
+            'pa' => $pegawai,
+            'silpa' => $silpa
         ];
         return new JsonResponse ($lra);
     }
@@ -254,14 +262,48 @@ class LRAController extends Controller
         $awal=request('tgl');
         $akhir=request('tglx');
         $thn= date('Y');
-        $pembiayaan = Akun50_2024::select('akun50_2024.kodeall2',
-        'akun50_2024.uraian', 'akun50_2024.kodeall3'
-        )->whereIn('akun50_2024.kodeall3', ['6',
-                                        '6.1',
-                                        '6.1.01',
-                                        '6.1.01.08',
-                                        '6.1.01.08.01',
-                                        '6.1.01.08.01.0001'])
+        // $pembiayaan = Akun50_2024::select('akun50_2024.kodeall2',
+        // 'akun50_2024.uraian', 'akun50_2024.kodeall3'
+        // )->whereIn('akun50_2024.kodeall3', ['6',
+        //                                 '6.1',
+        //                                 '6.1.01',
+        //                                 '6.1.01.08',
+        //                                 '6.1.01.08.01',
+        //                                 '6.1.01.08.01.0001'])
+        // ->get();
+
+        $pembiayaan = Akun50_2024::select('akun50_2024.uraian', 'akun50_2024.kodeall3'
+        )
+        ->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
+        // ->leftJoin('akun50_2024 as wew', DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2)'),'=','wew.kodeall3')
+        ->with('kodebiaya1',function($gg){
+            $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+            })
+            ->with('kodebiaya2',function($gg){
+                $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+                })
+                ->with('kodebiaya3',function($gg){
+                    $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+                    })
+                    ->with('kodebiaya4',function($gg){
+                        $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+                        })
+                        ->with('kodebiaya5',function($gg){
+                            $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+                            })
+        ->join('silpa','silpa.koderek50','=', 'akun50_2024.kodeall3')
+        ->where('tahun', $thn)
+        ->with('silpaanggaran', function($data) use ($thn){
+            $data->where('tahun', $thn)->select('silpa.koderek50',
+            'silpa.kode79',
+            'silpa.tanggal',
+            'silpa.tahun',
+            'silpa.nominal');
+        })
         ->get();
         // $pegawai = Mpegawaisimpeg::where('jabatan', 'J00001')
         // ->where('aktif', 'AKTIF')

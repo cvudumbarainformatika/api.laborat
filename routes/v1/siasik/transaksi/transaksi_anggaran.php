@@ -10,6 +10,7 @@ Route::group([
 ], function () {
     Route::get('/getsilpa', [SilpaController::class, 'getSilpa']);
     Route::post('/transsilpa', [SilpaController::class, 'transSilpa']);
+    Route::post('/hapussilpa', [SilpaController::class, 'hapusSilpa']);
 
 });
 
