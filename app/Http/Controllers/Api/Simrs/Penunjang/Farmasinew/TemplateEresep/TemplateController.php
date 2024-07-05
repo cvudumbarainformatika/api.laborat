@@ -223,6 +223,17 @@ class TemplateController extends Controller
         return new JsonResponse($data, 200);
     }
 
+    public function destroy(Request $request)
+    {
+        $id = $request->id;
+        $data = Templateresep::find($id);
+        $del = $data->delete();
+        if (!$del) {
+          return new JsonResponse(['message' => 'Error on Delete'], 500);
+        }
+        return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
+    }
+
 
     public function order(Request $request)
     {

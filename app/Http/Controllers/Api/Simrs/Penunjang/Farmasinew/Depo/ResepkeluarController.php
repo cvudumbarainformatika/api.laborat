@@ -334,7 +334,12 @@ class ResepkeluarController extends Controller
 
     public function ambilSigna()
     {
-        $data = Msigna::get();
+        // $data = Msigna::get();
+        $q = Msigna::query();
+        $data = $q->select('signa','jumlah')
+        ->when(request('q'), function ($query) {
+            $query->where('signa', 'like', '%' . request('q') . '%');
+        })->limit(10)->get();
         return new JsonResponse($data);
     }
     public static function cekpemberianobat($request, $jumlahstok)

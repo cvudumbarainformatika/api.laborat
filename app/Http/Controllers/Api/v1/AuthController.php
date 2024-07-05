@@ -8,6 +8,7 @@ use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\Akses\Menu;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Msistembayar;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,12 +77,20 @@ class AuthController extends Controller
             $akses = AksesUser::where('user_id', $me->id)->get();
         }
 
+        $masterSistemBayar = Msistembayar::query()
+            ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
+            ->where('hidden','!=','')
+            ->where('rs1','!=','')
+            ->get();
+        
 
+        
 
         $result = [
             'apps' => $apps,
             'akses' => $akses,
-            'user' => $user
+            'user' => $user,
+            'mSistemBayar' => $masterSistemBayar
         ];
         return new JsonResponse($result);
     }
