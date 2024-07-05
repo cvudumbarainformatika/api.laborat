@@ -2,7 +2,9 @@
 
 namespace App\Models\Simrs\Kasir;
 
+use App\Models\KunjunganRawatInap;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,6 +18,11 @@ class Rstigalimax extends Model
     public function rstigapuluhtarif()
     {
         return $this->hasMany(Rstigapuluhtarif::class, 'rs1','rs1');
+    }
+
+    public function kunjunganranap()
+    {
+        return $this->hasOne(Kunjunganranap::class, 'rs1','rs1');
     }
 
     public function getSubtotalAttribute($data)
