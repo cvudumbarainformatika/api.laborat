@@ -425,8 +425,9 @@ class ReturpenjualanController extends Controller
                 $stok = Stokreal::where('nopenerimaan', $key['nopenerimaan'])
                     ->where('kdobat', $key['kdobat'])
                     ->where('kdruang', $request->depo)
-                    ->where('jumlah', '>', 0)
-                    ->latest()
+                    // ->where('jumlah', '>', 0)
+                    // ->latest()
+                    ->orderBy('tglexp', 'DESC')
                     ->first();
                 if (!$stok) {
                     return new JsonResponse([

@@ -409,6 +409,7 @@ class SetNewStokController extends Controller
                 ->pluck('id');
             $penyesuaian = PenyesuaianStok::select('stokreal_id', DB::raw('sum(penyesuaian) as jumlah'))
                 ->whereIn('stokreal_id', $stokid)
+                ->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                 ->groupBy('stokreal_id')
                 ->first();
             $penerimaan = PenerimaanRinci::select(
@@ -557,6 +558,7 @@ class SetNewStokController extends Controller
             $penyesuaian = PenyesuaianStok::select('stokreal_id', DB::raw('sum(penyesuaian) as jumlah'))
                 ->whereIn('stokreal_id', $stokid)
                 // ->whereNull('flag') // local only
+                ->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                 ->groupBy('stokreal_id')
                 ->first();
 
