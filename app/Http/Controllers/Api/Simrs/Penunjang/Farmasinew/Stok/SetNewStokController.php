@@ -586,14 +586,14 @@ class SetNewStokController extends Controller
             // jika bukan depo ok
             if ($koderuangan !== 'Gd-04010103') {
 
-                $noresep = Resepkeluarrinci::select(
-                    'resep_keluar_r.noresep',
-                )
-                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                    ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    ->where('resep_keluar_r.kdobat', $kdobat)
-                    ->pluck('resep_keluar_r.noresep');
+                // $noresep = Resepkeluarrinci::select(
+                //     'resep_keluar_r.noresep',
+                // )
+                //     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                //     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                //     ->where('resep_keluar_h.depo', $koderuangan)
+                //     ->where('resep_keluar_r.kdobat', $kdobat)
+                //     ->pluck('resep_keluar_r.noresep');
 
                 $resepKeluar = Resepkeluarrinci::select(
                     'resep_keluar_r.kdobat',
@@ -606,12 +606,16 @@ class SetNewStokController extends Controller
                     ->groupBy('resep_keluar_r.kdobat')
                     ->first();
                 $retur = Returpenjualan_r::select(
-                    'kdobat',
-                    DB::raw('sum(jumlah_retur) as jumlah')
+                    'retur_penjualan_r.kdobat',
+                    DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
                 )
-                    ->whereIn('noresep', $noresep)
-                    ->where('kdobat', $kdobat)
-                    ->groupBy('kdobat')
+                    ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('resep_keluar_h.depo', $koderuangan)
+                    // ->whereIn('noresep', $noresep)
+                    ->where('retur_penjualan_r.kdobat', $kdobat)
+                    ->groupBy('retur_penjualan_r.kdobat')
                     ->first();
 
                 $resepKeluarRacikan = Resepkeluarrinciracikan::select(
@@ -644,14 +648,20 @@ class SetNewStokController extends Controller
                     ->whereNotIn('resep_keluar_h.noresep', $noresep)
                     ->groupBy('resep_keluar_r.kdobat')
                     ->first();
-                $retur = Returpenjualan_r::select(
-                    'kdobat',
-                    DB::raw('sum(jumlah_retur) as jumlah')
-                )
-                    ->whereIn('noresep', $noresep)
-                    ->where('kdobat', $kdobat)
-                    ->groupBy('kdobat')
-                    ->first();
+                
+                    
+                    $retur = Returpenjualan_r::select(
+                        'retur_penjualan_r.kdobat',
+                        DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
+                    )
+                        ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                        ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+                        
+                        ->where('retur_penjualan_r.kdobat', $kdobat)
+                        ->groupBy('retur_penjualan_r.kdobat')
+                        ->first();
 
                 $resepKeluarRacikan = Resepkeluarrinciracikan::select(
                     'resep_keluar_racikan_r.kdobat',
@@ -878,7 +888,7 @@ class SetNewStokController extends Controller
                 'penerimaan' => 0,
                 'mutasiMasuk' => $mutasiMasuk,
                 'mutasiKeluar' => $mutasiKeluar,
-                'noresep' => $noresep,
+                'noresep' => $noresep??[],
                 'resepKeluar' => $resepKeluar,
                 'retur' => $retur,
                 'resepKeluarRacikan' => $resepKeluarRacikan,

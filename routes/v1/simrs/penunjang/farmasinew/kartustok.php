@@ -9,5 +9,5 @@ Route::group([
     'prefix' => 'simrs/farmasinew/kartustok'
 ], function () {
     Route::get('/listobat', [KartustokController::class, 'index']);
-    // Route::get('/listobat', [KartustokController::class, 'listkartuStok']);
+    // Route::get('/listobat', [KartustokController::class, 'listkartuStok']); //ooo
 });

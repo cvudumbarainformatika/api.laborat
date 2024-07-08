@@ -1197,6 +1197,7 @@ class EresepController extends Controller
         if ($request->jenisresep == 'Racikan') {
             $simpanrinci = Resepkeluarrinciracikan::with('mobat:kd_obat,nama_obat')
                 ->where('noresep', $request->noresep)
+                ->where('namaracikan', $request->namaracikan)
                 ->where('kdobat', $request->kdobat)
                 ->first();
             if ($simpanrinci) {
