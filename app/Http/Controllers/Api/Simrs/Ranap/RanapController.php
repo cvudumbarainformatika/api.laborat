@@ -17,16 +17,22 @@ class RanapController extends Controller
         $dokter = request('kddokter');
 
         if (request('to') === '' || request('from') === null) {
-            $tgl = Carbon::now()->format('Y-m-d 00:00:00');
-            $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+            $tgl = Carbon::now()->format('Y-m-d');
+            $tglx = Carbon::now()->format('Y-m-d');
         } else {
-            $tgl = request('to');
+            $tgl = request('to') ;
             $tglx = request('from');
         }
+
+        $tanggal = $tgl. ' 23:59:59';
+        $tanggalx = Carbon::now()->subDays(30)->format('Y-m-d'). ' 00:00:00';
+
+        // return $tanggalx;
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request('koderuangan');
         $data = Kunjunganranap::select(
+            'rs23.rs1',
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23.rs3 as tglmasuk',
@@ -70,7 +76,10 @@ class RanapController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
-            ->whereDate('rs23.rs3', '<=', $tgl)
+            ->where(function($query) use ($tanggal, $tanggalx) {
+                $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal]);
+            })
+            // ->whereDate('rs23.rs3', '<=', $tgl)
             // ->whereIn('rs23.rs22', $status)
 
             // ->where(function ($x) {
@@ -99,16 +108,17 @@ class RanapController extends Controller
             ->where(function ($q) use ($status) {
                 $q->whereIn('rs23.rs22', $status);
             })
-            ->with([
-                'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->with([
-                        'dokter:nama,kdpegsimrs',
-                        'permintaanresep.mobat:kd_obat,nama_obat',
-                        'permintaanracikan.mobat:kd_obat,nama_obat',
-                    ])
-                        ->orderBy('id', 'DESC');
-                },
-            ])
+            // ->with([
+            //     'newapotekrajal' => function ($newapotekrajal) {
+            //         $newapotekrajal->with([
+            //             'dokter:nama,kdpegsimrs',
+            //             'permintaanresep.mobat:kd_obat,nama_obat',
+            //             'permintaanracikan.mobat:kd_obat,nama_obat',
+            //         ])
+            //             ->orderBy('id', 'DESC');
+            //     },
+            //     'diagnosa' // ini sementara berhubungan dengan resep
+            // ])
             // ->whereIn('rs23.rs5', $ruangan)
             // ->where('rs23.rs10', 'like', '%' . $dokter . '%')
             // ->where(function ($sts) use ($status) {
@@ -135,5 +145,34 @@ class RanapController extends Controller
             ->paginate(20);
 
         return new JsonResponse($data);
+    }
+
+    public function bukalayanan(Request $request)
+    {
+        $cekx = Kunjunganranap::query()
+        ->select(
+            'rs1',
+            'rs1 as noreg',
+            'rs2 as norm')
+            ->where('rs1', '=', $request->noreg)
+            ->with([
+                'newapotekrajal' => function ($q) {
+                    $q->with([
+                        'dokter:nama,kdpegsimrs',
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'diagnosa' // ini berhubungan dengan resep
+            ])->first();
+
+        if (!$cekx) {
+           return new JsonResponse([
+               'message' => 'Data tidak ditemukan',
+           ], 500);
+        }
+
+        return new JsonResponse($cekx);
     }
 }
