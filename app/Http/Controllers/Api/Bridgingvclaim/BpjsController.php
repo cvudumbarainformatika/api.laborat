@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Bridgingvclaim;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pasien;
-use App\Models\TransaksiLaborat;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
