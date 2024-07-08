@@ -25,35 +25,32 @@ class AllBillRekapByRuanganController extends Controller
                 'akomodasikamar' => function ($akomodasikamar) {
                     $akomodasikamar->select('rs1', 'rs7', 'rs14','rs16')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
                 },
-                // 'biayamaterai' => function ($biayamaterai) {
-                //     $biayamaterai->select('rs1', 'rs5')->where('rs7', '!=', 'IRD');
-                // },
-                // 'tindakandokter' => function ($tindakandokterperawat) {
-                //     $tindakandokterperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
-                //         ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
-                //         ->where('rs21.rs13', '1')
-                //         ->groupBy('rs24.rs4', 'rs73.rs2', 'rs73.rs4');
-                //     //->where('rs73.rs22','POL014');
-                // },
-                // 'visiteumum' => function ($visiteumum) {
-                //     $visiteumum->select('rs1', 'rs4', 'rs5');
-                // },
-                // 'tindakanperawat' => function ($tindakanperawat) {
-                //     $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
-                //         ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
-                //         ->where('rs21.rs13', '!=', '1')
-                //         ->groupBy('rs24.rs4', 'rs73.rs2', 'rs73.rs4', 'rs73.id');
-                //     //->where('rs73.rs22','POL014');
-                // },
-                // 'asuhangizi' => function ($asuhangizi) {
-                //     $asuhangizi->select('rs1', 'rs4', 'rs5')->where('rs3', 'K00013');
-                // },
-                // 'makanpasien' => function ($makanpasien) {
-                //     $makanpasien->select('rs1', 'rs4', 'rs5')->whereIn('rs3', ['K00003', 'K00004']);
-                //     //$makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003')->orWhere('rs3','K00004');
-                // },
+                'biayamaterai' => function ($biayamaterai) {
+                    $biayamaterai->select('rs1', 'rs5')->where('rs7', '!=', 'IRD');
+                },
+                'tindakandokter' => function ($tindakandokterperawat) {
+                    $tindakandokterperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
+                        ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                        ->where('rs21.rs13', '1')
+                        ->groupBy('rs24.rs4', 'rs73.rs2', 'rs73.rs4');
+                    //->where('rs73.rs22','POL014');
+                },
+                'visiteumum' => function ($visiteumum) {
+                    $visiteumum->select('rs1', 'rs4', 'rs5');
+                },
+                'tindakanperawat' => function ($tindakanperawat) {
+                    $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
+                        ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                        ->where('rs21.rs13', '!=', '1')
+                        ->groupBy('rs24.rs4', 'rs73.rs2', 'rs73.rs4', 'rs73.id');
+                    //->where('rs73.rs22','POL014');
+                },
+                'makanpasien' => function ($makanpasien) {
+                    $makanpasien->select('rs1', 'rs4', 'rs5')->whereIn('rs3', ['K00003', 'K00004']);
+                    //$makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003')->orWhere('rs3','K00004');
+                },
                 // 'oksigen' => function ($oksigen) {
                 //     $oksigen->select('rs1', 'rs4', 'rs5', 'rs6');
                 // },
