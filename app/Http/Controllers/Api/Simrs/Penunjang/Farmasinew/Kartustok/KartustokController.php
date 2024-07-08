@@ -54,10 +54,12 @@ class KartustokController extends Controller
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
                 },
                 // untuk ambil penyesuaian stok awal
-                'stok' => function ($stok) use ($koderuangan) {
+                'stok' => function ($stok) use ($koderuangan,$tglAwal, $tglAkhir) {
                     $stok->select('id', 'kdobat', 'nopenerimaan', 'nobatch', 'jumlah')
                         ->with([
-                            'ssw'
+                            'ssw'=> function ($q) use ($tglAwal, $tglAkhir){
+                                $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                            }
                         ])
                         ->where('kdruang', $koderuangan);
                 },
@@ -134,6 +136,7 @@ class KartustokController extends Controller
                     $q->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
+                        ->where('resep_keluar_r.jumlah', '>',0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4']);
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
@@ -146,7 +149,7 @@ class KartustokController extends Controller
                     $q->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
-
+                        ->where('resep_keluar_racikan_r.jumlah', '>',0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
