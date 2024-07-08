@@ -137,7 +137,8 @@ class KartustokController extends Controller
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
                         ->where('resep_keluar_r.jumlah', '>',0)
-                        ->whereIn('resep_keluar_h.flag', ['3', '4']);
+                        ->whereIn('resep_keluar_h.flag', ['3', '4'])
+                        ->with('retur.rinci');
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
