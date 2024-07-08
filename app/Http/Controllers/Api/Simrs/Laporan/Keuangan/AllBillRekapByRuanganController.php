@@ -48,28 +48,28 @@ class AllBillRekapByRuanganController extends Controller
                     //->where('rs73.rs22','POL014');
                 },
                 'makanpasien' => function ($makanpasien) {
-                    $makanpasien->select('rs1', 'rs4', 'rs5')->whereIn('rs3', ['K00003', 'K00004']);
+                    $makanpasien->select('rs1', 'rs4', 'rs5','rs8')->whereIn('rs3', ['K00003', 'K00004']);
                     //$makanpasien->select('rs1','rs4','rs5')->where('rs3','K00003')->orWhere('rs3','K00004');
                 },
-                // 'oksigen' => function ($oksigen) {
-                //     $oksigen->select('rs1', 'rs4', 'rs5', 'rs6');
-                // },
-                // 'keperawatan' => function ($keperawatan) {
-                //     $keperawatan->select('rs1', 'rs4', 'rs5');
-                // },
-                // 'laborat' => function ($laborat) {
-                //     $laborat->select('rs51.rs1', 'rs51.rs2', 'rs51.rs3', 'rs51.rs4', 'rs51.rs5', 'rs51.rs6', 'rs51.rs13', 'rs51.rs23')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs51.rs23')
-                //         ->where('rs18', '!=', '')
-                //         ->where('rs23', '!=', '1')
-                //         ->groupBy('rs24.rs4', 'rs51.rs2', 'rs51.rs4');
-                // },
-                // 'laborat.pemeriksaanlab:rs1,rs2,rs21',
-                // 'transradiologi' => function ($transradiologi) {
-                //     $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs48.rs26')
-                //         ->groupBy('rs24.rs4', 'rs48.rs2', 'rs48.rs4');
-                // },
+                'oksigen' => function ($oksigen) {
+                    $oksigen->select('rs1', 'rs4', 'rs5', 'rs6','rs8');
+                },
+                'keperawatan' => function ($keperawatan) {
+                    $keperawatan->select('rs1', 'rs4', 'rs5','rs8');
+                },
+                'laborat' => function ($laborat) {
+                    $laborat->select('rs51.rs1', 'rs51.rs2', 'rs51.rs3', 'rs51.rs4', 'rs51.rs5', 'rs51.rs6', 'rs51.rs13', 'rs51.rs23')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs51.rs23')
+                        ->where('rs18', '!=', '')
+                        ->where('rs23', '!=', '1')
+                        ->groupBy('rs24.rs4', 'rs51.rs2', 'rs51.rs4');
+                },
+                'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                'transradiologi' => function ($transradiologi) {
+                    $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs48.rs26')
+                        ->groupBy('rs24.rs4', 'rs48.rs2', 'rs48.rs4');
+                },
                 // 'tindakanendoscopy' => function ($tindakanendoscopy) {
                 //     $tindakanendoscopy->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'POL031');
                 // },
