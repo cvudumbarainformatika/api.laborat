@@ -18,7 +18,7 @@ class              LisController extends Controller
         $xid = "4444";
         $secret_key = 'l15Test';
         date_default_timezone_set('UTC');
-        // $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00')); LIS
+        // $xtimestamp = strval(time() - strtotime('1970-01-01 00:00:00'));
         $xtimestamp = strtotime($request->tanggal);
         $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         $xsignature = base64_encode($sign);
