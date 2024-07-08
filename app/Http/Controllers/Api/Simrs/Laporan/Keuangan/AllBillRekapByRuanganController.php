@@ -37,7 +37,7 @@ class AllBillRekapByRuanganController extends Controller
                     //->where('rs73.rs22','POL014');
                 },
                 'visiteumum' => function ($visiteumum) {
-                    $visiteumum->select('rs1', 'rs4', 'rs5');
+                    $visiteumum->select('rs1', 'rs4', 'rs5','rs8');
                 },
                 'tindakanperawat' => function ($tindakanperawat) {
                     $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
