@@ -122,16 +122,24 @@ class KartustokController extends Controller
                         ->where('tujuan', $koderuangan);
                 },
 
+                // retur
+                'returpenjualan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $q->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('resep_keluar_h.depo', $koderuangan);
+                },
+
                 'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
-                        ->whereIn('resep_keluar_h.flag', ['3', '4'])
+                        ->whereIn('resep_keluar_h.flag', ['3', '4']);
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
                         // })
-                        ->with('retur.rinci');
+                        // ->with('retur.rinci');
                 },
 
                 'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
