@@ -446,7 +446,7 @@ class SetNewStokController extends Controller
             $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                 ->where('kdruang', $koderuangan)->first();
             $tts = $totalStok->jumlah ?? 0;
-            $sal = $saldoAwal->jumlah ?? 0;
+            $sal = $saldoAwal->total ?? 0;
             $peny = $penyesuaian->jumlah ?? 0;
             $trm = $penerimaan->jumlah ?? 0;
             $mutma = $mutasiMasuk->jumlah ?? 0;
@@ -703,7 +703,7 @@ class SetNewStokController extends Controller
                 ->where('kdruang', $koderuangan)->first();
 
             $tts = $totalStok->jumlah ?? 0;
-            $sal = $saldoAwal->jumlah ?? 0;
+            $sal = $saldoAwal->total ?? 0;
             $peny = $penyesuaian->jumlah ?? 0;
             $mutma = $mutasiMasuk->jumlah ?? 0;
             $ret = $retur->jumlah ?? 0;
