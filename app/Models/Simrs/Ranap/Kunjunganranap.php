@@ -454,4 +454,14 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
     }
+
+    public function laboratpaket()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
+    public function laboratnonpaket()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
 }
