@@ -175,23 +175,25 @@ class KartustokController extends Controller
                 //     // });
                 // },
                 'distribusipersiapan' => function ($dist) use ($tglAwal, $tglAkhir) {
-                    $dist->join('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                    $dist->select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasis.nopermintaan',
+                        'persiapan_operasis.tgl_distribusi',
+                        'persiapan_operasi_distribusis.tgl_retur',
+                        'persiapan_operasi_rincis.noresep',
+                        'persiapan_operasi_rincis.created_at',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+
+                    )
+                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                         ->leftJoin('persiapan_operasi_rincis', function ($join) {
                             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         })
                         ->whereBetween('persiapan_operasis.tgl_distribusi', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
-                        ->select(
-                            'persiapan_operasi_distribusis.kd_obat',
-                            'persiapan_operasis.nopermintaan',
-                            'persiapan_operasis.tgl_distribusi',
-                            'persiapan_operasi_distribusis.tgl_retur',
-                            'persiapan_operasi_rincis.noresep',
-                            DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
-                            DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
-
-                        )
+                        
                         // ->with([
                         //     'rinci' => function ($ri) {
                         //         $ri->select(
