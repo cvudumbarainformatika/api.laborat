@@ -3083,4 +3083,22 @@ class EresepController extends Controller
             ], 410);
         }
     }
+
+    public function simpanTglPelayananObat(Request $request){
+
+        $data=Resepkeluarheder::find($request->id);
+        if(!$data){
+            return new JsonResponse([
+                'message'=>'Data Resep Tidak ditemukan'
+            ],410);    
+        }
+        $data->update([
+            'tgl_pelayanan_obat'=>$request->tgl_pelayanan_obat
+        ]);
+
+        return new JsonResponse([
+            'message'=>'Tanggal Pelayanan Obat sudah terisi',
+            'data'=>$data
+        ]);
+    }
 }
