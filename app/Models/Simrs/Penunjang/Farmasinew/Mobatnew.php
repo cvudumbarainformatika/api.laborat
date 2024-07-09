@@ -187,6 +187,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(PersiapanOperasiDistribusi::class, 'kd_obat', 'kd_obat');
     }
+    public function persiapanretur()
+    {
+        return $this->hasMany(PersiapanOperasiDistribusi::class, 'kd_obat', 'kd_obat');
+    }
     public function returpenjualan()
     {
         return $this->hasMany(Returpenjualan_r::class, 'kdobat', 'kd_obat');
