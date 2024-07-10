@@ -90,7 +90,7 @@ class SilpaController extends Controller
         }
         else{
             $ambil=SisaAnggaran::all()->last();
-            $urut = (int)substr($ambil->no_transaksi, 0, 4) + 1;
+            $urut = (int)substr($ambil->noregister, 1, 3) + 1;
             //cara menyambungkan antara tgl dn kata dihubungkan tnda .
             // $urut = "000" . $urut;
             if(strlen($urut) == 1){

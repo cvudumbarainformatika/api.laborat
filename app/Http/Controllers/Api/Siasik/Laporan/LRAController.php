@@ -9,6 +9,7 @@ use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
+use App\Models\Siasik\TransaksiPendapatan\PengeluaranKas;
 use App\Models\Siasik\TransaksiPendapatan\TranskePPK;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use Carbon\Carbon;
@@ -199,6 +200,13 @@ class LRAController extends Controller
         ->orderBy('tgltrans', 'asc')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
+        $kurangikaskecil=PengeluaranKas::where('kd_kas', 'K0002')
+        ->select('pengeluarankhaskecil.nominal',
+                'pengeluarankhaskecil.tanggalpengeluaran',
+                'pengeluarankhaskecil.kd_kas')
+        ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->get();
+
         $pembiayaan = Akun50_2024::select('akun50_2024.kodeall2',
         'akun50_2024.uraian', 'akun50_2024.kodeall3'
         )->whereIn('akun50_2024.kodeall3', ['6',
@@ -223,6 +231,7 @@ class LRAController extends Controller
             'belanja' => $belanja,
             'pendapatan' => $pendapatan,
             'nilaipendapatan' => $nilaipendapatan,
+            'kurangikaskecil' => $kurangikaskecil,
             'realisasipendapatan' => $realisasipendapatan,
             'pembiayaan' => $pembiayaan,
             'pa' => $pegawai,
@@ -272,38 +281,45 @@ class LRAController extends Controller
         //                                 '6.1.01.08.01.0001'])
         // ->get();
 
-        $pembiayaan = Akun50_2024::select('akun50_2024.uraian', 'akun50_2024.kodeall3'
-        )
-        ->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
-        // ->leftJoin('akun50_2024 as wew', DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2)'),'=','wew.kodeall3')
-        ->with('kodebiaya1',function($gg){
-            $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            })
-            ->with('kodebiaya2',function($gg){
-                $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
-                })
-                ->with('kodebiaya3',function($gg){
-                    $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
-                    })
-                    ->with('kodebiaya4',function($gg){
-                        $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
-                        })
-                        ->with('kodebiaya5',function($gg){
-                            $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
-                            })
-        ->join('silpa','silpa.koderek50','=', 'akun50_2024.kodeall3')
-        ->where('tahun', $thn)
-        ->with('silpaanggaran', function($data) use ($thn){
-            $data->where('tahun', $thn)->select('silpa.koderek50',
-            'silpa.kode79',
-            'silpa.tanggal',
-            'silpa.tahun',
-            'silpa.nominal');
-        })
+        // $pembiayaan = Akun50_2024::select('akun50_2024.uraian', 'akun50_2024.kodeall3'
+        // )
+        // ->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+        //             DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+        //             DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+        //             DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+        //             DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
+        // // ->leftJoin('akun50_2024 as wew', DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2)'),'=','wew.kodeall3')
+        // ->with('kodebiaya1',function($gg){
+        //     $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //     })
+        //     ->with('kodebiaya2',function($gg){
+        //         $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //         })
+        //         ->with('kodebiaya3',function($gg){
+        //             $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //             })
+        //             ->with('kodebiaya4',function($gg){
+        //                 $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //                 })
+        //                 ->with('kodebiaya5',function($gg){
+        //                     $gg->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //                     })
+        // ->join('silpa','silpa.koderek50','=', 'akun50_2024.kodeall3')
+        // ->where('tahun', $thn)
+        // ->with('silpaanggaran', function($data) use ($thn){
+        //     $data->where('tahun', $thn)->select('silpa.koderek50',
+        //     'silpa.kode79',
+        //     'silpa.tanggal',
+        //     'silpa.tahun',
+        //     'silpa.nominal');
+        // })
+        // ->get();
+
+        $kurangikaskecil=PengeluaranKas::where('kd_kas', 'K0002')
+        ->select('pengeluarankhaskecil.nominal',
+                'pengeluarankhaskecil.tanggalpengeluaran',
+                'pengeluarankhaskecil.kd_kas')
+        ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->get();
         // $pegawai = Mpegawaisimpeg::where('jabatan', 'J00001')
         // ->where('aktif', 'AKTIF')
@@ -453,7 +469,7 @@ class LRAController extends Controller
         // ->groupBy('akun50_2024.kodeall2')
         // ->get();
 
-        return new JsonResponse ($pembiayaan);
+        return new JsonResponse ($kurangikaskecil);
 
     }
 }
