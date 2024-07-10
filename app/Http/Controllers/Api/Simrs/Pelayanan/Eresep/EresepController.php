@@ -77,7 +77,8 @@ class EresepController extends Controller
             $kandungan = [];
             $jumlah = [];
             $noreseps = [];
-            $noreg = [];
+            $groupsistembayar = [];
+
 
             foreach($request->kirimResep as $records){
                 $kdobat[] = $records['kodeobat'];
@@ -90,6 +91,7 @@ class EresepController extends Controller
                 $jumlah[] = $records['jumlah'];
                 $noreseps = $records['noresep'];
                 $noreg = $records['noreg'];
+                $groupsistembayar = $records['groupsistembayar'];
 
                 if ($records['kodedepo'] === 'Gd-04010102') {
                     $procedure = 'resepkeluardeporanap(@nomor)';
@@ -122,7 +124,7 @@ class EresepController extends Controller
             $cekjumlahstok = Stokreal::select('stokreal.kdobat as kdobat', 'new_masterobat.sistembayar', DB::raw('sum(jumlah) as jumlahstok'))
                 ->whereIn('stokreal.kdobat', $kdobat)
                 ->whereIn('stokreal.kdruang', $kddepo)
-                ->where('stokreal.jumlah', '>', 0)
+                // ->where('stokreal.jumlah', '>', 0)
                 ->with([
                     'transnonracikan' => function ($transnonracikan) {
                         $transnonracikan->select(
@@ -191,7 +193,6 @@ class EresepController extends Controller
                     'kodeobat' => $x->kdobat
                 ];
             })->all();
-
         
             $collection = collect($results);
 
@@ -212,7 +213,7 @@ class EresepController extends Controller
 
             $statuses = [];
             $hasil = [];
-            // if ($kddepo === 'Gd-05010101') {
+            if ($kddepo[0] === 'Gd-05010101') {
                 $cekpemberian = self::cekpemberianobat($norm, $kdobat, $kandungan);
 
                 $data = json_decode($cekpemberian, true);
@@ -230,7 +231,17 @@ class EresepController extends Controller
                         $hasil[] = $entry[0]['hasil'];
                     }
                 }
-            // }
+            }
+
+            $hargajualx = [];
+            $harga = [];
+            $har = HargaHelper::getHarga($kdobat, $groupsistembayar);
+            $res = $har['res'];
+            if ($res) {
+                throw new \Exception('Obat ini tidak mempunyai harga');
+            }
+            $hargajualx = $har['hargaJual'];
+            $harga = $har['harga'];
 
             foreach ($request->kirimResep as $key => $record) {
                 try {
@@ -310,14 +321,6 @@ class EresepController extends Controller
                         throw new \Exception('Data Gagal Disimpan...!!!');
                     }
 
-                    $har = HargaHelper::getHarga($record['kodeobat'], $record['groupsistembayar']);
-                    $res = $har['res'];
-                    if ($res) {
-                        throw new \Exception('Obat ini tidak mempunyai harga');
-                    }
-                    $hargajualx = $har['hargaJual'];
-                    $harga = $har['harga'];
-
                     if ($record['jenisresep'] == 'Racikan') {
                         if ($record['tiperacikan'] == 'DTD') {
                             $simpandtd = Permintaanresepracikan::create(
@@ -342,7 +345,7 @@ class EresepController extends Controller
                                     'uraian108' => $record['uraian108'],
                                     'kode50' => $record['kode50'],
                                     'uraian50' => $record['uraian50'],
-                                    'stokalokasi' => $alokasi,
+                                    'stokalokasi' => $alokasi[$key],
                                     'dosisobat' => $record['dosisobat'] ?? 0,
                                     'dosismaksimum' => $record['dosismaksimum'] ?? 0, // dosis resep
                                     'jumlah' => $record['jumlah'], // jumlah obat
@@ -377,7 +380,7 @@ class EresepController extends Controller
                                     'uraian108' => $record['uraian108'],
                                     'kode50' => $record['kode50'],
                                     'uraian50' => $record['uraian50'],
-                                    'stokalokasi' => $alokasi,
+                                    'stokalokasi' => $alokasi[$key],
                                     // 'dosisobat' => $record['dosisobat,
                                     // 'dosismaksimum' => $request->dosismaksimum,
                                     'jumlah' => $record['jumlah'],
@@ -434,7 +437,7 @@ class EresepController extends Controller
                     //     $endas = [];
                     // }
         
-                    $endas = Resepkeluarheder::whereIn('noreg', [$noreg])->with(
+                    $endas = Resepkeluarheder::where('noreg', $record['noreg'])->with(
                         'permintaanresep.mobat:kd_obat,nama_obat',
                         'permintaanracikan.mobat:kd_obat,nama_obat'
                     )->get();
@@ -486,7 +489,8 @@ class EresepController extends Controller
                     'error' => $e,
                     'message' => 'rolled back ada kesalahan'
                 ], 410);
-        }  
+        }
+
     }
 
     public static function cekpemberianobat($norm, $kdobat, $kandungan)
@@ -529,38 +533,45 @@ class EresepController extends Controller
         $selisih = 0;
 
         $response = [];
-
-        if (count($hasil)) {
-            foreach ($hasil as $item) {
-                $selisih = $item->selisih;
-                $total = (float) $item->konsumsi;
-                $response[] = [
-                    'status' => ($selisih <= $total) ? 1 : 2,
-                    'kdobat' => $item->kdobat,
-                    'hasil' => [
-                        [
-                            'noresep' => $item->noresep,
-                            'tgl' => $item->tgl,
-                            'total' => $total,
-                            'selisih' => $selisih,
-                        ]
-                    ],
-                    'selisih' => $selisih,
-                    'total' => $total,
-                ];
+            if (count($hasil)) {
+                foreach ($hasil as $item) {
+                    $selisih = $item->selisih;
+                    $total = (float) $item->konsumsi;
+                    $response[] = [
+                        'status' => ($selisih <= $total) ? 1 : 2,
+                        'kdobat' => $item->kdobat,
+                        'hasil' => [
+                            [
+                                'noresep' => $item->noresep,
+                                'tgl' => $item->tgl,
+                                'total' => $total,
+                                'selisih' => $selisih,
+                            ]
+                        ],
+                        'selisih' => $selisih,
+                        'total' => $total,
+                    ];
+                }
+                if (count($hasil) !== count($kdobat)) {
+                    $response[] = [
+                        'status' => 2,
+                        'kdobat' => null,
+                        'hasil' => [],
+                        'selisih' => null,
+                        'total' => null,
+                    ];
+                }
+            } else {
+                    $response[] = [
+                        'status' => 2,
+                        'kdobat' => $kdobat,
+                        'hasil' => [],
+                        'selisih' => null,
+                        'total' => null,
+                    ];
             }
-        } else {
-            $response[] = [
-                'status' => 2,
-                'hasil' => [],
-                'selisih' => null,
-                'total' => null,
-            ];
-        }
-        // usort($response, function($a, $b) {
-        //     // Compare the kdobat values
-        //     return strcmp($a['hasil'][0]['kdobat'], $b['hasil'][0]['kdobat']);
-        // });
+        // }
+
         $collection = collect($response);
 
         $sorted = $collection->sortBy(function ($item) use ($kdobat) {
@@ -568,33 +579,6 @@ class EresepController extends Controller
         })->values()->toArray();
 
         return(json_encode($sorted));
-    //    return(json_encode($response));
-        // if (count($hasil)) {
-        //     $selisih = $hasil[0]->selisih;
-        //     $total = (float)$hasil[0]->konsumsi;
-        //     if ($selisih <= $total) {
-        //         return [
-        //             'status' => 1,
-        //             'hasil' => $hasil,
-        //             'selisih' => $selisih,
-        //             'total' => $total,
-        //         ];
-        //     } else {
-        //         return [
-        //             'status' => 2,
-        //             'hasil' => $hasil,
-        //             'selisih' => $selisih,
-        //             'total' => $total,
-        //         ];
-        //         // return 2;
-        //     }
-        // }
-        // return [
-        //     'status' => 2,
-        //     'hasil' => $hasil,
-        //     'selisih' => $selisih,
-        //     'total' => $total,
-        // ];
     }
 
     public function lihatstokobateresepBydokter()
