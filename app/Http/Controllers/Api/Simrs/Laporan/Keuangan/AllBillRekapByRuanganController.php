@@ -58,13 +58,22 @@ class AllBillRekapByRuanganController extends Controller
                     $keperawatan->select('rs1', 'rs4', 'rs5','rs8');
                 },
                 'laborat' => function ($laborat) {
-                    $laborat->select('rs51.rs1', 'rs51.rs2', 'rs51.rs4', 'rs49.rs2', 'rs49.rs21', 'rs51.rs23',
+                    $laborat->select('rs51.rs1', 'rs51.rs2 as nota', 'rs51.rs4 as kode', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket', 'rs51.rs23 as ruangan',
                         DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
                         ->leftjoin('rs49', 'rs51.rs4', '=', 'rs49.rs1')
-                        ->where('rs51.rs23','!=','POL014')
-                        ->groupBy( 'rs51.rs2', 'rs49.rs21');
+                        ->where('rs51.rs23','!=','POL014')->where('rs49.rs21','!=','')
+                        ->groupBy( 'rs51.rs2', 'rs49.rs21')
+                       ;
                 },
-                'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                'laboratnonpaket' => function ($laborat) {
+                    $laborat->select('rs51.rs1', 'rs51.rs2 as nota', 'rs51.rs4 as kode', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket', 'rs51.rs23 as ruangan',
+                        DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
+                        ->leftjoin('rs49', 'rs51.rs4', '=', 'rs49.rs1')
+                        ->where('rs51.rs23','!=','POL014')->where('rs49.rs21','=','')
+                       // ->groupBy( 'rs51.rs2')
+                       ;
+                },
+                // 'laborat.pemeriksaanlab:rs1,rs2,rs21',
                 'transradiologi' => function ($transradiologi) {
                     $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24')
                         ->join('rs24', 'rs24.rs4', '=', 'rs48.rs26')
