@@ -58,7 +58,8 @@ class AllBillRekapByRuanganController extends Controller
                     $keperawatan->select('rs1', 'rs4', 'rs5','rs8');
                 },
                 'laborat' => function ($laborat) {
-                    $laborat->select('rs51.rs1', 'rs51.rs2', 'rs51.rs4', 'rs49.rs2', 'rs49.rs21', 'rs51.rs23',DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
+                    $laborat->select('rs51.rs1', 'rs51.rs2', 'rs51.rs4', 'rs49.rs2', 'rs49.rs21', 'rs51.rs23',
+                        DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
                         ->leftjoin('rs49', 'rs51.rs4', '=', 'rs49.rs1')
                         ->where('rs51.rs23','!=','POL014')
                         ->groupBy( 'rs51.rs2', 'rs49.rs21');
