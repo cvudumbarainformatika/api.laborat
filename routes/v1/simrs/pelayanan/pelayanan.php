@@ -98,5 +98,6 @@ Route::group([
     // Route::get('/cariprocedure', [EwseklaimController::class, 'cariprocedure']);
 
     Route::get('/listresepbynorm', [EresepController::class, 'listresepbynorm']);
+    Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
     Route::post('/copiresep', [EresepController::class, 'copiresep']);
 });

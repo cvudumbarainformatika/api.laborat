@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Sigarang;
+namespace App\Models\Pegawai;
 
 use App\Models\Pegawai\Akses\Role;
 use App\Models\Pegawai\Alpha;
@@ -10,6 +10,9 @@ use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Sigarang\Gudang;
+use App\Models\Sigarang\PenggunaRuang;
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,14 +20,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
 use Intervention\Image\ImageManager;
 
-class Pegawai extends Model
+class PegawaiTanpaAppendFoto extends Model
 {
     use HasFactory;
     protected $connection = 'kepex';
     protected $table = 'pegawai';
     protected $guarded = ['id'];
-    protected $appends = ['ttdpegawai_url', 'foto_pegawai'];
-    // protected $hidden = ['foto_pegawai'];
+    // protected $hidden = [];
 
     public $timestamps = false;
 
@@ -97,68 +99,8 @@ class Pegawai extends Model
         return $this->hasMany(Alpha::class);
     }
 
-    public function getTtdpegawaiUrlAttribute()
-    {
-        $image = URL::to('/storage/' . $this->ttdpegawai);
-        if (!$image) {
-            return null;
-        }
-        $handle = @fopen($image, 'r');
-        if ($handle) {
-            $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
-            return $this->ttdpegawai ? $base64 : null;
-        } else {
-            return null;
-        }
-    }
-    public function getFotoPegawaiAttribute()
-    {
-        // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}";
-        // if (!$image) {
-        //     return null;
-        // }
-        // $handle = @fopen($image, 'r');
-        // if ($handle) {
-        //     $base64 = 'data:image/jpg;base64,' . base64_encode(file_get_contents($image));
-        //     return  $base64 ? $base64 : null;
-        // } else {
-        //     return null;
-        // }
-        // $nip = '3574041305820002';
-        // $foto = 'foto-3574041305820002.jpg';
-
-        $nip = $this->nip;
-        $foto = $this->foto;
-
-        if ($nip === null || $nip === '' || $foto===null || $foto === '') {
-            return null;
-        }
-
-        $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
-        // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
-        // $exist = file_exists($image);
-        // if (!$image || !$exist) {
-        //     return null;
-        // }
-        if (!$image) {
-            return null;
-        }
-        $handle = @fopen($image, 'r');
-        if ($handle) {
-            // $manager = new ImageManager(['driver' => 'imagick']);
-            $manager = new ImageManager();
-            $base64 = (string) $manager->make($image)->resize(300, null, function ($constraint) {
-                $constraint->aspectRatio();
-            })->encode('data-url');
-
-            // $base64 = "data:image/{$extension};base64," . base64_encode(file_get_contents($img));
-            $result=  $base64 ? $base64 : null;
-            return $result;
-        } else {
-            return null;
-        } 
-
-    }
+    
+    
 
 
 

@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LaboratLuar;
-use App\Models\TransaksiLaborat;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

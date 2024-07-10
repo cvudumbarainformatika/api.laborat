@@ -1022,20 +1022,46 @@ class EresepController extends Controller
 
         $listresep = Resepkeluarheder::with(
             [
-                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'poli',
-                'ruanganranap',
-                'sistembayar',
-                'dokter:kdpegsimrs,nama',
-                'datapasien' => function ($quer) {
-                    $quer->select(
-                        'rs1',
-                        'rs2 as nama'
-                    );
-                }
+                // 'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                // 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                // 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                // 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                // 'poli',
+                // 'ruanganranap',
+                // 'sistembayar',
+                // 'dokter:kdpegsimrs,nama',
+                // 'datapasien' => function ($quer) {
+                //     $quer->select(
+                //         'rs1',
+                //         'rs2 as nama'
+                //     );
+                // }
+            'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'permintaanresep.aturansigna:signa,jumlah',
+            'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+            'poli',
+            'info',
+            'antrian' => function ($q) {
+                $q->where('pelayanan_id', 'AP0001');
+            },
+            'ruanganranap',
+            'sistembayar',
+            'sep:rs1,rs8',
+            'dokter:kdpegsimrs,nama',
+            'kunjunganranap:rs1,titipan',
+            'kunjunganranap.ruangtitipan:rs1,rs2',
+            'datapasien' => function ($quer) {
+                $quer->select(
+                    'rs1',
+                    'rs2 as nama',
+                    'rs46 as noka',
+                    'rs16 as tgllahir',
+                    'rs2 as nama_panggil',
+                    DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
+                );
+            }
             ]
         )
             ->where('farmasi.resep_keluar_h.id', request('id'))
@@ -1197,6 +1223,7 @@ class EresepController extends Controller
         if ($request->jenisresep == 'Racikan') {
             $simpanrinci = Resepkeluarrinciracikan::with('mobat:kd_obat,nama_obat')
                 ->where('noresep', $request->noresep)
+                ->where('namaracikan', $request->namaracikan)
                 ->where('kdobat', $request->kdobat)
                 ->first();
             if ($simpanrinci) {
@@ -3081,5 +3108,23 @@ class EresepController extends Controller
                 'message' => 'rolled back ada kesalahan'
             ], 410);
         }
+    }
+
+    public function simpanTglPelayananObat(Request $request){
+
+        $data=Resepkeluarheder::find($request->id);
+        if(!$data){
+            return new JsonResponse([
+                'message'=>'Data Resep Tidak ditemukan'
+            ],410);    
+        }
+        $data->update([
+            'tgl_pelayanan_obat'=>$request->tgl_pelayanan_obat
+        ]);
+
+        return new JsonResponse([
+            'message'=>'Tanggal Pelayanan Obat sudah terisi',
+            'data'=>$data
+        ]);
     }
 }

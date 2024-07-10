@@ -43,21 +43,23 @@ class KartustokController extends Controller
             ->with([
                 'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
                     $saldo->whereBetween('tglopname', [$blnLaluAwal, $blnLaluAkhir])
-                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))->groupBy('kdobat','tglopname');
                 },
                 'fisik' => function ($saldo) use ($tglAwal, $tglAkhir) {
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', 'jumlah');
                 },
                 'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir) {
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'jumlah', 'kdobat');
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))->groupBy('kdobat','tglopname');
                 },
                 // untuk ambil penyesuaian stok awal
-                'stok' => function ($stok) use ($koderuangan) {
+                'stok' => function ($stok) use ($koderuangan,$tglAwal, $tglAkhir) {
                     $stok->select('id', 'kdobat', 'nopenerimaan', 'nobatch', 'jumlah')
                         ->with([
-                            'ssw'
+                            'ssw'=> function ($q) use ($tglAwal, $tglAkhir){
+                                $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                            }
                         ])
                         ->where('kdruang', $koderuangan);
                 },
@@ -122,23 +124,33 @@ class KartustokController extends Controller
                         ->where('tujuan', $koderuangan);
                 },
 
+                // retur
+                'returpenjualan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
+                    $q->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('resep_keluar_h.depo', $koderuangan);
+                },
+
                 'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
+                        ->where('resep_keluar_r.jumlah', '>',0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
+                        ->with('retur.rinci');
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
                         //     ->where('depo', $koderuangan);
                         // })
-                        ->with('retur.rinci');
+                        // ->with('retur.rinci');
                 },
 
                 'resepkeluarracikan' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
-
+                        ->where('resep_keluar_racikan_r.jumlah', '>',0)
                         ->whereIn('resep_keluar_h.flag', ['3', '4'])
                         // $q->whereHas('header', function ($x) use ($tglAwal, $tglAkhir, $koderuangan) {
                         //     $x->whereBetween('tgl_selesai', [$tglAwal, $tglAkhir])
@@ -163,36 +175,47 @@ class KartustokController extends Controller
                 //     // });
                 // },
                 'distribusipersiapan' => function ($dist) use ($tglAwal, $tglAkhir) {
-                    $dist->join('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                    $dist->select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasis.nopermintaan',
+                        'persiapan_operasis.tgl_distribusi',
+                        'persiapan_operasi_distribusis.tgl_retur',
+                        'persiapan_operasi_rincis.noresep',
+                        'persiapan_operasi_rincis.created_at',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+
+                    )
+                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                         ->leftJoin('persiapan_operasi_rincis', function ($join) {
                             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         })
                         ->whereBetween('persiapan_operasis.tgl_distribusi', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
-                        ->select(
-                            'persiapan_operasi_distribusis.kd_obat',
-                            'persiapan_operasis.nopermintaan',
-                            'persiapan_operasis.tgl_distribusi',
-                            'persiapan_operasi_distribusis.tgl_retur',
-                            'persiapan_operasi_rincis.noresep',
-                            DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
-                            DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+                        
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
+                },
+                'persiapanretur' => function ($dist) use ($tglAwal, $tglAkhir) {
+                    $dist->select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasis.nopermintaan',
+                        'persiapan_operasis.tgl_distribusi',
+                        'persiapan_operasi_distribusis.tgl_retur',
+                        'persiapan_operasi_rincis.noresep',
+                        'persiapan_operasi_rincis.created_at',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
-                        )
-                        // ->with([
-                        //     'rinci' => function ($ri) {
-                        //         $ri->select(
-                        //             'persiapan_operasi_rincis.kd_obat',
-                        //             'persiapan_operasi_rincis.nopermintaan',
-                        //             'persiapan_operasi_rincis.noresep',
-                        //         )
-                        //             ->join('persiapan_operasi_distribusis', function ($jo) {
-                        //                 $jo->on('persiapan_operasi_distribusis.kd_obat', '=', 'persiapan_operasi_rincis.kd_obat')
-                        //                     ->on('persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan');
-                        //             });
-                        //     }
-                        // ])
+                    )
+                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                        ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                            $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        })
+                        ->whereBetween('persiapan_operasis.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
                 }
 

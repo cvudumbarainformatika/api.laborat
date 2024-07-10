@@ -31,10 +31,10 @@ class StokrealController extends Controller
                 'kdobat' => $request->kdobat,
                 'kdruang' => $request->kdruang,
                 'nobatch' => $request->no_batch,
-                'tglexp' => $request->tgl_exp,
-                'harga' => $request->harga_netto_kecil
             ],
             [
+                'tglexp' => $request->tgl_exp,
+                'harga' => $request->harga_netto_kecil,
                 'tglpenerimaan' => $request->tglpenerimaan,
                 'jumlah' => $request->jml_terima_k,
                 'flag' => 1
