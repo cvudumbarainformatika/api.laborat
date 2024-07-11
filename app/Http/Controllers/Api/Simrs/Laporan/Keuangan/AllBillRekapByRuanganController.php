@@ -74,18 +74,23 @@ class AllBillRekapByRuanganController extends Controller
                 },
                 // 'laborat.pemeriksaanlab:rs1,rs2,rs21',
                 'transradiologi' => function ($transradiologi) {
-                    $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24')
+                    $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24','rs48.rs26','rs24.rs5')
                         ->join('rs24', 'rs24.rs4', '=', 'rs48.rs26')
+                        ->where('rs48.rs26','!=','POL014')
                         ->groupBy('rs24.rs4', 'rs48.rs2', 'rs48.rs4');
                 },
-                // 'tindakanendoscopy' => function ($tindakanendoscopy) {
-                //     $tindakanendoscopy->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'POL031');
-                // },
-                // 'kamaroperasiibs' => function ($kamaroperasiibs) {
-                //     $kamaroperasiibs->select('rs54.rs1', 'rs54.rs5', 'rs54.rs6', 'rs54.rs7', 'rs54.rs8')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs54.rs15')
-                //         ->groupBy('rs24.rs4', 'rs54.rs2', 'rs54.rs4');;
-                // },
+                'tindakanendoscopy' => function ($tindakanendoscopy) {
+                    $tindakanendoscopy->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs73.rs16','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs73.rs22', 'POL031')
+                    ->where('rs73.rs16','!=','POL014');
+                },
+                'kamaroperasiibs' => function ($kamaroperasiibs) {
+                    $kamaroperasiibs->select('rs54.rs1', 'rs54.rs5', 'rs54.rs6', 'rs54.rs7', 'rs54.rs8','rs54.rs15')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs54.rs15')
+                        ->where('rs54.rs15','!=', 'POL014')
+                        ->groupBy('rs54.rs2', 'rs54.rs4');;
+                },
                 // 'kamaroperasiigd' => function ($kamaroperasiigd) {
                 //     $kamaroperasiigd->select('rs226.rs1', 'rs226.rs5', 'rs226.rs6', 'rs226.rs7', 'rs226.rs8')
                 //         ->join('rs24', 'rs24.rs4', '=', 'rs226.rs15')
