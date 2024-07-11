@@ -117,17 +117,24 @@ class AutogenController extends Controller
 
         // $coba = $this->lihatstokobateresepBydokter();
         // return new JsonResponse($coba);
-        User::updateOrCreate(
-            ['username' => 'sa'],
-            [
-                'nama' => 'Programmer',
-                'email' => 'sa@app.com',
-                'pegawai_id' => '4',
-                'password' => bcrypt('kentangkotak2121'),
-            ]
+        // User::updateOrCreate(
+        //     ['username' => 'sa'],
+        //     [
+        //         'nama' => 'Programmer',
+        //         'email' => 'sa@app.com',
+        //         'pegawai_id' => '4',
+        //         'password' => bcrypt('kentangkotak2121'),
+        //     ]
+        // );
+
+        // echo 'ok';
+
+        $dokter = BridgingbpjsHelper::get_url(
+            'vclaim',
+            'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/029/TglRencanaKontrol/2024-07-18'
         );
 
-        echo 'ok';
+        return $dokter;
     }
 
     public function lihatstokobateresepBydokter()

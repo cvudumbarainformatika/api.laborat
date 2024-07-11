@@ -66,7 +66,7 @@ class BridgingbpjsHelper
 
         $header = self::getHeader($sign);
         $response = Http::withHeaders($header)->get($url);
-
+        // return $response;
         $data = json_decode($response, true);
         // return $data;
         if (!$data) {
@@ -89,12 +89,13 @@ class BridgingbpjsHelper
         //     return $res;
         // }
         $nilairespon = $data["response"] ?? false;
+        // return $nilairespon;
         if (!$nilairespon) {
             date_default_timezone_set('Asia/Jakarta');
             return $res;
         }
         $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
-
+        // return $hasilakhir;
         date_default_timezone_set('Asia/Jakarta');
         $res['result'] = json_decode($hasilakhir);
         if (!$hasilakhir) {
