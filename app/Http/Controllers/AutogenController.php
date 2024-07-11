@@ -131,7 +131,7 @@ class AutogenController extends Controller
 
         $dokter = BridgingbpjsHelper::get_url(
             'vclaim',
-            'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/029/TglRencanaKontrol/2024-07-18'
+            'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/INT/TglRencanaKontrol/2024-07-11'
         );
 
         return $dokter;

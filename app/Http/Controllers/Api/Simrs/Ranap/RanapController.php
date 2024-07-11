@@ -25,7 +25,7 @@ class RanapController extends Controller
         }
 
         $tanggal = $tgl. ' 23:59:59';
-        $tanggalx = Carbon::now()->subDays(30)->format('Y-m-d'). ' 00:00:00';
+        $tanggalx = Carbon::now()->subDays(180)->format('Y-m-d'). ' 00:00:00';
 
         // return $tanggalx;
 

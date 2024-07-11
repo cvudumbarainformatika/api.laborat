@@ -79,10 +79,31 @@ class EditsuratbpjsController extends Controller
     public function jadwaldokter(Request $request)
     {
         // $tanggal = date('Y-m-d');
+        // $jadwaldokter = BridgingbpjsHelper::get_url(
+        //     'antrean',
+        //     'jadwaldokter/kodepoli/' . $request->poliTujuan . '/tanggal/' . $request->tglrencanakontrol
+        // );
         $jadwaldokter = BridgingbpjsHelper::get_url(
-            'antrean',
-            'jadwaldokter/kodepoli/' . $request->poliTujuan . '/tanggal/' . $request->tglrencanakontrol
+            'vclaim',
+            'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/' . $request->poliTujuan . '/TglRencanaKontrol/' . $request->tglrencanakontrol
         );
+
+        // return $jadwaldokter['result']->list;
+        if ($jadwaldokter['metadata']['code'] === 200 || $jadwaldokter['metadata']['code'] === '200') {
+            $list = $jadwaldokter['result']->list ?? [];
+            $xx = [];
+            if (count($list) > 0) {
+                $xx = collect($list)->map(function ($x) {
+                    return [
+                        'kodedokter'=> $x->kodeDokter,
+                        'namadokter'=> $x->namaDokter,
+                        'kapasitas'=> $x->kapasitas,
+                        'jadwalpraktek'=> $x->jadwalPraktek,
+                    ];
+                });
+            }
+            $jadwaldokter['result']= $xx;
+        }
         return ($jadwaldokter);
     }
 
