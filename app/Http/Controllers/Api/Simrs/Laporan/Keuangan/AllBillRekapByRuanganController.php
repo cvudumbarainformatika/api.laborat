@@ -91,14 +91,18 @@ class AllBillRekapByRuanganController extends Controller
                         ->where('rs54.rs15','!=', 'POL014')
                         ->groupBy('rs54.rs2', 'rs54.rs4');;
                 },
-                // 'kamaroperasiigd' => function ($kamaroperasiigd) {
-                //     $kamaroperasiigd->select('rs226.rs1', 'rs226.rs5', 'rs226.rs6', 'rs226.rs7', 'rs226.rs8')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs226.rs15')
-                //         ->groupBy('rs24.rs4', 'rs226.rs2', 'rs226.rs4');;
-                // },
-                // 'tindakanoperasi' => function ($tindakanoperasi) {
-                //     $tindakanoperasi->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'OPERASI');
-                // },
+                'kamaroperasiigd' => function ($kamaroperasiigd) {
+                    $kamaroperasiigd->select('rs226.rs1', 'rs226.rs5', 'rs226.rs6', 'rs226.rs7', 'rs226.rs8','rs226.rs15')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs226.rs15')
+                        ->where('rs226.rs15','!=', 'POL014')
+                        ->groupBy('rs226.rs2', 'rs226.rs4');
+                },
+                'tindakanoperasi' => function ($tindakanoperasi) {
+                    $tindakanoperasi->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs73.rs22', 'OPERASI')
+                    ->where('rs73.rs16','!=','POL014');
+                },
                 // 'tindakanoperasiigd' => function ($tindakanoperasiigd) {
                 //     $tindakanoperasiigd->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'OPERASIIRD');
                 // },
