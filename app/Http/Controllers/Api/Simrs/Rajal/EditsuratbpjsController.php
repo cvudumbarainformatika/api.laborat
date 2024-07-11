@@ -87,6 +87,23 @@ class EditsuratbpjsController extends Controller
             'vclaim',
             'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/' . $request->poliTujuan . '/TglRencanaKontrol/' . $request->tglrencanakontrol
         );
+
+        // return $jadwaldokter['result']->list;
+        if ($jadwaldokter['metadata']['code'] === 200 || $jadwaldokter['metadata']['code'] === '200') {
+            $list = $jadwaldokter['result']->list ?? [];
+            $xx = [];
+            if (count($list) > 0) {
+                $xx = collect($list)->map(function ($x) {
+                    return [
+                        'kodedokter'=> $x->kodeDokter,
+                        'namadokter'=> $x->namaDokter,
+                        'kapasitas'=> $x->kapasitas,
+                        'jadwalpraktek'=> $x->jadwalPraktek,
+                    ];
+                });
+            }
+            $jadwaldokter['result']= $xx;
+        }
         return ($jadwaldokter);
     }
 
