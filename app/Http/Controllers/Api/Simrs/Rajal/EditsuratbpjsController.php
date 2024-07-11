@@ -79,9 +79,13 @@ class EditsuratbpjsController extends Controller
     public function jadwaldokter(Request $request)
     {
         // $tanggal = date('Y-m-d');
+        // $jadwaldokter = BridgingbpjsHelper::get_url(
+        //     'antrean',
+        //     'jadwaldokter/kodepoli/' . $request->poliTujuan . '/tanggal/' . $request->tglrencanakontrol
+        // );
         $jadwaldokter = BridgingbpjsHelper::get_url(
-            'antrean',
-            'jadwaldokter/kodepoli/' . $request->poliTujuan . '/tanggal/' . $request->tglrencanakontrol
+            'vclaim',
+            'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/' . $request->poliTujuan . '/TglRencanaKontrol/' . $request->tglrencanakontrol
         );
         return ($jadwaldokter);
     }
