@@ -38,23 +38,8 @@ class PengunjungController extends Controller
       $sort = request('sort') === 'terbaru'? 'DESC':'ASC';
       $status = request('status') ?? 'Semua';
 
-      
-      
-
-
-
-
-
-
-
-
-
       $permintaan = self::permintaanFisio($tgl, $tglx, $sort, $status);
 
-
-
-
-      
       $query = KunjunganPoli::query();
 
       $select = $query->select(
@@ -309,9 +294,12 @@ class PengunjungController extends Controller
             })
             ->where(function ($query) {
                 $query->where('rs201.rs1', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs201.rs2', 'LIKE', '%' . request('q') . '%')
+                    // ->orWhere('rs201.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien17.rs46', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien17.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien17.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien23.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien23.rs1', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
