@@ -100,4 +100,5 @@ Route::group([
     Route::get('/listresepbynorm', [EresepController::class, 'listresepbynorm']);
     Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
     Route::post('/copiresep', [EresepController::class, 'copiresep']);
+    Route::get('/listresepbynoreg', [EresepController::class, 'listresepbynoreg']);
 });
