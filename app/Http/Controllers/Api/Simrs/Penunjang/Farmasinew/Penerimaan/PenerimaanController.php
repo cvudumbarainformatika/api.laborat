@@ -258,10 +258,11 @@ class PenerimaanController extends Controller
         $kodegudang = request('gudang');
         $supl = [];
         if (request('cari')) {
-            $temp = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('cari') . '%')->get('kode');
-            $supl = collect($temp)->map(function ($item, $key) {
-                return $item->kode;
-            });
+            $supl = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('cari') . '%')->pluck('kode');
+
+            // $supl = collect($temp)->map(function ($item, $key) {
+            //     return $item->kode;
+            // });
         }
         $listpenerimaan = PenerimaanHeder::select(
             'nopenerimaan',
@@ -279,18 +280,23 @@ class PenerimaanController extends Controller
             'total_faktur_pbf as total',
         )
             // ->leftJoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
-            ->where('gudang', '=', request('gudang'))
+            ->when(request('gudang'),function($q){
+                $q->where('gudang', '=', request('gudang'));
+            })
             ->when(count($supl) > 0, function ($e) use ($supl) {
                 $e->whereIn('kdpbf', $supl);
             })
-            ->where(function ($qu) {
-                $qu->where('nopemesanan', 'Like', '%' . request('cari') . '%')
-                    ->orWhere('nopenerimaan', 'Like', '%' . request('cari') . '%')
-                    ->orWhere('tglpenerimaan', 'Like', '%' . request('cari') . '%')
-                    ->orWhere('pengirim', 'Like', '%' . request('cari') . '%')
-                    ->orWhere('jenissurat', 'Like', '%' . request('cari') . '%')
-                    ->orWhere('nomorsurat', 'Like', '%' . request('cari') . '%');
+            ->when(count($supl) <= 0, function ($e) use ($supl) {
+                $e->where(function ($qu) {
+                    $qu->where('nopemesanan', 'Like', '%' . request('cari') . '%')
+                        ->orWhere('nopenerimaan', 'Like', '%' . request('cari') . '%')
+                        ->orWhere('tglpenerimaan', 'Like', '%' . request('cari') . '%')
+                        ->orWhere('pengirim', 'Like', '%' . request('cari') . '%')
+                        ->orWhere('jenissurat', 'Like', '%' . request('cari') . '%')
+                        ->orWhere('nomorsurat', 'Like', '%' . request('cari') . '%');
+                });
             })
+            
             ->with([
                 'penerimaanrinci',
                 'penerimaanrinci.masterobat',
@@ -302,6 +308,7 @@ class PenerimaanController extends Controller
         return new JsonResponse([
             'data' => $listpenerimaan,
             'req' => request('gudang'),
+            'kode'=>$supl
         ]);
     }
 
