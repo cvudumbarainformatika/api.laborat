@@ -23,6 +23,12 @@ class PenerimaanController extends Controller
 {
     public function listpemesananfix()
     {
+        $supl = [];
+        if (request('q')) {
+            $supl = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('q') . '%')->pluck('kode');
+        }
+        
+        // return new JsonResponse($supl);
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'kd_ruang')
             ->with([
                 'gudang:kode,nama',
@@ -37,6 +43,9 @@ class PenerimaanController extends Controller
             ])
             ->when(request('gudang'), function ($q) {
                 $q->where('kd_ruang', request('gudang'));
+            })
+            ->when(count($supl)>0, function($q) use($supl) {
+                $q->whereIn('kdpbf',$supl);
             })
             ->where('flag', '1')
             ->get();
