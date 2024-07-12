@@ -12,19 +12,31 @@ use Illuminate\Support\Facades\DB;
 class SilpaController extends Controller
 {
     public function getSilpa(){
-        // $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
-        // // $awal=request('tgl', 'Y'.'-'.'01-01');
-        // $awal = $thn.'-01-01';
-        // $akhir=request('tglx', 'Y-m-d');
+
+        $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        $awal = $thn.'-01-01';
+        $akhir=request('tglx', 'Y-m-d');
         // $thnakhir =Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
         // if($thn !== $thnakhir){
         //  return response()->json(['message' => 'Tahun Tidak Sama'], 500);
         // }
-        $silpa = SisaAnggaran::select('silpa.koderek50',
-                                    'silpa.kode79',
-                                    'silpa.tanggal',
-                                    'silpa.nominal')->get();
-        return new JsonResponse ($silpa);
+        $silpa = SisaAnggaran::where('tahun', $thn)
+        ->select('silpa.notrans',
+                'silpa.tanggal',
+                'silpa.koderek50',
+                'silpa.uraian50',
+                'silpa.nominal')
+        ->whereBetween('tanggal', [$awal, $akhir])
+        ->when(request('q'),function ($query) {
+            $query->where('notrans', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('tanggal', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('nominal', 'LIKE', '%' . request('q') . '%');
+        })
+        ->paginate(request('per_page'));
+        $collect = collect($silpa);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+        return new JsonResponse ($balik);
     }
     public function transSilpa(Request $request){
 
@@ -41,7 +53,8 @@ class SilpaController extends Controller
                     'kode79' => '6.1.1',
                     'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
                 ]);
-            } else {
+            }
+            else {
                 $data = SisaAnggaran::find($request->id);
                 $data->update([
                     'notrans'=> self::buatnomor(),
@@ -55,7 +68,7 @@ class SilpaController extends Controller
                 ]);
             }
             DB::commit();
-            return response()->json(['message' => 'Succes'], 200);
+            return response()->json(['message' => 'Berhasil, Data Tersimpan'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
@@ -90,7 +103,7 @@ class SilpaController extends Controller
         }
         else{
             $ambil=SisaAnggaran::all()->last();
-            $urut = (int)substr($ambil->noregister, 1, 3) + 1;
+            $urut = (int)substr($ambil->notrans, 1, 3) + 1;
             //cara menyambungkan antara tgl dn kata dihubungkan tnda .
             // $urut = "000" . $urut;
             if(strlen($urut) == 1){
@@ -110,7 +123,7 @@ class SilpaController extends Controller
 
         return $sambung;
     }
-    public function hapussaldo(Request $request){
+    public function hapusSilpa(Request $request){
         $id=$request->id;
         $data=SisaAnggaran::find($id);
         $del=$data->delete();
