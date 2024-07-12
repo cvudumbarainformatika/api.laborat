@@ -58,51 +58,87 @@ class AllBillRekapByRuanganController extends Controller
                     $keperawatan->select('rs1', 'rs4', 'rs5','rs8');
                 },
                 'laborat' => function ($laborat) {
-                    $laborat->select('rs51.rs1', 'rs51.rs2', 'rs51.rs4', 'rs49.rs2', 'rs49.rs21', 'rs51.rs23',DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
+                    $laborat->select('rs51.rs1', 'rs51.rs2 as nota', 'rs51.rs4 as kode', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket', 'rs51.rs23 as ruangan',
+                        DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
                         ->leftjoin('rs49', 'rs51.rs4', '=', 'rs49.rs1')
-                        ->where('rs51.rs23','!=','POL014')
+                        ->where('rs51.rs23','!=','POL014')->where('rs49.rs21','!=','')
                         ->groupBy( 'rs51.rs2', 'rs49.rs21');
                 },
-                'laborat.pemeriksaanlab:rs1,rs2,rs21',
+                'laboratnonpaket' => function ($laborat) {
+                    $laborat->select('rs51.rs1', 'rs51.rs2 as nota', 'rs51.rs4 as kode', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket', 'rs51.rs23 as ruangan',
+                        DB::raw('round((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotalx'))
+                        ->leftjoin('rs49', 'rs51.rs4', '=', 'rs49.rs1')
+                        ->where('rs51.rs23','!=','POL014')->where('rs49.rs21','=','')
+                        //->groupBy( 'rs51.rs2')
+                        ;
+                },
+                // 'laborat.pemeriksaanlab:rs1,rs2,rs21',
                 'transradiologi' => function ($transradiologi) {
-                    $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24')
+                    $transradiologi->select('rs48.rs1', 'rs48.rs6', 'rs48.rs8', 'rs48.rs24','rs48.rs26','rs24.rs5')
                         ->join('rs24', 'rs24.rs4', '=', 'rs48.rs26')
+                        ->where('rs48.rs26','!=','POL014')
                         ->groupBy('rs24.rs4', 'rs48.rs2', 'rs48.rs4');
                 },
-                // 'tindakanendoscopy' => function ($tindakanendoscopy) {
-                //     $tindakanendoscopy->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'POL031');
-                // },
-                // 'kamaroperasiibs' => function ($kamaroperasiibs) {
-                //     $kamaroperasiibs->select('rs54.rs1', 'rs54.rs5', 'rs54.rs6', 'rs54.rs7', 'rs54.rs8')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs54.rs15')
-                //         ->groupBy('rs24.rs4', 'rs54.rs2', 'rs54.rs4');;
-                // },
-                // 'kamaroperasiigd' => function ($kamaroperasiigd) {
-                //     $kamaroperasiigd->select('rs226.rs1', 'rs226.rs5', 'rs226.rs6', 'rs226.rs7', 'rs226.rs8')
-                //         ->join('rs24', 'rs24.rs4', '=', 'rs226.rs15')
-                //         ->groupBy('rs24.rs4', 'rs226.rs2', 'rs226.rs4');;
-                // },
-                // 'tindakanoperasi' => function ($tindakanoperasi) {
-                //     $tindakanoperasi->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'OPERASI');
-                // },
-                // 'tindakanoperasiigd' => function ($tindakanoperasiigd) {
-                //     $tindakanoperasiigd->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'OPERASIIRD');
-                // },
+                'tindakanendoscopy' => function ($tindakanendoscopy) {
+                    $tindakanendoscopy->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs73.rs16','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs73.rs22', 'POL031')
+                    ->where('rs73.rs16','!=','POL014');
+                },
+                'kamaroperasiibs' => function ($kamaroperasiibs) {
+                    $kamaroperasiibs->select('rs54.rs1', 'rs54.rs5', 'rs54.rs6', 'rs54.rs7', 'rs54.rs8','rs54.rs15')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs54.rs15')
+                        ->where('rs54.rs15','!=', 'POL014')
+                        ->groupBy('rs54.rs2', 'rs54.rs4');;
+                },
+                'kamaroperasiigd' => function ($kamaroperasiigd) {
+                    $kamaroperasiigd->select('rs226.rs1', 'rs226.rs5', 'rs226.rs6', 'rs226.rs7', 'rs226.rs8','rs226.rs15')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs226.rs15')
+                        ->where('rs226.rs15','!=', 'POL014')
+                        ->groupBy('rs226.rs2', 'rs226.rs4');
+                },
+                'tindakanoperasi' => function ($tindakanoperasi) {
+                    $tindakanoperasi->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs73.rs22', 'OPERASI')
+                    ->where('rs73.rs16','!=','POL014');
+                },
+                'tindakanoperasiigd' => function ($tindakanoperasiigd) {
+                    $tindakanoperasiigd->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs73.rs22', 'OPERASIIRD')
+                    ->where('rs73.rs16','!=','POL014');
+                },
+                'tindakanfisioterapi' => function ($tindakanfisioterapi) {
+                    $tindakanfisioterapi->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs73.rs22', 'FISIO')->OrWhere('rs22', 'PEN005')
+                    ->where('rs73.rs16','!=','POL014');
+                },
                 // 'tindakanfisioterapi' => function ($tindakanfisioterapi) {
-                //     $tindakanfisioterapi->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'FISIO');
+                //     $tindakanfisioterapi->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                //     ->join('rs24','rs24.rs1','rs73.rs16')
+                //     ->where('rs22', 'PEN005')
+                //     ->where('rs73.rs16','!=','POL014');
                 // },
-                // 'tindakanfisioterapi' => function ($tindakanfisioterapi) {
-                //     $tindakanfisioterapi->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'PEN005');
-                // },
-                // 'tindakananastesidiluarokdanicu' => function ($tindakananastesidiluarokdanicu) {
-                //     $tindakananastesidiluarokdanicu->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'PEN012')->where('rs25', '!=', 'POL014');
-                // },
-                // 'tindakancardio' => function ($tindakancardio) {
-                //     $tindakancardio->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'POL026');
-                // },
-                // 'tindakaneeg' => function ($tindakaneeg) {
-                //     $tindakaneeg->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'POL024');
-                // },
+                'tindakananastesidiluarokdanicu' => function ($tindakananastesidiluarokdanicu) {
+                    $tindakananastesidiluarokdanicu->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs22', 'PEN012')
+                    ->where('rs25', '!=', 'POL014');
+                },
+                'tindakancardio' => function ($tindakancardio) {
+                    $tindakancardio->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs22', 'POL026')
+                    ->where('rs25', '!=', 'POL014');
+                },
+                'tindakaneeg' => function ($tindakaneeg) {
+                    $tindakaneeg->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
+                    ->join('rs24','rs24.rs1','rs73.rs16')
+                    ->where('rs22', 'POL024')
+                    ->where('rs25', '!=', 'POL014');
+                },
                 // 'psikologtransumum',
                 // 'bdrs' => function ($bdrs) {
                 //     $bdrs->select('rs1', 'rs12', 'rs13')->where('rs14', '!=', 'POL014');

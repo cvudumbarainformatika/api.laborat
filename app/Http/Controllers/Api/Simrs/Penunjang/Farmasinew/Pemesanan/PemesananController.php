@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Pemesanan;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
@@ -124,6 +125,10 @@ class PemesananController extends Controller
         //     ->orderBy('tglpemesanan')->paginate(request('per_page'));
         $gud = request('gudang');
         $gud[] = '';
+        $supl = [];
+        if (request('nopemesanan')) {
+            $supl = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('nopemesanan') . '%')->pluck('kode');
+        }
         // return new JsonResponse($gud);
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
             ->with([
@@ -144,6 +149,9 @@ class PemesananController extends Controller
                 // 'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
             ])
             ->whereIn('kd_ruang', $gud)
+            ->when(count($supl)>0, function($q) use($supl) {
+                $q->whereIn('kdpbf',$supl);
+            })
             ->orderBy('tgl_pemesanan', 'desc')
             ->paginate(request('per_page'));
         return new JsonResponse($listpemesanan);

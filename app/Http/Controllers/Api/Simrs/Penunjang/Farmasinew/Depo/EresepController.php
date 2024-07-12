@@ -945,10 +945,12 @@ class EresepController extends Controller
             'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
             'permintaanresep.aturansigna:signa,jumlah',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+            'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'asalpermintaanresep.aturansigna:signa,jumlah',
             'poli',
             'info',
             'antrian' => function ($q) {
-                $q->where('pelayanan_id', 'AP0001');
+                $q->where('pelayanan_id', 'AP0001'); 
             },
             'ruanganranap',
             'sistembayar',
