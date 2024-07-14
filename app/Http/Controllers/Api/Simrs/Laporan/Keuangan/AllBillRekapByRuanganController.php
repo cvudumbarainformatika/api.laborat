@@ -157,10 +157,14 @@ class AllBillRekapByRuanganController extends Controller
                 //     $apotekranap->select('rs1', 'rs6', 'rs8', 'rs10')->where('rs20', '!=', 'POL014')->where('lunas', '!=', '1')
                 //         ->where('rs25', 'CENTRAL');
                 // },
-                // 'apotekranaplalu' => function ($apotekranaplalu) {
-                //     $apotekranaplalu->select('rs1', 'rs6', 'rs8', 'rs10')->where('rs20', '!=', 'POL014')->where('lunas', '!=', '1')
-                //         ->where('rs25', 'CENTRAL');
-                // },
+                'apotekranaplalu' => function ($apotekranaplalu) {
+                    $apotekranaplalu->select('rs62.rs1','rs62.rs2', 'rs62.rs6', 'rs62.rs8', 'rs62.rs10','rs62.rs20','rs24.rs4','rs24.rs5',
+                    DB::raw('round(sum((rs62.rs6*rs62.rs8)+rs62.rs10)) as subtotalx'))
+                        ->join('rs24','rs62.rs20','rs24.rs1')
+                        ->where('rs62.rs20', '!=', 'POL014')->where('lunas', '!=', '1')
+                        ->where('rs62.rs25', 'CENTRAL')
+                        ->groupBy('rs62.rs2');
+                },
                 // 'apotekranapracikanheder' => function ($apotekranapracikanheder) {
                 //     $apotekranapracikanheder->select('rs1', 'rs8')->where('lunas', '!=', '1')->where('rs19', 'CENTRAL')->Where('rs18', '!=', 'IGD');
                 // },
@@ -168,11 +172,20 @@ class AllBillRekapByRuanganController extends Controller
                 // 'apotekranapracikanhederlalu' => function ($apotekranapracikanhederlalu) {
                 //     $apotekranapracikanhederlalu->select('rs1', 'rs8')->where('lunas', '!=', '1')->where('rs19', 'CENTRAL')->Where('rs18', '!=', 'IGD');
                 // },
-                // 'apotekranapracikanrincilalu:rs1,rs5,rs7',
-                // 'kamaroperasiibsx' => function ($kamaroperasiibsx) {
-                //     $kamaroperasiibsx->select('rs1', 'rs5', 'rs6', 'rs7', 'rs8')
-                //         ->where('rs15', 'POL014');
+                'apotekranapracikanhederlalux' => function($apotekranapracikanrincilalu) {
+                    $apotekranapracikanrincilalu->select('rs63.rs1','rs63.rs2','rs63.rs8','rs63.rs15','rs64.rs6','rs64.rs7','rs64.rs5',
+                    DB::raw('round(sum(rs64.rs5*rs64.rs7)) as subtotalx'))
+                    ->leftjoin('rs64','rs63.rs2','rs64.rs2')
+                    ->leftjoin('rs24','rs63.rs15','rs24.rs1')
+                    ->where('rs63.rs15','!=','POL014');
+                },
+                // 'newapotekrajal' => function($newapotekrajal) {
+                //     $newapotekrajal->select('farmasi.')
                 // },
+                'kamaroperasiibsx' => function ($kamaroperasiibsx) {
+                    $kamaroperasiibsx->select('rs1', 'rs5', 'rs6', 'rs7', 'rs8')
+                        ->where('rs15', 'POL014');
+                },
                 // 'tindakanoperasix' => function ($tindakanoperasix) {
                 //     $tindakanoperasix->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'OPERASI2');
                 // },
