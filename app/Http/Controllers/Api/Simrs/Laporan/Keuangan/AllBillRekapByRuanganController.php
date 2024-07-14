@@ -139,11 +139,20 @@ class AllBillRekapByRuanganController extends Controller
                     ->where('rs22', 'POL024')
                     ->where('rs25', '!=', 'POL014');
                 },
-                // 'psikologtransumum',
-                // 'bdrs' => function ($bdrs) {
-                //     $bdrs->select('rs1', 'rs12', 'rs13')->where('rs14', '!=', 'POL014');
-                // },
-                // 'penunjangkeluar:noreg,harga_sarana,harga_pelayanan,jumlah',
+                 'psikologtransumum' => function ($psikologtransumum) {
+                    $psikologtransumum->select('psikologi_trans.rs1','psikologi_trans.rs2','psikologi_trans.rs3','psikologi_trans.rs4 as kodetindakan','psikologi_trans.rs7','psikologi_trans.rs13',
+                    'psikologi_trans.rs5','rs24.rs4')
+                    ->leftjoin('rs24','psikologi_trans.rs25','rs24.rs4')
+                    ->where('rs24.rs1','!=','')
+                    ->groupBy('psikologi_trans.rs2','psikologi_trans.rs4');
+                 },
+                'bdrs' => function ($bdrs) {
+                    $bdrs->select('rs1', 'rs12', 'rs13','rs14')->where('rs14', '!=', 'POL014');
+                },
+                 'penunjangkeluar' => function ($penunjangkeluar) {
+                    $penunjangkeluar->select('noreg','nota','ruangan','harga_sarana','harga_pelayanan','jumlah')
+                    ->where('ruangan','!=','POL014');
+                 },
                 // 'apotekranap' => function ($apotekranap) {
                 //     $apotekranap->select('rs1', 'rs6', 'rs8', 'rs10')->where('rs20', '!=', 'POL014')->where('lunas', '!=', '1')
                 //         ->where('rs25', 'CENTRAL');
