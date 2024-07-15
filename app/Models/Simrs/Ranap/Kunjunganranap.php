@@ -57,6 +57,7 @@ class Kunjunganranap extends Model
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
     protected $connection = 'mysql';
+    //protected $connection = 'farmasi';
 
     public function relmasterruangranap()
     {
@@ -457,5 +458,17 @@ class Kunjunganranap extends Model
     public function laboratnonpaket()
     {
         return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
+    public function newfarmasi()
+    {
+        // return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
+
+    public function newfarmasiracikan()
+    {
+        // return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
 }
