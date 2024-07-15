@@ -72,8 +72,12 @@ class AntrianController extends Controller
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
 
+            $message = [
+                'nomorAntrian' => $query->data->nomor,
+                'loketId' => $unitantrian->loket_id
+            ];
 
-
+            event(new NotifMessageEvent($message, 'pendaftaran', auth()->user()));
             return $query;
         } else if ($jenis === 'call lansia') {
             $myReq["layanan"] = 3;
@@ -100,7 +104,7 @@ class AntrianController extends Controller
                     return new JsonResponse(['message' => 'gagal'], 500);
                 }
                 $message = [
-                    'nomorAntrianLansia' => $query->data->nomor,
+                    'nomorAntrian' => $query->data->nomor,
                     'loketId' => $unitantrian->loket_id
                 ];
                 // event(new AntreanEvent($message));                
@@ -120,6 +124,13 @@ class AntrianController extends Controller
                 'http_errors' => false
             ]);
             $query = json_decode($url->getBody()->getContents(), false);
+
+            $message = [
+                'nomorAntrian' => $query->data->nomor,
+                'loketId' => $unitantrian->loket_id
+            ];
+            // event(new AntreanEvent($message));                
+            event(new NotifMessageEvent($message, 'pendaftaran', auth()->user()));
             return $query;
         }
     }
