@@ -10,4 +10,5 @@ class Kwitansilog extends Model
     use HasFactory;
     protected $table = 'kwitansilog';
     protected $guarded = ['id'];
+    protected $connection = 'mysql';
 }

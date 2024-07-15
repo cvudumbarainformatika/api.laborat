@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
@@ -93,5 +94,8 @@ class Resepkeluarheder extends Model
     public function kunjunganranap()
     {
         return $this->hasOne(Kunjunganranap::class, 'rs1', 'noreg');
+    }
+    public function kwitansi(){
+        return $this->hasMany(Kwitansilog::class, 'noreg', 'noreg');
     }
 }
