@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Siasik\TransaksiSaldo;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Master\RekeningBank;
 use App\Models\Siasik\TransaksiSaldo\SaldoAwal_PPK;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 // use App\Models\Sigarang\Rekening50;
 use Illuminate\Http\Request;
@@ -20,9 +21,18 @@ class TransSaldoController extends Controller
 
     }
     public function tabelrek() {
-        $saldo = SaldoAwal_PPK::when(request('q'), function($x){
-        $x->where('rekening', request('q'));
-        })->get();
+        $thn=date('Y');
+        // $awal = $thn.'-01-01';
+        // $akhir=request('tglx', 'Y-m-d');
+        $saldo = SaldoAwal_PPK::where('tahun', $thn)
+        ->when(request('q'), function($x){
+            $x->where('rekening', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('noregister', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('namaRek', 'LIKE', '%' . request('q') . '%');
+            ;
+        })
+        // ->whereBetween('tanggal', [$awal, $akhir])
+        ->paginate(request('per_page'));
         // ->where('noRek', request('rek'))
 
         return new JsonResponse( $saldo);
@@ -35,6 +45,7 @@ class TransSaldoController extends Controller
                 SaldoAwal_PPK::firstOrCreate([
                     'noregister'=> self::buatnomor(),
                     'tanggal' => $request->tanggal,
+                    'tahun'=> date('Y'),
                     'rekening' => $request->rekening,
                     'namaRek' => $request->namaRek,
                     'nilaisaldo' => $request->nilaisaldo
@@ -44,6 +55,7 @@ class TransSaldoController extends Controller
                 $data->update([
                     'noregister'=> self::buatnomor(),
                     'tanggal' => $request->tanggal,
+                    'tahun'=> date('Y'),
                     'rekening' => $request->rekening,
                     'namaRek' => $request->namaRek,
                     'nilaisaldo' => $request->nilaisaldo
