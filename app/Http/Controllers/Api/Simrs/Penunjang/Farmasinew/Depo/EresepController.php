@@ -952,6 +952,7 @@ class EresepController extends Controller
             'antrian' => function ($q) {
                 $q->where('pelayanan_id', 'AP0001'); 
             },
+            'kwitansi',
             'ruanganranap',
             'sistembayar',
             'sep:rs1,rs8',
@@ -973,6 +974,9 @@ class EresepController extends Controller
                 $q->on('antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
                     ->where('antrian_ambil.pelayanan_id', '=', 'AP0001');
             })
+            // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.kwitansilog'), function ($q) {
+            //     $q->on('resep_keluar_h.noresep', 'LIKE', 'kwitansilog.nota' );
+            // })
             // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
             // ->where('antrian_ambil.pelayanan_id', '=', 'AP0001')
             ->select('resep_keluar_h.*', 'antrian_ambil.nomor')
