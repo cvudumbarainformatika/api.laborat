@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Laporan\Keuangan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class AllBillRekapByRuanganController extends Controller
         ->with(
             [
                 'rstigalimax' => function ($rstigalimax) {
-                    $rstigalimax->select('rs1','rs4', 'rs7', 'rs14', 'rs17')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
+                    $rstigalimax->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
                 },
                 'akomodasikamar' => function ($akomodasikamar) {
                     $akomodasikamar->select('rs1', 'rs7', 'rs14','rs16')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
@@ -158,7 +159,7 @@ class AllBillRekapByRuanganController extends Controller
                 //         ->where('rs25', 'CENTRAL');
                 // },
                 'apotekranaplalu' => function ($apotekranaplalu) {
-                    $apotekranaplalu->select('rs62.rs1','rs62.rs2', 'rs62.rs6', 'rs62.rs8', 'rs62.rs10','rs62.rs20','rs24.rs4','rs24.rs5',
+                    $apotekranaplalu->select('rs62.rs1','rs62.rs2', 'rs62.rs6', 'rs62.rs8', 'rs62.rs10','rs62.rs20','rs24.rs4 as ruangan','rs24.rs5',
                     DB::raw('round(sum((rs62.rs6*rs62.rs8)+rs62.rs10)) as subtotalx'))
                         ->join('rs24','rs62.rs20','rs24.rs1')
                         ->where('rs62.rs20', '!=', 'POL014')->where('lunas', '!=', '1')
@@ -173,15 +174,31 @@ class AllBillRekapByRuanganController extends Controller
                 //     $apotekranapracikanhederlalu->select('rs1', 'rs8')->where('lunas', '!=', '1')->where('rs19', 'CENTRAL')->Where('rs18', '!=', 'IGD');
                 // },
                 'apotekranapracikanhederlalux' => function($apotekranapracikanrincilalu) {
-                    $apotekranapracikanrincilalu->select('rs63.rs1','rs63.rs2','rs63.rs8','rs63.rs15','rs64.rs6','rs64.rs7','rs64.rs5',
+                    $apotekranapracikanrincilalu->select('rs63.rs1','rs63.rs2','rs63.rs8','rs63.rs15','rs64.rs6','rs64.rs7','rs64.rs5','rs24.rs4 as ruangan','rs24.rs5',
                     DB::raw('round(sum(rs64.rs5*rs64.rs7)) as subtotalx'))
                     ->leftjoin('rs64','rs63.rs2','rs64.rs2')
                     ->leftjoin('rs24','rs63.rs15','rs24.rs1')
                     ->where('rs63.rs15','!=','POL014');
                 },
-                // 'newapotekrajal' => function($newapotekrajal) {
-                //     $newapotekrajal->select('farmasi.')
-                // },
+                'newfarmasi' => function($newapotekrajal) {
+                    $newapotekrajal->select('farmasi.resep_keluar_h.noreg','farmasi.resep_keluar_h.noresep','farmasi.resep_keluar_h.ruangan as koderuangan','rs.rs24.rs4 as ruangan','rs.rs24.rs5',
+                    DB::raw('round(sum(farmasi.resep_keluar_r.harga_jual*farmasi.resep_keluar_r.jumlah+farmasi.resep_keluar_r.nilai_r)) as subtotalx'))
+                    ->leftjoin('farmasi.resep_keluar_r','farmasi.resep_keluar_h.noresep','farmasi.resep_keluar_r.noresep')
+                    ->leftjoin('rs.rs24','farmasi.resep_keluar_h.ruangan','rs.rs24.rs1')
+                    ->whereIn('farmasi.resep_keluar_h.depo',['Gd-04010102', 'Gd-04010103'])
+                    ->where('resep_keluar_r.kdobat','!=','')
+                    ->where('farmasi.resep_keluar_h.ruangan','!=','POL014')
+                    ->groupBy('farmasi.resep_keluar_h.noresep');
+                },
+                'newfarmasiracikan' => function($newfarmasiracikan) {
+                    $newfarmasiracikan->select('farmasi.resep_keluar_h.noreg','farmasi.resep_keluar_h.noresep','farmasi.resep_keluar_h.ruangan as koderuangan','rs.rs24.rs4 as ruangan','rs.rs24.rs5',
+                    DB::raw('round(sum(farmasi.resep_keluar_racikan_r.harga_jual*farmasi.resep_keluar_racikan_r.jumlah+farmasi.resep_keluar_racikan_r.nilai_r)) as subtotalx'))
+                    ->join('farmasi.resep_keluar_racikan_r','farmasi.resep_keluar_h.noresep','farmasi.resep_keluar_racikan_r.noresep')
+                    ->join('rs.rs24','farmasi.resep_keluar_h.ruangan','rs.rs24.rs1')
+                    ->whereIn('farmasi.resep_keluar_h.depo',['Gd-04010102', 'Gd-04010103'])
+                    ->where('farmasi.resep_keluar_h.ruangan','!=','POL014')
+                    ->groupBy('farmasi.resep_keluar_h.noresep');
+                },
                 'kamaroperasiibsx' => function ($kamaroperasiibsx) {
                     $kamaroperasiibsx->select('rs1', 'rs5', 'rs6', 'rs7', 'rs8')
                         ->where('rs15', 'POL014');
@@ -259,25 +276,33 @@ class AllBillRekapByRuanganController extends Controller
         ->whereBetween('rs23.rs4', [$dari, $sampai])
         ->get();
 
-        // $data = Rstigalimax::select('rs23.rs1','rs23.rs2','rs35x.rs16','rs24.rs5',
-        // DB::raw('sum(rs35x.rs7+rs35x.rs14) as subtotalx'),DB::raw('count(rs35x.rs1) as lama'))
-        // ->with(
-        //     [
-        //         'kunjunganranap' => function ($kunjungan) {
-        //             $kunjungan->with(
-        //                 [
-        //                     'rstigalimax' => function ($biayaadmin) {
-        //                         $biayaadmin->select(DB::raw('sum(rs7+rs14) as subtotalx'))->where('rs3', 'K1#');
-        //                     }
-        //                 ]
-        //             );
+        // $ee = $data->map(function ($query) {
+        //     $query->with(['rstigalimax', $query->rstigalimax->where('rs3', 'K1#')->take(1)]);
+        //     return $query->rstigalimax;
+        // });
+
+        // $tarif = Rstigapuluhtarif::where('rs3', 'A1#')->first();
+        //     $aa = $data->map(function ($query) use ($tarif) {
+        //         $admin = $query->rstigalimaxrs[0]->rs17;
+        //         $administrasi = 0;
+
+        //         if ($admin === "3") {
+        //             $administrasi = $tarif->rs6 + $tarif->rs7;
+        //         } else if ($admin === "2") {
+        //             $administrasi = $tarif->rs8 + $tarif->rs9;
+        //         } else if ($admin === "1" || $admin === "IC" || $admin === "ICC" || $admin === "NICU" || $admin === "IN") {
+        //             $administrasi = $tarif->rs10 + $tarif->rs11;
+        //         } else if ($admin === "Utama") {
+        //             $administrasi = $tarif->rs12 + $tarif->rs13;
+        //         } else if ($admin === "VIP") {
+        //             $administrasi = $tarif->rs14 + $tarif->rs15;
+        //         } else if ($admin === "VVIP") {
+        //             $administrasi = $tarif->rs16 + $tarif->rs17;
         //         }
-        //     ])
-        // ->leftjoin('rs23','rs23.rs1','rs35x.rs1')
-        // ->leftjoin('rs24','rs24.rs1','rs35x.rs18')
-        // ->where('rs35x.rs3','K1#')->whereBetween('rs23.rs4', [$dari, $sampai])
-        // ->groupBy('rs35x.rs1','rs24.rs4')
-        // ->get();
+
+        //         $query['admin'] = $administrasi;
+        //         return $query;
+        //     });
         return new JsonResponse($data);
     }
 }

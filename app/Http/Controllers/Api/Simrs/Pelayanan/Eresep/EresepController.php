@@ -268,15 +268,15 @@ class EresepController extends Controller
                 }
             }
 
-            $hargajualx = [];
-            $harga = [];
-            $har = HargaHelper::getHarga($kdobat, $groupsistembayar);
-            $res = $har['res'];
-            if ($res) {
-                throw new \Exception('Obat ini tidak mempunyai harga');
-            }
-            $hargajualx = $har['hargaJual'];
-            $harga = $har['harga'];
+            // $hargajualx = [];
+            // $harga = [];
+            // $har = HargaHelper::getHarga($kdobat, $groupsistembayar);
+            // $res = $har['res'];
+            // if ($res) {
+            //     throw new \Exception('Obat ini tidak mempunyai harga');
+            // }
+            // $hargajualx = $har['hargaJual'];
+            // $harga = $har['harga'];
 
             foreach ($request->kirimResep as $key => $record) {
                 try {
@@ -355,6 +355,14 @@ class EresepController extends Controller
                     if (!$simpan) {
                         throw new \Exception('Data Gagal Disimpan...!!!');
                     }
+
+                    $har = HargaHelper::getHarga($record['kodeobat'], $record['groupsistembayar']);
+                    $res = $har['res'];
+                    if ($res) {
+                        throw new \Exception('Obat ini tidak mempunyai harga');
+                    }
+                    $hargajualx = $har['hargaJual'];
+                    $harga = $har['harga'];
 
                     if ($record['jenisresep'] == 'Racikan') {
                         if ($record['tiperacikan'] == 'DTD') {
