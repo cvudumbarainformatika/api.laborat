@@ -21,7 +21,7 @@ class AllBillRekapByRuanganController extends Controller
         ->with(
             [
                 'rstigalimax' => function ($rstigalimax) {
-                    $rstigalimax->select('rs1','rs4', 'rs7', 'rs14', 'rs17')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
+                    $rstigalimax->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
                 },
                 'akomodasikamar' => function ($akomodasikamar) {
                     $akomodasikamar->select('rs1', 'rs7', 'rs14','rs16')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
