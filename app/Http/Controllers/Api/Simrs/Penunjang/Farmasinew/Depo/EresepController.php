@@ -1013,6 +1013,9 @@ class EresepController extends Controller
         if(request('sistembayar')){
             $query->where('resep_keluar_h.sistembayar', request('sistembayar'));
         }
+        if(request('listsistembayar')){
+            $query->whereIn('resep_keluar_h.sistembayar', request('listsistembayar'));
+        }
 
         // Add the ORDER BY clause
         $query
