@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -309,6 +310,26 @@ class AllBillRekapByRuanganController extends Controller
         //         $query['admin'] = $administrasi;
         //         return $query;
         //     });
+        return new JsonResponse($data);
+    }
+
+    public function allBillRekapByRuanganperruangan()
+    {
+        $dari = request('tgldari') .' 00:00:00';
+        $sampai = request('tglsampai') .' 23:59:59';
+
+        $data = Mruangranap::select('rs24.rs1','rs24.rs4','rs24.rs5 as ruangan','rs23.rs1 as noreg')
+        // ->with(
+        //     [
+        //         'rstigalimax' => function($rstigalimax) {
+        //             $rstigalimax->where('rs3','K1#');
+        //         }
+        //     ]
+        // )
+        ->leftjoin('rs23','rs23.rs5','rs24.rs1')
+        ->whereBetween('rs23.rs4', [$dari, $sampai])
+        ->orderBy('rs23.rs1')
+        ->get();
         return new JsonResponse($data);
     }
 }
