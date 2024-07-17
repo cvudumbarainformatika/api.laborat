@@ -107,13 +107,5 @@ class TransaksiLaboratController extends Controller
         return $responseBody;
     }
 
-    public function update_complete(Request $request)
-    {
-       $nota = $request->nota;
-       $cek = TransaksiLaborat::select('rs1','rs2')->where('rs2', $nota)->limit(1)->get();
-       if (count($cek) > 0) {
-           TransaksiLaborat::where('rs2', $nota)->update(['rs20' => "2"]);
-           return new JsonResponse($cek);
-       }
-    }
+    
 }
