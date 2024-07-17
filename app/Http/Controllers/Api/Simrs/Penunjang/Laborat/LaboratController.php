@@ -55,7 +55,7 @@ class LaboratController extends Controller
         }
     }
 
-    public function simpanpermintaanlaborat(Request $request)
+    public function simpanpermintaanlaborat(Request $request) // ini sudah gak dipake
     {
         // return $request->all();
         // if ($request->nota == '' || $request->nota == null) {
