@@ -27,7 +27,7 @@ class AllBillRekapByRuanganController extends Controller
                     $akomodasikamar->select('rs1', 'rs7', 'rs14','rs16')->where('rs3', 'K1#')->orderBy('rs4', 'DESC');
                 },
                 'biayamaterai' => function ($biayamaterai) {
-                    $biayamaterai->select('rs1', 'rs5')->where('rs7', '!=', 'IRD');
+                    $biayamaterai->select('rs1', 'rs5 as subtotal')->where('rs7', '!=', 'IRD');
                 },
                 'tindakandokter' => function ($tindakandokterperawat) {
                     $tindakandokterperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
@@ -99,10 +99,11 @@ class AllBillRekapByRuanganController extends Controller
                 //         ->groupBy('rs226.rs2', 'rs226.rs4');
                 // },
                 'tindakanoperasi' => function ($tindakanoperasi) {
-                    $tindakanoperasi->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs16')
-                    // ->leftjoin('rs24','rs24.rs1','rs73.rs16')
+                    $tindakanoperasi->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs16','rs200.rs13 as ruang')
+                    ->join('rs200','rs73.rs1','rs200.rs1')
                     ->where('rs73.rs22', 'OPERASI')
-                    ->where('rs73.rs16','!=','POL014');
+                   // ->where('rs73.rs16','!=','POL014')
+                   ;
                 },
                 'tindakanoperasiigd' => function ($tindakanoperasiigd) {
                     $tindakanoperasiigd->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5','rs24.rs4')
@@ -206,9 +207,14 @@ class AllBillRekapByRuanganController extends Controller
                 // 'tindakanoperasix' => function ($tindakanoperasix) {
                 //     $tindakanoperasix->select('rs1', 'rs2', 'rs7', 'rs13', 'rs5')->where('rs22', 'OPERASI2');
                 // },
-                // 'ambulan' => function ($ambulan) {
-                //     $ambulan->select('rs1', 'rs2', 'rs15', 'rs16', 'rs17', 'rs18', 'rs23', 'rs26', 'rs30')->where('rs20', '!=', 'POL014');
-                // },
+                'ambulan' => function ($ambulan) {
+                    $ambulan->select('rs283.rs1', 'rs283.rs2', 'rs283.rs15', 'rs283.rs16', 'rs283.rs17', 'rs283.rs18', 'rs283.rs23', 'rs283.rs26', 'rs283.rs30','rs283.rs20','rs24.rs4 as ruangan')
+                    ->join('rs24','rs283.rs20','rs24.rs1')
+                    ->where('rs20', '!=', 'POL014');
+                },
+                'asuhangizi' => function ($asuhangizi) {
+                    $asuhangizi->select('rs1', 'rs4', 'rs5','rs8 as ruangan')->where('rs3', 'K00013');
+                },
 
                 // //------------------igd-------------//
 
