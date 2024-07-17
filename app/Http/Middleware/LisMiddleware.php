@@ -27,7 +27,7 @@ class LisMiddleware
 
 
         if (!$this->hasCorrectSignature($request) ) {
-            return response()->json(['status' => 'signature is Invalid', 'message'=> 'Coba Lagi.'], 401);
+            return response()->json(['status' => 'signature is Invalid', 'message'=> $this->getSignature()], 401);
         }
         if ($request->header('X-id') !== $xid || !$request->headers->has('X-id')) {
             return response()->json(['status' => 'Token is Invalid', 'message'=> 'Unauthorized.'], 401);
@@ -50,5 +50,17 @@ class LisMiddleware
         $signature = hash_hmac('sha256', $xid, $secret_key);
 
         return hash_equals($signature, (string) $request->header('X-signature'));
+    }
+
+    public function getSignature()
+    {
+        $xid = env('LIS_X_ID');
+        $xtimestamp = time();
+        $secret_key = env('LIS_X_SECRET');
+
+        $expired = strtotime("+2 days", $xtimestamp);
+        // $checkExpired = $expired <= $request->header('X-timestamp');
+        $signature = hash_hmac('sha256', $xid, $secret_key);
+        return $signature;
     }
 }
