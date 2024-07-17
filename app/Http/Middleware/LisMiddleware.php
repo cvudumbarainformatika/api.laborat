@@ -54,11 +54,10 @@ class LisMiddleware
 
     public function getSignature()
     {
-        $xid = env('LIS_X_ID');
-        $xtimestamp = time();
-        $secret_key = env('LIS_X_SECRET');
+        $xid = '4444';
+        $secret_key = 'l15Test';
 
-        $expired = strtotime("+2 days", $xtimestamp);
+        // $expired = strtotime("+2 days", $xtimestamp);
         // $checkExpired = $expired <= $request->header('X-timestamp');
         $signature = hash_hmac('sha256', $xid, $secret_key);
         return $signature;
