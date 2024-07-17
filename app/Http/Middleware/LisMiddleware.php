@@ -27,7 +27,7 @@ class LisMiddleware
 
 
         if (!$this->hasCorrectSignature($request) ) {
-            return response()->json(['status' => 'signature is Invalid', 'message'=> 'Unauthorized.'], 401);
+            return response()->json(['status' => 'signature is Invalid', 'message'=> 'Coba Lagi.'], 401);
         }
         if ($request->header('X-id') !== $xid || !$request->headers->has('X-id')) {
             return response()->json(['status' => 'Token is Invalid', 'message'=> 'Unauthorized.'], 401);

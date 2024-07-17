@@ -176,4 +176,5 @@ class TransaksiLaborat extends Model
         //     });
         // });
     }
+    
 }
