@@ -121,7 +121,7 @@ class LisController extends Controller
 
     public function update_complete($nota)
     {
-       
+       // update rs20 berdasarkan nota
         TransaksiLaborat::where('rs2', $nota)->update(['rs20' => "2"]);
        
     }
