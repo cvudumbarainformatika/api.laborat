@@ -96,6 +96,7 @@ class BastController extends Controller
                         'nobast' => $nobast,
                         'tgl_bast' => $request->tgl_bast,
                         'jumlah_bast' => $request->jumlah_bast,
+                        'jumlah_bastx' => $request->jumlah_bastx??$request->jumlah_bast,
                         'nilai_retur' => $penerimaan['subtotal_retur'] ?? 0,
                         'user_bast' => $user['kodesimrs'],
                     ]);
