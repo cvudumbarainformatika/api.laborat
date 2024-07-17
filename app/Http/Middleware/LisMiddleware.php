@@ -17,9 +17,9 @@ class LisMiddleware
     public function handle(Request $request, Closure $next)
     {
         date_default_timezone_set('Asia/Jakarta');
-        $xid = env('LIS_X_ID');
+        $xid = '4444';
         $xtimestamp = time();
-        $secret_key = env('LIS_X_SECRET');
+        $secret_key = 'l15Test';
         // $sign = hash_hmac('sha256', $xtimestamp, $secret_key);
         // $xsignature = base64_encode($sign);
         $expired = strtotime("+2 days", $xtimestamp);
