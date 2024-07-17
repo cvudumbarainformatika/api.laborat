@@ -41,9 +41,9 @@ class LisMiddleware
 
     public function hasCorrectSignature($request)
     {
-        $xid = env('LIS_X_ID');
+        $xid = '4444';
         $xtimestamp = time();
-        $secret_key = env('LIS_X_SECRET');
+        $secret_key = 'l15Test';
 
         $expired = strtotime("+2 days", $xtimestamp);
         $checkExpired = $expired <= $request->header('X-timestamp');
