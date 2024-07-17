@@ -125,7 +125,7 @@ class PersiapanOperasiController extends Controller
     {
         // penccarian termasuk tiperesep
         $groupsistembayar = request('groups');
-        if ($groupsistembayar == '1') {
+        if ($groupsistembayar === '1'|| $groupsistembayar === 1) {
             $sistembayar = ['SEMUA', 'BPJS'];
         } else {
             $sistembayar = ['SEMUA', 'UMUM'];
@@ -230,7 +230,8 @@ class PersiapanOperasiController extends Controller
         });
         return new JsonResponse(
             [
-                'dataobat' => $wew
+                'dataobat' => $wew,
+                'siba'=> $sistembayar
             ]
         );
     }

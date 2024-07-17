@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -9,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class PendaftaranRanapController extends Controller
 {
@@ -126,4 +128,26 @@ class PendaftaranRanapController extends Controller
 
         return $q;
     }
+
+    public function wheatherapi_country()
+    {
+        $data = Http::get('http://api.weatherapi.com/v1/search.json?key=88a330fe969d462e919175655242101&q='.request('q'));
+        return $data;
+    }
+
+    public function cekPesertaBpjs()
+    {
+        $no = request('no');
+        $by = request('by');
+        $today = date('Y-m-d');
+
+        $cekpsereta = BridgingbpjsHelper::get_url(
+            'vclaim',
+            // 'Peserta/nokartu/' . $request->noka . '/tglSEP/' . $request->tglsep
+            "Peserta/$by/$no/tglSEP/$today"
+        );
+        // $wew = $cekpsereta['result']->peserta->provUmum;
+        return ($cekpsereta);
+    }
+
 }

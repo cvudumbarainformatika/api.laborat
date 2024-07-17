@@ -299,13 +299,18 @@ class PenerimaanController extends Controller
                 $e->where(function ($qu) {
                     $qu->where('nopemesanan', 'Like', '%' . request('cari') . '%')
                         ->orWhere('nopenerimaan', 'Like', '%' . request('cari') . '%')
-                        ->orWhere('tglpenerimaan', 'Like', '%' . request('cari') . '%')
+                        // ->orWhere('tglpenerimaan', 'Like', '%' . request('cari') . '%')
                         ->orWhere('pengirim', 'Like', '%' . request('cari') . '%')
                         ->orWhere('jenissurat', 'Like', '%' . request('cari') . '%')
                         ->orWhere('nomorsurat', 'Like', '%' . request('cari') . '%');
                 });
             })
-            
+            ->when(request('jenispenerimaan'),function($q){
+                $q->where('jenis_penerimaan',request('jenispenerimaan'));
+            })
+            ->when(request('from'), function($q){
+                $q->whereBetween('tglpenerimaan',[request('from').' 00:00:00', request('to').' 23:59:59']);
+            })
             ->with([
                 'penerimaanrinci',
                 'penerimaanrinci.masterobat',
@@ -316,7 +321,7 @@ class PenerimaanController extends Controller
             ->paginate(request('per_page'));
         return new JsonResponse([
             'data' => $listpenerimaan,
-            'req' => request('gudang'),
+            'req' => request()->all(),
             'kode'=>$supl
         ]);
     }

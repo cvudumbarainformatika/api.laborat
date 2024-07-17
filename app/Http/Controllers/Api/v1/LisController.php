@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class              LisController extends Controller
+class LisController extends Controller
 {
     public function get_token(Request $request)
     {
