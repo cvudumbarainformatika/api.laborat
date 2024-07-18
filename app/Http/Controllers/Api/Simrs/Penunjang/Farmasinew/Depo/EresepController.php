@@ -979,7 +979,14 @@ class EresepController extends Controller
             // })
             // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
             // ->where('antrian_ambil.pelayanan_id', '=', 'AP0001')
-            ->select('resep_keluar_h.*', 'antrian_ambil.nomor')
+            ->select(
+                'resep_keluar_h.*', 
+                'antrian_ambil.nomor',
+                DB::raw('(TIMESTAMPDIFF(DAY,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai)) AS rt_hari'),
+		        DB::raw('((TIMESTAMPDIFF(HOUR,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%24) AS rt_jam'), 
+		        DB::raw('((TIMESTAMPDIFF(MINUTE,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%60) AS rt_menit'),
+		        DB::raw('((TIMESTAMPDIFF(SECOND,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%60) AS rt_detik'),
+            )
             ->where(function ($query) use ($rm) {
                 $query->when(count($rm) > 0, function ($wew) use ($rm) {
                     $wew->whereIn('resep_keluar_h.norm', $rm);
