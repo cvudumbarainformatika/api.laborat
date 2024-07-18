@@ -22,6 +22,7 @@ Route::group([
     //RANAP
     Route::get('/allbillranap', [AllbillranapController::class, 'allbillranap']);
     Route::get('/allBillRekapByRuangan', [AllBillRekapByRuanganController::class, 'allBillRekapByRuangan']);
+    Route::get('/allBillRekapByRuanganperruangan', [AllBillRekapByRuanganController::class, 'allBillRekapByRuanganperruangan']);
 
     //incbg
     Route::get('/incbglap', [InacbgController::class, 'incbglap']);
