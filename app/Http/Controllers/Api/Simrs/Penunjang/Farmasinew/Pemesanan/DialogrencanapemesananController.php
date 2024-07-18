@@ -27,14 +27,14 @@ class DialogrencanapemesananController extends Controller
 
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
             ->distinct('perencana_pebelian_h.no_rencbeliobat')
-            ->get();
-        $raw = collect($rencanabeli);
-        $nomor = $raw->map(function ($item) {
+            ->pluck('perencana_pebelian_h.no_rencbeliobat');
+        // $raw = collect($rencanabeli);
+        // $nomor = $raw->map(function ($item) {
 
-            return $item->no_rencbeliobat;
-        });
+        //     return $item->no_rencbeliobat;
+        // });
 
-        $data = RencanabeliH::with('gudang:kode,nama')->whereIn('no_rencbeliobat', $nomor)
+        $data = RencanabeliH::with('gudang:kode,nama')->whereIn('no_rencbeliobat', $rencanabeli)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
             ->orderBy('tgl', 'desc')
             ->paginate(request('per_page'));

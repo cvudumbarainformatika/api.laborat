@@ -20,4 +20,8 @@ Route::group([
     Route::post('/kuncipemesanan', [PemesananController::class, 'kuncipemesanan']);
     Route::post('/batal', [PemesananController::class, 'batal']);
     Route::post('/batal-rinci', [PemesananController::class, 'batalRinci']);
+
+    // anggap selesai rencana
+    Route::post('/anggap-selesai', [PemesananController::class, 'anggapSelesai']);
+    
 });

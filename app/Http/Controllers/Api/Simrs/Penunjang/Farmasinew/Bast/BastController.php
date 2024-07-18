@@ -200,7 +200,7 @@ class BastController extends Controller
 
             return [
                 'no_bast' => $kwitansi,
-                'totalSemua' =>  $items[0]->jumlah_bast,
+                'totalSemua' =>  $items[0]->jumlah_bastx??$items[0]->jumlah_bast,
                 'tanggal' => $items[0]->tgl_bast,
                 'nomor' => $items[0]->nopemesanan,
                 'terima' => $items[0]->terima,

@@ -235,4 +235,21 @@ class PemesananController extends Controller
             ->get();
         return new JsonResponse($listpemesanan);
     }
+
+    public function anggapSelesai(Request $request){
+        $data=RencanabeliH::where('no_rencbeliobat',$request->no_rencbeliobat)->first();        
+        $rinci=RencanabeliR::where('no_rencbeliobat',$request->no_rencbeliobat)->where('flag','')->get();
+        if(count($rinci)>0){
+            foreach($rinci as $key){
+                $key->update([
+                    'flag'=>'1'
+                ]);
+            }
+        }
+        return new JsonResponse([
+            'message'=>'Sudah Dianggap Selesai',
+            'data'=>$data,
+            'rinci'=>$rinci,
+        ]);
+    }
 }
