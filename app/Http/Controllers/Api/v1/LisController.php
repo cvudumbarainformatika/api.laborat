@@ -95,6 +95,8 @@ class LisController extends Controller
                             'satuan' => $key['UNIT'],
                         ]);
                 }
+
+                $this->update_complete($request->ONO);
             }
 
             $message = array(
@@ -105,6 +107,8 @@ class LisController extends Controller
                 'LIS' => $temp
             );
 
+            
+
             event(new PlaygroundEvent($message));
             return response()->json(['message' => 'success'], 201);
 
@@ -113,5 +117,12 @@ class LisController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['message' => 'failed', $th]);
         }
+    }
+
+    public function update_complete($nota)
+    {
+       // update rs20 berdasarkan nota
+        TransaksiLaborat::where('rs2', $nota)->update(['rs20' => "2"]);
+       
     }
 }
