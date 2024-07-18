@@ -88,7 +88,8 @@ class HistorypasienfullController extends Controller
                 ]
             )
             ->orderby('tanggal', 'DESC')
-            ->paginate(request('per_page'));
-        return new JsonResponse($history);
+            ->get();
+            //->paginate(request('per_page'));
+        return new JsonResponse(['data' => $history]);
     }
 }
