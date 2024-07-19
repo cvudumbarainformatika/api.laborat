@@ -23,5 +23,7 @@ Route::group([
 
     // anggap selesai rencana
     Route::post('/anggap-selesai', [PemesananController::class, 'anggapSelesai']);
+    Route::post('/anggap-selesai-pesanan', [PemesananController::class, 'anggapSelesaiPemesanan']);
+
     
 });
