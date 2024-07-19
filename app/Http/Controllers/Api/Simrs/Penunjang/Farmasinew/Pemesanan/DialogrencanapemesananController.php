@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Pemesanan;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
@@ -24,7 +25,10 @@ class DialogrencanapemesananController extends Controller
             ->where('perencana_pebelian_h.flag', '2')
             ->where('perencana_pebelian_r.flag', '')
             ->where('perencana_pebelian_h.no_rencbeliobat', 'Like', '%' . request('no_rencbeliobat') . '%')
-
+            ->when(request('obat'),function($q){
+                $obat=Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('obat') . '%')->pluck('kd_obat');
+                $q->whereIn('perencana_pebelian_r.kdobat', $obat);
+            })
             ->groupby('perencana_pebelian_h.no_rencbeliobat', 'perencana_pebelian_r.kdobat')
             ->distinct('perencana_pebelian_h.no_rencbeliobat')
             ->pluck('perencana_pebelian_h.no_rencbeliobat');
@@ -36,6 +40,7 @@ class DialogrencanapemesananController extends Controller
 
         $data = RencanabeliH::with('gudang:kode,nama')->whereIn('no_rencbeliobat', $rencanabeli)
             ->where('no_rencbeliobat', 'LIKE', '%' . request('no_rencbeliobat') . '%')
+            
             ->orderBy('tgl', 'desc')
             ->paginate(request('per_page'));
 
