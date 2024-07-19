@@ -11,6 +11,6 @@ class TBPHeader extends Model
     // protected $connection = 'rs_coba';
     protected $guarded = ['id'];
     protected $table = 'tbp';
-    protected $timestamp = false;
+    public $timestamps = false;
 
 }

@@ -11,6 +11,7 @@ class NpkLS_rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'npkls_rinci';
+    public $timestamps = false;
     // protected $appends = array('totalcair');
     // public function getTotalcairAttribute()
     // {

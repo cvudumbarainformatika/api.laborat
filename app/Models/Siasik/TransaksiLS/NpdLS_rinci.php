@@ -13,6 +13,7 @@ class NpdLS_rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'npdls_rinci';
+    public $timestamps = false;
     // public function kodeall()
     // {
     //     return $this->belongsTo(Akun_Kepmendg50::class, 'kodeall', 'koderek50');
