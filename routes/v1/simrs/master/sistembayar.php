@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::get('/sistembayar',[SistemBayarController::class, 'index']);
     Route::get('/sistembayar2',[SistemBayarController::class, 'sistembayar2']);
+    Route::get('/allsistembayar',[SistemBayarController::class, 'allsistembayar']);
 });

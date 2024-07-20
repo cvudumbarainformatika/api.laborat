@@ -129,12 +129,18 @@ class AutogenController extends Controller
 
         // echo 'ok';
 
-        $dokter = BridgingbpjsHelper::get_url(
-            'vclaim',
-            'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/INT/TglRencanaKontrol/2024-07-11'
-        );
+        // $dokter = BridgingbpjsHelper::get_url(
+        //     'vclaim',
+        //     'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/INT/TglRencanaKontrol/2024-07-11'
+        // );
 
-        return $dokter;
+        // return $dokter;
+
+        $xid = 'org';
+        $secret_key = 'd4l4m';
+
+        $signature = hash_hmac('sha256', $xid, $secret_key);
+        return $signature;
     }
 
     public function lihatstokobateresepBydokter()
