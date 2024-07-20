@@ -11,7 +11,7 @@ class PendapatanLainRinci extends Model
     // protected $connection = 'rs_coba';
     protected $guarded = ['id'];
     protected $table = 'rs260';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function pendapatanlain()
     {
         return $this->belongsTo(PendapatanLain::class, 'rs1', 'rs1');

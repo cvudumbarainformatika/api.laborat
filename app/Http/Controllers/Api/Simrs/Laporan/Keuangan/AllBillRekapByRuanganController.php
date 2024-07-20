@@ -317,6 +317,7 @@ class AllBillRekapByRuanganController extends Controller
     {
         $dari = request('tgldari') .' 00:00:00';
         $sampai = request('tglsampai') .' 23:59:59';
+<<<<<<< HEAD
 
         $data = Mruangranap::select('rs24.rs1','rs24.rs4','rs24.rs5 as ruangan','rs23.rs1 as noreg')
         // ->with(
@@ -329,6 +330,26 @@ class AllBillRekapByRuanganController extends Controller
         ->leftjoin('rs23','rs23.rs5','rs24.rs1')
         ->whereBetween('rs23.rs4', [$dari, $sampai])
         ->orderBy('rs23.rs1')
+=======
+        $ruangan = request('ruangan');
+
+        $data = Kunjunganranap::select('rs23.rs1','rs23.rs2','rs15.rs2 as nama','rs23.rs3','rs23.rs4 as krs','rs23.rs5','rs23.rs19','rs23.titipan','rs24.rs4','rs24.rs5 as namaruangan')
+        ->with(
+            [
+                'rstigalimax' => function ($rstigalimax) use ($ruangan) {
+                    $rstigalimax->select('rs35x.rs1','rs35x.rs4', 'rs35x.rs7', 'rs35x.rs14', 'rs35x.rs16','rs35x.rs17')
+                    ->leftjoin('rs24', 'rs24.rs4','rs35x.rs16')
+                    ->where('rs35x.rs3', 'K1#')
+                    ->where('rs24.rs1', $ruangan)
+                    ->orderBy('rs35x.rs4', 'DESC');
+                },
+            ]
+        )
+        ->leftjoin('rs24','rs23.rs5','rs24.rs1')
+        ->leftjoin('rs15','rs23.rs2','rs15.rs1')
+        ->whereBetween('rs23.rs4', [$dari, $sampai])
+        ->where('rs24.rs4', $ruangan)
+>>>>>>> 1c1001cffeff497d1ff5b526ebb94dec220a7f24
         ->get();
         return new JsonResponse($data);
     }

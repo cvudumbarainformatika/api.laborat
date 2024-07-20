@@ -12,7 +12,7 @@ class Contrapost extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'contrapost';
-    protected $timestamp = false;
+    public $timestamps = false;
 
     public function mapbidang()
     {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Pemesanan;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpihakketiga;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
@@ -151,6 +152,13 @@ class PemesananController extends Controller
             ->whereIn('kd_ruang', $gud)
             ->when(count($supl)>0, function($q) use($supl) {
                 $q->whereIn('kdpbf',$supl);
+            },function($q){
+                $q->where('nopemesanan','LIKE', '%'. request('nopemesanan') .'%');
+            })
+            ->when(request('obat'),function($q){
+                $obat=Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('obat') . '%')->pluck('kd_obat');
+                $rin=PemesananRinci::select('nopemesanan')->whereIn('kdobat',$obat)->pluck('nopemesanan');
+                $q->whereIn('nopemesanan',$rin);
             })
             ->orderBy('tgl_pemesanan', 'desc')
             ->paginate(request('per_page'));
@@ -234,5 +242,47 @@ class PemesananController extends Controller
             ->where('nopemesanan', request('nopemesanan'))
             ->get();
         return new JsonResponse($listpemesanan);
+    }
+
+    public function anggapSelesai(Request $request){
+        $data=RencanabeliH::where('no_rencbeliobat',$request->no_rencbeliobat)->first();        
+        $rinci=RencanabeliR::where('no_rencbeliobat',$request->no_rencbeliobat)->where('flag','')->get();
+        if(count($rinci)<=0){
+            return new JsonResponse([
+                'message'=>'Tidak ada data yang belum selesai',
+                'data'=>$data,
+                'rinci'=>$rinci,
+            ],410);
+        }
+        if(count($rinci)>0){
+            foreach($rinci as $key){
+                $key->update([
+                    'flag'=>'1'
+                ]);
+            }
+        }
+        return new JsonResponse([
+            'message'=>'Sudah Dianggap Selesai',
+            'data'=>$data,
+            'rinci'=>$rinci,
+        ]);
+    }
+
+    public function  anggapSelesaiPemesanan(Request $request){
+        // PemesananHeder
+        $data=PemesananHeder::where('nopemesanan',$request->nopemesanan)->where('flag','1')->first();
+        if(!$data){
+            return new JsonResponse([
+                'message'=>'Data tidak ditemukan',
+                'data'=>$data,
+            ],410);
+        }
+        $data->update([
+            'flag'=>'2'
+        ]);
+        return new JsonResponse([
+            'message'=>'Sudah Dianggap Selesai',
+            'data'=>$data,
+        ]);
     }
 }
