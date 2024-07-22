@@ -373,7 +373,7 @@ class StokrealController extends Controller
     public function listStokMinDepo()
     {
         $kdruang = request('kdruang');
-        $stokreal = Stokreal::select(
+        $stokreal = Mobatnew::select(
             'stokreal.id as idx',
             'stokreal.kdruang',
             'stokreal.jumlah',
@@ -391,19 +391,24 @@ class StokrealController extends Controller
             DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
 
         )
-            ->where('stokreal.flag', '')
-            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->leftjoin('stokreal', 'new_masterobat.kd_obat', 'stokreal.kdobat')
             ->leftjoin('min_max_ruang', function ($anu) {
                 $anu->on('min_max_ruang.kd_obat', 'stokreal.kdobat')
                     ->on('min_max_ruang.kd_ruang', 'stokreal.kdruang');
             })
+            // ->where(function ($q) use($kdruang){
+            //     $q->where(function($w) use($kdruang){
+            //         $w;
+            //     });//->orWhereNull('stokreal.jumlah');
+            // })
+            ->where('stokreal.flag', '')
             ->where('stokreal.kdruang', $kdruang)
-            // ->where('stokreal.jumlah', '>', 0)
             ->where(function ($x) {
-                $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
-                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
+                ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
             })
-            ->havingRaw('minvalue >= total')
+            
+            // ->havingRaw('minvalue >= total')
             ->with([
                 'permintaanobatrinci' => function ($pr) use ($kdruang) {
                     $pr->select(
