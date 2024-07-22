@@ -391,24 +391,29 @@ class StokrealController extends Controller
             DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
 
         )
-            ->leftjoin('stokreal', 'new_masterobat.kd_obat', 'stokreal.kdobat')
-            ->leftjoin('min_max_ruang', function ($anu) {
-                $anu->on('min_max_ruang.kd_obat', 'stokreal.kdobat')
-                    ->on('min_max_ruang.kd_ruang', 'stokreal.kdruang');
+            ->leftjoin('stokreal', function($x) use($kdruang){
+                $x->on('new_masterobat.kd_obat','=', 'stokreal.kdobat')
+                    ->where('stokreal.flag','=', '')
+                    ->where('stokreal.kdruang','=', $kdruang)
+            ;
             })
-            // ->where(function ($q) use($kdruang){
-            //     $q->where(function($w) use($kdruang){
-            //         $w;
-            //     });//->orWhereNull('stokreal.jumlah');
-            // })
-            ->where('stokreal.flag', '')
-            ->where('stokreal.kdruang', $kdruang)
-            ->where(function ($x) {
-            $x->orwhere('stokreal.kdobat', 'like', '%' . request('q') . '%')
-                ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            ->leftjoin('min_max_ruang', function ($anu) use($kdruang){
+                $anu->on('min_max_ruang.kd_obat','=', 'new_masterobat.kd_obat')
+                    ->where('min_max_ruang.kd_ruang','=', $kdruang);
             })
             
-            // ->havingRaw('minvalue >= total')
+            ->where(function ($x) {
+            $x->orwhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
+                ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
+            // ->where(function ($x) {
+            //     $x->orWhereNull('stokreal.jumlah')
+            //         ->orWhereNotNull('stokreal.jumlah')
+            //         ->orWhereNull('min_max_ruang.min')
+            //         ->orWhereNotNull('min_max_ruang.min')
+            //         ;
+            //     })
+            
             ->with([
                 'permintaanobatrinci' => function ($pr) use ($kdruang) {
                     $pr->select(
@@ -431,6 +436,7 @@ class StokrealController extends Controller
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->orderBy(DB::raw('(min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100'), 'DESC')
             ->orderBy(DB::raw('min_max_ruang.min'), 'DESC')
+            // ->simplePaginate(request('per_page'));
             ->paginate(request('per_page'));
         $stokreal->append('harga');
 
