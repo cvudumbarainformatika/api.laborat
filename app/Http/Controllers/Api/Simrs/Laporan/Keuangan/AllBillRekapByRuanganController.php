@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -316,6 +317,20 @@ class AllBillRekapByRuanganController extends Controller
     {
         $dari = request('tgldari') .' 00:00:00';
         $sampai = request('tglsampai') .' 23:59:59';
+<<<<<<< HEAD
+
+        $data = Mruangranap::select('rs24.rs1','rs24.rs4','rs24.rs5 as ruangan','rs23.rs1 as noreg')
+        // ->with(
+        //     [
+        //         'rstigalimax' => function($rstigalimax) {
+        //             $rstigalimax->where('rs3','K1#');
+        //         }
+        //     ]
+        // )
+        ->leftjoin('rs23','rs23.rs5','rs24.rs1')
+        ->whereBetween('rs23.rs4', [$dari, $sampai])
+        ->orderBy('rs23.rs1')
+=======
         $ruangan = request('ruangan');
 
         $data = Kunjunganranap::select('rs23.rs1','rs23.rs2','rs15.rs2 as nama','rs23.rs3','rs23.rs4 as krs','rs23.rs5','rs23.rs19','rs23.titipan','rs24.rs4','rs24.rs5 as namaruangan')
@@ -334,6 +349,7 @@ class AllBillRekapByRuanganController extends Controller
         ->leftjoin('rs15','rs23.rs2','rs15.rs1')
         ->whereBetween('rs23.rs4', [$dari, $sampai])
         ->where('rs24.rs4', $ruangan)
+>>>>>>> 1c1001cffeff497d1ff5b526ebb94dec220a7f24
         ->get();
         return new JsonResponse($data);
     }

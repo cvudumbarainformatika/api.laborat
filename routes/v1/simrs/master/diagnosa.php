@@ -9,4 +9,5 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/listdiagnosa', [DiagnosaController::class, 'listdiagnosa']);
+    Route::get('/diagnosa-autocomplete', [DiagnosaController::class, 'diagnosa_autocomplete']);
 });

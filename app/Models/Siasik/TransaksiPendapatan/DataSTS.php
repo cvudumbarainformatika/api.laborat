@@ -11,7 +11,7 @@ class DataSTS extends Model
     // protected $connection = 'rs_coba';
     protected $guarded = ['id'];
     protected $table = 'keu_trans_setor';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function tbp()
     {
         return $this->hasMany(TBPHeader::class, 'noSetor', 'noSetor');

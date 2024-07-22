@@ -11,6 +11,7 @@ class NpkLS_heder extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'npkls_heder';
+    public $timestamps = false;
 
     public function npklsrinci()
     {

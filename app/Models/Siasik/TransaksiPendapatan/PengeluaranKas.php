@@ -10,5 +10,5 @@ class PengeluaranKas extends Model
     use HasFactory;
     protected $guarded = ['id'];
     protected $table = 'pengeluarankhaskecil';
-    protected $timestamp = false;
+    public $timestamps = false;
 }
