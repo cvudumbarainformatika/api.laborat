@@ -557,17 +557,18 @@ class EresepController extends Controller
 
             if ($request->jenisresep == 'Racikan') {
                 if ($request->tiperacikan == 'DTD') {
-                    $simpandtd = Permintaanresepracikan::create(
+                    $simpandtd = Permintaanresepracikan::updateOrCreate(
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $noresep,
                             'namaracikan' => $request->namaracikan,
+                            'kdobat' => $request->kodeobat,
+                        ],[
                             'tiperacikan' => $request->tiperacikan,
                             'jumlahdibutuhkan' => $request->jumlahdibutuhkan, // jumlah racikan
                             'aturan' => $request->aturan,
                             'konsumsi' => $request->konsumsi,
                             'keterangan' => $request->keterangan,
-                            'kdobat' => $request->kodeobat,
                             'kandungan' => $request->kandungan ?? '',
                             'fornas' => $request->fornas ?? '',
                             'forkit' => $request->forkit ?? '',
@@ -593,17 +594,19 @@ class EresepController extends Controller
                     //     $simpandtd->load('mobat:kd_obat,nama_obat');
                     // }
                 } else {
-                    $simpannondtd = Permintaanresepracikan::create(
+                    $simpannondtd = Permintaanresepracikan::updateOrCreate(
                         [
                             'noreg' => $request->noreg,
                             'noresep' => $noresep,
                             'namaracikan' => $request->namaracikan,
+                            'kdobat' => $request->kodeobat,
+                        ],
+                        [
                             'tiperacikan' => $request->tiperacikan,
                             'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
                             'aturan' => $request->aturan,
                             'konsumsi' => $request->konsumsi,
                             'keterangan' => $request->keterangan,
-                            'kdobat' => $request->kodeobat,
                             'kandungan' => $request->kandungan ?? '',
                             'fornas' => $request->fornas ?? '',
                             'forkit' => $request->forkit ?? '',
@@ -630,11 +633,13 @@ class EresepController extends Controller
                     // }
                 }
             } else {
-                $simpanrinci = Permintaanresep::create(
+                $simpanrinci = Permintaanresep::updateOrCreate(
                     [
                         'noreg' => $request->noreg,
                         'noresep' => $noresep,
                         'kdobat' => $request->kodeobat,
+                    ],
+                    [                        
                         'kandungan' => $request->kandungan ?? '',
                         'fornas' => $request->fornas ?? '',
                         'forkit' => $request->forkit ?? '',
