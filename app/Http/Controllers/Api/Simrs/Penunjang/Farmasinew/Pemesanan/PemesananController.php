@@ -269,6 +269,8 @@ class PemesananController extends Controller
     }
 
     public function  anggapSelesaiPemesanan(Request $request){
+        try {
+            DB::connection('farmasi')->beginTransaction();
         // PemesananHeder
         $data=PemesananHeder::where('nopemesanan',$request->nopemesanan)->where('flag','1')->first();
         if(!$data){
@@ -280,9 +282,20 @@ class PemesananController extends Controller
         $data->update([
             'flag'=>'2'
         ]);
+        $rin=PemesananRinci::where('nopemesanan',$request->nopemesanan)->get();
+        foreach($rin as $key){
+            $key->update([
+                'flag'=>'1'
+            ]);
+        }
+        DB::connection('farmasi')->commit();
         return new JsonResponse([
             'message'=>'Sudah Dianggap Selesai',
             'data'=>$data,
         ]);
+    } catch (\Exception $e) {
+        DB::connection('farmasi')->rollBack();
+        return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
+    }
     }
 }
