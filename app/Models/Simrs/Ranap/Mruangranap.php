@@ -3,6 +3,8 @@
 namespace App\Models\Simrs\Ranap;
 
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,4 +21,25 @@ class Mruangranap extends Model
     {
         return $this->hasMany(Rstigalimax::class, 'rs16', 'rs4');
     }
+
+    public function akomodasikamar()
+    {
+        return $this->hasMany(Rstigalimax::class, 'rs16', 'rs4');
+    }
+
+    public function tindakandokter()
+    {
+        return $this->hasMany(Tindakan::class, 'rs22', 'rs4');
+    }
+
+    public function tindakanperawat()
+    {
+        return $this->hasMany(Tindakan::class, 'rs22', 'rs4');
+    }
+
+    public function keperawatan()
+    {
+        return $this->hasMany(Keperawatan::class, 'rs8', 'rs4');
+    }
+
 }

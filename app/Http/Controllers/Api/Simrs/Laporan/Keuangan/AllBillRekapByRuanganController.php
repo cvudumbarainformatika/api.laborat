@@ -318,17 +318,42 @@ class AllBillRekapByRuanganController extends Controller
         $dari = request('tgldari') .' 00:00:00';
         $sampai = request('tglsampai') .' 23:59:59';
 
-        $data = Mruangranap::select('rs24.rs1','rs24.rs4','rs24.rs5 as ruangan','rs23.rs1 as noreg')
-        // ->with(
-        //     [
-        //         'rstigalimax' => function($rstigalimax) {
-        //             $rstigalimax->where('rs3','K1#');
-        //         }
-        //     ]
-        // )
-        ->leftjoin('rs23','rs23.rs5','rs24.rs1')
-        ->whereBetween('rs23.rs4', [$dari, $sampai])
-        ->orderBy('rs23.rs1')
+        $data = Mruangranap::select('rs24.rs1','rs24.rs4','rs24.rs5 as ruangan')
+        ->with(
+            [
+                'rstigalimax' => function($rstigalimax) use ($dari,$sampai) {
+                    $rstigalimax->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')
+                    ->whereBetween('rs4', [$dari, $sampai])
+                    ->orderBy('rs4', 'DESC');
+                },
+                'akomodasikamar' => function($akomodasikamar) use ($dari,$sampai) {
+                    $akomodasikamar->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')
+                    ->whereBetween('rs4', [$dari, $sampai])
+                    ->orderBy('rs4', 'DESC');
+                },
+                'tindakandokter' => function ($tindakandokter) use ($dari,$sampai) {
+                    $tindakandokter->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
+                        ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                        ->where('rs21.rs13', '1')
+                        ->whereBetween('rs73.rs3', [$dari, $sampai]);
+                    //->where('rs73.rs22','POL014');
+                },
+                'tindakanperawat' => function ($tindakanperawat) use ($dari,$sampai) {
+                    $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
+                        ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
+                        ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                        ->whereIn('rs21.rs13', ['2', '3'])
+                        ->whereBetween('rs73.rs3', [$dari, $sampai]);
+                    //->where('rs73.rs22','POL014');
+                },
+                'keperawatan' => function ($keperawatan) use ($dari,$sampai){
+                    $keperawatan->select('rs1', 'rs4', 'rs5','rs8')
+                    ->whereBetween('rs2', [$dari, $sampai]);
+                },
+            ]
+        )
+        ->groupBy('rs24.rs4')
         ->get();
         return new JsonResponse($data);
     }
