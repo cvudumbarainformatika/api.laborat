@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Bast;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -161,6 +162,16 @@ class BastController extends Controller
     {
         $res1 = PenerimaanHeder::select('nobast')
             ->where('nobast', '<>', '')
+            ->when(request('q'),function($q){
+                $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
+                $q->when(count($pihak)>0, function($x) use($pihak){
+                    $x->whereIn('kdpbf', $pihak);
+                },
+                function($r){
+                    $r->where('nobast','LIKE','%'.request('q').'%');
+                });
+                
+            })
             // ->orderBy('nobast', 'DESC')
             // ->orderBy('tgl_bast', 'DESC')
             // ->get();
