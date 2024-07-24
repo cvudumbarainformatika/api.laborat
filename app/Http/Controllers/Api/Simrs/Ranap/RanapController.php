@@ -161,6 +161,7 @@ class RanapController extends Controller
                         'dokter:nama,kdpegsimrs',
                         'permintaanresep.mobat:kd_obat,nama_obat',
                         'permintaanracikan.mobat:kd_obat,nama_obat',
+                        'sistembayar'
                     ])
                         ->orderBy('id', 'DESC');
                 },

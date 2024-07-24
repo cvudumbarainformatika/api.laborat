@@ -24,4 +24,13 @@ class SistemBayarController extends Controller
         return new JsonResponse($data);
     }
 
+    public function allsistembayar()
+    {
+        $data = Msistembayar::query()
+        ->selectRaw('rs1 as kode, rs2 as sistembayar, groups, hidden')
+        ->where('rs1', '<>' ,'') // menampilkan yg tidak di hide
+        ->get();
+        return new JsonResponse($data);
+    }
+
 }

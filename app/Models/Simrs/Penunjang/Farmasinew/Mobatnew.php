@@ -7,6 +7,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
@@ -27,6 +28,18 @@ class Mobatnew extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+
+    public function getHargaAttribute()
+    {
+        $kdobat = $this->kd_obat;
+        $daftar = DaftarHarga::selectRaw('max(harga) as harga')
+            ->where('kd_obat', $kdobat)
+            ->orderBy('tgl_mulai_berlaku', 'desc')
+            ->limit(5)
+            ->first();
+        $harga = $daftar->harga;
+        return $harga;
+    }
     public function scopeMobat($data)
     {
         return $data->select([
@@ -194,5 +207,9 @@ class Mobatnew extends Model
     public function returpenjualan()
     {
         return $this->hasMany(Returpenjualan_r::class, 'kdobat', 'kd_obat');
+    }
+    public function permintaanobatrinci()
+    {
+        return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
     }
 }

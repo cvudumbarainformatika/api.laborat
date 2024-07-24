@@ -14,4 +14,20 @@ class DiagnosaController extends Controller
         $listdiagnosa = Diagnosa_m::where('disable_status', '')->orderBy('rs3')->limit(25)->get();
         return new JsonResponse($listdiagnosa);
     }
+
+    public function diagnosa_autocomplete()
+    {
+       $data = Diagnosa_m::query()
+        ->select('rs1 as icd', 'rs2 as dtd', 'rs3 as ketindo', 'rs4 as keterangan')
+        ->where('disable_status', '')
+        ->where(function ($q) {
+            $q->where('rs1', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs2', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs3', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs4', 'LIKE', '%' . request('q') . '%');
+        })
+        ->limit(15)->get();
+
+        return new JsonResponse($data);
+    }
 }

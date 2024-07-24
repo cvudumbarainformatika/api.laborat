@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/master'
 ], function () {
     Route::get('/nakes/selaindokter',[NakesController::class, 'selaindokter']);
+    Route::get('/nakes/dokter',[NakesController::class, 'dokter']);
 });

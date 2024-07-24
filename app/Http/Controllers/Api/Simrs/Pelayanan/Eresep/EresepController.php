@@ -91,7 +91,7 @@ class EresepController extends Controller
 
     public function copiresep(Request $request)
     {
-        return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
+        // return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
         $response = [];
         $cekpemberianobat = false;
         try {
@@ -156,67 +156,73 @@ class EresepController extends Controller
                 $noresep = $noreseps;
             }
 
-            $cekjumlahstok = Stokreal::select('stokreal.kdobat as kdobat', 'new_masterobat.sistembayar', DB::raw('sum(jumlah) as jumlahstok'))
-                ->whereIn('stokreal.kdobat', $kdobat)
-                ->whereIn('stokreal.kdruang', $kddepo)
-                // ->where('stokreal.jumlah', '>', 0)
+            $cekjumlahstok = Stokreal::select('stokreal.kdobat as kdobat', DB::raw('sum(jumlah) as jumlahstok'))
+                ->whereIn('kdobat', $kdobat)
+                ->whereIn('kdruang', $kddepo)
+                // ->where('jumlah', '>', 0)
                 ->with([
-                    'transnonracikan' => function ($transnonracikan) {
+                    'transnonracikan' => function ($transnonracikan) use ($kddepo) {
                         $transnonracikan->select(
+                            // 'resep_keluar_r.kdobat as kdobat',
                             'resep_permintaan_keluar.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
                         )
-                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
-                        ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                        ->groupBy('resep_permintaan_keluar.kdobat');
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                            ->whereIn('resep_keluar_h.depo', $kddepo)
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                            ->groupBy('resep_permintaan_keluar.kdobat');
                     },
-                    'transracikan' => function ($transracikan) {
+                    'transracikan' => function ($transracikan) use ($kddepo) {
                         $transracikan->select(
+                            // 'resep_keluar_racikan_r.kdobat as kdobat',
                             'resep_permintaan_keluar_racikan.kdobat as kdobat',
                             'resep_keluar_h.depo as kdruang',
                             DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
                         )
-                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
-                        ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                        ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                            ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar_racikan.noresep')
+                            ->where('resep_keluar_h.depo', $kddepo)
+                            ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                            ->groupBy('resep_permintaan_keluar_racikan.kdobat');
                     },
-                    'permintaanobatrinci' => function ($permintaanobatrinci) {
+                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($kddepo) {
                         $permintaanobatrinci->select(
                             'permintaan_r.no_permintaan',
                             'permintaan_r.kdobat',
                             DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
                         )
-                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                        })
-                        ->whereNull('mutasi_gudangdepo.kd_obat')
-                        ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                        ->groupBy('permintaan_r.kdobat');
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            // biar yang ada di tabel mutasi ga ke hitung
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                            ->where('permintaan_h.tujuan', $kddepo)
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
                     },
-                    'persiapanrinci' => function ($res) {
+                    'persiapanrinci' => function ($res) use ($request) {
                         $res->select(
                             'persiapan_operasi_rincis.kd_obat',
-                            DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah')
+
+                            DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
                         )
-                        ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
-                        ->whereIn('persiapan_operasis.flag', ['', '1'])
-                        ->groupBy('persiapan_operasi_rincis.kd_obat');
+                            ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                            ->whereIn('persiapan_operasis.flag', ['', '1'])
+                            ->groupBy('persiapan_operasi_rincis.kd_obat');
                     },
                 ])
-                ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
                 ->groupBy('kdobat')
                 ->get();
-
-            $wew = collect($cekjumlahstok)->map(function ($x) use ($kddepo) {
+            $wew = collect($cekjumlahstok)->map(function ($x, $y) use ($request) {
                 $total = $x->jumlahstok ?? 0;
-                $jumlahper = in_array('Gd-04010103', $kddepo) ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
+                $jumlahper = $request->kodedepo === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
                 $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
                 $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-                $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0;
-                $x->alokasi = (float)$total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
+                $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+                $x->alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci - (float)$jumlahper;
                 return $x;
             });
 
@@ -234,16 +240,17 @@ class EresepController extends Controller
             $sorted = $collection->sortBy(function ($item) use ($kdobat) {
                 return array_search($item['kodeobat'], $kdobat);
             })->values()->toArray();
-           
-            // Extract ordered data for display
+            
             $jumlahstok = [];
             $alokasi = [];
             $sistembayar = [];
+            $kdobats = [];
 
             foreach ($sorted as $result) {
                 $jumlahstok[] = $result['jumlahstok'];
                 $alokasi[] = $result['alokasi'];
                 $sistembayar[] = $result['sistembayar'];
+                $kdobats[] = $result['kodeobat'];
             }
 
             $statuses = [];
@@ -268,19 +275,9 @@ class EresepController extends Controller
                 }
             }
 
-            // $hargajualx = [];
-            // $harga = [];
-            // $har = HargaHelper::getHarga($kdobat, $groupsistembayar);
-            // $res = $har['res'];
-            // if ($res) {
-            //     throw new \Exception('Obat ini tidak mempunyai harga');
-            // }
-            // $hargajualx = $har['hargaJual'];
-            // $harga = $har['harga'];
-
             foreach ($request->kirimResep as $key => $record) {
                 try {
-
+                    
                     if ($record['jenisresep'] == 'nonRacikan') {
                         if ($record['jumlah_diminta'] > $alokasi[$key]) {
                             throw new \Exception('Maaf Stok Alokasi Tidak Mencukupi...!!!');
@@ -303,7 +300,7 @@ class EresepController extends Controller
                         }
                             
                         $lanjut = $record['lanjuTr'];
-                        if ($statuses[$key] == 1 && $lanjut !== '1') {
+                        if ($statuses[$key] === 1 && $lanjut !== '1') {
 
                         foreach ($hasil[$key] as $prescription) {
                             $total = $prescription['total'];
@@ -347,6 +344,7 @@ class EresepController extends Controller
                             'tiperesep' => $tiperesep,
                             'iter_expired' => $iter_expired,
                             'iter_jml' => $iter_jml,
+                            'flag_dari' => '2',
                             // 'iter_expired' => $record['iter_expired ?? '',
                             'tagihanrs' => $record['tagihanrs'] ?? 0,
                         ]
@@ -605,13 +603,15 @@ class EresepController extends Controller
                     ];
                 }
             } else {
+                foreach ($kdobat as $item) {
                     $response[] = [
                         'status' => 2,
-                        'kdobat' => $kdobat,
+                        'kdobat' => $item,
                         'hasil' => [],
                         'selisih' => null,
                         'total' => null,
                     ];
+                }
             }
         // }
 
@@ -620,6 +620,8 @@ class EresepController extends Controller
         $sorted = $collection->sortBy(function ($item) use ($kdobat) {
             return array_search($item['kdobat'], $kdobat);
         })->values()->toArray();
+
+        // print_r($sorted);
 
         return(json_encode($sorted));
     }
