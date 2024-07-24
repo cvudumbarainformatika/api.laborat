@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Siasik\TransaksiSisaAnggaran;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
+use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,54 +41,31 @@ class SilpaController extends Controller
     }
     public function transSilpa(Request $request){
 
-        try{
-            DB::beginTransaction();
-            if (!$request->has('id')){
-                SisaAnggaran::firstOrCreate([
-                    'notrans'=> self::buatnomor(),
-                    'tanggal' => $request->tanggal,
-                    'tahun' => $request->tahun,
-                    'nominal'=> $request->nominal,
-                    'koderek50'=> '6.1.01.08.01.0001',
-                    'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
-                    'kode79' => '6.1.1',
-                    'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
-                ]);
-            }
-            else {
-                $data = SisaAnggaran::find($request->id);
-                $data->update([
-                    'notrans'=> self::buatnomor(),
-                    'tanggal' => $request->tanggal,
-                    'tahun' => $request->tahun,
-                    'nominal'=> $request->nominal,
-                    'koderek50'=> '6.1.01.08.01.0001',
-                    'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
-                    'kode79' => '6.1.1',
-                    'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
-                ]);
-            }
-            DB::commit();
-            return response()->json(['message' => 'Berhasil, Data Tersimpan'], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
+        $nomor = $request->notrans ?? self::buatnomor();
+        $simpan = SisaAnggaran::updateOrCreate(
+            [
+                'notrans'=> $nomor,
+            ],
+            [
+                'tanggal' => $request->tanggal,
+                'tahun' => $request->tahun,
+                'nominal'=> $request->nominal,
+                'koderek50'=> '6.1.01.08.01.0001',
+                'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
+                'kode79' => '6.1.1',
+                'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
+            ]
+        );
+        if (!$simpan){
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }else {
+            return new JsonResponse(['message' => 'Berhasil di Simpan'], 200);
         }
-        // $data = SisaAnggaran::create([
-        // 'notrans'=> self::buatnomor(),
-        // 'tanggal' => $request->tanggal,
-        // 'tahun' => $request->tahun,
-        // 'nominal'=> $request->nominal,
-        // 'koderek50'=> '6.1.01.08.01.0001',
-        // 'uraian50' => 'Sisa Lebih Perhitungan Anggaran BLUD',
-        // 'kode79' => '6.1.1',
-        // 'uraian79' => 'Sisa Lebih Perhitungan Anggaran Tahun Anggaran Sebelumnya'
-        // ]);
-        // ($request->only('bulan','tahun','rekening','nilaisaldo'));
-
-        // return new JsonResponse(['message' => 'berhasil disimpan', 'data' => $data], 200);
     }
     public static function buatnomor(){
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->account_pass;
         $huruf = ('SILPA-BLUD');
         // $no = ('4.02.0.00.0.00.01.0000');
         date_default_timezone_set('Asia/Jakarta');
@@ -99,7 +77,7 @@ class SilpaController extends Controller
         $cek = SisaAnggaran::count();
         if ($cek == null){
             $urut = "0001";
-            $sambung = $urut.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
+            $sambung = $urut.'/'.$pegawai.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
         }
         else{
             $ambil=SisaAnggaran::all()->last();
@@ -118,7 +96,7 @@ class SilpaController extends Controller
             else {
                 $urut = (int)$urut;
             }
-            $sambung = $urut.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
+            $sambung = $urut.'/'.$pegawai.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
         }
 
         return $sambung;

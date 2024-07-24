@@ -39,43 +39,24 @@ class TransSaldoController extends Controller
 
     }
     public function transSaldo(Request $request){
-        try{
-            DB::beginTransaction();
-            if (!$request->has('id')){
-                SaldoAwal_PPK::firstOrCreate([
-                    'noregister'=> self::buatnomor(),
-                    'tanggal' => $request->tanggal,
-                    'tahun'=> date('Y'),
-                    'rekening' => $request->rekening,
-                    'namaRek' => $request->namaRek,
-                    'nilaisaldo' => $request->nilaisaldo
-                ]);
-            } else {
-                $data = SaldoAwal_PPK::find($request->id);
-                $data->update([
-                    'noregister'=> self::buatnomor(),
-                    'tanggal' => $request->tanggal,
-                    'tahun'=> date('Y'),
-                    'rekening' => $request->rekening,
-                    'namaRek' => $request->namaRek,
-                    'nilaisaldo' => $request->nilaisaldo
-                ]);
-            }
-            DB::commit();
-            return response()->json(['message' =>'Berhasil Disimpan', 'succes'], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
+        $nomor = $request->noregister ?? self::buatnomor();
+        $simpan = SaldoAwal_PPK::updateOrCreate(
+            [
+                'noregister'=> $nomor,
+            ],
+            [
+                'tanggal' => $request->tanggal,
+                'tahun'=> date('Y'),
+                'rekening' => $request->rekening,
+                'namaRek' => $request->namaRek,
+                'nilaisaldo' => $request->nilaisaldo
+            ]
+        );
+        if (!$simpan){
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }else {
+            return new JsonResponse(['message' => 'Berhasil di Simpan'], 200);
         }
-        // $data = SaldoAwal_PPK::create([
-        // 'bulan'=> $request->bulan,
-        // 'tahun' => $request->tahun,
-        // 'rekening'=> $request->rekening,
-        // 'nilaisaldo'=> $request->nilaisaldo,
-        // ]);
-        // // ($request->only('bulan','tahun','rekening','nilaisaldo'));
-
-        // return new JsonResponse(['msg' => 'berhasil disimpan', 'data' => $data], 200);
     }
     public function hapussaldo(Request $request){
         $id=$request->id;
