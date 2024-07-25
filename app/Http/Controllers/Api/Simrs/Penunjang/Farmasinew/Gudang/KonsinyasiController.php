@@ -331,6 +331,17 @@ class KonsinyasiController extends Controller
             'bast:kdpegsimrs,nama',
             'bayar:kdpegsimrs,nama',
         ])
+            ->when(request('q'),function($q){
+                $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
+                $q->when(count($pihak)>0, function($x) use($pihak){
+                    $x->whereIn('kdpbf', $pihak)
+                    ->orWhere('nobast','LIKE','%'.request('q').'%');
+                },
+                function($r){
+                    $r->where('nobast','LIKE','%'.request('q').'%');
+                });
+                
+            })
             ->paginate(request('per_page'));
 
         return new JsonResponse($data);
@@ -346,6 +357,17 @@ class KonsinyasiController extends Controller
             'bast:kdpegsimrs,nama',
             'bayar:kdpegsimrs,nama',
         ])
+        ->when(request('q'),function($q){
+            $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
+            $q->when(count($pihak)>0, function($x) use($pihak){
+                $x->whereIn('kdpbf', $pihak)
+                ->orWhere('nobast','LIKE','%'.request('q').'%');
+            },
+            function($r){
+                $r->where('nobast','LIKE','%'.request('q').'%');
+            });
+            
+        })
             ->whereNotNull('tgl_bast')
             ->paginate(request('per_page'));
 
