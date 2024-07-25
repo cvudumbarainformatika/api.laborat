@@ -93,7 +93,8 @@ class Mpasien extends Model
             'gelardepan as gelardepan',
             'gelarbelakang as gelarbelakang',
             'bacatulis as bacatulis',
-            'kdhambatan as kdhambatan'
+            'kdhambatan as kdhambatan',
+            'satset_uuid as idsatset',
         ]);
     }
 

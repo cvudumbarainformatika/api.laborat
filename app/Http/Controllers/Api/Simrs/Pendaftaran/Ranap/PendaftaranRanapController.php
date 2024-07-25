@@ -150,4 +150,9 @@ class PendaftaranRanapController extends Controller
         return ($cekpsereta);
     }
 
+    public function simpanPasien(Request $request)
+    {
+        
+    }
+
 }

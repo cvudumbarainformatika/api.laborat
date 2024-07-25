@@ -322,9 +322,11 @@ class AllBillRekapByRuanganController extends Controller
         ->with(
             [
                 'rstigalimax' => function($rstigalimax) use ($dari,$sampai) {
-                    $rstigalimax->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')
-                    ->whereBetween('rs4', [$dari, $sampai])
-                    ->orderBy('rs4', 'DESC');
+                    $rstigalimax->select('rs23.rs1','rs35x.rs4', 'rs35x.rs7', 'rs35x.rs14', 'rs35x.rs16','rs35x.rs17')->where('rs35x.rs3', 'K1#')
+                    ->whereBetween('rs23.rs4', [$dari, $sampai])
+                    ->leftjoin('rs23','rs23.rs1','rs35x.rs1')
+                    ->whereIn('rs23.rs22', ['2','3'])
+                    ->latest('rs35x.rs4');
                 },
                 'akomodasikamar' => function($akomodasikamar) use ($dari,$sampai) {
                     $akomodasikamar->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')

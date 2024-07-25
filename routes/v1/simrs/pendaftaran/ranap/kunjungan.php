@@ -12,4 +12,5 @@ Route::group([
     Route::get('list-pendaftararan-ranap', [PendaftaranRanapController::class, 'list_pendaftaran_ranap']);
     Route::get('wheatherapi-country', [PendaftaranRanapController::class, 'wheatherapi_country']);
     Route::get('cek-peserta-bpjs', [PendaftaranRanapController::class, 'cekPesertaBpjs']);
+    Route::post('simpanpendaftaran-byform', [PendaftaranRanapController::class, 'simpankunjunganpoli']);
 });
