@@ -15,5 +15,5 @@ Route::group([
     Route::get('/simpan', [NPD_LSController::class, 'simpan']);
 
     Route::get('/listkontrak', [KontrakController::class, 'listkontrak']);
-
+    Route::get('/simpankontrak', [KontrakController::class, 'simpankontrak']);
 });

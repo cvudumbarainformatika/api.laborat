@@ -11,5 +11,5 @@ class Mapping_Bidang_Ptk_Kegiatan extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'mappingpptkkegiatan';
-    public $timestamp = false;
+    public $timestamps = false;
 }

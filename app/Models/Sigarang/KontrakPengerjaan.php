@@ -10,7 +10,9 @@ class KontrakPengerjaan extends Model
     use HasFactory;
     protected $connection = 'siasik';
     protected $table = 'kontrakPengerjaan_header';
-    protected $fillable = [];
+    // protected $fillable = [];
+    protected $guarded = [];
+    public $timestamps = false;
 
 
     public function penyedia()

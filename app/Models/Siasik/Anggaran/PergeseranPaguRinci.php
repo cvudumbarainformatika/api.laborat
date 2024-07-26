@@ -14,7 +14,7 @@ class PergeseranPaguRinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 't_tampung';
-    public $timestamp = false;
+    public $timestamps = false;
 
     public function npdls_rinci(){
         return $this->hasMany(NpdLS_rinci::class,'koderek50', 'koderek50');
