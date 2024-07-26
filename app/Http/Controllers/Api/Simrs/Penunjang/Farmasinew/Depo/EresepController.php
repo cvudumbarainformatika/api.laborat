@@ -945,8 +945,18 @@ class EresepController extends Controller
 
         // Construct the query using Eloquent
         $query = Resepkeluarheder::with([
-            'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-            'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            // 'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            // 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'rincian'=>function ($ri){
+                $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
+                ->with('mobat:kd_obat,nama_obat,satuan_k,status_kronis')
+                ->groupBy('kdobat','noresep','noreg');
+            },
+            'rincianracik'=>function ($ri){
+                $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
+                ->with('mobat:kd_obat,nama_obat,satuan_k,status_kronis')
+                ->groupBy('kdobat','noresep','noreg','namaracikan');
+            },
             'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
             'permintaanresep.aturansigna:signa,jumlah',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
