@@ -166,17 +166,17 @@ class RegistrasiRanapController extends Controller
       // UPDATE rs25
       // if ($request->titpan !== null || $request->titpan !== '') {
         // $ruangan = $titipan === '' ? $request->kode_ruang : $titipan;
-        $rs24 = Mkamar::where('rs1', $ruang)->first();
+        $rs24 = Mkamar::where('rs1','=', $ruang)->first();
         // return new JsonResponse($rs24, 200);
         if ($rs24) {
-          $rs25 =MkamarRanap::where('rs5', $ruang)->where('rs1', $kamar)->where('rs2', $noBed)->first();
+          $rs25 =MkamarRanap::where('rs5','=', $ruang)->where('rs1','=', $kamar)->where('rs2','=', $noBed)->first();
           return new JsonResponse($rs25, 200);
           if ($rs25) {
             $rs25->rs3 = 'S';
             $rs25->rs4 = 'N';
             $rs25->save();
           }
-          $rs25NonKelas = MkamarRanap::where('rs6', $rs24->groups)->where('rs1', $kamar)->where('rs2', $noBed)->where('rs5','-')->first();
+          $rs25NonKelas = MkamarRanap::where('rs6','=', $rs24->groups)->where('rs1','=', $kamar)->where('rs2','=', $noBed)->where('rs5','-')->first();
           if ($rs25NonKelas) {
             $rs25NonKelas->rs3 = 'S';
             $rs25NonKelas->rs4 = 'N';
