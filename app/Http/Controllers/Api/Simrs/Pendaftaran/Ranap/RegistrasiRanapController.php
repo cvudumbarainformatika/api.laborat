@@ -167,7 +167,7 @@ class RegistrasiRanapController extends Controller
       // if ($request->titpan !== null || $request->titpan !== '') {
         // $ruangan = $titipan === '' ? $request->kode_ruang : $titipan;
         $rs24 = Mkamar::where('rs1', $ruang)->first();
-        return new JsonResponse($rs24, 200);
+        // return new JsonResponse($rs24, 200);
         if ($rs24) {
           $rs25 =MkamarRanap::where('rs5', $ruang)->where('rs1', $kamar)->where('rs2', $noBed)->first();
           return new JsonResponse($rs25, 200);
