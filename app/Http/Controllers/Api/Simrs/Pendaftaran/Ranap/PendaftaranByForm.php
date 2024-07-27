@@ -16,8 +16,7 @@ class PendaftaranByForm extends Controller
         $request->validate([
           'norm' => 'required|string|max:6|min:6',
           'nama'=>  'required|string',
-          'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
-          'tgllahir' => 'required|date_format:Y-m-d'
+          'tanggallahir' => 'required|date_format:Y-m-d'
         ]);
 
         $masterpasien = Mpasien::updateOrCreate(

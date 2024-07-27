@@ -11,6 +11,7 @@ class Mkamar extends Model
     use HasFactory;
     protected $table      = 'rs24';
     protected $guarded = ['id'];
+    // protected $timestamp = false;
 
     public function kamars()
     {
