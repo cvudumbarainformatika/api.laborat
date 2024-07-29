@@ -42,4 +42,9 @@ class Mruangranap extends Model
         return $this->hasMany(Keperawatan::class, 'rs8', 'rs4');
     }
 
+    public function kunjunganranap()
+    {
+        return $this->hasMany(Kunjunganranap::class, 'rs5', 'rs1');
+    }
+
 }
