@@ -335,16 +335,23 @@ class KonsinyasiController extends Controller
                 $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
                 $q->when(count($pihak)>0, function($x) use($pihak){
                     $x->whereIn('kdpbf', $pihak)
-                    ->orWhere('nobast','LIKE','%'.request('q').'%');
+                    ->orWhere('nobast','LIKE','%'.request('q').'%')
+                    ->orWhere('notranskonsi','LIKE','%'.request('q').'%');
                 },
                 function($r){
-                    $r->where('nobast','LIKE','%'.request('q').'%');
+                    $r->where('nobast','LIKE','%'.request('q').'%')
+                    ->orWhere('notranskonsi','LIKE','%'.request('q').'%');
                 });
                 
             })
             ->paginate(request('per_page'));
 
-        return new JsonResponse($data);
+            $meta=collect($data)->except('data');
+            $datanya=collect($data)['data'];
+        return new JsonResponse([
+            'data'=>$datanya,
+            'meta'=>$meta,
+        ]);
     }
     public function bastKonsinyasi()
     {
