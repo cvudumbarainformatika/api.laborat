@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Hemodialisa;
+namespace App\Http\Controllers\Api\Simrs\Radiologi;
 
 use App\Events\ChatMessageEvent;
 use App\Events\NotifMessageEvent;
@@ -18,7 +18,9 @@ use App\Models\Simrs\Master\MtindakanX;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Lain\Lain;
+use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
@@ -28,7 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\TextUI\XmlConfiguration\Group;
 
-class HemodialisaController extends Controller
+class RadiologiController extends Controller
 {
 
     public function index()
@@ -59,10 +61,11 @@ class HemodialisaController extends Controller
       $sort = request('sort') === 'terbaru'? 'DESC':'ASC';
       $status = request('status') ?? 'Semua';
 
-      $permintaan = self::permintaanFisio($tgl, $tglx, $sort, $status);
+      $permintaan = self::permintaanradiologi($tgl, $tglx, $sort, $status);
       $query = KunjunganPoli::query();
 
       $select = $query->select(
+        'rs17.rs1',
         'rs17.rs1 as noreg',
         'rs17.rs2 as norm',
         'rs17.rs3 as tgl_kunjungan',
@@ -73,7 +76,7 @@ class HemodialisaController extends Controller
         'rs17.rs19 as status',
         'rs17.rs9 as kodedokter',
         'rs21.rs2 as dokter',
-
+    
         DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
         DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
         DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
@@ -98,6 +101,7 @@ class HemodialisaController extends Controller
         // 'rs17.rs20 as asalpendaftaran',
         // 'rs17.rs7 as namaperujuk',
         'rs19.rs2 as ruangan',
+        'rs19.rs2 as poli',
         // 'rs19.rs6 as kodepolibpjs',
         // 'rs19.panggil_antrian as panggil_antrian',
         // 'rs17.rs9 as kodedokter',
@@ -105,8 +109,6 @@ class HemodialisaController extends Controller
         // 'rs21.rs2 as dokter',
         'rs9.rs2 as sistembayar',
         'rs9.groups as groups',
-        
-        
         
         // 'rs222.rs8 as sep',
         // 'rs222.rs5 as norujukan',
@@ -118,12 +120,24 @@ class HemodialisaController extends Controller
         // 'rs24.rs2 as ruangan',
         // 'rs23.rs2 as status_masuk',
         // 'antrian_ambil.nomor as noantrian'
-      )
-        ->leftjoin('rs107 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
+      )->with([
+        'newapotekrajal' => function ($newapotekrajal) {
+            $newapotekrajal->with([
+                'permintaanresep.mobat:kd_obat,nama_obat',
+                'permintaanracikan.mobat:kd_obat,nama_obat',
+            ])
+                ->orderBy('id', 'DESC');
+        },
+    ])
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
-        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
         ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        ->leftjoin('rs106 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
+        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+       
+       
+        // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+       
         // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
         // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
         // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
@@ -135,7 +149,7 @@ class HemodialisaController extends Controller
 
         $q = $select
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            ->where('rs17.rs8', '=', 'PEN005')
+            ->where('rs17.rs8', '=', 'PEN003')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
@@ -156,10 +170,17 @@ class HemodialisaController extends Controller
                     // ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%')
                     ;
             })
-
             ->union($permintaan)
-            // ->groupBy('rs17.rs1')
-            ;
+          //   ->with([
+          //     'newapotekrajal' => function ($newapotekrajal) {
+          //         $newapotekrajal->with([
+          //             'permintaanresep.mobat:kd_obat,nama_obat',
+          //             'permintaanracikan.mobat:kd_obat,nama_obat',
+          //         ])
+          //             ->orderBy('id', 'DESC');
+          //     },
+          // ])
+            ->groupBy('rs17.rs1');
             // ->orderby('rs17.rs3', $sort);
 
         // dd($q->toSql());
@@ -172,29 +193,31 @@ class HemodialisaController extends Controller
         // ->limit(100)
         // ->get()
         ;
+       
 
         return $result;
 
     }
 
-    static function permintaanFisio($tgl, $tglx, $sort, $status)
+    static function permintaanRadiologi($tgl, $tglx, $sort, $status)
     {
-        $data = Lain::query();
+        $data = Transpermintaanradiologi::query();
         $select = $data->select(
-        'rs107.rs1 as noreg',
+        'rs106.rs1',
+        'rs106.rs1 as noreg',
         // 'rs107.rs2 as norm',
         DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
-        'rs107.rs3 as tgl_kunjungan',
-        'rs107.rs10 as kdruangan',
-        'rs107.rs10 as koderuangan',
-        'rs107.rs10 as kodepoli',
+        'rs106.rs3 as tgl_kunjungan',
+        'rs106.rs10 as kdruangan',
+        'rs106.rs10 as koderuangan',
+        'rs106.rs10 as kodepoli',
         DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
         // DB::raw('coalesce(rs17.rs19, rs23.rs22) as status'),
         // 'rs107.rs9 as status',
-        DB::raw('CASE WHEN rs107.rs9 = "2" THEN "1" ELSE "" END as status'),
+        DB::raw('CASE WHEN rs106.rs9 = "2" THEN "1" ELSE "" END as status'),
+
         DB::raw('coalesce(pasien17.rs9, pasien23.rs10) as kddokter'),
         'rs21.rs2 as dokter',
-
         DB::raw('coalesce(
           concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang), 
           concat(pasien23.rs3," ",pasien23.gelardepan," ",pasien23.rs2," ",pasien23.gelarbelakang)
@@ -225,7 +248,7 @@ class HemodialisaController extends Controller
         DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
         DB::raw('coalesce(pasien17.rs49, pasien23.rs49) as noktp'),
         DB::raw('coalesce(pasien17.rs55, pasien23.rs55) as nohp'),
-        DB::raw('(CASE WHEN rs107.rs2 ="" THEN NULL ELSE rs107.rs2 END) as nota_permintaan'),
+        DB::raw('(CASE WHEN rs106.rs2 ="" THEN NULL ELSE rs106.rs2 END) as nota_permintaan'),
         // 'rs107.rs2 as nota_permintaan',
 
 
@@ -241,6 +264,12 @@ class HemodialisaController extends Controller
                 WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
             END
         ) as ruangan'),
+        DB::raw(
+          '( 
+            CASE 
+                WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
+            END
+        ) as poli'),
         // DB::raw('coalesce(rs19.rs2, rs24.rs2, null) as ruangan'),
         //   ),
         // 'rs19.rs6 as kodepolibpjs',
@@ -278,9 +307,9 @@ class HemodialisaController extends Controller
         // 'antrian_ambil.nomor as noantrian'
         // 'rs17.rs19 as status',
         )
-        ->leftjoin('rs17', 'rs107.rs1', '=', 'rs17.rs1') //rajal
-        ->leftjoin('rs23', 'rs107.rs1', '=', 'rs23.rs1') //ranap
-        ->leftjoin('rs24', 'rs24.rs1', '=', 'rs107.rs10') //ruangan ranap
+        ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
+        ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
+        ->leftjoin('rs24', 'rs24.rs1', '=', 'rs106.rs10') //ruangan ranap
         // ->leftjoin('rs15 as pasien', 'rs15.rs1', '=', 'rs107.rs2') //pasien
         ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
@@ -288,10 +317,10 @@ class HemodialisaController extends Controller
         //   $q->on('rs17.rs2', '=', 'rs15.rs1');
         //   $q->on('rs23.rs2','=', 'rs15.rs1');
         // }) //pasien
-        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs107.rs10') //poli
-        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs107.rs8') //dokter
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs106.rs10') //poli
+        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs106.rs8') //dokter
         // // ->leftjoin('rs21', 'rs21.rs1', '=', 'rs107.rs8') //mboh
-        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs107.rs15') //sistembayar
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs106.rs14') //sistembayar
         // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
         // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
         // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
@@ -300,26 +329,26 @@ class HemodialisaController extends Controller
         ;
 
         $q = $select
-            ->whereBetween('rs107.rs3', [$tgl, $tglx])
+            ->whereBetween('rs106.rs3', [$tgl, $tglx])
             // ->where('rs17.rs8', '=', 'PEN004')
             // ->where('rs141.rs4', '=', 'Rawat Inap')
             // ->where('rs107.rs13', 'LIKE', '%' . 'POL' . '%')
             // ->whereNotIn('rs107.rs13', ['Pendafataran'])
-            ->where('rs107.rs2', '!=', '')
-            ->whereNotNull('rs107.rs2')
+            ->where('rs106.rs2', '!=', '')
+            ->whereNotNull('rs106.rs2')
             // ->whereNull('rs107.rs13')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
-                        $sts->where('rs107.rs9', '=','2');
+                        $sts->where('rs106.rs9', '=','2');
                     } else {
-                        $sts->where('rs107.rs9', '=', '1');
+                        $sts->where('rs106.rs9', '=', '1');
                     }
                 }
             })
             ->where(function ($query) {
-                $query->where('rs107.rs1', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs107.rs2', 'LIKE', '%' . request('q') . '%')
+                $query->where('rs106.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs106.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien17.rs46', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien17.rs2', 'LIKE', '%' . request('q') . '%')
                     // ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
@@ -328,10 +357,8 @@ class HemodialisaController extends Controller
                     // ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%')
                     ;
             })
-            ->groupBy('rs107.rs2')
-            ;
+            ->groupBy('rs106.rs2');
             // ->orderby('rs17.rs3', $sort);
-
         return $q;
     }
 }

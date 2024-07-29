@@ -12,6 +12,7 @@ use App\Helpers\BridgingeklaimHelper;
 use App\Helpers\DateHelper;
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
+use App\Helpers\TarifHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
@@ -143,8 +144,90 @@ class AutogenController extends Controller
         // $kamars = Mkamar::where([
         //     ['status','<>','1'],['hiddens','<>','1']
         // ])->get();
+        $noreg= '00132/07/2024/I';
+        $tarif = TarifHelper::ruang($noreg);
+        // $kodekamar=null;
+        // $koderuang=null;
+        // $kelas=null;
+        // $sistembayar=null;
+        // $sarana=null;
+        // $pelayanan=null;
+        // if (count($tarif)>0) {
+        //     $kodekamar=$tarif[0]->kodekamar;
+        //     $koderuang=$tarif[0]->koderuang;
+        //     $kelas=$tarif[0]->kelas;
+        //     $sistembayar=$tarif[0]->sistembayar;
+        //     $sarana=$tarif[0]->sarana;
+        //     $pelayanan=$tarif[0]->pelayanan;
+        // }
 
-        return $this->showKamar();
+        // return new JsonResponse([
+        //     'noreg' => $noreg,
+        //     'kodekamar' => $kodekamar,
+        //     'koderuang' => $koderuang,
+        //     'kelas' => $kelas,
+        //     'sistembayar' => $sistembayar,
+        //     'sarana' => $sarana,
+        //     'pelayanan' => $pelayanan
+        // ]);
+        return new JsonResponse($tarif);
+    }
+
+    public function lihatSaranaDanPelayananRuangan()
+    {
+        $noreg= '11125/07/2024/X';
+        // $data = DB::table('rs23')
+        //     ->select(
+        //         'rs23.rs1 as noreg',
+        //         'rs23.rs5 as kodekamar',
+        //         'rs23.rs19 as sistembayar',
+        //         'rs24.rs4 as koderuang',
+        //         'rs24.rs3 as kelas',
+        //     )
+        //     ->leftJoin('rs24', 'rs24.rs1', '=', 'rs23.rs5')
+        //     ->where('rs23.rs1','=', $noreg)
+        //     ->first();
+        // $tarif = DB::table('rs30tarif')
+        //     ->select('*')
+        //     ->where('rs3', '=', 'K1#')
+        //     ->where('rs4', 'like', '%'.$data->koderuang.'%')
+        //     ->where('rs5', 'like', '%'.$data->kelas.'%')
+        //     ->get();
+        // return $tarif;
+
+        $data = DB::select(
+            "SELECT rs23.rs1 as noreg,rs23.rs5 as kodekamar,rs24.rs4 as koderuang,rs24.rs3 as kelas,rs23.rs19 as sistembayar,
+			CASE rs24.rs3
+				 WHEN '3' THEN rs30tarif.rs6
+				 WHEN 'IC' THEN rs30tarif.rs6
+				 WHEN 'ICC' THEN rs30tarif.rs6
+				 WHEN 'NICU' THEN rs30tarif.rs6
+				 WHEN 'IN' THEN rs30tarif.rs6
+				 WHEN 'ISO' THEN rs30tarif.rs6
+				 WHEN '2' THEN rs30tarif.rs8
+				 WHEN '1' THEN rs30tarif.rs10
+				 WHEN 'Utama' THEN rs30tarif.rs12
+				 WHEN 'VIP' THEN rs30tarif.rs14
+				 WHEN 'VVIP' THEN rs30tarif.rs16
+			END as sarana,CASE rs24.rs3
+				 WHEN '3' THEN rs30tarif.rs7
+				 WHEN 'IC' THEN rs30tarif.rs7
+				 WHEN 'ICC' THEN rs30tarif.rs7
+				 WHEN 'NICU' THEN rs30tarif.rs7
+				 WHEN 'IN' THEN rs30tarif.rs7
+				 WHEN 'ISO' THEN rs30tarif.rs7
+				 WHEN '2' THEN rs30tarif.rs9
+				 WHEN '1' THEN rs30tarif.rs11
+				 WHEN 'Utama' THEN rs30tarif.rs13
+				 WHEN 'VIP' THEN rs30tarif.rs15
+				 WHEN 'VVIP' THEN rs30tarif.rs17
+			END as pelayanan
+			from rs23,rs24,rs30tarif where rs24.rs1=rs23.rs5
+			and rs30tarif.rs3='K1#' and rs30tarif.rs4 like concat('%',rs24.rs4,'%')
+			and rs30tarif.rs5 like concat('%',rs24.rs3,'%') and rs23.rs1='".$noreg."'"
+        );
+
+        return $data;
     }
 
     public function showKamar()

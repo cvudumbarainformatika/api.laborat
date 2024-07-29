@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
+use App\Helpers\TarifHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Pembayaran;
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Hutangpasien;
 use App\Models\Simrs\Master\Mkamar;
 use App\Models\Simrs\Master\MkamarRanap;
@@ -23,22 +26,29 @@ class RegistrasiRanapController extends Controller
 {
     public function registrasiranap(Request $request)
     {
-      if ($request->barulama === 'baru') {
-        $data = Mpasien::where('rs1', $request->norm)->first();
-        if ($data) {
-            return new JsonResponse([
-                'message' => 'Nomor RM Sudah ada',
-                'data' => $data
-            ], 410);
-        }
-        $data2 = Mpasien::where('rs49', $request->nik)->first();
-        if ($data2) {
-            return new JsonResponse([
-                'message' => 'NIK Sudah didaftarkan',
-                'data' => $data
-            ], 410);
-        }
+      if ($request->barulama === 'Baru' || $request->barulama === 'baru' || $request->barulama === 'BARU' || $request->barulama === '') {
+        // $data = Mpasien::where('rs1', $request->norm)->first();
+        // if ($data) {
+        //     return new JsonResponse([
+        //         'message' => 'Nomor RM Sudah ada',
+        //         'data' => $data
+        //     ], 410);
+        // }
+        // $data2 = Mpasien::where('rs49', $request->nik)->first();
+        // if ($data2) {
+        //     return new JsonResponse([
+        //         'message' => 'NIK Sudah didaftarkan',
+        //         'data' => $data
+        //     ], 410);
+        // }
+
+        $request->validate([
+            'norm' => 'required|unique:rs15,rs1|min:6|max:6',
+            'noktp' => 'required|unique:rs15,rs49',
+        ]);
       }
+
+      // return 'ok';
 
       $masterpasien = PendaftaranByForm::store($request);
       if (!$masterpasien) {
@@ -48,7 +58,7 @@ class RegistrasiRanapController extends Controller
       
 
       $cekRanap = Kunjunganranap::select('rs1')->where('rs2','=', $request->norm)->where('rs22','=', '')->get();
-      $cekHutang = Hutangpasien::where('rs2', $request->norm)->whrere('rs18','1')->get();
+      $cekHutang = Hutangpasien::where('rs2', $request->norm)->where('rs18','1')->get();
       $cekIgd = KunjunganPoli::select('rs1')->where('rs2', $request->norm)->where('rs19', '')->where('rs8', 'POL014')->get();
 
       if (count($cekRanap) > 0) {
@@ -61,33 +71,26 @@ class RegistrasiRanapController extends Controller
         return new JsonResponse(['message' => 'Maaf, kondisi akhir di igd belum dientri. segera hubungi admin igd.'], 500);
       }
 
+      
       //NOREG jk kosong ambil dari counter
 
-      DB::select('call reg_ranap(@nomor)');
-      $hcounter = DB::table('rs1')->select('rs12')->get();
-      $wew = $hcounter[0]->rs12;
-      $noreg = FormatingHelper::gennoreg($wew, 'I');
+      
 
-      $input = new Request([
-          'noreg' => $noreg
-      ]);
-
-      $input->validate([
-          'noreg' => 'required|unique:rs23,rs1'
-      ]);
-
-      $tglMsk = $request->tglmasuk ?? Carbon::now()->format('Y-m-d');
-      $tglmasuk = Carbon::create($tglMsk)->toDateString();
+      // $tglMsk = $request->tglmasuk ?? Carbon::now()->format('Y-m-d');
+      $tglmasuk = date('Y-m-d H:i:s');
 
       // INI DARI IGD
 
+      $ruang = $request->kode_ruang ?? '';
+      $titipan = $request->isTitipan === 'Ya'? $request->hakruang : '';
+      
+      $kamar = $request->kamar ?? ''; 
+      $noBed = $request->no_bed ?? ''; 
+
+      
+
       $tempNoreg = null;
-
-      $ruang = $request->ruang ?? '';
-      $kamar = $request->kamar ?? ''; // belum ada di request
-      $noBed = $request->no_bed ?? ''; // belum ada di request
-
-      $titipan = $request->titipan ?? ''; // masih ada di request
+      
 
       if ($request->has('noreg')) {
         $reg = Kunjunganranap::updateOrCreate(
@@ -103,8 +106,8 @@ class RegistrasiRanapController extends Controller
             'rs30'=> auth()->user()->pegawai_id ?? '',
             'rs31'=> '',
             'rs38'=> $request->hakKelasBpjs ?? '', // hak Kelas dari BPJS
-            'rs39'=> $request->diagnosaAwal ?? '', // ICD
-            'rs40'=> $request->diagnosa ?? '', // BELUM ADA di request
+            'rs39'=> $request->diagnosaAwal['icd'] ?? '', // ICD
+            'rs40'=> $request->diagnosaAwal['keterangan'] ?? '', // BELUM ADA di request
             'titipan' => $titipan
           ]
         );
@@ -112,9 +115,20 @@ class RegistrasiRanapController extends Controller
         $tempNoreg = $request->noreg;
           
       } else { // INI DARI SELAIN IGD (bisa dr poli atau lain-lain SPRI)
+        DB::select('call reg_ranap(@nomor)');
+        $hcounter = DB::table('rs1')->select('rs12')->get();
+        $wew = $hcounter[0]->rs12;
+        $noreg = FormatingHelper::gennoreg($wew, 'I');
 
+        // $input = new Request([
+        //     'noreg' => $noreg
+        // ]);
+
+        // $input->validate([
+        //     'noreg' => 'required|unique:rs23,rs1'
+        // ]);
         $reg = new Kunjunganranap();
-        $reg->rs1 = $input->noreg;
+        $reg->rs1 = $noreg;
         $reg->rs2 = $request->norm;
         $reg->rs3 = $tglmasuk;
         $reg->rs13 = $request->asalrujukan ?? '';
@@ -127,14 +141,14 @@ class RegistrasiRanapController extends Controller
         $reg->rs30 = auth()->user()->pegawai_id ?? '';
         $reg->rs31 = '';
         $reg->rs38 = $request->hakKelasBpjs ?? '';
-        $reg->rs39 = $request->diagnosaAwal ?? '';
-        $reg->rs40 = $request->diagnosa ?? '';
-        $reg->titipan = $request->titipan ?? '';
+        $reg->rs39 = $request->diagnosaAwal['icd'] ?? '';
+        $reg->rs40 = $request->diagnosaAwal['keterangan'] ?? '';
+        $reg->titipan = $titipan ?? '';
         $reg->save();
 
         if ($request->kodesistembayar === 'AR32') {
           Rsjr::updateOrCreate(
-            ['rs1' => $reg->noreg],
+            ['rs1' => $noreg],
             [
               'rs2' => $request->norm, 'rs3'=> 'JR1',
               'rs4' => 'Pembuatan Dokumen Asuransi',
@@ -143,29 +157,96 @@ class RegistrasiRanapController extends Controller
           );
         }
 
-        $tempNoreg = $reg->noreg;
+        $tempNoreg = $noreg;
 
       }
 
+      // return new JsonResponse($tempNoreg, 200);
+
       // UPDATE rs25
-      if ($request->titpan !== null || $request->titpan !== '') {
-        $ruangan = $titipan === '' ? $request->ruang : $titipan;
-        $rs24 = Mkamar::where('rs1', $ruangan)->first();
+      // if ($request->titpan !== null || $request->titpan !== '') {
+        // $ruangan = $titipan === '' ? $request->kode_ruang : $titipan;
+        $rs24 = Mkamar::where('rs1','=', $ruang)->first();
+        // return new JsonResponse($rs24, 200);
         if ($rs24) {
-          $rs25 =MkamarRanap::where('rs5', $ruangan)->where('rs1', $kamar)->where('rs2', $noBed)->first();
+          $rs25 =MkamarRanap::where('rs5','=', $ruang)->where('rs1','=', $kamar)->where('rs2','=', $noBed)->first();
+          return new JsonResponse($rs25, 200);
           if ($rs25) {
             $rs25->rs3 = 'S';
             $rs25->rs4 = 'N';
             $rs25->save();
           }
-          $rs25NonKelas = MkamarRanap::where('rs6', $rs24->groups)->where('rs1', $kamar)->where('rs2', $noBed)->where('rs5','-')->first();
+          $rs25NonKelas = MkamarRanap::where('rs6','=', $rs24->groups)->where('rs1','=', $kamar)->where('rs2','=', $noBed)->where('rs5','-')->first();
           if ($rs25NonKelas) {
             $rs25NonKelas->rs3 = 'S';
             $rs25NonKelas->rs4 = 'N';
             $rs25NonKelas->save();
           }
         } 
+        
+      // }
+
+      // INSERT TARIF
+      $tarif = TarifHelper::ruang($tempNoreg);
+      // return new JsonResponse($tarif, 200);
+      if (count($tarif)===0) {
+        return new JsonResponse(['message' => 'MAAF ... TARIF TIDAK DITEMUKAN'], 500);
       }
+
+      
+
+      $kodekamar=$tarif[0]->kodekamar;
+      $koderuang=$tarif[0]->koderuang;
+      $kelas=$tarif[0]->kelas;
+      $sistembayar=$tarif[0]->sistembayar;
+      $sarana=$tarif[0]->sarana;
+      $pelayanan=$tarif[0]->pelayanan;
+
+      if($koderuang=="WKUT" || $koderuang=="WKVVIP"){
+        $koderuangkelas=$koderuang;
+      }elseif($koderuang=="DA" || $koderuang=="IC" || $koderuang=="ICC" || $koderuang=="WKKB" || $koderuang=="ISHK" || $koderuang=="TR"){
+        $koderuangkelas=$kodekamar;
+      }else{
+        $koderuangkelas=$koderuang.$kelas;
+      }
+
+      Rstigalimax::where('noreg','=', $tempNoreg)
+        ->where('rs3','=', 'K1#')
+        ->where('rs6', '=', 'Akomodasi / Kamar')
+      ->delete();
+
+      Rstigalimax::insert([
+        'rs1' => $tempNoreg,
+        'rs3' => 'K1#',
+        'rs4' => date("Y-m-d H:i:s"),
+        'rs5' => 'D',
+        'rs6' => 'Akomodasi / Kamar',
+        'rs7' => $sarana,
+        'rs8' => $sistembayar,
+        'rs14' => $pelayanan,
+        'rs16' => $koderuang,
+        'rs17' => $kelas,
+        'rs18' => $koderuangkelas
+      ]);
+
+      // INSERT PEMBAYARAN
+      // Pembayaran::updateOrCreate(
+      //   ['rs1' => $tempNoreg],
+      //   [
+      //     'rs2' => '',
+      //     'rs3' => 'A1#',
+      //     'rs4' => date("Y-m-d H:i:s"),
+      //     'rs5' => 'D',
+      //     'rs6' => $namabiaya, // belum ada
+      //     'rs7' => $biayaadmin1, // belum ada
+      //     'rs8' => $sistembayar,
+      //     'rs9' => '',
+      //     'rs10' => auth()->user()->pegawai_id,
+      //     'rs11' => $biayaadmin2, // belum ada
+      //     'rs12' => auth()->user()->pegawai_id,
+      //     'rs13' => '1'
+      //   ]
+      // );
 
 
       return new JsonResponse(['message' => 'ok'], 200);

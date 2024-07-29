@@ -11,5 +11,5 @@ class Anggaran_Pendapatan extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'anggaran_pendapatan';
-    public $timestamp = false;
+    public $timestamps = false;
 }
