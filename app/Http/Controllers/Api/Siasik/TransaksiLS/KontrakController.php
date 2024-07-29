@@ -53,9 +53,10 @@ class KontrakController extends Controller
         );
         if (!$simpan){
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        }else {
-            return new JsonResponse(['message' => 'Berhasil di Simpan'], 200);
         }
+        // else {
+        //     return new JsonResponse(['message' => 'Berhasil di Simpan'], 200);
+        // }
     }
     public static function buatnomor(){
         $huruf = ('KP');
