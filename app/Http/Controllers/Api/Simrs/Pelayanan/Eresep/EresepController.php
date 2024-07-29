@@ -278,7 +278,7 @@ class EresepController extends Controller
             foreach ($request->kirimResep as $key => $record) {
                 try {
                     
-                    if ($record['jenisresep'] == 'nonRacikan') {
+                    if ($record['jenisresep'] === 'nonRacikan') {
                         if ($record['jumlah_diminta'] > $alokasi[$key]) {
                             throw new \Exception('Maaf Stok Alokasi Tidak Mencukupi...!!!');
                         }

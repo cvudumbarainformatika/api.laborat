@@ -2,6 +2,9 @@
 
 namespace App\Models\Simrs\Penunjang\Radiologi;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,5 +20,10 @@ class Transpermintaanradiologi extends Model
     public function reltransrinci()
     {
         return  $this->hasMany(Transradiologi::class, 'rs1', 'rs1');
+    }
+
+    public function newapotekrajal()
+    {
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
 }
