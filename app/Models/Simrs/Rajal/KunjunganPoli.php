@@ -338,4 +338,19 @@ class KunjunganPoli extends Model
     {
         return $this->belongsTo(Pembayaran::class, 'rs1', 'rs1');
     }
+
+    public function konsulantarpoli()
+    {
+        return $this->belongsTo(Pembayaran::class, 'rs1', 'rs1');
+    }
+
+    public function tindakandokter()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+
+    public function tindakanperawat()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
 }
