@@ -361,6 +361,60 @@ class SetNewStokController extends Controller
 
         return new JsonResponse($data);
     }
+    public function cekPenerimaan(Request $request){
+        $gudangs = ['Gd-05010100', 'Gd-03010100'];
+        if (!in_array($request->kdruang, $gudangs)){
+            return new JsonResponse([
+                'message'=>'Yang bisa cek penerimaan hanya gudang',
+            ],410);        
+        }
+        
+        $penrimaanrinci=PenerimaanRinci::where('kdobat',$request->kdobat)->get();
+        $nope=PenerimaanRinci::where('kdobat',$request->kdobat)->distinct('nopenerimaan')->pluck('nopenerimaan');
+        $stok=FarmasinewStokreal::whereIn('nopenerimaan',$nope)
+        ->where('kdobat',$request->kdobat)
+        ->where('kdruang',$request->kdruang)
+        ->get();
+        $noba=$stok->pluck('nobatch')->toArray();
+        $tgl=$stok[0]->tglpenerimaan??null;
+        $da=[];
+        $msg='Tidak Ditemukan data penerimaan yang membutuhkan perubahan';
+        if(count($penrimaanrinci)!== count($stok)){
+            foreach($penrimaanrinci as $key){
+                if(!in_array($key['no_batch'],$noba)){
+                        // $da[]=$key;
+                    FarmasinewStokreal::updateOrCreate(
+                        [
+                            'nopenerimaan' => $key['nopenerimaan'],
+                            'kdobat' => $key['kdobat'],
+                            'kdruang' => $request->kdruang,
+                            'nobatch' => $key['no_batch'],
+                        ],
+                        [
+                            'tglexp' => $key['tgl_exp'],
+                            'harga' => $key['harga_netto_kecil'],
+                            'tglpenerimaan' => $tgl,
+                            'jumlah' => 0,
+                            'flag' => ''
+            
+                        ]
+                        );
+                        $msg='Ada Penambahan Penerimaan';
+                }
+
+            }
+        }
+
+        
+        return new JsonResponse([
+            'message'=>$msg,
+            'penrimaanrinci'=>$penrimaanrinci,
+            'nope'=>$nope,
+            'stok'=>$stok,
+            'noba'=>$noba,
+            'da'=>$da,
+        ]);
+    }
     public function newPerbaikanStok(Request $request)
     {
         $depo = $request->kdruang;
@@ -454,6 +508,7 @@ class SetNewStokController extends Controller
             $masuk = (int)$sal + (int)$peny + (int)$trm + (int)$mutma;
             $keluar = (int)$mutkel;
             $sisa = (int)$masuk - (int)$keluar;
+              
             if ((int)$sisa != (int)$tts) {
                 $masukin = $sisa;
                 $index = 0;
