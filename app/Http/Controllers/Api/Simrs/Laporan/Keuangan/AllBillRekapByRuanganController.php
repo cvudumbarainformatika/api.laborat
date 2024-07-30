@@ -334,20 +334,20 @@ class AllBillRekapByRuanganController extends Controller
                 //     ->latest('rs35x.rs4');
                 // },
                 'akomodasikamar' => function($akomodasikamar) use ($dari,$sampai) {
-                    $akomodasikamar->select('rs1','rs4', 'rs7', 'rs14', 'rs16','rs17')->where('rs3', 'K1#')
+                    $akomodasikamar->select('rs1','rs4', 'rs7', 'rs14', 'rs18','rs17')->where('rs3', 'K1#')
                     ->whereBetween('rs4', [$dari, $sampai])
                     ->orderBy('rs4', 'DESC');
                 },
                 'tindakandokter' => function ($tindakandokter) use ($dari,$sampai) {
-                    $tindakandokter->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
-                        ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
+                    $tindakandokter->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs25')
+                        ->join('rs24', 'rs24.rs1', '=', 'rs73.rs25')
                         ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
                         ->where('rs21.rs13', '1')
                         ->whereBetween('rs73.rs3', [$dari, $sampai])
                     ->where('rs73.rs22','!=','POL014');
                 },
                 'tindakanperawat' => function ($tindakanperawat) use ($dari,$sampai) {
-                    $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs22')
+                    $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs25')
                         ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
                         ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
                         ->whereIn('rs21.rs13', ['2', '3'])

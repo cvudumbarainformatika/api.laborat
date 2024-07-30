@@ -25,17 +25,17 @@ class Mruangranap extends Model
 
     public function akomodasikamar()
     {
-        return $this->hasMany(Rstigalimax::class, 'rs16', 'rs4');
+        return $this->hasMany(Rstigalimax::class, 'rs18', 'rs1');
     }
 
     public function tindakandokter()
     {
-        return $this->hasMany(Tindakan::class, 'rs22', 'rs4');
+        return $this->hasMany(Tindakan::class, 'rs25', 'rs1');
     }
 
     public function tindakanperawat()
     {
-        return $this->hasMany(Tindakan::class, 'rs22', 'rs4');
+        return $this->hasMany(Tindakan::class, 'rs25', 'rs1');
     }
 
     public function keperawatan()
