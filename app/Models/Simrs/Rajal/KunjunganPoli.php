@@ -10,6 +10,7 @@ use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
+use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -331,5 +332,10 @@ class KunjunganPoli extends Model
 
     public function pasien(){
         return $this->belongsTo(Pasien::class, 'rs2', 'rs1');
+    }
+
+    public function adminpoli()
+    {
+        return $this->belongsTo(Pembayaran::class, 'rs1', 'rs1');
     }
 }

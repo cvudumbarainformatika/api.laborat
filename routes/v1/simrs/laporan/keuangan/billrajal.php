@@ -18,6 +18,7 @@ Route::group([
     Route::get('/laporanallbillrajal', [AllbillrajalController::class, 'rekapanbill']);
     Route::get('/allbillperlopi', [AllbillrajalperpoliController::class, 'allbillperlopi']);
     Route::get('/billpoli', [AllbillrajalperpoliController::class, 'billpoli']);
+    Route::get('/allBillRekapByRuanganperPoli', [AllBillRekapByRuanganController::class, 'allBillRekapByRuanganperPoli']);
 
     //RANAP
     Route::get('/allbillranap', [AllbillranapController::class, 'allbillranap']);
