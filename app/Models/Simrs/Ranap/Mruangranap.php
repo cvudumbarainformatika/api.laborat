@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Tindakan\Tindakan;
+use App\Models\Simrs\Visite\Visite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -40,6 +41,16 @@ class Mruangranap extends Model
     public function keperawatan()
     {
         return $this->hasMany(Keperawatan::class, 'rs8', 'rs4');
+    }
+
+    public function kunjunganranap()
+    {
+        return $this->hasMany(Kunjunganranap::class, 'rs5', 'rs1');
+    }
+
+    public function visiteumum()
+    {
+        return $this->hasMany(Visite::class, 'rs8', 'rs4');
     }
 
 }
