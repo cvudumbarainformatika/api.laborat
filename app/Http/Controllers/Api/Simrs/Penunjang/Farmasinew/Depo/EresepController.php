@@ -351,6 +351,10 @@ class EresepController extends Controller
             // 'jumlah' => 'required',
             'kdruangan' => 'required',
         ]);
+        $sudahAda=Resepkeluarheder::where('noresep',$request->noresep)->first();
+        if($sudahAda){           
+            if($sudahAda->noreg !== $request->noreg) $request['noresep']=null;
+        }
         try {
             DB::connection('farmasi')->beginTransaction();
             $user = FormatingHelper::session_user();
