@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Simrs\Laporan\Keuangan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
+use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
@@ -348,7 +350,7 @@ class AllBillRekapByRuanganController extends Controller
                 },
                 'tindakanperawat' => function ($tindakanperawat) use ($dari,$sampai) {
                     $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs25')
-                        ->join('rs24', 'rs24.rs4', '=', 'rs73.rs22')
+                        ->join('rs24', 'rs24.rs1', '=', 'rs73.rs25')
                         ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
                         ->whereIn('rs21.rs13', ['2', '3'])
                         ->whereBetween('rs73.rs3', [$dari, $sampai])
@@ -365,6 +367,46 @@ class AllBillRekapByRuanganController extends Controller
             ]
         )
         //->groupBy('rs24.rs4')
+        ->get();
+        return new JsonResponse($data);
+    }
+
+    public function allBillRekapByRuanganperPoli()
+    {
+        $dari = request('tgldari') .' 00:00:00';
+        $sampai = request('tglsampai') .' 23:59:59';
+
+        $data = KunjunganPoli::select('rs19.rs1','rs19.rs2','rs17.rs1','rs19.rs1 as kodepoli')
+        ->join('rs19','rs17.rs8','rs19.rs1')
+        ->with(
+            [
+                'adminpoli' => function($adminpoli) {
+                    $adminpoli->select('rs1','rs2','rs7','rs11')->where('rs3','K2#');
+                },
+                'konsulantarpoli' => function($konsulantarpoli) {
+                    $konsulantarpoli->select('rs1','rs2','rs7','rs11')->where('rs3','K3#');
+                },
+                'tindakandokter' => function ($tindakandokter) use ($dari,$sampai) {
+                    $tindakandokter->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs25')
+                        ->join('rs19', 'rs19.rs1', '=', 'rs73.rs22')
+                        ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                        ->where('rs21.rs13', '1')->where('rs19.rs4','Poliklinik')
+                        ->whereBetween('rs73.rs3', [$dari, $sampai])
+                    ->where('rs73.rs22','!=','POL014');
+                },
+                'tindakanperawat' => function ($tindakanperawat) use ($dari,$sampai) {
+                    $tindakanperawat->select('rs73.rs1', 'rs73.rs2', 'rs73.rs7', 'rs73.rs13', 'rs73.rs5', 'rs73.rs25')
+                        ->join('rs19', 'rs19.rs1', '=', 'rs73.rs22')
+                        ->join('rs21', 'rs21.rs1', '=', DB::raw('SUBSTRING_INDEX(rs73.rs8,";",1)'))
+                        ->whereIn('rs21.rs13', ['2', '3'])->where('rs19.rs4','Poliklinik')
+                        ->whereBetween('rs73.rs3', [$dari, $sampai])
+                        ->where('rs73.rs22','!=','POL014');
+                },
+            ]
+        )
+        ->whereBetween('rs17.rs3', [$dari, $sampai])
+        ->where('rs19.rs1','!=','POL014')->where('rs19.rs4','Poliklinik')
+        ->orderBY('rs19.rs2')
         ->get();
         return new JsonResponse($data);
     }
