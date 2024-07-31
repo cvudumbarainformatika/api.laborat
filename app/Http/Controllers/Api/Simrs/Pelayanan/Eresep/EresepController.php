@@ -91,7 +91,7 @@ class EresepController extends Controller
 
     public function copiresep(Request $request)
     {
-        return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
+        // return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
         $response = [];
         $cekpemberianobat = false;
         try {
@@ -127,33 +127,6 @@ class EresepController extends Controller
                 $noreseps = $records['noresep'];
                 $noreg = $records['noreg'];
                 $groupsistembayar = $records['groupsistembayar'];
-
-                if ($records['kodedepo'] === 'Gd-04010102') {
-                    $procedure = 'resepkeluardeporanap(@nomor)';
-                    $colom = 'deporanap';
-                    $lebel = 'D-RI';
-                } elseif ($records['kodedepo'] === 'Gd-04010103') {
-                    $procedure = 'resepkeluardepook(@nomor)';
-                    $colom = 'depook';
-                    $lebel = 'D-KO';
-                } elseif ($records['kodedepo'] === 'Gd-05010101') {
-                    $procedure = 'resepkeluardeporajal(@nomor)';
-                    $colom = 'deporajal';
-                    $lebel = 'D-RJ';
-                } else {
-                    $procedure = 'resepkeluardepoigd(@nomor)';
-                    $colom = 'depoigd';
-                    $lebel = 'D-IR';
-                }
-            }
-            
-            if ($records['noresep'] === '' || $records['noresep'] === null) {
-                DB::connection('farmasi')->select('call ' . $procedure);
-                $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
-                $wew = $x[0]->$colom;
-                $noresep = FormatingHelper::resep($wew, $lebel);
-            } else {
-                $noresep = $noreseps;
             }
 
             $cekjumlahstok = Stokreal::select('stokreal.kdobat as kdobat', DB::raw('sum(jumlah) as jumlahstok'))
@@ -273,6 +246,33 @@ class EresepController extends Controller
                         $hasil[] = $entry[0]['hasil'];
                     }
                 }
+            }
+
+            if ($records['kodedepo'] === 'Gd-04010102') {
+                $procedure = 'resepkeluardeporanap(@nomor)';
+                $colom = 'deporanap';
+                $lebel = 'D-RI';
+            } elseif ($records['kodedepo'] === 'Gd-04010103') {
+                $procedure = 'resepkeluardepook(@nomor)';
+                $colom = 'depook';
+                $lebel = 'D-KO';
+            } elseif ($records['kodedepo'] === 'Gd-05010101') {
+                $procedure = 'resepkeluardeporajal(@nomor)';
+                $colom = 'deporajal';
+                $lebel = 'D-RJ';
+            } else {
+                $procedure = 'resepkeluardepoigd(@nomor)';
+                $colom = 'depoigd';
+                $lebel = 'D-IR';
+            }
+            
+            if ($records['noresep'] === '' || $records['noresep'] === null) {
+                DB::connection('farmasi')->select('call ' . $procedure);
+                $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
+                $wew = $x[0]->$colom;
+                $noresep = FormatingHelper::resep($wew, $lebel);
+            } else {
+                $noresep = $noreseps;
             }
 
             foreach ($request->kirimResep as $key => $record) {
