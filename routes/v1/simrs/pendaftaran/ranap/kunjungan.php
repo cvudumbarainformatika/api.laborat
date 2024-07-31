@@ -11,7 +11,11 @@ Route::group([
     'prefix' => 'simrs/pendaftaran/ranap'
 ], function () {
     Route::get('list-pendaftararan-ranap', [PendaftaranRanapController::class, 'list_pendaftaran_ranap']);
+    // Route::get('list-pendaftararan-ranap', [PendaftaranRanapController::class, 'list_tunggu_pendaftaran_ranap']);
     Route::get('wheatherapi-country', [PendaftaranRanapController::class, 'wheatherapi_country']);
     Route::get('cek-peserta-bpjs', [PendaftaranRanapController::class, 'cekPesertaBpjs']);
+    Route::get('history-kunjungan', [PendaftaranRanapController::class, 'cekPesertaBpjs']);
     Route::post('simpanpendaftaran-byform', [RegistrasiRanapController::class, 'registrasiranap']);
+    Route::post('simpanpendaftaran-byigd', [RegistrasiRanapController::class, 'registrasiranapIgd']);
+    Route::post('simpanpendaftaran-byspri', [RegistrasiRanapController::class, 'registrasiranapSpri']);
 });

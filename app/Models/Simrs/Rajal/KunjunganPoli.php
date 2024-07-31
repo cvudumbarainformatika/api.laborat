@@ -52,6 +52,8 @@ use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use App\Models\Simrs\Sharing\SharingTrans;
 use App\Models\Simrs\Tindakan\Tindakan;
@@ -334,6 +336,7 @@ class KunjunganPoli extends Model
         return $this->belongsTo(Pasien::class, 'rs2', 'rs1');
     }
 
+<<<<<<< HEAD
     public function adminpoli()
     {
         return $this->belongsTo(Pembayaran::class, 'rs1', 'rs1');
@@ -352,5 +355,14 @@ class KunjunganPoli extends Model
     public function tindakanperawat()
     {
         return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+=======
+    public function spri()
+    {
+       return $this->hasOne(Rs141::class, 'rs1', 'rs1');
+    }
+    public function tunggu_ranap()
+    {
+       return $this->hasOne(Kunjunganranap::class, 'rs1', 'flag');
+>>>>>>> 2c2c32e4 (hjgjh)
     }
 }

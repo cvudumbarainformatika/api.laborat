@@ -52,7 +52,7 @@ class Kunjunganranap extends Model
 {
     use HasFactory;
     protected $table = 'rs23';
-    protected $gurded = [''];
+    protected $guarded = [];
     public $timestamps = false;
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';

@@ -67,7 +67,14 @@ class KamarController extends Controller
       }
       $flatten = collect(array_merge(...$flat))->unique()->values()->all();
 
-      $kunjungan = Kunjunganview::whereIn('noreg', $flatten)
+      $kunjungan = Kunjunganview::select(
+        'noreg','norm','status_inap',
+        'tgl_masuk','group_kamar','kd_kelas','no_bed',
+        'kelamin','alamat','nama',
+        'kd_kmr','kamar','titipan'
+      )
+      ->whereIn('noreg', $flatten)
+      ->where('status_inap','=','')
       ->orderBy('tgl_masuk', 'desc')
       ->groupBy('noreg')
       ->get();
