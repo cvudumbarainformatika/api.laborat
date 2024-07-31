@@ -146,7 +146,7 @@ class KonsinyasiController extends Controller
             ->where('persiapan_operasi_rincis.status_konsinyasi', '=', '1')
             ->whereIn('persiapan_operasi_distribusis.nopenerimaan', $pene)
             ->whereNull('dibayar')
-            ->groupBy('persiapan_operasi_distribusis.kd_obat','persiapan_operasi_distribusis.nopermintaan','persiapan_operasi_distribusis.nopenerimaan')
+            ->groupBy('persiapan_operasi_distribusis.kd_obat','persiapan_operasi_distribusis.nopermintaan')
             ->get();
         $data = $resep;
         // $data['pene'] = $pene;
@@ -347,6 +347,7 @@ class KonsinyasiController extends Controller
                 });
                 
             })
+            ->orderBy('notranskonsi','DESC')
             ->paginate(request('per_page'));
 
             $meta=collect($data)->except('data');
