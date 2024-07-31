@@ -80,7 +80,10 @@ class KonsinyasiController extends Controller
     public function getListPemakaianKonsinyasi()
     {
         $rwpene = PenerimaanHeder::select('nopenerimaan')
-            ->where('jenis_penerimaan', '=', 'Konsinyasi')
+            ->where(function($q){
+                $q->where('jenis_penerimaan', '=', 'Konsinyasi')
+                ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
+            })
             ->where('kdpbf', '=', request('penyedia'))
             ->whereNull('tgl_bast')
             ->distinct('nopenerimaan')

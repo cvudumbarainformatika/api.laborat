@@ -528,10 +528,19 @@ class PersiapanOperasiController extends Controller
         }
         if ((float)$stok->total < (float)$request->jumlah_distribusi) {
             $obat = Mobatnew::select('nama_obat', 'satuan_k')->where('kd_obat', $request->kodeobat)->first();
-            return new JsonResponse([
-                'message' => 'stok ' . $obat->nama_obat ?? 'obat tidak ditemukan' . ' tidak mencukupi, stok tersisa ' . $stok->total . ' ' . $obat->satuan_k . ' silahkan kurangi jumlah distribusi',
-                'request' => $request->all(),
-            ], 410);
+            if($obat){
+                return new JsonResponse([
+                    'message' => 'stok ' . $obat->nama_obat ?? 'obat tidak ditemukan' . ' tidak mencukupi, stok tersisa ' . $stok->total . ' ' . $obat->satuan_k . ' silahkan kurangi jumlah distribusi',
+                    'request' => $request->all(),
+                ], 410);
+                
+            }else{
+                return new JsonResponse([
+                    'message' => 'stok obat tidak ditemukan , stok tersisa ' . $stok->total . ' silahkan kurangi jumlah distribusi',
+                    'request' => $request->all(),
+                ], 410);
+
+            }
         }
         $ada = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $request->kodeobat)->first();
         if ($ada) {
