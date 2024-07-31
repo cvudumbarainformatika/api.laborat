@@ -25,12 +25,14 @@ class HutangKonsinyasiController extends Controller
         ->paginate(request('per_page'));
         // ambil master barang konsinyasi
         $master=Mobatnew::select('kd_obat')->where('status_konsinyasi','1')->pluck('kd_obat');
-        // ambil jumlah distribusi dan kembali
+        // ambil jumlah distribusi dan kembali, kalo bisa cari yang belum dibayar saja
+        // hubungannya ada di rinci, dengan rincian bast yang headernya belum ada tanggal bayar ini dipisah
         $dist=PersiapanOperasiDistribusi::select(
             'persiapan_operasi_distribusis.nopermintaan',
             'persiapan_operasi_distribusis.nopenerimaan',
             'persiapan_operasi_distribusis.kd_obat',
             'penerimaan_r.harga_netto_kecil',
+            'penerimaan_h.kdpbf',
             DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
             DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah_retur'),
             DB::raw('sum(persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) as dipakai'),
@@ -40,25 +42,79 @@ class HutangKonsinyasiController extends Controller
             $jo->on('penerimaan_r.nopenerimaan','=','persiapan_operasi_distribusis.nopenerimaan')
             ->on('penerimaan_r.kdobat','=','persiapan_operasi_distribusis.kd_obat');
         })
+        ->leftJoin('penerimaan_h',function($jo){
+            $jo->on('penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan');
+        })
+        ->leftJoin('persiapan_operasis',function($jo){
+            $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
+        })
+        ->leftJoin('persiapan_operasi_rincis',function($jo){
+            $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan') 
+            ->on('persiapan_operasi_rincis.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
+        })
         ->whereIn('persiapan_operasi_distribusis.kd_obat',$master)
+        ->where('persiapan_operasis.flag','4')
+        ->whereNull('persiapan_operasi_rincis.dibayar')
         ->havingRaw('dipakai > 0')
-        ->groupBy('nopenerimaan', 'kd_obat',)
-        ->get();
-        // cari bast untuk cari jumlah dimintakan faktur dan bast
-        $kdp = collect($data->items())->pluck('kode');
-        $bastkonsi=BastKonsinyasi::with('rinci')->whereIn('kdpbf',$kdp)->get();
+        ->with([
+            'persiapan:nopermintaan,norm',
+            'persiapan.pasien:rs1,rs2',
 
-        // get jumlah penerimaan
-        $nopen=$dist->pluck('nopenerimaan');
-        $trm=PenerimaanRinci::select(
-            'penerimaan_h.kdpbf',
-            'penerimaan_r.nopenerimaan',
-            DB::raw('sum(penerimaan_r.subtotal) as total')
-        )
-        ->leftJoin('penerimaan_h','penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan')
-        ->whereIn('penerimaan_r.nopenerimaan',$nopen)
-        ->groupBy('penerimaan_r.nopenerimaan')
+        ])
+        ->groupBy('nopenerimaan', 'kd_obat','nopermintaan')
         ->get();
+        $list=PersiapanOperasiDistribusi::select(
+            'persiapan_operasi_distribusis.nopermintaan',
+            'persiapan_operasi_distribusis.nopenerimaan',
+            'persiapan_operasi_distribusis.kd_obat',
+            'penerimaan_r.harga_netto_kecil',
+            'penerimaan_h.kdpbf',
+            DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
+            DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah_retur'),
+            DB::raw('sum(persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) as dipakai'),
+            DB::raw('sum((persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) * penerimaan_r.harga_netto_kecil) as sub'),
+        )
+        ->leftJoin('penerimaan_r',function($jo){
+            $jo->on('penerimaan_r.nopenerimaan','=','persiapan_operasi_distribusis.nopenerimaan')
+            ->on('penerimaan_r.kdobat','=','persiapan_operasi_distribusis.kd_obat');
+        })
+        ->leftJoin('penerimaan_h',function($jo){
+            $jo->on('penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan');
+        })
+        ->leftJoin('persiapan_operasis',function($jo){
+            $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
+        })
+        ->leftJoin('persiapan_operasi_rincis',function($jo){
+            $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan') 
+            ->on('persiapan_operasi_rincis.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
+        })
+        ->whereIn('persiapan_operasi_distribusis.kd_obat',$master)
+        ->where('persiapan_operasis.flag','4')
+        ->whereNotNull('persiapan_operasi_rincis.dibayar')
+        ->havingRaw('dipakai > 0')
+        ->with([
+            'persiapan:nopermintaan,norm',
+            'persiapan.pasien:rs1,rs2',
+
+        ])
+        ->groupBy('nopenerimaan', 'kd_obat','nopermintaan')
+        ->get();
+
+        // // cari bast untuk cari jumlah dimintakan faktur dan bast
+        // $kdp = collect($data->items())->pluck('kode');
+        // $bastkonsi=BastKonsinyasi::with('rinci')->whereIn('kdpbf',$kdp)->get();
+
+        // // get jumlah penerimaan
+        // $nopen=$dist->pluck('nopenerimaan');
+        // $trm=PenerimaanRinci::select(
+        //     'penerimaan_h.kdpbf',
+        //     'penerimaan_r.nopenerimaan',
+        //     DB::raw('sum(penerimaan_r.subtotal) as total')
+        // )
+        // ->leftJoin('penerimaan_h','penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan')
+        // ->whereIn('penerimaan_r.nopenerimaan',$nopen)
+        // ->groupBy('penerimaan_r.nopenerimaan')
+        // ->get();
 
         $datanya=collect($data)['data'];
         $meta=collect($data)->except('data');
@@ -66,9 +122,10 @@ class HutangKonsinyasiController extends Controller
             'raw'=>$data,
             'data'=>$datanya,
             'meta'=>$meta,
-            'bastkonsi'=>$bastkonsi,
+            // 'bastkonsi'=>$bastkonsi,
             'dist'=>$dist,
-            'trm'=>$trm,
+            'list'=>$list,
+            // 'trm'=>$trm,
             'req'=>request()->all(),
         ]);
     }

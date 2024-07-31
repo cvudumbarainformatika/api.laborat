@@ -15,4 +15,8 @@ class PersiapanOperasiDistribusi extends Model
     {
         return $this->hasMany(PersiapanOperasiRinci::class, 'kd_obat', 'kd_obat');
     }
+
+    public function persiapan(){
+        return $this->belongsTo(PersiapanOperasi::class,'nopermintaan','nopermintaan');
+    }
 }
