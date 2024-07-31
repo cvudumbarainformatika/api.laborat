@@ -37,12 +37,12 @@ class HistoryKunjunganController extends Controller
             $tglx = Carbon::now()->format('Y-m-d 00:00:00');
             $tgl = Carbon::now()->format('Y-m-d 23:59:59');
         } else {
-            $tglx = request('from') . ' 00:00:00';
-            $tgl = request('to') . ' 23:59:59';
+            $tglx = request('to') . ' 00:00:00';
+            $tgl = request('from') . ' 23:59:59';
         }
   
         $sort = request('sort') === 'terbaru'? 'DESC':'ASC';
-        $status = request('status') ?? 'Semua';
+        $status = ((request('status') === 'Belum Pulang') ? [''] : ['2','3']);
   
         $query = Kunjunganranap::query();
   
@@ -100,14 +100,17 @@ class HistoryKunjunganController extends Controller
                         ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
                 });
             })
-            
+            ->where(function ($q) use ($status) {
+                if (request('status') !== 'Semua') {
+                    $q->whereIn('rs23.rs22', $status);
+                }
+                
+            })
+            ->orderby('rs23.rs3', $sort)
             ;
-            
-  
-          $q = $select;
 
 
-          return $q;
+        return $select;
     }
 
 }
