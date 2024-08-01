@@ -364,17 +364,18 @@ class EresepController extends Controller
 
                     if ($record['jenisresep'] == 'Racikan') {
                         if ($record['tiperacikan'] == 'DTD') {
-                            $simpandtd = Permintaanresepracikan::create(
+                            $simpandtd = Permintaanresepracikan::updateOrCreate(
                                 [
                                     'noreg' => $record['noreg'],
                                     'noresep' => $noresep,
                                     'namaracikan' => $record['namaracikan'],
+                                    'kdobat' => $record['kodeobat'],
+                                ],[
                                     'tiperacikan' => $record['tiperacikan'],
                                     'jumlahdibutuhkan' => $record['jumlahdibutuhkan'], // jumlah racikan
                                     'aturan' => $record['aturan'],
                                     'konsumsi' => $record['konsumsi'],
                                     'keterangan' => $record['keterangan'],
-                                    'kdobat' => $record['kodeobat'],
                                     'kandungan' => $record['kandungan'] ?? '',
                                     'fornas' =>$record['fornas'] ?? '',
                                     'forkit' =>$record['forkit'] ?? '',
@@ -399,17 +400,18 @@ class EresepController extends Controller
                             //     $simpandtd->load('mobat:kd_obat,nama_obat');
                             // }
                         } else {
-                            $simpannondtd = Permintaanresepracikan::create(
+                            $simpannondtd = Permintaanresepracikan::updateOrCreate(
                                 [
                                     'noreg' => $record['noreg'],
                                     'noresep' => $noresep,
                                     'namaracikan' => $record['namaracikan'],
+                                    'kdobat' => $record['kodeobat'],
+                                ],[
                                     'tiperacikan' => $record['tiperacikan'],
                                     'jumlahdibutuhkan' => $record['jumlahdibutuhkan'],
                                     'aturan' => $record['aturan'],
                                     'konsumsi' => $record['konsumsi'],
                                     'keterangan' => $record['keterangan'],
-                                    'kdobat' => $record['kodeobat'],
                                     'kandungan' => $record['kandungan'] ?? '',
                                     'fornas' => $record['fornas'] ?? '',
                                     'forkit' => $record['forkit'] ?? '',
@@ -417,7 +419,7 @@ class EresepController extends Controller
                                     'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 500 : 0,
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajualx,
-                                    'kode108' => $record['>kode108'],
+                                    'kode108' => $record['kode108'],
                                     'uraian108' => $record['uraian108'],
                                     'kode50' => $record['kode50'],
                                     'uraian50' => $record['uraian50'],
@@ -435,11 +437,12 @@ class EresepController extends Controller
                             // }
                         }
                     } else {
-                        $simpanrinci = Permintaanresep::create(
+                        $simpanrinci = Permintaanresep::updateOrCreate(
                             [
                                 'noreg' => $record['noreg'],
                                 'noresep' => $noresep,
                                 'kdobat' => $record['kodeobat'],
+                            ],[
                                 'kandungan' => $record['kandungan'] ?? '',
                                 'fornas' => $record['fornas'] ?? '',
                                 'forkit' => $record['forkit'] ?? '',
@@ -495,9 +498,11 @@ class EresepController extends Controller
                 } catch (\Exception $e) {
 
                     if($cekpemberianobat){
+                        $cekpemberianobat =  false;
                             $response[] = [
                                 'newapotekrajal' => $endas ?? [],
                                 'nota' => $noresep,
+                                'kdobat' => $kdobat[$key],
                                 'messageError' => json_decode($e->getMessage(), true)
                             ];
                             continue;
@@ -723,7 +728,7 @@ class EresepController extends Controller
             )
             ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
             ->where('stokreal.kdruang', request()->kdruang)
-            ->where('stokreal.jumlah', '>', 0)
+            // ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
             ->where('new_masterobat.status_konsinyasi', '')
             ->when(request()->tiperesep === 'prb', function ($q) {
