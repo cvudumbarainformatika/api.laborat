@@ -240,6 +240,98 @@ class PersiapanOperasiController extends Controller
     {
         $user = FormatingHelper::session_user();
         $kode = $user['kodesimrs'];
+
+        $cariobat = Stokreal::select(
+            'stokreal.kdobat as kdobat',
+            'stokreal.kdruang as kdruang',
+            'stokreal.tglexp',
+            'new_masterobat.nama_obat as namaobat',
+            'new_masterobat.kandungan as kandungan',
+            'new_masterobat.bentuk_sediaan as bentuk_sediaan',
+            'new_masterobat.satuan_k as satuankecil',
+            'new_masterobat.status_fornas as fornas',
+            'new_masterobat.status_forkid as forkit',
+            'new_masterobat.status_generik as generik',
+            'new_masterobat.status_kronis as kronis',
+            'new_masterobat.status_prb as prb',
+            'new_masterobat.kode108',
+            'new_masterobat.uraian108',
+            'new_masterobat.kode50',
+            'new_masterobat.uraian50',
+            'new_masterobat.status_konsinyasi',
+            'new_masterobat.kekuatan_dosis as kekuatandosis',
+            'new_masterobat.volumesediaan as volumesediaan',
+            DB::raw('sum(stokreal.jumlah) as total')
+        )
+            ->with(
+                [
+                    'minmax',
+                    'persiapanrinci' => function ($res) {
+                        $res->select(
+                            'persiapan_operasi_rincis.kd_obat',
+                            DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
+                        )
+                            ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
+                            ->whereIn('persiapan_operasis.flag', ['', '1'])
+                            ->groupBy('persiapan_operasi_rincis.kd_obat');
+                    },
+                    'permintaanobatrinci' => function ($permintaanobatrinci) use($request) {
+                        $permintaanobatrinci->select(
+                            'permintaan_r.no_permintaan',
+                            'permintaan_r.kdobat',
+                            DB::raw('sum(permintaan_r.jumlah_minta) as allpermintaan')
+                        )
+                            ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                            // biar yang ada di tabel mutasi ga ke hitung
+                            ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                                $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                    ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                            })
+                            ->whereNull('mutasi_gudangdepo.kd_obat')
+
+                            ->where('permintaan_h.tujuan', $request->kodedepo)
+                            ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                            ->groupBy('permintaan_r.kdobat');
+                    },
+                ]
+            )
+            ->leftjoin('new_masterobat', 'new_masterobat.kd_obat', 'stokreal.kdobat')
+            ->where('stokreal.kdruang', $request->kodedepo)
+            ->where('stokreal.jumlah', '>', 0)
+            ->where('stokreal.kdobat', $request->kodeobat)
+                // ->where(function ($query) {
+                //     $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
+                //         ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%')
+                //         ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
+                // })
+            ->first();
+        // $wew = collect($cariobat)->map(function ($x, $y) {
+        //     $total = $x->total ?? 0;
+        //     $jumlahper = $x['jumlahper'][0]->jumlah ?? 0;
+        //     $permintaanobatrinci = $x['permintaanobatrinci'][0]->allpermintaan ?? 0; // mutasi antar depo
+        //     $x->alokasi = (float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
+        //     return $x;
+        // });
+        $total = $cariobat->total ?? 0;
+        $jumlahper=$cariobat->persiapanrinci[0]->jumlah ?? 0;
+        $permintaanobatrinci=$cariobat->permintaanobatrinci[0]->allpermintaan ?? 0;
+        $alokasi=(float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
+        if($request->jumlah_minta > $alokasi){
+            return new JsonResponse([
+                'message'=>'Maaf Stok Alokasi tidak mencukupi, sisa alokasi : '.$alokasi
+            ],410); 
+        }
+        // return new JsonResponse([
+        //     'cariobat' => $cariobat,
+        //     'total' => $total,
+        //     'jumlahper' => $jumlahper,
+        //     'permintaanobatrinci' => $permintaanobatrinci,
+        //     'alokasi' => $alokasi,
+        //     // 'wew' => $wew,
+        //     // 'req' => $request->all(),
+        //     // 'nopermintaan' => $nopermintaan,
+        //     // 'num' => $num
+        // ], 410);
         if (!$request->nopermintaan) {
             // $jum = PersiapanOperasi::whereMonth('tgl_permintaan', date('m'))->latest('id')->get();
             // // $jum = PersiapanOperasi::whereMonth('tgl_permintaan', '01')->latest('id')->get();
@@ -293,6 +385,8 @@ class PersiapanOperasiController extends Controller
         //     'nopermintaan' => $nopermintaan,
         //     'num' => $num
         // ], 410);
+        // cek lagi alokasi
+        
         $head = PersiapanOperasi::updateOrCreate(
             [
                 'noreg' => $request->noreg,
