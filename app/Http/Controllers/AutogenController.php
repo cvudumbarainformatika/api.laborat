@@ -13,6 +13,7 @@ use App\Models\TransaksiLaborat;
 
 use App\Models\Simrs\Master\Mkamar;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -39,6 +40,18 @@ class AutogenController extends Controller
         // return new JsonResponse($query['data']);
     }
 
+    public function resetCounter(){
+        $counter=Counter::first();
+        // if($counter){
+        //     $counter->update([
+        //         'deporajal'=>0,
+        //         'deporanap'=>0,
+        //         'depook'=>0,
+        //         'depoigd'=>0,
+        //     ]);
+        // }
+        return $counter;
+    }
     public function iniSipUntukmenggantiWith()
     {
         $query = Rs141::select(
