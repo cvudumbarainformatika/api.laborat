@@ -82,6 +82,7 @@ class HistoryKunjunganController extends Controller
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
+            'rs24.rs3 as kelasruangan',
             'rs24.rs5 as group_ruangan'
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')

@@ -17,6 +17,7 @@ use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
+use App\Models\Simrs\Ranap\Rs23Meta;
 use App\Models\Simrs\Ranap\Rsjr;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -284,6 +285,17 @@ class RegistrasiRanapController extends Controller
         'noreglama' => $request->noreglama ?? null,
         'message' => 'OK',
       ];
+
+      // Insert Ke metaranap
+      Rs23Meta::updateOrCreate(
+        ['noreg' => $tempNoreg],
+        [
+          'norm' => $request->norm,
+          'kd_jeniskasus' => $request->kategoriKasus,
+          'indikator_naik_kelas'=> $request->indikatorPerubahanKelas,
+          'user_input'=> auth()->user()->pegawai_id,
+
+        ]);
 
 
       return new JsonResponse($data, 200);
