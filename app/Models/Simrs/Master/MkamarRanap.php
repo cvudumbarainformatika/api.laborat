@@ -12,7 +12,7 @@ class MkamarRanap extends Model
     use HasFactory;
     protected $table      = 'rs25';
     protected $guarded = ['id'];
-    protected $timestamps = false;
+    public $timestamps = false;
 
     public function pengunjung()
     {

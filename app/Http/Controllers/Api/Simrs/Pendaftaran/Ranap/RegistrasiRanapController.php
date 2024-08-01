@@ -6,6 +6,7 @@ use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Helpers\TarifHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Adminranap;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Hutangpasien;
@@ -15,6 +16,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Ranap\Rsjr;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -56,7 +58,32 @@ class RegistrasiRanapController extends Controller
       }
 
       
+      return self::regKunjungan($request);
+      
 
+    }
+
+
+    public function registrasiranapIgd(Request $request)
+    {
+      $request->validate([
+        'norm' => 'required|string',
+        'noreg' => 'required|string',
+      ]);
+
+      return self::regKunjungan($request);
+    }
+
+    public function registrasiranapSpri(Request $request)
+    {
+        $request->validate([
+          'norm' => 'required|string',
+        ]);
+        return self::regKunjungan($request);
+    }
+
+    public static function regKunjungan($request)
+    {
       $cekRanap = Kunjunganranap::select('rs1')->where('rs2','=', $request->norm)->where('rs22','=', '')->get();
       $cekHutang = Hutangpasien::where('rs2', $request->norm)->where('rs18','1')->get();
       $cekIgd = KunjunganPoli::select('rs1')->where('rs2', $request->norm)->where('rs19', '')->where('rs8', 'POL014')->get();
@@ -76,13 +103,11 @@ class RegistrasiRanapController extends Controller
 
       
 
-      // $tglMsk = $request->tglmasuk ?? Carbon::now()->format('Y-m-d');
-      $tglmasuk = date('Y-m-d H:i:s');
+      $tglMsk = Carbon::now();
+      $tglmasuk = $tglMsk->toDateTimeString();
 
-      // INI DARI IGD
-
-      $ruang = $request->kode_ruang ?? '';
-      $titipan = $request->isTitipan === 'Ya'? $request->hakruang : '';
+      $ruang = $request->isTitipan === 'Ya' ? $request->kode_ruang ?? '' : $request->hakruang ?? '';
+      $titipan = $request->isTitipan === 'Ya'? $request->hakruang ?? '' : '';
       
       $kamar = $request->kamar ?? ''; 
       $noBed = $request->no_bed ?? ''; 
@@ -92,73 +117,49 @@ class RegistrasiRanapController extends Controller
       $tempNoreg = null;
       
 
-      if ($request->has('noreg')) {
-        $reg = Kunjunganranap::updateOrCreate(
-          ['rs1' => $request->noreg],
-          [
-            'rs13' => $request->asalrujukan ?? '',
-            'rs5' => $ruang,
-            'rs6' => $kamar,
-            'rs7' => $noBed,
-            'rs10'=> $request->kd_dokter ?? '',
-            'rs19'=> $request->kodesistembayar ?? '',
-            'rs11'=> $request->penanggungjawab ?? '',
-            'rs30'=> auth()->user()->pegawai_id ?? '',
-            'rs31'=> '',
-            'rs38'=> $request->hakKelasBpjs ?? '', // hak Kelas dari BPJS
-            'rs39'=> $request->diagnosaAwal['icd'] ?? '', // ICD
-            'rs40'=> $request->diagnosaAwal['keterangan'] ?? '', // BELUM ADA di request
-            'titipan' => $titipan
-          ]
-        );
-
-        $tempNoreg = $request->noreg;
-          
-      } else { // INI DARI SELAIN IGD (bisa dr poli atau lain-lain SPRI)
-        DB::select('call reg_ranap(@nomor)');
-        $hcounter = DB::table('rs1')->select('rs12')->get();
-        $wew = $hcounter[0]->rs12;
-        $noreg = FormatingHelper::gennoreg($wew, 'I');
-
-        // $input = new Request([
-        //     'noreg' => $noreg
-        // ]);
-
-        // $input->validate([
-        //     'noreg' => 'required|unique:rs23,rs1'
-        // ]);
-        $reg = new Kunjunganranap();
-        $reg->rs1 = $noreg;
-        $reg->rs2 = $request->norm;
-        $reg->rs3 = $tglmasuk;
-        $reg->rs13 = $request->asalrujukan ?? '';
-        $reg->rs5 = $ruang;
-        $reg->rs6 = $kamar;
-        $reg->rs7 = $noBed;
-        $reg->rs10 = $request->kd_dokter ?? '';
-        $reg->rs19 = $request->kodesistembayar ?? '';
-        $reg->rs11 = $request->penanggungjawab ?? '';
-        $reg->rs30 = auth()->user()->pegawai_id ?? '';
-        $reg->rs31 = '';
-        $reg->rs38 = $request->hakKelasBpjs ?? '';
-        $reg->rs39 = $request->diagnosaAwal['icd'] ?? '';
-        $reg->rs40 = $request->diagnosaAwal['keterangan'] ?? '';
-        $reg->titipan = $titipan ?? '';
-        $reg->save();
-
-        if ($request->kodesistembayar === 'AR32') {
-          Rsjr::updateOrCreate(
-            ['rs1' => $noreg],
+      if ($request->has('noreg') ) {
+        if ($request->noreg === null || $request->noreg === '') {
+          $tempNoreg = self::createNoreg($request, $tglmasuk, $ruang, $kamar, $noBed);
+        } else {
+          Kunjunganranap::updateOrCreate(
+            ['rs1' => $request->noreg],
             [
-              'rs2' => $request->norm, 'rs3'=> 'JR1',
-              'rs4' => 'Pembuatan Dokumen Asuransi',
-              'rs5' => '45000', 'rs6' => auth()->user()->pegawai_id,
+              'rs2' => $request->norm,
+              'rs3' => $tglmasuk,
+              'rs13' => $request->asalrujukan ?? '',
+              'rs5' => $ruang,
+              'rs6' => $kamar,
+              'rs7' => $noBed,
+              'rs10'=> $request->kd_dokter ?? '',
+              'rs19'=> $request->kodesistembayar ?? '',
+              'rs11'=> $request->penanggungjawab ?? '',
+              'rs30'=> auth()->user()->pegawai_id ?? '',
+              'rs31'=> '',
+              'rs38'=> $request->hakKelasBpjs ?? '', // hak Kelas dari BPJS
+              'rs39'=> $request->diagnosaAwal['icd'] ?? '', // ICD
+              'rs40'=> $request->diagnosaAwal['keterangan'] ?? '', // BELUM ADA di request
+              'titipan' => $titipan
             ]
           );
+  
+          $tempNoreg = $request->noreg;
         }
+        
+          
+      } else { // INI DARI SELAIN IGD (bisa dr poli atau lain-lain SPRI)
+        $tempNoreg = self::createNoreg($request, $tglmasuk, $ruang, $kamar, $noBed);
 
-        $tempNoreg = $noreg;
+      }
 
+      if ($request->kodesistembayar === 'AR32') {
+        Rsjr::updateOrCreate(
+          ['rs1' => $tempNoreg],
+          [
+            'rs2' => $request->norm, 'rs3'=> 'JR1',
+            'rs4' => 'Pembuatan Dokumen Asuransi',
+            'rs5' => '45000', 'rs6' => auth()->user()->pegawai_id,
+          ]
+        );
       }
 
       // return new JsonResponse($tempNoreg, 200);
@@ -170,7 +171,7 @@ class RegistrasiRanapController extends Controller
         // return new JsonResponse($rs24, 200);
         if ($rs24) {
           $rs25 =MkamarRanap::where('rs5','=', $ruang)->where('rs1','=', $kamar)->where('rs2','=', $noBed)->first();
-          return new JsonResponse($rs25, 200);
+          // return new JsonResponse($rs25, 200);
           if ($rs25) {
             $rs25->rs3 = 'S';
             $rs25->rs4 = 'N';
@@ -210,7 +211,9 @@ class RegistrasiRanapController extends Controller
         $koderuangkelas=$koderuang.$kelas;
       }
 
-      Rstigalimax::where('noreg','=', $tempNoreg)
+      
+
+      Rstigalimax::where('rs1','=', $tempNoreg)
         ->where('rs3','=', 'K1#')
         ->where('rs6', '=', 'Akomodasi / Kamar')
       ->delete();
@@ -229,7 +232,27 @@ class RegistrasiRanapController extends Controller
         'rs18' => $koderuangkelas
       ]);
 
-      // INSERT PEMBAYARAN
+
+      // INSERT ADMINISTRASI
+
+      $admin = TarifHelper::admin($tempNoreg);
+      if (count($tarif)===0) {
+        return new JsonResponse(['message' => 'MAAF ... TARIF ADMINISTRASI TIDAK DITEMUKAN'], 500);
+      }
+
+      Adminranap::updateOrCreate(
+        ['noreg' => $tempNoreg],
+        [
+          'norm' => $request->norm,
+          'sarana' => $admin[0]->sarana,
+          'kd_sistembayar' => $admin[0]->sistembayar,
+          'pelayanan' => $admin[0]->pelayanan,
+          'kd_ruang' => $admin[0]->koderuang,
+          'user_input'=> auth()->user()->pegawai_id
+        ]
+      );
+
+      //INSERT PEMBAYARAN
       // Pembayaran::updateOrCreate(
       //   ['rs1' => $tempNoreg],
       //   [
@@ -237,20 +260,70 @@ class RegistrasiRanapController extends Controller
       //     'rs3' => 'A1#',
       //     'rs4' => date("Y-m-d H:i:s"),
       //     'rs5' => 'D',
-      //     'rs6' => $namabiaya, // belum ada
-      //     'rs7' => $biayaadmin1, // belum ada
+      //     // 'rs6' => $namabiaya, // belum ada
+      //     // 'rs7' => $biayaadmin1, // belum ada
       //     'rs8' => $sistembayar,
       //     'rs9' => '',
       //     'rs10' => auth()->user()->pegawai_id,
-      //     'rs11' => $biayaadmin2, // belum ada
+      //     // 'rs11' => $biayaadmin2, // belum ada
       //     'rs12' => auth()->user()->pegawai_id,
       //     'rs13' => '1'
       //   ]
       // );
 
+      if($request->has('noreglama')){
+        $cekSpri = Rs141::where('rs1', $request->noreglama)->first();
+        if($cekSpri){
+          $cekSpri->flag = $tempNoreg;
+          $cekSpri->save();
+        }
+      }
 
-      return new JsonResponse(['message' => 'ok'], 200);
+      $data = [
+        'noreg' => $tempNoreg,
+        'noreglama' => $request->noreglama ?? null,
+        'message' => 'OK',
+      ];
 
+
+      return new JsonResponse($data, 200);
+    }
+
+    public static function createNoreg($request, $tglmasuk, $ruang, $kamar, $noBed)
+    {
+        DB::select('call reg_ranap(@nomor)');
+        $hcounter = DB::table('rs1')->select('rs12')->get();
+        $wew = $hcounter[0]->rs12;
+        $noreg = FormatingHelper::gennoreg($wew, 'I');
+
+        // $input = new Request([
+        //     'noreg' => $noreg
+        // ]);
+
+        // $input->validate([
+        //     'noreg' => 'required|unique:rs23,rs1'
+        // ]);
+        $reg = new Kunjunganranap();
+        $reg->rs1 = $noreg;
+        $reg->rs2 = $request->norm;
+        $reg->rs3 = $tglmasuk;
+        $reg->rs13 = $request->asalrujukan ?? '';
+        $reg->rs5 = $ruang;
+        $reg->rs6 = $kamar;
+        $reg->rs7 = $noBed;
+        $reg->rs10 = $request->kd_dokter ?? '';
+        $reg->rs19 = $request->kodesistembayar ?? '';
+        $reg->rs11 = $request->penanggungjawab ?? '';
+        $reg->rs30 = auth()->user()->pegawai_id ?? '';
+        $reg->rs31 = '';
+        $reg->rs38 = $request->hakKelasBpjs ?? '';
+        $reg->rs39 = $request->diagnosaAwal['icd'] ?? '';
+        $reg->rs40 = $request->diagnosaAwal['keterangan'] ?? '';
+        $reg->titipan = $titipan ?? '';
+        $reg->save();
+
+        
+        return $noreg;
     }
 
 
