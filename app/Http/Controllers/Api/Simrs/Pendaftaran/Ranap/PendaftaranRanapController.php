@@ -31,7 +31,7 @@ class PendaftaranRanapController extends Controller
     }
     
 
-    static function query_table()
+    public static function query_table()
     {
       // rs23 tabel ranap
       // rs23.rs22 status ranap
@@ -46,9 +46,8 @@ class PendaftaranRanapController extends Controller
       $sort = request('sort') === 'terbaru'? 'DESC':'ASC';
       $status = request('status') ?? 'Semua';
 
-      $query = KunjunganPoli::query();
-
-      $select = $query->select(
+      $query = KunjunganPoli::query()
+        ->select(
         'rs17.rs1',
         'rs17.rs9',
         'rs17.rs4',
@@ -86,15 +85,14 @@ class PendaftaranRanapController extends Controller
         'rs222.kodedokterdpjp as kodedokterdpjp',
         'rs222.dokterdpjp as dokterdpjp',
         'rs222.kdunit as kdunit',
-        // 'memodiagnosadokter.diagnosa as memodiagnosa',
         'rs141.rs4 as status_tunggu',
         'rs24.rs2 as ruangan',
         'rs24.rs1 as koderuangan',
         'rs23.rs2 as status_masuk',
         'rs23.rs5 as kode_ruangan_sekarang',
         'rs141.flag as flag'
-        // 'antrian_ambil.nomor as noantrian'
-      )->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
+      )
+        ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
         ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
         ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
@@ -103,49 +101,39 @@ class PendaftaranRanapController extends Controller
         ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
         ->leftjoin('rs23', 'rs23.rs1', '=', 'rs141.rs1') // status masuk
         ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
-        // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
-        // ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1');
-        
-        ;
-        
-
-        $q = $select
-        ->with([
-            // 'spri:rs1,flag','spri.kunjungan_ranap:rs1'
-            'tunggu_ranap:rs1,rs22'
-        ])
-            ->whereBetween('rs17.rs3', [$tgl, $tglx])
-            // ->where('rs17.rs8', '=', 'POL014')
-            ->where('rs141.rs4', '=', 'Rawat Inap')
-            ->where(function ($query) {
-                if (request('unit') === 'igd') {
-                    $query->where('rs17.rs8', '=', 'POL014');
+        ->with(['tunggu_ranap:rs1,rs22'])
+        ->whereBetween('rs17.rs3', [$tgl, $tglx])
+        // ->where('rs17.rs8', '=', 'POL014')
+        ->where('rs141.rs4', '=', 'Rawat Inap')
+        ->where(function ($query) {
+            if (request('unit') === 'igd') {
+                $query->where('rs17.rs8', '=', 'POL014');
+            } else {
+                $query->where('rs17.rs8', '<>', 'POL014');
+            }
+        })
+        ->where(function ($sts) use ($status) {
+            if ($status !== 'Semua') {
+                if ($status === 'Terlayani') {
+                    $sts->where('rs23.rs2', '!=',null);
                 } else {
-                    $query->where('rs17.rs8', '<>', 'POL014');
+                    $sts->where('rs23.rs2', '=', null);
                 }
-            })
-            ->where(function ($sts) use ($status) {
-                if ($status !== 'Semua') {
-                    if ($status === 'Terlayani') {
-                        $sts->where('rs23.rs2', '!=',null);
-                    } else {
-                        $sts->where('rs23.rs2', '=', null);
-                    }
-                }
-            })
-            ->where(function ($query) {
-                $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
-                    // ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
-                    // ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
-            })->groupBy('rs17.rs1')
-            ->orderby('rs17.rs3', $sort);
+            }
+        })
+        ->where(function ($query) {
+            $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+                // ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
+                // ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
+        })->groupBy('rs17.rs1')
+        ->orderby('rs17.rs3', $sort);
 
-        return $q;
+        return $query;
     }
 
     public function wheatherapi_country()
