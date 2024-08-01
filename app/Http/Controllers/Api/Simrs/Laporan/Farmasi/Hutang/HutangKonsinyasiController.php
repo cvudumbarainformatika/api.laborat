@@ -31,8 +31,9 @@ class HutangKonsinyasiController extends Controller
             'persiapan_operasi_distribusis.nopermintaan',
             'persiapan_operasi_distribusis.nopenerimaan',
             'persiapan_operasi_distribusis.kd_obat',
-            'penerimaan_r.harga_netto_kecil',
+            'penerimaan_r.harga_netto_kecil as harga_net',
             'penerimaan_h.kdpbf',
+            'new_masterobat.nama_obat',
             DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
             DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah_retur'),
             DB::raw('sum(persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) as dipakai'),
@@ -44,6 +45,9 @@ class HutangKonsinyasiController extends Controller
         })
         ->leftJoin('penerimaan_h',function($jo){
             $jo->on('penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan');
+        })
+        ->leftJoin('new_masterobat',function($jo){
+            $jo->on('new_masterobat.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
         })
         ->leftJoin('persiapan_operasis',function($jo){
             $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
@@ -57,22 +61,25 @@ class HutangKonsinyasiController extends Controller
         ->whereNull('persiapan_operasi_rincis.dibayar')
         ->havingRaw('dipakai > 0')
         ->with([
+            // 'master:kd_obat,nama_obat',
             'persiapan:nopermintaan,norm',
             'persiapan.pasien:rs1,rs2',
 
         ])
-        ->groupBy('nopenerimaan', 'kd_obat','nopermintaan')
+        ->groupBy('persiapan_operasi_distribusis.nopenerimaan', 'persiapan_operasi_distribusis.kd_obat','persiapan_operasi_distribusis.nopermintaan')
         ->get();
         $list=PersiapanOperasiDistribusi::select(
             'persiapan_operasi_distribusis.nopermintaan',
             'persiapan_operasi_distribusis.nopenerimaan',
             'persiapan_operasi_distribusis.kd_obat',
-            'penerimaan_r.harga_netto_kecil',
+            // 'penerimaan_r.harga_netto_kecil',
+            'detail_bast_konsinyasis.harga_net',
             'penerimaan_h.kdpbf',
+            'new_masterobat.nama_obat',
             DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
             DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah_retur'),
             DB::raw('sum(persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) as dipakai'),
-            DB::raw('sum((persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) * penerimaan_r.harga_netto_kecil) as sub'),
+            DB::raw('sum((persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) * detail_bast_konsinyasis.harga_net) as sub'),
         )
         ->leftJoin('penerimaan_r',function($jo){
             $jo->on('penerimaan_r.nopenerimaan','=','persiapan_operasi_distribusis.nopenerimaan')
@@ -81,6 +88,9 @@ class HutangKonsinyasiController extends Controller
         ->leftJoin('penerimaan_h',function($jo){
             $jo->on('penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan');
         })
+        ->leftJoin('new_masterobat',function($jo){
+            $jo->on('new_masterobat.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
+        })
         ->leftJoin('persiapan_operasis',function($jo){
             $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
         })
@@ -88,9 +98,18 @@ class HutangKonsinyasiController extends Controller
             $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan') 
             ->on('persiapan_operasi_rincis.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
         })
+        ->leftJoin('detail_bast_konsinyasis',function($jo){
+            $jo->on('detail_bast_konsinyasis.nopermintaan','=','persiapan_operasi_rincis.nopermintaan') 
+            ->on('detail_bast_konsinyasis.kdobat','=','persiapan_operasi_rincis.kd_obat')
+            ->on('detail_bast_konsinyasis.noresep','=','persiapan_operasi_rincis.noresep');
+        })
+        ->leftJoin('bast_konsinyasis',function($jo){
+            $jo->on('bast_konsinyasis.notranskonsi','=','detail_bast_konsinyasis.notranskonsi');
+        })
         ->whereIn('persiapan_operasi_distribusis.kd_obat',$master)
         ->where('persiapan_operasis.flag','4')
         ->whereNotNull('persiapan_operasi_rincis.dibayar')
+        ->whereNull('bast_konsinyasis.tgl_pembayaran')
         ->havingRaw('dipakai > 0')
         ->with([
             'persiapan:nopermintaan,norm',
