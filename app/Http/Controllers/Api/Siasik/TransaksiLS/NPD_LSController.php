@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\Api\Siasik\TransaksiLS;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Helpers\FormatingHelper;
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
-use App\Models\Siasik\TransaksiLS\NpdLS_heder;
-use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Simrs\Master\Mpihakketiga;
+use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Siasik\TransaksiLS\NpdLS_heder;
+use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use Illuminate\Support\Facades\Date;
 
 class NPD_LSController extends Controller
 {
@@ -36,24 +39,81 @@ class NPD_LSController extends Controller
         return new JsonResponse($cari);
     }
 
-    public function bast(){
+    public function bastfarmasi(){
         $penerimaan=PenerimaanHeder::where('nobast', '!=', '')
+        ->whereIn('jenis_penerimaan', ['Pesanan'])
         ->whereNotNull('tgl_bast')
-        ->with('penerimaanrinci')
-        ->orderBy('tgl_bast', 'DESC')
-        ->orderBy('nobast', 'DESC')
-        ->get();
+        ->when(request('q'),function ($query) {
+            $query->where('nobast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
+        })
+        // ->with('penerimaanrinci')
+        // ->orderBy('tgl_bast', 'DESC')
+        ->orderBy('nobast', 'asc')
+        ->groupBy('nobast')
+        ->paginate(request('per_page'));
+        // ->get();
         return new JsonResponse($penerimaan);
     }
-    public function simpan(Request $request)
+    public function simpannpd(Request $request)
     {
-        $save = NpdLS_heder::create([
-            'nonpdls' => self::buatnomor(),
-            'kodekegiatanblud' => $request -> kodekegiatanblud
+        $request->validate([
+            'keterangan' => 'required|min:3',
+            'pptk' => 'required',
         ]);
-        return response()->json(['message' =>'Berhasil Disimpan', 'succes' => $save], 200);
+
+        $time = date('Y-m-d H:i:s');
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
+
+        $nomor = $request->nonpdls ?? self::buatnomor();
+
+        $save = NpdLS_heder::updateOrCreate(
+            [
+                'nonpdls' => $nomor,
+            ],
+            [
+                'tglnpdls'=>$request->tglnpdls ?? '',
+                'kodepptk'=>$request->kodepptk ?? '',
+                'pptk'=>$request->pptk ?? '',
+                'serahterimapekerjaan'=>$request->serahterimapekerjaan ?? '',
+                'triwulan'=>$request->triwulan ?? '',
+                'program'=>'PROGRAM PENUNJANG URUSAN PEMERINTAH DAERAH KABUPATEN/KOTA',
+                'nokontrak'=>$request->nokontrak ?? '',
+                'kegiatan'=>'PELAYANAN DAN PENUNJANG PELAYANAN BLUD',
+                'kodekegiatanblud'=>$request->kodekegiatanblud ?? '',
+                'kegiatanblud'=>$request->kegiatanblud ?? '',
+                'kodepenerima'=>$request->kodepenerima ?? '',
+                'penerima'=>$request->penerima ?? '',
+                'bank'=>$request->bank ?? '',
+                'rekening'=>$request->rekening ?? '',
+                'npwp'=>$request->npwp ?? '',
+                'kodebidang'=>$request->kodebidang ?? '',
+                'bidang'=>$request->bidang ?? '',
+                'keterangan'=>$request->keterangan ?? '',
+                'biayatransfer'=>$request->biayatransfer ?? '',
+                'tglentry'=>$time ?? '',
+                'userentry'=>$pegawai ?? '',
+                'noserahterima'=>$request->noserahterima ?? '',
+            ]
+        );
+        if (!$save){
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
+        return new JsonResponse(
+            [
+                'message' => 'Data Berhasil disimpan...!!!',
+                'result' => $save
+            ],
+            200
+        );
     }
     public static function buatnomor(){
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
+
         $bidang = Mapping_Bidang_Ptk_Kegiatan::select('alias')->where('kodekegiatan', request('kodekegiatan'))->get();
         $huruf = ('NPD-LS');
         // $no = ('4.02.0.00.0.00.01.0000');
@@ -66,11 +126,11 @@ class NPD_LSController extends Controller
         $cek = NpdLS_heder::count();
         if ($cek == null){
             $urut = "00001";
-            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($bidang).'/'.strtoupper($huruf).'/'.$thn;
+            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($pegawai).'/'.strtoupper($huruf).'/'.$thn;
         }
         else{
             $ambil=NpdLS_heder::all()->last();
-            $urut = (int)substr($ambil->notrans, 1, 4) + 1;
+            $urut = (int)substr($ambil->nonpdls, 0, 5) + 1;
             //cara menyambungkan antara tgl dn kata dihubungkan tnda .
             // $urut = "000" . $urut;
             if(strlen($urut) == 1){
@@ -88,9 +148,65 @@ class NPD_LSController extends Controller
             else {
                 $urut = (int)$urut;
             }
-            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($bidang).'/'.strtoupper($huruf).'/'.$thn;
+            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($pegawai).'/'.strtoupper($huruf).'/'.$thn;
         }
 
         return $sambung;
     }
+    // public static function getQuartersBetween($start_ts, $end_ts)
+    // {
+    //     $quarters = [];
+    //     $months_per_year = [];
+    //     $years = self::getYearsBetween($start_ts, $end_ts);
+    //     $months = self::getMonthsBetween($start_ts, $end_ts);
+
+    //     foreach ($years as $year) {
+    //         foreach ($months as $month) {
+    //             if ($year->format('Y') == $month->format('Y')) {
+    //                 $months_per_year[$year->format('Y')][] = $month;
+    //             }
+    //         }
+    //     }
+
+    //     foreach ($months_per_year as $year => $months) {
+    //         $january = new Date('01-01-' . $year);
+    //         $march = new Date('01-03-' . $year);
+    //         $april = new Date('01-04-' . $year);
+    //         $june = new Date('01-06-' . $year);
+    //         $july = new Date('01-07-' . $year);
+    //         $september = new Date('01-09-' . $year);
+    //         $october = new Date('01-10-' . $year);
+    //         $december = new Date('01-12-' . $year);
+
+    //         if (in_array($january, $months) && in_array($march, $months)) {
+    //             $quarter_per_year['label'] = 'T1 / ' . $year;
+    //             $quarter_per_year['start_day'] = $january->startOfMonth();
+    //             $quarter_per_year['end_day'] = $march->endOfMonth()->endOfDay();
+    //             array_push($quarters, $quarter_per_year);
+    //         }
+
+    //         if (in_array($april, $months) && in_array($june, $months)) {
+    //             $quarter_per_year['label'] = 'T2 / ' . $year;
+    //             $quarter_per_year['start_day'] = $april->startOfMonth();
+    //             $quarter_per_year['end_day'] = $june->endOfMonth()->endOfDay();
+    //             array_push($quarters, $quarter_per_year);
+    //         }
+
+    //         if (in_array($july, $months) && in_array($september, $months)) {
+    //             $quarter_per_year['label'] = 'T3 / ' . $year;
+    //             $quarter_per_year['start_day'] = $july->startOfMonth();
+    //             $quarter_per_year['end_day'] = $september->endOfMonth()->endOfDay();
+    //             array_push($quarters, $quarter_per_year);
+    //         }
+
+    //         if (in_array($october, $months) && in_array($december, $months)) {
+    //             $quarter_per_year['label'] = 'T4 / ' . $year;
+    //             $quarter_per_year['start_day'] = $october->startOfMonth();
+    //             $quarter_per_year['end_day'] = $december->endOfMonth()->endOfDay();
+    //             array_push($quarters, $quarter_per_year);
+    //         }
+    //     }
+
+    //     return $quarters;
+    // }
 }
