@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
+use App\Models\Simrs\Master\Mpihakketiga;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,5 +20,12 @@ class PersiapanOperasiDistribusi extends Model
 
     public function persiapan(){
         return $this->belongsTo(PersiapanOperasi::class,'nopermintaan','nopermintaan');
+    }
+    public function master(){
+        return $this->belongsTo(Mobatnew::class,'kd_obat','kd_obat');
+    }
+    public function pbf(){
+        // ini dipake jika di join dengan penerimaan_r dan penerimaan_h, dan penerimaan_h.kdpbf di select. 
+        return $this->belongsTo(Mpihakketiga::class,'kdpbf','kode');
     }
 }

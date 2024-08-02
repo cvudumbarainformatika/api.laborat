@@ -5,10 +5,11 @@ namespace App\Models\Simrs\Ranap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Rsjr extends Model
+class Rs23Meta extends Model
 {
     use HasFactory;
-    protected $table = 'rsjr';
+    protected $table = 'rs23_meta';
     protected $guarded = ['id'];
-    // protected $timestamp = false;
+
+    
 }

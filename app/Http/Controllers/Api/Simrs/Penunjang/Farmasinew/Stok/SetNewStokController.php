@@ -453,7 +453,7 @@ class SetNewStokController extends Controller
         $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
         if (in_array($koderuangan, $gudangs)) {
             $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
-                ->whereBetween('tglopname', [$blnLaluAwal, $blnLaluAkhir])
+                ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
                 ->where('kdruang', $koderuangan)
                 ->where('kdobat', $kdobat)
                 ->groupBy('tglopname', 'kdruang', 'kdobat')
@@ -602,7 +602,7 @@ class SetNewStokController extends Controller
             ];
         } else {
             $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
-                ->whereBetween('tglopname', [$blnLaluAwal, $blnLaluAkhir])
+                ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
                 ->where('kdruang', $koderuangan)
                 ->where('kdobat', $kdobat)
                 ->groupBy('tglopname', 'kdruang', 'kdobat')

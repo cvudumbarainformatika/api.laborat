@@ -3,174 +3,109 @@
 namespace App\Http\Controllers;
 
 use App\Events\AntreanEvent;
-use App\Events\ChatMessageEvent;
-use App\Events\newQrEvent;
 use App\Events\PlaygroundEvent;
-use App\Exports\pegawaiExport;
 use App\Helpers\BridgingbpjsHelper;
-use App\Helpers\BridgingeklaimHelper;
 use App\Helpers\DateHelper;
 use App\Helpers\FormatingHelper;
-use App\Helpers\HargaHelper;
-use App\Helpers\TarifHelper;
-use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StockController;
-use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\TransaksiGudangController;
-use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
-use App\Http\Controllers\Api\Pegawai\Master\QrcodeController;
-use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
-use App\Http\Controllers\Api\Simrs\Kasir\DetailbillingbynoregController;
-use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
-use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFarmasiController;
-use App\Http\Controllers\Api\Simrs\Planing\BridbpjsplanController;
-use App\Models\Antrean\Booking;
-use App\Models\Berita;
-use App\Models\Kunjungan;
 use App\Models\LaboratLuar;
-use App\Models\Pasien;
-use App\Models\Pegawai\Akses\Access;
-use App\Models\Pegawai\Akses\Menu;
-use App\Models\Pegawai\Hari;
-use App\Models\Pegawai\Kategory;
-use App\Models\Pegawai\Libur;
-use App\Models\Pegawai\Prota;
-use App\Models\Pegawai\Qrcode;
-use App\Models\Pegawai\TransaksiAbsen;
-use App\Models\PemeriksaanLaborat;
-use App\Models\Sigarang\BarangRS;
-use App\Models\Sigarang\Gudang;
-use App\Models\Sigarang\MapingBarangDepo;
-use App\Models\Sigarang\MaxRuangan;
-use App\Models\Sigarang\MinMaxDepo;
-use App\Models\Sigarang\MinMaxPengguna;
-use App\Models\Sigarang\Pegawai;
-use App\Models\Sigarang\Pengguna;
-use App\Models\Sigarang\PenggunaRuang;
-use App\Models\Sigarang\RecentStokUpdate;
-use App\Models\Sigarang\Ruang;
-use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
-use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
-use App\Models\Sigarang\Transaksi\Penerimaanruangan\DetailsPenerimaanruangan;
-use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
-use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\TransaksiLaborat;
-use App\Models\User;
-use App\Models\Pegawai\Akses\User as Akses;
-use App\Models\Pegawai\Alpha;
-use App\Models\Pegawai\JadwalAbsen;
-use App\Models\Pegawai\Mpegawaisimpeg;
-use App\Models\Sigarang\MonthlyStokUpdate;
-use App\Models\Sigarang\Transaksi\DistribusiLangsung\DistribusiLangsung;
-use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
-use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
-use App\Models\Sigarang\Transaksi\Permintaanruangan\DetailPermintaanruangan;
-use App\Models\Simrs\Bpjs\BpjsHttpRespon;
-use App\Models\Simrs\Master\Diagnosa_m;
+
 use App\Models\Simrs\Master\Mkamar;
-use App\Models\Simrs\Master\MkamarRanap;
-use App\Models\Simrs\Master\Mruangan;
-use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
-use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
-use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
-use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
+use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
-use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
-use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
-use App\Models\Simrs\Penunjang\Farmasinew\RencanabeliH;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
-use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Ranap\Views\Kunjunganview;
 use Carbon\Carbon;
 use Exception;
-use GuzzleHttp\Client;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\URL;
-use Maatwebsite\Excel\Facades\Excel;
-
-use Intervention\Image\ImageManager;
 
 use function PHPUnit\Framework\isNull;
 
 class AutogenController extends Controller
 {
+    
 
     public function index(Request $request)
     {
-        // $thumb = collect();
-        // $dokter = Pegawai::select('id', 'kdpegsimrs', 'nama','nip','nik','foto')
-        //     ->where('aktif', 'AKTIF')
-        //     ->orderBy('id')
-        //     ->chunk(50, function ($dokters) use ($thumb) {
-        //         foreach ($dokters as $q) {
-        //             $thumb->push($q);
-        //         }
-        //     });
+        
 
+        
+        // return new JsonResponse($query['data']);
+    }
 
-        // return new JsonResponse($thumb);
-        // echo 'SELAMAT DATANG';
-
-        // $coba = $this->lihatstokobateresepBydokter();
-        // return new JsonResponse($coba);
-        // User::updateOrCreate(
-        //     ['username' => 'sa'],
-        //     [
-        //         'nama' => 'Programmer',
-        //         'email' => 'sa@app.com',
-        //         'pegawai_id' => '4',
-        //         'password' => bcrypt('kentangkotak2121'),
-        //     ]
-        // );
-
-        // echo 'ok';
-
-        // $dokter = BridgingbpjsHelper::get_url(
-        //     'vclaim',
-        //     'RencanaKontrol/JadwalPraktekDokter/JnsKontrol/2/KdPoli/INT/TglRencanaKontrol/2024-07-11'
-        // );
-
-        // return $dokter;
-
-        // $kamars = Mkamar::where([
-        //     ['status','<>','1'],['hiddens','<>','1']
-        // ])->get();
-        $noreg= '00132/07/2024/I';
-        $tarif = TarifHelper::ruang($noreg);
-        // $kodekamar=null;
-        // $koderuang=null;
-        // $kelas=null;
-        // $sistembayar=null;
-        // $sarana=null;
-        // $pelayanan=null;
-        // if (count($tarif)>0) {
-        //     $kodekamar=$tarif[0]->kodekamar;
-        //     $koderuang=$tarif[0]->koderuang;
-        //     $kelas=$tarif[0]->kelas;
-        //     $sistembayar=$tarif[0]->sistembayar;
-        //     $sarana=$tarif[0]->sarana;
-        //     $pelayanan=$tarif[0]->pelayanan;
+    public function resetCounter(){
+        $counter=Counter::first();
+        // if($counter){
+        //     $counter->update([
+        //         'deporajal'=>0,
+        //         'deporanap'=>0,
+        //         'depook'=>0,
+        //         'depoigd'=>0,
+        //     ]);
         // }
+        return $counter;
+    }
+    public function iniSipUntukmenggantiWith()
+    {
+        $query = Rs141::select(
+            'rs141.rs1 as noreg',
+            'rs141.rs2 as norm',
+        )
+        ->where('rs141.rs3', '=', 'POL014')
+        // ->leftJoin('rs23', 'rs23.rs2', '=', 'rs141.rs2')
+        ->addSelect([
+            'kunjungan'=> KunjunganRanap::query()
+            ->selectRaw(
+                "substring_index(GROUP_CONCAT(
+                    rs23.rs1 order by rs23.rs3 desc
+                SEPARATOR '|+|'), '|+|', 3)"
+            )
+            // ->whereColumn('rs23.rs2', 'rs141.rs2')
+            ->whereColumn('rs23.rs1', 'rs141.flag')
+            // ->where('rs23.rs22', '=', '')
+            ->groupBy('rs23.rs1')
+            ->take(3)
+        ])
+        ->orderBy('rs141.id', 'desc')
+        // ->groupBy('rs141.rs1')
+        ->simplePaginate(10);
 
-        // return new JsonResponse([
-        //     'noreg' => $noreg,
-        //     'kodekamar' => $kodekamar,
-        //     'koderuang' => $koderuang,
-        //     'kelas' => $kelas,
-        //     'sistembayar' => $sistembayar,
-        //     'sarana' => $sarana,
-        //     'pelayanan' => $pelayanan
-        // ]);
-        return new JsonResponse($tarif);
+        $kodes = $query->pluck('kunjungan')
+            ->map(function ($arr) {
+                if ($arr !== null) {
+                    return explode('|+|', $arr);
+                }
+
+                return [];
+            })
+        ->flatten();
+
+        $datax = Kunjunganranap::select('rs1','rs2')
+        ->whereIn('rs1', $kodes)
+        ->orderBy('rs3', 'desc')
+        ->get();
+
+        foreach ($query as $yy) {
+            // menjadikan array dari string $yy->harga_tertinggi_ids
+            $ids = explode(',', $yy->kunjungan);
+    
+            $yyHargaTertinggi = $datax
+                ->whereIn('rs1', $ids)
+                ->sortBy(fn (Kunjunganranap $xx) => array_flip($ids)[$xx->rs1])
+                ->values();
+         
+            // masukkan ke object harga_teringgi_kodes
+            $yy->setRelation('kunjungan', $yyHargaTertinggi)->toArray();
+          }
+
+        return $query;
     }
 
     public function lihatSaranaDanPelayananRuangan()

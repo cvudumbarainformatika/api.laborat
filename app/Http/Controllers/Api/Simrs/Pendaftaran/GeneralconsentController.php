@@ -16,7 +16,9 @@ class GeneralconsentController extends Controller
 {
     public function mastergeneralconsent()
     {
-        $data = Mgeneralconsent::when(request('kelompok'), function ($query, $param) {
+        $data = Mgeneralconsent::select('kelompok', 'pernyataan')
+        ->where('flag','=',null)
+        ->when(request('kelompok'), function ($query, $param) {
             $query->where('kelompok', $param);
         })->get();
         return new JsonResponse($data);

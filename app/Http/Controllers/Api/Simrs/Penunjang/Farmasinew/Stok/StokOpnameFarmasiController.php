@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use Illuminate\Http\JsonResponse;
@@ -86,6 +87,16 @@ class StokOpnameFarmasiController extends Controller
                 foreach (array_chunk($newOpname, 100) as $t) {
                     $data = Stokopname::insert($t);
                 }
+            }
+
+            $counter=Counter::first();
+            if($counter){
+                $counter->update([
+                    'deporajal'=>0,
+                    'deporanap'=>0,
+                    'depook'=>0,
+                    'depoigd'=>0,
+                ]);
             }
             return new JsonResponse([
                 'message' => 'data opname farmasi berhasil disimpan',

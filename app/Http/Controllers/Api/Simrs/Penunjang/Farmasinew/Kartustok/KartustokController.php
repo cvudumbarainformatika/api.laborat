@@ -38,12 +38,13 @@ class KartustokController extends Controller
 
         // $ruang= $ruangan?? $gudang ?? null;
 
-        $list = Mobatnew::query()
+            $list = Mobatnew::query()
             ->select('kd_obat', 'nama_obat', 'satuan_k', 'satuan_b', 'id', 'flag', 'merk', 'kandungan')
             ->with([
                 'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
-                    $saldo->whereBetween('tglopname', [$blnLaluAwal, $blnLaluAkhir])
-                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))->groupBy('kdobat','tglopname');
+                    $saldo->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))
+                        ->groupBy('kdobat','tglopname');
                 },
                 'fisik' => function ($saldo) use ($tglAwal, $tglAkhir) {
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
@@ -51,7 +52,8 @@ class KartustokController extends Controller
                 },
                 'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir) {
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))->groupBy('kdobat','tglopname');
+                        ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))
+                        ->groupBy('kdobat','tglopname');
                 },
                 // untuk ambil penyesuaian stok awal
                 'stok' => function ($stok) use ($koderuangan,$tglAwal, $tglAkhir) {
@@ -234,7 +236,13 @@ class KartustokController extends Controller
             ->where('flag', '')
             ->paginate(request('rowsPerPage'));
 
+        
+        
         return new JsonResponse($list);
+        // return new JsonResponse([
+        //     'lalu awal'=>$blnLaluAwal,
+        //     'lalu Akhir'=>$blnLaluAkhir,
+        // ]);
     }
 
     public function cariobat()

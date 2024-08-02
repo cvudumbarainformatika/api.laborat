@@ -105,6 +105,7 @@ class ObatnewController extends Controller
             ->where(function ($list) {
                 $list->where('nama_obat', 'Like', '%' . request('q') . '%')
                     ->orWhere('merk', 'Like', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'Like', '%' . request('q') . '%')
                     ->orWhere('kandungan', 'Like', '%' . request('q') . '%');
             })->orderBy('id', 'desc')
             ->where('flag', '')
