@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap;
 
 use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Pasien;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Rs141;
@@ -154,7 +156,26 @@ class PendaftaranRanapController extends Controller
             "Peserta/$by/$no/tglSEP/$today"
         );
         // $wew = $cekpsereta['result']->peserta->provUmum;
-        return ($cekpsereta);
+        $pasienRs = null;
+        if ($by==='nik') {
+            $cek = Mpasien::pasien()->where('rs49','=',$no)->first();
+            if ($cek) {
+                $pasienRs=$cek;
+            }
+        }
+        else {
+            $cek = Mpasien::pasien()->where('rs46','=',$no)->first();
+            if ($cek) {
+                $pasienRs=$cek;
+            }
+        }
+
+        $data = [
+            'bpjs'=> $cekpsereta,
+            'rs'=> $pasienRs
+        ];
+        
+        return ($data);
     }
 
     public function list_tunggu_pendaftaran_ranap()
