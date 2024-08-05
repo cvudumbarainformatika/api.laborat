@@ -94,6 +94,7 @@ class EresepController extends Controller
         // return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
         $response = [];
         $cekpemberianobat = false;
+      
         try {
 
             DB::connection('farmasi')->beginTransaction();
@@ -266,6 +267,11 @@ class EresepController extends Controller
                 $lebel = 'D-IR';
             }
             
+            $sudahAda=Resepkeluarheder::where('noresep',$records['noresep'])->first();
+            if($sudahAda){           
+                if($sudahAda->noreg !== $records['noreg']) $records['noresep']=null;
+            }
+
             if ($records['noresep'] === '' || $records['noresep'] === null) {
                 DB::connection('farmasi')->select('call ' . $procedure);
                 $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
