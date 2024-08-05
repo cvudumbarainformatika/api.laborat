@@ -65,6 +65,7 @@ class HistoryKunjunganController extends Controller
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
                         TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
                         TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            'rs15.rs4 as alamatbarcode',
             'rs15.rs16 as tgllahir',
             'rs15.rs17 as kelamin',
             'rs15.rs19 as pendidikan',
