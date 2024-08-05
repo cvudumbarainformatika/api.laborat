@@ -16,7 +16,7 @@ class KamarController extends Controller
     public function listkamar()
     {
       $listkamar = Mkamar::query()
-      ->selectRaw('rs1,rs2,rs3,rs4,rs6')
+      ->selectRaw('rs1,rs2,rs3,rs4,rs6,groups')
       ->where(function ($q) {
         $q->where('rs6', '<>', '1')
         ->where('status', '<>', '1');
@@ -29,7 +29,7 @@ class KamarController extends Controller
     public function showKamar()
     {
       $data = Mkamar::query()
-      ->select('groups','rs5')
+      ->select('groups','rs5','rs4')
       ->with(['kamars'=>function($q){
         $q->where('rs7','<>','1')
             ->addSelect([
