@@ -14,6 +14,7 @@ class Rstigalimax extends Model
     protected $table = 'rs35x';
     protected $guarded = ['id'];
     protected $appends = ['subtotal'];
+    public $timestamps = false;
 
     public function rstigapuluhtarif()
     {

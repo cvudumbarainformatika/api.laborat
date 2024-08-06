@@ -177,7 +177,7 @@ class DaftarigdController extends Controller
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
             'rs2' => $request->norm,
-            'rs3' => date('Y-m-d h:i:s'),
+            'rs3' => date('Y-m-d H:i:s'),
             'rs6' => $request->asalrujukan,
             'rs8' => $request->kodepoli,
             //'rs9' => $request->dpjp,
@@ -197,9 +197,9 @@ class DaftarigdController extends Controller
         $masterpasien = $this->simpanMpasien($request);
         $simpanadminigd = Rstigalimax::create([
             'rs1' =>  $input->noreg,
-            'rs2' => '',
+            // 'rs2' => '',
             'rs3' => 'A2#',
-            'rs4' => date('Y-m-d h:i:s'),
+            'rs4' => date('Y-m-d H:i:s'),
             'rs5' => 'D',
             'rs6' => 'Administrasi IGD',
             'rs7' => 8000
