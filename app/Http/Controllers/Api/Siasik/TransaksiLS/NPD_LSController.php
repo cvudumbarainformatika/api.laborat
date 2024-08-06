@@ -40,14 +40,37 @@ class NPD_LSController extends Controller
     }
 
     public function bastfarmasi(){
-        $penerimaan=PenerimaanHeder::where('nobast', '!=', '')
-        ->whereIn('jenis_penerimaan', ['Pesanan'])
+        // $pbf = Mpihakketiga::where('kode', request('kodepenerima'))->get();
+        $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
+                                            'penerimaan_h.tgl_bast',
+                                            'penerimaan_h.nopenerimaan',
+                                            'penerimaan_h.jumlah_bastx',
+                                            'penerimaan_h.jenis_penerimaan',
+                                            'penerimaan_h.kdpbf')
+        ->where('kdpbf', request('kodepenerima'), function ($bast){
+            $bast->whereIn('jenis_penerimaan', ['Pesanan']);
+        })
+        ->where('nobast', '!=', '')
         ->whereNotNull('tgl_bast')
         ->when(request('q'),function ($query) {
             $query->where('nobast', 'LIKE', '%' . request('q') . '%')
             ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
         })
-        // ->with('penerimaanrinci')
+        ->with('penerimaanrinci', function($rinci) {
+            $rinci->select('penerimaan_r.nopenerimaan',
+                            'penerimaan_r.kdobat',
+                            'penerimaan_r.harga_netto',
+                            'penerimaan_r.harga_netto_kecil',
+                            'penerimaan_r.jml_all_penerimaan',
+                            'penerimaan_r.subtotal')
+                    ->with('masterobat', function ($rekening){
+                        $rekening->select('new_masterobat.kd_obat',
+                                        'new_masterobat.kode50',
+                                        'new_masterobat.uraian50',
+                                        'new_masterobat.kode108',
+                                        'new_masterobat.uraian108');
+                    });
+        })
         // ->orderBy('tgl_bast', 'DESC')
         ->orderBy('nobast', 'asc')
         ->groupBy('nobast')
