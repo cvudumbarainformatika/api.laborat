@@ -7,6 +7,6 @@ Route::group([
     'prefix' => 'transaksi/kontrak'
 ], function () {
 
-    Route::get('/listkontrakcc', [KontrakController::class, 'listkontrakcc']);
-    Route::post('/simpankontrakxx', [KontrakController::class, 'simpankontrak']);
+    Route::get('/listkontrak', [KontrakController::class, 'listkontrak']);
+    Route::post('/simpankontrak', [KontrakController::class, 'simpankontrak']);
 });

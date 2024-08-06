@@ -63,9 +63,7 @@ class SilpaController extends Controller
         }
     }
     public static function buatnomor(){
-        $user = auth()->user()->pegawai_id;
-        $pg= Pegawai::find($user);
-        $pegawai= $pg->account_pass;
+
         $huruf = ('SILPA-BLUD');
         // $no = ('4.02.0.00.0.00.01.0000');
         date_default_timezone_set('Asia/Jakarta');
@@ -77,7 +75,7 @@ class SilpaController extends Controller
         $cek = SisaAnggaran::count();
         if ($cek == null){
             $urut = "0001";
-            $sambung = $urut.'/'.$pegawai.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
+            $sambung = $urut.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
         }
         else{
             $ambil=SisaAnggaran::all()->last();
@@ -96,7 +94,7 @@ class SilpaController extends Controller
             else {
                 $urut = (int)$urut;
             }
-            $sambung = $urut.'/'.$pegawai.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
+            $sambung = $urut.'/'.strtoupper($huruf).'/'.$rom[date('n')].'/'.$thn;
         }
 
         return $sambung;
