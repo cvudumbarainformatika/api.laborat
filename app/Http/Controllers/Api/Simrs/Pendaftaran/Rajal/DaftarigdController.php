@@ -59,7 +59,7 @@ class DaftarigdController extends Controller
 
         $request->validate([
             'norm' => 'required|string|max:6|min:6',
-            'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
+            //'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
             'nik' => 'string|max:16|min:16',
             'tgllahir' => 'required|date_format:Y-m-d'
         ]);
