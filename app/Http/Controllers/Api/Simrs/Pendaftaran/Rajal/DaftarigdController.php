@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -194,6 +195,18 @@ class DaftarigdController extends Controller
             return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
         $masterpasien = $this->simpanMpasien($request);
+        $simpanadminigd = Rstigalimax::create([
+            'rs1' =>  $input->noreg,
+            'rs2' => '',
+            'rs3' => 'A2#',
+            'rs4' => date('Y-m-d h:i:s'),
+            'rs5' => 'D',
+            'rs6' => 'Administrasi IGD',
+            'rs7' => 8000
+        ]);
+        if (!$simpanadminigd) {
+            return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
+        }
         return new JsonResponse([
             'message' => 'data berhasil disimpan',
             'noreg' => $input->noreg

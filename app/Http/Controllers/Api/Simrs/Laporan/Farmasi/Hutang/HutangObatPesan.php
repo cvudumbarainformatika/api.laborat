@@ -12,9 +12,17 @@ class HutangObatPesan extends Controller
     public function reportObatPesananBytanggal()
     {
         $dari = request('tgldari');
-        $data = PenerimaanHeder::where('tglpenerimaan','<=', $dari)
-        ->where('tgl_pembayaran','>=', $dari)
+        $data = PenerimaanHeder::whereDate('tglpenerimaan','<=', $dari)
+        ->with(
+            [
+                'pihakketiga',
+                'penerimaanrinci' => function($penerimaanrinci){
+                    $penerimaanrinci->with('masterobat');
+                }
+            ]
+        )
         ->where('jenis_penerimaan','Pesanan')
+        ->limit(10)
         ->get();
         return new JsonResponse($data);
     }
