@@ -60,11 +60,15 @@ class HistoryKunjunganController extends Controller
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
             'rs15.rs2 as nama_panggil',
+
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
             DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
                         TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
                         TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+            DB::raw("(IF(rs23.rs4='0000-00-00 00:00:00',datediff('".date("Y-m-d")."',rs23.rs3),
+            datediff(rs23.rs4,rs23.rs3)))+1  as lama"),
+            
             'rs15.rs4 as alamatbarcode',
             'rs15.rs16 as tgllahir',
             'rs15.rs17 as kelamin',

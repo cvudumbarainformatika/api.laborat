@@ -30,6 +30,7 @@ class KamarController extends Controller
     {
       $data = Mkamar::query()
       ->select('groups','rs5','rs4')
+      ->where('status','<>','1')
       ->with(['kamars'=>function($q){
         $q->where('rs7','<>','1')
             ->addSelect([
@@ -38,7 +39,7 @@ class KamarController extends Controller
                 ->selectRaw("GROUP_CONCAT(v_15_23.noreg order by v_15_23.tgl_masuk asc, ',')" )
                 ->whereColumn('v_15_23.no_bed','=', 'rs25.rs2')
                 ->whereColumn('v_15_23.kd_kmr','=', 'rs25.rs1')
-                ->whereColumn('v_15_23.kamar','=', 'rs24.rs2')
+                // ->whereColumn('v_15_23.kamar','=', 'rs24.rs2')
                 ->where('v_15_23.status_inap','=', '')
             ])
             ->orderBy('rs5', 'asc');
