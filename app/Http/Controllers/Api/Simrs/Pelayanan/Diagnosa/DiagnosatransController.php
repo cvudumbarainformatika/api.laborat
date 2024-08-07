@@ -17,6 +17,7 @@ class DiagnosatransController extends Controller
         $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs2 as dtd', 'rs4 as keterangan')
             ->where('rs1', 'Like', '%' . request('diagnosa') . '%')
             ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
+            ->where('disable_status','=','')
             ->get();
         return new JsonResponse($listdiagnosa);
     }

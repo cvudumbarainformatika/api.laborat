@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -58,7 +59,7 @@ class DaftarigdController extends Controller
 
         $request->validate([
             'norm' => 'required|string|max:6|min:6',
-            'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
+            //'tglmasuk' => 'required|date_format:Y-m-d H:i:s',
             'nik' => 'string|max:16|min:16',
             'tgllahir' => 'required|date_format:Y-m-d'
         ]);
@@ -176,7 +177,7 @@ class DaftarigdController extends Controller
         $simpankunjunganpoli = KunjunganPoli::create([
             'rs1' => $input->noreg,
             'rs2' => $request->norm,
-            'rs3' => date('Y-m-d h:i:s'),
+            'rs3' => date('Y-m-d H:i:s'),
             'rs6' => $request->asalrujukan,
             'rs8' => $request->kodepoli,
             //'rs9' => $request->dpjp,
@@ -194,9 +195,22 @@ class DaftarigdController extends Controller
             return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
         $masterpasien = $this->simpanMpasien($request);
+        $simpanadminigd = Rstigalimax::create([
+            'rs1' =>  $input->noreg,
+            // 'rs2' => '',
+            'rs3' => 'A2#',
+            'rs4' => date('Y-m-d H:i:s'),
+            'rs5' => 'D',
+            'rs6' => 'Administrasi IGD',
+            'rs7' => 8000
+        ]);
+        if (!$simpanadminigd) {
+            return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
+        }
         return new JsonResponse([
             'message' => 'data berhasil disimpan',
-            'noreg' => $input->noreg
+            'noreg' => $input->noreg,
+            'datapasien' => $masterpasien
         ], 200);
     }
 

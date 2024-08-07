@@ -8,23 +8,38 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
+use Carbon\Carbon;
+use DateTime;
 
 class KontrakController extends Controller
 {
     public function listkontrak()
     {
-        $data = KontrakPengerjaan::where('kunci', '=', 1)
+        $data = KontrakPengerjaan::select(
+            'nokontrak',
+            'tgltrans',
+            'namaperusahaan',
+            'namapptk',
+            'kegiatanblud',
+            'nilaikontrak',
+            'nokontrakx'
+        )
         ->when(request('q'),function ($query) {
             $query->where('nokontrak', 'LIKE', '%' . request('q') . '%')
             ->orWhere('namaperusahaan', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('namaperusahaan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('nilaikontrak', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('nokontrakx', 'LIKE', '%' . request('q') . '%')
             ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
-        })->paginate(request('per_page'));
+        })
+        ->whereYear('tgltrans', date('Y'))
+        ->orderBy('tglentry', 'desc')
+        ->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
     public function simpankontrak(Request $request)
     {
+        $time = date('Y-m-d H:i:s');
         $nomor = $request->notrans ?? self::buatnomor();
         $simpan = KontrakPengerjaan::updateOrCreate(
             [
@@ -36,6 +51,7 @@ class KontrakController extends Controller
                 'tglmulaikontrak' => $request->tglmulaikontrak ?? '',
                 'tglakhirkontrak' => $request->tglakhirkontrak,
                 'tgltrans' => $request->tgltrans ?? '',
+                'tglentry' => $time ?? '',
                 'kodepptk' => $request->kodepptk ?? '',
                 'namapptk' => $request->namapptk ?? '',
                 'program' => 'PROGRAM PENUNJANG URUSAN PEMERINTAH DAERAH KABUPATEN/KOTA',
@@ -45,7 +61,7 @@ class KontrakController extends Controller
                 'kodemapingrs' => $request->kodemapingrs ?? '',
                 'namasuplier' => $request->namasuplier ?? '',
                 'nilaikontrak' => $request->nilaikontrak ?? '',
-                'kodeBagian' => $request->kodebagian ?? '',
+                'kodeBagian' => $request->kodeBagian ?? '',
                 'nokontrakx' => $request->nokontrakx ?? '',
                 'termin' => $request->termin ?? ''
                 // 'userentry'=>$user['kodesimrs']

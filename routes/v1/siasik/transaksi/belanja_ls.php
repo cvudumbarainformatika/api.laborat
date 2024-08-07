@@ -10,6 +10,6 @@ Route::group([
 ], function () {
     Route::get('/perusahaan', [NPD_LSController::class, 'perusahaan']);
     Route::get('/ptk', [NPD_LSController::class, 'ptk']);
-    Route::get('/bast', [NPD_LSController::class, 'bast']);
-    Route::get('/simpan', [NPD_LSController::class, 'simpan']);
+    Route::get('/bastfarmasi', [NPD_LSController::class, 'bastfarmasi']);
+    Route::post('/simpannpd', [NPD_LSController::class, 'simpannpd']);
 });
