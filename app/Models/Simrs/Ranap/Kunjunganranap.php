@@ -8,6 +8,7 @@ use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Dokter;
+use App\Models\Simrs\Master\MkamarRanap;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
@@ -470,5 +471,8 @@ class Kunjunganranap extends Model
     {
         // return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
+    public function kamarranap(){
+        return $this->belongsTo(MkamarRanap::class, 'rs6', 'rs1');
     }
 }

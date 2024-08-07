@@ -31,4 +31,5 @@ class MkamarRanap extends Model
     {
        return $this->hasMany(Kunjunganranap::class, 'rs6', 'rs1');
     }
+    
 }

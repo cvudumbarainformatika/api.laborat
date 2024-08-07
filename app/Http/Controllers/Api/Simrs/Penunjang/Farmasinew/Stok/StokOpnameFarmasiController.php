@@ -96,6 +96,8 @@ class StokOpnameFarmasiController extends Controller
                     'deporanap'=>0,
                     'depook'=>0,
                     'depoigd'=>0,
+                    'regbebas'=>0,
+                    'respbebas'=>0,
                 ]);
             }
             return new JsonResponse([

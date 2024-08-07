@@ -17,6 +17,8 @@ class TransaksiLaborat extends Model
     protected $guarded = ['id'];
 
     public $timestamps = false;
+    
+    protected $connection = 'mysql';
 
     public function kunjungan_poli()
     {

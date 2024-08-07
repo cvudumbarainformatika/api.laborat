@@ -12,6 +12,7 @@ class Diagnosa extends Model
     use HasFactory;
     protected $table = 'rs101';
     protected $guarded = ['id'];
+    protected $connection = 'mysql';
     public $timestamps = false;
 
     public function masterdiagnosa()

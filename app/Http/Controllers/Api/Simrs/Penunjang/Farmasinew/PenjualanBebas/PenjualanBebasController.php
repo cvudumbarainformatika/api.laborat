@@ -131,4 +131,25 @@ class PenjualanBebasController extends Controller
             ]
         );
     }
+
+    public static function setNomor($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 6 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $has . $n . "/" . date("d") . "/" . date("m") . "/" . date("Y") . "/" . $kode;
+    }
+    public function  simpan(Request $request){
+        // ini  nanti ngisi di resep_keluar_h dan resep_keluar_r
+        // bikin baru tabel registrasi penjualan bebas
+        // tiap obat harus cek alokasi, jadi bikin seperti template resep untuk keluarnya.
+        // noresp
+        DB::connection('farmasi')->select('call registrasipenjumum(@nomor)' );
+        $x = DB::connection('farmasi')->table('conter')->select('regbebas')->first();
+        $nom=$x->regbebas;
+        $nomor=self::setNomor($nom,'R-PJB');
+        return new JsonResponse($nomor);
+    }
 }

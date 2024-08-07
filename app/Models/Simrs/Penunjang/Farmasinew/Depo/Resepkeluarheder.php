@@ -4,14 +4,17 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Kasir\Kwitansilog;
+use App\Models\Simrs\Master\MkamarRanap;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\SistemBayar;
+use App\Models\TransaksiLaborat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -98,4 +101,13 @@ class Resepkeluarheder extends Model
     public function kwitansi(){
         return $this->hasMany(Kwitansilog::class, 'noreg', 'noreg');
     }
+    public function diagnosas(){
+        return $this->hasMany(Diagnosa::class,'rs1', 'noreg');
+    }
+    public function laborat(){
+        return $this->hasMany(TransaksiLaborat::class,'rs1', 'noreg');
+    }
+    
+    
+    
 }

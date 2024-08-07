@@ -972,12 +972,16 @@ class EresepController extends Controller
                 $q->where('pelayanan_id', 'AP0001'); 
             },
             'kwitansi',
+            'diagnosas:rs1,rs3,rs13',
+            'diagnosas.masterdiagnosa:rs1,rs3,rs4',
             'ruanganranap',
+            'laborat.pemeriksaan_laborat',
             'sistembayar',
             'sep:rs1,rs8',
             'dokter:kdpegsimrs,nama',
-            'kunjunganranap:rs1,titipan',
+            'kunjunganranap:rs1,titipan,rs6,rs3,rs4',
             'kunjunganranap.ruangtitipan:rs1,rs2',
+            // 'kunjunganranap.kamarranap',
             'datapasien' => function ($quer) {
                 $quer->select(
                     'rs1',

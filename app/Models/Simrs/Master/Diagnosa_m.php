@@ -10,4 +10,5 @@ class Diagnosa_m extends Model
     use HasFactory;
     protected $table = 'rs99x';
     protected $guarded = ['id'];
+    protected $connection = 'mysql';
 }
