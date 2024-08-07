@@ -215,14 +215,14 @@ class SepranapController extends Controller
                         "noSurat" => $request->skdp['noSurat'] ?? '', // ini dari SPRI
                         "kodeDPJP" => $request->skdp['kodeDPJP'] ?? '',
                     ],
-                    "dpjpLayan" => $request->dpjpLayan !== null ? $request->dpjpLayan :'' , // untuk RANAP dikosongi
+                    "dpjpLayan" => $request->dpjpLayan ?? '', // untuk RANAP dikosongi
                     "noTelp" => $request->noTelp ?? '',
                     "user" => $request->user ?? '-',
                 ],
             ],
         ];
 
-        return $request->all();
+        // return new JsonResponse($data);
 
         $tgltobpjshttpres = DateHelper::getDateTime();
         $createsep = BridgingbpjsHelper::post_url(
