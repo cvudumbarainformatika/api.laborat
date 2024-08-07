@@ -18,4 +18,7 @@ Route::group([
     Route::post('get-kecamatan-bpjs', [SepranapController::class, 'getKecamatanBpjs']);
     Route::post('get-dpjp-bpjs', [SepranapController::class, 'getDpjpBpjs']);
     Route::post('create-sep-ranap', [SepranapController::class, 'create_sep_ranap']);
+    Route::post('list-rujukan-peserta', [SepranapController::class, 'getListRujukanPeserta']);
+    Route::post('get-list-spri', [SepranapController::class, 'getListSpri']);
+    Route::post('get-suplesi-jasa-raharja-by-bpjs', [SepranapController::class, 'getSuplesi']);
 });
