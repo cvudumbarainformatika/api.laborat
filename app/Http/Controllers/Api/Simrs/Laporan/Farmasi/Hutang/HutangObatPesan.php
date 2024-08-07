@@ -22,7 +22,6 @@ class HutangObatPesan extends Controller
             ]
         )
         ->where('jenis_penerimaan','Pesanan')
-        ->limit(20)
         ->get();
         return new JsonResponse($data);
     }
