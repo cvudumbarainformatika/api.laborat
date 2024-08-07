@@ -209,7 +209,8 @@ class DaftarigdController extends Controller
         }
         return new JsonResponse([
             'message' => 'data berhasil disimpan',
-            'noreg' => $input->noreg
+            'noreg' => $input->noreg,
+            'datapasien' => $masterpasien
         ], 200);
     }
 
