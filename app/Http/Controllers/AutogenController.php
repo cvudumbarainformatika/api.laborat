@@ -35,8 +35,12 @@ class AutogenController extends Controller
     public function index(Request $request)
     {
         
+        $dat=date('d-m');
+        if($dat==='08-08'){
+            return new JsonResponse('kena dah');
 
-        
+        }
+        return new JsonResponse($dat);
         // return new JsonResponse($query['data']);
     }
 

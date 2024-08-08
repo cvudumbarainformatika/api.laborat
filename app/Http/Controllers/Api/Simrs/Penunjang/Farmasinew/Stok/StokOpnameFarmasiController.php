@@ -88,7 +88,8 @@ class StokOpnameFarmasiController extends Controller
                     $data = Stokopname::insert($t);
                 }
             }
-
+            
+            $rstlai='tidak ada reset';
             $counter=Counter::first();
             if($counter){
                 $counter->update([
@@ -99,6 +100,27 @@ class StokOpnameFarmasiController extends Controller
                     'regbebas'=>0,
                     'respbebas'=>0,
                 ]);
+                $rstlai='reset bulanan';
+            }
+            $dat=date('d-m');
+            if($dat==='01-01'){
+                if($counter){
+                    $counter->update([
+                        'rencblobat'=>0,
+                        'pemesanan'=>0,
+                        'penerimaanko'=>0,
+                        'penerimaanfs'=>0,
+                        'permintaandepo'=>0,
+                        'returpbf'=>0,
+                        'bast'=>0,
+                        'persiapanok'=>0,
+                        'returpenjualan'=>0,
+                        'pemakaianruangan'=>0,
+                        'konsinyasi'=>0,
+                    ]);
+                    $bfr=$rstlai . ' ditambah reset tahunan';
+                    $rstlai=$bfr;
+                }
             }
             return new JsonResponse([
                 'message' => 'data opname farmasi berhasil disimpan',
@@ -107,6 +129,8 @@ class StokOpnameFarmasiController extends Controller
                 // 'newOpname' => $newOpname,
                 'stoktgl' => $stoktgl,
                 'data' => $data,
+                'reset counter' => $rstlai,
+
             ], 201);
 
             //end if
