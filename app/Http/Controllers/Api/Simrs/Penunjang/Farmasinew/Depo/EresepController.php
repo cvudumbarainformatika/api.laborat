@@ -1018,8 +1018,8 @@ class EresepController extends Controller
                     ->orWhere('resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
             })
-            ->where('resep_keluar_h.depo', request('kddepo'))
-            ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+            ->where('resep_keluar_h.depo', request('kddepo'));
+            // ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
 
         if (request('tipe')) {
             if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
@@ -1033,12 +1033,20 @@ class EresepController extends Controller
 
         if (request('flag')) {
             if (request('flag') === 'semua') {
-                $query->whereIn('resep_keluar_h.flag', ['', '1', '2', '3', '4', '5']);
+                $query->where(function($q)use($tgl, $tglx){
+                    $q->where(function($m)use($tgl, $tglx){
+                        $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
+                        ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+                    })->orWhere(function($q)use($tgl, $tglx){
+                        $q->where('resep_keluar_h.flag', '')
+                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+                    });
+                    })                    ;
             } else {
                 $query->where('resep_keluar_h.flag', request('flag'));
             }
         } else {
-            $query->where('resep_keluar_h.flag', '');
+            $query->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
         }
         if(request('sistembayar')){
             $query->where('resep_keluar_h.sistembayar', request('sistembayar'));
@@ -1052,6 +1060,7 @@ class EresepController extends Controller
             ->groupBy('resep_keluar_h.noresep')
             ->orderBy('resep_keluar_h.flag', 'ASC')
             ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC')
+            ->orderBy('resep_keluar_h.tgl_kirim', 'ASC')
             ->orderBy('antrian_ambil.nomor', 'ASC');
 
         // Get paginated results
