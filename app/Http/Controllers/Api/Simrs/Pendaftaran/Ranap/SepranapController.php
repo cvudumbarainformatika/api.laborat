@@ -11,6 +11,7 @@ use App\Models\Simrs\Ranap\BpjsSpri;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SepranapController extends Controller
 {
@@ -154,6 +155,35 @@ class SepranapController extends Controller
         }
 
         return $list;
+    }
+
+    public function getSepFromBpjs(Request $request)
+    {
+        $request->validate([
+            'noSep'=> 'required',
+        ]);
+
+        $data = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $request->noSep);
+        return new JsonResponse($data);
+    }
+
+
+    public function getNorujukanInternal(Request $request)
+    {
+        DB::select('call generetenorujukan(@nomor)');
+        $hcounter = DB::table('rs1')->select('rs285')->first();
+        $no = 0;
+        $has=null;
+        $num = date("y").date("m").date("d").'00000R';
+        if ($hcounter) {
+			$x=$hcounter->rs285;
+            $no = $x+1;
+
+            $panjang = strlen($no);
+            for($i=1;$i<=4-$panjang;$i++){$has=$has."0";}
+            $num = date("y").date("m").date("d").$has.$no."R";
+        }
+        return new JsonResponse($num);
     }
 
 

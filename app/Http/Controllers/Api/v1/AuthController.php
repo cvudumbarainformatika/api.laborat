@@ -57,7 +57,11 @@ class AuthController extends Controller
 
         // $keycache = 'authuser' . $pegawaiId;
 
-        $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+        // $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+
+        $user = cache()->remember('account_' . $me->id, now()->addHours(8), function () use($me) {
+            return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+        });
 
         $loadGudang = array(3, 4, 7);
 
@@ -65,10 +69,10 @@ class AuthController extends Controller
             $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.depoSim:kode,nama']);
         }
 
-        $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
-        // $apps = Cache::rememberForever('menu-sso-xenter', function () {
-        //     return Aplikasi::with(['menus', 'menus.submenus'])->get();
-        // });
+        // $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
+        $apps = Cache::rememberForever('menu-sso-xenter', function () {
+            return Aplikasi::with(['menus', 'menus.submenus'])->get();
+        });
 
         $akses = 'all';
         $allAccess = array('sa', 'coba', 'wan');

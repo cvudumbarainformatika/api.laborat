@@ -34,6 +34,7 @@ class AutogenController extends Controller
 
     public function index(Request $request)
     {
+<<<<<<< HEAD
         
         $dat=date('d-m');
         if($dat==='08-08'){
@@ -41,6 +42,14 @@ class AutogenController extends Controller
 
         }
         return new JsonResponse($dat);
+=======
+        $n = 42064;
+        $panjang = strlen($n);
+        $has=null;
+        for($i=1;$i<=4-$panjang;$i++){$has=$has."0";}
+
+        return date("y").date("m").date("d").$has.$n."R";
+>>>>>>> 246a4544 (optimasi user)
         // return new JsonResponse($query['data']);
     }
 

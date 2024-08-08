@@ -21,4 +21,6 @@ Route::group([
     Route::post('list-rujukan-peserta', [SepranapController::class, 'getListRujukanPeserta']);
     Route::post('get-list-spri', [SepranapController::class, 'getListSpri']);
     Route::post('get-suplesi-jasa-raharja-by-bpjs', [SepranapController::class, 'getSuplesi']);
+    Route::post('get-sep-from-bpjs', [SepranapController::class, 'getSepFromBpjs']);
+    Route::get('get-no-rujukan-internal', [SepranapController::class, 'getNorujukanInternal']);
 });

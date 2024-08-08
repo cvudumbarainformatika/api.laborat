@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Extensions\CacheEloquentProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
@@ -23,8 +25,22 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->app['auth']->provider('cached-user-driver', 
+            function ($app, $config) {
+                // use App\Extensions\CacheEloquentProvider;
+                return new CacheEloquentProvider(
+                    $this->app['hash'], 
+                    $config['model']
+                );
+        });
         $this->registerPolicies();
 
+        // Auth::provider('cached', function ($app, array $config) {
+        //     return new CachedUserProvider($app['hash'], $config['model']);
+        // });
+
         //
+
+
     }
 }

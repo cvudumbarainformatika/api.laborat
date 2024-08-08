@@ -43,7 +43,8 @@ return [
 
         'api' => [
             'driver' => 'jwt',
-            'provider' => 'users',
+            // 'provider' => 'users',   //defaultnya
+            'provider' => 'cached-user',
             'hash' => false,
         ],
 
@@ -73,7 +74,7 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            'driver' => 'eloquent', //defaultnya
             'model' => App\Models\User::class,
         ],
 
@@ -81,6 +82,11 @@ return [
         'genis' => [
             'driver' => 'eloquent',
             'model' => App\Models\Pegawai\Akses\User::class,
+        ],
+
+        'cached-user' => [
+            'driver' => 'cached-user-driver',
+            'model' => App\Models\User::class,
         ],
 
         // 'users' => [
