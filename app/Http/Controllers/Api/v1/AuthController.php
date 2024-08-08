@@ -81,11 +81,19 @@ class AuthController extends Controller
             $akses = AksesUser::where('user_id', $me->id)->get();
         }
 
-        $masterSistemBayar = Msistembayar::query()
-            ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
-            ->where('hidden','!=','')
-            ->where('rs1','!=','')
-            ->get();
+        // $masterSistemBayar = Msistembayar::query()
+        //     ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
+        //     ->where('hidden','!=','')
+        //     ->where('rs1','!=','')
+        //     ->get();
+
+            $masterSistemBayar = Cache::rememberForever('master-sistembayar', function () {
+                return Msistembayar::query()
+                ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
+                ->where('hidden','!=','')
+                ->where('rs1','!=','')
+                ->get();
+            });
         
 
         
