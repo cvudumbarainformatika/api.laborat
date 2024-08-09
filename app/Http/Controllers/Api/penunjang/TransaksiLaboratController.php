@@ -82,7 +82,8 @@ class TransaksiLaboratController extends Controller
         $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         $xsignature = base64_encode($sign);
 
-        $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
+        // $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
+        $apiURL = 'http://192.168.101.200:83/prolims/api/lis/postOrder';
 
 
         $headers = [

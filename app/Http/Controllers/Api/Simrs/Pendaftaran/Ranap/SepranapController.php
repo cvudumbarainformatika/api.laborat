@@ -276,8 +276,11 @@ class SepranapController extends Controller
 
         $bpjs = $createsep['metadata']['code'];
         if ($bpjs === 200 || $bpjs === '200') {
-            $sep = $createsep['response']['sep'];
-            $nosep = $sep->noSep;
+            $sepx = $createsep['response']->sep;
+            $nosep = $sepx->noSep;
+            // $dinsos = $sepx->informasi->dinsos;
+            // $prolanisPRB = $sepx->informasi->prolanisPRB;
+            // $noSKTM = $sepx->informasi->noSKTM;
             Sepranap::firstOrCreate(
                 ['rs1' => $request->noreg],
                 [
