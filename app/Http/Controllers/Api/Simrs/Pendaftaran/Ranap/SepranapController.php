@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Ranap\BpjsSpri;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -132,11 +133,11 @@ class SepranapController extends Controller
     public function getListSpri(Request $request)
     {
         $request->validate([
-            'norm'=> 'required',
+            'noreg'=> 'required',
         ]);
 
         $data = BpjsSpri::select('noreg','norm','noSep','kodeDokter','namaDokter','tglRencanaKontrol','noSuratKontrol','noKartu','nama',)
-        ->where('norm', $request->norm)->whereNull('batal')
+        ->where('noreg', $request->noreg)->whereNull('batal')
         ->orderBy('created_at', 'desc')->get();
         return new JsonResponse($data, 200);
     }
@@ -157,14 +158,93 @@ class SepranapController extends Controller
         return $list;
     }
 
+    public function getListSpesialistik(Request $request)
+    {
+       $data = BridgingbpjsHelper::get_url('vclaim', "RencanaKontrol/ListSpesialistik/JnsKontrol/{$request->jnsKontrol}/nomor/{$request->nomor}/TglRencanaKontrol/{$request->tglRencanaKontrol}");
+       return $data;
+    }
+
+    public function getListDokterBpjs(Request $request)
+    {
+       $data = BridgingbpjsHelper::get_url('vclaim', "RencanaKontrol/JadwalPraktekDokter/JnsKontrol/{$request->jnsKontrol}/KdPoli/{$request->kodePoli}/TglRencanaKontrol/{$request->tglRencanaKontrol}");
+       return $data;
+    }
+
+    public function insertSepManual(Request $request)
+    {
+        $request->validate([
+            'noSep'=> 'required',
+            'pasien'=> 'required',
+        ]);
+
+        // return $request->pasien['noreg'];
+
+        $data = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $request->noSep);
+        $code = $data['metadata']['code'];
+        if ($code !== '200') {
+            return new JsonResponse($data, 200);
+        }
+
+        $sepx = $data['result'];
+
+        // update to rs227
+        Sepranap::updateOrCreate(
+            ['rs1' => $request->pasien['noreg'], 'rs8'=> $sepx->noSep],
+            [
+                'rs2' => $request->pasien['norm'] ?? '',
+                'rs3' => $request->pasien['ruangan'] ?? '',
+                'rs4' => $request->pasien['kodesistembayar'] ?? "",
+                'rs5' => $sepx->noRujukan ?? '',
+                'rs6' => $sepx->tglSep ?? '',
+                'rs7' => $sepx->diagnosa ?? '',
+                
+                'rs9'=> $sepx->catatan ?? '-',
+                'rs10'=> 'RSUD MOH SALEH',
+                'rs11' =>$sepx->peserta->jenispeserta ?? '',
+                'rs12'=> $sepx->tglSep ?? '',
+                'rs13'=> $sepx->peserta->noKartu ?? '',
+                'rs14' => $sepx->peserta->nama ?? '',
+                'rs15' => $sepx->peserta->tglLahir ?? '',
+                'rs16' => $sepx->peserta->kelamin ?? '',
+                'rs17' => 'Rawat Inap',
+                'rs18'=> $sepx->kelasRawat ?? '',
+                'rs19'=> '1',
+                'laka'=> $sepx->kdStatusKecelakaan ?? '0',
+                'lokasilaka' => $sepx->lokasiKejadian->lokasi ?? '',
+                'penjaminlaka' => $sepx->penjamin,
+                'users' => auth()->user()->pegawai_id,
+                // 'notelepon'=> '',
+                // 'tgl_entery' => $tgltobpjshttpres,
+                'namaasuransicob'=> $sepx->peserta->asuransi,
+                'noDpjp'=> $sepx->kontrol->kdDokter ?? '',
+                'tgl_kejadian_laka' => $sepx->lokasiKejadian->tglKejadian,
+                'keterangan' => $sepx->lokasiKejadian->ketKejadian,
+                // 'suplesi' => $request->jaminan->penjamin->suplesi->suplesi,
+                // 'nosuplesi' => $request->jaminan->penjamin->suplesi->noSepSuplesi,
+                'kdpropinsi' => $sepx->lokasiKejadian->kdProp,
+                // 'propinsi',
+                'kdkabupaten' => $sepx->lokasiKejadian->kdKab,
+                // kabupaten,
+                'kdkecamatan' => $sepx->lokasiKejadian->kdKec,
+                // kecamatan,
+                // kodedokterdpjp,
+                // dokterdpjp
+            ]
+        );
+
+        return $data;
+    }
+
     public function getSepFromBpjs(Request $request)
     {
         $request->validate([
             'noSep'=> 'required',
         ]);
 
+        // return $request->pasien['noreg'];
+
         $data = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $request->noSep);
-        return new JsonResponse($data);
+        return new JsonResponse($data, 200);
     }
 
 
@@ -329,4 +409,66 @@ class SepranapController extends Controller
 
        return $createsep;
     }
+
+
+    public function create_spri_ranap(Request $request)
+    {
+    //    return $request->all();
+
+        $payload = [
+            "request" => [
+                "noKartu" => $request->pasien['noka'] ?? "",
+                "kodeDokter" => $request->dokter["kodeDokter"] ?? "",
+                "poliKontrol" => $request->spesialis["kodePoli"] ?? "",
+                "tglRencanaKontrol" => $request->tglRawatInap ?? "",
+                "user" => auth()->user()->nama,
+            ],
+        ];
+
+        // return $payload;
+
+        $createSpri = BridgingbpjsHelper::post_url(
+            'vclaim',
+            'RencanaKontrol/InsertSPRI',
+            $payload
+        );
+
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'noreg' => $request->pasien['noreg'] === null ? '' : $request->pasien['noreg'],
+                'request' => $payload,
+                'respon' => $createSpri,
+                'url' => '/RencanaKontrol/InsertSPRI',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+
+
+        $bpjs = $createSpri['metadata']['code'];
+        if ($bpjs === 200 || $bpjs === '200') {
+            $sprix = $createSpri['response'];
+
+            BpjsSpri::updateOrCreate(
+                ['noreg' => $request->pasien['noreg'], 'noSuratKontrol'=> $sprix->noSpri],
+                [
+                    'norm' => $request->pasien['norm'],
+                    'kodeDokter' => $request->dokter['kodeDokter'],
+                    'poliKontrol' => $request->spesialis['kodePoli'],
+                    'tglRencanaKontrol' => $request->tglRawatInap,
+                    'namaDokter' => $request->dokter['namaDokter'],
+                    'noKartu' => $request->pasien['noka'],
+                    'nama' => $request->pasien['nama'],
+                    'kelamin' => $request->pasien['kelamin'],
+                    'tglLahir' => $request->pasien['tglLahir'],
+                    'user_id' => auth()->user()->pegawai_id,
+                ]
+            );
+        }
+       return $createSpri;
+    }
+
+
+
 }

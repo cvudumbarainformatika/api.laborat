@@ -90,7 +90,8 @@ class HistoryKunjunganController extends Controller
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
             'rs24.rs3 as kelasruangan',
-            'rs24.rs5 as group_ruangan'
+            'rs24.rs5 as group_ruangan',
+            // 'bpjs_spri.noSuratKontrol as noSpri'
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
@@ -98,6 +99,7 @@ class HistoryKunjunganController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs222', 'rs222.rs1', 'rs23.rs1')
+            // ->leftjoin('bpjs_spri', 'rs23.rs1', '=', 'bpjs_spri.noreg')
 
             // ->with(['sepranap' => function($q) {
             //     $q->select('rs1', 'rs8 as noSep', 'rs3 as ruang', 'rs5 as noRujukan', 'rs7 as diagnosa', 'rs10 as ppkRujukan', 'rs11 as jenisPeserta');

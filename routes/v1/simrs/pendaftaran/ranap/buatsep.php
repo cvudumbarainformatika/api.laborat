@@ -18,9 +18,13 @@ Route::group([
     Route::post('get-kecamatan-bpjs', [SepranapController::class, 'getKecamatanBpjs']);
     Route::post('get-dpjp-bpjs', [SepranapController::class, 'getDpjpBpjs']);
     Route::post('create-sep-ranap', [SepranapController::class, 'create_sep_ranap']);
+    Route::post('create-spri-ranap', [SepranapController::class, 'create_spri_ranap']);
     Route::post('list-rujukan-peserta', [SepranapController::class, 'getListRujukanPeserta']);
     Route::post('get-list-spri', [SepranapController::class, 'getListSpri']);
+    Route::post('get-list-spesialistik', [SepranapController::class, 'getListSpesialistik']);
+    Route::post('get-list-dokter-bpjs', [SepranapController::class, 'getListDokterBpjs']);
     Route::post('get-suplesi-jasa-raharja-by-bpjs', [SepranapController::class, 'getSuplesi']);
     Route::post('get-sep-from-bpjs', [SepranapController::class, 'getSepFromBpjs']);
+    Route::post('insert-sep-manual', [SepranapController::class, 'insertSepManual']);
     Route::get('get-no-rujukan-internal', [SepranapController::class, 'getNorujukanInternal']);
 });
