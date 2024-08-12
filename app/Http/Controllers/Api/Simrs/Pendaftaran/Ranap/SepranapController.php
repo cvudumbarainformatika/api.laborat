@@ -378,7 +378,7 @@ class SepranapController extends Controller
                     'rs13'=> $request->noKartu ?? '',
                     'rs14' => $request->sepRanap['nama'] ?? '',
                     'rs15' => $request->sepRanap['tglLahir'] ?? '',
-                    'rs16' => $request->sepRanap['jeniskelamin'] ? ($request->sepRananp['jeniskelamin']==='Laki-Laki' ? 'L' : 'P') : '', 
+                    'rs16' => $request->sepRanap['jeniskelamin']==='Laki-Laki' ? 'L' : 'P', 
                     'rs17' => 'Rawat Inap',
                     'rs18'=> $request->sepRanap['hakKelas'] ?? '',
                     'rs19'=> '1',
