@@ -24,6 +24,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 use function PHPUnit\Framework\isNull;
@@ -34,13 +35,16 @@ class AutogenController extends Controller
 
     public function index(Request $request)
     {
-        $n = 42064;
-        $panjang = strlen($n);
-        $has=null;
-        for($i=1;$i<=4-$panjang;$i++){$has=$has."0";}
+        // $n = 42064;
+        // $panjang = strlen($n);
+        // $has=null;
+        // for($i=1;$i<=4-$panjang;$i++){$has=$has."0";}
 
-        return date("y").date("m").date("d").$has.$n."R";
+        // return date("y").date("m").date("d").$has.$n."R";
         // return new JsonResponse($query['data']);
+
+        $contents = File::get(storage_path('json/listscache.json'));
+        return JsonResponse::fromJsonString($contents);
     }
 
     public function resetCounter(){

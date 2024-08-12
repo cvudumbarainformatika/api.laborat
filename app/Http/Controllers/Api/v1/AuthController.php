@@ -59,7 +59,11 @@ class AuthController extends Controller
 
         // $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
 
-        $user = cache()->remember('account_' . $me->id, now()->addHours(8), function () use($me) {
+        // $user = cache()->remember('account_' . $me->id, now()->addHours(8), function () use($me) {
+        //     return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+        // });
+
+        $user = Cache::rememberForever('account_' . $me->id, function () use ($me) {
             return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
         });
 
