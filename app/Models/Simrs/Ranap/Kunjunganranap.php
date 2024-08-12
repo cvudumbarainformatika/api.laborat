@@ -15,6 +15,7 @@ use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
+use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
@@ -474,5 +475,10 @@ class Kunjunganranap extends Model
     }
     public function kamarranap(){
         return $this->belongsTo(MkamarRanap::class, 'rs6', 'rs1');
+    }
+
+    public function sepranap()
+    {
+       return $this->hasOne(Sepranap::class, 'rs1', 'rs1');
     }
 }

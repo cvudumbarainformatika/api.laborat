@@ -131,7 +131,8 @@ class TransaksiLaboratLuarController extends Controller
         $kodes = collect($data)->pluck('kd_lab');
         $kode_lab = implode('~', $kodes->toArray());
 
-        $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
+        // $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
+        $apiURL = 'http://192.168.101.200:83/prolims/api/lis/postOrder';
         $postInput = [
             "ADDRESS" => $data[0]->alamat,
             "BOD" => "19981127",

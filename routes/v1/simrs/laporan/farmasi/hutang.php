@@ -11,5 +11,5 @@ Route::group([
 ], function () {
     Route::get('/get-hutang-konsinyasi', [HutangKonsinyasiController::class, 'getHutangKonsinyasi']);
     Route::get('/reportObatPesananBytanggal', [HutangObatPesan::class, 'reportObatPesananBytanggal']);
-
+    Route::get('/reportObatPesananBytanggalBast', [HutangObatPesan::class, 'reportObatPesananBytanggalBast']);
 });

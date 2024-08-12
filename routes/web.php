@@ -14,6 +14,7 @@ use App\Http\Controllers\PrintController;
 use App\Websockets\SocketHandler\UpdatePostSocketHandler;
 use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +83,11 @@ Route::get('/notif-refresh', function () {
     ];
     event(new PlaygroundEvent($message));
     return null;
+});
+
+Route::get('/clear-cache', function () {
+    Artisan::call('cache:clear');
+    echo 'cache cleared';
 });
 
 

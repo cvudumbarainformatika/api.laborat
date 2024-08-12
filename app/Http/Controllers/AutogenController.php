@@ -34,13 +34,12 @@ class AutogenController extends Controller
 
     public function index(Request $request)
     {
-        
-        $dat=date('d-m');
-        if($dat==='08-08'){
-            return new JsonResponse('kena dah');
+        $n = 42064;
+        $panjang = strlen($n);
+        $has=null;
+        for($i=1;$i<=4-$panjang;$i++){$has=$has."0";}
 
-        }
-        return new JsonResponse($dat);
+        return date("y").date("m").date("d").$has.$n."R";
         // return new JsonResponse($query['data']);
     }
 
@@ -409,7 +408,8 @@ class AutogenController extends Controller
         $sign = hash_hmac('sha256', $xid . "&" . $xtimestamp, $secret_key, true);
         $xsignature = base64_encode($sign);
 
-        $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
+        // $apiURL = 'http://172.16.24.2:83/prolims/api/lis/postOrder';
+        $apiURL = 'http://192.168.101.200:83/prolims/api/lis/postOrder';
         $postInput = [
             "ADDRESS" => "JL BANTARAN RT5/10 NO.07 SUMBERKEDAWUNG LECES - KOTA PROBOLINGGO",
             "BOD" => "19981127",

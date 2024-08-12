@@ -32,6 +32,15 @@ class AppServiceProvider extends ServiceProvider
         
         JsonResource::withoutWrapping();
 
+        
+        // app('db')->listen(function($query) {
+        //     app('log')->info(
+        //         $query->sql,
+        //         $query->bindings,
+        //         $query->time
+        //     );
+        // });
+
         /**
          * Paginate a standard Laravel Collection.
          *

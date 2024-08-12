@@ -25,4 +25,21 @@ class HutangObatPesan extends Controller
         ->get();
         return new JsonResponse($data);
     }
+
+    public function reportObatPesananBytanggalBast()
+    {
+        $dari = request('tgldari');
+        $data = PenerimaanHeder::whereDate('tgl_bast','<=', $dari)->where('nobast','!=','')
+        ->with(
+            [
+                'pihakketiga',
+                'penerimaanrinci' => function($penerimaanrinci){
+                    $penerimaanrinci->with('masterobat');
+                }
+            ]
+        )
+        ->where('jenis_penerimaan','Pesanan')
+        ->get();
+        return new JsonResponse($data);
+    }
 }
