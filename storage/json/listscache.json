@@ -11,6 +11,7 @@
   {"nama":"pekerjaan", "ketId":null, "controller":"PekerjaanController", "method":"index"},
   {"nama":"asalrujukan", "ketId":null, "controller":"AsalrujukanController", "method":"listasalrujukan"},
   {"nama":"allsistembayar", "ketId":null, "controller":"SistembayarController", "method":"allsistembayar"},
+  {"nama":"master-sistembayar", "ketId":null, "controller":"AuthController", "method":"authuser"},
   {"nama":"kamar", "ketId":null, "controller":"KamarController", "method":"index"},
   {"nama":"dokter", "ketId":null, "controller":"NakesController", "method":"dokter"}
 ]

@@ -91,13 +91,13 @@ class AuthController extends Controller
         //     ->where('rs1','!=','')
         //     ->get();
 
-            $masterSistemBayar = Cache::rememberForever('master-sistembayar', function () {
-                return Msistembayar::query()
-                ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
-                ->where('hidden','!=','')
-                ->where('rs1','!=','')
-                ->get();
-            });
+        $masterSistemBayar = Cache::rememberForever('master-sistembayar', function () {
+            return Msistembayar::query()
+            ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
+            ->where('hidden','!=','')
+            ->where('rs1','!=','')
+            ->get();
+        });
         
 
         
