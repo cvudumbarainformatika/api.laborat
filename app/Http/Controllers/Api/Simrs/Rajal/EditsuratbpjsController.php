@@ -59,7 +59,7 @@ class EditsuratbpjsController extends Controller
         if ($xxx === 200 || $xxx === '200') {
             $cari = Simpansuratkontrol::where('noSuratKontrol', $request->noSuratKontrol)->first();
             if ($cari) {
-                $cari->rs19 = $request->tglrencanakontrol;
+                $cari->tglRencanaKontrol = $request->tglrencanakontrol;
                 $cari->save();
             }
             return new JsonResponse(
