@@ -43,6 +43,7 @@ class BastController extends Controller
             ->leftJoin('penerimaan_h', 'penerimaan_h.nopemesanan', '=', 'pemesanan_h.nopemesanan')
             ->where('pemesanan_h.kdpbf', request('kdpbf'))
             ->whereNull('penerimaan_h.tgl_bast')
+            ->groupBy('pemesanan_h.nopemesanan')
             ->get();
         return new JsonResponse($data);
     }
@@ -64,7 +65,7 @@ class BastController extends Controller
                                 ->on('retur_penyedia_r.kd_obat', '=', 'penerimaan_r.kdobat');
                         })
                         ->with('masterobat:kd_obat,nama_obat,satuan_b')
-                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
+                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan','penerimaan_r.no_batch');
                 },
                 'faktur'
             ])

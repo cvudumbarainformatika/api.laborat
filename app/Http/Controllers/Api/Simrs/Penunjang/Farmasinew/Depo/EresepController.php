@@ -239,6 +239,7 @@ class EresepController extends Controller
                 'new_masterobat.kekuatan_dosis as kekuatandosis',
                 'new_masterobat.volumesediaan as volumesediaan',
                 'new_masterobat.kelompok_psikotropika as psikotropika',
+                'new_masterobat.jenis_perbekalan',
                 'stokreal.kdobat as kdobat',
                 'stokreal.jumlah as jumlah',
                 // DB::raw('sum(stokreal.jumlah) as total')
@@ -354,6 +355,40 @@ class EresepController extends Controller
         $sudahAda=Resepkeluarheder::where('noresep',$request->noresep)->first();
         if($sudahAda){           
             if($sudahAda->noreg !== $request->noreg) $request['noresep']=null;
+        }
+        $depoLimit=['Gd-04010102','Gd-05010101'];
+        if(in_array($request->kodedepo,$depoLimit)){
+            // jumlah Racikan
+            $racikan=Permintaanresepracikan::where('noresep',$request->noresep)->groupBy('namaracikan')->count();
+            // non racikan
+            $nonracikan=Permintaanresep::select('resep_permintaan_keluar.kdobat')
+            ->leftJoin('new_masterobat','new_masterobat.kd_obat','=','resep_permintaan_keluar.kdobat')
+            ->where('resep_permintaan_keluar.noresep',$request->noresep)
+            ->where('new_masterobat.jenis_perbekalan','obat')
+            ->count();
+            // $total=(int)$racikan+(int)$nonracikan;
+            // $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
+            // if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
+            //     return new JsonResponse([
+            //         'message' => 'Jumlah Obat Dibatasi 7 saja',
+            //         'racikan'=>$racikan,
+            //         'non racikan'=>$nonracikan
+            //     ],410);
+            // }
+            // if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
+            //     return new JsonResponse([
+            //         'message' => 'Jumlah Obat Dibatasi 5 saja',
+            //         'racikan'=>$racikan,
+            //         'non racikan'=>$nonracikan
+            //     ],410);
+            // }
+            // return new JsonResponse([
+            //     'message' => 'Batasan',
+            //     'racikan'=>$racikan,
+            //     'non racikan'=>$nonracikan,
+            //     'depo'=>$request->kodedepo,
+            //     'obat minta'=>$obatMinta,
+            // ],410);
         }
         try {
             DB::connection('farmasi')->beginTransaction();
