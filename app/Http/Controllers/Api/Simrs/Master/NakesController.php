@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Dokter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class NakesController extends Controller
 {
@@ -19,9 +20,14 @@ class NakesController extends Controller
 
     public function dokter()
     {
-       $dokter = Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
+    //    $dokter = Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
+    //         ->where('kdgroupnakes', '1')->where('aktif', 'AKTIF')
+    //         ->get();
+        $dokter = Cache::rememberForever('dokter', function () {
+            return Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
             ->where('kdgroupnakes', '1')->where('aktif', 'AKTIF')
             ->get();
+        });
         return new JsonResponse($dokter);
     }
 }

@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mkelamin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class KelaminarrController extends Controller
 {
     public function index()
     {
-        $data = Mkelamin::all();
+        // $data = Mkelamin::all();
+        $data = Cache::rememberForever('kelamin', function () {
+            return Mkelamin::all();
+        });
         return new JsonResponse($data);
     }
 

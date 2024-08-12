@@ -91,6 +91,7 @@ class HistoryKunjunganController extends Controller
             'rs24.rs2 as ruangan',
             'rs24.rs3 as kelasruangan',
             'rs24.rs5 as group_ruangan',
+            // 'rs101.rs3 as kode_diagnosa'
             // 'bpjs_spri.noSuratKontrol as noSpri'
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
@@ -99,11 +100,18 @@ class HistoryKunjunganController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs222', 'rs222.rs1', 'rs23.rs1')
+            // ->leftjoin('rs101', 'rs101.rs1', 'rs23.rs1')
             // ->leftjoin('bpjs_spri', 'rs23.rs1', '=', 'bpjs_spri.noreg')
 
             // ->with(['sepranap' => function($q) {
             //     $q->select('rs1', 'rs8 as noSep', 'rs3 as ruang', 'rs5 as noRujukan', 'rs7 as diagnosa', 'rs10 as ppkRujukan', 'rs11 as jenisPeserta');
             // }])
+
+            ->with(['diagnosa' => function($q) {
+                $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status')
+                    ->leftjoin('rs99x', 'rs101.rs3', 'rs99x.rs1')
+                    ->orderBy('rs101.id', 'desc');
+            }])
             
             ->where(function($query) use ($tgl, $tglx) {
                 $query->whereBetween('rs23.rs3', [$tglx, $tgl]);

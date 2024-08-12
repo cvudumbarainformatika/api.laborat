@@ -6,15 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Magama;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class AgamaControllerar extends Controller
 {
     public function index()
     {
-        $data = Magama::query()
-        ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
-        ->where('flag','<>','1')
-        ->get();
+        // $data = Magama::query()
+        // ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
+        // ->where('flag','<>','1')
+        // ->get();
+
+        $data = Cache::rememberForever('agama', function () {
+            return Magama::query()
+            ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
+            ->where('flag','<>','1')
+            ->get();
+        });
 
         return new JsonResponse($data);
     }

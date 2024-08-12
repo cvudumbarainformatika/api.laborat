@@ -24,6 +24,14 @@ class LocationController extends Controller
 
         return response()->json($data);
     }
+    public function listRuanganRanap()
+    {
+        $data = Ruang::where('groupper', '=', 'ranap')
+            ->with(['namagedung', 'organisasi', 'satset'])
+            ->get();
+
+        return response()->json($data);
+    }
 
     public function updateLocation(Request $request)
     {
