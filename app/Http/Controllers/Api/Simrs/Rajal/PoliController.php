@@ -590,7 +590,7 @@ class PoliController extends Controller
                     $sharing->orderBy('id', 'DESC');
                 },
                 'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->with([
+                    $newapotekrajal->whereIn('flag',['','1','2','3','4'])->with([
                         'permintaanresep.mobat:kd_obat,nama_obat',
                         'permintaanracikan.mobat:kd_obat,nama_obat',
                     ])
