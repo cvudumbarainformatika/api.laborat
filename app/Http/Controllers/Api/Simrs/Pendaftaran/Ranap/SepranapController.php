@@ -461,7 +461,7 @@ class SepranapController extends Controller
                     'noKartu' => $request->pasien['noka'],
                     'nama' => $request->pasien['nama'],
                     'kelamin' => $request->pasien['kelamin'],
-                    'tglLahir' => $request->pasien['tglLahir'],
+                    'tglLahir' => $request->pasien['tgllahir'],
                     'user_id' => auth()->user()->pegawai_id,
                 ]
             );
