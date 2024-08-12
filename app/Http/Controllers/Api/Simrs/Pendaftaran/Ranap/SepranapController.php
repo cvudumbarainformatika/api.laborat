@@ -451,7 +451,7 @@ class SepranapController extends Controller
             $sprix = $createSpri['response'];
 
             BpjsSpri::updateOrCreate(
-                ['noreg' => $request->pasien['noreg'], 'noSuratKontrol'=> $sprix->noSpri],
+                ['noreg' => $request->pasien['noreg'], 'noSuratKontrol'=> $sprix->noSPRI],
                 [
                     'norm' => $request->pasien['norm'],
                     'kodeDokter' => $request->dokter['kodeDokter'],
