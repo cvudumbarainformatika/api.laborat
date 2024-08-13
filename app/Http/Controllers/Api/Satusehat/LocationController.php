@@ -33,9 +33,22 @@ class LocationController extends Controller
         return response()->json($data);
     }
 
+    public function listRuanganByGroup()
+    {
+        $data = Ruang::where('groupper', '=', request('group'))
+        ->whereNotNull('groupper')
+        ->with(['namagedung', 'organisasi', 'satset'])
+        ->get();
+
+        return response()->json($data);
+    }
+
     public function updateLocation(Request $request)
     {
+
+
         $data = Ruang::find($request->id);
+        // return $request->type;
 
         $form = [
             'gedung' => $request->gedung,
@@ -54,15 +67,18 @@ class LocationController extends Controller
             'longitude' => $request->longitude,
             'latitude' => $request->latitude,
             'altitude' => $request->altitude,
+            'departement_uuid' => $request->departement_uuid,
         ];
 
         $update = $data->update($form);
 
         if (!$update) {
             return response()->json([
-                'message' => 'Maaf Ada Kesalahan'
+                'message' => 'Gaga Update Lokasi'
             ], 500);
         }
+
+        // nyampek sini belum
 
         return $this->sendToSatset($request->token, $data);
         // return response()->json([
@@ -76,7 +92,7 @@ class LocationController extends Controller
         $organization_id = '100026342';
         $satset_uuid = $data->satset_uuid;
         $uuid = '';
-        if ($satset_uuid) {
+        if (!empty($satset_uuid)) {
             $uuid = '"id": "' . $satset_uuid . '",';
         }
         $body = '{
@@ -172,6 +188,8 @@ class LocationController extends Controller
                     }
                 }';
         $form = json_decode($body, true);
+
+
 
         // put
         if ($satset_uuid) {
