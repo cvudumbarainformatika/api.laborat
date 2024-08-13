@@ -59,7 +59,11 @@ class AuthController extends Controller
 
         // $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
 
-        $user = cache()->remember('account_' . $me->id, now()->addHours(8), function () use($me) {
+        // $user = cache()->remember('account_' . $me->id, now()->addHours(8), function () use($me) {
+        //     return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+        // });
+
+        $user = Cache::rememberForever('account_' . $me->id, function () use ($me) {
             return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
         });
 
@@ -87,13 +91,13 @@ class AuthController extends Controller
         //     ->where('rs1','!=','')
         //     ->get();
 
-            $masterSistemBayar = Cache::rememberForever('master-sistembayar', function () {
-                return Msistembayar::query()
-                ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
-                ->where('hidden','!=','')
-                ->where('rs1','!=','')
-                ->get();
-            });
+        $masterSistemBayar = Cache::rememberForever('master-sistembayar', function () {
+            return Msistembayar::query()
+            ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
+            ->where('hidden','!=','')
+            ->where('rs1','!=','')
+            ->get();
+        });
         
 
         

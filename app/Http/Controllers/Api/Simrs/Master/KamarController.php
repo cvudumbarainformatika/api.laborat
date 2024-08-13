@@ -10,18 +10,30 @@ use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Views\Kunjunganview;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class KamarController extends Controller
 {
     public function listkamar()
     {
-      $listkamar = Mkamar::query()
-      ->selectRaw('rs1,rs2,rs3,rs4,rs6,groups')
-      ->where(function ($q) {
-        $q->where('rs6', '<>', '1')
-        ->where('status', '<>', '1');
-      })->distinct('rs1')
-      ->orderBy('rs2', 'DESC')->get();
+      // $listkamar = Mkamar::query()
+      // ->selectRaw('rs1,rs2,rs3,rs4,rs6,groups')
+      // ->where(function ($q) {
+      //   $q->where('rs6', '<>', '1')
+      //   ->where('status', '<>', '1');
+      // })->distinct('rs1')
+      // ->orderBy('rs2', 'DESC')->get();
+
+      $listkamar = Cache::rememberForever('kamar', function () {
+        return Mkamar::query()
+        ->selectRaw('rs1,rs2,rs3,rs4,rs6,groups')
+        ->where(function ($q) {
+          $q->where('rs6', '<>', '1')
+          ->where('status', '<>', '1');
+        })->distinct('rs1')
+        ->orderBy('rs2', 'DESC')->get();
+      });
+
       return new JsonResponse($listkamar);
     }
 

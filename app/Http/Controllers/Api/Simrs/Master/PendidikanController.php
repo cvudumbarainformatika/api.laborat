@@ -6,14 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpendidikan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PendidikanController extends Controller
 {
     public function index()
     {
-        $data = Mpendidikan::query()
-        ->selectRaw('rs1 as kode,rs2 as pendidikan')
-        ->get();
+        // $data = Mpendidikan::query()
+        // ->selectRaw('rs1 as kode,rs2 as pendidikan')
+        // ->get();
+
+        $data = Cache::rememberForever('pendidikan', function () {
+            return Mpendidikan::query()
+            ->selectRaw('rs1 as kode,rs2 as pendidikan')
+            ->get();
+        });
 
         return new JsonResponse($data);
     }

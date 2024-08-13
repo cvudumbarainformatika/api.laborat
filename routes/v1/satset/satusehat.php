@@ -27,6 +27,7 @@ Route::group([
 
     // LOCATION
     Route::get('/listRuanganRajal', [LocationController::class, 'listRuanganRajal']);
+    Route::get('/listRuanganRanap', [LocationController::class, 'listRuanganRanap']);
     Route::post('/updateLocation', [LocationController::class, 'updateLocation']);
 
     // PRACTITIONER / NAKES

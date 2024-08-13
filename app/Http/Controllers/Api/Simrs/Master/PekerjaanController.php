@@ -6,12 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpekerjaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PekerjaanController extends Controller
 {
     public function index()
     {
-        $query = Mpekerjaan::all();
+        // $query = Mpekerjaan::all();
+
+        $query = Cache::rememberForever('pekerjaan', function () {
+            return Mpekerjaan::all();
+        });
         return new JsonResponse($query);
 
     }

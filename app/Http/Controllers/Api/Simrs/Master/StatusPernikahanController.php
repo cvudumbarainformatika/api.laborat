@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mstatuspernikahan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class StatusPernikahanController extends Controller
 {
     public function index()
     {
-        $data = Mstatuspernikahan::all();
+        // $data = Mstatuspernikahan::all();
+        $data = Cache::rememberForever('statuspernikahan', function () {
+            return Mstatuspernikahan::all();
+        });
         return new JsonResponse($data);
     }
 
