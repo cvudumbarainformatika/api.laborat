@@ -20,6 +20,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Sistembayarlain;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRacikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRinci;
@@ -366,22 +367,37 @@ class EresepController extends Controller
             ->where('resep_permintaan_keluar.noresep',$request->noresep)
             ->where('new_masterobat.jenis_perbekalan','obat')
             ->count();
-            // $total=(int)$racikan+(int)$nonracikan;
-            // $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
-            // if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
-            //     return new JsonResponse([
-            //         'message' => 'Jumlah Obat Dibatasi 7 saja',
-            //         'racikan'=>$racikan,
-            //         'non racikan'=>$nonracikan
-            //     ],410);
-            // }
-            // if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
-            //     return new JsonResponse([
-            //         'message' => 'Jumlah Obat Dibatasi 5 saja',
-            //         'racikan'=>$racikan,
-            //         'non racikan'=>$nonracikan
-            //     ],410);
-            // }
+            $total=(int)$racikan+(int)$nonracikan;
+            $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
+            if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
+                return new JsonResponse([
+                    'message' => 'Jumlah Obat Dibatasi 7 saja',
+                    'racikan'=>$racikan,
+                    'non racikan'=>$nonracikan
+                ],410);
+            }
+            if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
+                return new JsonResponse([
+                    'message' => 'Jumlah Obat Dibatasi 5 saja',
+                    'racikan'=>$racikan,
+                    'non racikan'=>$nonracikan
+                ],410);
+            }
+            // batasan obat yang sama
+            $sekarang=date('Y-m-d');
+            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->pluck('noresep');
+            $adaObat=Permintaanresep::where('noreg',$request->noreg)->where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
+            if($adaObat){
+                $pesanA='Item Obat ';
+                $pesanT='';
+                $pesanB=' Sudah Pernah Diberikan Hari ini ';
+                $master=Mobatnew::select('nama_obat')->where('kd_obat',$request->kodeobat)->first();
+                if($master){
+                    $pesanT=$master->nama_obat;
+                }
+                $msg=$pesanA . $pesanT . $pesanB;
+                return new JsonResponse(['message'=>$msg],410);
+            }
             // return new JsonResponse([
             //     'message' => 'Batasan',
             //     'racikan'=>$racikan,
@@ -1136,7 +1152,7 @@ class EresepController extends Controller
             'sistembayar',
             'sep:rs1,rs8',
             'dokter:kdpegsimrs,nama',
-            'kunjunganranap:rs1,titipan',
+            'kunjunganranap:rs1,titipan,rs6,rs3,rs4',
             'kunjunganranap.ruangtitipan:rs1,rs2',
             'datapasien' => function ($quer) {
                 $quer->select(
@@ -1154,9 +1170,142 @@ class EresepController extends Controller
             ->first();
         return new JsonResponse($listresep);
     }
-
+    public static function pushToArray($cond,$array,$str,$bnd){
+        $column=array_column($array,$str);
+        $index=array_search($bnd,$column);
+        if($index===false && $cond) return true;
+        else return false;
+        
+    }
     public function kirimresep(Request $request)
     {
+        /**
+         * pembatasan start 
+        */
+        $depoLimit=['Gd-04010102','Gd-05010101'];
+        if(in_array($request->kodedepo,$depoLimit)){
+            // batasan obat yang sama
+            $sekarang=date('Y-m-d');
+            // normal, tidak ada retur
+            $normalHead=Resepkeluarheder::where('noreg',$request->noreg)
+            ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
+            ->whereIn('flag',['1','2','3'])
+            ->pluck('noresep');
+            $returHead=Resepkeluarheder::where('noreg',$request->noreg)
+            ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
+            ->where('flag','4')
+            ->pluck('noresep');
+        }
+        // ambil detail obat yang akan dikirim
+        $obatnya=Permintaanresep::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
+        $obatRacikan=Permintaanresepracikan::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
+        // ambil obat untuk pasien kunjungan sekarang
+        $obatNormal=Permintaanresep::whereIn('noresep',$normalHead)->get();
+        $obatNormalRacikan=Permintaanresepracikan::whereIn('noresep',$normalHead)->orWhereIn('noresep',$returHead)->get();
+        // ambil retur obat (kalau ada)
+        $obatAdaRetur=Permintaanresep::whereIn('noresep',$returHead)->get();
+        // ambil obat yang diretur
+        $obatRetur=Returpenjualan_r::whereIn('noresep',$returHead)->get();
+        // cek retur, berapa jumlah nya, jika semua maka dianggap tidak diberikan
+        $arrayAda=$obatAdaRetur->toArray();
+        $keys=array_column($arrayAda,'kdobat');
+        foreach($obatRetur as $ret){
+            $index=array_search($ret['kdobat'],$keys);
+            if(!($index!==false)){
+                $keluar=$ret['jumlah_keluar'];
+                $retur=$ret['jumlah_retur'];
+                // yang ada retur, jika di retur semua obatnya berarti dianggap tidak ada
+                if($keluar==$retur){
+                    array_splice($arrayAda,$index,1);
+                }
+            }
+        }
+        // bandingkan
+        $sudahAda=[];
+        $cN=[];
+        $cR=[];
+        $cRA=[];
+        $msg='';
+        $arrayNormal=$obatNormal->toArray();
+        $arrayNormalRacikan=$obatNormalRacikan->toArray();
+        $ret=array_column($arrayAda,'kdobat');
+        $nor=array_column($arrayNormal,'kdobat');
+        $norR=array_column($arrayNormalRacikan,'kdobat');
+        // bandingkan dengan obat yang akan dikirim
+        if(count($obatnya)>0){
+            foreach($obatnya as $obt){
+                
+                $indR=array_search($obt['kdobat'],$ret);
+                $indN=array_search($obt['kdobat'],$nor);
+                $indNRa=array_search($obt['kdobat'],$norR);
+                                                
+                $fIndR=$indR!==false; // kalo ga ketemu itu false, kelo ketemu itu number, kalo ketemu 0 itu juga dianggap false
+                $fIndN=$indN!==false;
+                $findNRa=$indNRa!==false;
+
+                if($fIndR && self::pushToArray($fIndR,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
+                else if($fIndN && self::pushToArray($fIndN,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
+                else if($findNRa && self::pushToArray($findNRa,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
+
+                if(sizeof($sudahAda)==1) $msg=$msg . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
+                if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
+                $cN[]=[$fIndN,$obt['kdobat']];
+                $cR[]=[$fIndR,$obt['kdobat']];
+                $cRA[]=[$findNRa,$obt['kdobat']];
+
+                
+            }
+        }
+        // racikan
+        if(count($obatRacikan)>0){
+            foreach($obatRacikan as $obt){
+                // $sdh=array_column($sudahAda,'kdobat');
+                $indR=array_search($obt['kdobat'],$ret);
+                $indN=array_search($obt['kdobat'],$nor);
+                $indNRa=array_search($obt['kdobat'],$norR);
+                // $indS=array_search($obt['kdobat'],$sdh);
+                // return new JsonResponse($indS); 
+                // if($indS===false){
+                    $fIndR=$indR!==false; // kalo ga ketemu itu false, kelo ketemu itu number, kalo ketemu 0 itu juga dianggap false
+                    $fIndN=$indN!==false;
+                    $findNRa=$indNRa!==false;
+
+                    if($fIndR && self::pushToArray($fIndR,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
+                    else if($fIndN && self::pushToArray($fIndN,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
+                    else if($findNRa && self::pushToArray($findNRa,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
+                    
+                    if(sizeof($sudahAda)==1) $msg=$msg . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
+                    if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
+                // }
+                $cN[]=[$fIndN,$obt['kdobat']];
+                $cR[]=[$fIndR,$obt['kdobat']];
+                $cRA[]=[$findNRa,$obt['kdobat']];
+                
+            }
+
+        }
+        if(sizeof($sudahAda)>0){
+            // $msg=$msg . ' Sudah diresepkan';
+            return new JsonResponse([
+                'message'=>$msg,
+                'sudahAda'=>$sudahAda,
+                'cR'=>$cR,
+                'cN'=>$cN,
+                'cRA'=>$cRA,
+                'arrayAda'=>$arrayAda,
+                'arrayNormal'=>$arrayNormal,
+                'arrayNormalRacikan'=>$arrayNormalRacikan,
+                'obatnya'=>$obatnya,
+                'normalHead'=>$normalHead,
+                'count'=>sizeof($sudahAda),
+                
+            ],410);
+        }
+
+        /**
+         * pembatasan end 
+        */
+
         $user = Pegawai::find(auth()->user()->pegawai_id);
 
         $kirimresep = Resepkeluarheder::where('noresep', $request->noresep)->first();

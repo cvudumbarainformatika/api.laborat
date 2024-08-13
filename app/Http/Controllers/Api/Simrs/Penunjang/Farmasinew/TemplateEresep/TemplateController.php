@@ -47,7 +47,8 @@ class TemplateController extends Controller
         'new_masterobat.uraian50',
         'new_masterobat.kekuatan_dosis as kekuatandosis',
         'new_masterobat.volumesediaan as volumesediaan',
-        'new_masterobat.kelompok_psikotropika as psikotropika'
+        'new_masterobat.kelompok_psikotropika as psikotropika',
+        'new_masterobat.jenis_perbekalan',
       )
       ->where(function ($query) {
       $query->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
@@ -216,7 +217,17 @@ class TemplateController extends Controller
         ->when(request('q'), function ($q) {
             $q->where('nama', 'like', '%' . request('q') . '%');
         })
-        ->with('rincian.rincian')
+        ->with([
+          // 'rincian.rincian'
+          'rincian'=>function($ri){
+            $ri->select(
+              'template_resep_rinci.*',
+              'new_masterobat.jenis_perbekalan'
+            )
+              ->leftJoin('new_masterobat','new_masterobat.kd_obat','=','template_resep_rinci.kodeobat')
+            ->with('rincian');
+          }
+          ])
         ->limit(20)
         ->get();
 
