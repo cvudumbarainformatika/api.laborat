@@ -360,7 +360,7 @@ class EresepController extends Controller
         $depoLimit=['Gd-04010102','Gd-05010101'];
         if(in_array($request->kodedepo,$depoLimit)){
             // jumlah Racikan
-            $racikan=Permintaanresepracikan::where('noresep',$request->noresep)->groupBy('namaracikan')->count();
+            $racikan=Permintaanresepracikan::where('noresep',$request->noresep)->groupBy('namaracikan')->get()->count();
             // non racikan
             $nonracikan=Permintaanresep::select('resep_permintaan_keluar.kdobat')
             ->leftJoin('new_masterobat','new_masterobat.kd_obat','=','resep_permintaan_keluar.kdobat')
