@@ -21,11 +21,11 @@ class EresepController extends Controller
     {
         $history = Resepkeluarheder::with(
             [
-                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis,jenis_perbekalan',
+                'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis,jenis_perbekalan',
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis,jenis_perbekalan',
                 'permintaanresep.aturansigna:signa,jumlah',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,jenis_perbekalan,kelompok_psikotropika',
                 'poli',
                 'info',
                 'ruanganranap',
@@ -114,7 +114,7 @@ class EresepController extends Controller
             $jumlah = [];
             $noreseps = [];
             $groupsistembayar = [];
-
+            $jenis_perbekalan = [];
 
             foreach($request->kirimResep as $records){
                 $kdobat[] = $records['kodeobat'];
@@ -128,6 +128,7 @@ class EresepController extends Controller
                 $noreseps = $records['noresep'];
                 $noreg = $records['noreg'];
                 $groupsistembayar = $records['groupsistembayar'];
+                $jenis_perbekalan[] = $records['jenis_perbekalan'];
             }
 
             $cekjumlahstok = Stokreal::select('stokreal.kdobat as kdobat', DB::raw('sum(jumlah) as jumlahstok'))
@@ -283,7 +284,7 @@ class EresepController extends Controller
 
             foreach ($request->kirimResep as $key => $record) {
                 try {
-                    
+                
                     if ($record['jenisresep'] === 'nonRacikan') {
                         if ($record['jumlah_diminta'] > $alokasi[$key]) {
                             throw new \Exception('Maaf Stok Alokasi Tidak Mencukupi...!!!');
