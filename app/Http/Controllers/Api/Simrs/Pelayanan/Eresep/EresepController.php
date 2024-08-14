@@ -25,7 +25,7 @@ class EresepController extends Controller
                 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis,jenis_perbekalan',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis,jenis_perbekalan',
                 'permintaanresep.aturansigna:signa,jumlah',
-                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,,jenis_perbekalan,kelompok_psikotropika',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,jenis_perbekalan,kelompok_psikotropika',
                 'poli',
                 'info',
                 'ruanganranap',
