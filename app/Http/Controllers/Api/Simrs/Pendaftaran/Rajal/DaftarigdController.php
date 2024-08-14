@@ -6,6 +6,7 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Master\Mwna;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\SistemBayar;
@@ -70,16 +71,16 @@ class DaftarigdController extends Controller
                 'rs3' => $request->sapaan,
                 'rs4' => $request->alamat,
                 'alamatdomisili' => $request->alamatdomisili,
-                'rs5' => $request->kelurahan,
-                'kd_kel' => $request->kodekelurahan,
-                'rs6' => $request->kecamatan,
-                'kd_kec' => $request->kodekecamatan,
-                'rs7' => $request->rt,
-                'rs8' => $request->rw,
-                'rs10' => $request->propinsi,
-                'kd_propinsi' => $request->kodepropinsi,
-                'rs11' => $request->kabupatenkota,
-                'kd_kota' => $request->kodekabupatenkota,
+                'rs5' => $request->kelurahan ?? '' ,
+                'kd_kel' => $request->kodekelurahan ?? '',
+                'rs6' => $request->kecamatan ?? '',
+                'kd_kec' => $request->kodekecamatan ?? '',
+                'rs7' => $request->rt ?? '',
+                'rs8' => $request->rw ?? '',
+                'rs10' => $request->propinsi ?? '',
+                'kd_propinsi' => $request->kodepropinsi ?? '',
+                'rs11' => $request->kabupatenkota ?? '',
+                'kd_kota' => $request->kodekabupatenkota ?? '',
                 'rs49' => $nik,
                 'rs37' => $request->templahir,
                 'rs16' => $request->tgllahir,
@@ -93,15 +94,15 @@ class DaftarigdController extends Controller
                 'bahasa' => $request->bahasa,
                 'noidentitaslain' => $nomoridentitaslain,
                 'namaibu' => $request->namaibukandung,
-                'kodepos' => $request->kodepos,
+                'kodepos' => $request->kodepos ?? '',
                 'kd_negara' => $request->negara,
-                'kd_rt_dom' => $request->rtdomisili,
-                'kd_rw_dom' => $request->rwdomisili,
-                'kd_kel_dom' => $request->kodekelurahandomisili,
-                'kd_kec_dom' => $request->kodekecamatandomisili,
-                'kd_kota_dom' => $request->kodekabupatenkotadomisili,
-                'kodeposdom' => $request->kodeposdomisili,
-                'kd_prov_dom' => $request->kodepropinsidomisili,
+                'kd_rt_dom' => $request->rtdomisili ?? '',
+                'kd_rw_dom' => $request->rwdomisili ?? '',
+                'kd_kel_dom' => $request->kodekelurahandomisili ?? '',
+                'kd_kec_dom' => $request->kodekecamatandomisili ?? '',
+                'kd_kota_dom' => $request->kodekabupatenkotadomisili ?? '',
+                'kodeposdom' => $request->kodeposdomisili ?? '',
+                'kd_prov_dom' => $request->kodepropinsidomisili ?? '',
                 'kd_negara_dom' => $request->negaradomisili,
                 'noteleponrumah' => $noteleponrumah,
                 'kd_pendidikan' => $request->kodependidikan,
@@ -115,6 +116,19 @@ class DaftarigdController extends Controller
                 'kdhambatan' => $request->kdhambatan
             ]
         );
+
+        if ($request->kewarganegaraan === 'WNA') {
+            Mwna::updateOrCreate(
+                ['norm' => $request->norm],
+                [
+                    'kewarganegaraan' => $request->kewarganegaraan,
+                    'paspor' => $request->nomoridentitaslain,
+                    'country' => $request->country,
+                    'city' => $request->city,
+                    'region' => $request->region
+                ]
+            );
+        }
         return $masterpasien;
     }
 
