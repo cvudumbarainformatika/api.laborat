@@ -385,7 +385,7 @@ class EresepController extends Controller
             }
             // batasan obat yang sama
             $sekarang=date('Y-m-d');
-            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->pluck('noresep');
+            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2','3','4'])->pluck('noresep');
             $adaObat=Permintaanresep::where('noreg',$request->noreg)->where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
             if($adaObat){
                 $pesanA='Item Obat ';
