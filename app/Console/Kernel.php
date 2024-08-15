@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        // $schedule->call(function () {
+        //     info('mulai kirim kunjungan rajal');
+        //     $opname = new StokOpnameFarmasiController;
+        //     $data = $opname->storeMonthly();
+        //     info($data);
+        // })->dailyAt('00:20');
 
         $schedule->call(function () {
             info('mulai stok opname farmasi');

@@ -6,6 +6,7 @@ use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Helpers\PostKunjunganHelper;
 use App\Helpers\Satsets\PostKunjunganRajalHelper;
+use App\Helpers\Satsets\PostKunjunganRanapHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -279,6 +280,7 @@ class KunjunganController extends Controller
           'rs23.rs6 as ketruangan',
           'rs23.rs7 as nomorbed',
           'rs23.rs10 as kddokter',
+          'rs23.rs10',
           'rs21.rs2 as dokter',
           'rs23.rs19 as kodesistembayar', // ini untuk farmasi
           'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
@@ -301,7 +303,7 @@ class KunjunganController extends Controller
           'rs15.rs39 as suku',
           'rs15.rs40 as jenispasien',
           'rs15.rs46 as noka',
-          'rs15.rs49 as nktp',
+          'rs15.rs49 as nik',
           'rs15.rs55 as nohp',
           'rs15.satset_uuid as pasien_uuid',
           'rs9.rs2 as sistembayar',
@@ -337,7 +339,7 @@ class KunjunganController extends Controller
             'diagnosa' => function($q) {
               $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status')
                   ->leftjoin('rs99x', 'rs101.rs3', 'rs99x.rs1')
-                  ->orderBy('rs101.id', 'desc');
+                  ->orderBy('rs101.id', 'asc');
             },
             'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
           
@@ -346,7 +348,7 @@ class KunjunganController extends Controller
           ->where('rs23.rs1', $noreg)
           ->first();
 
-
+      return $select;
       return self::kirimKunjunganRanap($select);
     }
 
@@ -358,7 +360,9 @@ class KunjunganController extends Controller
           $pasien_uuid = $getPasienFromSatset['data']['uuid'];
         }
 
-        
+        $send = PostKunjunganRanapHelper::form($data, $pasien_uuid);
+        return $send;
+
     }
 
 
