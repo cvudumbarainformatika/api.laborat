@@ -3,6 +3,7 @@
 use App\Events\NotifMessageEvent;
 use App\Events\PlaygroundEvent;
 use App\Events\RefreshEvent;
+use App\Helpers\Routes\RouteHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\v1\ScrapperController;
@@ -113,3 +114,7 @@ Route::get('/clear-cache', function () {
 
 //    return null;
 // });
+
+Route::prefix('v4')->group(function () {
+    RouteHelper::includeRouteFiles(__DIR__ . '/v4'); // UNTUK WEB
+});

@@ -318,47 +318,47 @@ class TemplateController extends Controller
                    $findNRa=$indNRa!==false;
    
                    if($fIndR && EresepController::pushToArray($fIndR,$sudahAda,'kdobat',$obt['kdobat'])) {
-                    $obt['ada']=$ret[$indR];
+                    $obt['ada']=$obatAdaRetur[$indR];
                     $sudahAda[]=$obt;
-
+                    if(sizeof($sudahAda)==1) $msg=$msg . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
+                    if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
                   }
                    else if($fIndN && EresepController::pushToArray($fIndN,$sudahAda,'kdobat',$obt['kdobat'])) {
-                    $obt['ada']=$ret[$indN];
+                    $obt['ada']=$obatNormal[$indN];
                     $sudahAda[]=$obt;
+                    if(sizeof($sudahAda)==1) $msg=$msg . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
+                    if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
                   }
                    else if($findNRa && EresepController::pushToArray($findNRa,$sudahAda,'kdobat',$obt['kdobat'])) {
-                    $obt['ada']=$ret[$indNRa];
+                    $obt['ada']=$obatNormalRacikan[$indNRa];
                     $sudahAda[]=$obt;
+                    if(sizeof($sudahAda)==1) $msg=$msg . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
+                    if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['ada']['jumlah'];
                   }
-   
-                  //  if(sizeof($sudahAda)==1) $msg=$msg . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
-                  //  if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
-                   
-   
                    
                }
            }
-          // //  if(sizeof($sudahAda)>0){
-          //      // $msg=$msg . ' Sudah diresepkan';
-          //      return new JsonResponse([
-          //          'message'=>$msg,
-          //          'sudahAda'=>$sudahAda,
-          //          'cR'=>$cR,
-          //          'cN'=>$cN,
-          //          'cRA'=>$cRA,
-          //          'arrayAda'=>$arrayAda,
-          //          'arrayNormal'=>$arrayNormal,
-          //          'arrayNormalRacikan'=>$arrayNormalRacikan,
-          //          'obatnya'=>$obatnya,
-          //          'kode'=>$kode,
-          //          'normalHead'=>$normalHead,
-          //          'count'=>sizeof($sudahAda),
+          //  if(sizeof($sudahAda)>0){
+               // $msg=$msg . ' Sudah diresepkan';
+               return new JsonResponse([
+                   'message'=>$msg,
+                   'sudahAda'=>$sudahAda,
+                   'cR'=>$cR,
+                   'cN'=>$cN,
+                   'cRA'=>$cRA,
+                   'arrayAda'=>$arrayAda,
+                   'arrayNormal'=>$arrayNormal,
+                   'arrayNormalRacikan'=>$arrayNormalRacikan,
+                   'obatnya'=>$obatnya,
+                   'kode'=>$kode,
+                   'normalHead'=>$normalHead,
+                   'count'=>sizeof($sudahAda),
                    
-          //      ],410);
-          // //  }
-          // return new JsonResponse([
-          //   'req'=>$request->all()
-          // ],410);
+               ],410);
+          //  }
+          return new JsonResponse([
+            'req'=>$request->all()
+          ],410);
         }
       /** 
        * cek pembatasan obat end 

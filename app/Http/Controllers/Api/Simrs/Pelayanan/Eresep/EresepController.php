@@ -91,7 +91,7 @@ class EresepController extends Controller
 
     public function copiresep(Request $request)
     {
-        // return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
+        return new JsonResponse(['message'=>'Duplicate resep sedang dalam perbaikan'],410);
         $response = [];
         $cekpemberianobat = false;
       

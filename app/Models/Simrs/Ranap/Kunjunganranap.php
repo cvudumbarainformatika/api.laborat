@@ -451,7 +451,7 @@ class Kunjunganranap extends Model
     }
     public function datasimpeg()
     {
-        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs10');
     }
     public function kamaroperasi()
     {
