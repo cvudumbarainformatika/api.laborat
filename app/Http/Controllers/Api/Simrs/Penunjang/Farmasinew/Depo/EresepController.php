@@ -369,14 +369,14 @@ class EresepController extends Controller
             ->count();
             $total=(int)$racikan+(int)$nonracikan;
             $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
-            if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
+            if($request->kodedepo==='Gd-04010102' && $total>7 && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 7 saja',
                     'racikan'=>$racikan,
                     'non racikan'=>$nonracikan
                 ],410);
             }
-            if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
+            if($request->kodedepo==='Gd-05010101' && $total>5 && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 5 saja',
                     'racikan'=>$racikan,
