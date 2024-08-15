@@ -172,7 +172,7 @@ class KunjunganPoli extends Model
 
     public function datasimpeg()
     {
-        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');  
     }
 
     public function laborat()
