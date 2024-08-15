@@ -358,7 +358,12 @@ class EresepController extends Controller
             if($sudahAda->noreg !== $request->noreg) $request['noresep']=null;
         }
         $depoLimit=['Gd-04010102','Gd-05010101'];
-        if(in_array($request->kodedepo,$depoLimit)){
+        // return new JsonResponse([
+        //     'siba'=>(int)$request->groupsistembayarlain
+        // ],410);
+        // pembatasan untuk pasien bpjs saja
+        $total=0;
+        if(in_array($request->kodedepo,$depoLimit) && (int)$request->groupsistembayarlain===1){
             // jumlah Racikan
             $racikan=Permintaanresepracikan::where('noresep',$request->noresep)->groupBy('namaracikan')->get()->count();
             // non racikan
@@ -369,14 +374,14 @@ class EresepController extends Controller
             ->count();
             $total=(int)$racikan+(int)$nonracikan;
             $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
-            if($request->kodedepo==='Gd-04010102' && $total>7 && $obatMinta){
+            if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 7 saja',
                     'racikan'=>$racikan,
                     'non racikan'=>$nonracikan
                 ],410);
             }
-            if($request->kodedepo==='Gd-05010101' && $total>5 && $obatMinta){
+            if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 5 saja',
                     'racikan'=>$racikan,
@@ -385,7 +390,7 @@ class EresepController extends Controller
             }
             // batasan obat yang sama
             $sekarang=date('Y-m-d');
-            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2'])->pluck('noresep');
+            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2'])->whereIn('depo',$depoLimit)->pluck('noresep');
             $adaObat=Permintaanresep::where('noreg',$request->noreg)->where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
             if($adaObat){
                 $pesanA='Item Obat ';
@@ -398,7 +403,7 @@ class EresepController extends Controller
                 $msg=$pesanA . $pesanT . $pesanB;
                 return new JsonResponse(['message'=>$msg],410);
             }
-            $head1=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->pluck('noresep');
+            $head1=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->whereIn('depo',$depoLimit)->pluck('noresep');
             $adaObat1=Resepkeluarrinci::where('noreg',$request->noreg)->where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah','>',0)->count();
             if($adaObat1){
                 $pesanA='Item Obat ';
@@ -749,6 +754,10 @@ class EresepController extends Controller
                 'rincidtd' => $simpandtd ?? 0,
                 'rincinondtd' => $simpannondtd ?? 0,
                 'nota' => $noresep,
+                'tot' => $total,
+                'siba' => (int)$request->groupsistembayarlain===1,
+                'inaa' => in_array($request->kodedepo,$depoLimit),
+                'all' => in_array($request->kodedepo,$depoLimit) && (int)$request->groupsistembayarlain===1,
                 'message' => 'Data Berhasil Disimpan...!!!'
             ], 200);
         } catch (\Exception $e) {
@@ -1199,21 +1208,24 @@ class EresepController extends Controller
          * pembatasan start
         */
         $depoLimit=['Gd-04010102','Gd-05010101'];
-        if(in_array($request->kodedepo,$depoLimit)){
+        if(in_array($request->kodedepo,$depoLimit) && (int)$request->groupsistembayarlain===1 ){
             // batasan obat yang sama
             $sekarang=date('Y-m-d');
             // normal, tidak ada retur
             $normalHeadKel=Resepkeluarheder::where('noreg',$request->noreg)
             ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
             ->whereIn('flag',['3'])
+            ->whereIn('depo',$depoLimit)
             ->pluck('noresep');
             $normalHead=Resepkeluarheder::where('noreg',$request->noreg)
             ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
             ->whereIn('flag',['1','2'])
+            ->whereIn('depo',$depoLimit)
             ->pluck('noresep');
             $returHead=Resepkeluarheder::where('noreg',$request->noreg)
             ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
             ->where('flag','4')
+            ->whereIn('depo',$depoLimit)
             ->pluck('noresep');
             // ambil detail obat yang akan dikirim
             $obatnya=Permintaanresep::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
