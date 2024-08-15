@@ -358,8 +358,12 @@ class EresepController extends Controller
             if($sudahAda->noreg !== $request->noreg) $request['noresep']=null;
         }
         $depoLimit=['Gd-04010102','Gd-05010101'];
+        // return new JsonResponse([
+        //     'siba'=>(int)$request->groupsistembayarlain
+        // ],410);
         // pembatasan untuk pasien bpjs saja
-        if(in_array($request->kodedepo,$depoLimit) && ($request->groupsistembayarlain==='1'|| $request->groupsistembayarlain===1)){
+        $total=0;
+        if(in_array($request->kodedepo,$depoLimit) && (int)$request->groupsistembayarlain===1){
             // jumlah Racikan
             $racikan=Permintaanresepracikan::where('noresep',$request->noresep)->groupBy('namaracikan')->get()->count();
             // non racikan
@@ -370,14 +374,14 @@ class EresepController extends Controller
             ->count();
             $total=(int)$racikan+(int)$nonracikan;
             $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
-            if($request->kodedepo==='Gd-04010102' && $total>7 && $obatMinta){
+            if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 7 saja',
                     'racikan'=>$racikan,
                     'non racikan'=>$nonracikan
                 ],410);
             }
-            if($request->kodedepo==='Gd-05010101' && $total>5 && $obatMinta){
+            if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 5 saja',
                     'racikan'=>$racikan,
@@ -750,6 +754,10 @@ class EresepController extends Controller
                 'rincidtd' => $simpandtd ?? 0,
                 'rincinondtd' => $simpannondtd ?? 0,
                 'nota' => $noresep,
+                'tot' => $total,
+                'siba' => (int)$request->groupsistembayarlain===1,
+                'inaa' => in_array($request->kodedepo,$depoLimit),
+                'all' => in_array($request->kodedepo,$depoLimit) && (int)$request->groupsistembayarlain===1,
                 'message' => 'Data Berhasil Disimpan...!!!'
             ], 200);
         } catch (\Exception $e) {
@@ -1200,7 +1208,7 @@ class EresepController extends Controller
          * pembatasan start
         */
         $depoLimit=['Gd-04010102','Gd-05010101'];
-        if(in_array($request->kodedepo,$depoLimit) && ($request->groupsistembayarlain==='1' || $request->groupsistembayarlain===1)){
+        if(in_array($request->kodedepo,$depoLimit) && (int)$request->groupsistembayarlain===1 ){
             // batasan obat yang sama
             $sekarang=date('Y-m-d');
             // normal, tidak ada retur
