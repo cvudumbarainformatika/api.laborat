@@ -354,7 +354,7 @@ class EresepController extends Controller
             'kdruangan' => 'required',
         ]);
         $sudahAda=Resepkeluarheder::where('noresep',$request->noresep)->first();
-        if($sudahAda){           
+        if($sudahAda){
             if($sudahAda->noreg !== $request->noreg) $request['noresep']=null;
         }
         $depoLimit=['Gd-04010102','Gd-05010101'];
@@ -694,7 +694,7 @@ class EresepController extends Controller
                         'noresep' => $noresep,
                         'kdobat' => $request->kodeobat,
                     ],
-                    [                        
+                    [
                         'kandungan' => $request->kandungan ?? '',
                         'fornas' => $request->fornas ?? '',
                         'forkit' => $request->forkit ?? '',
@@ -1012,6 +1012,9 @@ class EresepController extends Controller
                 ->with('mobat:kd_obat,nama_obat,satuan_k,status_kronis')
                 ->groupBy('kdobat','noresep','noreg','namaracikan');
             },
+            'kunjunganrajal' => function($kunjunganrajal){
+                $kunjunganrajal->select('rs1','rs9')->with('doktersimpeg:kdpegsimrs,nama');
+            },
             'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
             'permintaanresep.aturansigna:signa,jumlah',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
@@ -1020,7 +1023,7 @@ class EresepController extends Controller
             'poli',
             'info',
             'antrian' => function ($q) {
-                $q->where('pelayanan_id', 'AP0001'); 
+                $q->where('pelayanan_id', 'AP0001');
             },
             'kwitansi',
             'diagnosas:rs1,rs3,rs13',
@@ -1054,10 +1057,10 @@ class EresepController extends Controller
             // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
             // ->where('antrian_ambil.pelayanan_id', '=', 'AP0001')
             ->select(
-                'resep_keluar_h.*', 
+                'resep_keluar_h.*',
                 'antrian_ambil.nomor',
                 DB::raw('(TIMESTAMPDIFF(DAY,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai)) AS rt_hari'),
-		        DB::raw('((TIMESTAMPDIFF(HOUR,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%24) AS rt_jam'), 
+		        DB::raw('((TIMESTAMPDIFF(HOUR,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%24) AS rt_jam'),
 		        DB::raw('((TIMESTAMPDIFF(MINUTE,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%60) AS rt_menit'),
 		        DB::raw('((TIMESTAMPDIFF(SECOND,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))%60) AS rt_detik'),
             )
@@ -1175,12 +1178,12 @@ class EresepController extends Controller
         $index=array_search($bnd,$column);
         if($index===false && $cond) return true;
         else return false;
-        
+
     }
     public function kirimresep(Request $request)
     {
         /**
-         * pembatasan start 
+         * pembatasan start
         */
         $depoLimit=['Gd-04010102','Gd-05010101'];
         if(in_array($request->kodedepo,$depoLimit)){
@@ -1233,26 +1236,26 @@ class EresepController extends Controller
             // bandingkan dengan obat yang akan dikirim
             if(count($obatnya)>0){
                 foreach($obatnya as $obt){
-                    
+
                     $indR=array_search($obt['kdobat'],$ret);
                     $indN=array_search($obt['kdobat'],$nor);
                     $indNRa=array_search($obt['kdobat'],$norR);
-                                                    
+
                     $fIndR=$indR!==false; // kalo ga ketemu itu false, kelo ketemu itu number, kalo ketemu 0 itu juga dianggap false
                     $fIndN=$indN!==false;
                     $findNRa=$indNRa!==false;
-    
+
                     if($fIndR && self::pushToArray($fIndR,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
                     else if($fIndN && self::pushToArray($fIndN,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
                     else if($findNRa && self::pushToArray($findNRa,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
-    
+
                     if(sizeof($sudahAda)==1) $msg=$msg . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
                     if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
                     $cN[]=[$fIndN,$obt['kdobat']];
                     $cR[]=[$fIndR,$obt['kdobat']];
                     $cRA[]=[$findNRa,$obt['kdobat']];
-    
-                    
+
+
                 }
             }
             // racikan
@@ -1263,25 +1266,25 @@ class EresepController extends Controller
                     $indN=array_search($obt['kdobat'],$nor);
                     $indNRa=array_search($obt['kdobat'],$norR);
                     // $indS=array_search($obt['kdobat'],$sdh);
-                    // return new JsonResponse($indS); 
+                    // return new JsonResponse($indS);
                     // if($indS===false){
                         $fIndR=$indR!==false; // kalo ga ketemu itu false, kelo ketemu itu number, kalo ketemu 0 itu juga dianggap false
                         $fIndN=$indN!==false;
                         $findNRa=$indNRa!==false;
-    
+
                         if($fIndR && self::pushToArray($fIndR,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
                         else if($fIndN && self::pushToArray($fIndN,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
                         else if($findNRa && self::pushToArray($findNRa,$sudahAda,'kdobat',$obt['kdobat'])) $sudahAda[]=$obt;
-                        
+
                         if(sizeof($sudahAda)==1) $msg=$msg . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
                         if(sizeof($sudahAda)>1) $msg=$msg . ', ' . $obt['mobat']['nama_obat'] . ' sudah diresepkan sebanyak ' . $obt['jumlah'];
                     // }
                     $cN[]=[$fIndN,$obt['kdobat']];
                     $cR[]=[$fIndR,$obt['kdobat']];
                     $cRA[]=[$findNRa,$obt['kdobat']];
-                    
+
                 }
-    
+
             }
             if(sizeof($sudahAda)>0){
                 // $msg=$msg . ' Sudah diresepkan';
@@ -1297,13 +1300,13 @@ class EresepController extends Controller
                     'obatnya'=>$obatnya,
                     'normalHead'=>$normalHead,
                     'count'=>sizeof($sudahAda),
-                    
+
                 ],410);
             }
         }
 
         /**
-         * pembatasan end 
+         * pembatasan end
         */
 
         $user = Pegawai::find(auth()->user()->pegawai_id);
@@ -3351,7 +3354,7 @@ class EresepController extends Controller
         if(!$data){
             return new JsonResponse([
                 'message'=>'Data Resep Tidak ditemukan'
-            ],410);    
+            ],410);
         }
         $data->update([
             'tgl_pelayanan_obat'=>$request->tgl_pelayanan_obat

@@ -11,6 +11,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
+use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Mruangranap;
 use App\Models\SistemBayar;
@@ -107,7 +108,10 @@ class Resepkeluarheder extends Model
     public function laborat(){
         return $this->hasMany(TransaksiLaborat::class,'rs1', 'noreg');
     }
-    
-    
-    
+    public function kunjunganrajal(){
+        return $this->hasMany(KunjunganPoli::class,'rs1','noreg');
+    }
+
+
+
 }

@@ -64,6 +64,7 @@ use Illuminate\Http\JsonResponse;
 class KunjunganPoli extends Model
 {
     use HasFactory;
+    protected $connection = 'mysql';
     protected $table = 'rs17';
     protected $guarded = ['id'];
     public $timestamps = false;
@@ -362,5 +363,9 @@ class KunjunganPoli extends Model
     public function tunggu_ranap()
     {
        return $this->hasOne(Kunjunganranap::class, 'rs1', 'flag');
+    }
+    public function doktersimpeg()
+    {
+        return $this->hasOne(Pegawai::class,'kdpegsimrs','rs9');
     }
 }
