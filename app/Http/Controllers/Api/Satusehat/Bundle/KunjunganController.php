@@ -30,7 +30,7 @@ class KunjunganController extends Controller
               self::rajal($arrayKunjungan[$i]);
               echo $i;
               // break;
-              sleep(5);//menunggu 5 detik
+              sleep(10);//menunggu 5 detik
             }
             return;
         }
