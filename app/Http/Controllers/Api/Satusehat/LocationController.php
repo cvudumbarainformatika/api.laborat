@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\Satusehat;
 
+use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Extra;
 use App\Models\Pegawai\Ruangan;
+use App\Models\Satset\SatsetToken;
 use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Organisasi\Organisasi;
 use Illuminate\Http\JsonResponse;
@@ -78,13 +80,23 @@ class LocationController extends Controller
             ], 500);
         }
 
-        // nyampek sini belum
+        // ambil token satset dr database
+        $token = AuthSatsetHelper::accessToken();
 
-        return $this->sendToSatset($request->token, $data);
-        // return response()->json([
-        //     'message' => 'Success Tersimpan',
-        //     'data' => $data
-        // ], 200);
+        $send = $this->sendToSatset($token, $data);
+        // if ($send['data']['message'] === 'failed') {
+        //     $expired = $send['data']['response']['issue'][0]['code']==='invalid-access-token';
+        //     if ($expired) {
+        //         $token = AuthSatsetHelper::accessToken();
+        //         $send = $this->sendToSatset($token, $data);
+        //     }
+        // }
+        return $send;
+        // $expired = $send['data']['response']['issue'][0]['code']==='invalid-access-token';
+
+        
+
+        // return $send;
     }
 
     public function sendToSatset($token, $data)
@@ -195,7 +207,7 @@ class LocationController extends Controller
         if ($satset_uuid) {
             $send = BridgingSatsetHelper::put_data($token, '/Location' . '/' . $satset_uuid, $form);
             if ($send['message'] === 'success') {
-                $data->satset_uuid = $send['data']['uuid'];
+                $data->satset_uuid = $send['data']->uuid;
                 $data->save();
             }
             return $send;
@@ -205,7 +217,7 @@ class LocationController extends Controller
         $send = BridgingSatsetHelper::post_data($token, '/Location', $form);
 
         if ($send['message'] === 'success') {
-            $data->satset_uuid = $send['data']['uuid'];
+            $data->satset_uuid = $send['data']->uuid;
             $data->save();
         }
         return $send;

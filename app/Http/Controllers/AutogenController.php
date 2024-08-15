@@ -43,8 +43,23 @@ class AutogenController extends Controller
         // return date("y").date("m").date("d").$has.$n."R";
         // return new JsonResponse($query['data']);
 
-        $contents = File::get(storage_path('json/listscache.json'));
-        return JsonResponse::fromJsonString($contents);
+        // $contents = File::get(storage_path('json/listscache.json'));
+        // return JsonResponse::fromJsonString($contents);
+
+        $waktu = '2024-08-14 10:08:19';
+        $detik = (int)'14399';
+        $now = Carbon::now();
+        $a = Carbon::createFromFormat('Y-m-d H:i:s', $waktu);
+        $b = Carbon::createFromFormat('Y-m-d H:i:s', $waktu)->addSeconds($detik);
+        return new JsonResponse(
+            [
+                'waktu' => $waktu,
+                'now' => $now->toDateTimeString(),
+                'a' => $a->toDateTimeString(),
+                'b' => $b->toDateTimeString(),
+                'diff' => now()->diffInSeconds(Carbon::parse($b), false),
+            ]
+        );
     }
 
     public function resetCounter(){
