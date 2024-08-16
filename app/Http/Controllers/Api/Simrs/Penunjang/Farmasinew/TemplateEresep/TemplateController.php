@@ -255,7 +255,8 @@ class TemplateController extends Controller
        * cek pembatasan obat start 
        */
       $depoLimit=['Gd-04010102','Gd-05010101'];
-        if(in_array($request->kodedepo,$depoLimit)){
+      $gr=$request->groupsistembayarlain?(int)$request->groupsistembayarlain===1:true;
+        if(in_array($request->kodedepo,$depoLimit)&&$gr){
            // batasan obat yang sama
            $sekarang=date('Y-m-d');
            // normal, tidak ada retur
@@ -338,7 +339,7 @@ class TemplateController extends Controller
                    
                }
            }
-          //  if(sizeof($sudahAda)>0){
+           if(sizeof($sudahAda)>0){
                // $msg=$msg . ' Sudah diresepkan';
                return new JsonResponse([
                    'message'=>$msg,
@@ -355,10 +356,10 @@ class TemplateController extends Controller
                    'count'=>sizeof($sudahAda),
                    
                ],410);
-          //  }
-          return new JsonResponse([
-            'req'=>$request->all()
-          ],410);
+           }
+          // return new JsonResponse([
+          //   'req'=>$request->all()
+          // ],410);
         }
       /** 
        * cek pembatasan obat end 
