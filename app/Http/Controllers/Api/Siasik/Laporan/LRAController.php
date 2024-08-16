@@ -24,10 +24,11 @@ class LRAController extends Controller
     public function bidang(){
         $thn= request('tahun', 'Y');
         $bidang=Mapping_Bidang_Ptk_Kegiatan::where('tahun', $thn)
+        ->where('alias', '!=', '')
         ->when(request('bidang'),function($keg) {
             $keg->where('kodebidang', request('bidang'));
         })
-        ->select('kodebidang', 'bidang', 'kodekegiatan', 'kegiatan')
+        ->select('kodebidang', 'bidang', 'kodekegiatan', 'kegiatan', 'kodepptk', 'namapptk')
         ->groupBy('kodekegiatan')
         ->get();
 

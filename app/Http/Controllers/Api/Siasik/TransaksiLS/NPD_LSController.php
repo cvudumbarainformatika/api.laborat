@@ -9,14 +9,15 @@ use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Date;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
-use Illuminate\Support\Facades\Date;
 
 class NPD_LSController extends Controller
 {
@@ -39,6 +40,28 @@ class NPD_LSController extends Controller
         return new JsonResponse($cari);
     }
 
+    public function anggaran(){
+        $tahun = date('Y');
+        $anggaran = PergeseranPaguRinci::where('tgl', $tahun)
+        // ->select('mappingpptkkegiatan.kegiatan','mappingpptkkegiatan.kodekegiatan')
+        ->where('kodekegiatanblud', request('kodekegiatan'))
+        ->select('t_tampung.kodekegiatanblud',
+                't_tampung.notrans',
+                't_tampung.koderek50',
+                't_tampung.uraian50',
+                't_tampung.usulan',
+                't_tampung.volume',
+                't_tampung.satuan',
+                't_tampung.harga',
+                't_tampung.pagu')
+
+        // ->with('anggaran', function($pagu) use ($tahun){
+        //     $pagu->where('tgl', $tahun)
+
+        // })
+        ->get();
+        return new JsonResponse($anggaran);
+    }
     public function bastfarmasi(){
         // $pbf = Mpihakketiga::where('kode', request('kodepenerima'))->get();
         $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
@@ -83,6 +106,8 @@ class NPD_LSController extends Controller
         $request->validate([
             'keterangan' => 'required|min:3',
             'pptk' => 'required',
+            'rincianbelanja' => 'required',
+            'itembelanja' => 'required'
         ]);
 
         $time = date('Y-m-d H:i:s');
@@ -92,46 +117,76 @@ class NPD_LSController extends Controller
 
         $nomor = $request->nonpdls ?? self::buatnomor();
 
-        $save = NpdLS_heder::updateOrCreate(
-            [
-                'nonpdls' => $nomor,
-            ],
-            [
-                'tglnpdls'=>$request->tglnpdls ?? '',
-                'kodepptk'=>$request->kodepptk ?? '',
-                'pptk'=>$request->pptk ?? '',
-                'serahterimapekerjaan'=>$request->serahterimapekerjaan ?? '',
-                'triwulan'=>$request->triwulan ?? '',
-                'program'=>'PROGRAM PENUNJANG URUSAN PEMERINTAH DAERAH KABUPATEN/KOTA',
-                'nokontrak'=>$request->nokontrak ?? '',
-                'kegiatan'=>'PELAYANAN DAN PENUNJANG PELAYANAN BLUD',
-                'kodekegiatanblud'=>$request->kodekegiatanblud ?? '',
-                'kegiatanblud'=>$request->kegiatanblud ?? '',
-                'kodepenerima'=>$request->kodepenerima ?? '',
-                'penerima'=>$request->penerima ?? '',
-                'bank'=>$request->bank ?? '',
-                'rekening'=>$request->rekening ?? '',
-                'npwp'=>$request->npwp ?? '',
-                'kodebidang'=>$request->kodebidang ?? '',
-                'bidang'=>$request->bidang ?? '',
-                'keterangan'=>$request->keterangan ?? '',
-                'biayatransfer'=>$request->biayatransfer ?? '',
-                'tglentry'=>$time ?? '',
-                'userentry'=>$pegawai ?? '',
-                'noserahterima'=>$request->noserahterima ?? '',
-            ]
-        );
-        if (!$save){
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        try {
+            DB::beginTransaction();
+            $save = NpdLS_heder::updateOrCreate(
+                [
+                    'nonpdls' => $nomor,
+                ],
+                [
+                    'tglnpdls'=>$request->tglnpdls ?? '',
+                    'kodepptk'=>$request->kodepptk ?? '',
+                    'pptk'=>$request->pptk ?? '',
+                    'serahterimapekerjaan'=>$request->serahterimapekerjaan ?? '',
+                    'triwulan'=>$request->triwulan ?? '',
+                    'program'=>'PROGRAM PENUNJANG URUSAN PEMERINTAH DAERAH KABUPATEN/KOTA',
+                    'nokontrak'=>$request->nokontrak ?? '',
+                    'kegiatan'=>'PELAYANAN DAN PENUNJANG PELAYANAN BLUD',
+                    'kodekegiatanblud'=>$request->kodekegiatanblud ?? '',
+                    'kegiatanblud'=>$request->kegiatanblud ?? '',
+                    'kodepenerima'=>$request->kodepenerima ?? '',
+                    'penerima'=>$request->penerima ?? '',
+                    'bank'=>$request->bank ?? '',
+                    'rekening'=>$request->rekening ?? '',
+                    'npwp'=>$request->npwp ?? '',
+                    'kodebidang'=>$request->kodebidang ?? '',
+                    'bidang'=>$request->bidang ?? '',
+                    'keterangan'=>$request->keterangan ?? '',
+                    'biayatransfer'=>$request->biayatransfer ?? '',
+                    'tglentry'=>$time ?? '',
+                    'userentry'=>$pegawai ?? '',
+                    'noserahterima'=>$request->noserahterima ?? '',
+                ]);
+            foreach ($request->rincians as $rinci){
+                $save->npdlsrinci()->create(
+                    [
+                        'nonpdls' => $save->nonpdls,
+                    // ],
+                    // [
+                        'koderek50'=>$rinci->koderek50 ?? '',
+                        'rincianbelanja'=>$rinci->rincianbelanja ?? '',
+                        'koderek108'=>$rinci->koderek108 ?? '',
+                        'uraian108'=>$rinci->uraian108 ?? '',
+                        'itembelanja'=>$rinci->itembelanja ?? '',
+                        'nopenerimaan'=>$rinci->nopenerimaan ?? '',
+                        'idserahterima_rinci'=>$rinci->idserahterima_rinci ?? '',
+                        'tglentry'=>$time ?? '',
+                        'userentry'=>$pegawai ?? '',
+                        'volume'=>$rinci->volume ?? '',
+                        'satuan'=>$rinci->satuan ?? '',
+                        'harga'=>$rinci->harga ?? '',
+                        'total'=>$rinci->total ?? '',
+                        'volumels'=>$rinci->volumels ?? '',
+                        'hargals'=>$rinci->hargals ?? '',
+                        'totalls'=>$rinci->totalls ?? '',
+                        'nominalpembayaran'=>$rinci->nominalpembayaran ?? '',
+                    ]);
+
+                }
+            return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil disimpan...!!!',
+                    'result' => $save
+                ], 200);
+        } catch (\Exception $er) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Ada Kesalahan',
+                'error' => $er
+            ], 500);
         }
-        return new JsonResponse(
-            [
-                'message' => 'Data Berhasil disimpan...!!!',
-                'result' => $save
-            ],
-            200
-        );
     }
+
     public static function buatnomor(){
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
