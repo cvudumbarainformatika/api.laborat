@@ -12,6 +12,7 @@ class MutasiHutangObat extends Controller
     public function reportMutasiHutangObat()
     {
         $dari = request('tgldari');
+        $tglsampai = request('tglsampai');
         $saldoawal = PenerimaanHeder::whereDate('tglpenerimaan','<=', $dari)
         ->with(
             [
@@ -22,6 +23,7 @@ class MutasiHutangObat extends Controller
             ]
         )
         ->where('jenis_penerimaan','Pesanan')
+       // ->limit(10)
         ->get();
 
         return new JsonResponse($saldoawal);
