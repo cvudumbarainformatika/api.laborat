@@ -22,20 +22,24 @@ class PostKunjunganRanapHelper
 
         $organization_id = BridgingSatsetHelper::organization_id();
 
+
+        $entrys= self::encounter($request, $pasien_uuid, $organization_id);
+
         $form = [
           "resourceType" => "Bundle",
           "type" => "transaction",
           "entry" => [
 
-            // 1. Encounter
-            self::encounter($request, $pasien_uuid, $organization_id)
-
+            // 1. Encounter, Condition
+            $entrys['encounter'],
             // 2. CarePlan dll belm dikerjakan
             ]
-        
-
         ];
 
+        // push condition
+        for ($i=0; $i < count($entrys['condition']) ; $i++) { 
+            array_push($form['entry'], $entrys['condition'][$i]);
+        }
 
         $send['message'] = 'success';
         $send['data'] = $form;
@@ -49,14 +53,48 @@ class PostKunjunganRanapHelper
     static function encounter($request, $pasien_uuid, $organization_id)
     {
 
-      $start = Carbon::parse($request['tgLmasuk'])->toIso8601String();
+        // setlocale(LC_ALL, 'IND');
+      $start = Carbon::parse($request['tglmasuk'])->toIso8601String();
       $end = Carbon::parse($request['tglkeluar'])->toIso8601String();
 
       $encounter = self::generateUuid();
 
       $basedOn = self::generateUuid();
 
-        $data = [
+      // DIAGNOSA
+
+      $diagnosa = [];
+      foreach ($request->diagnosa as $key => $value) {
+          $uuid = self::generateUuid();
+          $data = [
+            "condition" => [
+                    "reference" => "urn:uuid:$uuid",
+                    "display" => $value['inggris'] ?? '-',
+                ],
+                "use" => [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                            "code" => "DD",
+                            "display" => "Discharge diagnosis",
+                        ],
+                    ],
+                ],
+                "rank" => $key + 1,
+          ];
+
+          $diagnosa[] = $data;
+      }
+
+      $naikKelas = $request->hak_kelas!==null? (
+        (int) $request->kelasruangan > (int) $request->hak_kelas ? "Kelas Naik" : "Kelas Tetap"
+      ): "Kelas Tetap";
+
+
+        // MULAI BUAT FORM
+
+
+        $formEncounter = [
           "fullUrl" => "urn:uuid:$encounter",
           "resource" => [
               "resourceType" => "Encounter",
@@ -72,15 +110,15 @@ class PostKunjunganRanapHelper
                   [
                       "status" => "in-progress",
                       "period" => [
-                          "start" => "$start",
-                          "end" => "$end",
+                          "start" => $start,
+                          "end" => $end,
                       ],
                   ],
                   [
                       "status" => "finished",
                       "period" => [
-                          "start" => "$end",
-                          "end" => "$end",
+                          "start" => $end,
+                          "end" => $end,
                       ],
                   ],
               ],
@@ -123,56 +161,17 @@ class PostKunjunganRanapHelper
                   "start" => $start,
                   "end" => $end,
               ],
-              "diagnosis" => [
-                  [
-                      "condition" => [
-                          "reference" =>
-                              "urn:uuid:{{Condition_DiagnosisPrimer}}",
-                          "display" => "Chronic kidney disease, stage 5",
-                      ],
-                      "use" => [
-                          "coding" => [
-                              [
-                                  "system" =>
-                                      "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                                  "code" => "DD",
-                                  "display" => "Discharge diagnosis",
-                              ],
-                          ],
-                      ],
-                      "rank" => 1,
-                  ],
-                  [
-                      "condition" => [
-                          "reference" =>
-                              "urn:uuid:{{Condition_DiagnosisSekunder}}",
-                          "display" => "Anemia in chronic kidney disease",
-                      ],
-                      "use" => [
-                          "coding" => [
-                              [
-                                  "system" =>
-                                      "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                                  "code" => "DD",
-                                  "display" => "Discharge diagnosis",
-                              ],
-                          ],
-                      ],
-                      "rank" => 2,
-                  ],
-              ],
+              "diagnosis" => $diagnosa,
               "hospitalization" => [
                   "dischargeDisposition" => [
                       "coding" => [
                           [
-                              "system" =>
-                                  "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+                              "system" => "http://terminology.hl7.org/CodeSystem/discharge-disposition",
                               "code" => "home",
                               "display" => "Home",
                           ],
                       ],
-                      "text" =>
-                          "Anjuran dokter untuk pulang dan kontrol kembali dan melakukan hemodialisis Rutin 1 Bulan Sekali",
+                      "text" => !empty($request->tindaklanjut) ? "Anjuran dokter untuk pulang dan $request->tindaklanjut" : "Anjuran dokter untuk pulang ",
                   ],
               ],
               "location" => [
@@ -185,24 +184,22 @@ class PostKunjunganRanapHelper
                                       "valueCodeableConcept" => [
                                           "coding" => [
                                               [
-                                                  "system" =>
-                                                      "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Inpatient",
-                                                  "code" => "1",
-                                                  "display" => "Kelas 1",
+                                                  "system" =>"http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Inpatient",
+                                                  "code" => "$request->kelasruangan",
+                                                  "display" => "Kelas $request->kelasruangan",
                                               ],
                                           ],
                                       ],
                                   ],
+                                  // ini jika ada kenaikan kelas
                                   [
                                       "url" => "upgradeClassIndicator",
                                       "valueCodeableConcept" => [
                                           "coding" => [
                                               [
-                                                  "system" =>
-                                                      "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
-                                                  "code" => "kelas-tetap",
-                                                  "display" =>
-                                                      "Kelas Tetap Perawatan",
+                                                  "system" =>"http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass",
+                                                  "code" => $naikKelas === "Kelas Naik" ? "kelas-naik" : "kelas-tetap",
+                                                  "display" => "$naikKelas Perawatan",
                                               ],
                                           ],
                                       ],
@@ -214,23 +211,97 @@ class PostKunjunganRanapHelper
                       ],
                       "location" => [
                           "reference" =>
-                              "Location/{{Location_Ruang210_Bed2_id}}",
+                              "Location/".$request->relmasterruangranap? $request->relmasterruangranap['ruang']['satset_uuid'] : '-',
                           "display" =>
-                              "Bed 2, Ruang 210, Bangsal Rawat Inap Kelas 1, Layanan Penyakit Dalam, Lantai 2, Gedung Utama",
+                              "Bed $request->nomorbed, $request->group_ruangan, $request->ruangan, Layanan Rawat Inap, Lantai ,". $request->relmasterruangranap['ruang']['lantai'] ?? '-'." Gedung ".$request->relmasterruangranap['ruang']['gedung'] ?? '-',
                       ],
                       "period" => [
-                          "start" => "2022-12-25T08:00:00+00:00",
-                          "end" => "2022-12-30T09:30:27+07:00",
+                          "start" => $start,
+                          "end" => $end,
                       ],
                   ],
               ],
-              "serviceProvider" => ["reference" => "Organization/{{Org_id}}"],
+              "serviceProvider" => ["reference" => "Organization/$organization_id"],
           ],
           "request" => ["method" => "POST", "url" => "Encounter"],
         ];
 
-        return $data;
+
+
+        // 2. Condition
+        $formCondition=null;
+        if (count($diagnosa) > 0) {
+            $formCondition = self::condition($request, $pasien_uuid, $organization_id, $diagnosa, $encounter);
+          }
+
+        
+
+        $form =[
+            "encounter" => $formEncounter,
+            "condition" => $formCondition
+        ];
+        return $form;
        
+    }
+
+    static function condition($request, $pasien_uuid, $organization_id, $diagnosa, $encounter)
+    {
+
+        $conditions = [];
+        foreach ($request->diagnosa as $key => $value) {
+            $cond = 
+            [
+                // "fullUrl" => "urn:uuid:{{Condition_DiagnosisPrimer}}",
+                "fullUrl" => $diagnosa[$key]['condition']['reference'],
+                "resource" => [
+                    "resourceType" => "Condition",
+                    "clinicalStatus" => [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                                "code" => "active",
+                                "display" => "Active",
+                            ],
+                        ],
+                    ],
+                    "category" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://terminology.hl7.org/CodeSystem/condition-category",
+                                    "code" => "encounter-diagnosis",
+                                    "display" => "Encounter Diagnosis",
+                                ],
+                            ],
+                        ],
+                    ],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://hl7.org/fhir/sid/icd-10",
+                                "code" => $value['kode'],
+                                "display" => $value['inggris'],
+                            ],
+                        ],
+                    ],
+                    "subject" => [
+                        "reference" => "Patient/$pasien_uuid",
+                        "display" => $request->nama_panggil,
+                    ],
+                    "encounter" => ["reference" => "urn:uuid:$encounter"],
+                    "onsetDateTime" => Carbon::parse($value['recordedDate'])->toIso8601String(),
+                    "recordedDate" => Carbon::parse($value['recordedDate'])->toIso8601String(),
+                    "note" => [["text" => "Pasien mengalami ".$value['indonesia']]],
+                ],
+                "request" => ["method" => "POST", "url" => "Condition"],
+            ];
+
+            $conditions[] = $cond;
+        }
+        
+
+
+        return $conditions;
     }
 
 
@@ -448,6 +519,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "CarePlan"],
             ],
+
+            // 3. Observation
             [
                 "fullUrl" => "urn:uuid:{{Observation_Kesadaran}}",
                 "resource" => [
@@ -497,6 +570,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],
+
+            // 4. Observation
             [
                 "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
                 "resource" => [
@@ -543,6 +618,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],
+
+            // 5. CarePlan
             [
                 "fullUrl" => "urn:uuid:{{CarePlan_Instruksi}}",
                 "resource" => [
@@ -573,6 +650,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "CarePlan"],
             ],
+
+            // 6. Procedure
             [
                 "fullUrl" => "urn:uuid:{{Procedure_PraLab}}",
                 "resource" => [
@@ -617,6 +696,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Procedure"],
             ],
+
+            // 7. ServiceRequest
             [
                 "fullUrl" => "urn:uuid:{{ServiceRequest_Lab}}",
                 "resource" => [
@@ -686,6 +767,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "ServiceRequest"],
             ],
+
+            // 8. Specimen
             [
                 "fullUrl" => "urn:uuid:{{Specimen_Lab}}",
                 "resource" => [
@@ -778,6 +861,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Specimen"],
             ],
+
+            // 9. Observation
             [
                 "fullUrl" => "urn:uuid:{{Observation_Lab}}",
                 "resource" => [
@@ -880,6 +965,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],
+
+            // 10. DiagnosticReport
             [
                 "fullUrl" => "urn:uuid:{{DiagnosticReport_Lab}}",
                 "resource" => [
@@ -943,6 +1030,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "DiagnosticReport"],
             ],
+
+            // 11. Condition diagnosis (sudah dikerjakan)
             [
                 "fullUrl" => "urn:uuid:{{Condition_DiagnosisPrimer}}",
                 "resource" => [
@@ -989,6 +1078,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
             ],
+
+            // 12. Condition diagnosis (sudah dikerjakan)
             [
                 "fullUrl" => "urn:uuid:{{Condition_DiagnosisSekunder}}",
                 "resource" => [
@@ -1035,6 +1126,8 @@ class PostKunjunganRanapHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
             ],
+
+            // 13. Procedure
             [
                 "fullUrl" => "urn:uuid:{{Procedure_Hemodialisis}}",
                 "resource" => [
