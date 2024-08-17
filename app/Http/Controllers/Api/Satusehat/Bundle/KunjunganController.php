@@ -56,8 +56,8 @@ class KunjunganController extends Controller
     // KUNJUNGAN RAJAL ==========================================================================================================
     public static function cekKunjunganRajal($req)
     {
-      // $kemarin = Carbon::now()->subDay()->toDateString();
-      $tgl = Carbon::now()->subDays(2)->toDateString();
+      $tgl = Carbon::now()->subDay()->toDateString();
+      // $tgl = Carbon::now()->subDays(1)->toDateString();
       $data = KunjunganPoli::select('rs1 as noreg')
         ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->where('rs8', '!=', 'POL014')
@@ -254,11 +254,11 @@ class KunjunganController extends Controller
 
     public static function cekKunjunganRanap()
     {
-      // $kemarin = Carbon::now()->subDay()->toDateString();
-      $lusa = Carbon::now()->subDays(4)->toDateString();
-      // return $lusa;
+      $tgl = Carbon::now()->subDay()->toDateString();
+      // $tgl = Carbon::now()->subDays(4)->toDateString();
+      // return $tgl;
       $data = Kunjunganranap::select('rs1 as noreg', 'rs4 as tgl_pulang')
-        ->where('rs4', 'LIKE', '%' . $lusa . '%')
+        ->where('rs4', 'LIKE', '%' . $tgl . '%')
         ->whereIn('rs22', ['2', '3']) // kunjungan selesai
         ->orderBy('rs3', 'desc')
         ->get();
