@@ -91,6 +91,13 @@ class PostKunjunganRanapHelper
       ): "Kelas Tetap";
 
 
+      $relmasterRuang = $request->relmasterruangranap['ruang'];
+      $ruangId = !$relmasterRuang ? '-': $relmasterRuang['satset_uuid'] ?? '-';
+      $ruang = !$relmasterRuang ? '-': $relmasterRuang['ruang'] ?? '-';
+      $lantai = !$relmasterRuang ? '-': $relmasterRuang['lantai'] ?? '-';
+      $gedung = !$relmasterRuang ? '-': $relmasterRuang['gedung'] ?? '-';
+
+
         // MULAI BUAT FORM
 
 
@@ -210,10 +217,9 @@ class PostKunjunganRanapHelper
                           ],
                       ],
                       "location" => [
-                          "reference" =>
-                              "Location/" .isset($request->relmasterruangranap['ruang'])? $request->relmasterruangranap['ruang']['satset_uuid'] : '-',
+                          "reference" => "Location/" .$ruangId,
                           "display" =>
-                              "Bed $request->nomorbed, $request->group_ruangan, $request->ruangan, Layanan Rawat Inap, Lantai ,". $request->relmasterruangranap['ruang']['lantai'] ?? '-'." Gedung ".$request->relmasterruangranap['ruang']['gedung'] ?? '-',
+                              "Bed $request->nomorbed, $request->group_ruangan, $request->ruangan, Layanan Rawat Inap, Lantai $lantai Gedung $gedung",
                       ],
                       "period" => [
                           "start" => $start,
