@@ -39,7 +39,7 @@ class KunjunganController extends Controller
         if ($jenis_kunjungan === 'ranap') {
             $ygTerkirim =0;
             $arrayKunjungan = self::cekKunjunganRanap();
-            return self::ranap($arrayKunjungan[8]);
+            // return self::ranap($arrayKunjungan[8]);
             for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
               self::ranap($arrayKunjungan[$i]);
               // echo $i;
@@ -373,10 +373,10 @@ class KunjunganController extends Controller
         }
 
         $send = PostKunjunganRanapHelper::form($data, $pasien_uuid);
-        // if ($send['message'] === 'success') {
-        //   $token = AuthSatsetHelper::accessToken();
-        //   $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-        // }
+        if ($send['message'] === 'success') {
+          $token = AuthSatsetHelper::accessToken();
+          $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        }
         return $send;
 
     }
