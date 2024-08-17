@@ -211,7 +211,7 @@ class PostKunjunganRanapHelper
                       ],
                       "location" => [
                           "reference" =>
-                              "Location/".$request->relmasterruangranap['ruang'] !==null? $request->relmasterruangranap['ruang']['satset_uuid'] : '-',
+                              "Location/" .isset($request->relmasterruangranap['ruang'])? $request->relmasterruangranap['ruang']['satset_uuid'] : '-',
                           "display" =>
                               "Bed $request->nomorbed, $request->group_ruangan, $request->ruangan, Layanan Rawat Inap, Lantai ,". $request->relmasterruangranap['ruang']['lantai'] ?? '-'." Gedung ".$request->relmasterruangranap['ruang']['gedung'] ?? '-',
                       ],
