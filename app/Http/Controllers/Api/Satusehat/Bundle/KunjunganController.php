@@ -49,6 +49,20 @@ class KunjunganController extends Controller
             return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
         }
 
+        if ($jenis_kunjungan === 'igd') {
+            $ygTerkirim =0;
+            $arrayKunjungan = self::cekKunjunganIgd();
+
+            return self::igd($arrayKunjungan[0]);
+
+            for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
+              self::igd($arrayKunjungan[$i]);
+              $ygTerkirim = $i+1;
+              // sleep(5);//menunggu 10 detik
+            }
+            return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
+        }
+
         return new JsonResponse(['message' => 'Jenis Kunjungan Tidak Diketahui'], 500);
     }
 
@@ -379,6 +393,87 @@ class KunjunganController extends Controller
         }
         return $send;
 
+    }
+
+
+    // KUNJUNGAN IGD ==========================================================================================================================
+    public function cekKunjunganIgd()
+    {
+      $tgl = Carbon::now()->subDay()->toDateString();
+      // $tgl = Carbon::now()->subDays(1)->toDateString();
+      $data = KunjunganPoli::select('rs1 as noreg')
+        ->where('rs3', 'LIKE', '%' . $tgl . '%')
+        ->where('rs8', '=', 'POL014')
+        ->where('rs19', '=', '1') // kunjungan selesai
+        ->orderBy('rs3', 'desc')
+      ->get();
+      $arr = collect($data)->map(function ($x) {
+        return $x->noreg;
+      });
+
+      return $arr->toArray();
+    }
+
+    public function igd($noreg)
+    {
+      $data = KunjunganPoli::select(
+        'rs17.rs1',
+        'rs17.rs9',
+        'rs17.rs4',
+        'rs17.rs8',
+        'rs17.rs1 as noreg',
+        'rs17.rs2 as norm',
+        'rs17.rs3 as tgl_kunjungan',
+        'rs17.rs8 as kodepoli',
+        'rs19.rs2 as poli',
+        'rs17.rs9 as kodedokter',
+        'rs21.rs2 as dokter',
+        'rs17.rs14 as kodesistembayar',
+        'rs9.rs2 as sistembayar',
+        'rs9.groups as groups',
+        'rs15.rs2 as nama',
+        'rs15.rs49 as nik',
+        'rs17.rs19 as status',
+        'rs15.satset_uuid as pasien_uuid',
+        // 'satsets.uuid as satset',
+        // 'satset_error_respon.uuid as satset_error',
+      )
+        ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        // ->leftjoin('satsets', 'satsets.uuid', '=', 'rs17.rs1') //satset
+        // ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
+
+        ->where('rs17.rs1', $noreg)
+
+        ->with([
+            'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+            'relmpoli'=>function($q){
+              $q->select('rs1','kode_ruang','rs7 as nama')
+              ->with('ruang:kode,uraian,groupper,gedung,lantai,satset_uuid,departement_uuid');
+            },
+            //   // 1 (mulai waktu tunggu admisi),
+            //   // 2 (akhir waktu tunggu admisi/mulai waktu layan admisi),
+            //   // 3 (akhir waktu layan admisi/mulai waktu tunggu poli),
+            //   // 4 (akhir waktu tunggu poli/mulai waktu layan poli),
+            //   // 5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+            //   // 6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+            //   // 7 (akhir waktu obat selesai dibuat),
+            //   // 99 (tidak hadir/batal)
+            'taskid' => function ($q) {
+                $q->select('noreg', 'taskid', 'waktu', 'created_at')
+                    ->orderBy('taskid', 'ASC');
+            },
+            'diagnosa' => function ($d) {
+                $d->select('rs1','rs3','rs4','rs7','rs8');
+                $d->with('masterdiagnosa');
+            },
+        ])
+        ->first();
+
+    return $data;
+    // return self::kirimKunjunganIgd($data);
     }
 
 
