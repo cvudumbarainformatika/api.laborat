@@ -25,25 +25,28 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
             // return self::rajal(request()->all());
+            $ygTerkirim =0;
             $arrayKunjungan = self::cekKunjunganRajal(request()->all());
             for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
               self::rajal($arrayKunjungan[$i]);
-              echo $i;
+              $ygTerkirim = $i+1;
               // break;
-              sleep(10);//menunggu 10 detik
+              // sleep(5);//menunggu 10 detik
             }
-            return;
+            return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
         }
 
         if ($jenis_kunjungan === 'ranap') {
+            $ygTerkirim =0;
             $arrayKunjungan = self::cekKunjunganRanap();
-            return self::ranap($arrayKunjungan[0]);
-            // for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
-            //   self::ranap($arrayKunjungan[$i]);
-            //   echo $i;
-            //   sleep(5);//menunggu 5 detik
-            // }
-            // return;
+            // return self::ranap($arrayKunjungan[8]);
+            for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
+              self::ranap($arrayKunjungan[$i]);
+              // echo $i;
+              // sleep(5);//menunggu 5 detik
+              $ygTerkirim = $i+1;
+            }
+            return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
         }
 
         return new JsonResponse(['message' => 'Jenis Kunjungan Tidak Diketahui'], 500);
@@ -53,8 +56,8 @@ class KunjunganController extends Controller
     // KUNJUNGAN RAJAL ==========================================================================================================
     public static function cekKunjunganRajal($req)
     {
-      // $kemarin = Carbon::now()->subDay()->toDateString();
-      $tgl = Carbon::now()->toDateString();
+      $tgl = Carbon::now()->subDay()->toDateString();
+      // $tgl = Carbon::now()->subDays(1)->toDateString();
       $data = KunjunganPoli::select('rs1 as noreg')
         ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->where('rs8', '!=', 'POL014')
@@ -251,11 +254,11 @@ class KunjunganController extends Controller
 
     public static function cekKunjunganRanap()
     {
-      // $kemarin = Carbon::now()->subDay()->toDateString();
-      $lusa = Carbon::now()->subDays(2)->toDateString();
-      // return $lusa;
+      $tgl = Carbon::now()->subDay()->toDateString();
+      // $tgl = Carbon::now()->subDays(4)->toDateString();
+      // return $tgl;
       $data = Kunjunganranap::select('rs1 as noreg', 'rs4 as tgl_pulang')
-        ->where('rs4', 'LIKE', '%' . $lusa . '%')
+        ->where('rs4', 'LIKE', '%' . $tgl . '%')
         ->whereIn('rs22', ['2', '3']) // kunjungan selesai
         ->orderBy('rs3', 'desc')
         ->get();
@@ -278,13 +281,16 @@ class KunjunganController extends Controller
           'rs23.rs3 as tglmasuk',
           'rs23.rs4 as tglkeluar',
           'rs23.rs5 as kdruangan',
+          'rs23.rs5',
           'rs23.rs6 as ketruangan',
           'rs23.rs7 as nomorbed',
           'rs23.rs10 as kddokter',
           'rs23.rs10',
+          'rs23.rs27',
           'rs21.rs2 as dokter',
           'rs23.rs19 as kodesistembayar', // ini untuk farmasi
           'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
+          'rs23.rs38 as hak_kelas',
           'rs15.rs2 as nama_panggil',
 
           DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
@@ -310,23 +316,25 @@ class KunjunganController extends Controller
           'rs9.rs2 as sistembayar',
           'rs9.groups as groups',
           'rs21.rs2 as namanakes',
-          'rs222.rs8 as sep_igd',
-          'rs227.rs8 as sep',
-          'rs227.rs10 as faskesawal',
-          'rs227.kodedokterdpjp as kodedokterdpjp',
-          'rs227.dokterdpjp as dokterdpjp',
+          // 'rs222.rs8 as sep_igd',
+          // 'rs227.rs8 as sep',
+          // 'rs227.rs10 as faskesawal',
+          // 'rs227.kodedokterdpjp as kodedokterdpjp',
+          // 'rs227.dokterdpjp as dokterdpjp',
           'rs24.rs2 as ruangan',
           'rs24.rs3 as kelasruangan',
           'rs24.rs5 as group_ruangan',
           // 'rs101.rs3 as kode_diagnosa'
           // 'bpjs_spri.noSuratKontrol as noSpri'
+          'rs242.rs4 as tindaklanjut'
       )
           ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
           ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
           ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
           ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
-          ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
-          ->leftjoin('rs222', 'rs222.rs1', 'rs23.rs1')
+          ->leftjoin('rs242', 'rs242.rs1', 'rs23.rs1') // rencana tindak lanjut
+          // ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
+          // ->leftjoin('rs222', 'rs222.rs1', 'rs23.rs1')
           // ->leftjoin('rs101', 'rs101.rs1', 'rs23.rs1')
           // ->leftjoin('bpjs_spri', 'rs23.rs1', '=', 'bpjs_spri.noreg')
 
@@ -338,18 +346,21 @@ class KunjunganController extends Controller
 
           ->with([
             'diagnosa' => function($q) {
-              $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status')
+              $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status','rs101.rs12 as recordedDate')
                   ->leftjoin('rs99x', 'rs101.rs3', 'rs99x.rs1')
                   ->orderBy('rs101.id', 'asc');
             },
             'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+            'relmasterruangranap' => function($q) {
+              $q->select('rs1', 'rs2 as nama','kode_ruang')->with('ruang:kode,uraian,groupper,gedung,lantai,satset_uuid,departement_uuid');
+            }
           
           ])
           
           ->where('rs23.rs1', $noreg)
           ->first();
 
-      return $select;
+      // return $select;
       return self::kirimKunjunganRanap($select);
     }
 
@@ -362,6 +373,10 @@ class KunjunganController extends Controller
         }
 
         $send = PostKunjunganRanapHelper::form($data, $pasien_uuid);
+        if ($send['message'] === 'success') {
+          $token = AuthSatsetHelper::accessToken();
+          $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        }
         return $send;
 
     }

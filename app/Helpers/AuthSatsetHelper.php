@@ -68,7 +68,7 @@ class AuthSatsetHelper
         $diff = now()->diffInSeconds($waktu, false);
 
         // ambil token baru
-        if ($diff <= 0) {
+        if ($diff < 50) {
             $ambilToken = self::getToken();
             $cekToken->update([
                 'token' => $ambilToken['access_token'],
