@@ -37,8 +37,13 @@ class BridgingSatsetHelper
         // return $data;
         // JIKA ERROR
         $error = $data['resourceType'] === 'OperationOutcome';
-        $notfound = count($data['entry']) === 0;
-        if ($error || $notfound) {
+
+        $notfound = isset($data['entry']) ? count($data['entry']) === 0 : false;
+        if ($notfound) {
+            $error = true;
+        }
+
+        if ($error) {
             $err = [
                 'method' => 'GET',
                 'url' => $params,
@@ -47,7 +52,7 @@ class BridgingSatsetHelper
             $resp = SatsetErrorRespon::create($err);
 
             $send = [
-                'message' => $error ? 'failed' : 'Tidak Ditemukan Data di Satu Sehat',
+                'message' => 'failed' ,
                 'data' => $resp
             ];
             return $send;
@@ -61,7 +66,7 @@ class BridgingSatsetHelper
             ];
             $resp = SatsetErrorRespon::create($err);
             $send = [
-                'message' => 'Tidak Ditemukan Data di Satu Sehat',
+                'message' => 'failed',
                 'data' => $resp
             ];
             return $send;

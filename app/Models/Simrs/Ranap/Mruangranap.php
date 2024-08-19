@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Ranap;
 
+use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Tindakan\Tindakan;
@@ -51,6 +52,11 @@ class Mruangranap extends Model
     public function visiteumum()
     {
         return $this->hasMany(Visite::class, 'rs8', 'rs4');
+    }
+
+    public function ruang()
+    {
+        return $this->setConnection('kepex')->belongsTo(Ruang::class, 'kode_ruang', 'kode');
     }
 
 }
