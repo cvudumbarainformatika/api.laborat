@@ -390,7 +390,7 @@ class EresepController extends Controller
             }
             // batasan obat yang sama
             $sekarang=date('Y-m-d');
-            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2'])->whereIn('depo',$depoLimit)->pluck('noresep');
+            $head=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2'])->where('depo',$request->kodedepo)->pluck('noresep');
             $adaObat=Permintaanresep::where('noreg',$request->noreg)->where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
             if($adaObat){
                 $pesanA='Item Obat ';
@@ -403,7 +403,7 @@ class EresepController extends Controller
                 $msg=$pesanA . $pesanT . $pesanB;
                 return new JsonResponse(['message'=>$msg],410);
             }
-            $head1=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->whereIn('depo',$depoLimit)->pluck('noresep');
+            $head1=Resepkeluarheder::where('noreg',$request->noreg)->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->where('depo',$request->kodedepo)->pluck('noresep');
             $adaObat1=Resepkeluarrinci::where('noreg',$request->noreg)->where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah','>',0)->count();
             if($adaObat1){
                 $pesanA='Item Obat ';
@@ -1215,17 +1215,17 @@ class EresepController extends Controller
             $normalHeadKel=Resepkeluarheder::where('noreg',$request->noreg)
             ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
             ->whereIn('flag',['3'])
-            ->whereIn('depo',$depoLimit)
+            ->where('depo',$request->kodedepo)
             ->pluck('noresep');
             $normalHead=Resepkeluarheder::where('noreg',$request->noreg)
             ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
             ->whereIn('flag',['1','2'])
-            ->whereIn('depo',$depoLimit)
+            ->where('depo',$request->kodedepo)
             ->pluck('noresep');
             $returHead=Resepkeluarheder::where('noreg',$request->noreg)
             ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')
             ->where('flag','4')
-            ->whereIn('depo',$depoLimit)
+            ->where('depo',$request->kodedepo)
             ->pluck('noresep');
             // ambil detail obat yang akan dikirim
             $obatnya=Permintaanresep::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
