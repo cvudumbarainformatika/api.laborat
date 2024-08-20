@@ -5,6 +5,7 @@
 use App\Http\Controllers\Api\Satusehat\AuthController;
 use App\Http\Controllers\Api\Satusehat\KunjunganSatsetController;
 use App\Http\Controllers\Api\Satusehat\LocationController;
+use App\Http\Controllers\Api\Satusehat\MapingKfaController;
 use App\Http\Controllers\Api\Satusehat\OrganizationController;
 use App\Http\Controllers\Api\Satusehat\PractitionerController;
 use Illuminate\Support\Facades\Route;
@@ -39,4 +40,7 @@ Route::group([
     Route::get('/listKunjungan', [KunjunganSatsetController::class, 'listKunjungan']);
     Route::post('/getPasienByNikSatset', [KunjunganSatsetController::class, 'getPasienByNikSatset']);
     Route::post('/kirimKunjungan', [KunjunganSatsetController::class, 'kirimKunjungan']);
+    
+    // Maping KFA 
+    Route::get('/master-obat', [MapingKfaController::class, 'getMasterObat']);
 });

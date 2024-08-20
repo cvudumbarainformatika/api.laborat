@@ -505,11 +505,11 @@ class SetNewStokController extends Controller
             $trm = $penerimaan->jumlah ?? 0;
             $mutma = $mutasiMasuk->jumlah ?? 0;
             $mutkel = $mutasiKeluar->jumlah ?? 0;
-            $masuk = (int)$sal + (int)$peny + (int)$trm + (int)$mutma;
-            $keluar = (int)$mutkel;
-            $sisa = (int)$masuk - (int)$keluar;
+            $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma;
+            $keluar = (float)$mutkel;
+            $sisa = (float)$masuk - (float)$keluar;
               
-            if ((int)$sisa != (int)$tts) {
+            if ((float)$sisa != (float)$tts) {
                 $masukin = $sisa;
                 $index = 0;
                 $stok = FarmasinewStokreal::where('kdobat', $kdobat)
@@ -769,10 +769,10 @@ class SetNewStokController extends Controller
             $reskel = $resepKeluar->jumlah ?? 0;
             $reskelrac = $resepKeluarRacikan->jumlah ?? 0;
             if ($koderuangan === 'Gd-04010103') {
-                $masuk = (int)$sal + (int)$peny + (int)$mutma + (int)$kem + (int) $ret;
-                $keluar = (int)$mutkel + (int)$dist + (int)$reskel + (int)$reskelrac;
-                $sisa = (int)$masuk - (int)$keluar;
-                if ((int)$sisa != (int)$tts) {
+                $masuk = (float)$sal + (float)$peny + (float)$mutma + (float)$kem + (float) $ret;
+                $keluar = (float)$mutkel + (float)$dist + (float)$reskel + (float)$reskelrac;
+                $sisa = (float)$masuk - (float)$keluar;
+                if ((float)$sisa != (float)$tts) {
                     // cek ketorolac
                     $masuk = $sisa;
                     $index = 0;
@@ -851,11 +851,11 @@ class SetNewStokController extends Controller
                     }
                 }
             } else {
-                $masuk = (int)$sal + (int)$peny + (int)$mutma + (int) $ret;
-                $keluar = (int)$mutkel + (int)$reskel + (int)$reskelrac;
-                $sisa = (int)$masuk - (int)$keluar;
+                $masuk = (float)$sal + (float)$peny + (float)$mutma + (float) $ret;
+                $keluar = (float)$mutkel + (float)$reskel + (float)$reskelrac;
+                $sisa = (float)$masuk - (float)$keluar;
 
-                if ((int)$sisa != (int)$tts) {
+                if ((float)$sisa != (float)$tts) {
                     // cek ketorolac
                     $masuk = $sisa;
                     $index = 0;
