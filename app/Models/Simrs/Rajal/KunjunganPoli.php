@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Rajal;
 use App\Models\Pasien;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Satset\Satset;
+use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
@@ -277,6 +278,10 @@ class KunjunganPoli extends Model
     public function satset()
     {
         return $this->hasOne(Satset::class, 'uuid', 'rs1');
+    }
+    public function satset_error()
+    {
+        return $this->hasOne(SatsetErrorRespon::class, 'uuid', 'rs1');
     }
     public function generalcons()
     {

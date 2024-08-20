@@ -25,16 +25,17 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
             // return self::rajal(request()->all());
-            $ygTerkirim =0;
-            $arrayKunjungan = self::cekKunjunganRajal(request()->all());
-            return self::rajal($arrayKunjungan[0]);
-            for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
-              self::rajal($arrayKunjungan[$i]);
-              $ygTerkirim = $i+1;
-              // break;
-              // sleep(5);//menunggu 10 detik
-            }
-            return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
+            // $ygTerkirim =0;
+            // $arrayKunjungan = self::cekKunjunganRajal(request()->all());
+            // return self::rajal($arrayKunjungan[0]);
+            // for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
+            //   self::rajal($arrayKunjungan[$i]);
+            //   $ygTerkirim = $i+1;
+            //   // break;
+            //   // sleep(5);//menunggu 10 detik
+            // }
+            // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
+            return PostKunjunganRajalHelper::cekKunjungan();
         }
 
         if ($jenis_kunjungan === 'ranap') {
@@ -302,7 +303,7 @@ class KunjunganController extends Controller
         //     ], 500);
         // }
 
-        // $practitioner = $request->datasimpeg['satset_uuid'];
+        $practitioner = $data->datasimpeg['satset_uuid'];
         // if (!$practitioner) {
         //     return response()->json([
         //         'message' => 'Maaf ... Dokter Ini Belum Terkoneksi Ke Satu Sehat'
@@ -339,7 +340,7 @@ class KunjunganController extends Controller
         // $send = BridgingSatsetHelper::post_bundle($request->token, $form, $request->noreg);
         // return $send;
 
-        $send = PostKunjunganRajalHelper::form($data, $pasien_uuid);
+        $send = PostKunjunganRajalHelper::form($data, $pasien_uuid, $practitioner);
         // if ($send['message'] === 'success') {
         //   $token = AuthSatsetHelper::accessToken();
         //   $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
