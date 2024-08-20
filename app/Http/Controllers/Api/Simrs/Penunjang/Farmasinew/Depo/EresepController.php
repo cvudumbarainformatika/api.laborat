@@ -393,47 +393,58 @@ class EresepController extends Controller
                 ],410);
             }
             // batasan obat yang sama
-            $sekarang=date('Y-m-d');
-            $head=Resepkeluarheder::when($request->kodedepo==='Gd-04010102',function($q) use($request){
-                $q->where('noreg',$request->noreg);
-            })->when($request->kodedepo==='Gd-05010101',function($q) use($request){
-                $q->where('norm',$request->norm);
-            })
-            ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2'])->where('depo',$request->kodedepo)->pluck('noresep');
+            if(!$request->keterangan_bypass){
+                $sekarang=date('Y-m-d');
+                $head=Resepkeluarheder::when($request->kodedepo==='Gd-04010102',function($q) use($request){
+                    $q->where('noreg',$request->noreg);
+                })->when($request->kodedepo==='Gd-05010101',function($q) use($request){
+                    $q->where('norm',$request->norm);
+                })
+                ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['1','2'])->where('depo',$request->kodedepo)->pluck('noresep');
+    
+                $adaObat=Permintaanresep::where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
 
-            $adaObat=Permintaanresep::where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
+                $bypass=$request->kodedepo==='Gd-04010102' && $request->jenisresep !== 'Racikan'?1:'0';
 
-            if($adaObat){
-                $pesanA='Item Obat ';
-                $pesanT='';
-                $pesanB=' Sudah Pernah Diberikan Hari ini ';
-                $master=Mobatnew::select('nama_obat')->where('kd_obat',$request->kodeobat)->first();
-                if($master){
-                    $pesanT=$master->nama_obat;
+                if($adaObat){
+                    $pesanA='Item Obat ';
+                    $pesanT='';
+                    $pesanB=' Sudah Pernah Diberikan Hari ini ';
+                    $master=Mobatnew::select('nama_obat')->where('kd_obat',$request->kodeobat)->first();
+                    if($master){
+                        $pesanT=$master->nama_obat;
+                    }
+                    $msg=$pesanA . $pesanT . $pesanB;
+                    return new JsonResponse([
+                        'message'=>$msg,
+                        'bypass'=>$bypass,
+                    ],410);
                 }
-                $msg=$pesanA . $pesanT . $pesanB;
-                return new JsonResponse(['message'=>$msg],410);
-            }
-
-            $head1=Resepkeluarheder::when($request->kodedepo==='Gd-04010102',function($q) use($request){
-                $q->where('noreg',$request->noreg);
-            })->when($request->kodedepo==='Gd-05010101',function($q) use($request){
-                $q->where('norm',$request->norm);
-            })
-            ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->where('depo',$request->kodedepo)->pluck('noresep');
-
-            $adaObat1=Resepkeluarrinci::where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah','>',0)->count();
-
-            if($adaObat1){
-                $pesanA='Item Obat ';
-                $pesanT='';
-                $pesanB=' Sudah Pernah Diberikan Hari ini ';
-                $master=Mobatnew::select('nama_obat')->where('kd_obat',$request->kodeobat)->first();
-                if($master){
-                    $pesanT=$master->nama_obat;
+    
+                $head1=Resepkeluarheder::when($request->kodedepo==='Gd-04010102',function($q) use($request){
+                    $q->where('noreg',$request->noreg);
+                })->when($request->kodedepo==='Gd-05010101',function($q) use($request){
+                    $q->where('norm',$request->norm);
+                })
+                ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->where('depo',$request->kodedepo)->pluck('noresep');
+    
+                $adaObat1=Resepkeluarrinci::where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah','>',0)->count();
+    
+                if($adaObat1){
+                    $pesanA='Item Obat ';
+                    $pesanT='';
+                    $pesanB=' Sudah Pernah Diberikan Hari ini ';
+                    $master=Mobatnew::select('nama_obat')->where('kd_obat',$request->kodeobat)->first();
+                    if($master){
+                        $pesanT=$master->nama_obat;
+                    }
+                    $msg=$pesanA . $pesanT . $pesanB;
+                    return new JsonResponse([
+                        'message'=>$msg,
+                        'bypass'=>$bypass,
+                    ],410);
                 }
-                $msg=$pesanA . $pesanT . $pesanB;
-                return new JsonResponse(['message'=>$msg],410);
+
             }
 
             // return new JsonResponse([
@@ -680,6 +691,7 @@ class EresepController extends Controller
                             'jumlah' => $request->jumlah, // jumlah obat
                             'satuan_racik' => $request->satuan_racik, // jumlah obat
                             'keteranganx' => $request->keteranganx, // keterangan obat
+                            'keterangan_bypass' => $request->keterangan_bypass, // keterangan obat
                             'user' => $user['kodesimrs']
                         ]
                     );
@@ -718,6 +730,7 @@ class EresepController extends Controller
                             'jumlah' => $request->jumlah,
                             'satuan_racik' => $request->satuan_racik,
                             'keteranganx' => $request->keteranganx,
+                            'keterangan_bypass' => $request->keterangan_bypass,
                             'user' => $user['kodesimrs']
                         ]
                     );
@@ -750,6 +763,7 @@ class EresepController extends Controller
                         'aturan' => $request->aturan,
                         'konsumsi' => $request->konsumsi,
                         'keterangan' => $request->keterangan ?? '',
+                        'keterangan_bypass' => $request->keterangan_bypass,
                         'user' => $user['kodesimrs']
                     ]
                 );
@@ -1260,7 +1274,7 @@ class EresepController extends Controller
             ->where('depo',$request->kodedepo)
             ->pluck('noresep');
             // ambil detail obat yang akan dikirim
-            $obatnya=Permintaanresep::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
+            $obatnya=Permintaanresep::where('noresep',$request->noresep)->whereNull('keterangan_bypass')->with('mobat:kd_obat,nama_obat')->get();
             $obatRacikan=Permintaanresepracikan::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
             // ambil obat untuk pasien kunjungan sekarang
             $obatKeluar=Resepkeluarrinci::whereIn('noresep',$normalHeadKel)->where('jumlah','>',0)->get();
