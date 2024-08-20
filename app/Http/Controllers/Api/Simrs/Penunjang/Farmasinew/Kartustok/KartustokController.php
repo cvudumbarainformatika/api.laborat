@@ -318,7 +318,7 @@ class KartustokController extends Controller
                     $q->select(
                         'mutasi_gudangdepo.kd_obat as kd_obat',
                         'mutasi_gudangdepo.jml as jml',
-                        'permintaan_h.tgl_permintaan as tgl_permintaan',
+                        'permintaan_h.tgl_terima_depo as tgl_permintaan',
                         'permintaan_h.tujuan as tujuan',
                         'permintaan_h.dari as dari',
                         'permintaan_h.no_permintaan as no_permintaan'
@@ -335,7 +335,7 @@ class KartustokController extends Controller
                     $q->select(
                         'mutasi_gudangdepo.kd_obat as kd_obat',
                         'mutasi_gudangdepo.jml as jml',
-                        'permintaan_h.tgl_permintaan as tgl_permintaan',
+                        'permintaan_h.tgl_kirim_depo as tgl_permintaan',
                         'permintaan_h.tujuan as tujuan',
                         'permintaan_h.dari as dari',
                         'permintaan_h.no_permintaan as no_permintaan'
