@@ -165,7 +165,90 @@ class KunjunganController extends Controller
                     $d->select('rs1','rs3','rs4','rs7','rs8');
                     $d->with('masterdiagnosa');
                 },
+                'anamnesis',
+                'pemeriksaanfisik' => function ($a) {
+                  $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                      ->orderBy('id', 'DESC');
+                },
+                'planning' => function ($p) {
+                  $p->with(
+                      'masterpoli',
+                      'rekomdpjp',
+                      'transrujukan',
+                      'listkonsul',
+                      'spri',
+                      'ranap',
+                      'kontrol',
+                      'operasi',
+                  )->orderBy('id', 'DESC');
+              },
             ])
+
+          //   ->with([
+          //     'anamnesis',
+          //     'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
+          //     'gambars',
+          //     'fisio',
+          //     'diagnosakeperawatan' => function ($diag) {
+          //         $diag->with('intervensi.masterintervensi');
+          //     },
+          //     'laborats' => function ($t) {
+          //         $t->with('details.pemeriksaanlab')
+          //             ->orderBy('id', 'DESC');
+          //     },
+          //     'radiologi' => function ($t) {
+          //         $t->orderBy('id', 'DESC');
+          //     },
+          //     'penunjanglain' => function ($t) {
+          //         $t->with('masterpenunjang')->orderBy('id', 'DESC');
+          //     },
+          //     'tindakan' => function ($t) {
+          //         $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+          //             ->orderBy('id', 'DESC');
+          //     },
+          //     'diagnosa' => function ($d) {
+          //         $d->with('masterdiagnosa');
+          //     },
+          //     'pemeriksaanfisik' => function ($a) {
+          //         $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+          //             ->orderBy('id', 'DESC');
+          //     },
+          //     'ok' => function ($q) {
+          //         $q->orderBy('id', 'DESC');
+          //     },
+          //     'taskid' => function ($q) {
+          //         $q->orderBy('taskid', 'DESC');
+          //     },
+          //     'planning' => function ($p) {
+          //         $p->with(
+          //             'masterpoli',
+          //             'rekomdpjp',
+          //             'transrujukan',
+          //             'listkonsul',
+          //             'spri',
+          //             'ranap',
+          //             'kontrol',
+          //             'operasi',
+          //         )->orderBy('id', 'DESC');
+          //     },
+          //     'edukasi' => function ($x) {
+          //         $x->orderBy('id', 'DESC');
+          //     },
+          //     'diet' => function ($diet) {
+          //         $diet->orderBy('id', 'DESC');
+          //     },
+          //     'sharing' => function ($sharing) {
+          //         $sharing->orderBy('id', 'DESC');
+          //     },
+          //     'newapotekrajal' => function ($newapotekrajal) {
+          //         $newapotekrajal->with([
+          //             'permintaanresep.mobat:kd_obat,nama_obat',
+          //             'permintaanracikan.mobat:kd_obat,nama_obat',
+          //         ])
+          //             ->orderBy('id', 'DESC');
+          //     },
+          //     'laporantindakan'
+          // ])
 
             // ->orderby('rs17.rs3', 'ASC')
             // ->limit(1)

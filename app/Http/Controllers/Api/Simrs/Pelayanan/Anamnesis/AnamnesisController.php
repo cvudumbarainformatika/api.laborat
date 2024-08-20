@@ -38,7 +38,7 @@ class AnamnesisController extends Controller
                     'user'  => $kdpegsimrs,
                 ]
             );
-            if ($hasil === 1) {
+            if ($hasil === 1) { 
                 $simpananamnesis = AnamnesisAnamnesis::where('id', $request->id)->first();
             } else {
                 $simpananamnesis = null;
