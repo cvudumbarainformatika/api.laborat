@@ -94,6 +94,12 @@ class PostKunjunganRajalHelper
         $ruang = !$relmasterRuang ? '-': $relmasterRuang['ruang'] ?? '-';
         $lantai = !$relmasterRuang ? '-': $relmasterRuang['lantai'] ?? '-';
         $gedung = !$relmasterRuang ? '-': $relmasterRuang['gedung'] ?? '-';
+
+
+
+        $observation = self::observation($request, $encounter, $tgl_kunjungan);
+
+
         $body =
             [
                 "resourceType" => "Bundle",
@@ -189,6 +195,12 @@ class PostKunjunganRajalHelper
                             "url" => "Encounter"
                         ]
                     ],
+
+                    $observation['nadi'],
+                    $observation['pernapasan'],
+                    $observation['sistole'],
+                    $observation['diastole'],
+                    $observation['suhu'],
                 ]
             ];
 
@@ -250,7 +262,6 @@ class PostKunjunganRajalHelper
         }
 
 
-        $observation = self::observation($request, $encounter, $tgl_kunjungan);
 
         // return $body;
 
@@ -269,7 +280,15 @@ class PostKunjunganRajalHelper
       $practitioner_uuid = $request->datasimpeg ? $request->datasimpeg['satset_uuid']: '-';
       $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
       $uuid = self::generateUuid();
-       $form = [
+
+
+      $nadi = count($request->pemeriksaanfisik) > 0 ? (int)$request->pemeriksaanfisik[0]['rs4']: null;
+      $pernapasan = count($request->pemeriksaanfisik) > 0 ? (int)$request->pemeriksaanfisik[0]['pernapasan']: null;
+      $sistole = count($request->pemeriksaanfisik) > 0 ? (int)$request->pemeriksaanfisik[0]['sistole']: null;
+      $diastole = count($request->pemeriksaanfisik) > 0 ? (int)$request->pemeriksaanfisik[0]['diastole']: null;
+      $suhu = count($request->pemeriksaanfisik) > 0 ? (int)$request->pemeriksaanfisik[0]['suhutubuh']: null;
+      
+      $formNadi = [
         // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
         "fullUrl" => "urn:uuid:$uuid",
         "resource" => [
@@ -309,14 +328,267 @@ class PostKunjunganRajalHelper
                 ],
             ],
             "valueQuantity" => [
-                "value" => 80,
+                "value" => $nadi,
                 "unit" => "{beats}/min",
                 "system" => "http://unitsofmeasure.org",
                 "code" => "{beats}/min",
             ],
         ],
         "request" => ["method" => "POST", "url" => "Observation"],
+        ];
+
+
+
+      
+
+
+      $formPernapasan = [
+        // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
+        "fullUrl" => "urn:uuid:$uuid",
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs",
+                        ],
+                    ],
+                ],
+            ],
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "9279-1",
+                        "display" => "Respiratory rate",
+                    ],
+                ],
+            ],
+            "subject" => [
+                "reference" => "Patient/$request->pasien_uuid",
+                "display" => $request->nama,
+            ],
+            "encounter" => ["reference" => "urn:uuid:$encounter"],
+            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
+            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "performer" => [
+                [
+                    "reference" => "Practitioner/$practitioner_uuid",
+                    "display" => $nama_practitioner,
+                ],
+            ],
+            "valueQuantity" => [
+                "value" => $pernapasan,
+                "unit"=> "breaths/minute",
+                "system"=> "http://unitsofmeasure.org",
+                "code"=> "/min"
+            ],
+          ],
+          "request" => ["method" => "POST", "url" => "Observation"],
+        ];
+
+      
+      
+      
+      
+        $form = [
+        'nadi' => $formNadi,
+        'kesadaran' => $formPernapasan
       ];
+
+
+      $formSistole = [
+        // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
+        "fullUrl" => "urn:uuid:$uuid",
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs",
+                        ],
+                    ],
+                ],
+            ],
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "8480-6",
+                        "display" => "Systolic blood pressure",
+                    ],
+                ],
+            ],
+            "subject" => [
+                "reference" => "Patient/$request->pasien_uuid",
+                "display" => $request->nama,
+            ],
+            "encounter" => ["reference" => "urn:uuid:$encounter"],
+            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
+            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "performer" => [
+                [
+                    "reference" => "Practitioner/$practitioner_uuid",
+                    "display" => $nama_practitioner,
+                ],
+            ],
+            "valueQuantity" => [
+                "value" => $sistole,
+                "unit" => "mm[Hg]",
+                "system" => "http://unitsofmeasure.org",
+                "code" => "mm[Hg]",
+            ],
+          ],
+          "request" => ["method" => "POST", "url" => "Observation"],
+      ];
+
+
+      $formDiastole = [
+        // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
+        "fullUrl" => "urn:uuid:$uuid",
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs",
+                        ],
+                    ],
+                ],
+            ],
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "8480-6",
+                        "display" => "Systolic blood pressure",
+                    ],
+                ],
+            ],
+            "subject" => [
+                "reference" => "Patient/$request->pasien_uuid",
+                "display" => $request->nama,
+            ],
+            "encounter" => ["reference" => "urn:uuid:$encounter"],
+            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
+            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "performer" => [
+                [
+                    "reference" => "Practitioner/$practitioner_uuid",
+                    "display" => $nama_practitioner,
+                ],
+            ],
+            "valueQuantity" => [
+                "value" => $diastole,
+                "unit" => "mm[Hg]",
+                "system" => "http://unitsofmeasure.org",
+                "code" => "mm[Hg]",
+            ],
+          ],
+          "request" => ["method" => "POST", "url" => "Observation"],
+      ];
+
+      $formSuhu = [
+        // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
+        "fullUrl" => "urn:uuid:$uuid",
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs",
+                        ],
+                    ],
+                ],
+            ],
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "8480-6",
+                        "display" => "Systolic blood pressure",
+                    ],
+                ],
+            ],
+            "subject" => [
+                "reference" => "Patient/$request->pasien_uuid",
+                "display" => $request->nama,
+            ],
+            "encounter" => ["reference" => "urn:uuid:$encounter"],
+            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
+            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "performer" => [
+                [
+                    "reference" => "Practitioner/$practitioner_uuid",
+                    "display" => $nama_practitioner,
+                ],
+            ],
+            "valueQuantity" => [
+                "value" => $suhu,
+                "unit"=> "C",
+                "system"=> "http://unitsofmeasure.org",
+                "code"=> "Cel"
+            ],
+          ],
+          "request" => ["method" => "POST", "url" => "Observation"],
+      ];
+      
+      
+      
+        
+
+
+
+      // $skortingkatKesadaran = count($request->pemeriksaanfisik) ? $request->pemeriksaanfisik[0]['tingkatkesadaran']: 0;
+
+      // $tingkatKesadaran = 'Sadar Baik/Alert';
+
+      // switch ($skortingkatKesadaran) {
+      //   case 0:
+      //     $tingkatKesadaran = "Sadar Baik/Alert";
+      //     break;
+      //   case 1:
+      //     $tingkatKesadaran = "Berespon denga kata-kata / Voice";
+      //     break;
+      //   case 2:
+      //     $tingkatKesadaran = "Hanya berespons jika dirangsang nyeri / Pain";
+      //     break;
+      //   case 3:
+      //     $tingkatKesadaran = "Pasien tidak sadar / Unresponsive";
+      //     break;
+      //   case 4:
+      //     $tingkatKesadaran = "Gelisah atau bingung";
+      //     break;
+      //   default:
+      //     $tingkatKesadaran = "Acute Confusional States";
+      // }
+      
+
+      $form = [
+        'nadi' => $formNadi,
+        'pernapasan' => $formPernapasan,
+        'sistole' => $formSistole,
+        'diastole' => $formDiastole,
+        'suhu' => $formSuhu
+      ];
+
+      return $form;
     }
 
 
@@ -769,6 +1041,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Procedure"],
             ],
+
+            // 5. Observation PraRad
             [
                 "fullUrl" => "urn:uuid:{{Observation_PraRad}}",
                 "resource" => [
@@ -817,6 +1091,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],
+
+            // 6. AllergyIntolerance PraRad
             [
                 "fullUrl" => "urn:uuid:{{AllergyIntolerance_PraRad}}",
                 "resource" => [
@@ -973,6 +1249,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "ServiceRequest"],
             ],
+
+            
             [
                 "fullUrl" => "urn:uuid:",
                 "resource" => [
@@ -1014,11 +1292,11 @@ class PostKunjunganRajalHelper
                         ],
                     ],
                     "valueString" => "Left upper and middle lung zones show reticulonodular opacities.
-    The left apical lung zone shows a cavitary lesion( active TB).
-    Left apical pleural thickening
-    Mild mediastinum widening is noted
-    Normal heart size.
-    Free costophrenic angles.",
+                                      The left apical lung zone shows a cavitary lesion( active TB).
+                                      Left apical pleural thickening
+                                      Mild mediastinum widening is noted
+                                      Normal heart size.
+                                      Free costophrenic angles.",
                 ],
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],

@@ -27,6 +27,7 @@ class KunjunganController extends Controller
             // return self::rajal(request()->all());
             $ygTerkirim =0;
             $arrayKunjungan = self::cekKunjunganRajal(request()->all());
+            return self::rajal($arrayKunjungan[0]);
             for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
               self::rajal($arrayKunjungan[$i]);
               $ygTerkirim = $i+1;
@@ -181,8 +182,8 @@ class KunjunganController extends Controller
                       'kontrol',
                       'operasi',
                   )->orderBy('id', 'DESC');
-              },
-            ])
+                },
+              ])
 
           //   ->with([
           //     'anamnesis',
@@ -339,10 +340,10 @@ class KunjunganController extends Controller
         // return $send;
 
         $send = PostKunjunganRajalHelper::form($data, $pasien_uuid);
-        if ($send['message'] === 'success') {
-          $token = AuthSatsetHelper::accessToken();
-          $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-        }
+        // if ($send['message'] === 'success') {
+        //   $token = AuthSatsetHelper::accessToken();
+        //   $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        // }
         return $send;
     }
 
