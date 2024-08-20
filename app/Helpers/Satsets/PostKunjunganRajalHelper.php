@@ -356,7 +356,7 @@ class PostKunjunganRajalHelper
 
         $antri = Carbon::parse($task3['created_at'])->toIso8601String();
 
-        $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->subMinutes(3)->toIso8601String();
+        $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
         $end = Carbon::parse($task5['created_at'])->toIso8601String();
 
         setlocale(LC_ALL, 'IND');
@@ -628,8 +628,8 @@ class PostKunjunganRajalHelper
                 "display" => $request->nama,
             ],
             "encounter" => ["reference" => "urn:uuid:$encounter"],
-            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
-            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+            "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
             "performer" => [
                 [
                     "reference" => "Practitioner/$practitioner_uuid",
@@ -653,7 +653,7 @@ class PostKunjunganRajalHelper
 
       $formPernapasan = [
         // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
-        "fullUrl" => "urn:uuid:$uuid",
+        "fullUrl" => "urn:uuid:".self::generateUuid(),
         "resource" => [
             "resourceType" => "Observation",
             "status" => "final",
@@ -682,8 +682,8 @@ class PostKunjunganRajalHelper
                 "display" => $request->nama,
             ],
             "encounter" => ["reference" => "urn:uuid:$encounter"],
-            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
-            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+            "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
             "performer" => [
                 [
                     "reference" => "Practitioner/$practitioner_uuid",
@@ -712,7 +712,7 @@ class PostKunjunganRajalHelper
 
       $formSistole = [
         // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
-        "fullUrl" => "urn:uuid:$uuid",
+        "fullUrl" => "urn:uuid:".self::generateUuid(),
         "resource" => [
             "resourceType" => "Observation",
             "status" => "final",
@@ -741,8 +741,8 @@ class PostKunjunganRajalHelper
                 "display" => $request->nama,
             ],
             "encounter" => ["reference" => "urn:uuid:$encounter"],
-            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
-            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+            "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
             "performer" => [
                 [
                     "reference" => "Practitioner/$practitioner_uuid",
@@ -762,7 +762,7 @@ class PostKunjunganRajalHelper
 
       $formDiastole = [
         // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
-        "fullUrl" => "urn:uuid:$uuid",
+        "fullUrl" => "urn:uuid:".self::generateUuid(),
         "resource" => [
             "resourceType" => "Observation",
             "status" => "final",
@@ -791,8 +791,8 @@ class PostKunjunganRajalHelper
                 "display" => $request->nama,
             ],
             "encounter" => ["reference" => "urn:uuid:$encounter"],
-            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
-            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+            "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
             "performer" => [
                 [
                     "reference" => "Practitioner/$practitioner_uuid",
@@ -811,7 +811,7 @@ class PostKunjunganRajalHelper
 
       $formSuhu = [
         // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
-        "fullUrl" => "urn:uuid:$uuid",
+        "fullUrl" => "urn:uuid:".self::generateUuid(),
         "resource" => [
             "resourceType" => "Observation",
             "status" => "final",
@@ -840,8 +840,8 @@ class PostKunjunganRajalHelper
                 "display" => $request->nama,
             ],
             "encounter" => ["reference" => "urn:uuid:$encounter"],
-            "effectiveDateTime" => $tgl_kunjungan . "T01:10:00+00:00",
-            "issued" => $tgl_kunjungan . "T01:10:00+00:00",
+            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+            "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
             "performer" => [
                 [
                     "reference" => "Practitioner/$practitioner_uuid",
