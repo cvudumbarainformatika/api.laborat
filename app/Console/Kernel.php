@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('send:rajal')
                     ->everyMinute()
-                    ->between('17:00', '23:50');
+                    ->between('16:30', '23:50');
 
         $schedule->call(function () {
             info('mulai stok opname farmasi');
