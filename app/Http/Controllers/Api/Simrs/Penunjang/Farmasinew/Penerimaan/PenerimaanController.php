@@ -533,11 +533,12 @@ class PenerimaanController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus, data tidak ditemukan'], 410);
         }
         $pemesananH = PemesananHeder::where('nopemesanan', $penerimaanH->nopemesanan)->first();
-
+        
         $pemesananR = PemesananRinci::where('nopemesanan', $penerimaanH->nopemesanan)
-            ->where('kdobat', $penerimaanR->kdobat)
-            ->get();
-        if (count($pemesananR) >= 0) {
+        ->where('kdobat', $penerimaanR->kdobat)
+        ->get();
+        
+        if (count($pemesananR) > 0) {
             if (count($pemesananR) > 1) {
                 foreach ($pemesananR as $it) {
                     $it->flag = '';
