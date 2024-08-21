@@ -404,7 +404,7 @@ class EresepController extends Controller
     
                 $adaObat=Permintaanresep::where('kdobat',$request->kodeobat)->whereIn('noresep',$head)->count();
 
-                $bypass=$request->kodedepo==='Gd-04010102' && $request->jenisresep !== 'Racikan'?1:'0';
+                $bypass=$request->kodedepo==='Gd-04010102'?1:'0';
 
                 if($adaObat){
                     $pesanA='Item Obat ';
