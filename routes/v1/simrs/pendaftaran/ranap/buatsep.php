@@ -38,5 +38,5 @@ Route::group([
 
     // Delete SEP
 
-    Route::post('delete-sep-ranap', [SepranapController::class, 'delete_sep']);
+    Route::post('delete-sep-ranap', [SepranapController::class, 'delete_sep']); // masih krg yakin
 });
