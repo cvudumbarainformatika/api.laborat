@@ -691,7 +691,7 @@ class EresepController extends Controller
                             'jumlah' => $request->jumlah, // jumlah obat
                             'satuan_racik' => $request->satuan_racik, // jumlah obat
                             'keteranganx' => $request->keteranganx, // keterangan obat
-                            'keterangan_bypass' => $request->keterangan_bypass, // keterangan obat
+                            'keterangan_bypass' => $request->keterangan_bypass, // keterangan bypass
                             'user' => $user['kodesimrs']
                         ]
                     );
@@ -1275,7 +1275,7 @@ class EresepController extends Controller
             ->pluck('noresep');
             // ambil detail obat yang akan dikirim
             $obatnya=Permintaanresep::where('noresep',$request->noresep)->whereNull('keterangan_bypass')->with('mobat:kd_obat,nama_obat')->get();
-            $obatRacikan=Permintaanresepracikan::where('noresep',$request->noresep)->with('mobat:kd_obat,nama_obat')->get();
+            $obatRacikan=Permintaanresepracikan::where('noresep',$request->noresep)->whereNull('keterangan_bypass')->with('mobat:kd_obat,nama_obat')->get();
             // ambil obat untuk pasien kunjungan sekarang
             $obatKeluar=Resepkeluarrinci::whereIn('noresep',$normalHeadKel)->where('jumlah','>',0)->get();
             $obatNormal=Permintaanresep::whereIn('noresep',$normalHead)->get();
@@ -1704,6 +1704,7 @@ class EresepController extends Controller
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajual,
                                     'nilai_r' => $request->nilai_r ?? 0,
+                                    'keterangan_bypass' => $request->keterangan_bypass,
                                     'user' => $user['kodesimrs']
                                 ]
                             );
@@ -1730,6 +1731,7 @@ class EresepController extends Controller
                                     'aturan' => $request->aturan,
                                     'konsumsi' => $request->konsumsi,
                                     'keterangan' => $request->keterangan ?? '',
+                                    'keterangan_bypass' => $request->keterangan_bypass,
                                     'user' => $user['kodesimrs']
                                 ]
                             );
@@ -1774,6 +1776,7 @@ class EresepController extends Controller
                                     'hpp' => $harga,
                                     'harga_jual' => $hargajual,
                                     'nilai_r' => $request->nilai_r ?? 0,
+                                    'keterangan_bypass' => $request->keterangan_bypass,
                                     'user' => $user['kodesimrs']
                                 ]
                             );
@@ -1800,6 +1803,7 @@ class EresepController extends Controller
                                     'aturan' => $request->aturan,
                                     'konsumsi' => $request->konsumsi,
                                     'keterangan' => $request->keterangan ?? '',
+                                    'keterangan_bypass' => $request->keterangan_bypass,
                                     'user' => $user['kodesimrs']
                                 ]
                             );
