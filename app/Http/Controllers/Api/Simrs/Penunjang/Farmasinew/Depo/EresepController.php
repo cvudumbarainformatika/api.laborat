@@ -433,9 +433,8 @@ class EresepController extends Controller
                 ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->where('depo',$request->kodedepo)->pluck('noresep');
     
                 $adaObat1=Resepkeluarrinci::where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah','>',0)->count();
-                $adaRetur=Returpenjualan_r::where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah_retur','>=','jumlah_keluar')->count();
     
-                if($adaObat1>$adaRetur){
+                if($adaObat1){
                     $pesanA='Item Obat ';
                     $pesanT='';
                     $pesanB=' Sudah Pernah Diberikan Hari ini ';
@@ -447,8 +446,6 @@ class EresepController extends Controller
                     return new JsonResponse([
                         'message'=>$msg,
                         'bypass'=>$bypass,
-                        'adaObat1'=>$adaObat1,
-                        'adaRetur'=>$adaRetur,
                     ],410);
                 }
 
