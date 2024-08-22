@@ -27,4 +27,16 @@ Route::group([
     Route::post('get-sep-from-bpjs', [SepranapController::class, 'getSepFromBpjs']);
     Route::post('insert-sep-manual', [SepranapController::class, 'insertSepManual']);
     Route::get('get-no-rujukan-internal', [SepranapController::class, 'getNorujukanInternal']);
+
+
+
+
+    // EDIT SEP
+
+    Route::post('cari-sep-bpjs', [SepranapController::class, 'cariSepBpjs']);
+    Route::post('update-sep-ranap', [SepranapController::class, 'update_sep_ranap']);
+
+    // Delete SEP
+
+    Route::post('delete-sep-ranap', [SepranapController::class, 'delete_sep']); // masih krg yakin
 });

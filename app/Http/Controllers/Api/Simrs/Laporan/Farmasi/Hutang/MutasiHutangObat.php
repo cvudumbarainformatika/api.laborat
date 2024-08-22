@@ -14,29 +14,19 @@ class MutasiHutangObat extends Controller
     {
         $dari = request('tgldari');
 
-        $tgldaridari = request('tgldari') . ' 00:00:00';
-        $tglsampai = request('tglsampai') . ' 23:59:59';
-    //     $saldoawal = PenerimaanHeder::whereDate('tglpenerimaan','<=', $dari)
-    //     ->with(
-    //         [
-    //             'pihakketiga',
-    //             'penerimaanrinci' => function($penerimaanrinci){
-    //                 $penerimaanrinci->with('masterobat');
-    //             }
-    //         ]
-    //     )
-    //     ->where('jenis_penerimaan','Pesanan')
-    //    // ->limit(10)
-    //     ->get();
+        $tgldari = request('tgldari') ;
+        $tglsampai = request('tglsampai');
+
     $pbf=PenerimaanHeder::select('kdpbf')->distinct()->pluck('kdpbf');
     $data = Mpihakketiga::with([
         'penerimaanobat' => function($penerimaanobat) use($dari){
             $penerimaanobat->select('farmasi.penerimaan_h.nopenerimaan','farmasi.penerimaan_h.tglpenerimaan',
-            'farmasi.penerimaan_h.nomorsurat','farmasi.penerimaan_h.kdpbf','farmasi.penerimaan_h.gudang','farmasi.penerimaan_h.jenis_penerimaan')
+            'farmasi.penerimaan_h.nomorsurat','farmasi.penerimaan_h.kdpbf','farmasi.penerimaan_h.gudang',
+            'farmasi.penerimaan_h.jenis_penerimaan')
             ->with([
                 'penerimaanrinci'
             ])
-            ->whereDate('farmasi.penerimaan_h.tglpenerimaan','<=', $dari)
+            ->whereDate('farmasi.penerimaan_h.tglpenerimaan','<', $dari)
             ->where('farmasi.penerimaan_h.jenis_penerimaan','Pesanan');
         },
         'penerimaanobatkonsinyasi' => function($penerimaanobatkonsinyasi) use($dari){
@@ -45,27 +35,27 @@ class MutasiHutangObat extends Controller
             ->with([
                 'rinci'
             ])
-            ->whereDate('farmasi.bast_konsinyasis.tgl_bast','<=', $dari)
+            ->whereDate('farmasi.bast_konsinyasis.tgl_bast','<', $dari)
             ->where('farmasi.bast_konsinyasis.nobast','!=','')
             ->whereNull('farmasi.bast_konsinyasis.flag_bayar');
         },
-        'penerimaanobatperiodeskrng' => function($penerimaanobatperiodeskrng) use($tgldaridari, $tglsampai){
+        'penerimaanobatperiodeskrng' => function($penerimaanobatperiodeskrng) use($tgldari, $tglsampai){
             $penerimaanobatperiodeskrng->select('farmasi.penerimaan_h.nopenerimaan','farmasi.penerimaan_h.tglpenerimaan',
             'farmasi.penerimaan_h.nomorsurat','farmasi.penerimaan_h.kdpbf','farmasi.penerimaan_h.gudang','farmasi.penerimaan_h.jenis_penerimaan')
             ->with([
                 'penerimaanrinci'
             ])
-            ->whereDate('farmasi.penerimaan_h.tglpenerimaan','>=', $tgldaridari)
+            ->whereDate('farmasi.penerimaan_h.tglpenerimaan','>=', $tgldari)
             ->whereDate('farmasi.penerimaan_h.tglpenerimaan','<=', $tglsampai)
             ->where('farmasi.penerimaan_h.jenis_penerimaan','Pesanan');
         },
-        'penerimaanobatkonsinyasiperiodeskrng' => function($penerimaanobatkonsinyasiperiodeskrng) use($tgldaridari, $tglsampai){
+        'penerimaanobatkonsinyasiperiodeskrng' => function($penerimaanobatkonsinyasiperiodeskrng) use($tgldari, $tglsampai){
             $penerimaanobatkonsinyasiperiodeskrng->select('farmasi.bast_konsinyasis.notranskonsi','farmasi.bast_konsinyasis.nobast',
             'farmasi.bast_konsinyasis.kdpbf','farmasi.bast_konsinyasis.tgl_bast')
             ->with([
                 'rinci'
             ])
-            ->whereDate('farmasi.bast_konsinyasis.tgl_bast','>=', $tgldaridari)
+            ->whereDate('farmasi.bast_konsinyasis.tgl_bast','>=', $tgldari)
             ->whereDate('farmasi.bast_konsinyasis.tgl_bast','<=', $tglsampai)
             ->where('farmasi.bast_konsinyasis.nobast','!=','')
             ->whereNull('farmasi.bast_konsinyasis.flag_bayar');
