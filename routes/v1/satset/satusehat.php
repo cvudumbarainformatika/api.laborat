@@ -42,5 +42,6 @@ Route::group([
     Route::post('/kirimKunjungan', [KunjunganSatsetController::class, 'kirimKunjungan']);
     
     // Maping KFA 
-    Route::get('/master-obat', [MapingKfaController::class, 'getMasterObat']);
+    Route::get('/mapingkfa/master-obat', [MapingKfaController::class, 'getMasterObat']);
+    Route::get('/mapingkfa/get-kfa', [MapingKfaController::class, 'getKfa']);
 });

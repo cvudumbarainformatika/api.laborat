@@ -24,6 +24,8 @@ class Kernel extends ConsoleKernel
         //     info($data);
         // })->dailyAt('00:20');
 
+        // apakah perlu ditambahkan cek stok setiap hari?????????
+        
         $schedule->call(function () {
             info('mulai stok opname farmasi');
             $opname = new StokOpnameFarmasiController;

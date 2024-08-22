@@ -215,7 +215,7 @@ class EresepController extends Controller
     {
         // penccarian termasuk tiperesep
         $groupsistembayar = request('groups');
-        if ($groupsistembayar == '1') {
+        if ((int)$groupsistembayar === 1) {
             $sistembayar = ['SEMUA', 'BPJS'];
         } else {
             $sistembayar = ['SEMUA', 'UMUM'];
@@ -376,16 +376,20 @@ class EresepController extends Controller
             ->where('resep_permintaan_keluar.noresep',$request->noresep)
             ->where('new_masterobat.jenis_perbekalan','obat')
             ->count();
+            
             $total=(int)$racikan+(int)$nonracikan;
+            $batasRanap = $request->jenisresep == 'Racikan' ? $total>7:$total>=7;
+            $batasRajal = $request->jenisresep == 'Racikan' ? $total>5:$total>=5;
+            
             $obatMinta=Mobatnew::select('kd_obat')->where('jenis_perbekalan','obat')->where('kd_obat',$request->kodeobat)->first();
-            if($request->kodedepo==='Gd-04010102' && $total>=7 && $obatMinta){
+            if($request->kodedepo==='Gd-04010102' && $batasRanap && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 7 saja',
                     'racikan'=>$racikan,
                     'non racikan'=>$nonracikan
                 ],410);
             }
-            if($request->kodedepo==='Gd-05010101' && $total>=5 && $obatMinta){
+            if($request->kodedepo==='Gd-05010101' && $batasRajal && $obatMinta){
                 return new JsonResponse([
                     'message' => 'Jumlah Obat Dibatasi 5 saja',
                     'racikan'=>$racikan,
@@ -429,8 +433,9 @@ class EresepController extends Controller
                 ->where('tgl_kirim','LIKE', '%'. $sekarang .'%')->whereIn('flag',['3','4'])->where('depo',$request->kodedepo)->pluck('noresep');
     
                 $adaObat1=Resepkeluarrinci::where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah','>',0)->count();
+                $adaRetur=Returpenjualan_r::where('kdobat',$request->kodeobat)->whereIn('noresep',$head1)->where('jumlah_retur','>=','jumlah_keluar')->count();
     
-                if($adaObat1){
+                if($adaObat1>$adaRetur){
                     $pesanA='Item Obat ';
                     $pesanT='';
                     $pesanB=' Sudah Pernah Diberikan Hari ini ';
@@ -442,6 +447,8 @@ class EresepController extends Controller
                     return new JsonResponse([
                         'message'=>$msg,
                         'bypass'=>$bypass,
+                        'adaObat1'=>$adaObat1,
+                        'adaRetur'=>$adaRetur,
                     ],410);
                 }
 
