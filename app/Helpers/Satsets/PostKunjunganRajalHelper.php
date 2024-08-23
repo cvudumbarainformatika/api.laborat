@@ -510,6 +510,7 @@ class PostKunjunganRajalHelper
                     $observation['sistole'],
                     $observation['diastole'],
                     $observation['suhu'],
+                    $observation['kesadaran'],
                 ]
             ];
 
@@ -857,36 +858,121 @@ class PostKunjunganRajalHelper
           ],
           "request" => ["method" => "POST", "url" => "Observation"],
       ];
-      
-      
-      
-        
+
+      $skortingkatKesadaran = count($request->pemeriksaanfisik) ? $request->pemeriksaanfisik[0]['tingkatkesadaran']: 0;
+
+      $snowmedTingkatKesadaran = [
+        "kode" => "248234008",
+        'display' => "Mentally alert",
+        'ind' => 'Sadar Baik/Alert'
+      ];
+
+      switch ($skortingkatKesadaran) {
+        case 0:
+            $snowmedTingkatKesadaran = [
+                "kode" => "248234008",
+                'display' => "Mentally alert",
+                'ind' => 'Sadar Baik/Alert'
+              ];
+          break;
+        case 1:
+        //   $tingkatKesadaran = "Berespon denga kata-kata / Voice";
+          $snowmedTingkatKesadaran = [
+            "kode" => "300202002",
+            'display' => "Response to voice",
+            'ind' => 'Berespon denga kata-kata / Voice'
+          ];
+          break;
+        case 2:
+        //   $tingkatKesadaran = "Hanya berespons jika dirangsang nyeri / Pain";
+          $snowmedTingkatKesadaran = [
+            "kode" => "450847001",
+            'display' => "Responds to pain",
+            'ind' => 'Hanya berespons jika dirangsang nyeri / Pain'
+          ];
+
+          break;
+        case 3:
+            $snowmedTingkatKesadaran = [
+                "kode" => "422768004",
+                'display' => "Unresponsive",
+                'ind' => 'Pasien tidak sadar/unresponsive'
+              ];
+          break;
+        case 4:
+            $snowmedTingkatKesadaran = [
+                "kode" => "130987000",
+                'display' => "Acute confusion",
+                'ind' => 'Gelisah atau bingung'
+              ];
+          break;
+        case 5:
+            $snowmedTingkatKesadaran = [
+                "kode" => "2776000",
+                'display' => "Delirium",
+                'ind' => 'Acute Confusional States'
+              ];
+          break;
+        default:
+        $snowmedTingkatKesadaran = [
+            "kode" => "248234008",
+            'display' => "Mentally alert",
+            'ind' => 'Sadar Baik/Alert'
+          ];
+      }
 
 
-
-      // $skortingkatKesadaran = count($request->pemeriksaanfisik) ? $request->pemeriksaanfisik[0]['tingkatkesadaran']: 0;
-
-      // $tingkatKesadaran = 'Sadar Baik/Alert';
-
-      // switch ($skortingkatKesadaran) {
-      //   case 0:
-      //     $tingkatKesadaran = "Sadar Baik/Alert";
-      //     break;
-      //   case 1:
-      //     $tingkatKesadaran = "Berespon denga kata-kata / Voice";
-      //     break;
-      //   case 2:
-      //     $tingkatKesadaran = "Hanya berespons jika dirangsang nyeri / Pain";
-      //     break;
-      //   case 3:
-      //     $tingkatKesadaran = "Pasien tidak sadar / Unresponsive";
-      //     break;
-      //   case 4:
-      //     $tingkatKesadaran = "Gelisah atau bingung";
-      //     break;
-      //   default:
-      //     $tingkatKesadaran = "Acute Confusional States";
-      // }
+      $formKesadaran = [
+        // "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
+        "fullUrl" => "urn:uuid:".self::generateUuid(),
+        "resource" => [
+            "resourceType" => "Observation",
+            "status" => "final",
+            "category" => [
+                [
+                    "coding" => [
+                        [
+                            "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                            "code" => "vital-signs",
+                            "display" => "Vital Signs",
+                        ],
+                    ],
+                ],
+            ],
+            "code" => [
+                "coding" => [
+                    [
+                        "system" => "http://loinc.org",
+                        "code" => "67775-7",
+                        "display" => "Level of responsiveness",
+                    ],
+                ],
+            ],
+            "subject" => [
+                "reference" => "Patient/$pasien_uuid",
+                "display" => $request->nama,
+            ],
+            "encounter" => ["reference" => "urn:uuid:$encounter"],
+            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+            "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
+            "performer" => [
+                [
+                    "reference" => "Practitioner/$practitioner_uuid",
+                    "display" => $nama_practitioner,
+                ],
+            ],
+            "valueCodeableConcept" => [
+                "coding" => [
+                    [
+                        "system" => "http://snomed.info/sct",
+                        "code" => $snowmedTingkatKesadaran['kode'],
+                        "display" => $snowmedTingkatKesadaran['display'],
+                    ],
+                ],
+            ],
+          ],
+          "request" => ["method" => "POST", "url" => "Observation"],
+      ];
       
 
       $form = [
@@ -894,7 +980,8 @@ class PostKunjunganRajalHelper
         'pernapasan' => $formPernapasan,
         'sistole' => $formSistole,
         'diastole' => $formDiastole,
-        'suhu' => $formSuhu
+        'suhu' => $formSuhu,
+        'kesadaran' => $formKesadaran
       ];
 
       return $form;
@@ -1083,7 +1170,7 @@ class PostKunjunganRajalHelper
                 "request" => ["method" => "POST", "url" => "Encounter"],
             ],
 
-            // 2. Condition
+            // 2. Condition Keluhan Utama
             [
                 "fullUrl" => "urn:uuid:c566d6e2-4da0-4895-9bcb-8051dd16548c",
                 "resource" => [
@@ -1135,7 +1222,7 @@ class PostKunjunganRajalHelper
                 "request" => ["method" => "POST", "url" => "Condition"],
             ],
 
-            // 3. Observation
+            // 3. Observation Nadi
             [
                 "fullUrl" => "urn:uuid:{{Observation_Nadi}}",
                 "resource" => [
@@ -1184,7 +1271,7 @@ class PostKunjunganRajalHelper
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],
 
-            // 4. Observation
+            // 4. Observation tingkat kesadaran
             [
                 "fullUrl" => "urn:uuid:{{Observation_Kesadaran}}",
                 "resource" => [
