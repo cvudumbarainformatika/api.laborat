@@ -22,12 +22,13 @@ class BridgingSatsetHelper
     public static function get_data_kfa($ext,$token, $params){
 
         
-        $url = self::base_url() . $ext . $params;
+        // return self::root_url();
+        $url = self::root_url() . $ext . $params;
         $response = Http::withToken($token)->get($url);
         $data = json_decode($response, true);
 
         
-        // return $data;
+        return $data;
         // JIKA ERROR
         $error = $data['resourceType'] === 'OperationOutcome';
 
