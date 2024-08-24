@@ -48,6 +48,9 @@ class Mobatnew extends Model
         ]);
     }
 
+    public function kodebelanja(){
+        return $this->belongsTo(Mkodebelanjaobat::class,'kode108','kode');
+    }
     public function scopeFilter($cari, array $reqs)
     {
         $cari->when(
@@ -212,4 +215,5 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
     }
+    
 }

@@ -8,4 +8,6 @@ Route::group([
     'prefix' => 'simrs/laporan/farmasi/pemakaian'
 ], function () {
     Route::get('/get-pemakaian', [PemakaianObatController::class, 'getPemakaianObat']);
+    Route::get('/get-all-pemakaian', [PemakaianObatController::class, 'getAllPemakaianObat']);
+    Route::get('/get-sistembayar', [PemakaianObatController::class, 'getSistemBayar']);
 });
