@@ -407,14 +407,14 @@ class PostKunjunganRajalHelper
 
 
         $observation = self::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
-
+        $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
 
         $body =
             [
                 "resourceType" => "Bundle",
                 "type" => "transaction",
                 "entry" => [
-                    // ENCOUNTER
+                    // ENCOUNTER & CONDITION
                     [
                         "fullUrl" => "urn:uuid:$encounter",
                         "resource" => [
@@ -505,12 +505,18 @@ class PostKunjunganRajalHelper
                         ]
                     ],
 
+                    // OBSERVATION
                     $observation['nadi'],
                     $observation['pernapasan'],
                     $observation['sistole'],
                     $observation['diastole'],
                     $observation['suhu'],
                     $observation['kesadaran'],
+                    $observation['psikologis'],
+
+
+                    // CARE PLAN
+                    $carePlan
                 ]
             ];
 
@@ -973,6 +979,110 @@ class PostKunjunganRajalHelper
           ],
           "request" => ["method" => "POST", "url" => "Observation"],
       ];
+
+      $statusPsikologis = count($request->pemeriksaanfisik) ? $request->pemeriksaanfisik[0]['statuspsikologis']: 'Tidak ada kelainan';
+    
+        $psikologis = [
+            "kode" => "17326005",
+            'display' => "Well in self",
+            'ind' => 'Tidak ada kelainan'
+        ];
+
+        switch ($statusPsikologis) {
+            case 'Tidak ada kelainan':
+                $psikologis = [
+                    "kode" => "17326005",
+                    'display' => "Well in self",
+                    'ind' => 'Tidak ada kelainan'
+                ];
+            break;
+            case 'Cemas':
+                $psikologis = [
+                    "kode" => "48694002",
+                    'display' => "Feeling anxious",
+                    'ind' => 'Cemas'
+                ];
+            break;
+            case 'Takut':
+                $psikologis = [
+                    "kode" => "1402001",
+                    'display' => "Afraid",
+                    'ind' => 'Takut'
+                ];
+
+            break;
+            case 'Marah':
+                $psikologis = [
+                    "kode" => "75408008",
+                    'display' => "Feeling angry",
+                    'ind' => 'Marah'
+                ];
+            break;
+            case 'Sedih':
+                $psikologis = [
+                    "kode" => "420038007",
+                    'display' => "Feeling unhappy",
+                    'ind' => 'Sedih'
+                ];
+            break;
+            default:
+            $psikologis = [
+                "kode" => "74964007",
+                'display' => "Other",
+                'ind' => 'Lain-lain'
+            ];
+        }
+
+        $formPsikologis = [
+            "fullUrl" => "urn:uuid:".self::generateUuid(),
+            "resource" => [
+                "resourceType" => "Observation",
+                "status" => "final",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code" => "vital-signs",
+                                "display" => "Vital Signs",
+                            ],
+                        ],
+                    ],
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => "http://loinc.org",
+                            "code" => "8693-4",
+                            "display" => "Mental Status",
+                        ],
+                    ],
+                ],
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => $request->nama,
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+                "issued" => Carbon::parse($request->tgl_kunjungan)->addMinutes(10)->toIso8601String(),
+                "performer" => [
+                    [
+                        "reference" => "Practitioner/$practitioner_uuid",
+                        "display" => $nama_practitioner,
+                    ],
+                ],
+                "valueCodeableConcept" => [
+                    "coding" => [
+                        [
+                            "system" => "http://snomed.info/sct",
+                            "code" => $psikologis['kode'],
+                            "display" => $psikologis['display'],
+                        ],
+                    ],
+                ],
+                ],
+                "request" => ["method" => "POST", "url" => "Observation"],
+        ];
       
 
       $form = [
@@ -981,10 +1091,52 @@ class PostKunjunganRajalHelper
         'sistole' => $formSistole,
         'diastole' => $formDiastole,
         'suhu' => $formSuhu,
-        'kesadaran' => $formKesadaran
+        'kesadaran' => $formKesadaran,
+        'psikologis' => $formPsikologis
       ];
 
       return $form;
+    }
+
+    static function carePlan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(30)->toIso8601String();
+        $carePlan = [
+            "fullUrl" => "urn:uuid:".self::generateUuid(),
+            "resource" => [
+                "resourceType" => "CarePlan",
+                "status" => "active",
+                "intent" => "plan",
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "736271009",
+                                "display" => "Outpatient care plan",
+                            ],
+                        ],
+                    ],
+                ],
+                "title" => "Rencana Rawat Pasien",
+                "description" => "Rencana Rawat Pasien",
+                "subject" => [
+                    "reference" => "Patient/$pasien_uuid",
+                    "display" => "$request->nama",
+                ],
+                "encounter" => ["reference" => "urn:uuid:$encounter"],
+                "created" => $created,
+                "author" => [
+                    "reference" => "Practitioner/$practitioner_uuid",
+                    "display" => $nama_practitioner,
+                ],
+            ],
+            "request" => ["method" => "POST", "url" => "CarePlan"],
+        ];
+
+        return $carePlan;
     }
 
 
@@ -1390,6 +1542,7 @@ class PostKunjunganRajalHelper
                 "request" => ["method" => "POST", "url" => "CarePlan"],
             ],
 
+            // 4. Procedure PraRad
             [
                 "fullUrl" => "urn:uuid:{{Procedure_PraRad}}",
                 "resource" => [
@@ -1547,6 +1700,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
             ],
+
+            // 7. ServiceRequest
             [
                 "fullUrl" => "urn:uuid:",
                 "resource" => [
@@ -1646,7 +1801,7 @@ class PostKunjunganRajalHelper
                 "request" => ["method" => "POST", "url" => "ServiceRequest"],
             ],
 
-            
+            // 8. Observation Radiologist
             [
                 "fullUrl" => "urn:uuid:",
                 "resource" => [
@@ -1696,6 +1851,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Observation"],
             ],
+
+            // 9. DiagnosticReport Radiology
             [
                 "fullUrl" => "urn:uuid:{{DiagnosticReport_Rad}}",
                 "resource" => [
@@ -1750,6 +1907,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "DiagnosticReport"],
             ],
+
+            // 10. Procedure Terapetik
             [
                 "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
                 "resource" => [
@@ -1825,6 +1984,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Procedure"],
             ],
+
+            // 11. Procedure Konseling
             [
                 "fullUrl" => "urn:uuid:{{Procedure_Konseling}}",
                 "resource" => [
@@ -1891,6 +2052,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Procedure"],
             ],
+
+            // 12. Condition DiagnosisPrimer
             [
                 "fullUrl" => "urn:uuid:{{Condition_DiagnosisPrimer}}",
                 "resource" => [
@@ -1937,6 +2100,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
             ],
+
+            // 13. Condition DiagnosisSekunder
             [
                 "fullUrl" => "urn:uuid:{{Condition_DiagnosisSekunder}}",
                 "resource" => [
@@ -1986,6 +2151,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
             ],
+
+            // 14. Procedure Edukasi
             [
                 "fullUrl" => "urn:uuid:{{Procedure_Edukasi}}",
                 "resource" => [
@@ -2029,6 +2196,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Procedure"],
             ],
+
+            // 15. Medication
             [
                 "fullUrl" => "urn:uuid:{{Medication_forRequest}}",
                 "resource" => [
@@ -2193,6 +2362,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Medication"],
             ],
+
+
             [
                 "fullUrl" => "urn:uuid:{{MedicationRequest_id}}",
                 "resource" => [
@@ -2342,6 +2513,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "MedicationRequest"],
             ],
+
+            // QuestionnaireResponse_KajianResep
             [
                 "fullUrl" => "urn:uuid:{{QuestionnaireResponse_KajianResep}}",
                 "resource" => [
@@ -2541,6 +2714,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "QuestionnaireResponse"],
             ],
+
+            // medication
             [
                 "fullUrl" => "urn:uuid:{{Medication_forDispense}}",
                 "resource" => [
@@ -2709,6 +2884,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "Medication"],
             ],
+
+            // "MedicationDispense"
             [
                 "fullUrl" => "urn:uuid:{{MedicationDispense_id}}",
                 "resource" => [
@@ -2826,6 +3003,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "MedicationDispense"],
             ],
+
+            // "ClinicalImpression"
             [
                 "fullUrl" => "urn:uuid:{{ClinicalImpression_Prognosis}}",
                 "resource" => [
@@ -2920,6 +3099,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "ClinicalImpression"],
             ],
+
+            // "ServiceRequest"
             [
                 "fullUrl" => "urn:uuid:",
                 "resource" => [
@@ -3005,6 +3186,8 @@ class PostKunjunganRajalHelper
                 ],
                 "request" => ["method" => "POST", "url" => "ServiceRequest"],
             ],
+
+            // "Condition"
             [
                 "fullUrl" => "urn:uuid:{{Condition_Stabil}}",
                 "resource" => [
