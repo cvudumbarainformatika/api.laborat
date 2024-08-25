@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -40,7 +41,7 @@ class SetNewStokController extends Controller
             ['nama' => 'Depo Rawat Jalan', 'kode' => 'Gd-05010101', 'lama' => 'AP0001'],
             ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
         ];
-        $gudBaru = ['05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+        $gudBaru = ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
 
         $mapingDep = ['GU0001', 'GU0002', 'RC0001', 'AP0002', 'AP0005', 'AP0001', 'AP0007'];
 
@@ -497,6 +498,15 @@ class SetNewStokController extends Controller
                 ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                 ->groupBy('mutasi_gudangdepo.kd_obat')
                 ->first();
+            $rusak=BarangRusak::select(
+                'kd_obat',
+                DB::raw('sum(jumlah) as jumlah')
+                )
+                ->whereBetween('tgl_rusak',[$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('kunci','1')
+                    ->groupBy('kd_obat')
+                    ->first();
+
             $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                 ->where('kdruang', $koderuangan)->first();
             $tts = $totalStok->jumlah ?? 0;
@@ -505,11 +515,12 @@ class SetNewStokController extends Controller
             $trm = $penerimaan->jumlah ?? 0;
             $mutma = $mutasiMasuk->jumlah ?? 0;
             $mutkel = $mutasiKeluar->jumlah ?? 0;
-            $masuk = (int)$sal + (int)$peny + (int)$trm + (int)$mutma;
-            $keluar = (int)$mutkel;
-            $sisa = (int)$masuk - (int)$keluar;
+            $rus = $rusak->jumlah ?? 0;
+            $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma;
+            $keluar = (float)$mutkel + (float)$rus;
+            $sisa = (float)$masuk - (float)$keluar;
               
-            if ((int)$sisa != (int)$tts) {
+            if ((float)$sisa != (float)$tts) {
                 $masukin = $sisa;
                 $index = 0;
                 $stok = FarmasinewStokreal::where('kdobat', $kdobat)
@@ -597,6 +608,7 @@ class SetNewStokController extends Controller
                 'trm' => $trm,
                 'mutma' => $mutma,
                 'mutkel' => $mutkel,
+                'rus' => $rus,
                 'stok' => $stok ?? [],
                 'message' => $message
             ];
@@ -769,10 +781,10 @@ class SetNewStokController extends Controller
             $reskel = $resepKeluar->jumlah ?? 0;
             $reskelrac = $resepKeluarRacikan->jumlah ?? 0;
             if ($koderuangan === 'Gd-04010103') {
-                $masuk = (int)$sal + (int)$peny + (int)$mutma + (int)$kem + (int) $ret;
-                $keluar = (int)$mutkel + (int)$dist + (int)$reskel + (int)$reskelrac;
-                $sisa = (int)$masuk - (int)$keluar;
-                if ((int)$sisa != (int)$tts) {
+                $masuk = (float)$sal + (float)$peny + (float)$mutma + (float)$kem + (float) $ret;
+                $keluar = (float)$mutkel + (float)$dist + (float)$reskel + (float)$reskelrac;
+                $sisa = (float)$masuk - (float)$keluar;
+                if ((float)$sisa != (float)$tts) {
                     // cek ketorolac
                     $masuk = $sisa;
                     $index = 0;
@@ -851,11 +863,11 @@ class SetNewStokController extends Controller
                     }
                 }
             } else {
-                $masuk = (int)$sal + (int)$peny + (int)$mutma + (int) $ret;
-                $keluar = (int)$mutkel + (int)$reskel + (int)$reskelrac;
-                $sisa = (int)$masuk - (int)$keluar;
+                $masuk = (float)$sal + (float)$peny + (float)$mutma + (float) $ret;
+                $keluar = (float)$mutkel + (float)$reskel + (float)$reskelrac;
+                $sisa = (float)$masuk - (float)$keluar;
 
-                if ((int)$sisa != (int)$tts) {
+                if ((float)$sisa != (float)$tts) {
                     // cek ketorolac
                     $masuk = $sisa;
                     $index = 0;

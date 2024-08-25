@@ -19,6 +19,7 @@ Route::group([
     Route::post('get-dpjp-bpjs', [SepranapController::class, 'getDpjpBpjs']);
     Route::post('create-sep-ranap', [SepranapController::class, 'create_sep_ranap']);
     Route::post('create-spri-ranap', [SepranapController::class, 'create_spri_ranap']);
+    Route::post('delete-spri-ranap', [SepranapController::class, 'delete_spri_ranap']);
     Route::post('list-rujukan-peserta', [SepranapController::class, 'getListRujukanPeserta']);
     Route::post('get-list-spri', [SepranapController::class, 'getListSpri']);
     Route::post('get-list-spesialistik', [SepranapController::class, 'getListSpesialistik']);
@@ -27,4 +28,16 @@ Route::group([
     Route::post('get-sep-from-bpjs', [SepranapController::class, 'getSepFromBpjs']);
     Route::post('insert-sep-manual', [SepranapController::class, 'insertSepManual']);
     Route::get('get-no-rujukan-internal', [SepranapController::class, 'getNorujukanInternal']);
+
+
+
+
+    // EDIT SEP
+
+    Route::post('cari-sep-bpjs', [SepranapController::class, 'cariSepBpjs']);
+    Route::post('update-sep-ranap', [SepranapController::class, 'update_sep_ranap']);
+
+    // Delete SEP
+
+    Route::post('delete-sep-ranap', [SepranapController::class, 'delete_sep']); // masih krg yakin
 });

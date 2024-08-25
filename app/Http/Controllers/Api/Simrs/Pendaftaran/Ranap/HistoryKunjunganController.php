@@ -43,7 +43,7 @@ class HistoryKunjunganController extends Controller
   
         $sort = request('sort') === 'terbaru'? 'DESC':'ASC';
         $status = ((request('status') === 'Belum Pulang') ? [''] : ['2','3']);
-  
+        $ruangan = request('ruangan');
         $query = Kunjunganranap::query();
   
         $select = $query->select(
@@ -121,6 +121,14 @@ class HistoryKunjunganController extends Controller
                     $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
                         ->orWhere('rs23.rs2', 'like',  '%' . request('q') . '%')
                         ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+                });
+            })
+            ->where(function ($query) use ($ruangan) {
+                $query->when(request('ruangan'), function ($query) use ($ruangan) {
+                    // for ($i = 0; $i < count($ruangan); $i++) {
+                    //     $query->orWhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                    // }
+                    $query->where('rs23.rs5', 'like',  '%' . $ruangan . '%');
                 });
             })
             ->where(function ($q) use ($status) {

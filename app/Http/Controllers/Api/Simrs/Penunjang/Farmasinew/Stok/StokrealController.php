@@ -372,7 +372,8 @@ class StokrealController extends Controller
     }
     public function listStokMinDepo()
     {
-        $kdruang = request('kdruang');
+        $kdruang = request('kdruang');        
+        $depos = ['Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
         $stokreal = Mobatnew::select(
             'stokreal.id as idx',
             'stokreal.kdruang',
@@ -405,6 +406,10 @@ class StokrealController extends Controller
             ->where(function ($x) {
             $x->orwhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
                 ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
+            ->when(in_array($kdruang, $depos),function($q){
+                $q->whereNotNull('stokreal.jumlah')
+                ->whereNotNull('min_max_ruang.min');
             })
             // ->where(function ($x) {
             //     $x->orWhereNull('stokreal.jumlah')

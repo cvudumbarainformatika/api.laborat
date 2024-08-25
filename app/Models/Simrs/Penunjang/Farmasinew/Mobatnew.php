@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
@@ -50,6 +51,9 @@ class Mobatnew extends Model
         ]);
     }
 
+    public function kodebelanja(){
+        return $this->belongsTo(Mkodebelanjaobat::class,'kode108','kode');
+    }
     public function scopeFilter($cari, array $reqs)
     {
         $cari->when(
@@ -214,6 +218,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
     }
+    public function barangrusak(){
+        return $this->hasMany(BarangRusak::class,'kd_obat','kd_obat');
+    }
+
     public function pagu(){
         return $this->hasOne(PergeseranPaguRinci::class, 'koderek108', 'kode108');
     }

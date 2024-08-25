@@ -155,6 +155,24 @@ class DepoController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
+        
+        // jika masih ada yang belum selesai suruh selesaikan dulu
+        $ada=Permintaandepoheder::select('no_permintaan')->where('dari',$request->dari)->where('flag','3')->get();
+        if(count($ada)>0){
+            $arr=collect($ada)->map(function($x){return $x->no_permintaan;});
+            $noper=join(' ,',$arr->all());
+            return new JsonResponse([
+                'message'=>'Selesaikan dulu Transaksi sebelumnya, nomor permintaan : ' . $noper,
+                'arr'=>$arr,
+                'ada'=>$ada,
+                'req'=>$request->all()
+                ]
+            ,410);
+        }
+        // return new JsonResponse([
+        //     'message'=>'lpt',
+        //     'req'=>$request->all()
+        // ],410);
         try {
             DB::connection('farmasi')->beginTransaction();
             $cek = Permintaandepoheder::where('flag', '!=', '')->where('no_permintaan', $request->no_permintaan)->count();

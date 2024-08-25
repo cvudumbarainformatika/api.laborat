@@ -33,7 +33,7 @@ class BastController extends Controller
         $temp = collect($raw)->map(function ($y) {
             return $y->kdpbf;
         });
-        $data = KontrakPengerjaan::select('kodeperusahaan', 'namaperusahaan')->whereIn('kodeperusahaan', $temp)->distinct()->get();
+        $data = Mpihakketiga::select('kode as kodeperusahaan', 'nama as namaperusahaan')->whereIn('kode', $temp)->distinct()->get();
 
         return new JsonResponse($data);
     }
@@ -171,7 +171,7 @@ class BastController extends Controller
                 function($r){
                     $r->where('nobast','LIKE','%'.request('q').'%');
                 });
-                
+
             })
             // ->orderBy('nobast', 'DESC')
             // ->orderBy('tgl_bast', 'DESC')

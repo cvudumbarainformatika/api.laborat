@@ -17,13 +17,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->call(function () {
-        //     info('mulai kirim kunjungan rajal');
-        //     $opname = new StokOpnameFarmasiController;
-        //     $data = $opname->storeMonthly();
-        //     info($data);
-        // })->dailyAt('00:20');
+        $schedule->command('send:rajal')
+                    ->everyMinute()
+                    ->between('16:30', '23:50');
 
+        // apakah perlu ditambahkan cek stok setiap hari?????????
+        
         $schedule->call(function () {
             info('mulai stok opname farmasi');
             $opname = new StokOpnameFarmasiController;
