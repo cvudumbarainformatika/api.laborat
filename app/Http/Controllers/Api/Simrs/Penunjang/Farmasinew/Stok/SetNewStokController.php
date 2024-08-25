@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -40,7 +41,7 @@ class SetNewStokController extends Controller
             ['nama' => 'Depo Rawat Jalan', 'kode' => 'Gd-05010101', 'lama' => 'AP0001'],
             ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
         ];
-        $gudBaru = ['05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+        $gudBaru = ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
 
         $mapingDep = ['GU0001', 'GU0002', 'RC0001', 'AP0002', 'AP0005', 'AP0001', 'AP0007'];
 
@@ -497,6 +498,15 @@ class SetNewStokController extends Controller
                 ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                 ->groupBy('mutasi_gudangdepo.kd_obat')
                 ->first();
+            $rusak=BarangRusak::select(
+                'kd_obat',
+                DB::raw('sum(jumlah) as jumlah')
+                )
+                ->whereBetween('tgl_rusak',[$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('kunci','1')
+                    ->groupBy('kd_obat')
+                    ->first();
+
             $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                 ->where('kdruang', $koderuangan)->first();
             $tts = $totalStok->jumlah ?? 0;
@@ -505,8 +515,9 @@ class SetNewStokController extends Controller
             $trm = $penerimaan->jumlah ?? 0;
             $mutma = $mutasiMasuk->jumlah ?? 0;
             $mutkel = $mutasiKeluar->jumlah ?? 0;
+            $rus = $rusak->jumlah ?? 0;
             $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma;
-            $keluar = (float)$mutkel;
+            $keluar = (float)$mutkel + (float)$rus;
             $sisa = (float)$masuk - (float)$keluar;
               
             if ((float)$sisa != (float)$tts) {
@@ -597,6 +608,7 @@ class SetNewStokController extends Controller
                 'trm' => $trm,
                 'mutma' => $mutma,
                 'mutkel' => $mutkel,
+                'rus' => $rus,
                 'stok' => $stok ?? [],
                 'message' => $message
             ];
