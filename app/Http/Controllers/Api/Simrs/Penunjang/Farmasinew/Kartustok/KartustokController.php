@@ -212,6 +212,14 @@ class KartustokController extends Controller
                         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                         
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
+                },
+                'barangrusak'=>function($ru) use($tglAwal,$tglAkhir){
+                    $ru->select(
+                        'kd_obat',
+                        DB::raw('sum(jumlah) as jumlah')
+                    )->whereBetween('tgl_rusak',[$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('kunci','1')
+                    ->groupBy('kd_obat');
                 }
 
             ])
@@ -438,6 +446,16 @@ class KartustokController extends Controller
                         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                         
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
+                },
+                'barangrusak'=>function($ru) use($tglAwal,$tglAkhir){
+                    $ru->select(
+                        'kd_obat',
+                        'jumlah',
+                        'status',
+                        'tgl_rusak',
+                        'created_at',
+                    )->whereBetween('tgl_rusak',[$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('kunci','1');
                 }
 
             ])
