@@ -42,6 +42,10 @@ class PenerimaanHeder extends Model
     {
         return $this->hasMany(BastrinciM::class, 'nopenerimaan', 'nopenerimaan');
     }
+    public function rincianbast()
+    {
+        return $this->hasMany(BastrinciM::class, 'nobast', 'nobast');
+    }
     public function terima()
     {
         return $this->belongsTo(Pegawai::class, 'user', 'kdpegsimrs');
