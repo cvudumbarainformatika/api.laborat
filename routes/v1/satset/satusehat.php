@@ -40,8 +40,9 @@ Route::group([
     Route::get('/listKunjungan', [KunjunganSatsetController::class, 'listKunjungan']);
     Route::post('/getPasienByNikSatset', [KunjunganSatsetController::class, 'getPasienByNikSatset']);
     Route::post('/kirimKunjungan', [KunjunganSatsetController::class, 'kirimKunjungan']);
-    
-    // Maping KFA 
+
+    // Maping KFA
     Route::get('/mapingkfa/master-obat', [MapingKfaController::class, 'getMasterObat']);
-    Route::get('/mapingkfa/get-kfa', [MapingKfaController::class, 'getKfa']);
+    // Route::get('/mapingkfa/get-kfa', [MapingKfaController::class, 'getKfa']); ga jadi dipake
+    Route::post('/simpan-maping-kfa', [MapingKfaController::class, 'simpanMapingKfa']);
 });
