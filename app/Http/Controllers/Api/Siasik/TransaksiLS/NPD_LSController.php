@@ -18,6 +18,7 @@ use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use DateTime;
 
 class NPD_LSController extends Controller
 {
@@ -40,21 +41,37 @@ class NPD_LSController extends Controller
         return new JsonResponse($cari);
     }
 
+    // BELUM DIPAKE
     public function anggaran(){
         $tahun = date('Y');
         $anggaran = PergeseranPaguRinci::where('tgl', $tahun)
         // ->select('mappingpptkkegiatan.kegiatan','mappingpptkkegiatan.kodekegiatan')
         ->where('kodekegiatanblud', request('kodekegiatan'))
+        ->where('pagu', '!=', '0')
         ->select('t_tampung.kodekegiatanblud',
                 't_tampung.notrans',
                 't_tampung.koderek50',
+                't_tampung.koderek108',
+                't_tampung.uraian108',
                 't_tampung.uraian50',
                 't_tampung.usulan',
                 't_tampung.volume',
                 't_tampung.satuan',
                 't_tampung.harga',
                 't_tampung.pagu')
-
+        // ->with('masterobat', function($sel){
+        //     $sel->select('new_masterobat.kode108',
+        //                 'new_masterobat.uraian108',
+        //                 'new_masterobat.kd_obat')
+        //         ->with('penerimaanrinci', function($data){
+        //             $data->select('penerimaan_r.nopenerimaan',
+        //             'penerimaan_r.kdobat',
+        //             'penerimaan_r.harga_netto',
+        //             'penerimaan_r.harga_netto_kecil',
+        //             'penerimaan_r.jml_all_penerimaan',
+        //             'penerimaan_r.subtotal');
+        //         });
+        // })
         // ->with('anggaran', function($pagu) use ($tahun){
         //     $pagu->where('tgl', $tahun)
 
@@ -63,6 +80,13 @@ class NPD_LSController extends Controller
         return new JsonResponse($anggaran);
     }
     public function bastfarmasi(){
+        $format = ('Y-m-d H:i:s');
+        $srt = strtotime($format);
+        // $y=Carbon::createFromFormat('Y-m-d h:i:s', request('tgl'))->format('Y');
+        // $date = $y.'-01-01 00:00:00';
+        $date = date('Y', $srt);
+
+        $tahun = date('Y');
         // $pbf = Mpihakketiga::where('kode', request('kodepenerima'))->get();
         $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
                                             'penerimaan_h.tgl_bast',
@@ -79,19 +103,48 @@ class NPD_LSController extends Controller
             $query->where('nobast', 'LIKE', '%' . request('q') . '%')
             ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
         })
-        ->with('penerimaanrinci', function($rinci) {
-            $rinci->select('penerimaan_r.nopenerimaan',
-                            'penerimaan_r.kdobat',
-                            'penerimaan_r.harga_netto',
-                            'penerimaan_r.harga_netto_kecil',
-                            'penerimaan_r.jml_all_penerimaan',
-                            'penerimaan_r.subtotal')
-                    ->with('masterobat', function ($rekening){
+        ->with('rincianbast', function($rinci) use ($tahun, $date) {
+            $rinci->where('nobast', request('kodebast'))
+                    ->select('bast_r.nobast',
+                            'bast_r.id',
+                            'bast_r.kdobat',
+                            'bast_r.harga_net',
+                            'bast_r.jumlah',
+                            'bast_r.subtotal')
+        // ->with('penerimaanrinci', function($rinci) use ($tahun) {
+        //     $rinci->select('penerimaan_r.nopenerimaan',
+        //                     'penerimaan_r.kdobat',
+        //                     'penerimaan_r.harga_netto',
+        //                     'penerimaan_r.harga_netto_kecil',
+        //                     'penerimaan_r.jml_all_penerimaan',
+        //                     'penerimaan_r.subtotal')
+                    ->with('masterobat', function ($rekening) use ($tahun, $date){
                         $rekening->select('new_masterobat.kd_obat',
                                         'new_masterobat.kode50',
                                         'new_masterobat.uraian50',
                                         'new_masterobat.kode108',
-                                        'new_masterobat.uraian108');
+                                        'new_masterobat.uraian108')
+                            ->with('pagu', function ($pagu) use ($tahun) {
+                            $pagu->where('tgl', $tahun)
+                                ->where('kodekegiatanblud', request('kodekegiatan'))
+                                ->where('pagu', '!=', '0')
+                                ->select('t_tampung.kodekegiatanblud',
+                                        't_tampung.notrans',
+                                        't_tampung.koderek50',
+                                        't_tampung.koderek108',
+                                        't_tampung.uraian50',
+                                        't_tampung.usulan',
+                                        't_tampung.volume',
+                                        't_tampung.satuan',
+                                        't_tampung.harga',
+                                        't_tampung.pagu',
+                                        't_tampung.idpp')
+                                        ->with('realisasi', function ($realisasi) {
+                                            $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                                                'npdls_rinci.nominalpembayaran')
+                                            ->selectRaw('sum(nominalpembayaran) as total_realisasi');
+                                        });
+                            });
                     });
         })
         // ->orderBy('tgl_bast', 'DESC')

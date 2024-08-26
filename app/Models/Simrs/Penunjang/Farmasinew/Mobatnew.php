@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew;
 
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
+use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
@@ -219,5 +221,11 @@ class Mobatnew extends Model
     public function barangrusak(){
         return $this->hasMany(BarangRusak::class,'kd_obat','kd_obat');
     }
-    
+
+    public function pagu(){
+        return $this->hasOne(PergeseranPaguRinci::class, 'koderek108', 'kode108');
+    }
+    public function realisasi(){
+        return $this->hasMany(NpdLS_rinci::class, 'koderek108', 'kode108');
+    }
 }

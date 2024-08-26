@@ -13,5 +13,6 @@
   {"nama":"allsistembayar", "ketId":null, "controller":"SistembayarController", "method":"allsistembayar"},
   {"nama":"master-sistembayar", "ketId":null, "controller":"AuthController", "method":"authuser"},
   {"nama":"kamar", "ketId":null, "controller":"KamarController", "method":"index"},
-  {"nama":"dokter", "ketId":null, "controller":"NakesController", "method":"dokter"}
+  {"nama":"dokter", "ketId":null, "controller":"NakesController", "method":"dokter"},
+  {"nama":"ruanganranap", "ketId":null, "controller":"RuanganController", "method":"listruanganranap"}
 ]
