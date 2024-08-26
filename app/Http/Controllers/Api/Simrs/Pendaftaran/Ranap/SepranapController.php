@@ -561,8 +561,8 @@ class SepranapController extends Controller
     //    return $request->all();
 
         // UPDATE SPRI
-        if ($request->noSuratKontrol === null) { 
-
+        if ($request->noSuratKontrol !== null || $request->noSuratKontrol !== '') {
+            
             $request->validate([
                 'noSuratKontrol' => 'required',
             ]);
