@@ -503,6 +503,7 @@ class SetNewStokController extends Controller
                 DB::raw('sum(jumlah) as jumlah')
                 )
                 ->whereBetween('tgl_rusak',[$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('kd-obat',$kdobat)
                     ->where('kunci','1')
                     ->groupBy('kd_obat')
                     ->first();

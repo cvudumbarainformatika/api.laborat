@@ -14,7 +14,7 @@ class BridgingSatsetHelper
      * wawan 
      */
     public static function root_url(){
-        $url = 'https://api-satusehat-stg.dto.kemkes.go.id';
+        $url = 'https://api-satusehat.kemkes.go.id';
 
         return $url; 
     }

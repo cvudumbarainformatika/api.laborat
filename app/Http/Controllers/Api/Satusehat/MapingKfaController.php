@@ -26,15 +26,22 @@ class MapingKfaController extends Controller
     public function getKfa(){
         $extend='/kfa-v2/products/all';
         $token = AuthSatsetHelper::accessToken();
-        $param='?page='.request('page').'&size='.request('per_page').'&product_type='.request('q');
+        $param='?page='.request('page').'&size='.request('per_page').'&product_type=farmasi'.'keyword='.request('q');
         
         $obat=BridgingSatsetHelper::get_data_kfa($extend,$token,$param) ;
-        // $data=collect($obat)['data'];
-        // $meta=collect($obat)->except('data');
+        $data=$obat['items']['data'];
+        $adaur=(int)$obat['page']<(int)$obat['total']?'ada':null;
+        $meta=[
+            'current_page'=>$obat['page'],
+            'last_page'=>$obat['total'],
+            'total'=>$obat['total'],
+            'total'=>$obat['total'],
+            'next_page_url'=>$adaur,
+        ];
         
         return new JsonResponse([
-            // 'data'=>$data,
-            // 'meta'=>$meta,
+            'data'=>$data,
+            'meta'=>$meta,
             'obat'=>$obat,
             'token'=>$token,
             'req'=>request()->all(),
