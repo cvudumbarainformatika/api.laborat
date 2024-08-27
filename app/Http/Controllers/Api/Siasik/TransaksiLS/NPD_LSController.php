@@ -58,7 +58,8 @@ class NPD_LSController extends Controller
                 't_tampung.volume',
                 't_tampung.satuan',
                 't_tampung.harga',
-                't_tampung.pagu')
+                't_tampung.pagu',
+                't_tampung.idpp')
         // ->with('masterobat', function($sel){
         //     $sel->select('new_masterobat.kode108',
         //                 'new_masterobat.uraian108',
@@ -80,11 +81,11 @@ class NPD_LSController extends Controller
         return new JsonResponse($anggaran);
     }
     public function bastfarmasi(){
-        $format = ('Y-m-d H:i:s');
-        $srt = strtotime($format);
+        // $format = ('Y-m-d H:i:s');
+        // $srt = strtotime($format);
         // $y=Carbon::createFromFormat('Y-m-d h:i:s', request('tgl'))->format('Y');
         // $date = $y.'-01-01 00:00:00';
-        $date = date('Y', $srt);
+        // $date = date('Y', $srt);
 
         $tahun = date('Y');
         // $pbf = Mpihakketiga::where('kode', request('kodepenerima'))->get();
@@ -103,7 +104,7 @@ class NPD_LSController extends Controller
             $query->where('nobast', 'LIKE', '%' . request('q') . '%')
             ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
         })
-        ->with('rincianbast', function($rinci) use ($tahun, $date) {
+        ->with('rincianbast', function($rinci) use ($tahun) {
             $rinci->where('nobast', request('kodebast'))
                     ->select('bast_r.nobast',
                             'bast_r.id',
@@ -118,7 +119,7 @@ class NPD_LSController extends Controller
         //                     'penerimaan_r.harga_netto_kecil',
         //                     'penerimaan_r.jml_all_penerimaan',
         //                     'penerimaan_r.subtotal')
-                    ->with('masterobat', function ($rekening) use ($tahun, $date){
+                    ->with('masterobat', function ($rekening) use ($tahun){
                         $rekening->select('new_masterobat.kd_obat',
                                         'new_masterobat.kode50',
                                         'new_masterobat.uraian50',
@@ -159,8 +160,8 @@ class NPD_LSController extends Controller
         $request->validate([
             'keterangan' => 'required|min:3',
             'pptk' => 'required',
-            'rincianbelanja' => 'required',
-            'itembelanja' => 'required'
+            // 'rincianbelanja' => 'required',
+            // 'itembelanja' => 'required'
         ]);
 
         $time = date('Y-m-d H:i:s');
@@ -206,23 +207,23 @@ class NPD_LSController extends Controller
                         'nonpdls' => $save->nonpdls,
                     // ],
                     // [
-                        'koderek50'=>$rinci->koderek50 ?? '',
-                        'rincianbelanja'=>$rinci->rincianbelanja ?? '',
-                        'koderek108'=>$rinci->koderek108 ?? '',
-                        'uraian108'=>$rinci->uraian108 ?? '',
-                        'itembelanja'=>$rinci->itembelanja ?? '',
-                        'nopenerimaan'=>$rinci->nopenerimaan ?? '',
-                        'idserahterima_rinci'=>$rinci->idserahterima_rinci ?? '',
+                        'koderek50'=>$rinci['koderek50'] ?? '',
+                        'rincianbelanja'=>$rinci['rincianbelanja'] ?? '',
+                        'koderek108'=>$rinci['koderek108'] ?? '',
+                        'uraian108'=>$rinci['uraian108'] ?? '',
+                        'itembelanja'=>$rinci['itembelanja'] ?? '',
+                        'nopenerimaan'=>$rinci['nopenerimaan'] ?? '',
+                        'idserahterima_rinci'=>$rinci['idserahterima_rinci'] ?? '',
                         'tglentry'=>$time ?? '',
                         'userentry'=>$pegawai ?? '',
-                        'volume'=>$rinci->volume ?? '',
-                        'satuan'=>$rinci->satuan ?? '',
-                        'harga'=>$rinci->harga ?? '',
-                        'total'=>$rinci->total ?? '',
-                        'volumels'=>$rinci->volumels ?? '',
-                        'hargals'=>$rinci->hargals ?? '',
-                        'totalls'=>$rinci->totalls ?? '',
-                        'nominalpembayaran'=>$rinci->nominalpembayaran ?? '',
+                        'volume'=>$rinci['volume'] ?? '',
+                        'satuan'=>$rinci['satuan'] ?? '',
+                        'harga'=>$rinci['harga'] ?? '',
+                        'total'=>$rinci['total'] ?? '',
+                        'volumels'=>$rinci['volumels'] ?? '',
+                        'hargals'=>$rinci['hargals'] ?? '',
+                        'totalls'=>$rinci['totalls'] ?? '',
+                        'nominalpembayaran'=>$rinci['nominalpembayaran'] ?? '',
                     ]);
 
                 }
