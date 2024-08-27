@@ -44,5 +44,5 @@ Route::group([
     // Maping KFA
     Route::get('/mapingkfa/master-obat', [MapingKfaController::class, 'getMasterObat']);
     // Route::get('/mapingkfa/get-kfa', [MapingKfaController::class, 'getKfa']); ga jadi dipake
-    Route::post('/simpan-maping-kfa', [MapingKfaController::class, 'simpanMapingKfa']);
+    Route::post('/mapingkfa/simpan-maping-kfa', [MapingKfaController::class, 'simpanMapingKfa']);
 });
