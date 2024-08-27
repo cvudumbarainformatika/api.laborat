@@ -558,11 +558,63 @@ class SepranapController extends Controller
 
     public function create_spri_ranap(Request $request)
     {
-    //    return $request->all();
+    
 
-        // UPDATE SPRI
-        if ($request->noSuratKontrol !== null || $request->noSuratKontrol !== '') {
-            
+        // CREATE SPRI
+        if ($request->noSuratKontrol === null || $request->noSuratKontrol === '') {
+            $payload = [
+                "request" => [
+                    "noKartu" => $request->pasien['noka'] ?? "",
+                    "kodeDokter" => $request->dokter["kodeDokter"] ?? "",
+                    "poliKontrol" => $request->spesialis["kodePoli"] ?? "",
+                    "tglRencanaKontrol" => $request->tglRawatInap ?? "",
+                    "user" => auth()->user()->nama,
+                ],
+            ];
+    
+            $createSpri = BridgingbpjsHelper::post_url(
+                'vclaim',
+                'RencanaKontrol/InsertSPRI',
+                $payload
+            );
+    
+            $tgltobpjshttpres = DateHelper::getDateTime();
+            Bpjs_http_respon::create(
+                [
+                    'method' => 'POST',
+                    'noreg' => $request->pasien['noreg'] === null ? '' : $request->pasien['noreg'],
+                    'request' => $payload,
+                    'respon' => $createSpri,
+                    'url' => '/RencanaKontrol/InsertSPRI',
+                    'tgl' => $tgltobpjshttpres
+                ]
+            );
+    
+    
+            $bpjs = $createSpri['metadata']['code'];
+            if ($bpjs === 200 || $bpjs === '200') {
+                $sprix = $createSpri['response'];
+    
+                BpjsSpri::updateOrCreate(
+                    ['noreg' => $request->pasien['noreg'], 'noSuratKontrol'=> $sprix->noSPRI],
+                    [
+                        'norm' => $request->pasien['norm'],
+                        'kodeDokter' => $request->dokter['kodeDokter'],
+                        'poliKontrol' => $request->spesialis['kodePoli'],
+                        'tglRencanaKontrol' => $request->tglRawatInap,
+                        'namaDokter' => $request->dokter['namaDokter'],
+                        'noKartu' => $request->pasien['noka'],
+                        'nama' => $request->pasien['nama'],
+                        'kelamin' => $request->pasien['kelamin'],
+                        'tglLahir' => $request->pasien['tgllahir'],
+                        'user_id' => auth()->user()->pegawai_id,
+                    ]
+                );
+            }
+           return $createSpri;
+
+        } else { // UPDATE SPRI
+
             $request->validate([
                 'noSuratKontrol' => 'required',
             ]);
@@ -616,65 +668,7 @@ class SepranapController extends Controller
                 );
             }
            return $updateSpri;
-
-        
-
-        // CREATE SPRI
-        } else {
-            $payload = [
-                "request" => [
-                    "noKartu" => $request->pasien['noka'] ?? "",
-                    "kodeDokter" => $request->dokter["kodeDokter"] ?? "",
-                    "poliKontrol" => $request->spesialis["kodePoli"] ?? "",
-                    "tglRencanaKontrol" => $request->tglRawatInap ?? "",
-                    "user" => auth()->user()->nama,
-                ],
-            ];
-    
-            // return $payload;
-    
-            $createSpri = BridgingbpjsHelper::post_url(
-                'vclaim',
-                'RencanaKontrol/InsertSPRI',
-                $payload
-            );
-    
-            $tgltobpjshttpres = DateHelper::getDateTime();
-            Bpjs_http_respon::create(
-                [
-                    'method' => 'POST',
-                    'noreg' => $request->pasien['noreg'] === null ? '' : $request->pasien['noreg'],
-                    'request' => $payload,
-                    'respon' => $createSpri,
-                    'url' => '/RencanaKontrol/InsertSPRI',
-                    'tgl' => $tgltobpjshttpres
-                ]
-            );
-    
-    
-            $bpjs = $createSpri['metadata']['code'];
-            if ($bpjs === 200 || $bpjs === '200') {
-                $sprix = $createSpri['response'];
-    
-                BpjsSpri::updateOrCreate(
-                    ['noreg' => $request->pasien['noreg'], 'noSuratKontrol'=> $sprix->noSPRI],
-                    [
-                        'norm' => $request->pasien['norm'],
-                        'kodeDokter' => $request->dokter['kodeDokter'],
-                        'poliKontrol' => $request->spesialis['kodePoli'],
-                        'tglRencanaKontrol' => $request->tglRawatInap,
-                        'namaDokter' => $request->dokter['namaDokter'],
-                        'noKartu' => $request->pasien['noka'],
-                        'nama' => $request->pasien['nama'],
-                        'kelamin' => $request->pasien['kelamin'],
-                        'tglLahir' => $request->pasien['tgllahir'],
-                        'user_id' => auth()->user()->pegawai_id,
-                    ]
-                );
-            }
-           return $createSpri;
         }
-
         
     }
 
