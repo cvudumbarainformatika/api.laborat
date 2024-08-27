@@ -40,10 +40,20 @@ class MappingController extends Controller
         ->selectSub('SELECT "rs30"', 'table')
         ->leftjoin('prosedur_mapping', 'prosedur_mapping.kdMaster', '=', 'rs30.rs1')
         ->with(['snowmed','icd:kd_prosedur,prosedur'])
+        ->when(request('q'), function($query) {
+          $query->where('rs1', 'like', '%' . request('q') . '%')
+            ->orWhere('rs2', 'like', '%' . request('q') . '%');
+        })
+        ->when(request('kodepoli'), function($query) {
+          $query->where('rs4', 'like', '%' . request('kodepoli') . '%');
+        })
+        ->when(request('koderuangan'), function($query) {
+          $query->where('rs4', 'like', '%' . request('koderuangan') . '%');
+        })
       // ->union($rad)
       // ->union($lab)
       // ->union($oprasi)
-          ->paginate(20);
+          ->paginate(request('per_page'));
 
       return new JsonResponse($rs30, 200);
     }
