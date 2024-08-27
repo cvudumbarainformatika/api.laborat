@@ -11,7 +11,7 @@ class MapingProcedure extends Model
     use HasFactory;
     protected $table = 'prosedur_mapping';
     protected $guarded = ['id'];
-    public $timestamps = false;
+    // public $timestamps = false;
 
     public function prosedur()
     {
