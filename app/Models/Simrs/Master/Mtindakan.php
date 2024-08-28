@@ -18,4 +18,14 @@ class Mtindakan extends Model
     {
         return $this->hasOne(MapingProcedure::class, 'kdMaster', 'rs1');
     }
+
+    public function snowmed()
+    {
+       return $this->hasMany(MappingSnowmed::class, 'kdMaster', 'kode');
+    }
+
+    public function icd()
+    {
+       return $this->hasOne(Icd9prosedure::class, 'kd_prosedur', 'icd9');
+    }
 }
