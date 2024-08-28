@@ -65,7 +65,7 @@ class BastController extends Controller
                                 ->on('retur_penyedia_r.kd_obat', '=', 'penerimaan_r.kdobat');
                         })
                         ->with('masterobat:kd_obat,nama_obat,satuan_b')
-                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan','penerimaan_r.no_batch');
+                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.no_batch', 'penerimaan_r.tgl_exp');
                 },
                 'faktur'
             ])
@@ -98,7 +98,7 @@ class BastController extends Controller
                         'nobast' => $nobast,
                         'tgl_bast' => $request->tgl_bast,
                         'jumlah_bast' => $request->jumlah_bast,
-                        'jumlah_bastx' => $request->jumlah_bastx??$request->jumlah_bast,
+                        'jumlah_bastx' => $request->jumlah_bastx ?? $request->jumlah_bast,
                         'nilai_retur' => $penerimaan['subtotal_retur'] ?? 0,
                         'user_bast' => $user['kodesimrs'],
                     ]);
@@ -163,15 +163,17 @@ class BastController extends Controller
     {
         $res1 = PenerimaanHeder::select('nobast')
             ->where('nobast', '<>', '')
-            ->when(request('q'),function($q){
-                $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
-                $q->when(count($pihak)>0, function($x) use($pihak){
-                    $x->whereIn('kdpbf', $pihak);
-                },
-                function($r){
-                    $r->where('nobast','LIKE','%'.request('q').'%');
-                });
-
+            ->when(request('q'), function ($q) {
+                $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
+                $q->when(
+                    count($pihak) > 0,
+                    function ($x) use ($pihak) {
+                        $x->whereIn('kdpbf', $pihak);
+                    },
+                    function ($r) {
+                        $r->where('nobast', 'LIKE', '%' . request('q') . '%');
+                    }
+                );
             })
             // ->orderBy('nobast', 'DESC')
             // ->orderBy('tgl_bast', 'DESC')
@@ -212,7 +214,7 @@ class BastController extends Controller
 
             return [
                 'no_bast' => $kwitansi,
-                'totalSemua' =>  $items[0]->jumlah_bastx??$items[0]->jumlah_bast,
+                'totalSemua' =>  $items[0]->jumlah_bastx ?? $items[0]->jumlah_bast,
                 'tanggal' => $items[0]->tgl_bast,
                 'nomor' => $items[0]->nopemesanan,
                 'terima' => $items[0]->terima,
