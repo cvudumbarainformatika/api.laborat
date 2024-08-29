@@ -125,7 +125,7 @@ class PersiapanOperasiController extends Controller
     {
         // penccarian termasuk tiperesep
         $groupsistembayar = request('groups');
-        if ($groupsistembayar === '1'|| $groupsistembayar === 1) {
+        if ($groupsistembayar === '1' || $groupsistembayar === 1) {
             $sistembayar = ['SEMUA', 'BPJS'];
         } else {
             $sistembayar = ['SEMUA', 'UMUM'];
@@ -231,7 +231,7 @@ class PersiapanOperasiController extends Controller
         return new JsonResponse(
             [
                 'dataobat' => $wew,
-                'siba'=> $sistembayar
+                'siba' => $sistembayar
             ]
         );
     }
@@ -275,7 +275,7 @@ class PersiapanOperasiController extends Controller
                             ->whereIn('persiapan_operasis.flag', ['', '1'])
                             ->groupBy('persiapan_operasi_rincis.kd_obat');
                     },
-                    'permintaanobatrinci' => function ($permintaanobatrinci) use($request) {
+                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
                         $permintaanobatrinci->select(
                             'permintaan_r.no_permintaan',
                             'permintaan_r.kdobat',
@@ -300,17 +300,17 @@ class PersiapanOperasiController extends Controller
             ->where('stokreal.jumlah', '>', 0)
             ->where('stokreal.kdobat', $request->kodeobat)
             ->first();
-            
+
         $total = $cariobat->total ?? 0;
-        $jumlahper=$cariobat->persiapanrinci[0]->jumlah ?? 0;
-        $permintaanobatrinci=$cariobat->permintaanobatrinci[0]->allpermintaan ?? 0;
-        $alokasi=(float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
-        
-        if($request->jumlah_minta > $alokasi){
+        $jumlahper = $cariobat->persiapanrinci[0]->jumlah ?? 0;
+        $permintaanobatrinci = $cariobat->permintaanobatrinci[0]->allpermintaan ?? 0;
+        $alokasi = (float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
+
+        if ($request->jumlah_minta > $alokasi) {
             return new JsonResponse([
-                'message'=>'Maaf Stok Alokasi tidak mencukupi, sisa alokasi : '.$alokasi,
-                'cari'=>$cariobat
-            ],410); 
+                'message' => 'Maaf Stok Alokasi tidak mencukupi, sisa alokasi : ' . $alokasi,
+                'cari' => $cariobat
+            ], 410);
         }
         // return new JsonResponse([
         //     'cariobat' => $cariobat,
@@ -377,7 +377,7 @@ class PersiapanOperasiController extends Controller
         //     'num' => $num
         // ], 410);
         // cek lagi alokasi
-        
+
         $head = PersiapanOperasi::updateOrCreate(
             [
                 'noreg' => $request->noreg,
@@ -480,6 +480,24 @@ class PersiapanOperasiController extends Controller
                 }
             }
         }
+        $kode = collect($request->rinci)->pluck('kd_obat');
+        // $awaStok = Stokreal::whereIn('kdobat', $kode)
+        //     ->where('kdruang', 'Gd-04010103')
+        //     ->where('jumlah', '>', 0)
+        //     ->orderBy('tglExp', 'ASC')
+        //     ->get();
+        $allStok = Stokreal::whereIn('kdobat', $kode)
+            ->where('kdruang', 'Gd-04010103')
+            ->where('jumlah', '>', 0)
+            ->orderBy('tglExp', 'ASC')
+            ->get();
+        $anu = $allStok->toArray();
+        $col = collect($anu);
+        // return new JsonResponse([
+        //     'message' => 'test',
+        //     'kode' => $kode,
+        //     'allStok' => $allStok,
+        // ], 410);
         try {
             DB::connection('farmasi')->beginTransaction();
             $rinci = $request->rinci;
@@ -504,40 +522,72 @@ class PersiapanOperasiController extends Controller
 
                     // pastikan jumlah distribusi lebih dari 0
                     if ($distribusi > 0) {
-                        $stok = Stokreal::where('kdobat', $key['kd_obat'])
-                            ->where('kdruang', 'Gd-04010103')
-                            ->where('jumlah', '>', 0)
-                            ->orderBy('tglExp', 'ASC')
-                            ->get();
-                        $index = 0;
+                        // $stok = Stokreal::where('kdobat', $key['kd_obat'])
+                        //     ->where('kdruang', 'Gd-04010103')
+                        //     ->where('jumlah', '>', 0)
+                        //     ->orderBy('tglExp', 'ASC')
+                        //     ->get();
+                        // $stok = collect($allStok)->where('kdobat', $key['kd_obat'])->toArray();
+
+                        // return new JsonResponse([
+                        //     'message' => 'test',
+                        //     'kode' => $key['kd_obat'],
+                        //     'stok' => $stok,
+                        //     'allStok' => $allStok,
+                        // ], 410);
+
+                        // $index = 0;
 
                         while ($distribusi > 0) {
-                            $ada = (float)$stok[$index]->jumlah;
+                            $stok = $col->where('kdobat', $key['kd_obat'])->first();
+                            $ids =  array_column($col->toArray(), 'id');
+                            $ind = array_search($stok['id'], $ids);
+                            // return new JsonResponse([
+                            //     'message' => 'test',
+                            //     'ids' => $ids,
+                            //     'stok' => $stok,
+                            //     'ind' => $ind,
+                            // ], 410);
+                            $ada = (float)$stok['jumlah'];
                             if ($ada < $distribusi) {
                                 $temp = [
                                     'nopermintaan' => $key['nopermintaan'],
                                     'kd_obat' => $key['kd_obat'],
-                                    'nopenerimaan' => $stok[$index]->nopenerimaan,
-                                    'nodistribusi' => $stok[$index]->nodistribusi,
+                                    'nopenerimaan' => $stok['nopenerimaan'],
+                                    'nodistribusi' => $stok['nodistribusi'],
                                     'jumlah' => $ada,
                                     'created_at' => date('Y-m-d H:i:s'),
                                     'updated_at' => date('Y-m-d H:i:s'),
                                 ];
-                                $data[] = $temp;
+                                $adaSt = collect($data)->where('nopermintaan', $key['nopermintaan'])
+                                    ->where('kd_obat', $key['kd_obat'])
+                                    ->where('nopenerimaan', $stok['nopenerimaan'],)
+                                    ->where('nodistribusi', $stok['nodistribusi'])
+                                    ->where('jumlah', $ada,)
+                                    ->first();
+                                if (!$adaSt) $data[] = $temp;
                                 $sisa = $distribusi - $ada;
-                                $index += 1;
+                                // $index += 1;
+                                $col->splice($ind, 1);
                                 $distribusi = $sisa;
                             } else {
                                 $temp = [
                                     'nopermintaan' => $key['nopermintaan'],
                                     'kd_obat' => $key['kd_obat'],
-                                    'nopenerimaan' => $stok[$index]->nopenerimaan,
-                                    'nodistribusi' => $stok[$index]->nodistribusi,
+                                    'nopenerimaan' => $stok['nopenerimaan'],
+                                    'nodistribusi' => $stok['nodistribusi'],
                                     'jumlah' => $distribusi,
                                     'created_at' => date('Y-m-d H:i:s'),
                                     'updated_at' => date('Y-m-d H:i:s'),
                                 ];
-                                $data[] = $temp;
+
+                                $adaSt = collect($data)->where('nopermintaan', $key['nopermintaan'])
+                                    ->where('kd_obat', $key['kd_obat'])
+                                    ->where('nopenerimaan', $stok['nopenerimaan'],)
+                                    ->where('nodistribusi', $stok['nodistribusi'])
+                                    ->where('jumlah', $distribusi,)
+                                    ->first();
+                                if (!$adaSt) $data[] = $temp;
                                 $distribusi = 0;
                             }
                         }
@@ -545,6 +595,15 @@ class PersiapanOperasiController extends Controller
                 }
             }
 
+            // return new JsonResponse([
+            //     'message' => 'test hasil',
+            //     // 'kode' => $key['kd_obat'],
+            //     'ada' => $adaSt ?? false,
+            //     'data' => $data,
+            //     'allStok' => $allStok,
+            //     'anu' => $anu,
+            //     'col' => $col,
+            // ], 410);
             // update header
             $head = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
             if (!$head) {
@@ -632,7 +691,7 @@ class PersiapanOperasiController extends Controller
                             ->whereIn('persiapan_operasis.flag', ['', '1'])
                             ->groupBy('persiapan_operasi_rincis.kd_obat');
                     },
-                    'permintaanobatrinci' => function ($permintaanobatrinci) use($request) {
+                    'permintaanobatrinci' => function ($permintaanobatrinci) use ($request) {
                         $permintaanobatrinci->select(
                             'permintaan_r.no_permintaan',
                             'permintaan_r.kdobat',
@@ -657,17 +716,17 @@ class PersiapanOperasiController extends Controller
             ->where('stokreal.jumlah', '>', 0)
             ->where('stokreal.kdobat', $request->kodeobat)
             ->first();
-            
-        $total = $cariobat->total ?? 0;
-        $jumlahper=$cariobat->persiapanrinci[0]->jumlah ?? 0;
-        $permintaanobatrinci=$cariobat->permintaanobatrinci[0]->allpermintaan ?? 0;
-        $alokasi=(float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
 
-        if($request->jumlah_distribusi > $alokasi){
+        $total = $cariobat->total ?? 0;
+        $jumlahper = $cariobat->persiapanrinci[0]->jumlah ?? 0;
+        $permintaanobatrinci = $cariobat->permintaanobatrinci[0]->allpermintaan ?? 0;
+        $alokasi = (float)$total -  (float)$jumlahper - (float)$permintaanobatrinci;
+
+        if ($request->jumlah_distribusi > $alokasi) {
             return new JsonResponse([
-                'message'=>'Maaf Stok Alokasi tidak mencukupi, sisa alokasi : '.$alokasi,
-                'cari'=>$cariobat
-            ],410); 
+                'message' => 'Maaf Stok Alokasi tidak mencukupi, sisa alokasi : ' . $alokasi,
+                'cari' => $cariobat
+            ], 410);
         }
         // cek stok
         $stok = Stokreal::selectRaw('sum(jumlah) as total')
@@ -686,18 +745,16 @@ class PersiapanOperasiController extends Controller
         }
         if ((float)$stok->total < (float)$request->jumlah_distribusi) {
             $obat = Mobatnew::select('nama_obat', 'satuan_k')->where('kd_obat', $request->kodeobat)->first();
-            if($obat){
+            if ($obat) {
                 return new JsonResponse([
                     'message' => 'stok ' . $obat->nama_obat ?? 'obat tidak ditemukan' . ' tidak mencukupi, stok tersisa ' . $stok->total . ' ' . $obat->satuan_k . ' silahkan kurangi jumlah distribusi',
                     'request' => $request->all(),
                 ], 410);
-                
-            }else{
+            } else {
                 return new JsonResponse([
                     'message' => 'stok obat tidak ditemukan , stok tersisa ' . $stok->total . ' silahkan kurangi jumlah distribusi',
                     'request' => $request->all(),
                 ], 410);
-
             }
         }
         $ada = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('kd_obat', $request->kodeobat)->first();
