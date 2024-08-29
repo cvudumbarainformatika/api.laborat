@@ -3,7 +3,9 @@
 namespace App\Models\Simrs\Tindakan;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Ews\MapingProcedure;
+use App\Models\Simrs\Master\MappingSnowmed;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Mtindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +35,10 @@ class Tindakan extends Model
     {
         return $this->hasOne(MapingProcedure::class, 'kdMaster', 'rs4');
     }
+    public function maapingsnowmed()
+    {
+        return $this->hasOne(MappingSnowmed::class, 'kdMaster', 'rs4');
+    }
 
     public function mastertindakan()
     {
@@ -54,6 +60,10 @@ class Tindakan extends Model
     public function pegawai()
     {
         return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
+    }
+    public function petugas()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'rs9');
     }
     public function pelaksanalamasimrs()
     {

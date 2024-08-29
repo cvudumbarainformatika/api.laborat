@@ -158,6 +158,22 @@ class PostKunjunganRajalHelper
                   'operasi',
               )->orderBy('id', 'DESC');
             },
+            'tindakan' => function ($t) {
+                $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+                $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                    ->with([
+                    'maapingprocedure'=> function($mp){
+                        $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+                        ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                        ;
+                    },
+                    // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+                    'maapingsnowmed:kdMaster,kdSnowmed,display',
+                    'petugas:nama,kdpegsimrs,satset_uuid'
+                    ])
+                ->groupBy('rs73.rs4')
+                ->orderBy('id', 'DESC');
+            },
           ])
 
 
@@ -408,6 +424,7 @@ class PostKunjunganRajalHelper
 
         $observation = self::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
 
         $body =
             [
@@ -517,12 +534,14 @@ class PostKunjunganRajalHelper
 
                     // CARE PLAN
                     $carePlan
+
+                    // PROCEDURE PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
                 ]
             ];
 
 
 
-        //  CONDITION
+        //  PUSH CONDITION
         foreach ($request->diagnosa as $key => $value) {
             $cond =
                 [
@@ -577,6 +596,10 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $cond);
         }
 
+        // PUSH PROCEDURE
+        for ($i=0; $i < count($procedure) ; $i++) { 
+            array_push($body['entry'], $procedure[$i]);
+        }
 
 
         // return $body;
@@ -1102,7 +1125,7 @@ class PostKunjunganRajalHelper
     {
 
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
-        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(30)->toIso8601String();
+        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
         $carePlan = [
             "fullUrl" => "urn:uuid:".self::generateUuid(),
             "resource" => [
@@ -1137,6 +1160,107 @@ class PostKunjunganRajalHelper
         ];
 
         return $carePlan;
+    }
+
+    static function procedure($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        // $data = $request;
+        $adaTindakan = [];
+        // foreach ($data as $key => $value) {
+
+            // $adaTindakan[] = $value->tindakan;
+            $tindakan = $request->tindakan;
+            if (count($tindakan) > 0) {
+            foreach ($tindakan as $sub => $isi) {
+                if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
+
+                // setlocale(LC_ALL, 'IND');
+                $dt = Carbon::parse($isi->rs3)->locale('id');
+                $dt->settings(['formatFunction' => 'translatedFormat']);
+                $waktuPerform = $dt->format('l, j F Y');
+                $procedure = 
+                [
+                    "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
+                    "resource" => [
+                        "resourceType" => "Procedure",
+                        "status" => "completed",
+                        "category" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
+                                    "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                ],
+                            ],
+                            "text" => $isi->maapingsnowmed['display'] ?? '-'
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+                                    "code" => $isi->maapingprocedure['icd9'] ?? '-',
+                                    "display" => $isi->maapingprocedure['prosedur'] ?? '-',
+                                ],
+                            ],
+                        ],
+                        "subject" => [
+                            "reference" => "Patient/$pasien_uuid",
+                            "display" => "",
+                        ],
+                        "encounter" => [
+                            "reference" => "urn:uuid:$encounter",
+                            "display" => $isi->keterangan." pada ".$waktuPerform
+                        ],
+                        "performedPeriod" => [
+                            "start" => Carbon::parse($isi->rs3)->toIso8601String(),
+                            "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
+                        ],
+                        "performer" => [
+                            [
+                                "actor" => [
+                                    "reference" => "Practitioner/$isi->petugas['satset_uuid']",
+                                    "display" => $isi->petugas['nama'],
+                                ],
+                            ],
+                        ],
+                        // "reasonCode" => [
+                        //     [
+                        //         "coding" => [
+                        //             [
+                        //                 "system" => "http://hl7.org/fhir/sid/icd-10",
+                        //                 "code" => "A15.0",
+                        //                 "display" =>
+                        //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+                        //             ],
+                        //         ],
+                        //     ],
+                        // ],
+                        // "bodySite" => [
+                        //     [
+                        //         "coding" => [
+                        //             [
+                        //                 "system" => "http://snomed.info/sct",
+                        //                 "code" => "74101002",
+                        //                 "display" => "Both lungs",
+                        //             ],
+                        //         ],
+                        //     ],
+                        // ],
+                        // "note" => [
+                        //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
+                        // ],
+                    ],
+                    "request" => ["method" => "POST", "url" => "Procedure"],
+                ];
+                // $adaTindakan[] = $isi;
+                $adaTindakan[] = $procedure;
+                }
+            }
+            // }
+            
+        }
+
+        return $adaTindakan;
     }
 
 
