@@ -43,6 +43,10 @@ class Tindakan extends Model
     {
         return $this->hasOne(Mpoli::class, 'rs1', 'rs22');
     }
+    public function sambungan()
+    {
+        return $this->hasOne(TindakanSambung::class, 'rs73_id', 'id');
+    }
     public function gambardokumens()
     {
         return $this->HasMany(Gbrdokumentindakan::class, 'rs73_id', 'id');

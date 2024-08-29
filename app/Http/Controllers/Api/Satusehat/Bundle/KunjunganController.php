@@ -35,7 +35,8 @@ class KunjunganController extends Controller
             //   // sleep(5);//menunggu 10 detik
             // }
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
-            return PostKunjunganRajalHelper::cekKunjungan();
+            // return PostKunjunganRajalHelper::cekKunjungan();
+            return self::cekKunjunganRajal();
         }
 
         if ($jenis_kunjungan === 'ranap') {
@@ -70,21 +71,33 @@ class KunjunganController extends Controller
 
 
     // KUNJUNGAN RAJAL ==========================================================================================================
-    public static function cekKunjunganRajal($req)
+    public static function cekKunjunganRajal()
     {
       $tgl = Carbon::now()->subDay()->toDateString();
       // $tgl = Carbon::now()->subDays(1)->toDateString();
-      $data = KunjunganPoli::select('rs1 as noreg')
+      $bukanPoli = ['POL014','PEN005','PEN004'];
+      $data = KunjunganPoli::select('rs1 as noreg','rs1')
+        ->with([
+          'tindakan' => function ($t) {
+                    $t->select('rs1','rs2','rs4','rs8','rs9');
+                    $t->with('mastertindakan:rs1,rs2', 'mastertindakan.snowmedx:kdMaster,kdSnowmed,display', 'pegawai:nama,kdpegsimrs,satset_uuid')
+                        ->orderBy('id', 'DESC');
+                },
+        ])
         ->where('rs3', 'LIKE', '%' . $tgl . '%')
-        ->where('rs8', '!=', 'POL014')
-        ->where('rs19', '=', '1') // kunjungan selesai
+        ->whereNotIn('rs17.rs8', $bukanPoli)
+        ->where('rs17.rs19', '=', '1') // kunjungan selesai
         ->orderBy('rs3', 'desc')
+      ->limit(50)
       ->get();
-      $arr = collect($data)->map(function ($x) {
-        return $x->noreg;
-      });
 
-      return $arr->toArray();
+
+      return $data;
+      // $arr = collect($data)->map(function ($x) {
+      //   return $x->noreg;
+      // });
+
+      // return $arr->toArray();
     }
 
     public static function rajal($noreg)

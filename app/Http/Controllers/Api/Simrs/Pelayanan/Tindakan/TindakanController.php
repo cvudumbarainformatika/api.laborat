@@ -9,6 +9,7 @@ use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
 use App\Models\Simrs\Tindakan\Gbrdokumentindakan;
 use App\Models\Simrs\Tindakan\Tindakan;
+use App\Models\Simrs\Tindakan\TindakanSambung;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +79,13 @@ class TindakanController extends Controller
                 'rs24' => $request->kdsistembayar,
             ]
         );
+
+        TindakanSambung::updateOrCreate(
+            ['nota'=> $request->nota ?? $notatindakan, 'noreg'=> $request->noreg, 'kd_tindakan' => $request->kdtindakan],
+            ['ket' => $request->keterangan]
+        );
+
+
         if (!$simpantindakan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
