@@ -819,7 +819,14 @@ class PersiapanOperasiController extends Controller
                             'created_at' => date('Y-m-d H:i:s'),
                             'updated_at' => date('Y-m-d H:i:s'),
                         ];
-                        $dist[] = $temp;
+                        $adaSt = collect($data)->where('nopermintaan', $request->nopermintaan)
+                            ->where('kd_obat', $request->kodeobat)
+                            ->where('nopenerimaan', $stok['nopenerimaan'],)
+                            ->where('nodistribusi', $stok['nodistribusi'])
+                            ->where('jumlah', $ada,)
+                            ->first();
+                        if (!$adaSt) $data[] = $temp;
+                        // $dist[] = $temp;
                         $sisa = $distribusi - $ada;
                         $index += 1;
                         $distribusi = $sisa;
@@ -833,7 +840,14 @@ class PersiapanOperasiController extends Controller
                             'created_at' => date('Y-m-d H:i:s'),
                             'updated_at' => date('Y-m-d H:i:s'),
                         ];
-                        $dist[] = $temp;
+                        $adaSt = collect($data)->where('nopermintaan', $request->nopermintaan)
+                            ->where('kd_obat', $request->kodeobat)
+                            ->where('nopenerimaan', $stok['nopenerimaan'],)
+                            ->where('nodistribusi', $stok['nodistribusi'])
+                            ->where('jumlah', $distribusi,)
+                            ->first();
+                        if (!$adaSt) $data[] = $temp;
+                        // $dist[] = $temp;
                         $distribusi = 0;
                     }
                 }
