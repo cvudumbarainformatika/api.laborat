@@ -12,26 +12,15 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class PostKunjunganRajalHelper
+class CobaPostKunjunganRajalHelper
 {
 
-    public static function cekKunjungan()
+    public static function cekKunjungan($noreg)
     {
-      // $ygTerkirim =0;
-      // $arrayKunjungan = self::cekKunjunganRajal();
-      // return $arrayKunjungan;
-      // return count($arrayKunjungan);
-      // return self::rajal($arrayKunjungan[0]);
-      // for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
-      //   self::rajal($arrayKunjungan[$i]);
-      //   $ygTerkirim = $i+1;
-      //   // break;
-      //   // sleep(5);//menunggu 10 detik
-      // }
-      // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-      $tgl = Carbon::now()->subDay()->toDateString();
-      return self::rajal($tgl);
+      // $tgl = Carbon::now()->subDay()->toDateString();
+      
+      return self::rajal($noreg);
     }
 
     public static function cekKunjunganRajal()
@@ -60,7 +49,7 @@ class PostKunjunganRajalHelper
       return $data;
     }
 
-    public static function rajal($tgl)
+    public static function rajal($noreg)
     {
       $bukanPoli = ['POL014','PEN005','PEN004'];
 
@@ -93,10 +82,10 @@ class PostKunjunganRajalHelper
         // ->leftjoin('satsets', 'satsets.uuid', '=', 'rs17.rs1') //satset
         // ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
 
-        // ->where('rs17.rs1', $noreg)
+        ->where('rs17.rs1', $noreg)
         ->whereNotIn('rs17.rs8', $bukanPoli)
         ->where('rs17.rs19', '=', '1') // kunjungan selesai
-        ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+        // ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
         
         // ->whereBetween('rs17.rs3', [$tgl, $tglx])
         // ->where('rs17.rs8', $user->kdruangansim ?? '')
@@ -177,8 +166,8 @@ class PostKunjunganRajalHelper
           ])
 
 
-          ->doesntHave('satset')
-          ->doesntHave('satset_error')
+          // ->doesntHave('satset')
+          // ->doesntHave('satset_error')
 
       //   ->with([
       //     'anamnesis',
@@ -1205,7 +1194,7 @@ class PostKunjunganRajalHelper
                         ],
                         "subject" => [
                             "reference" => "Patient/$pasien_uuid",
-                            "display" => "",
+                            "display" => "$request->nama",
                         ],
                         "encounter" => [
                             "reference" => "urn:uuid:$encounter",

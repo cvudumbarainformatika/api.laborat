@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Satusehat\Bundle;
 use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Helpers\PostKunjunganHelper;
+use App\Helpers\Satsets\CobaPostKunjunganRajalHelper;
 use App\Helpers\Satsets\PostKunjunganRajalHelper;
 use App\Helpers\Satsets\PostKunjunganRanapHelper;
 use App\Http\Controllers\Controller;
@@ -35,7 +36,8 @@ class KunjunganController extends Controller
             //   // sleep(5);//menunggu 10 detik
             // }
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
-            return PostKunjunganRajalHelper::cekKunjungan();
+            return CobaPostKunjunganRajalHelper::cekKunjungan('69689/08/2024/J');
+            // return self::cekKunjunganRajal();
         }
 
         if ($jenis_kunjungan === 'ranap') {
@@ -70,21 +72,219 @@ class KunjunganController extends Controller
 
 
     // KUNJUNGAN RAJAL ==========================================================================================================
-    public static function cekKunjunganRajal($req)
+    public static function cekKunjunganRajal()
     {
-      $tgl = Carbon::now()->subDay()->toDateString();
+      $tgl = Carbon::now()->subDays(3)->toDateString();
       // $tgl = Carbon::now()->subDays(1)->toDateString();
-      $data = KunjunganPoli::select('rs1 as noreg')
+      $bukanPoli = ['POL014','PEN005','PEN004'];
+      $data = KunjunganPoli::select('rs1 as noreg','rs1')
+        ->with([
+          'tindakan' => function ($t) {
+                    $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                      ->with([
+                        'maapingprocedure'=> function($mp){
+                          $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+                            ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                          ;
+                        },
+                      // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+                      'maapingsnowmed:kdMaster,kdSnowmed,display',
+                      'petugas:nama,kdpegsimrs,satset_uuid'
+                      ])
+                      ->groupBy('rs73.rs4')
+                      ->orderBy('id', 'DESC');
+                },
+        ])
         ->where('rs3', 'LIKE', '%' . $tgl . '%')
-        ->where('rs8', '!=', 'POL014')
-        ->where('rs19', '=', '1') // kunjungan selesai
+        ->whereNotIn('rs17.rs8', $bukanPoli)
+        ->where('rs17.rs19', '=', '1') // kunjungan selesai
         ->orderBy('rs3', 'desc')
+      ->limit(50)
       ->get();
-      $arr = collect($data)->map(function ($x) {
-        return $x->noreg;
-      });
 
-      return $arr->toArray();
+
+      // $arr = collect($data)->map(function ($x) {
+      //   return $x->noreg;
+      // });
+
+      // return $arr->toArray();
+
+
+      return $data;
+      
+      // $adaTindakan = [];
+      // foreach ($data as $key => $value) {
+
+      //   // $adaTindakan[] = $value->tindakan;
+      //   $tindakan = $value->tindakan;
+      //   if (count($tindakan) > 0) {
+      //     foreach ($tindakan as $sub => $isi) {
+      //       if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
+
+      //         // setlocale(LC_ALL, 'IND');
+      //         $dt = Carbon::parse($isi->rs3)->locale('id');
+      //         $dt->settings(['formatFunction' => 'translatedFormat']);
+      //         $waktuPerform = $dt->format('l, j F Y');
+      //         $procedure = 
+      //         [
+      //           "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
+      //           "resource" => [
+      //               "resourceType" => "Procedure",
+      //               "status" => "completed",
+      //               "category" => [
+      //                   "coding" => [
+      //                       [
+      //                           "system" => "http://snomed.info/sct",
+      //                           "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
+      //                           "display" => $isi->maapingsnowmed['display'] ?? '-',
+      //                       ],
+      //                   ],
+      //                   "text" => $isi->maapingsnowmed['display'] ?? '-'
+      //               ],
+      //               "code" => [
+      //                   "coding" => [
+      //                       [
+      //                           "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+      //                           "code" => $isi->maapingprocedure['icd9'] ?? '-',
+      //                           "display" => $isi->maapingprocedure['prosedur'] ?? '-',
+      //                       ],
+      //                   ],
+      //               ],
+      //               "subject" => [
+      //                   "reference" => "Patient/{{Patient_ID}}",
+      //                   "display" => "",
+      //               ],
+      //               "encounter" => [
+      //                   "reference" => "urn:uuid:{{Encounter_id}}",
+      //                   "display" => $isi->keterangan." pada ".$waktuPerform
+      //               ],
+      //               "performedPeriod" => [
+      //                   "start" => Carbon::parse($isi->rs3)->toIso8601String(),
+      //                   "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
+      //               ],
+      //               "performer" => [
+      //                   [
+      //                       "actor" => [
+      //                           "reference" => "Practitioner/{{Practitioner_ID}}",
+      //                           "display" => "",
+      //                       ],
+      //                   ],
+      //               ],
+      //               // "reasonCode" => [
+      //               //     [
+      //               //         "coding" => [
+      //               //             [
+      //               //                 "system" => "http://hl7.org/fhir/sid/icd-10",
+      //               //                 "code" => "A15.0",
+      //               //                 "display" =>
+      //               //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+      //               //             ],
+      //               //         ],
+      //               //     ],
+      //               // ],
+      //               // "bodySite" => [
+      //               //     [
+      //               //         "coding" => [
+      //               //             [
+      //               //                 "system" => "http://snomed.info/sct",
+      //               //                 "code" => "74101002",
+      //               //                 "display" => "Both lungs",
+      //               //             ],
+      //               //         ],
+      //               //     ],
+      //               // ],
+      //               // "note" => [
+      //               //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
+      //               // ],
+      //           ],
+      //           "request" => ["method" => "POST", "url" => "Procedure"],
+      //         ];
+      //         // $adaTindakan[] = $isi;
+      //         $adaTindakan[] = $procedure;
+      //       }
+      //     }
+      //   }
+        
+      // }
+
+      // return $adaTindakan;
+      // // 10. Procedure Terapetik
+      // // [
+      // //   "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
+      // //   "resource" => [
+      // //       "resourceType" => "Procedure",
+      // //       "status" => "completed",
+      // //       "category" => [
+      // //           "coding" => [
+      // //               [
+      // //                   "system" => "http://snomed.info/sct",
+      // //                   "code" => "277132007",
+      // //                   "display" => "Therapeutic procedure",
+      // //               ],
+      // //           ],
+      // //           "text" => "Therapeutic procedure",
+      // //       ],
+      // //       "code" => [
+      // //           "coding" => [
+      // //               [
+      // //                   "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+      // //                   "code" => "93.94",
+      // //                   "display" =>
+      // //                       "Respiratory medication administered by nebulizer",
+      // //               ],
+      // //           ],
+      // //       ],
+      // //       "subject" => [
+      // //           "reference" => "Patient/{{Patient_ID}}",
+      // //           "display" => "",
+      // //       ],
+      // //       "encounter" => [
+      // //           "reference" => "urn:uuid:{{Encounter_id}}",
+      // //           "display" =>
+      // //               "Tindakan Nebulisasi  pada Selasa tanggal 31 Agustus 2023",
+      // //       ],
+      // //       "performedPeriod" => [
+      // //           "start" => "2023-08-31T02:27:00+00:00",
+      // //           "end" => "2023-08-31T02:27:00+00:00",
+      // //       ],
+      // //       "performer" => [
+      // //           [
+      // //               "actor" => [
+      // //                   "reference" => "Practitioner/{{Practitioner_ID}}",
+      // //                   "display" => "",
+      // //               ],
+      // //           ],
+      // //       ],
+      // //       "reasonCode" => [
+      // //           [
+      // //               "coding" => [
+      // //                   [
+      // //                       "system" => "http://hl7.org/fhir/sid/icd-10",
+      // //                       "code" => "A15.0",
+      // //                       "display" =>
+      // //                           "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+      // //                   ],
+      // //               ],
+      // //           ],
+      // //       ],
+      // //       "bodySite" => [
+      // //           [
+      // //               "coding" => [
+      // //                   [
+      // //                       "system" => "http://snomed.info/sct",
+      // //                       "code" => "74101002",
+      // //                       "display" => "Both lungs",
+      // //                   ],
+      // //               ],
+      // //           ],
+      // //       ],
+      // //       "note" => [
+      // //           ["text" => "Nebulisasi untuk melegakan sesak napas"],
+      // //       ],
+      // //   ],
+      // //   "request" => ["method" => "POST", "url" => "Procedure"],
+      // // ];
     }
 
     public static function rajal($noreg)

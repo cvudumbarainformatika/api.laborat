@@ -42,7 +42,8 @@ class MappingController extends Controller
         ->with(['snowmed','icd:kd_prosedur,prosedur'])
         ->when(request('q'), function($query) {
           $query->where('rs1', 'like', '%' . request('q') . '%')
-            ->orWhere('rs2', 'like', '%' . request('q') . '%');
+            ->orWhere('rs2', 'like', '%' . request('q') . '%')
+            ->orWhere('prosedur_mapping.icd9', 'like', '%' . request('q') . '%');
         })
         ->when(request('kodepoli'), function($query) {
           $query->where('rs4', 'like', '%' . request('kodepoli') . '%');
