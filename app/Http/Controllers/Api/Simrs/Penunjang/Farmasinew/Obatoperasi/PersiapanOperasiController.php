@@ -825,7 +825,7 @@ class PersiapanOperasiController extends Controller
                             ->where('nodistribusi', $stok[$index]->nodistribusi)
                             ->where('jumlah', $ada,)
                             ->first();
-                        if (!$adaSt) $data[] = $temp;
+                        if (!$adaSt) $dist[] = $temp;
                         // $dist[] = $temp;
                         $sisa = $distribusi - $ada;
                         $index += 1;
@@ -846,7 +846,7 @@ class PersiapanOperasiController extends Controller
                             ->where('nodistribusi', $stok[$index]->nodistribusi)
                             ->where('jumlah', $distribusi,)
                             ->first();
-                        if (!$adaSt) $data[] = $temp;
+                        if (!$adaSt) $dist[] = $temp;
                         // $dist[] = $temp;
                         $distribusi = 0;
                     }
