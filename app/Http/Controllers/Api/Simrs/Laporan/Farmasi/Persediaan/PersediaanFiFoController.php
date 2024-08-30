@@ -21,26 +21,73 @@ class PersediaanFiFoController extends Controller
         )
             ->with([
                 'stok' => function ($st) {
-                    $gd = ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
                     $st->select(
                         'stokreal.kdobat',
                         'stokreal.nopenerimaan as stpen',
                         DB::raw('sum(stokreal.jumlah) as jumlah'),
-                        DB::raw('sum(stokreal.jumlah * penerimaan_r.harga_netto_kecil) as sub'),
+                        DB::raw('sum(stokreal.jumlah * daftar_hargas.harga) as sub'),
                         'penerimaan_r.nopenerimaan',
                         'penerimaan_h.jenis_penerimaan',
-                        'penerimaan_r.harga_netto_kecil as harga',
+                        'daftar_hargas.harga',
                     )
+                        ->leftJoin('daftar_hargas', function ($jo) {
+                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokreal.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'stokreal.kdobat');
+                        })
                         ->leftJoin('penerimaan_r', function ($jo) {
                             $jo->on('penerimaan_r.nopenerimaan', '=', 'stokreal.nopenerimaan')
                                 ->on('penerimaan_r.kdobat', '=', 'stokreal.kdobat');
                         })
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->where('stokreal.jumlah', '!=', 0)
-                        ->groupBy('stokreal.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.harga_netto_kecil');
+                        ->when(
+                            request('kode_ruang') === 'all',
+                            function ($re) {
+                                $gd = ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+                                $re->whereIn('stokreal.kdruang', $gd);
+                            },
+                            function ($sp) {
+                                $sp->where('stokreal.kdruang', request('kode_ruang'));
+                            }
+                        )
+                        ->groupBy('stokreal.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
+                },
+                'saldoawal' => function ($st) {
+                    $st->select(
+                        'stokopname.kdobat',
+                        'stokopname.nopenerimaan as stpen',
+                        DB::raw('sum(stokopname.jumlah) as jumlah'),
+                        DB::raw('sum(stokopname.jumlah * daftar_hargas.harga) as sub'),
+                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_h.jenis_penerimaan',
+                        'daftar_hargas.harga',
+                    )
+                        ->leftJoin('daftar_hargas', function ($jo) {
+                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'stokopname.kdobat');
+                        })
+                        ->leftJoin('penerimaan_r', function ($jo) {
+                            $jo->on('penerimaan_r.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                                ->on('penerimaan_r.kdobat', '=', 'stokopname.kdobat');
+                        })
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->where('stokopname.jumlah', '!=', 0)
+                        ->where('stokopname.tglopname', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                        ->when(
+                            request('kode_ruang') === 'all',
+                            function ($re) {
+                                $gd = ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+                                $re->whereIn('stokopname.kdruang', $gd);
+                            },
+                            function ($sp) {
+                                $sp->where('stokopname.kdruang', request('kode_ruang'));
+                            }
+                        )
+                        ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
                 }
             ])
             ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+            ->where('status_konsinyasi', '=', '')
             ->get();
         // $data = collect($obat)['data'];
         // $meta = collect($obat)->except('data');

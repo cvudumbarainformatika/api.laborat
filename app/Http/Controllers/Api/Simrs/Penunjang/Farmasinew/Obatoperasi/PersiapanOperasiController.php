@@ -821,8 +821,8 @@ class PersiapanOperasiController extends Controller
                         ];
                         $adaSt = collect($data)->where('nopermintaan', $request->nopermintaan)
                             ->where('kd_obat', $request->kodeobat)
-                            ->where('nopenerimaan', $stok['nopenerimaan'],)
-                            ->where('nodistribusi', $stok['nodistribusi'])
+                            ->where('nopenerimaan', $stok[$index]->nopenerimaan,)
+                            ->where('nodistribusi', $stok[$index]->nodistribusi)
                             ->where('jumlah', $ada,)
                             ->first();
                         if (!$adaSt) $data[] = $temp;
@@ -842,8 +842,8 @@ class PersiapanOperasiController extends Controller
                         ];
                         $adaSt = collect($data)->where('nopermintaan', $request->nopermintaan)
                             ->where('kd_obat', $request->kodeobat)
-                            ->where('nopenerimaan', $stok['nopenerimaan'],)
-                            ->where('nodistribusi', $stok['nodistribusi'])
+                            ->where('nopenerimaan', $stok[$index]->nopenerimaan,)
+                            ->where('nodistribusi', $stok[$index]->nodistribusi)
                             ->where('jumlah', $distribusi,)
                             ->first();
                         if (!$adaSt) $data[] = $temp;
@@ -884,7 +884,7 @@ class PersiapanOperasiController extends Controller
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
-                'message' => 'Data Gagal Disimpan...!!!',
+                'message' => 'Data Gagal Disimpan, Ada Kesalahan Prosedur, silahkan hubungi tim IT',
                 'result' => '' . $e,
             ], 410);
         }
