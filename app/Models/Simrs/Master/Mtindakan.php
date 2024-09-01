@@ -23,6 +23,10 @@ class Mtindakan extends Model
     {
        return $this->hasMany(MappingSnowmed::class, 'kdMaster', 'kode');
     }
+    public function snowmedx()
+    {
+       return $this->hasMany(MappingSnowmed::class, 'kdMaster', 'rs1');
+    }
 
     public function icd()
     {

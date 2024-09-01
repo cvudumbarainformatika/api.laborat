@@ -11,7 +11,7 @@ class PihakketigaController extends Controller
 {
     public function pihakketiga()
     {
-        $pihakletiga = Mpihakketiga::where('nama', 'LIKE', '%' . request('nama') . '%')->limit(20)->get();
+        $pihakletiga = Mpihakketiga::where('nama', 'LIKE', '%' . request('nama') . '%')->where('hidden', '')->limit(20)->get();
         return new JsonResponse($pihakletiga);
     }
 }

@@ -13,5 +13,8 @@ Route::group([
     Route::get('/get-hutang-konsinyasi', [HutangKonsinyasiController::class, 'getHutangKonsinyasi']);
     Route::get('/reportObatPesananBytanggal', [HutangObatPesan::class, 'reportObatPesananBytanggal']);
     Route::get('/reportObatPesananBytanggalBast', [HutangObatPesan::class, 'reportObatPesananBytanggalBast']);
+    Route::get('/reportHutangByTransaksi', [HutangObatPesan::class, 'reportHutangByTransaksi']);
+
+
     Route::get('/reportMutasiHutangObat', [MutasiHutangObat::class, 'reportMutasiHutangObat']);
 });
