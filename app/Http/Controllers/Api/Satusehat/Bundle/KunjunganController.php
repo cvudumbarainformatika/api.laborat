@@ -36,7 +36,9 @@ class KunjunganController extends Controller
             //   // sleep(5);//menunggu 10 detik
             // }
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
-            return CobaPostKunjunganRajalHelper::cekKunjungan('69689/08/2024/J');
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('70214/08/2024/J');
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('70544/08/2024/J');
+            return CobaPostKunjunganRajalHelper::cekKunjungan('71376/08/2024/J');
             // return self::cekKunjunganRajal();
         }
 
@@ -77,30 +79,106 @@ class KunjunganController extends Controller
       $tgl = Carbon::now()->subDays(3)->toDateString();
       // $tgl = Carbon::now()->subDays(1)->toDateString();
       $bukanPoli = ['POL014','PEN005','PEN004'];
-      $data = KunjunganPoli::select('rs1 as noreg','rs1')
+      $data = KunjunganPoli::select(
+        'rs17.rs1',
+        'rs17.rs9',
+        'rs17.rs4',
+        'rs17.rs8',
+        'rs17.rs1 as noreg',
+        'rs17.rs2 as norm',
+        'rs17.rs3 as tgl_kunjungan',
+        'rs17.rs8 as kodepoli',
+        'rs19.rs2 as poli',
+        'rs17.rs9 as kodedokter',
+        'rs21.rs2 as dokter',
+        'rs17.rs14 as kodesistembayar',
+        'rs9.rs2 as sistembayar',
+        'rs9.groups as groups',
+        'rs15.rs2 as nama',
+        'rs15.rs49 as nik',
+        'rs17.rs19 as status',
+        'rs15.satset_uuid as pasien_uuid',
+        // 'satsets.uuid as satset',
+        // 'satset_error_respon.uuid as satset_error',
+        )
+        ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
         ->with([
+
+          'satset:uuid', 'satset_error:uuid',
+            'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+            'relmpoli'=>function($q){
+              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
+            },
+            'taskid' => function ($q) {
+                $q->select('noreg', 'taskid', 'waktu', 'created_at')
+                    ->orderBy('taskid', 'ASC');
+            },
+
+            'anamnesis',
+            'pemeriksaanfisik' => function ($a) {
+              $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                  ->orderBy('id', 'DESC');
+            },
+
           'tindakan' => function ($t) {
-                    $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
-                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-                      ->with([
-                        'maapingprocedure'=> function($mp){
-                          $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
-                            ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
-                          ;
-                        },
-                      // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
-                      'maapingsnowmed:kdMaster,kdSnowmed,display',
-                      'petugas:nama,kdpegsimrs,satset_uuid'
-                      ])
-                      ->groupBy('rs73.rs4')
-                      ->orderBy('id', 'DESC');
+            $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+            $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+              ->with([
+                'maapingprocedure'=> function($mp){
+                  $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                  ;
                 },
+              // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+              'maapingsnowmed:kdMaster,kdSnowmed,display',
+              'petugas:nama,kdpegsimrs,satset_uuid'
+              ])
+            ->groupBy('rs73.rs4')
+            ->orderBy('id', 'DESC');
+          },
+          'diagnosa' => function ($d) {
+            $d->select('rs1','rs3','rs4','rs7','rs8');
+            $d->with('masterdiagnosa');
+          },
+          'planning' => function ($p) {
+            $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
+            $p->with([
+                'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                'rekomdpjp',
+                'transrujukan',
+                // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
+                'listkonsul' => function($lk) {
+                  $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
+                      ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                      ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                      ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
+                },
+                'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                'kontrol' => function ($k) {
+                  $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
+                  ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                  ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
+                },
+                'operasi',
+            ])->orderBy('id', 'DESC');
+          },
         ])
-        ->where('rs3', 'LIKE', '%' . $tgl . '%')
+        // ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->whereNotIn('rs17.rs8', $bukanPoli)
         ->where('rs17.rs19', '=', '1') // kunjungan selesai
-        ->orderBy('rs3', 'desc')
-      ->limit(50)
+
+
+        ->doesntHave('satset')
+        ->doesntHave('satset_error')
+        ->whereHas('planning')
+
+        ->orderBy('rs17.rs3', 'desc')
+      ->limit(1)
       ->get();
 
 
@@ -113,102 +191,222 @@ class KunjunganController extends Controller
 
       return $data;
       
-      // $adaTindakan = [];
-      // foreach ($data as $key => $value) {
+      $spri = [];
+      $konsul = [];
+      $kontrol = [];
+      foreach ($data as $key => $value) {
 
-      //   // $adaTindakan[] = $value->tindakan;
-      //   $tindakan = $value->tindakan;
-      //   if (count($tindakan) > 0) {
-      //     foreach ($tindakan as $sub => $isi) {
-      //       if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
+        // $spri[] = $value->planning;
+        $planning = $value->planning;
 
-      //         // setlocale(LC_ALL, 'IND');
-      //         $dt = Carbon::parse($isi->rs3)->locale('id');
-      //         $dt->settings(['formatFunction' => 'translatedFormat']);
-      //         $waktuPerform = $dt->format('l, j F Y');
-      //         $procedure = 
-      //         [
-      //           "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
-      //           "resource" => [
-      //               "resourceType" => "Procedure",
-      //               "status" => "completed",
-      //               "category" => [
-      //                   "coding" => [
-      //                       [
-      //                           "system" => "http://snomed.info/sct",
-      //                           "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
-      //                           "display" => $isi->maapingsnowmed['display'] ?? '-',
-      //                       ],
-      //                   ],
-      //                   "text" => $isi->maapingsnowmed['display'] ?? '-'
-      //               ],
-      //               "code" => [
-      //                   "coding" => [
-      //                       [
-      //                           "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-      //                           "code" => $isi->maapingprocedure['icd9'] ?? '-',
-      //                           "display" => $isi->maapingprocedure['prosedur'] ?? '-',
-      //                       ],
-      //                   ],
-      //               ],
-      //               "subject" => [
-      //                   "reference" => "Patient/{{Patient_ID}}",
-      //                   "display" => "",
-      //               ],
-      //               "encounter" => [
-      //                   "reference" => "urn:uuid:{{Encounter_id}}",
-      //                   "display" => $isi->keterangan." pada ".$waktuPerform
-      //               ],
-      //               "performedPeriod" => [
-      //                   "start" => Carbon::parse($isi->rs3)->toIso8601String(),
-      //                   "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
-      //               ],
-      //               "performer" => [
-      //                   [
-      //                       "actor" => [
-      //                           "reference" => "Practitioner/{{Practitioner_ID}}",
-      //                           "display" => "",
-      //                       ],
-      //                   ],
-      //               ],
-      //               // "reasonCode" => [
-      //               //     [
-      //               //         "coding" => [
-      //               //             [
-      //               //                 "system" => "http://hl7.org/fhir/sid/icd-10",
-      //               //                 "code" => "A15.0",
-      //               //                 "display" =>
-      //               //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
-      //               //             ],
-      //               //         ],
-      //               //     ],
-      //               // ],
-      //               // "bodySite" => [
-      //               //     [
-      //               //         "coding" => [
-      //               //             [
-      //               //                 "system" => "http://snomed.info/sct",
-      //               //                 "code" => "74101002",
-      //               //                 "display" => "Both lungs",
-      //               //             ],
-      //               //         ],
-      //               //     ],
-      //               // ],
-      //               // "note" => [
-      //               //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
-      //               // ],
-      //           ],
-      //           "request" => ["method" => "POST", "url" => "Procedure"],
-      //         ];
-      //         // $adaTindakan[] = $isi;
-      //         $adaTindakan[] = $procedure;
-      //       }
-      //     }
-      //   }
         
-      // }
 
-      // return $adaTindakan;
+        if (count($planning) > 0) {
+          // foreach ($planning as $sub => $isi) {
+            $isi = $planning[0];
+            $spri[] = $isi;
+            $plann = $isi->rs4;
+            // if ($plann === 'Rawat Inap' && $isi->spri !== null) {
+
+            //   $diagnosa = collect($value->diagnosa)->filter(function ($item) {
+            //     return strpos($item['rs3'], 'Z') === false; 
+            //   });
+            //   $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
+            //   // $spri[] = $diag;
+
+            //   // $spri[] = $value;
+            //   $spri[] = 
+            //   [
+            //     "resourceType" => "ServiceRequest",
+            //     "identifier" => [
+            //         [
+            //             "system" => "http://sys-ids.kemkes.go.id/servicerequest/{{Org_ID}}",
+            //             "value" => "000012345",
+            //         ],
+            //     ],
+            //     "status" => "active",
+            //     "intent" => "original-order",
+            //     "priority" => "routine",
+            //     "category" => [
+            //         [
+            //             "coding" => [
+            //                 [
+            //                     "system" => "http://snomed.info/sct",
+            //                     "code" => "3457005",
+            //                     "display" => "Patient referral",
+            //                 ],
+            //             ],
+            //         ],
+            //     ],
+            //     "code" => [
+            //         "coding" => [
+            //             [
+            //                 "system" => "http://snomed.info/sct",
+            //                 "code" => "737481003",
+            //                 "display" => "Inpatient care management",
+            //             ],
+            //         ],
+            //     ],
+            //     "subject" => ["reference" => "Patient/{{Patient_ID}}"],
+            //     "encounter" => [
+            //         "reference" => "Encounter/{{Encounter_id}}",
+            //         "display" => "Kunjungan  di hari Kamis, 31 Agustus 2023 ",
+            //     ],
+            //     "occurrenceDateTime" => Carbon::parse($isi->tgl)->toIso8601String(),
+            //     "requester" => [
+            //         "reference" => "Practitioner/".$isi->spri['petugas'] ? $isi->spri['petugas']['satset_uuid'] : '-',
+            //         "display" => $isi->spri['petugas'] ? $isi->spri['petugas']['nama'] : '-',
+            //     ],
+            //     "performer" => [
+            //         ["reference" => "Practitioner/N10000005", "display" => "Fatma"],
+            //     ],
+            //     "reasonCode" => [
+            //         [
+            //             "coding" => [
+            //                 [
+            //                     "system" => "http://hl7.org/fhir/sid/icd-10",
+            //                     "code" => $diag ? $diag['rs3'] : '-',
+            //                     "display" => $diag ? $diag['masterdiagnosa']['rs4'] : '-',
+            //                 ],
+            //             ],
+            //         ],
+            //     ],
+            //     "locationCode" => [
+            //         [
+            //             "coding" => [
+            //                 [
+            //                     "system" =>
+            //                         "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+            //                     "code" => "HOSP",
+            //                     "display" => "Hospital",
+            //                 ],
+            //                 // INI JIKA PAKE AMBULANCE
+            //                 // [
+            //                 //     "system" =>
+            //                 //         "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+            //                 //     "code" => "AMB",
+            //                 //     "display" => "Ambulance",
+            //                 // ],
+            //             ],
+            //         ],
+            //     ],
+            //     "patientInstruction" =>
+            //         "Surat Perintah Rawat Inap RSUD MOHAMAD SALEH, Dalam Keadaan Darurat dapat Menghubungi (0335) 433119,421118",
+            //   ];
+            // }
+            // if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
+
+              // setlocale(LC_ALL, 'IND');
+              // $dt = Carbon::parse($isi->rs3)->locale('id');
+              // $dt->settings(['formatFunction' => 'translatedFormat']);
+              // $waktuPerform = $dt->format('l, j F Y');
+              
+              // $adaTindakan[] = $isi;
+              // $adaTindakan[] = $procedure;
+            // }
+          // }
+
+          // if ($isi->listkonsul !== null) {
+          //   $konsul[] = $value;
+
+          //   // $konsul[] = 
+          //   // [
+          //   //   "resourceType" => "ServiceRequest",
+          //   //   "identifier" => [
+          //   //       [
+          //   //           "system" => "http://sys-ids.kemkes.go.id/servicerequest/{{Org_id}}",
+          //   //           "value" => "00001",
+          //   //       ],
+          //   //   ],
+          //   //   "status" => "active",
+          //   //   "intent" => "original-order",
+          //   //   "priority" => "routine",
+          //   //   "category" => [
+          //   //       [
+          //   //           "coding" => [
+          //   //               [
+          //   //                   "system" => "http://snomed.info/sct",
+          //   //                   "code" => "306098008",
+          //   //                   "display" => "Self-referral",
+          //   //               ],
+          //   //           ],
+          //   //       ],
+          //   //       [
+          //   //           "coding" => [
+          //   //               [
+          //   //                   "system" => "http://snomed.info/sct",
+          //   //                   "code" => "11429006",
+          //   //                   "display" => "Consultation",
+          //   //               ],
+          //   //           ],
+          //   //       ],
+          //   //   ],
+          //   //   "code" => [
+          //   //       "coding" => [
+          //   //           [
+          //   //               "system" => "http://snomed.info/sct",
+          //   //               "code" => "185389009",
+          //   //               "display" => "Follow-up visit",
+          //   //           ],
+          //   //       ],
+          //   //       "text" => "Kontrol rutin regimen TB bulan ke-2",
+          //   //   ],
+          //   //   "subject" => ["reference" => "Patient/100000030009"],
+          //   //   "encounter" => [
+          //   //       "reference" => "Encounter/{{Encounter_uuid}}",
+          //   //       "display" => "Kunjungan Budi Santoso di hari Selasa, 14 Juni 2022",
+          //   //   ],
+          //   //   "occurrenceDateTime" => "2022-07-14",
+          //   //   "authoredOn" => "2022-06-14T09:30:27+07:00",
+          //   //   "requester" => [
+          //   //       "reference" => "Practitioner/N10000001",
+          //   //       "display" => "Dokter Bronsig",
+          //   //   ],
+          //   //   "performer" => [
+          //   //       ["reference" => "Practitioner/N10000005", "display" => "Fatma"],
+          //   //   ],
+          //   //   "reasonCode" => [
+          //   //       [
+          //   //           "coding" => [
+          //   //               [
+          //   //                   "system" => "http://hl7.org/fhir/sid/icd-10",
+          //   //                   "code" => "A15.0",
+          //   //                   "display" =>"Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+          //   //               ],
+          //   //           ],
+          //   //           "text" => "Kontrol rutin bulanan",
+          //   //       ],
+          //   //   ],
+          //   //   "locationCode" => [
+          //   //       [
+          //   //           "coding" => [
+          //   //               [
+          //   //                   "system" =>
+          //   //                       "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+          //   //                   "code" => "OF",
+          //   //                   "display" => "Outpatient Facility",
+          //   //               ],
+          //   //           ],
+          //   //       ],
+          //   //   ],
+          //   //   "locationReference" => [
+          //   //       [
+          //   //           "reference" => "Location/ef011065-38c9-46f8-9c35-d1fe68966a3e",
+          //   //           "display" => "Ruang 1A, Poliklinik Rawat Jalan",
+          //   //       ],
+          //   //   ],
+          //   //   "patientInstruction" => "Kontrol setelah 1 bulan minum obat anti tuberkulosis. Dalam keadaan darurat dapat menghubungi hotline RS di nomor 14045",
+          //   // ];
+          // }
+
+          if ($isi->kontrol !== null) {
+            $kontrol[]=$isi;
+          }
+        }
+        
+      }
+
+      return $kontrol;
       // // 10. Procedure Terapetik
       // // [
       // //   "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
@@ -285,6 +483,178 @@ class KunjunganController extends Controller
       // //   ],
       // //   "request" => ["method" => "POST", "url" => "Procedure"],
       // // ];
+
+
+      // SPRI
+      $arrayVar = [
+          "resourceType" => "ServiceRequest",
+          "identifier" => [
+              [
+                  "system" => "http://sys-ids.kemkes.go.id/servicerequest/{{Org_ID}}",
+                  "value" => "000012345",
+              ],
+          ],
+          "status" => "active",
+          "intent" => "original-order",
+          "priority" => "routine",
+          "category" => [
+              [
+                  "coding" => [
+                      [
+                          "system" => "http://snomed.info/sct",
+                          "code" => "3457005",
+                          "display" => "Patient referral",
+                      ],
+                  ],
+              ],
+          ],
+          "code" => [
+              "coding" => [
+                  [
+                      "system" => "http://snomed.info/sct",
+                      "code" => "737481003",
+                      "display" => "Inpatient care management",
+                  ],
+              ],
+          ],
+          "subject" => ["reference" => "Patient/{{Patient_ID}}"],
+          "encounter" => [
+              "reference" => "Encounter/{{Encounter_id}}",
+              "display" => "Kunjungan  di hari Kamis, 31 Agustus 2023 ",
+          ],
+          "occurrenceDateTime" => "2023-08-31T04:25:00+00:00",
+          "requester" => [
+              "reference" => "Practitioner/{{Practitioner_ID}}",
+              "display" => "",
+          ],
+          "performer" => [
+              ["reference" => "Practitioner/N10000005", "display" => "Fatma"],
+          ],
+          "reasonCode" => [
+              [
+                  "coding" => [
+                      [
+                          "system" => "http://hl7.org/fhir/sid/icd-10",
+                          "code" => "A15.0",
+                          "display" =>
+                              "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+                      ],
+                  ],
+              ],
+          ],
+          "locationCode" => [
+              [
+                  "coding" => [
+                      [
+                          "system" =>
+                              "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                          "code" => "HOSP",
+                          "display" => "Hospital",
+                      ],
+                      [
+                          "system" =>
+                              "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                          "code" => "AMB",
+                          "display" => "Ambulance",
+                      ],
+                  ],
+              ],
+          ],
+          "patientInstruction" =>
+              "Rujukan ke Rawat Inap RSUP Fatmawati. Dalam keadaan darurat dapat menghubungi hotline Fasyankes di nomor 14045",
+      ];
+
+      // konsul
+      $arrayVar = [
+        "resourceType" => "ServiceRequest",
+        "identifier" => [
+            [
+                "system" => "http://sys-ids.kemkes.go.id/servicerequest/{{Org_id}}",
+                "value" => "00001",
+            ],
+        ],
+        "status" => "active",
+        "intent" => "original-order",
+        "priority" => "routine",
+        "category" => [
+            [
+                "coding" => [
+                    [
+                        "system" => "http://snomed.info/sct",
+                        "code" => "306098008",
+                        "display" => "Self-referral",
+                    ],
+                ],
+            ],
+            [
+                "coding" => [
+                    [
+                        "system" => "http://snomed.info/sct",
+                        "code" => "11429006",
+                        "display" => "Consultation",
+                    ],
+                ],
+            ],
+        ],
+        "code" => [
+            "coding" => [
+                [
+                    "system" => "http://snomed.info/sct",
+                    "code" => "185389009",
+                    "display" => "Follow-up visit",
+                ],
+            ],
+            "text" => "Kontrol rutin regimen TB bulan ke-2",
+        ],
+        "subject" => ["reference" => "Patient/100000030009"],
+        "encounter" => [
+            "reference" => "Encounter/{{Encounter_uuid}}",
+            "display" => "Kunjungan Budi Santoso di hari Selasa, 14 Juni 2022",
+        ],
+        "occurrenceDateTime" => "2022-07-14",
+        "authoredOn" => "2022-06-14T09:30:27+07:00",
+        "requester" => [
+            "reference" => "Practitioner/N10000001",
+            "display" => "Dokter Bronsig",
+        ],
+        "performer" => [
+            ["reference" => "Practitioner/N10000005", "display" => "Fatma"],
+        ],
+        "reasonCode" => [
+            [
+                "coding" => [
+                    [
+                        "system" => "http://hl7.org/fhir/sid/icd-10",
+                        "code" => "A15.0",
+                        "display" =>
+                            "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+                    ],
+                ],
+                "text" => "Kontrol rutin bulanan",
+            ],
+        ],
+        "locationCode" => [
+            [
+                "coding" => [
+                    [
+                        "system" =>
+                            "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                        "code" => "OF",
+                        "display" => "Outpatient Facility",
+                    ],
+                ],
+            ],
+        ],
+        "locationReference" => [
+            [
+                "reference" => "Location/ef011065-38c9-46f8-9c35-d1fe68966a3e",
+                "display" => "Ruang 1A, Poliklinik Rawat Jalan",
+            ],
+        ],
+        "patientInstruction" =>
+            "Kontrol setelah 1 bulan minum obat anti tuberkulosis. Dalam keadaan darurat dapat menghubungi hotline RS di nomor 14045",
+      ];
+
     }
 
     public static function rajal($noreg)
