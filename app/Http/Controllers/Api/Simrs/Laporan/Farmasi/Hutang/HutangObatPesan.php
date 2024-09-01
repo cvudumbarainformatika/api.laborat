@@ -42,4 +42,21 @@ class HutangObatPesan extends Controller
         ->get();
         return new JsonResponse($data);
     }
+
+    public function reportHutangByTransaksi()
+    {
+        $dari = request('tgldari') . ' 00:00:00';
+        $sampai = request('tglsampai') . ' 23:59:59';
+
+        $data = PenerimaanHeder::with(
+            [
+                'penerimaanrinci',
+                'pihakketiga'
+            ]
+        )
+        ->whereBetween('tglpenerimaan', [$dari, $sampai])
+        ->get();
+
+        return new JsonResponse($data);
+    }
 }
