@@ -12,26 +12,15 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class PostKunjunganRajalHelper
+class CobaPostKunjunganRajalHelper
 {
 
-    public static function cekKunjungan()
+    public static function cekKunjungan($noreg)
     {
-      // $ygTerkirim =0;
-      // $arrayKunjungan = self::cekKunjunganRajal();
-      // return $arrayKunjungan;
-      // return count($arrayKunjungan);
-      // return self::rajal($arrayKunjungan[0]);
-      // for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
-      //   self::rajal($arrayKunjungan[$i]);
-      //   $ygTerkirim = $i+1;
-      //   // break;
-      //   // sleep(5);//menunggu 10 detik
-      // }
-      // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-      $tgl = Carbon::now()->subDay()->toDateString();
-      return self::rajal($tgl);
+      // $tgl = Carbon::now()->subDay()->toDateString();
+      
+      return self::rajal($noreg);
     }
 
     public static function cekKunjunganRajal()
@@ -60,7 +49,7 @@ class PostKunjunganRajalHelper
       return $data;
     }
 
-    public static function rajal($tgl)
+    public static function rajal($noreg)
     {
       $bukanPoli = ['POL014','PEN005','PEN004'];
 
@@ -85,7 +74,7 @@ class PostKunjunganRajalHelper
         'rs15.satset_uuid as pasien_uuid',
         // 'satsets.uuid as satset',
         // 'satset_error_respon.uuid as satset_error',
-    )
+        )
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
         ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
@@ -93,10 +82,14 @@ class PostKunjunganRajalHelper
         // ->leftjoin('satsets', 'satsets.uuid', '=', 'rs17.rs1') //satset
         // ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
 
-        // ->where('rs17.rs1', $noreg)
+        ->where('rs17.rs1', $noreg)
+        
         ->whereNotIn('rs17.rs8', $bukanPoli)
         ->where('rs17.rs19', '=', '1') // kunjungan selesai
-        ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+        // ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+
+        // ->doesntHave('satset')
+        // ->doesntHave('satset_error')
         
         // ->whereBetween('rs17.rs3', [$tgl, $tglx])
         // ->where('rs17.rs8', $user->kdruangansim ?? '')
@@ -123,7 +116,7 @@ class PostKunjunganRajalHelper
             'satset:uuid', 'satset_error:uuid',
             'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
             'relmpoli'=>function($q){
-              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid');
+              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
             },
             //   // 1 (mulai waktu tunggu admisi),
             //   // 2 (akhir waktu tunggu admisi/mulai waktu layan admisi),
@@ -146,7 +139,6 @@ class PostKunjunganRajalHelper
               $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                   ->orderBy('id', 'DESC');
             },
-            
             'tindakan' => function ($t) {
                 $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
                 $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
@@ -191,8 +183,7 @@ class PostKunjunganRajalHelper
           ])
 
 
-          ->doesntHave('satset')
-          ->doesntHave('satset_error')
+          
 
       //   ->with([
       //     'anamnesis',
@@ -265,7 +256,7 @@ class PostKunjunganRajalHelper
         // ->get();
         ->first();
 
-    // return $data;
+        // return $data;
       return self::kirimKunjungan($data);
     }
 
@@ -441,6 +432,8 @@ class PostKunjunganRajalHelper
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
+
+
         $body =
             [
                 "resourceType" => "Bundle",
@@ -547,14 +540,19 @@ class PostKunjunganRajalHelper
                     $observation['psikologis'],
 
 
-                    // CARE PLAN
+                    // // CARE PLAN
                     $carePlan,
 
-                    // PROCEDURE / TINDAKAN PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
-                    // PLANNING / SERVICE_REQUEST PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
+                    // PROCEDURE PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
+
+                    // PLANNING push di bawah
+                    // $plann['spri'],
+                    // $plann['konsul'],
+                    // $plann['kontrol'],
                 ]
             ];
 
+        
 
 
         //  PUSH CONDITION
@@ -617,7 +615,7 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $procedure[$i]);
         }
 
-        // PUSH PLANNING
+        //push planning
         if ($plann['spri'] !== null) array_push($body['entry'], $plann['spri']);
         if ($plann['konsul'] !== null) array_push($body['entry'], $plann['konsul']);
         if ($plann['kontrol'] !== null) array_push($body['entry'], $plann['kontrol']);
@@ -1226,7 +1224,7 @@ class PostKunjunganRajalHelper
                         ],
                         "subject" => [
                             "reference" => "Patient/$pasien_uuid",
-                            "display" => "",
+                            "display" => "$request->nama",
                         ],
                         "encounter" => [
                             "reference" => "urn:uuid:$encounter",
@@ -1283,7 +1281,6 @@ class PostKunjunganRajalHelper
 
         return $adaTindakan;
     }
-
     static function planning($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';

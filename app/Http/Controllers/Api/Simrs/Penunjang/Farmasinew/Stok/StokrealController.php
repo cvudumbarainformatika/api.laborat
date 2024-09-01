@@ -373,6 +373,7 @@ class StokrealController extends Controller
     public function listStokMinDepo()
     {
         $kdruang = request('kdruang');
+        $depos = ['Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
         $stokreal = Mobatnew::select(
             'stokreal.id as idx',
             'stokreal.kdruang',
@@ -391,20 +392,25 @@ class StokrealController extends Controller
             DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
 
         )
-            ->leftjoin('stokreal', function($x) use($kdruang){
-                $x->on('new_masterobat.kd_obat','=', 'stokreal.kdobat')
-                    ->where('stokreal.flag','=', '')
-                    ->where('stokreal.kdruang','=', $kdruang)
-            ;
+            ->leftjoin('stokreal', function ($x) use ($kdruang) {
+                $x->on('new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+                    ->where('stokreal.flag', '=', '')
+                    ->where('stokreal.kdruang', '=', $kdruang)
+                ;
             })
-            ->leftjoin('min_max_ruang', function ($anu) use($kdruang){
-                $anu->on('min_max_ruang.kd_obat','=', 'new_masterobat.kd_obat')
-                    ->where('min_max_ruang.kd_ruang','=', $kdruang);
+            ->leftjoin('min_max_ruang', function ($anu) use ($kdruang) {
+                $anu->on('min_max_ruang.kd_obat', '=', 'new_masterobat.kd_obat')
+                    ->where('min_max_ruang.kd_ruang', '=', $kdruang);
             })
-            
+
             ->where(function ($x) {
-            $x->orwhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
-                ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+                $x->orwhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
+                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+            })
+            ->when(in_array($kdruang, $depos), function ($q) {
+                $q->whereNotNull('stokreal.jumlah')
+                    ->whereNotNull('min_max_ruang.min')
+                    ->where('min_max_ruang.min', '>', 0);
             })
             // ->where(function ($x) {
             //     $x->orWhereNull('stokreal.jumlah')
@@ -413,7 +419,7 @@ class StokrealController extends Controller
             //         ->orWhereNotNull('min_max_ruang.min')
             //         ;
             //     })
-            
+
             ->with([
                 'permintaanobatrinci' => function ($pr) use ($kdruang) {
                     $pr->select(

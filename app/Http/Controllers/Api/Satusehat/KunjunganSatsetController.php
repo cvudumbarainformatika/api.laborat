@@ -106,6 +106,10 @@ class KunjunganSatsetController extends Controller
                 'diagnosa' => function ($d) {
                     $d->with('masterdiagnosa');
                 },
+                'tindakan' => function ($t) {
+                    $t->with('mastertindakan:rs1,rs2,mastertindakan.snowmedx', 'pegawai:nama,kdpegsimrs,satset_uuid')
+                        ->orderBy('id', 'DESC');
+                },
             ])
 
             ->orderby('rs17.rs3', 'ASC')

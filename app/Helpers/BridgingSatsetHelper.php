@@ -10,6 +10,86 @@ use LZCompressor\LZString;
 
 class BridgingSatsetHelper
 {
+    /**
+     * wawan 
+     */
+    public static function root_url(){
+        $url = 'https://api-satusehat.kemkes.go.id';
+
+        return $url; 
+    }
+
+    public static function get_data_kfa($ext,$token, $params){
+
+        
+        // return self::root_url();
+        $url = self::root_url() . $ext . $params;
+        $response = Http::withToken($token)->get($url);
+        $data = json_decode($response, true);
+
+        
+        return $data;
+        // JIKA ERROR
+        $error = $data['resourceType'] === 'OperationOutcome';
+
+        $notfound = isset($data['entry']) ? count($data['entry']) === 0 : false;
+        if ($notfound) {
+            $error = true;
+        }
+
+        if ($error) {
+            $err = [
+                'method' => 'GET',
+                'url' => $params,
+                'response' => $data
+            ];
+            $resp = SatsetErrorRespon::create($err);
+
+            $send = [
+                'message' => 'failed' ,
+                'data' => $resp
+            ];
+            return $send;
+        }
+
+        if ($data['resourceType'] === 'Bundle' && $data['total'] === 0) {
+            $err = [
+                'method' => 'GET',
+                'url' => $params,
+                'response' => $data
+            ];
+            $resp = SatsetErrorRespon::create($err);
+            $send = [
+                'message' => 'failed',
+                'data' => $resp
+            ];
+            return $send;
+        }
+
+
+        // JIKA SUCCESS
+        $success = [
+            'method' => 'GET',
+            'url' => $params,
+            'response' => $data,
+
+        ];
+
+        if ($data['resourceType'] === 'Bundle' && $data['total'] > 0) {
+            $resp = Satset::firstOrCreate([
+                'resource' => $data['resourceType'],
+                'uuid' => $data['entry'][0]['resource']['id']
+            ], $success);
+            $send = [
+                'message' => 'success',
+                'data' => $resp
+            ];
+            return $send;
+        }
+    }
+    /**
+     * wawan 
+     */
 
     public static function base_url()
     {

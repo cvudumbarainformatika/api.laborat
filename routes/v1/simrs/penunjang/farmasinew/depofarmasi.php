@@ -64,6 +64,7 @@ Route::group([
     // Copy Template
     Route::post('/cek-template-resep', [EresepController::class, 'cekTemplateResep']);
 
+    // iter
     Route::post('/ambil-iter', [EresepController::class, 'ambilIter']);
     Route::post('/copy-resep', [EresepController::class, 'copyResep']);
     Route::post('/ambil-history', [EresepController::class, 'ambilHistory']);
@@ -74,7 +75,7 @@ Route::group([
     // list resep by dokter
     Route::get('/ambil-resep-dokter', [EresepController::class, 'getResepDokter']);
 
-    // simpan tgl pelayanan obat    
+    // simpan tgl pelayanan obat
     Route::post('/simpan-tgl-pelayanan', [EresepController::class, 'simpanTglPelayananObat']);
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);

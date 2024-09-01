@@ -146,6 +146,48 @@ class BridgingbpjsHelper
 
         return $res;
     }
+
+    public static function put_url(string $name, $param, $post)
+    {
+        $url = self::ws_url($name, $param);
+        // $url = self::ws_url_dev($name, $param);
+
+        $sign = self::getSignature($name);
+        $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
+
+        $header = self::getHeader($sign);
+        $response = Http::withHeaders($header)->put($url, $post);
+        // return ($response);
+        $data = json_decode($response, true);
+        // return $data;
+        if (!$data) {
+            date_default_timezone_set('Asia/Jakarta');
+            return response()->json([
+                'code' => 500,
+                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
+            ], 500);
+        }
+
+
+
+        $res['metadata'] = '';
+        $res['response'] = '';
+
+        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
+        $res['response'] =  $data['response'];
+
+        $nilairespon = $data["response"] ?? false;
+        if (!$nilairespon) {
+            return $res;
+        }
+        $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
+        $res['result'] = json_decode($hasilakhir);
+        if (!$hasilakhir) {
+            return response()->json($data);
+        }
+        date_default_timezone_set('Asia/Jakarta');
+        return $res;
+    }
     public static function delete_url(string $name, $param, $post)
     {
         $url = self::ws_url($name, $param);
@@ -278,46 +320,7 @@ class BridgingbpjsHelper
         return response()->json($res);
     }
 
-    public static function put_url(string $name, $param, $post)
-    {
-        $url = self::ws_url($name, $param);
-        // $url = self::ws_url_dev($name, $param);
-
-        $sign = self::getSignature($name);
-        $kunci = $sign['xconsid'] . $sign['secret_key'] . $sign['xtimestamp'];
-
-        $header = self::getHeader($sign);
-        $response = Http::withHeaders($header)->put($url, $post);
-        // return ($response);
-        $data = json_decode($response, true);
-        // return $data;
-        if (!$data) {
-            return response()->json([
-                'code' => 500,
-                'message' => 'ERROR BRIDGING BPJS, cek Internet Atau Bpjs Down'
-            ], 500);
-        }
-
-
-
-        $res['metadata'] = '';
-        $res['response'] = '';
-
-        $res['metadata'] =  $data['metadata'] ??  $data['metaData'];
-        $res['response'] =  $data['response'];
-
-        $nilairespon = $data["response"] ?? false;
-        if (!$nilairespon) {
-            return $res;
-        }
-        $hasilakhir = self::decompress(self::stringDecrypt($kunci, $nilairespon));
-        $res['result'] = json_decode($hasilakhir);
-        if (!$hasilakhir) {
-            return response()->json($data);
-        }
-        date_default_timezone_set('Asia/Jakarta');
-        return $res;
-    }
+    
 
     public static function getHeadericare($data)
     {
