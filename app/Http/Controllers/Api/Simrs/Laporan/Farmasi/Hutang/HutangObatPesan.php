@@ -50,11 +50,14 @@ class HutangObatPesan extends Controller
 
         $data = PenerimaanHeder::with(
             [
-                'penerimaanrinci',
+                'penerimaanrinci' => function($penerimaanrinci){
+                    $penerimaanrinci->with(['masterobat']);
+                },
                 'pihakketiga'
             ]
         )
         ->whereBetween('tglpenerimaan', [$dari, $sampai])
+        ->whereIn('jenis_penerimaan', ['Konsinyasi','Pesanan'])
         ->get();
 
         return new JsonResponse($data);
