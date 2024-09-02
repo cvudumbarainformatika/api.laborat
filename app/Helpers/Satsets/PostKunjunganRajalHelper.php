@@ -188,6 +188,10 @@ class PostKunjunganRajalHelper
                     'operasi',
                 ])->orderBy('id', 'DESC');
             },
+
+            'diagnosakeperawatan'=> function ($d) {
+                $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+            },
           ])
 
 
@@ -547,8 +551,7 @@ class PostKunjunganRajalHelper
                     $observation['psikologis'],
 
 
-                    // CARE PLAN
-                    $carePlan,
+                    // CARE PLAN Push di bawah karena banyak & sdh dinamis
 
                     // PROCEDURE / TINDAKAN PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
                     // PLANNING / SERVICE_REQUEST PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
@@ -610,6 +613,11 @@ class PostKunjunganRajalHelper
                 ];
 
             array_push($body['entry'], $cond);
+        }
+
+        // PUSH careplan
+        for ($i=0; $i < count($carePlan) ; $i++) { 
+            array_push($body['entry'], $carePlan[$i]);
         }
 
         // PUSH PROCEDURE
@@ -1147,38 +1155,65 @@ class PostKunjunganRajalHelper
 
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
         $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
-        $carePlan = [
-            "fullUrl" => "urn:uuid:".self::generateUuid(),
-            "resource" => [
-                "resourceType" => "CarePlan",
-                "status" => "active",
-                "intent" => "plan",
-                "category" => [
-                    [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "736271009",
-                                "display" => "Outpatient care plan",
+
+        $diagnosaKeperawatan = $request->diagnosakeperawatan;
+
+        $carePlan = [];
+
+        if (count($diagnosaKeperawatan) > 0) {
+            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            if (count($intervensis) > 0) {
+
+                
+
+                $title = "RENCANA RAWAT PASIEN ".$diagnosaKeperawatan[0]['nama'];
+
+                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+
+                for ($i=0; $i < count($intervensis) ; $i++) { 
+                    $plan = [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "CarePlan",
+                            "status" => "active",
+                            "intent" => "plan",
+                            "category" => [
+                                [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://snomed.info/sct",
+                                            "code" => "736271009",
+                                            "display" => "Outpatient care plan",
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            "title" => $title,
+                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "subject" => [
+                                "reference" => "Patient/$pasien_uuid",
+                                "display" => "$request->nama",
+                            ],
+                            "encounter" => ["reference" => "urn:uuid:$encounter"],
+                            "created" => $created,
+                            "author" => [
+                                "reference" => "Practitioner/".$diagnosaKeperawatan[0]['petugas']['satset_uuid'],
+                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
                             ],
                         ],
-                    ],
-                ],
-                "title" => "Rencana Rawat Pasien",
-                "description" => "Rencana Rawat Pasien",
-                "subject" => [
-                    "reference" => "Patient/$pasien_uuid",
-                    "display" => "$request->nama",
-                ],
-                "encounter" => ["reference" => "urn:uuid:$encounter"],
-                "created" => $created,
-                "author" => [
-                    "reference" => "Practitioner/$practitioner_uuid",
-                    "display" => $nama_practitioner,
-                ],
-            ],
-            "request" => ["method" => "POST", "url" => "CarePlan"],
-        ];
+                        "request" => ["method" => "POST", "url" => "CarePlan"],
+                    ];
+
+                    $carePlan[] = $plan;
+                }
+
+                
+            } else {
+                $carePlan = [];
+            }
+        } else {
+            $carePlan = [];
+        }
 
         return $carePlan;
     }

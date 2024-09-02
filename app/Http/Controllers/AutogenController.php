@@ -46,20 +46,28 @@ class AutogenController extends Controller
         // $contents = File::get(storage_path('json/listscache.json'));
         // return JsonResponse::fromJsonString($contents);
 
-        $waktu = '2024-08-14 10:08:19';
-        $detik = (int)'14399';
-        $now = Carbon::now();
-        $a = Carbon::createFromFormat('Y-m-d H:i:s', $waktu);
-        $b = Carbon::createFromFormat('Y-m-d H:i:s', $waktu)->addSeconds($detik);
-        return new JsonResponse(
-            [
-                'waktu' => $waktu,
-                'now' => $now->toDateTimeString(),
-                'a' => $a->toDateTimeString(),
-                'b' => $b->toDateTimeString(),
-                'diff' => now()->diffInSeconds(Carbon::parse($b), false),
-            ]
-        );
+        // $waktu = '2024-08-14 10:08:19';
+        // $detik = (int)'14399';
+        // $now = Carbon::now();
+        // $a = Carbon::createFromFormat('Y-m-d H:i:s', $waktu);
+        // $b = Carbon::createFromFormat('Y-m-d H:i:s', $waktu)->addSeconds($detik);
+        // return new JsonResponse(
+        //     [
+        //         'waktu' => $waktu,
+        //         'now' => $now->toDateTimeString(),
+        //         'a' => $a->toDateTimeString(),
+        //         'b' => $b->toDateTimeString(),
+        //         'diff' => now()->diffInSeconds(Carbon::parse($b), false),
+        //     ]
+        // );
+        echo $this->translate("berpengawet muntah", "id", "en");
+        
+    }
+
+    public function translate($q, $sl, $tl){
+        $res= file_get_contents("https://translate.googleapis.com/translate_a/single?client=gtx&ie=UTF-8&oe=UTF-8&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t&dt=at&sl=".$sl."&tl=".$tl."&hl=hl&q=".urlencode($q), $_SERVER['DOCUMENT_ROOT']."/transes.html");
+        $res=json_decode($res);
+        return $res[0][0][0];
     }
 
     public function resetCounter(){

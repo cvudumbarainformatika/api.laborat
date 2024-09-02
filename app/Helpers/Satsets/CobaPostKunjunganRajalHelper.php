@@ -8,6 +8,7 @@ use App\Models\Pasien;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -136,7 +137,7 @@ class CobaPostKunjunganRajalHelper
             },
             'anamnesis',
             'pemeriksaanfisik' => function ($a) {
-              $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+              $a->with(['detailgambars:rs236_id,noreg,norm,tgl,anatomy,ket,user', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                   ->orderBy('id', 'DESC');
             },
             'tindakan' => function ($t) {
@@ -176,11 +177,15 @@ class CobaPostKunjunganRajalHelper
                     $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
                     ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
                     ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
-                    },
-                    'operasi',
+                },
+                'operasi',
                 ])->orderBy('id', 'DESC');
             },
-          ])
+
+            'diagnosakeperawatan'=> function ($d) {
+                $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+            },
+        ])
 
 
           
@@ -255,7 +260,7 @@ class CobaPostKunjunganRajalHelper
         // ->limit(1)
         // ->get();
         ->first();
-
+            
         // return $data;
       return self::kirimKunjungan($data);
     }
@@ -431,8 +436,9 @@ class CobaPostKunjunganRajalHelper
         $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
-
+        // return $alergyIntoleran;
 
         $body =
             [
@@ -540,15 +546,13 @@ class CobaPostKunjunganRajalHelper
                     $observation['psikologis'],
 
 
-                    // // CARE PLAN
-                    $carePlan,
+                    // // CARE PLAN push di bawah jika ada diagnosa keperawatan & intervensi
 
                     // PROCEDURE PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
 
                     // PLANNING push di bawah
-                    // $plann['spri'],
-                    // $plann['konsul'],
-                    // $plann['kontrol'],
+
+                    // ALLERY INTOLERAN push di bawah
                 ]
             ];
 
@@ -610,6 +614,11 @@ class CobaPostKunjunganRajalHelper
             array_push($body['entry'], $cond);
         }
 
+        // PUSH careplan
+        for ($i=0; $i < count($carePlan) ; $i++) { 
+            array_push($body['entry'], $carePlan[$i]);
+        }
+
         // PUSH PROCEDURE
         for ($i=0; $i < count($procedure) ; $i++) { 
             array_push($body['entry'], $procedure[$i]);
@@ -620,6 +629,8 @@ class CobaPostKunjunganRajalHelper
         if ($plann['konsul'] !== null) array_push($body['entry'], $plann['konsul']);
         if ($plann['kontrol'] !== null) array_push($body['entry'], $plann['kontrol']);
 
+        // PUSH ALLERGY INTOLERANCE
+        if ($alergyIntoleran !== null) array_push($body['entry'], $alergyIntoleran);
 
         // return $body;
 
@@ -1145,38 +1156,65 @@ class CobaPostKunjunganRajalHelper
 
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
         $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
-        $carePlan = [
-            "fullUrl" => "urn:uuid:".self::generateUuid(),
-            "resource" => [
-                "resourceType" => "CarePlan",
-                "status" => "active",
-                "intent" => "plan",
-                "category" => [
-                    [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "736271009",
-                                "display" => "Outpatient care plan",
+
+        $diagnosaKeperawatan = $request->diagnosakeperawatan;
+
+        $carePlan = [];
+
+        if (count($diagnosaKeperawatan) > 0) {
+            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            if (count($intervensis) > 0) {
+
+                
+
+                $title = "RENCANA RAWAT PASIEN ".$diagnosaKeperawatan[0]['nama'];
+
+                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+
+                for ($i=0; $i < count($intervensis) ; $i++) { 
+                    $plan = [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "CarePlan",
+                            "status" => "active",
+                            "intent" => "plan",
+                            "category" => [
+                                [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://snomed.info/sct",
+                                            "code" => "736271009",
+                                            "display" => "Outpatient care plan",
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            "title" => $title,
+                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "subject" => [
+                                "reference" => "Patient/$pasien_uuid",
+                                "display" => "$request->nama",
+                            ],
+                            "encounter" => ["reference" => "urn:uuid:$encounter"],
+                            "created" => $created,
+                            "author" => [
+                                "reference" => "Practitioner/".$diagnosaKeperawatan[0]['petugas']['satset_uuid'],
+                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
                             ],
                         ],
-                    ],
-                ],
-                "title" => "Rencana Rawat Pasien",
-                "description" => "Rencana Rawat Pasien",
-                "subject" => [
-                    "reference" => "Patient/$pasien_uuid",
-                    "display" => "$request->nama",
-                ],
-                "encounter" => ["reference" => "urn:uuid:$encounter"],
-                "created" => $created,
-                "author" => [
-                    "reference" => "Practitioner/$practitioner_uuid",
-                    "display" => $nama_practitioner,
-                ],
-            ],
-            "request" => ["method" => "POST", "url" => "CarePlan"],
-        ];
+                        "request" => ["method" => "POST", "url" => "CarePlan"],
+                    ];
+
+                    $carePlan[] = $plan;
+                }
+
+                
+            } else {
+                $carePlan = [];
+            }
+        } else {
+            $carePlan = [];
+        }
 
         return $carePlan;
     }
@@ -1624,6 +1662,100 @@ class CobaPostKunjunganRajalHelper
         return $data;
         
     }
+
+    static function allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
+
+        $allergy = null;
+
+        $anamnesis = $request->anamnesis;
+        if (count($anamnesis) > 0) {
+
+            if ($anamnesis[0]['riwayatalergi'] === null || $anamnesis[0]['riwayatalergi'] === '' || $anamnesis[0]['riwayatalergi'] === 'Tidak ada Alergi' || $anamnesis[0]['riwayatalergi'] === 'Tidak Ada Alergi,') {
+                $allergy = null;
+            } else {
+
+                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $anamnesis[0]['riwayatalergi']);
+                $cek = Allergy::where('nama','like','%'.$anamnesisAllergi.'%')->first();
+
+                if ($cek) {
+                    $allergy = 
+                    [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "AllergyIntolerance",
+                            "identifier" => [
+                                [
+                                    "system" =>
+                                        "http://sys-ids.kemkes.go.id/allergy/".$organization_id,
+                                    "use" => "official",
+                                    "value" => $cek->kode,
+                                ],
+                            ],
+                            "clinicalStatus" => [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+                                        "code" => "active",
+                                        "display" => "Active",
+                                    ],
+                                ],
+                            ],
+                            "verificationStatus" => [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+                                        "code" => "confirmed",
+                                        "display" => "Confirmed",
+                                    ],
+                                ],
+                            ],
+                            "category" => [$cek->codename],
+                            "code" => [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => $cek->kdSnowmed,
+                                        "display" => $cek->display,
+                                    ],
+                                ],
+                                "text" => $anamnesis[0]['keteranganalergi'] ?? '-',
+                            ],
+                            "patient" => [
+                                "reference" => "Patient/".$pasien_uuid,
+                                "display" => $request->nama,
+                            ],
+                            "encounter" => [
+                                "reference" => "urn:uuid:".$encounter,
+                                "display" => "Kunjungan $request->nama di hari ".$tgl_kunjungan,
+                            ],
+                            "recordedDate" => Carbon::parse($anamnesis[0]['created_at'])->toIso8601String(),
+                            "recorder" => ["reference" => "Practitioner/".$practitioner_uuid],
+                        ],
+                        "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
+                    ];
+                } else {
+                    $allergy = null;
+                }
+                
+            }
+            
+            
+        }else {
+            $allergy = null;
+        }
+
+        
+
+        return $allergy;
+    }
+
+
 
 
     public function ygHarusDikerjakan()
@@ -3719,6 +3851,67 @@ class CobaPostKunjunganRajalHelper
                     ],
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
+            ],
+
+            // "Allergy Intolerance"
+            [
+                "fullUrl" => "urn:uuid:3feb260d-8688-4394-b5bc-ff25277e0021",
+                "resource" => [
+                    "resourceType" => "AllergyIntolerance",
+                    "identifier" => [
+                        [
+                            "system" =>
+                                "http://sys-ids.kemkes.go.id/allergy/1000004",
+                            "use" => "official",
+                            "value" => "98457729",
+                        ],
+                    ],
+                    "clinicalStatus" => [
+                        "coding" => [
+                            [
+                                "system" =>
+                                    "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+                                "code" => "active",
+                                "display" => "Active",
+                            ],
+                        ],
+                    ],
+                    "verificationStatus" => [
+                        "coding" => [
+                            [
+                                "system" =>
+                                    "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+                                "code" => "confirmed",
+                                "display" => "Confirmed",
+                            ],
+                        ],
+                    ],
+                    "category" => ["food"],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "89811004",
+                                "display" => "Gluten",
+                            ],
+                        ],
+                        "text" =>
+                            "Alergi bahan gluten, khususnya ketika makan roti gandum",
+                    ],
+                    "patient" => [
+                        "reference" => "Patient/100000030009",
+                        "display" => "Budi Santoso",
+                    ],
+                    "encounter" => [
+                        "reference" =>
+                            "urn:uuid:588744a1-b657-40e5-ad1c-e1978ed9ceb7",
+                        "display" =>
+                            "Kunjungan Budi Santoso di tanggakl 14 Juli 2023",
+                    ],
+                    "recordedDate" => "2022-11-25T16:00:00+00:00",
+                    "recorder" => ["reference" => "Practitioner/N10000001"],
+                ],
+                "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
             ],
         ],
       ];
