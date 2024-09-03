@@ -11,6 +11,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CobaPostKunjunganRajalHelper
@@ -73,6 +74,7 @@ class CobaPostKunjunganRajalHelper
         'rs15.rs49 as nik',
         'rs17.rs19 as status',
         'rs15.satset_uuid as pasien_uuid',
+        DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())) AS usiatahun'),
         // 'satsets.uuid as satset',
         // 'satset_error_respon.uuid as satset_error',
         )
@@ -281,10 +283,10 @@ class CobaPostKunjunganRajalHelper
       }
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
-      if ($send['message'] === 'success') {
-        $token = AuthSatsetHelper::accessToken();
-        $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-      }
+    //   if ($send['message'] === 'success') {
+    //     $token = AuthSatsetHelper::accessToken();
+    //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+    //   }
       return $send;
     }
 
@@ -437,6 +439,7 @@ class CobaPostKunjunganRajalHelper
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        
 
         // return $alergyIntoleran;
 
@@ -1753,6 +1756,13 @@ class CobaPostKunjunganRajalHelper
         
 
         return $allergy;
+    }
+
+    static function screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        
+        
     }
 
 
