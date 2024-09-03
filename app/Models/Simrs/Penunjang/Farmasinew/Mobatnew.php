@@ -51,8 +51,9 @@ class Mobatnew extends Model
         ]);
     }
 
-    public function kodebelanja(){
-        return $this->belongsTo(Mkodebelanjaobat::class,'kode108','kode');
+    public function kodebelanja()
+    {
+        return $this->belongsTo(Mkodebelanjaobat::class, 'kode108', 'kode');
     }
     public function scopeFilter($cari, array $reqs)
     {
@@ -76,6 +77,11 @@ class Mobatnew extends Model
         return $this->hasMany(Mapingkelasterapi::class, 'kd_obat', 'kd_obat');
     }
 
+
+    public function kfa()
+    {
+        return $this->hasOne(MapingKfa::class, 'kd_obat', 'kd_obat');
+    }
     public function onestok()
     {
         return $this->hasOne(Stokreal::class, 'kdobat', 'kd_obat');
@@ -218,14 +224,17 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
     }
-    public function barangrusak(){
-        return $this->hasMany(BarangRusak::class,'kd_obat','kd_obat');
+    public function barangrusak()
+    {
+        return $this->hasMany(BarangRusak::class, 'kd_obat', 'kd_obat');
     }
 
-    public function pagu(){
+    public function pagu()
+    {
         return $this->hasOne(PergeseranPaguRinci::class, 'koderek108', 'kode108');
     }
-    public function realisasi(){
+    public function realisasi()
+    {
         return $this->hasMany(NpdLS_rinci::class, 'koderek108', 'kode108');
     }
 }
