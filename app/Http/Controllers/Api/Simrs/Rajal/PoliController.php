@@ -596,59 +596,69 @@ class PoliController extends Controller
                     ])
                         ->orderBy('id', 'DESC');
                 },
+                // ini buat satset
                 // resep keluar fix
-                'apotek' => function ($apot) {
-                    $apot->whereIn('flag', ['3', '4'])->with([
-                        // 'rincian.mobat:kd_obat,nama_obat',
-                        // 'rincianracik.mobat:kd_obat,nama_obat',
-                        'rincian' => function ($ri) {
-                            $ri->select(
-                                'resep_keluar_r.kdobat',
-                                'resep_keluar_r.noresep',
-                                'resep_keluar_r.jumlah',
-                                'resep_keluar_r.aturan', // signa
-                                'retur_penjualan_r.jumlah_retur',
-                                DB::raw('
-                                CASE
-                                WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
-                                ELSE resep_keluar_r.jumlah
-                                END as qty
-                                ') // iki jumlah obat sing non racikan mas..
-                            )
-                                ->leftJoin('retur_penjualan_r', function ($jo) {
-                                    $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
-                                        ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
-                                })
-                                ->with([
-                                    'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
-                                    // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
-                                    // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
-                                ]);
-                        },
-                        'rincianracik' => function ($ri) {
-                            $ri->select(
-                                'resep_keluar_racikan_r.kdobat',
-                                'resep_keluar_racikan_r.noresep',
-                                'resep_keluar_racikan_r.jumlah',
-                                'resep_keluar_racikan_r.jumlahdibutuhkan as qty', // MedicationRequest.dispenseRequest.quantity dan non-dtd -> Medication.ingredient.strength.denominator
-                                'resep_keluar_racikan_r.tiperacikan', // dtd / non-dtd
-                                'resep_permintaan_keluar_racikan.dosismaksimum', // dtd -> Medication.ingredient.strength.numerator
-                                'resep_permintaan_keluar_racikan.aturan', // signa
-                            )
-                                ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
-                                    $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
-                                        ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
-                                })
-                                ->with([
-                                    'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
-                                    // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
-                                    // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
-                                ]);
-                        }
+                // 'apotek' => function ($apot) {
+                //     $apot->whereIn('flag', ['3', '4'])->with([
+                //         // 'rincian.mobat:kd_obat,nama_obat',
+                //         // 'rincianracik.mobat:kd_obat,nama_obat',
+                //         'rincian' => function ($ri) {
+                //             $ri->select(
+                //                 'resep_keluar_r.kdobat',
+                //                 'resep_keluar_r.noresep',
+                //                 'resep_keluar_r.jumlah',
+                //                 'resep_keluar_r.aturan', // signa
+                //                 'retur_penjualan_r.jumlah_retur',
+                //                 DB::raw('
+                //                 CASE
+                //                 WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                //                 ELSE resep_keluar_r.jumlah
+                //                 END as qty
+                //                 ') // iki jumlah obat sing non racikan mas..
+                //             )
+                //                 ->leftJoin('retur_penjualan_r', function ($jo) {
+                //                     $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                //                         ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                //                 })
+                //                 ->with([
+                //                     'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                //                     // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                //                     // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                //                 ]);
+                //         },
+                //         'rincianracik' => function ($ri) {
+                //             $ri->select(
+                //                 'resep_keluar_racikan_r.kdobat',
+                //                 'resep_keluar_racikan_r.noresep',
+                //                 'resep_keluar_racikan_r.jumlah',
+                //                 'resep_keluar_racikan_r.jumlahdibutuhkan as qty', // MedicationRequest.dispenseRequest.quantity dan non-dtd -> Medication.ingredient.strength.denominator
+                //                 'resep_keluar_racikan_r.tiperacikan', // dtd / non-dtd
+                //                 'resep_permintaan_keluar_racikan.dosismaksimum', // dtd -> Medication.ingredient.strength.numerator
+                //                 'resep_permintaan_keluar_racikan.aturan', // signa
+                //             )
+                //                 ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                //                     $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                //                         ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                //                 })
+                //                 ->with([
+                //                     'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                //                     // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                //                     // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                //                 ]);
+                //         }
 
-                    ])
-                        ->orderBy('id', 'DESC');
-                },
+                //     ])
+                //         ->orderBy('id', 'DESC');
+                // },
+
+                // resep prb
+                // 'prb' => function ($p) {
+                //     $p->select(
+                //         'noreg'
+                //     )
+                //         ->whereIn('flag', ['3', '4'])
+                //         ->where('tiperesep', 'prb');
+                // }
             ])
             ->first();
 

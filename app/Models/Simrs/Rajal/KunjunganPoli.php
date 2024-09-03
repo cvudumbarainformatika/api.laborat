@@ -278,6 +278,10 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
+    public function prb()
+    {
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
 
     public function satset()
     {
