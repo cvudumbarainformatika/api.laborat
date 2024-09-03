@@ -38,8 +38,8 @@ class KunjunganController extends Controller
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
             // return CobaPostKunjunganRajalHelper::cekKunjungan('70214/08/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('70544/08/2024/J');
-            return CobaPostKunjunganRajalHelper::cekKunjungan('71962/09/2024/J');
-            // return self::cekKunjunganRajal();
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('72434/09/2024/J');
+            return self::cekKunjunganRajal();
         }
 
         if ($jenis_kunjungan === 'ranap') {
@@ -98,6 +98,7 @@ class KunjunganController extends Controller
         'rs15.rs49 as nik',
         'rs17.rs19 as status',
         'rs15.satset_uuid as pasien_uuid',
+        DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())) AS usiatahun'),
         // 'satsets.uuid as satset',
         // 'satset_error_respon.uuid as satset_error',
         )
@@ -171,18 +172,23 @@ class KunjunganController extends Controller
           'diagnosakeperawatan'=> function ($d) {
             $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
           },
+          'neonatusmedis',
+          'neonatuskeperawatan',
+          'pediatri',
+          'diet'
         ])
         // ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->whereNotIn('rs17.rs8', $bukanPoli)
-        ->where('rs17.rs19', '=', '1') // kunjungan selesai
+        // ->where('rs17.rs1', '=', '72216/09/2024/J')
+        // ->where('rs17.rs19', '=', '1') // kunjungan selesai
 
 
         ->doesntHave('satset')
         ->doesntHave('satset_error')
-        // ->whereHas('diagnosakeperawatan.intervensi', function ($q) {
-        //   // $q->where('riwayatalergi', 'NOT LIKE', '%' .'Tidak ada Alergi'. '%')
-        //   //   ->where('riwayatalergi', '!=','');  
-        // })
+        ->whereHas('diet', function ($q) {
+          // $q->whereNotnull('pediatri');
+          //   ->where('riwayatalergi', '!=','');  
+        })
 
         ->orderBy('rs17.rs3', 'desc')
       ->limit(1)
