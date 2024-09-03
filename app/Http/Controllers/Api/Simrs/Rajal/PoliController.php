@@ -621,6 +621,8 @@ class PoliController extends Controller
                                 })
                                 ->with([
                                     'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                                    // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                                    // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
                                 ]);
                         },
                         'rincianracik' => function ($ri) {
