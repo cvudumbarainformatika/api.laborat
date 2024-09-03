@@ -36,7 +36,9 @@ class KunjunganController extends Controller
             //   // sleep(5);//menunggu 10 detik
             // }
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
-            return CobaPostKunjunganRajalHelper::cekKunjungan('69689/08/2024/J');
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('70214/08/2024/J');
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('70544/08/2024/J');
+            return CobaPostKunjunganRajalHelper::cekKunjungan('71962/09/2024/J');
             // return self::cekKunjunganRajal();
         }
 
@@ -74,33 +76,116 @@ class KunjunganController extends Controller
     // KUNJUNGAN RAJAL ==========================================================================================================
     public static function cekKunjunganRajal()
     {
-      $tgl = Carbon::now()->subDays(3)->toDateString();
+      $tgl = Carbon::now()->subDays(4)->toDateString();
       // $tgl = Carbon::now()->subDays(1)->toDateString();
       $bukanPoli = ['POL014','PEN005','PEN004'];
-      $data = KunjunganPoli::select('rs1 as noreg','rs1')
+      $data = KunjunganPoli::select(
+        'rs17.rs1',
+        'rs17.rs9',
+        'rs17.rs4',
+        'rs17.rs8',
+        'rs17.rs1 as noreg',
+        'rs17.rs2 as norm',
+        'rs17.rs3 as tgl_kunjungan',
+        'rs17.rs8 as kodepoli',
+        'rs19.rs2 as poli',
+        'rs17.rs9 as kodedokter',
+        'rs21.rs2 as dokter',
+        'rs17.rs14 as kodesistembayar',
+        'rs9.rs2 as sistembayar',
+        'rs9.groups as groups',
+        'rs15.rs2 as nama',
+        'rs15.rs49 as nik',
+        'rs17.rs19 as status',
+        'rs15.satset_uuid as pasien_uuid',
+        // 'satsets.uuid as satset',
+        // 'satset_error_respon.uuid as satset_error',
+        )
+        ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
         ->with([
+
+          'satset:uuid', 'satset_error:uuid',
+            'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+            'relmpoli'=>function($q){
+              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
+            },
+            'taskid' => function ($q) {
+                $q->select('noreg', 'taskid', 'waktu', 'created_at')
+                    ->orderBy('taskid', 'ASC');
+            },
+
+            'anamnesis',
+            'pemeriksaanfisik' => function ($a) {
+              $a->with(['detailgambars:rs236_id,noreg,norm,tgl,anatomy,ket,user', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                  ->orderBy('id', 'DESC');
+            },
+
           'tindakan' => function ($t) {
-                    $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
-                    $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-                      ->with([
-                        'maapingprocedure'=> function($mp){
-                          $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
-                            ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
-                          ;
-                        },
-                      // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
-                      'maapingsnowmed:kdMaster,kdSnowmed,display',
-                      'petugas:nama,kdpegsimrs,satset_uuid'
-                      ])
-                      ->groupBy('rs73.rs4')
-                      ->orderBy('id', 'DESC');
+            $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+            $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+              ->with([
+                'maapingprocedure'=> function($mp){
+                  $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                  ;
                 },
+              // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+              'maapingsnowmed:kdMaster,kdSnowmed,display',
+              'petugas:nama,kdpegsimrs,satset_uuid'
+              ])
+            ->groupBy('rs73.rs4')
+            ->orderBy('id', 'DESC');
+          },
+          'diagnosa' => function ($d) {
+            $d->select('rs1','rs3','rs4','rs7','rs8');
+            $d->with('masterdiagnosa');
+          },
+          'planning' => function ($p) {
+            $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
+            $p->with([
+                'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                'rekomdpjp',
+                'transrujukan',
+                // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
+                'listkonsul' => function($lk) {
+                  $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
+                      ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                      ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                      ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
+                },
+                'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                'kontrol' => function ($k) {
+                  $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
+                  ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                  ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
+                },
+                'operasi',
+            ])->orderBy('id', 'DESC');
+          },
+          // 'diagnosakeperawatan.intervensi.masterintervensi',
+          'diagnosakeperawatan'=> function ($d) {
+            $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+          },
         ])
-        ->where('rs3', 'LIKE', '%' . $tgl . '%')
+        // ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->whereNotIn('rs17.rs8', $bukanPoli)
         ->where('rs17.rs19', '=', '1') // kunjungan selesai
-        ->orderBy('rs3', 'desc')
-      ->limit(50)
+
+
+        ->doesntHave('satset')
+        ->doesntHave('satset_error')
+        // ->whereHas('diagnosakeperawatan.intervensi', function ($q) {
+        //   // $q->where('riwayatalergi', 'NOT LIKE', '%' .'Tidak ada Alergi'. '%')
+        //   //   ->where('riwayatalergi', '!=','');  
+        // })
+
+        ->orderBy('rs17.rs3', 'desc')
+      ->limit(1)
       ->get();
 
 
@@ -112,179 +197,6 @@ class KunjunganController extends Controller
 
 
       return $data;
-      
-      // $adaTindakan = [];
-      // foreach ($data as $key => $value) {
-
-      //   // $adaTindakan[] = $value->tindakan;
-      //   $tindakan = $value->tindakan;
-      //   if (count($tindakan) > 0) {
-      //     foreach ($tindakan as $sub => $isi) {
-      //       if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
-
-      //         // setlocale(LC_ALL, 'IND');
-      //         $dt = Carbon::parse($isi->rs3)->locale('id');
-      //         $dt->settings(['formatFunction' => 'translatedFormat']);
-      //         $waktuPerform = $dt->format('l, j F Y');
-      //         $procedure = 
-      //         [
-      //           "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
-      //           "resource" => [
-      //               "resourceType" => "Procedure",
-      //               "status" => "completed",
-      //               "category" => [
-      //                   "coding" => [
-      //                       [
-      //                           "system" => "http://snomed.info/sct",
-      //                           "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
-      //                           "display" => $isi->maapingsnowmed['display'] ?? '-',
-      //                       ],
-      //                   ],
-      //                   "text" => $isi->maapingsnowmed['display'] ?? '-'
-      //               ],
-      //               "code" => [
-      //                   "coding" => [
-      //                       [
-      //                           "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-      //                           "code" => $isi->maapingprocedure['icd9'] ?? '-',
-      //                           "display" => $isi->maapingprocedure['prosedur'] ?? '-',
-      //                       ],
-      //                   ],
-      //               ],
-      //               "subject" => [
-      //                   "reference" => "Patient/{{Patient_ID}}",
-      //                   "display" => "",
-      //               ],
-      //               "encounter" => [
-      //                   "reference" => "urn:uuid:{{Encounter_id}}",
-      //                   "display" => $isi->keterangan." pada ".$waktuPerform
-      //               ],
-      //               "performedPeriod" => [
-      //                   "start" => Carbon::parse($isi->rs3)->toIso8601String(),
-      //                   "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
-      //               ],
-      //               "performer" => [
-      //                   [
-      //                       "actor" => [
-      //                           "reference" => "Practitioner/{{Practitioner_ID}}",
-      //                           "display" => "",
-      //                       ],
-      //                   ],
-      //               ],
-      //               // "reasonCode" => [
-      //               //     [
-      //               //         "coding" => [
-      //               //             [
-      //               //                 "system" => "http://hl7.org/fhir/sid/icd-10",
-      //               //                 "code" => "A15.0",
-      //               //                 "display" =>
-      //               //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
-      //               //             ],
-      //               //         ],
-      //               //     ],
-      //               // ],
-      //               // "bodySite" => [
-      //               //     [
-      //               //         "coding" => [
-      //               //             [
-      //               //                 "system" => "http://snomed.info/sct",
-      //               //                 "code" => "74101002",
-      //               //                 "display" => "Both lungs",
-      //               //             ],
-      //               //         ],
-      //               //     ],
-      //               // ],
-      //               // "note" => [
-      //               //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
-      //               // ],
-      //           ],
-      //           "request" => ["method" => "POST", "url" => "Procedure"],
-      //         ];
-      //         // $adaTindakan[] = $isi;
-      //         $adaTindakan[] = $procedure;
-      //       }
-      //     }
-      //   }
-        
-      // }
-
-      // return $adaTindakan;
-      // // 10. Procedure Terapetik
-      // // [
-      // //   "fullUrl" => "urn:uuid:{{Procedure_Terapetik}}",
-      // //   "resource" => [
-      // //       "resourceType" => "Procedure",
-      // //       "status" => "completed",
-      // //       "category" => [
-      // //           "coding" => [
-      // //               [
-      // //                   "system" => "http://snomed.info/sct",
-      // //                   "code" => "277132007",
-      // //                   "display" => "Therapeutic procedure",
-      // //               ],
-      // //           ],
-      // //           "text" => "Therapeutic procedure",
-      // //       ],
-      // //       "code" => [
-      // //           "coding" => [
-      // //               [
-      // //                   "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-      // //                   "code" => "93.94",
-      // //                   "display" =>
-      // //                       "Respiratory medication administered by nebulizer",
-      // //               ],
-      // //           ],
-      // //       ],
-      // //       "subject" => [
-      // //           "reference" => "Patient/{{Patient_ID}}",
-      // //           "display" => "",
-      // //       ],
-      // //       "encounter" => [
-      // //           "reference" => "urn:uuid:{{Encounter_id}}",
-      // //           "display" =>
-      // //               "Tindakan Nebulisasi  pada Selasa tanggal 31 Agustus 2023",
-      // //       ],
-      // //       "performedPeriod" => [
-      // //           "start" => "2023-08-31T02:27:00+00:00",
-      // //           "end" => "2023-08-31T02:27:00+00:00",
-      // //       ],
-      // //       "performer" => [
-      // //           [
-      // //               "actor" => [
-      // //                   "reference" => "Practitioner/{{Practitioner_ID}}",
-      // //                   "display" => "",
-      // //               ],
-      // //           ],
-      // //       ],
-      // //       "reasonCode" => [
-      // //           [
-      // //               "coding" => [
-      // //                   [
-      // //                       "system" => "http://hl7.org/fhir/sid/icd-10",
-      // //                       "code" => "A15.0",
-      // //                       "display" =>
-      // //                           "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
-      // //                   ],
-      // //               ],
-      // //           ],
-      // //       ],
-      // //       "bodySite" => [
-      // //           [
-      // //               "coding" => [
-      // //                   [
-      // //                       "system" => "http://snomed.info/sct",
-      // //                       "code" => "74101002",
-      // //                       "display" => "Both lungs",
-      // //                   ],
-      // //               ],
-      // //           ],
-      // //       ],
-      // //       "note" => [
-      // //           ["text" => "Nebulisasi untuk melegakan sesak napas"],
-      // //       ],
-      // //   ],
-      // //   "request" => ["method" => "POST", "url" => "Procedure"],
-      // // ];
     }
 
     public static function rajal($noreg)

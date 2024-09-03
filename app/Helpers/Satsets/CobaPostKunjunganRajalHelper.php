@@ -8,6 +8,7 @@ use App\Models\Pasien;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -74,7 +75,7 @@ class CobaPostKunjunganRajalHelper
         'rs15.satset_uuid as pasien_uuid',
         // 'satsets.uuid as satset',
         // 'satset_error_respon.uuid as satset_error',
-    )
+        )
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
         ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
@@ -83,9 +84,13 @@ class CobaPostKunjunganRajalHelper
         // ->leftjoin('satset_error_respon', 'satset_error_respon.uuid', '=', 'rs17.rs1') //satset error
 
         ->where('rs17.rs1', $noreg)
+        
         ->whereNotIn('rs17.rs8', $bukanPoli)
         ->where('rs17.rs19', '=', '1') // kunjungan selesai
         // ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
+
+        // ->doesntHave('satset')
+        // ->doesntHave('satset_error')
         
         // ->whereBetween('rs17.rs3', [$tgl, $tglx])
         // ->where('rs17.rs8', $user->kdruangansim ?? '')
@@ -112,7 +117,7 @@ class CobaPostKunjunganRajalHelper
             'satset:uuid', 'satset_error:uuid',
             'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
             'relmpoli'=>function($q){
-              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid');
+              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
             },
             //   // 1 (mulai waktu tunggu admisi),
             //   // 2 (akhir waktu tunggu admisi/mulai waktu layan admisi),
@@ -132,20 +137,8 @@ class CobaPostKunjunganRajalHelper
             },
             'anamnesis',
             'pemeriksaanfisik' => function ($a) {
-              $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+              $a->with(['detailgambars:rs236_id,noreg,norm,tgl,anatomy,ket,user', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                   ->orderBy('id', 'DESC');
-            },
-            'planning' => function ($p) {
-              $p->with(
-                  'masterpoli',
-                  'rekomdpjp',
-                  'transrujukan',
-                  'listkonsul',
-                  'spri',
-                  'ranap',
-                  'kontrol',
-                  'operasi',
-              )->orderBy('id', 'DESC');
             },
             'tindakan' => function ($t) {
                 $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
@@ -163,11 +156,39 @@ class CobaPostKunjunganRajalHelper
                 ->groupBy('rs73.rs4')
                 ->orderBy('id', 'DESC');
             },
-          ])
+
+            'planning' => function ($p) {
+                $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
+                $p->with([
+                    'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                    'rekomdpjp',
+                    'transrujukan',
+                    // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
+                    'listkonsul' => function($lk) {
+                    $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
+                        ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                        ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                        ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
+                    },
+                    'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                    'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                    'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                    'kontrol' => function ($k) {
+                    $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
+                    ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                    ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
+                },
+                'operasi',
+                ])->orderBy('id', 'DESC');
+            },
+
+            'diagnosakeperawatan'=> function ($d) {
+                $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+            },
+        ])
 
 
-          // ->doesntHave('satset')
-          // ->doesntHave('satset_error')
+          
 
       //   ->with([
       //     'anamnesis',
@@ -239,8 +260,8 @@ class CobaPostKunjunganRajalHelper
         // ->limit(1)
         // ->get();
         ->first();
-
-    // return $data;
+            
+        // return $data;
       return self::kirimKunjungan($data);
     }
 
@@ -414,6 +435,10 @@ class CobaPostKunjunganRajalHelper
         $observation = self::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+
+        // return $alergyIntoleran;
 
         $body =
             [
@@ -521,13 +546,17 @@ class CobaPostKunjunganRajalHelper
                     $observation['psikologis'],
 
 
-                    // CARE PLAN
-                    $carePlan
+                    // // CARE PLAN push di bawah jika ada diagnosa keperawatan & intervensi
 
                     // PROCEDURE PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
+
+                    // PLANNING push di bawah
+
+                    // ALLERY INTOLERAN push di bawah
                 ]
             ];
 
+        
 
 
         //  PUSH CONDITION
@@ -585,11 +614,23 @@ class CobaPostKunjunganRajalHelper
             array_push($body['entry'], $cond);
         }
 
+        // PUSH careplan
+        for ($i=0; $i < count($carePlan) ; $i++) { 
+            array_push($body['entry'], $carePlan[$i]);
+        }
+
         // PUSH PROCEDURE
         for ($i=0; $i < count($procedure) ; $i++) { 
             array_push($body['entry'], $procedure[$i]);
         }
 
+        //push planning
+        if ($plann['spri'] !== null) array_push($body['entry'], $plann['spri']);
+        if ($plann['konsul'] !== null) array_push($body['entry'], $plann['konsul']);
+        if ($plann['kontrol'] !== null) array_push($body['entry'], $plann['kontrol']);
+
+        // PUSH ALLERGY INTOLERANCE
+        if ($alergyIntoleran !== null) array_push($body['entry'], $alergyIntoleran);
 
         // return $body;
 
@@ -1115,38 +1156,65 @@ class CobaPostKunjunganRajalHelper
 
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
         $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
-        $carePlan = [
-            "fullUrl" => "urn:uuid:".self::generateUuid(),
-            "resource" => [
-                "resourceType" => "CarePlan",
-                "status" => "active",
-                "intent" => "plan",
-                "category" => [
-                    [
-                        "coding" => [
-                            [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "736271009",
-                                "display" => "Outpatient care plan",
+
+        $diagnosaKeperawatan = $request->diagnosakeperawatan;
+
+        $carePlan = [];
+
+        if (count($diagnosaKeperawatan) > 0) {
+            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            if (count($intervensis) > 0) {
+
+                
+
+                $title = "RENCANA RAWAT PASIEN ".$diagnosaKeperawatan[0]['nama'];
+
+                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+
+                for ($i=0; $i < count($intervensis) ; $i++) { 
+                    $plan = [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "CarePlan",
+                            "status" => "active",
+                            "intent" => "plan",
+                            "category" => [
+                                [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://snomed.info/sct",
+                                            "code" => "736271009",
+                                            "display" => "Outpatient care plan",
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            "title" => $title,
+                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "subject" => [
+                                "reference" => "Patient/$pasien_uuid",
+                                "display" => "$request->nama",
+                            ],
+                            "encounter" => ["reference" => "urn:uuid:$encounter"],
+                            "created" => $created,
+                            "author" => [
+                                "reference" => "Practitioner/".$diagnosaKeperawatan[0]['petugas']['satset_uuid'],
+                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
                             ],
                         ],
-                    ],
-                ],
-                "title" => "Rencana Rawat Pasien",
-                "description" => "Rencana Rawat Pasien",
-                "subject" => [
-                    "reference" => "Patient/$pasien_uuid",
-                    "display" => "$request->nama",
-                ],
-                "encounter" => ["reference" => "urn:uuid:$encounter"],
-                "created" => $created,
-                "author" => [
-                    "reference" => "Practitioner/$practitioner_uuid",
-                    "display" => $nama_practitioner,
-                ],
-            ],
-            "request" => ["method" => "POST", "url" => "CarePlan"],
-        ];
+                        "request" => ["method" => "POST", "url" => "CarePlan"],
+                    ];
+
+                    $carePlan[] = $plan;
+                }
+
+                
+            } else {
+                $carePlan = [];
+            }
+        } else {
+            $carePlan = [];
+        }
 
         return $carePlan;
     }
@@ -1251,6 +1319,443 @@ class CobaPostKunjunganRajalHelper
 
         return $adaTindakan;
     }
+    static function planning($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $spri = null;
+        $konsul = null;
+        $kontrol = null;
+        //   foreach ($data as $key => $value) {
+
+        // $spri[] = $value->planning;
+        $planning = $request->planning;
+
+        
+        $diagnosa = collect($request->diagnosa)->filter(function ($item) {
+            return strpos($item['rs3'], 'Z') === false; 
+          });
+        $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
+
+        $icd10 = $diag ? ($diag['rs3'] ?? '-') : '-';
+        $display = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs4'] ?? '-' : '-') : '-';
+        $uraian = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs3'] ?? '-' : '-') : '-';
+
+        if (count($planning) > 0) {
+            //   foreach ($planning as $sub => $isi) {
+            $isi = $planning[0];
+            $plann = $isi->rs4;
+
+            
+
+            if ($plann === 'Rawat Inap' && $isi->spri !== null) {
+
+              
+
+
+                $petugas_uuid = $isi->spri['petugas'] ? $isi->spri['petugas']['satset_uuid'] : '-';
+                $petugas_nama = $isi->spri['petugas'] ? $isi->spri['petugas']['nama'] : '-';
+
+              $spri = 
+              [
+                "fullUrl" => "urn:uuid:".self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "ServiceRequest",
+                    "identifier" => [
+                        [
+                            "system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id",
+                            "value" => $organization_id,
+                        ],
+                    ],
+                    "status" => "active",
+                    "intent" => "original-order",
+                    "priority" => "routine",
+                    "category" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => "3457005",
+                                    "display" => "Patient referral",
+                                ],
+                            ],
+                        ],
+                    ],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "737481003",
+                                "display" => "Inpatient care management",
+                            ],
+                        ],
+                    ],
+                    "subject" => ["reference" => "Patient/$pasien_uuid"],
+                    "encounter" => [
+                        "reference" => "Encounter/$encounter",
+                        "display" => "Kunjungan  di hari ".$tgl_kunjungan,
+                    ],
+                    "occurrenceDateTime" => Carbon::parse($isi->tgl)->toIso8601String(),
+                    "requester" => [
+                        "reference" => "Practitioner/".$petugas_uuid,
+                        "display" => $petugas_nama,
+                    ],
+                    "performer" => [
+                        ["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner],
+                    ],
+                    "reasonCode" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://hl7.org/fhir/sid/icd-10",
+                                    "code" => $icd10,
+                                    "display" => $display,
+                                ],
+                            ],
+                        ],
+                    ],
+                    "locationCode" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" =>
+                                        "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                    "code" => "HOSP",
+                                    "display" => "Hospital",
+                                ],
+                                // INI JIKA PAKE AMBULANCE
+                                // [
+                                //     "system" =>
+                                //         "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                //     "code" => "AMB",
+                                //     "display" => "Ambulance",
+                                // ],
+                            ],
+                        ],
+                    ],
+                    "patientInstruction" => "Surat Perintah Rawat Inap RSUD MOHAMAD SALEH, Dalam Keadaan Darurat dapat Menghubungi (0335) 433119,421118",
+                ],
+                "request" => ["method" => "POST", "url" => "ServiceRequest"],
+              ];
+
+             
+            }
+
+
+            if ($isi->listkonsul !== null) {
+
+                $namaDokterKonsul = $isi->listkonsul['dokterkonsul'] ? $isi->listkonsul['dokterkonsul']['nama'] : '-';
+                $dokterKonsulUuid = $isi->listkonsul['dokterkonsul'] ? $isi->listkonsul['dokterkonsul']['satset_uuid'] : '-';
+                $tglRencanaKonsul = $isi->listkonsul['tgl_rencana_konsul'] ? $isi->listkonsul['tgl_rencana_konsul'] : '-';
+
+
+                $lokasikonsul_uuid = $isi->listkonsul['lokasikonsul'] ? $isi->listkonsul['lokasikonsul']['satset_uuid'] : '-';
+                $ruangankonsul = $isi->listkonsul['lokasikonsul'] ? $isi->listkonsul['lokasikonsul']['uraian'] : '-';
+
+                $konsul = 
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" =>[
+                        "resourceType" => "ServiceRequest",
+                        "identifier" => [
+                            [
+                                "system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id",
+                                "value" => $organization_id,
+                            ],
+                        ],
+                        "status" => "active",
+                        "intent" => "original-order",
+                        "priority" => "routine",
+                        "category" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "306098008",
+                                        "display" => "Self-referral",
+                                    ],
+                                ],
+                            ],
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "11429006",
+                                        "display" => "Consultation",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => "185389009",
+                                    "display" => "Follow-up visit",
+                                ],
+                            ],
+                            "text" => "Konsultasi ke Dokter ".$namaDokterKonsul,
+                        ],
+                        "subject" => ["reference" => "Patient/$pasien_uuid"],
+                        "encounter" => [
+                            "reference" => "Encounter/$encounter",
+                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan",
+                        ],
+                        "occurrenceDateTime" => Carbon::parse($tglRencanaKonsul)->toIso8601String(),
+                        "authoredOn" => Carbon::parse($isi->tgl)->toIso8601String(),
+                        "requester" => [
+                            "reference" => "Practitioner/$practitioner_uuid",
+                            "display" => $nama_practitioner,
+                        ],
+                        "performer" => [
+                            ["reference" => "Practitioner/$dokterKonsulUuid", "display" => $namaDokterKonsul],
+                        ],
+                        "reasonCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://hl7.org/fhir/sid/icd-10",
+                                        "code" => $icd10,
+                                        "display" => $display,
+                                    ],
+                                ],
+                                "text" => "Konsul ".$uraian,
+                            ],
+                        ],
+                        "locationCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                        "code" => "OF",
+                                        "display" => "Outpatient Facility",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "locationReference" => [
+                            [
+                                "reference" => "Location/".$lokasikonsul_uuid,
+                                "display" => $ruangankonsul,
+                            ],
+                        ],
+                        "patientInstruction" => "-- ".$pasien_uuid,
+                    ],
+                    "request" => ["method" => "POST", "url" => "ServiceRequest"],
+                ];
+            }
+
+
+            if ($isi->kontrol !== null) {
+
+                $namaDokterKonsul = $isi->kontrol['dokterkontrol'] ? $isi->kontrol['dokterkontrol']['nama'] : '-';
+                $dokterKonsulUuid = $isi->kontrol['dokterkontrol'] ? $isi->kontrol['dokterkontrol']['satset_uuid'] : '-';
+                $tglRencanaKonsul = $isi->kontrol['tglRencanaKontrol'] ? $isi->kontrol['tglRencanaKontrol'] : '-';
+
+
+                $lokasikonsul_uuid = $isi->kontrol['lokasikontrol'] ? $isi->kontrol['lokasikontrol']['satset_uuid'] : '-';
+                $ruangankonsul = $isi->kontrol['lokasikontrol'] ? $isi->kontrol['lokasikontrol']['uraian'] : '-';
+
+                $kontrol = 
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" =>[
+                        "resourceType" => "ServiceRequest",
+                        "identifier" => [
+                            [
+                                "system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id",
+                                "value" => $organization_id,
+                            ],
+                        ],
+                        "status" => "active",
+                        "intent" => "original-order",
+                        "priority" => "routine",
+                        "category" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "306098008",
+                                        "display" => "Self-referral",
+                                    ],
+                                ],
+                            ],
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "11429006",
+                                        "display" => "Consultation",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => "185389009",
+                                    "display" => "Follow-up visit",
+                                ],
+                            ],
+                            "text" => "Kembali Kontrol ke dokter ".$namaDokterKonsul,
+                        ],
+                        "subject" => ["reference" => "Patient/$pasien_uuid"],
+                        "encounter" => [
+                            "reference" => "Encounter/$encounter",
+                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan",
+                        ],
+                        "occurrenceDateTime" => Carbon::parse($tglRencanaKonsul)->toIso8601String(),
+                        "authoredOn" => Carbon::parse($isi->tgl)->toIso8601String(),
+                        "requester" => [
+                            "reference" => "Practitioner/$practitioner_uuid",
+                            "display" => $nama_practitioner,
+                        ],
+                        "performer" => [
+                            ["reference" => "Practitioner/$dokterKonsulUuid", "display" => $namaDokterKonsul],
+                        ],
+                        "reasonCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://hl7.org/fhir/sid/icd-10",
+                                        "code" => $icd10,
+                                        "display" => $display,
+                                    ],
+                                ],
+                                "text" => "Kontrol ".$uraian,
+                            ],
+                        ],
+                        "locationCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                        "code" => "OF",
+                                        "display" => "Outpatient Facility",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "locationReference" => [
+                            [
+                                "reference" => "Location/".$lokasikonsul_uuid,
+                                "display" => $ruangankonsul,
+                            ],
+                        ],
+                        "patientInstruction" => "Masih Memerlukan Kontrol di RS",
+                    ],
+                    "request" => ["method" => "POST", "url" => "ServiceRequest"],
+                ];
+            }
+            
+        }
+        
+        //   }
+    
+        $data = [
+            'spri'=>$spri,
+            'konsul'=>$konsul,
+            'kontrol'=>$kontrol
+        ];
+        return $data;
+        
+    }
+
+    static function allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
+
+        $allergy = null;
+
+        $anamnesis = $request->anamnesis;
+        if (count($anamnesis) > 0) {
+
+            if ($anamnesis[0]['riwayatalergi'] === null || $anamnesis[0]['riwayatalergi'] === '' || $anamnesis[0]['riwayatalergi'] === 'Tidak ada Alergi' || $anamnesis[0]['riwayatalergi'] === 'Tidak Ada Alergi,') {
+                $allergy = null;
+            } else {
+
+                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $anamnesis[0]['riwayatalergi']);
+                $cek = Allergy::where('nama','like','%'.$anamnesisAllergi.'%')->first();
+
+                if ($cek) {
+                    $allergy = 
+                    [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "AllergyIntolerance",
+                            "identifier" => [
+                                [
+                                    "system" =>
+                                        "http://sys-ids.kemkes.go.id/allergy/".$organization_id,
+                                    "use" => "official",
+                                    "value" => $cek->kode,
+                                ],
+                            ],
+                            "clinicalStatus" => [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+                                        "code" => "active",
+                                        "display" => "Active",
+                                    ],
+                                ],
+                            ],
+                            "verificationStatus" => [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+                                        "code" => "confirmed",
+                                        "display" => "Confirmed",
+                                    ],
+                                ],
+                            ],
+                            "category" => [$cek->codename],
+                            "code" => [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => $cek->kdSnowmed,
+                                        "display" => $cek->display,
+                                    ],
+                                ],
+                                "text" => $anamnesis[0]['keteranganalergi'] ?? '-',
+                            ],
+                            "patient" => [
+                                "reference" => "Patient/".$pasien_uuid,
+                                "display" => $request->nama,
+                            ],
+                            "encounter" => [
+                                "reference" => "urn:uuid:".$encounter,
+                                "display" => "Kunjungan $request->nama di hari ".$tgl_kunjungan,
+                            ],
+                            "recordedDate" => Carbon::parse($anamnesis[0]['created_at'])->toIso8601String(),
+                            "recorder" => ["reference" => "Practitioner/".$practitioner_uuid],
+                        ],
+                        "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
+                    ];
+                } else {
+                    $allergy = null;
+                }
+                
+            }
+            
+            
+        }else {
+            $allergy = null;
+        }
+
+        
+
+        return $allergy;
+    }
+
+
 
 
     public function ygHarusDikerjakan()
@@ -3346,6 +3851,67 @@ class CobaPostKunjunganRajalHelper
                     ],
                 ],
                 "request" => ["method" => "POST", "url" => "Condition"],
+            ],
+
+            // "Allergy Intolerance"
+            [
+                "fullUrl" => "urn:uuid:3feb260d-8688-4394-b5bc-ff25277e0021",
+                "resource" => [
+                    "resourceType" => "AllergyIntolerance",
+                    "identifier" => [
+                        [
+                            "system" =>
+                                "http://sys-ids.kemkes.go.id/allergy/1000004",
+                            "use" => "official",
+                            "value" => "98457729",
+                        ],
+                    ],
+                    "clinicalStatus" => [
+                        "coding" => [
+                            [
+                                "system" =>
+                                    "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+                                "code" => "active",
+                                "display" => "Active",
+                            ],
+                        ],
+                    ],
+                    "verificationStatus" => [
+                        "coding" => [
+                            [
+                                "system" =>
+                                    "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+                                "code" => "confirmed",
+                                "display" => "Confirmed",
+                            ],
+                        ],
+                    ],
+                    "category" => ["food"],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "89811004",
+                                "display" => "Gluten",
+                            ],
+                        ],
+                        "text" =>
+                            "Alergi bahan gluten, khususnya ketika makan roti gandum",
+                    ],
+                    "patient" => [
+                        "reference" => "Patient/100000030009",
+                        "display" => "Budi Santoso",
+                    ],
+                    "encounter" => [
+                        "reference" =>
+                            "urn:uuid:588744a1-b657-40e5-ad1c-e1978ed9ceb7",
+                        "display" =>
+                            "Kunjungan Budi Santoso di tanggakl 14 Juli 2023",
+                    ],
+                    "recordedDate" => "2022-11-25T16:00:00+00:00",
+                    "recorder" => ["reference" => "Practitioner/N10000001"],
+                ],
+                "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
             ],
         ],
       ];
