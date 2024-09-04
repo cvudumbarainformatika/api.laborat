@@ -9,6 +9,6 @@ class TriageController extends Controller
 {
     public function simpantriage()
     {
-        return 'wew';
+        return 'sa';
     }
 }
