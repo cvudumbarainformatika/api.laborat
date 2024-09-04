@@ -53,6 +53,7 @@ use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Rekom\Rekomdpjp;
@@ -75,6 +76,11 @@ class KunjunganPoli extends Model
     public function masterpasien()
     {
         return $this->hasOne(Mpasien::class, 'rs1', 'rs2');
+    }
+
+    public function triage()
+    {
+        return $this->hasOne(TriageA::class, 'rs1', 'rs1');
     }
 
     // public function relrekomdpjp()

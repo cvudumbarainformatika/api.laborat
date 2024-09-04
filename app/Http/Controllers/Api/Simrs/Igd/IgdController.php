@@ -112,6 +112,14 @@ class IgdController extends Controller
             'anamnesis',
             'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
             'permintaanperawatanjenazah',
+            'triage' => function($triage) {
+                $triage->select('rs250.id','rs250.rs1','rs250.doa','rs250.rs6 as tanggal','rs250.rs8 as suhu','rs250.rs10 as pernapasan','rs250.rs11 as nadi','rs250.rs12 as tensi',
+                'rs250.rs13 as bb','rs250.rs21 as tb','rs250.sistole','rs250.diastole','rs250.kesadarans','rs250.spo2',
+                'rs251.flaghamil','rs251.haidterakir','rs251.gravida','rs251.partus','rs251.abortus','rs251.nyeri','rs251.lochea','rs251.proteinurin',
+                'rs251.rs7 as jalannapas','rs251.rs9 as pernapasan','rs251.rs19 as sirkulasi','rs251.rs20 as kesadaran'
+                )
+                ->leftjoin('rs251','rs251.rs1','rs250.rs1');
+            },
             // 'gambars',
             // 'fisio',
             // 'laporantindakan',
