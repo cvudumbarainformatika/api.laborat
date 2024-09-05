@@ -439,7 +439,7 @@ class CobaPostKunjunganRajalHelper
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
-        
+
 
         // return $alergyIntoleran;
 
@@ -1175,6 +1175,11 @@ class CobaPostKunjunganRajalHelper
                 // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
 
                 for ($i=0; $i < count($intervensis) ; $i++) { 
+
+                    // if ($intervensis[$i]['masterintervensi']['group'] == 'edukasi') {
+                    //     # code...
+                    // }
+
                     $plan = [
                         "fullUrl" => "urn:uuid:".self::generateUuid(),
                         "resource" => [
