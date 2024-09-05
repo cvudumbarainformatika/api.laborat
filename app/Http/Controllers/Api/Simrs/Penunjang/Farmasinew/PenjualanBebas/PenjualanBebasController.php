@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\PenjualanBebas;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -18,6 +19,17 @@ use Illuminate\Support\Facades\DB;
 
 class PenjualanBebasController extends Controller
 {
+    public function getKaryawan()
+    {
+        $data = Petugas::select('nama', 'nik')
+            ->where('nama', 'LIKE', '%' . request('q') . '%')
+            ->where('aktif', 'AKTIF')
+            ->where('nik', '!=', '')
+            ->limit(30)
+            ->get();
+
+        return new JsonResponse($data);
+    }
     public function getPihakTiga()
     {
         $data = Mpihakketiga::select('nama', 'kode')
