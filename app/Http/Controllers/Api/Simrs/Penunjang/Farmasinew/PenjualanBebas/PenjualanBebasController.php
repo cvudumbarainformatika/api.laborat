@@ -6,9 +6,12 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penjualan\KunjunganPenjualan;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -194,7 +197,7 @@ class PenjualanBebasController extends Controller
             $key['errors'] = $data['errors'];
             $key['harga'] = $data['harga'];
             $key['hargajual'] = $data['hargajual'];
-            $key['jumlah_all_diminta'] = $data['jumlah_diminta'];
+            $key['jumlah_diminta'] = $data['jumlah_diminta'];
             $key['item'] = $data['data'];
             $key['sistembayar'] = 'UMUM';
             // $key['signa'] = $key['signa'];
@@ -268,12 +271,20 @@ class PenjualanBebasController extends Controller
     }
     public static function cekAlokasi($request)
     {
+
         $limitHargaTertinggi = 5;
 
         $listobat = Mobatnew::query()
             ->select(
                 'new_masterobat.kd_obat',
-                'new_masterobat.kd_obat',
+                'new_masterobat.kandungan',
+                'new_masterobat.status_fornas as fornas',
+                'new_masterobat.status_forkid as forkit',
+                'new_masterobat.status_generik as generik ',
+                'new_masterobat.kode108',
+                'new_masterobat.uraian108',
+                'new_masterobat.kode50',
+                'new_masterobat.uraian50',
                 'stokreal.kdobat as kdobat',
                 'stokreal.jumlah as jumlah',
                 DB::raw('SUM(
@@ -387,7 +398,7 @@ class PenjualanBebasController extends Controller
         $diminta = [];
         foreach ($item as $key) {
             $data = collect($adaraw)->firstWhere('kdobat', $key['kodeobat']);
-            $diminta[] = self::mappingObat($data, $key, (int)$request->margin);
+            $diminta[] = self::mappingObat($data, $key, (float)$request->margin);
         }
         return $diminta;
     }
@@ -415,7 +426,7 @@ class PenjualanBebasController extends Controller
             }
         }
         $harga = $isError ? false : $data['harga_tertinggi'];
-        $hargajual = $isError ? false : (float)$harga * (int)$margin;
+        $hargajual = $isError ? false : ((float)$harga * (float)$margin) + (float)$harga;
         $obat['hargajual'] = $hargajual;
         if ($hargajual === 0 && $data['obat_program'] !== '1') {
             $obat['isError'] = true;
@@ -430,11 +441,11 @@ class PenjualanBebasController extends Controller
     }
     public static function sendOrder($request, $obatyangsudahdicek, $noreg)
     {
-        return new JsonResponse([
-            'req' => $request->all(),
-            'obat' => $obatyangsudahdicek,
-            'noreg' => $noreg,
-        ], 410);
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        //     'obat' => $obatyangsudahdicek,
+        //     'noreg' => $noreg,
+        // ], 410);
         // mulai insert
         //  $obatdiminta = $request->items;
         //  return [
@@ -451,27 +462,22 @@ class PenjualanBebasController extends Controller
         try {
             DB::connection('farmasi')->beginTransaction();
 
-            // if ($request->kodedepo === 'Gd-04010102') {
-            //     $procedure = 'resepkeluardeporanap(@nomor)';
-            //     $colom = 'deporanap';
-            //     $lebel = 'D-RI';
-            // } elseif ($request->kodedepo === 'Gd-04010103') {
-            //     $procedure = 'resepkeluardepook(@nomor)';
-            //     $colom = 'depook';
-            //     $lebel = 'D-KO';
-            // } elseif ($request->kodedepo === 'Gd-05010101') {
+            if ($request->depo === 'Gd-04010102') {
+                $lebel = 'PD-RI';
+            } elseif ($request->depo === 'Gd-04010103') {
+                $lebel = 'PD-KO';
+            } elseif ($request->depo === 'Gd-05010101') {
+                $lebel = 'PD-RJ';
+            } else if ($request->depo === 'Gd-02010104') {
+                $lebel = 'PD-IR';
+            } else {
+                $lebel = 'D-UM';
+            }
 
-
-            //     $procedure = 'resepkeluardeporajal(@nomor)';
-            //     $colom = 'deporajal';
-            //     $lebel = 'D-RJ';
-            // } else {
-            //     $procedure = 'resepkeluardepoigd(@nomor)';
-            //     $colom = 'depoigd';
-            //     $lebel = 'D-IR';
-            // }
-
-
+            DB::connection('farmasi')->select('call reseppenjumum(@nomor)');
+            $x = DB::connection('farmasi')->table('conter')->select('respbebas')->first();
+            $nom = $x->respbebas;
+            $noresep = self::setNomor($nom, $lebel);
             // DB::connection('farmasi')->select('call ' . $procedure);
             // $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
             // $wew = $x[0]->$colom;
@@ -481,98 +487,191 @@ class PenjualanBebasController extends Controller
             $created = date('Y-m-d H:i:s');
             $user = FormatingHelper::session_user();
 
-            // $simpan = Resepkeluarheder::updateOrCreate(
-            //     [
-            //         'noresep' => $noresep,
-            //         'noreg' => $request->noreg,
-            //     ],
-            //     [
-            //         'norm' => $request->norm,
-            //         'tgl_permintaan' => date('Y-m-d H:i:s'),
-            //         'tgl_kirim' => date('Y-m-d H:i:s'),
-            //         'tgl' => date('Y-m-d'),
-            //         'depo' => $request->kodedepo,
-            //         'ruangan' => $request->kdruangan,
-            //         'dokter' =>  $user['kodesimrs'],
-            //         'sistembayar' => $request->sistembayar,
+            $simpan = Resepkeluarheder::updateOrCreate(
+                [
+                    'noresep' => $noresep,
+                    'noreg' => $noreg,
+                ],
+                [
+                    'norm' => $request->kode_identitas,
+                    'tgl_permintaan' => date('Y-m-d H:i:s'),
+                    'tgl_kirim' => date('Y-m-d H:i:s'),
+                    'tgl_selesai' => date('Y-m-d H:i:s'),
+                    'tgl' => date('Y-m-d'),
+                    'depo' => $request->depo,
+                    'ruangan' => $request->depo,
+                    // 'dokter' =>  $user['kodesimrs'],
+                    'sistembayar' => 'UMUM',
 
-            //         'diagnosa' => $request->diagnosa ?? '',
-            //         'kodeincbg' => $request->kodeincbg ?? '',
-            //         'uraianinacbg' => $request->uraianinacbg ?? '',
-            //         'tarifina' => $request->tarifina ?? '',
-            //         'tiperesep' => $request->tiperesep,
-            //         'flag' => '1',
-            //         'flag_dari' => '1',
-            //         // 'user' => $user['kodesimrs'],
-            //         // 'iter_expired' => $iter_expired,
-            //         // 'iter_jml' => $iter_jml,
-            //         // 'iter_expired' => $request->iter_expired ?? '',
-            //         'tagihanrs' => $request->tagihanrs ?? 0,
-            //     ]
-            // );
+                    // 'diagnosa' => $request->diagnosa ?? '',
+                    // 'kodeincbg' => $request->kodeincbg ?? '',
+                    // 'uraianinacbg' => $request->uraianinacbg ?? '',
+                    // 'tarifina' => $request->tarifina ?? '',
+                    'tiperesep' => 'penjualan',
+                    'flag' => '3',
+                    'flag_dari' => '5',
+                    'user' => $user['kodesimrs'],
+                    // 'iter_expired' => $iter_expired,
+                    // 'iter_jml' => $iter_jml,
+                    // 'iter_expired' => $request->iter_expired ?? '',
+                    'tagihanrs' => $request->tagihanrs ?? 0,
+                ]
+            );
 
-            // if (!$simpan) {
-            //     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-            // }
+            if (!$simpan) {
+                return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+            }
 
             // ini ranah detail
             $racikandtd = [];
             $racikannondtd = [];
             $rinciaja = [];
+            $idnya = [];
+            $stokToUp = [];
 
-            $adaAlokasi = array_filter($obatyangsudahdicek, function ($obat) {
-                return $obat['racikan'] === false;
-            });
+            $adaAlokasi = $obatyangsudahdicek;
+            $stok = Stokreal::lockForUpdate()
+                ->whereIn('kdobat', $request->kode)
+                ->where('jumlah', '>', 0)
+                ->where('kdruang', $request->depo)
+                ->orderBy('tglexp', 'ASC')
+                ->get();
+            $collectStok = collect($stok);
+
+            // jika ada racikan
+            // $adaAlokasi = array_filter($obatyangsudahdicek, function ($obat) {
+            //     return $obat['racikan'] === false;
+            // });
 
             // return $adaAlokasi;
 
-            $adaAlokasiRacikan = array_filter($obatyangsudahdicek, function ($obat) {
-                return $obat['racikan'] !== false;
-            });
+            // $adaAlokasiRacikan = array_filter($obatyangsudahdicek, function ($obat) {
+            //     return $obat['racikan'] !== false;
+            // });
 
             // return $adaAlokasiRacikan;
 
 
             if (count($adaAlokasi) > 0) {
                 foreach ($adaAlokasi as $non) {
-                    // $har = HargaHelper::getHarga($non['kodeobat'], $request->groupsistembayar);
-                    // $res = $har['res'];
-                    // if ($res) {
-                    //     $hargajualx = $non['hargajual'];
-                    //     $harga = $non['hpp'];
-                    // } else {
-                    //     $hargajualx = $har['hargaJual'];
-                    //     $harga = $har['harga'];
-                    // }
-
+                    $diminta = (float) $non['jumlah_diminta'];
+                    // cari stok nya berdasarkan kode
                     // rinci
-                    $simpanrinci =
-                        [
-                            'noreg' => $request->noreg,
-                            // 'noresep' => $noresep,
-                            'kdobat' => $non['kodeobat'],
-                            'kandungan' => $non['item']['kandungan'] ?? '',
-                            'fornas' => $non['item']['fornas'] ?? '',
-                            'forkit' => $non['item']['forkit'] ?? '',
-                            'generik' => $non['item']['generik'] ?? '',
-                            'kode108' => $non['item']['kode108'],
-                            'uraian108' => $non['item']['uraian108'],
-                            'kode50' => $non['item']['kode50'],
-                            'uraian50' => $non['item']['uraian50'],
-                            'stokalokasi' => $non['item']['alokasi'],
-                            'r' => $request->groupsistembayar === '1' || $request->groupsistembayar === 1 ? 300 : 0,
-                            'jumlah' => $non['jumlah_diminta'],
-                            'hpp' => $non['harga'],
-                            'hargajual' => $non['hargajual'],
-                            'aturan' => $non['signa'],
-                            'konsumsi' => $non['konsumsi'],
-                            'keterangan' => $non['keterangan'] ?? '',
-                            'created_at' => $created,
-                            'updated_at' => date('Y-m-d H:i:s'),
-                        ];
-                    $rinciaja[] = $simpanrinci;
+                    while ($diminta > 0) {
+                        $stokNya = $collectStok->where('kdobat', $non['kodeobat'])
+                            ->whereNotIn('id',  $idnya)
+                            ->where('jumlah', '>', 0)
+                            ->first();
+                        $sisa = (float) $stokNya->jumlah;
+                        // return new JsonResponse([
+                        //     'req' => $request->all(),
+                        //     'obat' => $obatyangsudahdicek,
+                        //     'noreg' => $noreg,
+                        //     'rinciaja' => $rinciaja,
+                        //     'stok' => $stok,
+                        //     'stokNya' => $stokNya,
+                        //     'sisa' => $sisa,
+                        // ], 410);
+                        if ($sisa < $diminta) {
+                            $sisax =  $diminta - $sisa;
+                            $simpanrinci =
+                                [
+                                    'noreg' => $noreg,
+                                    'noresep' => $noresep,
+                                    'kdobat' => $non['kodeobat'],
+                                    'kandungan' => $non['item']['kandungan'] ?? '',
+                                    'fornas' => $non['item']['fornas'] ?? '',
+                                    'forkit' => $non['item']['forkit'] ?? '',
+                                    'generik' => $non['item']['generik'] ?? '',
+                                    'kode108' => $non['item']['kode108'],
+                                    'uraian108' => $non['item']['uraian108'],
+                                    'kode50' => $non['item']['kode50'],
+                                    'uraian50' => $non['item']['uraian50'],
+                                    // 'stokalokasi' => $non['item']['alokasi'],
+                                    'nilai_r' => 0,
+                                    'jumlah' => $sisa,
+                                    'nopenerimaan' => $stokNya->nopenerimaan,
+                                    'hpp' => $non['harga'],
+                                    'harga_jual' => $non['harga_jual'],
+                                    'harga_beli' => $non['harga_beli'],
+                                    'aturan' => $non['aturan'],
+                                    'konsumsi' => $non['konsumsi'],
+                                    'keterangan' => $non['keterangan'] ?? '',
+                                    'user' => $user['kodesimrs'],
+                                    'created_at' => $created,
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ];
+                            $rinciaja[] = $simpanrinci;
+                            $idnya[] = $stokNya->id;
+                            $stokToUp[] = [
+                                'jumlah' => 0,
+                                'id' => $stokNya->id,
+                                'sisa' => $sisa,
+                                'sisax' => $sisax,
+                                'diminta' => $diminta,
+                            ];
+                            $stokNya->update(['jumlah' => 0]);
+                            $diminta = $sisax;
+                        } else {
+                            $sisax =  $sisa - $diminta;
+                            $simpanrinci =
+                                [
+                                    'noreg' => $noreg,
+                                    'noresep' => $noresep,
+                                    'kdobat' => $non['kodeobat'],
+                                    'kandungan' => $non['item']['kandungan'] ?? '',
+                                    'fornas' => $non['item']['fornas'] ?? '',
+                                    'forkit' => $non['item']['forkit'] ?? '',
+                                    'generik' => $non['item']['generik'] ?? '',
+                                    'kode108' => $non['item']['kode108'],
+                                    'uraian108' => $non['item']['uraian108'],
+                                    'kode50' => $non['item']['kode50'],
+                                    'uraian50' => $non['item']['uraian50'],
+                                    // 'stokalokasi' => $non['item']['alokasi'],
+                                    'nilai_r' => 0,
+                                    'jumlah' => $diminta,
+                                    'nopenerimaan' => $stokNya->nopenerimaan,
+                                    'hpp' => $non['harga'],
+                                    'harga_jual' => $non['harga_jual'],
+                                    'harga_beli' => $non['harga_beli'],
+                                    'aturan' => $non['aturan'],
+                                    'konsumsi' => $non['konsumsi'],
+                                    'keterangan' => $non['keterangan'] ?? '',
+                                    'user' => $user['kodesimrs'],
+                                    'created_at' => $created,
+                                    'updated_at' => date('Y-m-d H:i:s'),
+                                ];
+                            $rinciaja[] = $simpanrinci;
+
+                            $idnya[] = $stokNya->id;
+                            $stokToUp[] = [
+                                'jumlah' => $sisax,
+                                'id' => $stokNya->id,
+                                'sisa' => $sisa,
+                                'sisax' => $sisax,
+                                'diminta' => $diminta,
+                            ];
+                            $stokNya->update(['jumlah' => $sisax]);
+                            // $stokNya->update(['jumlah' => $sisax]);
+                            $diminta = 0;
+                        }
+                    }
                 }
             }
+
+
+
+            // keluarkan by fifo
+            // return new JsonResponse([
+            //     'req' => $request->all(),
+            //     'obat' => $obatyangsudahdicek,
+            //     'noreg' => $noreg,
+            //     'rinciaja' => $rinciaja,
+            //     'stok' => $stok,
+            //     'idnya' => $idnya,
+            //     'stokToUp' => $stokToUp,
+            //     'collectStok' => $collectStok,
+            // ], 410);
 
             // racikan
             // if (count($adaAlokasiRacikan) > 0) {
@@ -664,9 +763,9 @@ class PenjualanBebasController extends Controller
             // }
 
 
-            // if (count($rinciaja) > 0) {
-            //     Permintaanresep::insert($rinciaja);
-            // }
+            if (count($rinciaja) > 0) {
+                Resepkeluarrinci::insert($rinciaja);
+            }
 
             // if (count($racikandtd) > 0) {
             //     Permintaanresepracikan::insert($racikandtd);
@@ -674,6 +773,7 @@ class PenjualanBebasController extends Controller
             // if (count($racikannondtd) > 0) {
             //     Permintaanresepracikan::insert($racikannondtd);
             // }
+
 
             DB::connection('farmasi')->commit();
             // $simpan->load([
@@ -700,9 +800,11 @@ class PenjualanBebasController extends Controller
                 'message' => 'Resep Berhasil dibuat',
                 // 'adaraw' => $adaraw,
                 // 'data' => $simpan,
-                'racikandtd' => $racikandtd,
-                'racikannondtd' => $racikannondtd,
+                // 'racikandtd' => $racikandtd,
+                // 'racikannondtd' => $racikannondtd,
                 'rinci' => $rinciaja,
+                'stok' => $stok,
+                // 'adaAlokasi' => $adaAlokasi,
                 // 'adaAlokasi' => $adaAlokasi,
                 // 'tidakAdaAlokasi' => $tidakAdaAlokasi,
                 // 'adaAlokasiRacikan' => $adaAlokasiRacikan,
