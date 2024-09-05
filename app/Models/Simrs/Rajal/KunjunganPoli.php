@@ -80,7 +80,7 @@ class KunjunganPoli extends Model
 
     public function triage()
     {
-        return $this->hasOne(TriageA::class, 'rs1', 'rs1');
+        return $this->hasmany(TriageA::class, 'rs1', 'rs1');
     }
 
     // public function relrekomdpjp()
