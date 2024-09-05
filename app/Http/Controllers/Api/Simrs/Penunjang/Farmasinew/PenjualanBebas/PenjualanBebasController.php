@@ -199,6 +199,7 @@ class PenjualanBebasController extends Controller
             $key['hargajual'] = $data['hargajual'];
             $key['jumlah_diminta'] = $data['jumlah_diminta'];
             $key['item'] = $data['data'];
+            $key['alokasi'] = $data['data']['alokasi'];
             $key['sistembayar'] = 'UMUM';
             // $key['signa'] = $key['signa'];
             // $key['keterangan'] = $key['keterangan'];
@@ -215,6 +216,20 @@ class PenjualanBebasController extends Controller
             $isError = false;
         }
 
+        //  test start
+        // $data = [
+        //     'message' => $msg,
+        //     'isError' => '$isError',
+        //     'items' => $obatDiminta,
+        //     'req' => $request->all(),
+        //     // 'cekobat'=> $cekObat
+        // ];
+
+        // return new JsonResponse(
+        //     $data,
+        //     410
+        // );
+        // end test
         // JIKA ADA YG ERROR
         if ($isError) {
             $data = [
@@ -280,7 +295,7 @@ class PenjualanBebasController extends Controller
                 'new_masterobat.kandungan',
                 'new_masterobat.status_fornas as fornas',
                 'new_masterobat.status_forkid as forkit',
-                'new_masterobat.status_generik as generik ',
+                'new_masterobat.status_generik as generik',
                 'new_masterobat.kode108',
                 'new_masterobat.uraian108',
                 'new_masterobat.kode50',
