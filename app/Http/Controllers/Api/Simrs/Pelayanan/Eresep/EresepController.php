@@ -250,6 +250,8 @@ class EresepController extends Controller
                 //         $hasil[] = $entry[0]['hasil'];
                 //     }
                 // }
+            }else{
+                $cekpemberian = '';
             }
 
             if ($kddepo === 'Gd-04010102') {
