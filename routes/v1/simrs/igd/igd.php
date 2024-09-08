@@ -11,5 +11,7 @@ Route::group([
 ],function () {
     Route::post('/terimapasien', [IgdController::class, 'terimapasien']);
     Route::post('/simpantriage', [TriageController::class, 'simpantriage']);
+
+    Route::post('/hapustriage', [TriageController::class, 'hapustriage']);
 });
 

@@ -12,6 +12,6 @@ class TriageB extends Model
     protected $table = 'rs251';
     protected $guarded = ['id'];
     public $timestamps = false;
-    protected $primaryKey = 'rs1';
-    protected $keyType = 'string';
+    // protected $primaryKey = 'rs1';
+    // protected $keyType = 'string';
 }

@@ -12,8 +12,8 @@ class TriageA extends Model
     protected $table = 'rs250';
     protected $guarded = ['id'];
     public $timestamps = false;
-    protected $primaryKey = 'rs1';
-    protected $keyType = 'string';
+    // protected $primaryKey = 'rs1';
+    // protected $keyType = 'string';
 
     public function triageb(){
         return $this->hasOne(TriageB::class, 'rs1', 'rs1');
