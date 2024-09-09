@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\PenjualanBebas;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simpeg\Petugas;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -19,6 +20,39 @@ use Illuminate\Support\Facades\DB;
 
 class PenjualanBebasController extends Controller
 {
+    public function getPasien()
+    {
+        $data = Mpasien::select(
+            'rs1 as norm',
+            'rs2 as nama',
+            'rs49 as nik',
+        )
+            ->where(function ($q) {
+                $q->where('rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs49', 'LIKE', '%' . request('q') . '%');
+            })
+            ->where('rs2', '!=', '')
+            ->orderBy('rs2', 'ASC')
+            ->limit(15)
+            ->get();
+
+        return new JsonResponse($data);
+    }
+    public function getDaftarKunjungan()
+    {
+        $data = KunjunganPenjualan::where('kode_identitas', 'NOT LIKE', 'PK%')
+            ->where(function ($q) {
+                $q->where('kode_identitas', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
+            })
+
+            ->orderBy('nama', 'ASC')
+            ->limit(15)
+            ->get();
+
+        return new JsonResponse($data);
+    }
     public function getKaryawan()
     {
         $data = Petugas::select('nama', 'nik')
@@ -199,6 +233,12 @@ class PenjualanBebasController extends Controller
     public function  simpan(Request $request)
     {
 
+        $jumRi = sizeof($request->details);
+        if ($jumRi <= 0) {
+            return new JsonResponse([
+                'message' => 'Tidak Ada Rincian Obat Untuk Disimpan'
+            ], 410);
+        }
         // cek alokasi
 
         $cekObat = self::setAlokasi($request);
@@ -260,35 +300,12 @@ class PenjualanBebasController extends Controller
             $request->request->add(['pegawai_id' => $user]);
             $request->request->add(['orders' => $obatDiminta]);
 
-            // ini  nanti ngisi di resep_keluar_h dan resep_keluar_r
-            // bikin baru tabel registrasi penjualan bebas
-            // tiap obat harus cek alokasi, jadi bikin seperti template resep untuk keluarnya.
-            // noresp
-            $tgl = date('Y-m-d');
-            $adaKunjungan = KunjunganPenjualan::where('kode_identitas', $request->kode_identitas)
-                ->where('tgl_kunjungan', 'LIKE', '%' . $tgl . '%')
-                ->orderBy('tgl_kunjungan', 'DESC')
-                ->first();
-            if (!$adaKunjungan) {
-                DB::connection('farmasi')->select('call registrasipenjumum(@nomor)');
-                $x = DB::connection('farmasi')->table('conter')->select('regbebas')->first();
-                $nom = $x->regbebas;
-                $nomor = self::setNomor($nom, 'R-PJB');
-                KunjunganPenjualan::create([
-                    'noreg' => $nomor,
-                    'kode_identitas' => $request->kode_identitas,
-                    'nama' => $request->nama,
-                    'keterangan' => $request->keterangan,
-                    'tgl_kunjungan' => date('Y-m-d H:i:s'),
-                ]);
-            } else {
-                $nomor = $adaKunjungan->noreg;
-            }
+
             // return new JsonResponse($nomor);
 
             // simpan kunjungan dimana? satu hari satu kunjungan?
 
-            return self::sendOrder($request, $obatDiminta, $nomor);
+            return self::sendOrder($request, $obatDiminta);
         }
         return new JsonResponse([
             'obatdiminta' => $obatDiminta,
@@ -466,7 +483,7 @@ class PenjualanBebasController extends Controller
         $obat['harga'] = $harga;
         return $obat;
     }
-    public static function sendOrder($request, $obatyangsudahdicek, $noreg)
+    public static function sendOrder($request, $obatyangsudahdicek)
     {
         // return new JsonResponse([
         //     'req' => $request->all(),
@@ -488,6 +505,31 @@ class PenjualanBebasController extends Controller
 
         try {
             DB::connection('farmasi')->beginTransaction();
+
+            // ini  nanti ngisi di resep_keluar_h dan resep_keluar_r
+            // bikin baru tabel registrasi penjualan bebas
+            // tiap obat harus cek alokasi, jadi bikin seperti template resep untuk keluarnya.
+            // noresp
+            $tgl = date('Y-m-d');
+            $adaKunjungan = KunjunganPenjualan::where('kode_identitas', $request->kode_identitas)
+                ->where('tgl_kunjungan', 'LIKE', '%' . $tgl . '%')
+                ->orderBy('tgl_kunjungan', 'DESC')
+                ->first();
+            if (!$adaKunjungan) {
+                DB::connection('farmasi')->select('call registrasipenjumum(@nomor)');
+                $x = DB::connection('farmasi')->table('conter')->select('regbebas')->first();
+                $nom = $x->regbebas;
+                $noreg = self::setNomor($nom, 'R-PJB');
+                KunjunganPenjualan::create([
+                    'noreg' => $noreg,
+                    'kode_identitas' => $request->kode_identitas,
+                    'nama' => $request->nama,
+                    'keterangan' => $request->keterangan,
+                    'tgl_kunjungan' => date('Y-m-d H:i:s'),
+                ]);
+            } else {
+                $noreg = $adaKunjungan->noreg;
+            }
 
             if ($request->depo === 'Gd-04010102') {
                 $lebel = 'PD-RI';
@@ -800,6 +842,12 @@ class PenjualanBebasController extends Controller
             // if (count($racikannondtd) > 0) {
             //     Permintaanresepracikan::insert($racikannondtd);
             // }
+
+            if (count($rinciaja) <= 0) {
+                return new JsonResponse([
+                    'message' => 'Tidak ada rincian Obat untuk disimpan'
+                ], 410);
+            }
 
 
             DB::connection('farmasi')->commit();

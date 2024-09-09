@@ -187,6 +187,63 @@ class CobaPostKunjunganRajalHelper
             'diagnosakeperawatan'=> function ($d) {
                 $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
             },
+
+            'apotek' => function ($apot) {
+                $apot->whereIn('flag', ['3', '4'])->with([
+                    // 'rincian.mobat:kd_obat,nama_obat',
+                    // 'rincianracik.mobat:kd_obat,nama_obat',
+                    'rincian' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_r.kdobat',
+                            'resep_keluar_r.noresep',
+                            'resep_keluar_r.jumlah',
+                            'resep_keluar_r.aturan', // signa
+                            'resep_keluar_r.konsumsi', // signa
+                            'resep_keluar_r.keterangan', // signa
+                            'retur_penjualan_r.jumlah_retur',
+                            'signa.jumlah as konsumsi_perhari',
+                            DB::raw('
+                            CASE
+                            WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                            ELSE resep_keluar_r.jumlah
+                            END as qty
+                            ') // iki jumlah obat sing non racikan mas..
+                        )
+                            ->leftJoin('retur_penjualan_r', function ($jo) {
+                                $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                    ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                            })
+                            ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                            ->with([
+                                'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                                // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                                // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                            ]);
+                    },
+                    'rincianracik' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_racikan_r.kdobat',
+                            'resep_keluar_racikan_r.noresep',
+                            'resep_keluar_racikan_r.jumlah',
+                            'resep_keluar_racikan_r.jumlahdibutuhkan as qty', // MedicationRequest.dispenseRequest.quantity dan non-dtd -> Medication.ingredient.strength.denominator
+                            'resep_keluar_racikan_r.tiperacikan', // dtd / non-dtd
+                            'resep_permintaan_keluar_racikan.dosismaksimum', // dtd -> Medication.ingredient.strength.numerator
+                            'resep_permintaan_keluar_racikan.aturan', // signa
+                        )
+                            ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                                $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                    ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                            })
+                            ->with([
+                                'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                                // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                                // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                            ]);
+                    }
+
+                ])
+                ->orderBy('id', 'DESC');
+            },
         ])
 
 
@@ -283,10 +340,10 @@ class CobaPostKunjunganRajalHelper
       }
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
-    //   if ($send['message'] === 'success') {
-    //     $token = AuthSatsetHelper::accessToken();
-    //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-    //   }
+      if ($send['message'] === 'success') {
+        $token = AuthSatsetHelper::accessToken();
+        $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+      }
       return $send;
     }
 
@@ -439,6 +496,7 @@ class CobaPostKunjunganRajalHelper
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
 
         // return $alergyIntoleran;
@@ -556,6 +614,8 @@ class CobaPostKunjunganRajalHelper
                     // PLANNING push di bawah
 
                     // ALLERY INTOLERAN push di bawah
+
+                    // medication push di bawah
                 ]
             ];
 
@@ -634,6 +694,12 @@ class CobaPostKunjunganRajalHelper
 
         // PUSH ALLERGY INTOLERANCE
         if ($alergyIntoleran !== null) array_push($body['entry'], $alergyIntoleran);
+
+        // PUSH MEDICATION
+        for ($i=0; $i < count($apotek['nonracikan']) ; $i++) { 
+            array_push($body['entry'], $apotek['nonracikan'][$i][0]);
+            array_push($body['entry'], $apotek['nonracikan'][$i][1]);
+        }
 
         // return $body;
 
@@ -1763,6 +1829,584 @@ class CobaPostKunjunganRajalHelper
         return $allergy;
     }
 
+    static function apotek($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+
+
+        $resep = $request->apotek;
+
+        // Pengiriman data peresepan obat akan menggunakan 2 resources yaitu Medication dan MedicationRequest. 
+        // Resource Medication akan mencatatkan data umum terkait obat yang akan diresepkan. 
+        // Sedangkan resource MedicationRequest akan digunakan untuk mengirimkan data terkait peresepan obat seperti jumlah yang diresepkan, 
+        // instruksi minum obat dan lain-lain. 
+        // Kedua data ini dikirimkan secara bersamaan sebagai 1 paket yaitu Medication dan MedicationRequest. 
+        // Satu payload Medication dan MedicationRequest hanya dapat digunakan untuk peresepan 1 jenis obat saja. 
+        // Apabila terdapat 2 jenis obat yang diresepkan, maka dikirimkan 2 paket Medication dan MedicationRequest.
+
+
+        /**
+         * Resource Medication
+         * Keterangan : +
+            * NC : Non-compound (non racikan)
+            * SD : Give of such doses (dtd)
+            * EP : Divide into equal part (tablet dipecah).
+        */
+
+        $diagnosa = collect($request->diagnosa)->filter(function ($item) {
+            return strpos($item['rs3'], 'Z') === false; 
+          });
+        $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
+
+        $icd10 = $diag ? ($diag['rs3'] ?? '-') : '-';
+        $display = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs4'] ?? '-' : '-') : '-';
+        $uraian = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs3'] ?? '-' : '-') : '-';
+
+
+
+        $kirimObatNonRacikan = [];
+        $kirimObatRacikan = [];
+
+        if (count($resep) > 0) {
+            for ($i=0; $i < count($resep) ; $i++) { 
+                $nonRacikan = $resep[$i]['rincian'];
+
+                $noresep = $resep[$i]['noresep']?? '-';
+                $tgl_kirim = $resep[$i]['tgl_kirim']?? Carbon::now();
+                $tgl_selesai = $resep[$i]['tgl_selesai']?? Carbon::now();
+
+
+                // $kodeObatNonRacikansdlmSatuResep = [];
+
+                // $medicationRequest =
+                // [
+                //     "fullUrl" => "urn:uuid:".self::generateUuid(),
+                //     "resource" => [
+                //         "resourceType" => "MedicationRequest",
+                //         "identifier" => [
+                //             [
+                //                 "system" =>
+                //                     "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
+                //                 "use" => "official",
+                //                 "value" => $noresep,
+                //             ],
+                //             // [
+                //             //     "system" =>
+                //             //         "http://sys-ids.kemkes.go.id/prescription-item/10000004",
+                //             //     "use" => "official",
+                //             //     "value" => "123456788-1AAA",
+                //             // ],
+                //         ],
+                //         "status" => "completed",
+                //         "intent" => "order",
+                //         "category" => [
+                //             [
+                //                 "coding" => [
+                //                     [
+                //                         "system" =>
+                //                             "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                //                         "code" => "outpatient",
+                //                         "display" => "Outpatient",
+                //                     ],
+                //                 ],
+                //             ],
+                //         ],
+                //         "priority" => "routine",
+                //         "medicationReference" => [
+                //             "reference" =>
+                //                 "urn:uuid:aeb30de2-aa5d-4b40-8ca1-4cdb50991ee9",
+                //             "display" =>
+                //                 "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                //         ],
+                //         "subject" => [
+                //             "reference" => "Patient/100000030009",
+                //             "display" => "Budi Santoso",
+                //         ],
+                //         "encounter" => [
+                //             "reference" =>
+                //                 "urn:uuid:588744a1-b657-40e5-ad1c-e1978ed9ceb7",
+                //         ],
+                //         "authoredOn" => "2023-07-14T08:41:00+00:00",
+                //         "requester" => [
+                //             "reference" => "Practitioner/N10000001",
+                //             "display" => "Dokter Bronsig",
+                //         ],
+                //         "reasonCode" => [
+                //             [
+                //                 "coding" => [
+                //                     [
+                //                         "system" => "http://hl7.org/fhir/sid/icd-10",
+                //                         "code" => "A15.3",
+                //                         "display" =>
+                //                             "Tuberculosis of lung, confirmed by unspecified means",
+                //                     ],
+                //                 ],
+                //             ],
+                //         ],
+                //         "courseOfTherapyType" => [
+                //             "coding" => [
+                //                 [
+                //                     "system" =>
+                //                         "http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+                //                     "code" => "continuous",
+                //                     "display" => "Continuing long term therapy",
+                //                 ],
+                //             ],
+                //         ],
+                //         "dosageInstruction" => [
+                //             [
+                //                 "sequence" => 1,
+                //                 "text" => "4 tablet per hari",
+                //                 "additionalInstruction" => [
+                //                     ["text" => "Diminum setiap hari"],
+                //                 ],
+                //                 "patientInstruction" =>
+                //                     "Minum 4 tablet perhari, diminum setiap hari tanpa jeda hingga proses pengobatan berakhir",
+                //                 "timing" => [
+                //                     "repeat" => [
+                //                         "frequency" => 1,
+                //                         "period" => 1,
+                //                         "periodUnit" => "d",
+                //                     ],
+                //                 ],
+                //                 "route" => [
+                //                     "coding" => [
+                //                         [
+                //                             "system" => "http://www.whocc.no/atc",
+                //                             "code" => "O",
+                //                             "display" => "Oral",
+                //                         ],
+                //                     ],
+                //                 ],
+                //                 "doseAndRate" => [
+                //                     [
+                //                         "type" => [
+                //                             "coding" => [
+                //                                 [
+                //                                     "system" =>
+                //                                         "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                //                                     "code" => "ordered",
+                //                                     "display" => "Ordered",
+                //                                 ],
+                //                             ],
+                //                         ],
+                //                         "doseQuantity" => [
+                //                             "value" => 4,
+                //                             "unit" => "TAB",
+                //                             "system" =>
+                //                                 "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                //                             "code" => "TAB",
+                //                         ],
+                //                     ],
+                //                 ],
+                //             ],
+                //         ],
+                //         "dispenseRequest" => [
+                //             "dispenseInterval" => [
+                //                 "value" => 1,
+                //                 "unit" => "days",
+                //                 "system" => "http://unitsofmeasure.org",
+                //                 "code" => "d",
+                //             ],
+                //             "validityPeriod" => [
+                //                 "start" => "2023-07-14T08:41:00+00:00",
+                //                 "end" => "2023-07-15T08:41:00+00:00",
+                //             ],
+                //             "numberOfRepeatsAllowed" => 0,
+                //             "quantity" => [
+                //                 "value" => 120,
+                //                 "unit" => "TAB",
+                //                 "system" =>
+                //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                //                 "code" => "TAB",
+                //             ],
+                //             "expectedSupplyDuration" => [
+                //                 "value" => 30,
+                //                 "unit" => "days",
+                //                 "system" => "http://unitsofmeasure.org",
+                //                 "code" => "d",
+                //             ],
+                //             "performer" => ["reference" => "Organization/10000004"],
+                //         ],
+                //     ],
+                //     "request" => ["method" => "POST", "url" => "MedicationRequest"],
+                // ];
+
+
+                if (count($nonRacikan) > 0) {
+                    # kirim obat non racikan yang hanya ada kode kfa nya
+                    for ($j=0; $j < count($nonRacikan) ; $j++) {
+
+                        $kode_kfa_93 = $nonRacikan[$j]['mobat']['kode_kfa_93'];
+                        $kode_kfa = $nonRacikan[$j]['mobat']['kode_kfa'];
+                        $kfa = $nonRacikan[$j]['mobat']['kfa'];
+                        if ($kode_kfa_93 != null && $kode_kfa != null && $kfa !== null) {
+
+
+                            $display = $nonRacikan[$j]['mobat']['kfa']['response']['result']['name'] ?? '-';
+                            $gudang = $nonRacikan[$j]['mobat']['gudang'] ?? '-';
+                            $kdobat = $nonRacikan[$j]['kdobat'];
+                            $dosage_form = $nonRacikan[$j]['mobat']['kfa']['dosage_form']['code'] ?? '-';
+                            $dosage_form_display = $nonRacikan[$j]['mobat']['kfa']['dosage_form']['name'] ?? '-';
+                            $routeCode = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['code'] ?? '-';
+                            $routeName = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['name'] ?? '-';
+
+                            $medication_id = self::generateUuid();
+
+                            $konsumsiX = (int)$nonRacikan[$j]['konsumsi'] >=30 ?? false;
+                            $kronis = (int)$nonRacikan[$j]['mobat']['status_kronis'] === '1' ?? false;
+
+                            $longTerm = $konsumsiX && $kronis;
+
+                            $pembagian = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+
+                            $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
+
+                            $tambahan = 
+                            [
+                                "reasonCode" => [
+                                        [
+                                            "coding" => [
+                                                [
+                                                    "system" => "http://hl7.org/fhir/sid/icd-10",
+                                                    "code" => $icd10,
+                                                    "display" => $display,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    "courseOfTherapyType" => [
+                                        "coding" => [
+                                            [
+                                                "system" =>"http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+                                                "code" => "continuous",
+                                                "display" => "Continuing long term therapy",
+                                            ],
+                                        ],
+                                    ],
+                            ];
+
+                            $medication = 
+                            [
+                                
+                                [
+                                    "fullUrl" => "urn:uuid:".$medication_id,
+                                    "resource" => [
+                                        "resourceType" => "Medication",
+                                        "meta" => [
+                                            "profile" => [
+                                                "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
+                                            ],
+                                        ],
+                                        "identifier" => [
+                                            [
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/medication/".$organization_id,
+                                                "use" => "official",
+                                                "value" => $kdobat,
+                                            ],
+                                        ],
+                                        "code" => [
+                                            "coding" => [
+                                                [
+                                                    "system" => "http://sys-ids.kemkes.go.id/kfa",
+                                                    "code" => $kode_kfa,
+                                                    "display" => $display,
+                                                    // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                                                ],
+                                            ],
+                                        ],
+                                        "status" => "active",
+                                        "manufacturer" => ["reference" => "Organization/".$organization_id],
+                                        "form" => [
+                                            "coding" => [
+                                                [
+                                                    "system" =>
+                                                        "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                                                    "code" => $dosage_form,
+                                                    "display" => $dosage_form_display,
+                                                ],
+                                            ],
+                                        ],
+
+                                        // khusus racikan
+                                        // "ingredient" => [
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000330",
+                                        //                     "display" => "Rifampin",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 150,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000328",
+                                        //                     "display" => "Isoniazid",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 75,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000329",
+                                        //                     "display" => "Pyrazinamide",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 400,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000288",
+                                        //                     "display" => "Ethambutol",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 275,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        // ],
+                                        "extension" => [
+                                            [
+                                                "url" =>
+                                                    "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                                                "valueCodeableConcept" => [
+                                                    "coding" => [
+                                                        [
+                                                            "system" =>
+                                                                "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                                                            "code" => "NC",
+                                                            "display" => "Non-compound",
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    "request" => ["method" => "POST", "url" => "Medication"],
+                                ],
+                                [
+                                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                                    "resource" => [
+                                        "resourceType" => "MedicationRequest",
+                                        "identifier" => [
+                                            [
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
+                                                "use" => "official",
+                                                "value" => $noresep,
+                                            ],
+                                            [
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
+                                                "use" => "official",
+                                                "value" => $kdobat,
+                                            ],
+                                        ],
+                                        "status" => "completed",
+                                        "intent" => "order",
+                                        "category" => [
+                                            [
+                                                "coding" => [
+                                                    [
+                                                        "system" =>
+                                                            "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                                                        "code" => "outpatient",
+                                                        "display" => "Outpatient",
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        "priority" => "routine",
+                                        "medicationReference" => [
+                                            "reference" => "urn:uuid:".$medication_id,
+                                            "display" => $display,
+                                        ],
+                                        "subject" => [
+                                            "reference" => "Patient/".$pasien_uuid,
+                                            "display" => $request->nama,
+                                        ],
+                                        "encounter" => [
+                                            "reference" => "urn:uuid:".$encounter,
+                                        ],
+                                        "authoredOn" => Carbon::parse($tgl_kirim)->toIso8601String(),
+                                        "requester" => [
+                                            "reference" => "Practitioner/".$practitioner_uuid,
+                                            "display" => $nama_practitioner,
+                                        ],
+                                        
+                                        "dosageInstruction" => [
+                                            [
+                                                "sequence" => 1,
+                                                "text" => $nonRacikan[$j]['konsumsi_perhari']." ".$nonRacikan[$j]['mobat']['satuan_k']."  per hari",
+                                                "additionalInstruction" => [
+                                                    ["text" => $nonRacikan[$j]['keterangan']]
+                                                ],
+                                                "patientInstruction" => $nonRacikan[$j]['konsumsi_perhari']." ".$nonRacikan[$j]['mobat']['satuan_k']."  per hari dengan keterangan " .$nonRacikan[$j]['keterangan'] ,
+                                                "timing" => [
+                                                    "repeat" => [
+                                                        "frequency" => $nonRacikan[$j]['konsumsi_perhari'],
+                                                        "period" => 1,
+                                                        "periodUnit" => "d",
+                                                    ],
+                                                ],
+                                                "route" => [
+                                                    "coding" => [
+                                                        [
+                                                            "system" => "http://www.whocc.no/atc",
+                                                            "code" => $routeCode,
+                                                            "display" => $routeName,
+                                                        ],
+                                                    ],
+                                                ],
+                                                // "doseAndRate" => [
+                                                //     [
+                                                //         "type" => [
+                                                //             "coding" => [
+                                                //                 [
+                                                //                     "system" =>
+                                                //                         "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                                                //                     "code" => "ordered",
+                                                //                     "display" => "Ordered",
+                                                //                 ],
+                                                //             ],
+                                                //         ],
+                                                //         "doseQuantity" => [
+                                                //             "value" => $nonRacikan[$j]['qty'],
+                                                //             "unit" => $nonRacikan[$j]['mobat']['satuan_k'],
+                                                //             "system" =>
+                                                //                 "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                                //             "code" => "TAB",
+                                                //         ],
+                                                //     ],
+                                                // ],
+                                            ],
+                                        ],
+                                        "dispenseRequest" => [
+                                            "dispenseInterval" => [
+                                                "value" => $nonRacikan[$j]['konsumsi_perhari'],
+                                                "unit" => "days",
+                                                "system" => "http://unitsofmeasure.org",
+                                                "code" => "d",
+                                            ],
+                                            "validityPeriod" => [
+                                                "start" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                                "end" => Carbon::parse($tglObatHabis)->toIso8601String(),
+                                            ],
+                                            "numberOfRepeatsAllowed" => 0,
+                                            // "quantity" => [
+                                            //     "value" => 120,
+                                            //     "unit" => "TAB",
+                                            //     "system" =>
+                                            //         "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                            //     "code" => "TAB",
+                                            // ],
+                                            "expectedSupplyDuration" => [
+                                                "value" => $pembagian,
+                                                "unit" => "days",
+                                                "system" => "http://unitsofmeasure.org",
+                                                "code" => "d",
+                                            ],
+                                            "performer" => ["reference" => "Organization/10000004"],
+                                        ],
+                                    ],
+                                    "request" => ["method" => "POST", "url" => "MedicationRequest"],
+                                ]
+                            ];
+
+                            if ($longTerm) {
+                                array_push($medication[1]['resource'],$tambahan);
+                            }
+
+                            $kirimObatNonRacikan[] = $medication;
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        $data = [
+            'racikan' => $kirimObatRacikan,
+            'nonracikan' => $kirimObatNonRacikan,
+        ];
+
+
+        return $data;
+        
+        
+    }
     static function screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';

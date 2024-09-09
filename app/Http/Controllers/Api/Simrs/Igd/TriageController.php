@@ -14,6 +14,13 @@ class TriageController extends Controller
 {
     public function simpantriage(Request $request)
     {
+        $cek = TriageA::where('rs1', $request->noreg)->count();
+        if($cek > 0){
+            return new JsonResponse(
+                [
+                    'message' => 'Triage Sudah Pernah Di Input...!!!',
+                ],500);
+        }
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
         try {

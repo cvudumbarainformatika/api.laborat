@@ -10,6 +10,8 @@ Route::group([
 ], function () {
     Route::get('/pihak-tiga', [PenjualanBebasController::class, 'getPihakTiga']);
     Route::get('/karyawan', [PenjualanBebasController::class, 'getKaryawan']);
+    Route::get('/pesien', [PenjualanBebasController::class, 'getPasien']);
+    Route::get('/daftar-kunj', [PenjualanBebasController::class, 'getDaftarKunjungan']);
     Route::get('/cari-obat', [PenjualanBebasController::class, 'pencarianObat']);
     Route::post('/simpan', [PenjualanBebasController::class, 'simpan']);
 });
