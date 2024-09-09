@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\PenjualanBebas;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simpeg\Petugas;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -19,6 +20,38 @@ use Illuminate\Support\Facades\DB;
 
 class PenjualanBebasController extends Controller
 {
+    public function getPasien()
+    {
+        $data = Mpasien::select(
+            'rs1 as norm',
+            'rs2 as nama',
+            'rs49 as nik',
+        )
+            ->where(function ($q) {
+                $q->where('rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs49', 'LIKE', '%' . request('q') . '%');
+            })
+            ->where('rs2', '!=', '')
+            ->orderBy('rs2', 'ASC')
+            ->limit(15)
+            ->get();
+
+        return new JsonResponse($data);
+    }
+    public function getDaftarKunjungan()
+    {
+        $data = KunjunganPenjualan::where(function ($q) {
+            $q->where('kode_identitas', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
+        })
+            ->where('kode_identitas', 'NOT LIKE', 'PK%')
+            ->orderBy('nama', 'ASC')
+            ->limit(15)
+            ->get();
+
+        return new JsonResponse($data);
+    }
     public function getKaryawan()
     {
         $data = Petugas::select('nama', 'nik')
@@ -199,6 +232,12 @@ class PenjualanBebasController extends Controller
     public function  simpan(Request $request)
     {
 
+        $jumRi = sizeof($request->details);
+        if ($jumRi <= 0) {
+            return new JsonResponse([
+                'message' => 'Tidak Ada Rincian Obat Untuk Disimpan'
+            ], 410);
+        }
         // cek alokasi
 
         $cekObat = self::setAlokasi($request);
@@ -800,6 +839,12 @@ class PenjualanBebasController extends Controller
             // if (count($racikannondtd) > 0) {
             //     Permintaanresepracikan::insert($racikannondtd);
             // }
+
+            if (count($rinciaja) <= 0) {
+                return new JsonResponse([
+                    'message' => 'Tidak ada rincian Obat untuk disimpan'
+                ], 410);
+            }
 
 
             DB::connection('farmasi')->commit();
