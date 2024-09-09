@@ -138,6 +138,7 @@ class HistoryKunjunganController extends Controller
                 
             })
             ->orderby('rs23.rs3', $sort)
+            ->groupBy('rs23.rs1')
             ;
 
 
