@@ -41,11 +41,12 @@ class PenjualanBebasController extends Controller
     }
     public function getDaftarKunjungan()
     {
-        $data = KunjunganPenjualan::where(function ($q) {
-            $q->where('kode_identitas', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
-        })
-            ->where('kode_identitas', 'NOT LIKE', 'PK%')
+        $data = KunjunganPenjualan::where('kode_identitas', 'NOT LIKE', 'PK%')
+            ->where(function ($q) {
+                $q->where('kode_identitas', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
+            })
+
             ->orderBy('nama', 'ASC')
             ->limit(15)
             ->get();
@@ -299,35 +300,12 @@ class PenjualanBebasController extends Controller
             $request->request->add(['pegawai_id' => $user]);
             $request->request->add(['orders' => $obatDiminta]);
 
-            // ini  nanti ngisi di resep_keluar_h dan resep_keluar_r
-            // bikin baru tabel registrasi penjualan bebas
-            // tiap obat harus cek alokasi, jadi bikin seperti template resep untuk keluarnya.
-            // noresp
-            $tgl = date('Y-m-d');
-            $adaKunjungan = KunjunganPenjualan::where('kode_identitas', $request->kode_identitas)
-                ->where('tgl_kunjungan', 'LIKE', '%' . $tgl . '%')
-                ->orderBy('tgl_kunjungan', 'DESC')
-                ->first();
-            if (!$adaKunjungan) {
-                DB::connection('farmasi')->select('call registrasipenjumum(@nomor)');
-                $x = DB::connection('farmasi')->table('conter')->select('regbebas')->first();
-                $nom = $x->regbebas;
-                $nomor = self::setNomor($nom, 'R-PJB');
-                KunjunganPenjualan::create([
-                    'noreg' => $nomor,
-                    'kode_identitas' => $request->kode_identitas,
-                    'nama' => $request->nama,
-                    'keterangan' => $request->keterangan,
-                    'tgl_kunjungan' => date('Y-m-d H:i:s'),
-                ]);
-            } else {
-                $nomor = $adaKunjungan->noreg;
-            }
+
             // return new JsonResponse($nomor);
 
             // simpan kunjungan dimana? satu hari satu kunjungan?
 
-            return self::sendOrder($request, $obatDiminta, $nomor);
+            return self::sendOrder($request, $obatDiminta);
         }
         return new JsonResponse([
             'obatdiminta' => $obatDiminta,
@@ -505,7 +483,7 @@ class PenjualanBebasController extends Controller
         $obat['harga'] = $harga;
         return $obat;
     }
-    public static function sendOrder($request, $obatyangsudahdicek, $noreg)
+    public static function sendOrder($request, $obatyangsudahdicek)
     {
         // return new JsonResponse([
         //     'req' => $request->all(),
@@ -527,6 +505,31 @@ class PenjualanBebasController extends Controller
 
         try {
             DB::connection('farmasi')->beginTransaction();
+
+            // ini  nanti ngisi di resep_keluar_h dan resep_keluar_r
+            // bikin baru tabel registrasi penjualan bebas
+            // tiap obat harus cek alokasi, jadi bikin seperti template resep untuk keluarnya.
+            // noresp
+            $tgl = date('Y-m-d');
+            $adaKunjungan = KunjunganPenjualan::where('kode_identitas', $request->kode_identitas)
+                ->where('tgl_kunjungan', 'LIKE', '%' . $tgl . '%')
+                ->orderBy('tgl_kunjungan', 'DESC')
+                ->first();
+            if (!$adaKunjungan) {
+                DB::connection('farmasi')->select('call registrasipenjumum(@nomor)');
+                $x = DB::connection('farmasi')->table('conter')->select('regbebas')->first();
+                $nom = $x->regbebas;
+                $noreg = self::setNomor($nom, 'R-PJB');
+                KunjunganPenjualan::create([
+                    'noreg' => $noreg,
+                    'kode_identitas' => $request->kode_identitas,
+                    'nama' => $request->nama,
+                    'keterangan' => $request->keterangan,
+                    'tgl_kunjungan' => date('Y-m-d H:i:s'),
+                ]);
+            } else {
+                $noreg = $adaKunjungan->noreg;
+            }
 
             if ($request->depo === 'Gd-04010102') {
                 $lebel = 'PD-RI';
