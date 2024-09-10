@@ -76,7 +76,12 @@ class ReqCatlabController extends Controller
 
     public function terimapasien(Request $request)
     {
-        $cekx = ReqCathlab::where('nota', $request->nota)->first();
+        $cekx = ReqCathlab::with(
+            [
+                'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+            ]
+        )
+        ->where('nota', $request->nota)->first();
         if ($cekx) {
             $flag = $cekx->flag;
 

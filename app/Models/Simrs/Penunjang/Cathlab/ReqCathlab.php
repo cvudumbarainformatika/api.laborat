@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Cathlab;
 
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,11 @@ class ReqCathlab extends Model
     public function ruangan()
     {
         return $this->hasOne(Mruangan::class, 'rs1', 'kd_ruangkelas');
+    }
+
+    public function datasimpeg()
+    {
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'dokterpengirim');
     }
 
 }
