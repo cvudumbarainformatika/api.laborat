@@ -1135,6 +1135,7 @@ class EresepController extends Controller
                     ->orWhere('resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
             })
+            ->where('resep_keluar_h.tiperesep', '!=', 'penjualan')
             ->where('resep_keluar_h.depo', request('kddepo'));
         // ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
 
