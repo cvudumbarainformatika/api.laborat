@@ -1905,7 +1905,8 @@ class PostKunjunganRajalHelper
 
                             $longTerm = $konsumsiX && $kronis;
 
-                            $pembagian = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            $bagi = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            $pembagian = ceil($bagi);
 
                             $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
 

@@ -39,7 +39,7 @@ class KunjunganController extends Controller
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
             // return CobaPostKunjunganRajalHelper::cekKunjungan('70214/08/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('70544/08/2024/J');
-            return CobaPostKunjunganRajalHelper::cekKunjungan('73461/09/2024/J');
+            return CobaPostKunjunganRajalHelper::cekKunjungan('74335/09/2024/J');
             // return self::cekKunjunganRajal();
         }
 
@@ -243,12 +243,12 @@ class KunjunganController extends Controller
         ])
         // ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->whereNotIn('rs17.rs8', $bukanPoli)
-        ->where('rs17.rs1', '=', '73461/09/2024/J')
+        ->where('rs17.rs1', '=', '73740/09/2024/J')
         // ->where('rs17.rs19', '=', '1') // kunjungan selesai
 
 
-        ->doesntHave('satset')
-        ->doesntHave('satset_error')
+        // ->doesntHave('satset')
+        // ->doesntHave('satset_error')
         // ->whereHas('apotek', function (Builder $q) {
         //   // $q->whereHas('rincian');
         //   // //   ->where('riwayatalergi', '!=','');  

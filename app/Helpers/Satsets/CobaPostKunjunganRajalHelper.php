@@ -340,10 +340,10 @@ class CobaPostKunjunganRajalHelper
       }
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
-      if ($send['message'] === 'success') {
-        $token = AuthSatsetHelper::accessToken();
-        $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-      }
+    //   if ($send['message'] === 'success') {
+    //     $token = AuthSatsetHelper::accessToken();
+    //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+    //   }
       return $send;
     }
 
@@ -2058,7 +2058,8 @@ class CobaPostKunjunganRajalHelper
 
                             $longTerm = $konsumsiX && $kronis;
 
-                            $pembagian = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            $bagi = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            $pembagian = ceil($bagi);
 
                             $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
 
@@ -2088,7 +2089,7 @@ class CobaPostKunjunganRajalHelper
 
                             $medication = 
                             [
-                                
+                                // MEDICATION
                                 [
                                     "fullUrl" => "urn:uuid:".$medication_id,
                                     "resource" => [
@@ -2255,6 +2256,8 @@ class CobaPostKunjunganRajalHelper
                                     ],
                                     "request" => ["method" => "POST", "url" => "Medication"],
                                 ],
+
+                                // MEDICATION REQUEST
                                 [
                                     "fullUrl" => "urn:uuid:".self::generateUuid(),
                                     "resource" => [
