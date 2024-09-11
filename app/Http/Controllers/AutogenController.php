@@ -31,8 +31,13 @@ use function PHPUnit\Framework\isNull;
 
 class AutogenController extends Controller
 {
-    
 
+
+    public function coba()
+    {
+        $data = ceil(0.2);
+        return $data;
+    }
     public function index(Request $request)
     {
         // $n = 42064;
@@ -61,17 +66,18 @@ class AutogenController extends Controller
         //     ]
         // );
         echo $this->translate("berpengawet muntah", "id", "en");
-        
     }
 
-    public function translate($q, $sl, $tl){
-        $res= file_get_contents("https://translate.googleapis.com/translate_a/single?client=gtx&ie=UTF-8&oe=UTF-8&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t&dt=at&sl=".$sl."&tl=".$tl."&hl=hl&q=".urlencode($q), $_SERVER['DOCUMENT_ROOT']."/transes.html");
-        $res=json_decode($res);
+    public function translate($q, $sl, $tl)
+    {
+        $res = file_get_contents("https://translate.googleapis.com/translate_a/single?client=gtx&ie=UTF-8&oe=UTF-8&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t&dt=at&sl=" . $sl . "&tl=" . $tl . "&hl=hl&q=" . urlencode($q), $_SERVER['DOCUMENT_ROOT'] . "/transes.html");
+        $res = json_decode($res);
         return $res[0][0][0];
     }
 
-    public function resetCounter(){
-        $counter=Counter::first();
+    public function resetCounter()
+    {
+        $counter = Counter::first();
         // if($counter){
         //     $counter->update([
         //         'deporajal'=>0,
@@ -88,24 +94,24 @@ class AutogenController extends Controller
             'rs141.rs1 as noreg',
             'rs141.rs2 as norm',
         )
-        ->where('rs141.rs3', '=', 'POL014')
-        // ->leftJoin('rs23', 'rs23.rs2', '=', 'rs141.rs2')
-        ->addSelect([
-            'kunjungan'=> KunjunganRanap::query()
-            ->selectRaw(
-                "substring_index(GROUP_CONCAT(
+            ->where('rs141.rs3', '=', 'POL014')
+            // ->leftJoin('rs23', 'rs23.rs2', '=', 'rs141.rs2')
+            ->addSelect([
+                'kunjungan' => KunjunganRanap::query()
+                    ->selectRaw(
+                        "substring_index(GROUP_CONCAT(
                     rs23.rs1 order by rs23.rs3 desc
                 SEPARATOR '|+|'), '|+|', 3)"
-            )
-            // ->whereColumn('rs23.rs2', 'rs141.rs2')
-            ->whereColumn('rs23.rs1', 'rs141.flag')
-            // ->where('rs23.rs22', '=', '')
-            ->groupBy('rs23.rs1')
-            ->take(3)
-        ])
-        ->orderBy('rs141.id', 'desc')
-        // ->groupBy('rs141.rs1')
-        ->simplePaginate(10);
+                    )
+                    // ->whereColumn('rs23.rs2', 'rs141.rs2')
+                    ->whereColumn('rs23.rs1', 'rs141.flag')
+                    // ->where('rs23.rs22', '=', '')
+                    ->groupBy('rs23.rs1')
+                    ->take(3)
+            ])
+            ->orderBy('rs141.id', 'desc')
+            // ->groupBy('rs141.rs1')
+            ->simplePaginate(10);
 
         $kodes = $query->pluck('kunjungan')
             ->map(function ($arr) {
@@ -115,32 +121,32 @@ class AutogenController extends Controller
 
                 return [];
             })
-        ->flatten();
+            ->flatten();
 
-        $datax = Kunjunganranap::select('rs1','rs2')
-        ->whereIn('rs1', $kodes)
-        ->orderBy('rs3', 'desc')
-        ->get();
+        $datax = Kunjunganranap::select('rs1', 'rs2')
+            ->whereIn('rs1', $kodes)
+            ->orderBy('rs3', 'desc')
+            ->get();
 
         foreach ($query as $yy) {
             // menjadikan array dari string $yy->harga_tertinggi_ids
             $ids = explode(',', $yy->kunjungan);
-    
+
             $yyHargaTertinggi = $datax
                 ->whereIn('rs1', $ids)
-                ->sortBy(fn (Kunjunganranap $xx) => array_flip($ids)[$xx->rs1])
+                ->sortBy(fn(Kunjunganranap $xx) => array_flip($ids)[$xx->rs1])
                 ->values();
-         
+
             // masukkan ke object harga_teringgi_kodes
             $yy->setRelation('kunjungan', $yyHargaTertinggi)->toArray();
-          }
+        }
 
         return $query;
     }
 
     public function lihatSaranaDanPelayananRuangan()
     {
-        $noreg= '11125/07/2024/X';
+        $noreg = '11125/07/2024/X';
         // $data = DB::table('rs23')
         //     ->select(
         //         'rs23.rs1 as noreg',
@@ -189,7 +195,7 @@ class AutogenController extends Controller
 			END as pelayanan
 			from rs23,rs24,rs30tarif where rs24.rs1=rs23.rs5
 			and rs30tarif.rs3='K1#' and rs30tarif.rs4 like concat('%',rs24.rs4,'%')
-			and rs30tarif.rs5 like concat('%',rs24.rs3,'%') and rs23.rs1='".$noreg."'"
+			and rs30tarif.rs5 like concat('%',rs24.rs3,'%') and rs23.rs1='" . $noreg . "'"
         );
 
         return $data;
@@ -198,36 +204,37 @@ class AutogenController extends Controller
     public function showKamar()
     {
         $data = Mkamar::query()
-        ->select('groups','rs5')
-        ->with(['kamars'=>function($q){
-          $q->where('rs7','<>','1')
-              ->addSelect([
-              'kunjungan'=> Kunjunganview::query()
-                  ->join('rs24', 'v_15_23.kamar', '=', 'rs24.rs2')
-                  ->selectRaw("GROUP_CONCAT(v_15_23.noreg order by v_15_23.tgl_masuk asc, ',')" )
-                  ->whereColumn('v_15_23.no_bed','=', 'rs25.rs2')
-                  ->whereColumn('v_15_23.kd_kmr','=', 'rs25.rs1')
-                  ->whereColumn('v_15_23.kamar','=', 'rs24.rs2')
-                  ->where('v_15_23.status_inap','=', '')
-              ])
-              ->orderBy('rs5', 'asc');
-            }, 
-            'kamars.kamar'=>function($q){
-              $q->select('rs1','rs2','rs3','rs4','rs5','groups');
-            }
-          ])
-          ->where('status','<>','1')
-          ->where('groups','=','BG')
-          ->distinct('groups')
-        ->get();
-  
+            ->select('groups', 'rs5')
+            ->with([
+                'kamars' => function ($q) {
+                    $q->where('rs7', '<>', '1')
+                        ->addSelect([
+                            'kunjungan' => Kunjunganview::query()
+                                ->join('rs24', 'v_15_23.kamar', '=', 'rs24.rs2')
+                                ->selectRaw("GROUP_CONCAT(v_15_23.noreg order by v_15_23.tgl_masuk asc, ',')")
+                                ->whereColumn('v_15_23.no_bed', '=', 'rs25.rs2')
+                                ->whereColumn('v_15_23.kd_kmr', '=', 'rs25.rs1')
+                                ->whereColumn('v_15_23.kamar', '=', 'rs24.rs2')
+                                ->where('v_15_23.status_inap', '=', '')
+                        ])
+                        ->orderBy('rs5', 'asc');
+                },
+                'kamars.kamar' => function ($q) {
+                    $q->select('rs1', 'rs2', 'rs3', 'rs4', 'rs5', 'groups');
+                }
+            ])
+            ->where('status', '<>', '1')
+            ->where('groups', '=', 'BG')
+            ->distinct('groups')
+            ->get();
+
         $flat = [];
         foreach ($data as $x) {
-            $xy=$x->kamars;
+            $xy = $x->kamars;
             foreach ($xy as $y) {
-                if($y->kunjungan !==null) {
+                if ($y->kunjungan !== null) {
                     $temp = [];
-                    foreach(explode(',', $y->kunjungan) as $key => $value) {
+                    foreach (explode(',', $y->kunjungan) as $key => $value) {
                         $temp[$key] = $value;
                     }
                     $flat[] = $temp;
@@ -235,27 +242,27 @@ class AutogenController extends Controller
             }
         }
         $flatten = collect(array_merge(...$flat))->unique()->values()->all();
-  
+
         $kunjungan = Kunjunganview::whereIn('noreg', $flatten)
-        ->orderBy('tgl_masuk', 'desc')
-        ->groupBy('noreg')
-        ->get();
-  
+            ->orderBy('tgl_masuk', 'desc')
+            ->groupBy('noreg')
+            ->get();
+
         foreach ($data as $x) {
-            $xy=$x->kamars;
+            $xy = $x->kamars;
             foreach ($xy as $y) {
                 $noregs = explode(',', $y->kunjungan);
                 $ee = $kunjungan
-                ->whereIn('noreg', $noregs)
-                ->sortBy(fn (Kunjunganview $kj) => array_flip($noregs)[$kj->noreg])
-                ->values();
-  
+                    ->whereIn('noreg', $noregs)
+                    ->sortBy(fn(Kunjunganview $kj) => array_flip($noregs)[$kj->noreg])
+                    ->values();
+
                 // masukkan ke object harga_teringgi_kodes
                 $y->setRelation('kunjungan', $ee)->toArray();
             }
         }
-  
-      
+
+
         return new JsonResponse($data);
     }
 
@@ -418,7 +425,8 @@ class AutogenController extends Controller
                 'kunjungan_rawat_inap.pasien',
                 'kunjungan_rawat_inap.ruangan',
                 'kunjungan_rawat_inap.sistem_bayar',
-                'poli', 'dokter'
+                'poli',
+                'dokter'
             ])
             ->orderBy('rs3', 'desc');
 
