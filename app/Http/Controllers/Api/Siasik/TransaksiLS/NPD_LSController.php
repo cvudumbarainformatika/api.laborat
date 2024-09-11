@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Siasik\TransaksiLS;
 
+use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastKonsinyasi;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Helpers\FormatingHelper;
@@ -81,14 +82,7 @@ class NPD_LSController extends Controller
         return new JsonResponse($anggaran);
     }
     public function bastfarmasi(){
-        // $format = ('Y-m-d H:i:s');
-        // $srt = strtotime($format);
-        // $y=Carbon::createFromFormat('Y-m-d h:i:s', request('tgl'))->format('Y');
-        // $date = $y.'-01-01 00:00:00';
-        // $date = date('Y', $srt);
-
         $tahun = date('Y');
-        // $pbf = Mpihakketiga::where('kode', request('kodepenerima'))->get();
         $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
                                             'penerimaan_h.tgl_bast',
                                             'penerimaan_h.nopenerimaan',
@@ -153,13 +147,146 @@ class NPD_LSController extends Controller
         ->groupBy('nobast')
         ->paginate(request('per_page'));
         // ->get();
-        return new JsonResponse($penerimaan);
+
+        $konsinyasi = BastKonsinyasi::select('bast_konsinyasis.notranskonsi',
+                                            'bast_konsinyasis.nobast',
+                                            'bast_konsinyasis.kdpbf',
+                                            'bast_konsinyasis.tgl_bast',
+                                            'bast_konsinyasis.jumlah_bastx',)
+        ->where('kdpbf', request('kodepenerima'), function ($bast){
+            $bast->where('nobast', '!=', '');
+        })
+        ->whereNotNull('tgl_bast')
+        ->when(request('q'),function ($query) {
+            $query->where('nobast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
+        })
+        ->with('rinci', function($rinci) use ($tahun) {
+            $rinci
+            ->where('notranskonsi', request('kodebast'))
+                    ->select('detail_bast_konsinyasis.notranskonsi',
+                            'detail_bast_konsinyasis.id',
+                            'detail_bast_konsinyasis.kdobat',
+                            'detail_bast_konsinyasis.harga_net',
+                            'detail_bast_konsinyasis.jumlah',
+                            'detail_bast_konsinyasis.subtotal')
+        // ->with('penerimaanrinci', function($rinci) use ($tahun) {
+        //     $rinci->select('penerimaan_r.nopenerimaan',
+        //                     'penerimaan_r.kdobat',
+        //                     'penerimaan_r.harga_netto',
+        //                     'penerimaan_r.harga_netto_kecil',
+        //                     'penerimaan_r.jml_all_penerimaan',
+        //                     'penerimaan_r.subtotal')
+                    ->with('obat', function ($rekening) use ($tahun){
+                        $rekening->select('new_masterobat.kd_obat',
+                                        'new_masterobat.kode50',
+                                        'new_masterobat.uraian50',
+                                        'new_masterobat.kode108',
+                                        'new_masterobat.uraian108')
+                            ->with('pagu', function ($pagu) use ($tahun) {
+                            $pagu->where('tgl', $tahun)
+                                ->where('kodekegiatanblud', request('kodekegiatan'))
+                                ->where('pagu', '!=', '0')
+                                ->select('t_tampung.kodekegiatanblud',
+                                        't_tampung.notrans',
+                                        't_tampung.koderek50',
+                                        't_tampung.koderek108',
+                                        't_tampung.uraian50',
+                                        't_tampung.usulan',
+                                        't_tampung.volume',
+                                        't_tampung.satuan',
+                                        't_tampung.harga',
+                                        't_tampung.pagu',
+                                        't_tampung.idpp')
+                                        ->with('realisasi', function ($realisasi) {
+                                            $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                                                'npdls_rinci.nominalpembayaran')
+                                            ->selectRaw('sum(nominalpembayaran) as total_realisasi');
+                                        });
+                            });
+                    });
+        })
+        ->orderBy('nobast', 'asc')
+        ->groupBy('nobast')
+        ->paginate(request('per_page'));
+
+        $bast = [
+            'penerimaan' => $penerimaan,
+            'konsinyasi' => $konsinyasi,
+        ];
+
+        return new JsonResponse($bast);
+    }
+    public function coba(){
+        $tahun = date('Y');
+        $konsinyasi = BastKonsinyasi::select('bast_konsinyasis.notranskonsi',
+                                            'bast_konsinyasis.nobast',
+                                            'bast_konsinyasis.kdpbf',
+                                            'bast_konsinyasis.tgl_bast',
+                                            'bast_konsinyasis.jumlah_bastx',)
+        ->where('kdpbf', request('kodepenerima'), function ($bast){
+            $bast->where('nobast', '!=', '');
+        })
+        ->whereNotNull('tgl_bast')
+        ->when(request('q'),function ($query) {
+            $query->where('nobast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
+        })
+        ->with('rinci', function($rinci) use ($tahun) {
+            $rinci->where('notranskonsi', request('kodebast'))
+                    ->select('detail_bast_konsinyasis.notranskonsi',
+                            'detail_bast_konsinyasis.id',
+                            'detail_bast_konsinyasis.kdobat',
+                            'detail_bast_konsinyasis.harga_net',
+                            'detail_bast_konsinyasis.jumlah',
+                            'detail_bast_konsinyasis.subtotal')
+        // ->with('penerimaanrinci', function($rinci) use ($tahun) {
+        //     $rinci->select('penerimaan_r.nopenerimaan',
+        //                     'penerimaan_r.kdobat',
+        //                     'penerimaan_r.harga_netto',
+        //                     'penerimaan_r.harga_netto_kecil',
+        //                     'penerimaan_r.jml_all_penerimaan',
+        //                     'penerimaan_r.subtotal')
+                    ->with('obat', function ($rekening) use ($tahun){
+                        $rekening->select('new_masterobat.kd_obat',
+                                        'new_masterobat.kode50',
+                                        'new_masterobat.uraian50',
+                                        'new_masterobat.kode108',
+                                        'new_masterobat.uraian108')
+                            ->with('pagu', function ($pagu) use ($tahun) {
+                            $pagu->where('tgl', $tahun)
+                                ->where('kodekegiatanblud', request('kodekegiatan'))
+                                ->where('pagu', '!=', '0')
+                                ->select('t_tampung.kodekegiatanblud',
+                                        't_tampung.notrans',
+                                        't_tampung.koderek50',
+                                        't_tampung.koderek108',
+                                        't_tampung.uraian50',
+                                        't_tampung.usulan',
+                                        't_tampung.volume',
+                                        't_tampung.satuan',
+                                        't_tampung.harga',
+                                        't_tampung.pagu',
+                                        't_tampung.idpp')
+                                        ->with('realisasi', function ($realisasi) {
+                                            $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                                                'npdls_rinci.nominalpembayaran')
+                                            ->selectRaw('sum(nominalpembayaran) as total_realisasi');
+                                        });
+                            });
+                    });
+        })
+        ->orderBy('nobast', 'asc')
+        ->groupBy('nobast')
+        ->paginate(request('per_page'));
+        return new JsonResponse($konsinyasi);
     }
     public function simpannpd(Request $request)
     {
-        $request->validate([
+        $this->validate($request,[
             'keterangan' => 'required|min:3',
             'pptk' => 'required',
+            'tglnpdls' => 'required',
             // 'rincianbelanja' => 'required',
             // 'itembelanja' => 'required'
         ]);
@@ -200,9 +327,12 @@ class NPD_LSController extends Controller
                     'tglentry'=>$time ?? '',
                     'userentry'=>$pegawai ?? '',
                     'noserahterima'=>$request->noserahterima ?? '',
+                    'kunci'=>'1'
                 ]);
             foreach ($request->rincians as $rinci){
+
                 $save->npdlsrinci()->create(
+
                     [
                         'nonpdls' => $save->nonpdls,
                     // ],
@@ -341,4 +471,5 @@ class NPD_LSController extends Controller
 
     //     return $quarters;
     // }
+
 }

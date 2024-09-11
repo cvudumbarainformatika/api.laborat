@@ -69,7 +69,11 @@ class KonsinyasiController extends Controller
             return $q->nopenerimaan;
         });
         // return new JsonResponse($resep);
-        $rwpenye = PenerimaanHeder::select('kdpbf')->where('jenis_penerimaan', '=', 'Konsinyasi')
+        $rwpenye = PenerimaanHeder::select('kdpbf')
+            ->where(function ($q) {
+                $q->where('jenis_penerimaan', '=', 'Konsinyasi')
+                    ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
+            })
             ->whereIn('nopenerimaan', $resep)
             ->distinct('kdpbf')->get();
         $penye = collect($rwpenye)->map(function ($p) {

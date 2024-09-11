@@ -13,5 +13,6 @@ Route::group([
     Route::get('/pesien', [PenjualanBebasController::class, 'getPasien']);
     Route::get('/daftar-kunj', [PenjualanBebasController::class, 'getDaftarKunjungan']);
     Route::get('/cari-obat', [PenjualanBebasController::class, 'pencarianObat']);
+    Route::get('/list-kunjungan', [PenjualanBebasController::class, 'listKunjungan']);
     Route::post('/simpan', [PenjualanBebasController::class, 'simpan']);
 });

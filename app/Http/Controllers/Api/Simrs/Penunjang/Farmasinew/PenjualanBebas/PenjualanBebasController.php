@@ -20,6 +20,26 @@ use Illuminate\Support\Facades\DB;
 
 class PenjualanBebasController extends Controller
 {
+    public function listKunjungan()
+    {
+        $list = KunjunganPenjualan::select('kunjungan_penjualans.*')
+            ->where('nama', 'LIKE', '%' . request('q') . '%')
+            ->with([
+                'rincian:noreg,noresep,kdobat,aturan,harga_jual,jumlah',
+                'rincian.mobat:kd_obat,nama_obat,satuan_k'
+            ])
+            ->leftJoin('resep_keluar_h', 'resep_keluar_h.noreg', '=', 'kunjungan_penjualans.noreg')
+            ->whereBetween('kunjungan_penjualans.tgl_kunjungan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where('depo', request('kdruang'))
+            ->paginate(request('per_page'));
+
+        $data = [
+            'data' => collect($list)['data'],
+            'meta' => collect($list)->except('data'),
+            'req' => request()->all()
+        ];
+        return new JsonResponse($data);
+    }
     public function getPasien()
     {
         $data = Mpasien::select(
@@ -470,7 +490,7 @@ class PenjualanBebasController extends Controller
             }
         }
         $harga = $isError ? false : $data['harga_tertinggi'];
-        $hargajual = $isError ? false : ((float)$harga * (float)$margin) + (float)$harga;
+        $hargajual = $isError ? false : ((float)$harga * ((float)$margin) / 100) + (float)$harga;
         $obat['hargajual'] = $hargajual;
         if ($hargajual === 0 && $data['obat_program'] !== '1') {
             $obat['isError'] = true;
