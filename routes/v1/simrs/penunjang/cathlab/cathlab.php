@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Cathlab\ReqCatlabController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Cathlab\TransCatlabController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -10,6 +11,7 @@ Route::group([
 ], function (){
     Route::get('reqcathlab',[ReqCatlabController::class, 'reqcathlab']);
     Route::post('terimapasien',[ReqCatlabController::class, 'terimapasien']);
-
     Route::get('tarifcathlab',[ReqCatlabController::class, 'tarifcathlab']);
+
+    Route::post('simpancathlab',[TransCatlabController::class, 'simpancathlab']);
 });

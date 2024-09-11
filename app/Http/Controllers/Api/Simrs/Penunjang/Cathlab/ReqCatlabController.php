@@ -32,6 +32,8 @@ class ReqCatlabController extends Controller
             'cathlab_req.norm as norm',
             'cathlab_req.tgl as tanggal',
             'cathlab_req.flag as flag',
+            'cathlab_req.kelas as kelas',
+            'cathlab_req.kd_ruangkelas as kd_ruangkelas',
             'kepegx.pegawai.nama as dokter',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
@@ -102,7 +104,7 @@ class ReqCatlabController extends Controller
 
     public function tarifcathlab()
     {
-        $data = Cache::rememberForever('agama', function () {
+        $data = Cache::rememberForever('cathlab', function () {
             return Mtarifcathlab::query()
             ->get();
         });
