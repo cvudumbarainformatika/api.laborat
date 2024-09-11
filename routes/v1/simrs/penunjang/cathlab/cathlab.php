@@ -10,4 +10,6 @@ Route::group([
 ], function (){
     Route::get('reqcathlab',[ReqCatlabController::class, 'reqcathlab']);
     Route::post('terimapasien',[ReqCatlabController::class, 'terimapasien']);
+
+    Route::get('tarifcathlab',[ReqCatlabController::class, 'tarifcathlab']);
 });

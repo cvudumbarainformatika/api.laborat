@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Cathlab;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mtarifcathlab;
 use App\Models\Simrs\Penunjang\Cathlab\ReqCathlab;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 use function PHPUnit\Framework\isNull;
@@ -96,5 +98,15 @@ class ReqCatlabController extends Controller
                 'message' => 'Data tidak ditemukan'
             ], 500);
         }
+    }
+
+    public function tarifcathlab()
+    {
+        $data = Cache::rememberForever('agama', function () {
+            return Mtarifcathlab::query()
+            ->get();
+        });
+
+        return new JsonResponse($data);
     }
 }
