@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Master\MkamarRanap;
 use App\Models\Simrs\Master\Mpasien;
@@ -45,7 +46,7 @@ class Resepkeluarheder extends Model
 
     public function dokter()
     {
-        return $this->hasone(Pegawai::class, 'kdpegsimrs', 'dokter');
+        return $this->hasone(Petugas::class, 'kdpegsimrs', 'dokter');
     }
 
     public function sistembayar()

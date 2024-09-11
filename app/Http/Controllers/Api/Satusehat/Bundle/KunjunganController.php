@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Satusehat\Bundle;
 use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Helpers\PostKunjunganHelper;
+use App\Helpers\Satsets\CobaPostKunjunganRajalHelper;
 use App\Helpers\Satsets\PostKunjunganRajalHelper;
 use App\Helpers\Satsets\PostKunjunganRanapHelper;
 use App\Http\Controllers\Controller;
@@ -13,6 +14,7 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +37,10 @@ class KunjunganController extends Controller
             //   // sleep(5);//menunggu 10 detik
             // }
             // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
-            return PostKunjunganRajalHelper::cekKunjungan();
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('70214/08/2024/J');
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('70544/08/2024/J');
+            return CobaPostKunjunganRajalHelper::cekKunjungan('73461/09/2024/J');
+            // return self::cekKunjunganRajal();
         }
 
         if ($jenis_kunjungan === 'ranap') {
@@ -70,21 +75,199 @@ class KunjunganController extends Controller
 
 
     // KUNJUNGAN RAJAL ==========================================================================================================
-    public static function cekKunjunganRajal($req)
+    public static function cekKunjunganRajal()
     {
-      $tgl = Carbon::now()->subDay()->toDateString();
+      $tgl = Carbon::now()->subDays(4)->toDateString();
       // $tgl = Carbon::now()->subDays(1)->toDateString();
-      $data = KunjunganPoli::select('rs1 as noreg')
-        ->where('rs3', 'LIKE', '%' . $tgl . '%')
-        ->where('rs8', '!=', 'POL014')
-        ->where('rs19', '=', '1') // kunjungan selesai
-        ->orderBy('rs3', 'desc')
-      ->get();
-      $arr = collect($data)->map(function ($x) {
-        return $x->noreg;
-      });
+      $bukanPoli = ['POL014','PEN005','PEN004'];
+      $data = KunjunganPoli::select(
+        'rs17.rs1',
+        'rs17.rs9',
+        'rs17.rs4',
+        'rs17.rs8',
+        'rs17.rs1 as noreg',
+        'rs17.rs2 as norm',
+        'rs17.rs3 as tgl_kunjungan',
+        'rs17.rs8 as kodepoli',
+        'rs19.rs2 as poli',
+        'rs17.rs9 as kodedokter',
+        'rs21.rs2 as dokter',
+        'rs17.rs14 as kodesistembayar',
+        'rs9.rs2 as sistembayar',
+        'rs9.groups as groups',
+        'rs15.rs2 as nama',
+        'rs15.rs49 as nik',
+        'rs17.rs19 as status',
+        'rs15.satset_uuid as pasien_uuid',
+        DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())) AS usiatahun'),
+        // 'satsets.uuid as satset',
+        // 'satset_error_respon.uuid as satset_error',
+        )
+        ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
+        ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+        ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+        ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+        ->with([
 
-      return $arr->toArray();
+          // 'satset:uuid', 'satset_error:uuid',
+          //   'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+          //   'relmpoli'=>function($q){
+          //     $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
+          //   },
+          //   'taskid' => function ($q) {
+          //       $q->select('noreg', 'taskid', 'waktu', 'created_at')
+          //           ->orderBy('taskid', 'ASC');
+          //   },
+
+          //   'anamnesis',
+          //   'pemeriksaanfisik' => function ($a) {
+          //     $a->with(['detailgambars:rs236_id,noreg,norm,tgl,anatomy,ket,user', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+          //         ->orderBy('id', 'DESC');
+          //   },
+
+          // 'tindakan' => function ($t) {
+          //   $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+          //   $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+          //     ->with([
+          //       'maapingprocedure'=> function($mp){
+          //         $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+          //           ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+          //         ;
+          //       },
+          //     // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+          //     'maapingsnowmed:kdMaster,kdSnowmed,display',
+          //     'petugas:nama,kdpegsimrs,satset_uuid'
+          //     ])
+          //   ->groupBy('rs73.rs4')
+          //   ->orderBy('id', 'DESC');
+          // },
+          // 'diagnosa' => function ($d) {
+          //   $d->select('rs1','rs3','rs4','rs7','rs8');
+          //   $d->with('masterdiagnosa');
+          // },
+          // 'planning' => function ($p) {
+          //   $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
+          //   $p->with([
+          //       'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+          //       'rekomdpjp',
+          //       'transrujukan',
+          //       // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
+          //       'listkonsul' => function($lk) {
+          //         $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
+          //             ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+          //             ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+          //             ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
+          //       },
+          //       'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+          //       'spri.petugas:nama,kdpegsimrs,satset_uuid',
+          //       'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+          //       'kontrol' => function ($k) {
+          //         $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
+          //         ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+          //         ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
+          //       },
+          //       'operasi',
+          //   ])->orderBy('id', 'DESC');
+          // },
+          // // 'diagnosakeperawatan.intervensi.masterintervensi',
+          // 'diagnosakeperawatan'=> function ($d) {
+          //   $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+          // },
+
+          // resep keluar fix
+          'apotek' => function ($apot) {
+              $apot->whereIn('flag', ['3', '4'])->with([
+                  // 'rincian.mobat:kd_obat,nama_obat',
+                  // 'rincianracik.mobat:kd_obat,nama_obat',
+                  'rincian' => function ($ri) {
+                      $ri->select(
+                          'resep_keluar_r.kdobat',
+                          'resep_keluar_r.noresep',
+                          'resep_keluar_r.jumlah',
+                          'resep_keluar_r.aturan', // signa
+                          'resep_keluar_r.konsumsi', // signa
+                          'resep_keluar_r.keterangan', // signa
+                          'retur_penjualan_r.jumlah_retur',
+                          'signa.jumlah as konsumsi_perhari',
+                          DB::raw('
+                          CASE
+                          WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                          ELSE resep_keluar_r.jumlah
+                          END as qty
+                          ') // iki jumlah obat sing non racikan mas..
+                      )
+                          ->leftJoin('retur_penjualan_r', function ($jo) {
+                              $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                  ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                          })
+                          ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                          ->with([
+                              'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                              // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                              // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                          ]);
+                  },
+                  'rincianracik' => function ($ri) {
+                      $ri->select(
+                          'resep_keluar_racikan_r.kdobat',
+                          'resep_keluar_racikan_r.noresep',
+                          'resep_keluar_racikan_r.jumlah',
+                          'resep_keluar_racikan_r.jumlahdibutuhkan as qty', // MedicationRequest.dispenseRequest.quantity dan non-dtd -> Medication.ingredient.strength.denominator
+                          'resep_keluar_racikan_r.tiperacikan', // dtd / non-dtd
+                          'resep_permintaan_keluar_racikan.dosismaksimum', // dtd -> Medication.ingredient.strength.numerator
+                          'resep_permintaan_keluar_racikan.aturan', // signa
+                      )
+                          ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                              $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                  ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                          })
+                          ->with([
+                              'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                              // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                              // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                          ]);
+                  }
+
+              ])
+                  ->orderBy('id', 'DESC');
+          },
+
+
+
+
+          // ini belum
+          'neonatusmedis',
+          'neonatuskeperawatan',
+          'pediatri',
+          'diet'
+        ])
+        // ->where('rs3', 'LIKE', '%' . $tgl . '%')
+        ->whereNotIn('rs17.rs8', $bukanPoli)
+        ->where('rs17.rs1', '=', '73461/09/2024/J')
+        // ->where('rs17.rs19', '=', '1') // kunjungan selesai
+
+
+        ->doesntHave('satset')
+        ->doesntHave('satset_error')
+        // ->whereHas('apotek', function (Builder $q) {
+        //   // $q->whereHas('rincian');
+        //   // //   ->where('riwayatalergi', '!=','');  
+        // })
+        
+
+        ->orderBy('rs17.rs3', 'desc')
+      ->limit(10)
+      ->get();
+
+
+      // $arr = collect($data)->map(function ($x) {
+      //   return $x->noreg;
+      // });
+
+      // return $arr->toArray();
+
+
+      return $data;
     }
 
     public static function rajal($noreg)

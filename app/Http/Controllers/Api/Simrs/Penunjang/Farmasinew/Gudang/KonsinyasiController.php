@@ -69,7 +69,11 @@ class KonsinyasiController extends Controller
             return $q->nopenerimaan;
         });
         // return new JsonResponse($resep);
-        $rwpenye = PenerimaanHeder::select('kdpbf')->where('jenis_penerimaan', '=', 'Konsinyasi')
+        $rwpenye = PenerimaanHeder::select('kdpbf')
+            ->where(function ($q) {
+                $q->where('jenis_penerimaan', '=', 'Konsinyasi')
+                    ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
+            })
             ->whereIn('nopenerimaan', $resep)
             ->distinct('kdpbf')->get();
         $penye = collect($rwpenye)->map(function ($p) {
@@ -81,9 +85,9 @@ class KonsinyasiController extends Controller
     public function getListPemakaianKonsinyasi()
     {
         $rwpene = PenerimaanHeder::select('nopenerimaan')
-            ->where(function($q){
+            ->where(function ($q) {
                 $q->where('jenis_penerimaan', '=', 'Konsinyasi')
-                ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
+                    ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
             })
             ->where('kdpbf', '=', request('penyedia'))
             ->whereNull('tgl_bast')
@@ -147,7 +151,7 @@ class KonsinyasiController extends Controller
             ->where('persiapan_operasi_rincis.status_konsinyasi', '=', '1')
             ->whereIn('persiapan_operasi_distribusis.nopenerimaan', $pene)
             ->whereNull('dibayar')
-            ->groupBy('persiapan_operasi_distribusis.kd_obat','persiapan_operasi_distribusis.nopermintaan')
+            ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopermintaan')
             ->get();
         $data = $resep;
         // $data['pene'] = $pene;
@@ -290,7 +294,7 @@ class KonsinyasiController extends Controller
                 'nobast' => $nobast,
                 'tgl_bast' => $request->tgl_bast,
                 'jumlah_bast' => $request->jumlah_bast,
-                'jumlah_bastx' => $request->jumlah_bastx??$request->jumlah_bast,
+                'jumlah_bastx' => $request->jumlah_bastx ?? $request->jumlah_bast,
                 'user_bast' => $user['kodesimrs'],
             ]);
             $rinci = [];
@@ -335,27 +339,29 @@ class KonsinyasiController extends Controller
             'bast:kdpegsimrs,nama',
             'bayar:kdpegsimrs,nama',
         ])
-            ->when(request('q'),function($q){
-                $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
-                $q->when(count($pihak)>0, function($x) use($pihak){
-                    $x->whereIn('kdpbf', $pihak)
-                    ->orWhere('nobast','LIKE','%'.request('q').'%')
-                    ->orWhere('notranskonsi','LIKE','%'.request('q').'%');
-                },
-                function($r){
-                    $r->where('nobast','LIKE','%'.request('q').'%')
-                    ->orWhere('notranskonsi','LIKE','%'.request('q').'%');
-                });
-                
+            ->when(request('q'), function ($q) {
+                $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
+                $q->when(
+                    count($pihak) > 0,
+                    function ($x) use ($pihak) {
+                        $x->whereIn('kdpbf', $pihak)
+                            ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    },
+                    function ($r) {
+                        $r->where('nobast', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    }
+                );
             })
-            ->orderBy('notranskonsi','DESC')
+            ->orderBy('notranskonsi', 'DESC')
             ->paginate(request('per_page'));
 
-            $meta=collect($data)->except('data');
-            $datanya=collect($data)['data'];
+        $meta = collect($data)->except('data');
+        $datanya = collect($data)['data'];
         return new JsonResponse([
-            'data'=>$datanya,
-            'meta'=>$meta,
+            'data' => $datanya,
+            'meta' => $meta,
         ]);
     }
     public function bastKonsinyasi()
@@ -368,88 +374,121 @@ class KonsinyasiController extends Controller
             'konsi:kdpegsimrs,nama',
             'bast:kdpegsimrs,nama',
             'bayar:kdpegsimrs,nama',
-            ])
-            ->when(request('q'),function($q){
-                $pihak=Mpihakketiga::select('kode')->where('nama', 'LIKE','%'.request('q').'%')->pluck('kode');
-                $q->when(count($pihak)>0, function($x) use($pihak){
-                    $x->whereIn('kdpbf', $pihak)
-                    ->orWhere('nobast','LIKE','%'.request('q').'%');
-                },
-                function($r){
-                    $r->where('nobast','LIKE','%'.request('q').'%');
-                });
-                
+        ])
+            ->when(request('q'), function ($q) {
+                $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
+                $q->when(
+                    count($pihak) > 0,
+                    function ($x) use ($pihak) {
+                        $x->whereIn('kdpbf', $pihak)
+                            ->orWhere('nobast', 'LIKE', '%' . request('q') . '%');
+                    },
+                    function ($r) {
+                        $r->where('nobast', 'LIKE', '%' . request('q') . '%');
+                    }
+                );
             })
             ->whereNotNull('tgl_bast')
             ->paginate(request('per_page'));
-            
-            return new JsonResponse($data);
-        }
 
-        public function belumKonsinyasi(){
-            $master=Mobatnew::select('kd_obat')->where('status_konsinyasi','1')->pluck('kd_obat');
-            $dist=PersiapanOperasiDistribusi::select(
-                'persiapan_operasi_distribusis.nopermintaan',
-                'persiapan_operasi_distribusis.nopenerimaan',
-                'persiapan_operasi_distribusis.kd_obat',
-                'penerimaan_r.harga_netto_kecil as harga_net',
-                'penerimaan_h.kdpbf',
-                'new_masterobat.nama_obat',
-                'new_masterobat.satuan_k as satuan',
-                DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah_retur'),
-                DB::raw('sum(persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) as dipakai'),
-                DB::raw('sum((persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) * penerimaan_r.harga_netto_kecil) as sub'),
-            )
-            ->leftJoin('penerimaan_r',function($jo){
-                $jo->on('penerimaan_r.nopenerimaan','=','persiapan_operasi_distribusis.nopenerimaan')
-                ->on('penerimaan_r.kdobat','=','persiapan_operasi_distribusis.kd_obat');
+        return new JsonResponse($data);
+    }
+
+    public function belumKonsinyasi()
+    {
+        $master = Mobatnew::select('kd_obat')->where('status_konsinyasi', '1')->pluck('kd_obat');
+        $dist = PersiapanOperasiDistribusi::select(
+            'persiapan_operasi_rincis.dibayar',
+            'persiapan_operasi_distribusis.nopermintaan',
+            'persiapan_operasi_distribusis.nopenerimaan',
+            'persiapan_operasi_distribusis.kd_obat',
+            'penerimaan_r.harga_netto_kecil as harga_net',
+            'penerimaan_h.kdpbf',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k as satuan',
+            DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
+            DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah_retur'),
+            DB::raw('sum(persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) as dipakai'),
+            DB::raw('sum((persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur) * penerimaan_r.harga_netto_kecil) as sub'),
+        )
+            ->leftJoin('penerimaan_r', function ($jo) {
+                $jo->on('penerimaan_r.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                    ->on('penerimaan_r.kdobat', '=', 'persiapan_operasi_distribusis.kd_obat');
             })
-            ->leftJoin('penerimaan_h',function($jo){
-                $jo->on('penerimaan_h.nopenerimaan','=','penerimaan_r.nopenerimaan');
+            ->leftJoin('penerimaan_h', function ($jo) {
+                $jo->on('penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan');
             })
-            ->leftJoin('new_masterobat',function($jo){
-                $jo->on('new_masterobat.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
+            ->leftJoin('new_masterobat', function ($jo) {
+                $jo->on('new_masterobat.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
             })
-            ->leftJoin('persiapan_operasis',function($jo){
-                $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
+            ->leftJoin('persiapan_operasis', function ($jo) {
+                $jo->on('persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan');
             })
-            ->leftJoin('persiapan_operasi_rincis',function($jo){
-                $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan') 
-                ->on('persiapan_operasi_rincis.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
+            ->leftJoin('persiapan_operasi_rincis', function ($jo) {
+                $jo->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                    ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
             })
-            ->whereIn('persiapan_operasi_distribusis.kd_obat',$master)            
-            ->where('persiapan_operasis.flag','4')
-            ->whereNull('persiapan_operasi_rincis.dibayar')
+            ->leftJoin('detail_bast_konsinyasis', function ($join) {
+                $join->on('detail_bast_konsinyasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                    ->on('detail_bast_konsinyasis.kdobat', '=', 'persiapan_operasi_distribusis.kd_obat');
+            })
+            ->whereIn('persiapan_operasi_distribusis.kd_obat', $master)
+            ->where('persiapan_operasis.flag', '4')
+            ->where(function ($q) {
+                $q->whereNull('persiapan_operasi_rincis.dibayar')
+                    ->orWhere(function ($b) {
+                        $b->where('persiapan_operasi_rincis.dibayar', '1')
+                            ->whereNull('detail_bast_konsinyasis.nopermintaan');
+                    });
+            })
             ->havingRaw('dipakai > 0')
             ->with([
                 // 'master:kd_obat,nama_obat',
                 'persiapan:nopermintaan,norm',
                 'persiapan.pasien:rs1,rs2',
                 'pbf:kode,nama',
-    
+
             ])
-            ->when(request('q'),function($q){
-                $kdpbf=[];
-                $rm=[];
-                if(strlen(request('q'))>2){
-                    $kdpbf=Mpihakketiga::where('nama','LIKE','%'.request('q').'%')->pluck('kode');
-                    $rm=Mpasien::where('rs2','LIKE','%'.request('q').'%')->pluck('rs1');
+            ->when(request('q'), function ($q) {
+                $kdpbf = [];
+                $rm = [];
+                if (strlen(request('q')) > 2) {
+                    $kdpbf = Mpihakketiga::where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
+                    $rm = Mpasien::where('rs2', 'LIKE', '%' . request('q') . '%')->pluck('rs1');
                 }
-                $q->where(function($m)use($kdpbf,$rm){
-                    $m->where('new_masterobat.nama_obat','LIKE','%'.request('q').'%')
-                    ->orWhere('new_masterobat.kd_obat','LIKE','%'.request('q').'%')
-                    ->orWhere('persiapan_operasi_distribusis.nopermintaan','LIKE','%'.request('q').'%')
-                    ->orWhere('persiapan_operasi_distribusis.nopenerimaan','LIKE','%'.request('q').'%')
-                    // ->orWhere('persiapan_operasis.norm','LIKE','%'.request('q').'%')
-                    ->orWhereIn('penerimaan_h.kdpbf',$kdpbf)
-                    ->orWhereIn('persiapan_operasis.norm',$rm)
+                $q->where(function ($m) use ($kdpbf, $rm) {
+                    $m->where('new_masterobat.nama_obat', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('new_masterobat.kd_obat', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('persiapan_operasi_distribusis.nopermintaan', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('persiapan_operasi_distribusis.nopenerimaan', 'LIKE', '%' . request('q') . '%')
+                        // ->orWhere('persiapan_operasis.norm','LIKE','%'.request('q').'%')
+                        ->orWhereIn('penerimaan_h.kdpbf', $kdpbf)
+                        ->orWhereIn('persiapan_operasis.norm', $rm)
                     ;
                 });
             })
-            ->groupBy('persiapan_operasi_distribusis.nopenerimaan', 'persiapan_operasi_distribusis.kd_obat','persiapan_operasi_distribusis.nopermintaan')
+            ->groupBy('persiapan_operasi_distribusis.nopenerimaan', 'persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopermintaan')
             ->get();
-            return new JsonResponse($dist);
-        }
+        return new JsonResponse($dist);
     }
-    
+    public function hapusDibayar(Request $request)
+    {
+
+        $data = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)
+            ->where('kd_obat', $request->kd_obat)
+            ->first();
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+
+        $data->update([
+            'dibayar' => null
+        ]);
+        return new JsonResponse([
+            'message' => 'Sudah ditandai belum masuk list',
+            'data' => $data
+        ]);
+    }
+}

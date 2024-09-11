@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KandungannamagenerikCont
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KekuatandosisController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KelasterapiController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\KelompokpenyimpananController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MasterSignaController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MerkController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\MjenisperbekalanController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Mjenisprodukcontroller;
@@ -79,4 +80,10 @@ Route::group([
     Route::get('/listjenisproduk', [Mjenisprodukcontroller::class, 'list']);
 
     Route::get('/listruangan', [Mruangancontroller::class, 'listruangan']);
+
+    // signa
+
+    Route::post('/simpan-signa', [MasterSignaController::class, 'simpan']);
+    Route::post('/hapus-signa', [MasterSignaController::class, 'hapus']);
+    Route::get('/list-signa', [MasterSignaController::class, 'list']);
 });

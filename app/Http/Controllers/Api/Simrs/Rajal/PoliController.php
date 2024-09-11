@@ -512,7 +512,7 @@ class PoliController extends Controller
     {
 
 
-        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4', 'rs9', 'rs19')->where('rs1', $request->noreg)
+        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3', 'rs4', 'rs9', 'rs19')->where('rs1', $request->noreg)
             ->with([
                 'anamnesis',
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
@@ -523,7 +523,7 @@ class PoliController extends Controller
                 // 'pediatri'=> function($neo){
                 //     $neo->with(['pegawai:id,nama']);
                 // },
-                'dokumenluar'=> function($neo){
+                'dokumenluar' => function ($neo) {
                     $neo->with(['pegawai:id,nama']);
                 },
                 // 'kandungan'=> function($neo){
@@ -552,7 +552,7 @@ class PoliController extends Controller
                     $t->with('masterpenunjang')->orderBy('id', 'DESC');
                 },
                 'tindakan' => function ($t) {
-                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
                         ->orderBy('id', 'DESC');
                 },
                 'diagnosa' => function ($d) {
@@ -590,18 +590,81 @@ class PoliController extends Controller
                     $sharing->orderBy('id', 'DESC');
                 },
                 'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->whereIn('flag',['','1','2','3','4'])->with([
+                    $newapotekrajal->whereIn('flag', ['', '1', '2', '3', '4'])->with([
                         'permintaanresep.mobat:kd_obat,nama_obat',
                         'permintaanracikan.mobat:kd_obat,nama_obat',
                     ])
                         ->orderBy('id', 'DESC');
                 },
+                // ini buat satset
+                // resep keluar fix
+                // 'apotek' => function ($apot) {
+                //     $apot->whereIn('flag', ['3', '4'])->with([
+                //         // 'rincian.mobat:kd_obat,nama_obat',
+                //         // 'rincianracik.mobat:kd_obat,nama_obat',
+                //         'rincian' => function ($ri) {
+                //             $ri->select(
+                //                 'resep_keluar_r.kdobat',
+                //                 'resep_keluar_r.noresep',
+                //                 'resep_keluar_r.jumlah',
+                //                 'resep_keluar_r.aturan', // signa
+                //                 'retur_penjualan_r.jumlah_retur',
+                //                 DB::raw('
+                //                 CASE
+                //                 WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                //                 ELSE resep_keluar_r.jumlah
+                //                 END as qty
+                //                 ') // iki jumlah obat sing non racikan mas..
+                //             )
+                //                 ->leftJoin('retur_penjualan_r', function ($jo) {
+                //                     $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                //                         ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                //                 })
+                //                 ->with([
+                //                     'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                //                     // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                //                     // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                //                 ]);
+                //         },
+                //         'rincianracik' => function ($ri) {
+                //             $ri->select(
+                //                 'resep_keluar_racikan_r.kdobat',
+                //                 'resep_keluar_racikan_r.noresep',
+                //                 'resep_keluar_racikan_r.jumlah',
+                //                 'resep_keluar_racikan_r.jumlahdibutuhkan as qty', // MedicationRequest.dispenseRequest.quantity dan non-dtd -> Medication.ingredient.strength.denominator
+                //                 'resep_keluar_racikan_r.tiperacikan', // dtd / non-dtd
+                //                 'resep_permintaan_keluar_racikan.dosismaksimum', // dtd -> Medication.ingredient.strength.numerator
+                //                 'resep_permintaan_keluar_racikan.aturan', // signa
+                //             )
+                //                 ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                //                     $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                //                         ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                //                 })
+                //                 ->with([
+                //                     'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                //                     // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                //                     // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                //                 ]);
+                //         }
+
+                //     ])
+                //         ->orderBy('id', 'DESC');
+                // },
+
+                // resep prb
+                // 'prb' => function ($p) {
+                //     $p->select(
+                //         'noreg'
+                //     )
+                //         ->whereIn('flag', ['3', '4'])
+                //         ->where('tiperesep', 'prb');
+                // }
             ])
             ->first();
 
         if ($cekx) {
             $flag = $cekx->rs19;
-            
+
             if ($flag === '') {
                 $cekx->rs19 = '2';
                 $cekx->save();
@@ -613,7 +676,6 @@ class PoliController extends Controller
                 'message' => 'Data tidak ditemukan'
             ], 500);
         }
-        
     }
 
     public function updatewaktubpjs(Request $request)

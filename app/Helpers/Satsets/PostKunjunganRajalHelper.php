@@ -8,8 +8,10 @@ use App\Models\Pasien;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PostKunjunganRajalHelper
@@ -146,18 +148,113 @@ class PostKunjunganRajalHelper
               $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                   ->orderBy('id', 'DESC');
             },
-            'planning' => function ($p) {
-              $p->with(
-                  'masterpoli',
-                  'rekomdpjp',
-                  'transrujukan',
-                  'listkonsul',
-                  'spri',
-                  'ranap',
-                  'kontrol',
-                  'operasi',
-              )->orderBy('id', 'DESC');
+            
+            'tindakan' => function ($t) {
+                $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+                $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                    ->with([
+                    'maapingprocedure'=> function($mp){
+                        $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+                        ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                        ;
+                    },
+                    // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+                    'maapingsnowmed:kdMaster,kdSnowmed,display',
+                    'petugas:nama,kdpegsimrs,satset_uuid'
+                    ])
+                ->groupBy('rs73.rs4')
+                ->orderBy('id', 'DESC');
             },
+
+            'planning' => function ($p) {
+                $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
+                $p->with([
+                    'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                    'rekomdpjp',
+                    'transrujukan',
+                    // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
+                    'listkonsul' => function($lk) {
+                    $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
+                        ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                        ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                        ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
+                    },
+                    'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                    'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                    'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                    'kontrol' => function ($k) {
+                    $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
+                    ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                    ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
+                    },
+                    'operasi',
+                ])->orderBy('id', 'DESC');
+            },
+
+            'diagnosakeperawatan'=> function ($d) {
+                $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+            },
+
+            'apotek' => function ($apot) {
+                $apot->whereIn('flag', ['3', '4'])->with([
+                    // 'rincian.mobat:kd_obat,nama_obat',
+                    // 'rincianracik.mobat:kd_obat,nama_obat',
+                    'rincian' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_r.kdobat',
+                            'resep_keluar_r.noresep',
+                            'resep_keluar_r.jumlah',
+                            'resep_keluar_r.aturan', // signa
+                            'resep_keluar_r.konsumsi', // signa
+                            'resep_keluar_r.keterangan', // signa
+                            'retur_penjualan_r.jumlah_retur',
+                            'signa.jumlah as konsumsi_perhari',
+                            DB::raw('
+                            CASE
+                            WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+                            ELSE resep_keluar_r.jumlah
+                            END as qty
+                            ') // iki jumlah obat sing non racikan mas..
+                        )
+                            ->leftJoin('retur_penjualan_r', function ($jo) {
+                                $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                                    ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+                            })
+                            ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+                            ->with([
+                                'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                                // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                                // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                            ]);
+                    },
+                    'rincianracik' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_racikan_r.kdobat',
+                            'resep_keluar_racikan_r.noresep',
+                            'resep_keluar_racikan_r.jumlah',
+                            'resep_keluar_racikan_r.jumlahdibutuhkan as qty', // MedicationRequest.dispenseRequest.quantity dan non-dtd -> Medication.ingredient.strength.denominator
+                            'resep_keluar_racikan_r.tiperacikan', // dtd / non-dtd
+                            'resep_permintaan_keluar_racikan.dosismaksimum', // dtd -> Medication.ingredient.strength.numerator
+                            'resep_permintaan_keluar_racikan.aturan', // signa
+                        )
+                            ->leftJoin('resep_permintaan_keluar_racikan', function ($jo) {
+                                $jo->on('resep_permintaan_keluar_racikan.kdobat', '=', 'resep_keluar_racikan_r.kdobat')
+                                    ->on('resep_permintaan_keluar_racikan.noresep', '=', 'resep_keluar_racikan_r.noresep');
+                            })
+                            ->with([
+                                'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+                                // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+                                // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+                            ]);
+                    }
+
+                ])
+                ->orderBy('id', 'DESC');
+            },
+
+            'neonatusmedis',
+            'neonatuskeperawatan',
+            'pediatri'
           ])
 
 
@@ -408,6 +505,11 @@ class PostKunjunganRajalHelper
 
         $observation = self::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $screeningGizi = self::screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
         $body =
             [
@@ -515,14 +617,16 @@ class PostKunjunganRajalHelper
                     $observation['psikologis'],
 
 
-                    // CARE PLAN
-                    $carePlan
+                    // CARE PLAN Push di bawah karena banyak & sdh dinamis
+
+                    // PROCEDURE / TINDAKAN PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
+                    // PLANNING / SERVICE_REQUEST PUSH DI BAWAH KARENA BANYAK & SDH DINAMIS
                 ]
             ];
 
 
 
-        //  CONDITION
+        //  PUSH CONDITION
         foreach ($request->diagnosa as $key => $value) {
             $cond =
                 [
@@ -577,6 +681,29 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $cond);
         }
 
+        // PUSH careplan
+        for ($i=0; $i < count($carePlan) ; $i++) { 
+            array_push($body['entry'], $carePlan[$i]);
+        }
+
+        // PUSH PROCEDURE
+        for ($i=0; $i < count($procedure) ; $i++) { 
+            array_push($body['entry'], $procedure[$i]);
+        }
+
+        // PUSH PLANNING
+        if ($plann['spri'] !== null) array_push($body['entry'], $plann['spri']);
+        if ($plann['konsul'] !== null) array_push($body['entry'], $plann['konsul']);
+        if ($plann['kontrol'] !== null) array_push($body['entry'], $plann['kontrol']);
+
+        // PUSH ALLERGY INTOLERANCE
+        if ($alergyIntoleran !== null) array_push($body['entry'], $alergyIntoleran);
+
+        // PUSH MEDICATION
+        for ($i=0; $i < count($apotek['nonracikan']) ; $i++) { 
+            array_push($body['entry'], $apotek['nonracikan'][$i][0]);
+            array_push($body['entry'], $apotek['nonracikan'][$i][1]);
+        }
 
 
         // return $body;
@@ -1102,41 +1229,1036 @@ class PostKunjunganRajalHelper
     {
 
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
-        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(30)->toIso8601String();
-        $carePlan = [
-            "fullUrl" => "urn:uuid:".self::generateUuid(),
-            "resource" => [
-                "resourceType" => "CarePlan",
-                "status" => "active",
-                "intent" => "plan",
-                "category" => [
-                    [
-                        "coding" => [
+        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
+
+        $diagnosaKeperawatan = $request->diagnosakeperawatan;
+
+        $carePlan = [];
+
+        if (count($diagnosaKeperawatan) > 0) {
+            $intervensis = $diagnosaKeperawatan[0]['intervensi'];
+            if (count($intervensis) > 0) {
+
+                
+
+                $title = "RENCANA RAWAT PASIEN ".$diagnosaKeperawatan[0]['nama'];
+
+                // $terapeutik = $terapeutik ? $terapeutik->masterintervensi['nama'] : 'Rencana Rawat Pasien';
+
+                for ($i=0; $i < count($intervensis) ; $i++) { 
+                    $plan = [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "CarePlan",
+                            "status" => "active",
+                            "intent" => "plan",
+                            "category" => [
+                                [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://snomed.info/sct",
+                                            "code" => "736271009",
+                                            "display" => "Outpatient care plan",
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            "title" => $title,
+                            "description" => $intervensis[$i]['masterintervensi']['nama'],
+                            "subject" => [
+                                "reference" => "Patient/$pasien_uuid",
+                                "display" => "$request->nama",
+                            ],
+                            "encounter" => ["reference" => "urn:uuid:$encounter"],
+                            "created" => $created,
+                            "author" => [
+                                "reference" => "Practitioner/".$diagnosaKeperawatan[0]['petugas']['satset_uuid'],
+                                "display" => $diagnosaKeperawatan[0]['petugas']['nama'],
+                            ],
+                        ],
+                        "request" => ["method" => "POST", "url" => "CarePlan"],
+                    ];
+
+                    $carePlan[] = $plan;
+                }
+
+                
+            } else {
+                $carePlan = [];
+            }
+        } else {
+            $carePlan = [];
+        }
+
+        return $carePlan;
+    }
+
+    static function procedure($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        // $data = $request;
+        $adaTindakan = [];
+        // foreach ($data as $key => $value) {
+
+            // $adaTindakan[] = $value->tindakan;
+            $tindakan = $request->tindakan;
+            if (count($tindakan) > 0) {
+            foreach ($tindakan as $sub => $isi) {
+                if ($isi->maapingprocedure !== null && $isi->maapingsnowmed !== null) {
+
+                // setlocale(LC_ALL, 'IND');
+                $dt = Carbon::parse($isi->rs3)->locale('id');
+                $dt->settings(['formatFunction' => 'translatedFormat']);
+                $waktuPerform = $dt->format('l, j F Y');
+                $procedure = 
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" => [
+                        "resourceType" => "Procedure",
+                        "status" => "completed",
+                        "category" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
+                                    "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                ],
+                            ],
+                            "text" => $isi->maapingsnowmed['display'] ?? '-'
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+                                    "code" => $isi->maapingprocedure['icd9'] ?? '-',
+                                    "display" => $isi->maapingprocedure['prosedur'] ?? '-',
+                                ],
+                            ],
+                        ],
+                        "subject" => [
+                            "reference" => "Patient/$pasien_uuid",
+                            "display" => "",
+                        ],
+                        "encounter" => [
+                            "reference" => "urn:uuid:$encounter",
+                            "display" => $isi->keterangan." pada ".$waktuPerform
+                        ],
+                        "performedPeriod" => [
+                            "start" => Carbon::parse($isi->rs3)->toIso8601String(),
+                            "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
+                        ],
+                        "performer" => [
                             [
-                                "system" => "http://snomed.info/sct",
-                                "code" => "736271009",
-                                "display" => "Outpatient care plan",
+                                "actor" => [
+                                    "reference" => "Practitioner/".$isi->petugas['satset_uuid'],
+                                    "display" => $isi->petugas['nama'],
+                                ],
+                            ],
+                        ],
+                        // "reasonCode" => [
+                        //     [
+                        //         "coding" => [
+                        //             [
+                        //                 "system" => "http://hl7.org/fhir/sid/icd-10",
+                        //                 "code" => "A15.0",
+                        //                 "display" =>
+                        //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+                        //             ],
+                        //         ],
+                        //     ],
+                        // ],
+                        // "bodySite" => [
+                        //     [
+                        //         "coding" => [
+                        //             [
+                        //                 "system" => "http://snomed.info/sct",
+                        //                 "code" => "74101002",
+                        //                 "display" => "Both lungs",
+                        //             ],
+                        //         ],
+                        //     ],
+                        // ],
+                        // "note" => [
+                        //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
+                        // ],
+                    ],
+                    "request" => ["method" => "POST", "url" => "Procedure"],
+                ];
+                // $adaTindakan[] = $isi;
+                $adaTindakan[] = $procedure;
+                }
+            }
+            // }
+            
+        }
+
+        return $adaTindakan;
+    }
+
+    static function planning($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $spri = null;
+        $konsul = null;
+        $kontrol = null;
+        //   foreach ($data as $key => $value) {
+
+        // $spri[] = $value->planning;
+        $planning = $request->planning;
+
+        
+        $diagnosa = collect($request->diagnosa)->filter(function ($item) {
+            return strpos($item['rs3'], 'Z') === false; 
+          });
+        $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
+
+        $icd10 = $diag ? ($diag['rs3'] ?? '-') : '-';
+        $display = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs4'] ?? '-' : '-') : '-';
+        $uraian = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs3'] ?? '-' : '-') : '-';
+
+        if (count($planning) > 0) {
+            //   foreach ($planning as $sub => $isi) {
+            $isi = $planning[0];
+            $plann = $isi->rs4;
+
+            
+
+            if ($plann === 'Rawat Inap' && $isi->spri !== null) {
+
+              
+
+
+                $petugas_uuid = $isi->spri['petugas'] ? $isi->spri['petugas']['satset_uuid'] : '-';
+                $petugas_nama = $isi->spri['petugas'] ? $isi->spri['petugas']['nama'] : '-';
+
+              $spri = 
+              [
+                "fullUrl" => "urn:uuid:".self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "ServiceRequest",
+                    "identifier" => [
+                        [
+                            "system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id",
+                            "value" => $organization_id,
+                        ],
+                    ],
+                    "status" => "active",
+                    "intent" => "original-order",
+                    "priority" => "routine",
+                    "category" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => "3457005",
+                                    "display" => "Patient referral",
+                                ],
                             ],
                         ],
                     ],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => "http://snomed.info/sct",
+                                "code" => "737481003",
+                                "display" => "Inpatient care management",
+                            ],
+                        ],
+                    ],
+                    "subject" => ["reference" => "Patient/$pasien_uuid"],
+                    "encounter" => [
+                        "reference" => "Encounter/$encounter",
+                        "display" => "Kunjungan  di hari ".$tgl_kunjungan,
+                    ],
+                    "occurrenceDateTime" => Carbon::parse($isi->tgl)->toIso8601String(),
+                    "requester" => [
+                        "reference" => "Practitioner/".$petugas_uuid,
+                        "display" => $petugas_nama,
+                    ],
+                    "performer" => [
+                        ["reference" => "Practitioner/$practitioner_uuid", "display" => $nama_practitioner],
+                    ],
+                    "reasonCode" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://hl7.org/fhir/sid/icd-10",
+                                    "code" => $icd10,
+                                    "display" => $display,
+                                ],
+                            ],
+                        ],
+                    ],
+                    "locationCode" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" =>
+                                        "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                    "code" => "HOSP",
+                                    "display" => "Hospital",
+                                ],
+                                // INI JIKA PAKE AMBULANCE
+                                // [
+                                //     "system" =>
+                                //         "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                //     "code" => "AMB",
+                                //     "display" => "Ambulance",
+                                // ],
+                            ],
+                        ],
+                    ],
+                    "patientInstruction" => "Surat Perintah Rawat Inap RSUD MOHAMAD SALEH, Dalam Keadaan Darurat dapat Menghubungi (0335) 433119,421118",
                 ],
-                "title" => "Rencana Rawat Pasien",
-                "description" => "Rencana Rawat Pasien",
-                "subject" => [
-                    "reference" => "Patient/$pasien_uuid",
-                    "display" => "$request->nama",
-                ],
-                "encounter" => ["reference" => "urn:uuid:$encounter"],
-                "created" => $created,
-                "author" => [
-                    "reference" => "Practitioner/$practitioner_uuid",
-                    "display" => $nama_practitioner,
-                ],
-            ],
-            "request" => ["method" => "POST", "url" => "CarePlan"],
+                "request" => ["method" => "POST", "url" => "ServiceRequest"],
+              ];
+
+             
+            }
+
+
+            if ($isi->listkonsul !== null) {
+
+                $namaDokterKonsul = $isi->listkonsul['dokterkonsul'] ? $isi->listkonsul['dokterkonsul']['nama'] : '-';
+                $dokterKonsulUuid = $isi->listkonsul['dokterkonsul'] ? $isi->listkonsul['dokterkonsul']['satset_uuid'] : '-';
+                $tglRencanaKonsul = $isi->listkonsul['tgl_rencana_konsul'] ? $isi->listkonsul['tgl_rencana_konsul'] : '-';
+
+
+                $lokasikonsul_uuid = $isi->listkonsul['lokasikonsul'] ? $isi->listkonsul['lokasikonsul']['satset_uuid'] : '-';
+                $ruangankonsul = $isi->listkonsul['lokasikonsul'] ? $isi->listkonsul['lokasikonsul']['uraian'] : '-';
+
+                $konsul = 
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" =>[
+                        "resourceType" => "ServiceRequest",
+                        "identifier" => [
+                            [
+                                "system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id",
+                                "value" => $organization_id,
+                            ],
+                        ],
+                        "status" => "active",
+                        "intent" => "original-order",
+                        "priority" => "routine",
+                        "category" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "306098008",
+                                        "display" => "Self-referral",
+                                    ],
+                                ],
+                            ],
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "11429006",
+                                        "display" => "Consultation",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => "185389009",
+                                    "display" => "Follow-up visit",
+                                ],
+                            ],
+                            "text" => "Konsultasi ke Dokter ".$namaDokterKonsul,
+                        ],
+                        "subject" => ["reference" => "Patient/$pasien_uuid"],
+                        "encounter" => [
+                            "reference" => "Encounter/$encounter",
+                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan",
+                        ],
+                        "occurrenceDateTime" => Carbon::parse($tglRencanaKonsul)->toIso8601String(),
+                        "authoredOn" => Carbon::parse($isi->tgl)->toIso8601String(),
+                        "requester" => [
+                            "reference" => "Practitioner/$practitioner_uuid",
+                            "display" => $nama_practitioner,
+                        ],
+                        "performer" => [
+                            ["reference" => "Practitioner/$dokterKonsulUuid", "display" => $namaDokterKonsul],
+                        ],
+                        "reasonCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://hl7.org/fhir/sid/icd-10",
+                                        "code" => $icd10,
+                                        "display" => $display,
+                                    ],
+                                ],
+                                "text" => "Konsul ".$uraian,
+                            ],
+                        ],
+                        "locationCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                        "code" => "OF",
+                                        "display" => "Outpatient Facility",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "locationReference" => [
+                            [
+                                "reference" => "Location/".$lokasikonsul_uuid,
+                                "display" => $ruangankonsul,
+                            ],
+                        ],
+                        "patientInstruction" => "-- ".$pasien_uuid,
+                    ],
+                    "request" => ["method" => "POST", "url" => "ServiceRequest"],
+                ];
+            }
+
+
+            if ($isi->kontrol !== null) {
+
+                $namaDokterKonsul = $isi->kontrol['dokterkontrol'] ? $isi->kontrol['dokterkontrol']['nama'] : '-';
+                $dokterKonsulUuid = $isi->kontrol['dokterkontrol'] ? $isi->kontrol['dokterkontrol']['satset_uuid'] : '-';
+                $tglRencanaKonsul = $isi->kontrol['tglRencanaKontrol'] ? $isi->kontrol['tglRencanaKontrol'] : '-';
+
+
+                $lokasikonsul_uuid = $isi->kontrol['lokasikontrol'] ? $isi->kontrol['lokasikontrol']['satset_uuid'] : '-';
+                $ruangankonsul = $isi->kontrol['lokasikontrol'] ? $isi->kontrol['lokasikontrol']['uraian'] : '-';
+
+                $kontrol = 
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" =>[
+                        "resourceType" => "ServiceRequest",
+                        "identifier" => [
+                            [
+                                "system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id",
+                                "value" => $organization_id,
+                            ],
+                        ],
+                        "status" => "active",
+                        "intent" => "original-order",
+                        "priority" => "routine",
+                        "category" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "306098008",
+                                        "display" => "Self-referral",
+                                    ],
+                                ],
+                            ],
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "11429006",
+                                        "display" => "Consultation",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "code" => [
+                            "coding" => [
+                                [
+                                    "system" => "http://snomed.info/sct",
+                                    "code" => "185389009",
+                                    "display" => "Follow-up visit",
+                                ],
+                            ],
+                            "text" => "Kembali Kontrol ke dokter ".$namaDokterKonsul,
+                        ],
+                        "subject" => ["reference" => "Patient/$pasien_uuid"],
+                        "encounter" => [
+                            "reference" => "Encounter/$encounter",
+                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan",
+                        ],
+                        "occurrenceDateTime" => Carbon::parse($tglRencanaKonsul)->toIso8601String(),
+                        "authoredOn" => Carbon::parse($isi->tgl)->toIso8601String(),
+                        "requester" => [
+                            "reference" => "Practitioner/$practitioner_uuid",
+                            "display" => $nama_practitioner,
+                        ],
+                        "performer" => [
+                            ["reference" => "Practitioner/$dokterKonsulUuid", "display" => $namaDokterKonsul],
+                        ],
+                        "reasonCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://hl7.org/fhir/sid/icd-10",
+                                        "code" => $icd10,
+                                        "display" => $display,
+                                    ],
+                                ],
+                                "text" => "Kontrol ".$uraian,
+                            ],
+                        ],
+                        "locationCode" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                                        "code" => "OF",
+                                        "display" => "Outpatient Facility",
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "locationReference" => [
+                            [
+                                "reference" => "Location/".$lokasikonsul_uuid,
+                                "display" => $ruangankonsul,
+                            ],
+                        ],
+                        "patientInstruction" => "Masih Memerlukan Kontrol di RS",
+                    ],
+                    "request" => ["method" => "POST", "url" => "ServiceRequest"],
+                ];
+            }
+            
+        }
+        
+        //   }
+    
+        $data = [
+            'spri'=>$spri,
+            'konsul'=>$konsul,
+            'kontrol'=>$kontrol
+        ];
+        return $data;
+        
+    }
+
+    static function allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $created = count($request->pemeriksaanfisik) ? Carbon::parse($request->pemeriksaanfisik[0]['rs3'])->toIso8601String(): Carbon::parse($request->tgl_kunjungan)->addMinutes(14)->toIso8601String();
+
+        $allergy = null;
+
+        $anamnesis = $request->anamnesis;
+        if (count($anamnesis) > 0) {
+
+            if ($anamnesis[0]['riwayatalergi'] === null || $anamnesis[0]['riwayatalergi'] === '' || $anamnesis[0]['riwayatalergi'] === 'Tidak ada Alergi' || $anamnesis[0]['riwayatalergi'] === 'Tidak Ada Alergi,') {
+                $allergy = null;
+            } else {
+
+                $anamnesisAllergi = preg_replace("/[^a-zA-Z0-9]/", ",", $anamnesis[0]['riwayatalergi']);
+                $cek = Allergy::where('nama','like','%'.$anamnesisAllergi.'%')->first();
+
+                if ($cek) {
+                    $allergy = 
+                    [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "AllergyIntolerance",
+                            "identifier" => [
+                                [
+                                    "system" =>
+                                        "http://sys-ids.kemkes.go.id/allergy/".$organization_id,
+                                    "use" => "official",
+                                    "value" => $cek->kode,
+                                ],
+                            ],
+                            "clinicalStatus" => [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+                                        "code" => "active",
+                                        "display" => "Active",
+                                    ],
+                                ],
+                            ],
+                            "verificationStatus" => [
+                                "coding" => [
+                                    [
+                                        "system" =>
+                                            "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+                                        "code" => "confirmed",
+                                        "display" => "Confirmed",
+                                    ],
+                                ],
+                            ],
+                            "category" => [$cek->codename],
+                            "code" => [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => $cek->kdSnowmed,
+                                        "display" => $cek->display,
+                                    ],
+                                ],
+                                "text" => $anamnesis[0]['keteranganalergi'] ?? '-',
+                            ],
+                            "patient" => [
+                                "reference" => "Patient/".$pasien_uuid,
+                                "display" => $request->nama,
+                            ],
+                            "encounter" => [
+                                "reference" => "urn:uuid:".$encounter,
+                                "display" => "Kunjungan $request->nama di hari ".$tgl_kunjungan,
+                            ],
+                            "recordedDate" => Carbon::parse($anamnesis[0]['created_at'])->toIso8601String(),
+                            "recorder" => ["reference" => "Practitioner/".$practitioner_uuid],
+                        ],
+                        "request" => ["method" => "POST", "url" => "AllergyIntolerance"],
+                    ];
+                } else {
+                    $allergy = null;
+                }
+                
+            }
+            
+            
+        }else {
+            $allergy = null;
+        }
+
+        
+
+        return $allergy;
+    }
+
+    static function apotek($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+
+
+        $resep = $request->apotek;
+
+        // Pengiriman data peresepan obat akan menggunakan 2 resources yaitu Medication dan MedicationRequest. 
+        // Resource Medication akan mencatatkan data umum terkait obat yang akan diresepkan. 
+        // Sedangkan resource MedicationRequest akan digunakan untuk mengirimkan data terkait peresepan obat seperti jumlah yang diresepkan, 
+        // instruksi minum obat dan lain-lain. 
+        // Kedua data ini dikirimkan secara bersamaan sebagai 1 paket yaitu Medication dan MedicationRequest. 
+        // Satu payload Medication dan MedicationRequest hanya dapat digunakan untuk peresepan 1 jenis obat saja. 
+        // Apabila terdapat 2 jenis obat yang diresepkan, maka dikirimkan 2 paket Medication dan MedicationRequest.
+
+
+        /**
+         * Resource Medication
+         * Keterangan : +
+            * NC : Non-compound (non racikan)
+            * SD : Give of such doses (dtd)
+            * EP : Divide into equal part (tablet dipecah).
+        */
+
+        $diagnosa = collect($request->diagnosa)->filter(function ($item) {
+            return strpos($item['rs3'], 'Z') === false; 
+          });
+        $diag = count($diagnosa) > 0 ? $diagnosa->first() : null;
+
+        $icd10 = $diag ? ($diag['rs3'] ?? '-') : '-';
+        $display = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs4'] ?? '-' : '-') : '-';
+        $uraian = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs3'] ?? '-' : '-') : '-';
+
+
+
+        $kirimObatNonRacikan = [];
+        $kirimObatRacikan = [];
+
+        if (count($resep) > 0) {
+            for ($i=0; $i < count($resep) ; $i++) { 
+                $nonRacikan = $resep[$i]['rincian'];
+
+                $noresep = $resep[$i]['noresep']?? '-';
+                $tgl_kirim = $resep[$i]['tgl_kirim']?? Carbon::now();
+                $tgl_selesai = $resep[$i]['tgl_selesai']?? Carbon::now();
+
+
+                
+
+
+                if (count($nonRacikan) > 0) {
+                    # kirim obat non racikan yang hanya ada kode kfa nya
+                    for ($j=0; $j < count($nonRacikan) ; $j++) {
+
+                        $kode_kfa_93 = $nonRacikan[$j]['mobat']['kode_kfa_93'];
+                        $kode_kfa = $nonRacikan[$j]['mobat']['kode_kfa'];
+                        $kfa = $nonRacikan[$j]['mobat']['kfa'];
+                        if ($kode_kfa_93 != null && $kode_kfa != null && $kfa !== null) {
+
+
+                            $display = $nonRacikan[$j]['mobat']['kfa']['response']['result']['name'] ?? '-';
+                            $gudang = $nonRacikan[$j]['mobat']['gudang'] ?? '-';
+                            $kdobat = $nonRacikan[$j]['kdobat'];
+                            $dosage_form = $nonRacikan[$j]['mobat']['kfa']['dosage_form']['code'] ?? '-';
+                            $dosage_form_display = $nonRacikan[$j]['mobat']['kfa']['dosage_form']['name'] ?? '-';
+                            $routeCode = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['code'] ?? '-';
+                            $routeName = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['name'] ?? '-';
+
+                            $medication_id = self::generateUuid();
+
+                            $konsumsiX = (int)$nonRacikan[$j]['konsumsi'] >=30 ?? false;
+                            $kronis = (int)$nonRacikan[$j]['mobat']['status_kronis'] === '1' ?? false;
+
+                            $longTerm = $konsumsiX && $kronis;
+
+                            $pembagian = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+
+                            $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
+
+                            $tambahan = 
+                            [
+                                "reasonCode" => [
+                                        [
+                                            "coding" => [
+                                                [
+                                                    "system" => "http://hl7.org/fhir/sid/icd-10",
+                                                    "code" => $icd10,
+                                                    "display" => $display,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    "courseOfTherapyType" => [
+                                        "coding" => [
+                                            [
+                                                "system" =>"http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+                                                "code" => "continuous",
+                                                "display" => "Continuing long term therapy",
+                                            ],
+                                        ],
+                                    ],
+                            ];
+
+                            $medication = 
+                            [
+                                
+                                [
+                                    "fullUrl" => "urn:uuid:".$medication_id,
+                                    "resource" => [
+                                        "resourceType" => "Medication",
+                                        "meta" => [
+                                            "profile" => [
+                                                "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
+                                            ],
+                                        ],
+                                        "identifier" => [
+                                            [
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/medication/".$organization_id,
+                                                "use" => "official",
+                                                "value" => $kdobat,
+                                            ],
+                                        ],
+                                        "code" => [
+                                            "coding" => [
+                                                [
+                                                    "system" => "http://sys-ids.kemkes.go.id/kfa",
+                                                    "code" => $kode_kfa,
+                                                    "display" => $display,
+                                                    // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                                                ],
+                                            ],
+                                        ],
+                                        "status" => "active",
+                                        "manufacturer" => ["reference" => "Organization/".$organization_id],
+                                        "form" => [
+                                            "coding" => [
+                                                [
+                                                    "system" =>
+                                                        "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                                                    "code" => $dosage_form,
+                                                    "display" => $dosage_form_display,
+                                                ],
+                                            ],
+                                        ],
+
+                                        // khusus racikan
+                                        // "ingredient" => [
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000330",
+                                        //                     "display" => "Rifampin",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 150,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000328",
+                                        //                     "display" => "Isoniazid",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 75,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000329",
+                                        //                     "display" => "Pyrazinamide",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 400,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     [
+                                        //         "itemCodeableConcept" => [
+                                        //             "coding" => [
+                                        //                 [
+                                        //                     "system" =>
+                                        //                         "http://sys-ids.kemkes.go.id/kfa",
+                                        //                     "code" => "91000288",
+                                        //                     "display" => "Ethambutol",
+                                        //                 ],
+                                        //             ],
+                                        //         ],
+                                        //         "isActive" => true,
+                                        //         "strength" => [
+                                        //             "numerator" => [
+                                        //                 "value" => 275,
+                                        //                 "system" => "http://unitsofmeasure.org",
+                                        //                 "code" => "mg",
+                                        //             ],
+                                        //             "denominator" => [
+                                        //                 "value" => 1,
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //                 "code" => "TAB",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        // ],
+                                        "extension" => [
+                                            [
+                                                "url" =>
+                                                    "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                                                "valueCodeableConcept" => [
+                                                    "coding" => [
+                                                        [
+                                                            "system" =>
+                                                                "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                                                            "code" => "NC",
+                                                            "display" => "Non-compound",
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    "request" => ["method" => "POST", "url" => "Medication"],
+                                ],
+                                [
+                                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                                    "resource" => [
+                                        "resourceType" => "MedicationRequest",
+                                        "identifier" => [
+                                            [
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
+                                                "use" => "official",
+                                                "value" => $noresep,
+                                            ],
+                                            [
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
+                                                "use" => "official",
+                                                "value" => $kdobat,
+                                            ],
+                                        ],
+                                        "status" => "completed",
+                                        "intent" => "order",
+                                        "category" => [
+                                            [
+                                                "coding" => [
+                                                    [
+                                                        "system" =>
+                                                            "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                                                        "code" => "outpatient",
+                                                        "display" => "Outpatient",
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        "priority" => "routine",
+                                        "medicationReference" => [
+                                            "reference" => "urn:uuid:".$medication_id,
+                                            "display" => $display,
+                                        ],
+                                        "subject" => [
+                                            "reference" => "Patient/".$pasien_uuid,
+                                            "display" => $request->nama,
+                                        ],
+                                        "encounter" => [
+                                            "reference" => "urn:uuid:".$encounter,
+                                        ],
+                                        "authoredOn" => Carbon::parse($tgl_kirim)->toIso8601String(),
+                                        "requester" => [
+                                            "reference" => "Practitioner/".$practitioner_uuid,
+                                            "display" => $nama_practitioner,
+                                        ],
+                                        
+                                        "dosageInstruction" => [
+                                            [
+                                                "sequence" => 1,
+                                                "text" => $nonRacikan[$j]['konsumsi_perhari']." ".$nonRacikan[$j]['mobat']['satuan_k']."  per hari",
+                                                "additionalInstruction" => [
+                                                    ["text" => $nonRacikan[$j]['keterangan']]
+                                                ],
+                                                "patientInstruction" => $nonRacikan[$j]['konsumsi_perhari']." ".$nonRacikan[$j]['mobat']['satuan_k']."  per hari dengan keterangan " .$nonRacikan[$j]['keterangan'] ,
+                                                "timing" => [
+                                                    "repeat" => [
+                                                        "frequency" => $nonRacikan[$j]['konsumsi_perhari'],
+                                                        "period" => 1,
+                                                        "periodUnit" => "d",
+                                                    ],
+                                                ],
+                                                "route" => [
+                                                    "coding" => [
+                                                        [
+                                                            "system" => "http://www.whocc.no/atc",
+                                                            "code" => $routeCode,
+                                                            "display" => $routeName,
+                                                        ],
+                                                    ],
+                                                ],
+                                                // "doseAndRate" => [
+                                                //     [
+                                                //         "type" => [
+                                                //             "coding" => [
+                                                //                 [
+                                                //                     "system" =>
+                                                //                         "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                                                //                     "code" => "ordered",
+                                                //                     "display" => "Ordered",
+                                                //                 ],
+                                                //             ],
+                                                //         ],
+                                                //         "doseQuantity" => [
+                                                //             "value" => $nonRacikan[$j]['qty'],
+                                                //             "unit" => $nonRacikan[$j]['mobat']['satuan_k'],
+                                                //             "system" =>
+                                                //                 "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                                //             "code" => "TAB",
+                                                //         ],
+                                                //     ],
+                                                // ],
+                                            ],
+                                        ],
+                                        "dispenseRequest" => [
+                                            "dispenseInterval" => [
+                                                "value" => $nonRacikan[$j]['konsumsi_perhari'],
+                                                "unit" => "days",
+                                                "system" => "http://unitsofmeasure.org",
+                                                "code" => "d",
+                                            ],
+                                            "validityPeriod" => [
+                                                "start" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                                "end" => Carbon::parse($tglObatHabis)->toIso8601String(),
+                                            ],
+                                            "numberOfRepeatsAllowed" => 0,
+                                            // "quantity" => [
+                                            //     "value" => 120,
+                                            //     "unit" => "TAB",
+                                            //     "system" =>
+                                            //         "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                            //     "code" => "TAB",
+                                            // ],
+                                            "expectedSupplyDuration" => [
+                                                "value" => $pembagian,
+                                                "unit" => "days",
+                                                "system" => "http://unitsofmeasure.org",
+                                                "code" => "d",
+                                            ],
+                                            "performer" => ["reference" => "Organization/10000004"],
+                                        ],
+                                    ],
+                                    "request" => ["method" => "POST", "url" => "MedicationRequest"],
+                                ]
+                            ];
+
+                            if ($longTerm) {
+                                array_push($medication[1]['resource'],$tambahan);
+                            }
+
+                            $kirimObatNonRacikan[] = $medication;
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        $data = [
+            'racikan' => $kirimObatRacikan,
+            'nonracikan' => $kirimObatNonRacikan,
         ];
 
-        return $carePlan;
+
+        return $data;
+        
+        
+    }
+    static function screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        
+        
     }
 
 

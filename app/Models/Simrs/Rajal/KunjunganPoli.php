@@ -53,6 +53,7 @@ use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Rekom\Rekomdpjp;
@@ -75,6 +76,11 @@ class KunjunganPoli extends Model
     public function masterpasien()
     {
         return $this->hasOne(Mpasien::class, 'rs1', 'rs2');
+    }
+
+    public function triage()
+    {
+        return $this->hasmany(TriageA::class, 'rs1', 'rs1');
     }
 
     // public function relrekomdpjp()
@@ -174,7 +180,7 @@ class KunjunganPoli extends Model
 
     public function datasimpeg()
     {
-        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');  
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'rs9');
     }
 
     public function laborat()
@@ -274,6 +280,14 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
+    public function apotek()
+    {
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
+    public function prb()
+    {
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+    }
 
     public function satset()
     {
@@ -338,7 +352,8 @@ class KunjunganPoli extends Model
         return $this->hasMany(KamarjenazahPermintaan::class, 'rs1', 'rs1');
     }
 
-    public function pasien(){
+    public function pasien()
+    {
         return $this->belongsTo(Pasien::class, 'rs2', 'rs1');
     }
 
@@ -363,14 +378,14 @@ class KunjunganPoli extends Model
     }
     public function spri()
     {
-       return $this->hasOne(Rs141::class, 'rs1', 'rs1');
+        return $this->hasOne(Rs141::class, 'rs1', 'rs1');
     }
     public function tunggu_ranap()
     {
-       return $this->hasOne(Kunjunganranap::class, 'rs1', 'flag');
+        return $this->hasOne(Kunjunganranap::class, 'rs1', 'flag');
     }
     public function doktersimpeg()
     {
-        return $this->hasOne(Pegawai::class,'kdpegsimrs','rs9');
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
     }
 }
