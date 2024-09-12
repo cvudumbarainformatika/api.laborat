@@ -26,21 +26,10 @@ class KunjunganController extends Controller
         $jenis_kunjungan = request('jenis');
 
         if ($jenis_kunjungan === 'rajal') {
-            // return self::rajal(request()->all());
-            // $ygTerkirim =0;
-            // $arrayKunjungan = self::cekKunjunganRajal(request()->all());
-            // return self::rajal($arrayKunjungan[0]);
-            // for ($i=0; $i < count($arrayKunjungan) ; $i++) { 
-            //   self::rajal($arrayKunjungan[$i]);
-            //   $ygTerkirim = $i+1;
-            //   // break;
-            //   // sleep(5);//menunggu 10 detik
-            // }
-            // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
-            // return CobaPostKunjunganRajalHelper::cekKunjungan('70214/08/2024/J');
-            // return CobaPostKunjunganRajalHelper::cekKunjungan('70544/08/2024/J');
-            return CobaPostKunjunganRajalHelper::cekKunjungan('74335/09/2024/J');
-            // return self::cekKunjunganRajal();
+
+            return PostKunjunganRajalHelper::cobarajal('74748/09/2024/J');
+            // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
+            // return self::cekKunjunganRajal('74748/09/2024/J');
         }
 
         if ($jenis_kunjungan === 'ranap') {
@@ -75,7 +64,7 @@ class KunjunganController extends Controller
 
 
     // KUNJUNGAN RAJAL ==========================================================================================================
-    public static function cekKunjunganRajal()
+    public static function cekKunjunganRajal($noreg)
     {
       $tgl = Carbon::now()->subDays(4)->toDateString();
       // $tgl = Carbon::now()->subDays(1)->toDateString();
@@ -109,70 +98,70 @@ class KunjunganController extends Controller
         ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
         ->with([
 
-          // 'satset:uuid', 'satset_error:uuid',
-          //   'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
-          //   'relmpoli'=>function($q){
-          //     $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
-          //   },
-          //   'taskid' => function ($q) {
-          //       $q->select('noreg', 'taskid', 'waktu', 'created_at')
-          //           ->orderBy('taskid', 'ASC');
-          //   },
+          'satset:uuid', 'satset_error:uuid',
+            'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
+            'relmpoli'=>function($q){
+              $q->select('rs1','kode_ruang','rs7 as nama')->with('ruang:kode,uraian,groupper,satset_uuid,departement_uuid,gedung,lantai,ruang');
+            },
+            'taskid' => function ($q) {
+                $q->select('noreg', 'taskid', 'waktu', 'created_at')
+                    ->orderBy('taskid', 'ASC');
+            },
 
-          //   'anamnesis',
-          //   'pemeriksaanfisik' => function ($a) {
-          //     $a->with(['detailgambars:rs236_id,noreg,norm,tgl,anatomy,ket,user', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
-          //         ->orderBy('id', 'DESC');
-          //   },
+            'anamnesis',
+            'pemeriksaanfisik' => function ($a) {
+              $a->with(['detailgambars:rs236_id,noreg,norm,tgl,anatomy,ket,user', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                  ->orderBy('id', 'DESC');
+            },
 
-          // 'tindakan' => function ($t) {
-          //   $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
-          //   $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-          //     ->with([
-          //       'maapingprocedure'=> function($mp){
-          //         $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
-          //           ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
-          //         ;
-          //       },
-          //     // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
-          //     'maapingsnowmed:kdMaster,kdSnowmed,display',
-          //     'petugas:nama,kdpegsimrs,satset_uuid'
-          //     ])
-          //   ->groupBy('rs73.rs4')
-          //   ->orderBy('id', 'DESC');
-          // },
-          // 'diagnosa' => function ($d) {
-          //   $d->select('rs1','rs3','rs4','rs7','rs8');
-          //   $d->with('masterdiagnosa');
-          // },
-          // 'planning' => function ($p) {
-          //   $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
-          //   $p->with([
-          //       'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
-          //       'rekomdpjp',
-          //       'transrujukan',
-          //       // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
-          //       'listkonsul' => function($lk) {
-          //         $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
-          //             ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
-          //             ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
-          //             ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
-          //       },
-          //       'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
-          //       'spri.petugas:nama,kdpegsimrs,satset_uuid',
-          //       'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
-          //       'kontrol' => function ($k) {
-          //         $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
-          //         ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
-          //         ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
-          //       },
-          //       'operasi',
-          //   ])->orderBy('id', 'DESC');
-          // },
-          // // 'diagnosakeperawatan.intervensi.masterintervensi',
-          // 'diagnosakeperawatan'=> function ($d) {
-          //   $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
-          // },
+          'tindakan' => function ($t) {
+            $t->select('rs73.rs1','rs73.rs2','rs73.rs3','rs73.rs4','rs73.rs8','rs73.rs9','rs30.rs2 as keterangan','rs30.rs1 as kode');
+            $t->leftjoin('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+              ->with([
+                'maapingprocedure'=> function($mp){
+                  $mp->select('prosedur_mapping.kdMaster','prosedur_mapping.icd9','prosedur_master.prosedur')
+                    ->leftjoin('prosedur_master', 'prosedur_master.kd_prosedur', '=', 'prosedur_mapping.icd9');
+                  ;
+                },
+              // 'maapingprocedure:kdMaster,icd9','maapingprocedure.prosedur:kd_prosedur,prosedure',
+              'maapingsnowmed:kdMaster,kdSnowmed,display',
+              'petugas:nama,kdpegsimrs,satset_uuid'
+              ])
+            ->groupBy('rs73.rs4')
+            ->orderBy('id', 'DESC');
+          },
+          'diagnosa' => function ($d) {
+            $d->select('rs1','rs3','rs4','rs7','rs8');
+            $d->with('masterdiagnosa');
+          },
+          'planning' => function ($p) {
+            $p->select('rs1','rs2','rs3','rs4','rs5','tgl','user','flag');
+            $p->with([
+                'masterpoli:rs1,rs7,rs6,panggil_antrian,displaykode,kode_ruang',
+                'rekomdpjp',
+                'transrujukan',
+                // 'listkonsul:noreg_lama,norm,tgl_kunjungan,tgl_rencana_konsul,kdpoli_asal,kdpoli_tujuan,kddokter_asal,flag',
+                'listkonsul' => function($lk) {
+                  $lk->select('noreg_lama','norm','tgl_kunjungan','tgl_rencana_konsul','kdpoli_asal','kdpoli_tujuan','kddokter_asal','flag','rs17.rs9 as kdDokterKonsul','rs19.kode_ruang')
+                      ->leftJoin('rs17', 'rs17.rs4', '=', 'listkonsulanpoli.noreg_lama')
+                      ->leftJoin('rs19', 'rs19.rs1', '=', 'listkonsulanpoli.kdpoli_tujuan')
+                      ->with('dokterkonsul:kdpegsimrs,nama,satset_uuid','lokasikonsul:kode,uraian,satset_uuid');
+                },
+                'spri:noreg,norm,kodeDokter,tglRencanaKontrol,noSuratKontrol,nama,kelamin,user_id',
+                'spri.petugas:nama,kdpegsimrs,satset_uuid',
+                'ranap:rs1,rs2,rs3,rs4,rs5,rs6,rs7,groups,status,hiddens,groups_nama,jenis',
+                'kontrol' => function ($k) {
+                  $k->select('noreg','norm','kodeDokter as kdDokterKontrol','poliKontrol','tglRencanaKontrol','created_at','rs19.kode_ruang')
+                  ->leftJoin('rs19', 'rs19.rs6', '=', 'bpjs_surat_kontrol.poliKontrol')
+                  ->with('dokterkontrol:kddpjp,nama,satset_uuid','lokasikontrol:kode,uraian,satset_uuid');
+                },
+                'operasi',
+            ])->orderBy('id', 'DESC');
+          },
+          // 'diagnosakeperawatan.intervensi.masterintervensi',
+          'diagnosakeperawatan'=> function ($d) {
+            $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+          },
 
           // resep keluar fix
           'apotek' => function ($apot) {
@@ -243,7 +232,7 @@ class KunjunganController extends Controller
         ])
         // ->where('rs3', 'LIKE', '%' . $tgl . '%')
         ->whereNotIn('rs17.rs8', $bukanPoli)
-        ->where('rs17.rs1', '=', '73740/09/2024/J')
+        ->where('rs17.rs1', '=', $noreg)
         // ->where('rs17.rs19', '=', '1') // kunjungan selesai
 
 
