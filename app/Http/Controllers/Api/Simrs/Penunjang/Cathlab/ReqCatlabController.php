@@ -83,6 +83,10 @@ class ReqCatlabController extends Controller
         $cekx = ReqCathlab::with(
             [
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                'cathlab',
+                'cathlab.tarif',
+                'cathlab.pelaksana1',
+                'cathlab.pelaksana2'
             ]
         )
         ->where('nota', $request->nota)->first();

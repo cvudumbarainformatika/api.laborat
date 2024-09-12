@@ -29,4 +29,11 @@ class ReqCathlab extends Model
         return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'dokterpengirim');
     }
 
+    public function cathlab()
+    {
+        return $this->hasMany(TransCathlab::class, 'nota', 'nota');
+    }
+
+
+
 }
