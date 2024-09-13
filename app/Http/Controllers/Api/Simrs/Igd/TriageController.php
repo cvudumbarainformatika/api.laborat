@@ -32,22 +32,19 @@ class TriageController extends Controller
                     'rs4' => 'IRD',
                     'rs5' => 'POL014',
                     'rs6' => date('Y-m-d H:i:s'),
-                    // 'rs7' => $request->norm,
+
                     'rs8' => $request->suhu,
                     'rs9' => '-',
                     'rs10' => $request->pernapasanx,
                     'rs11' => $request->nadi,
-                    //'rs12' => $request->tinggibadan,
+
                     'rs13' => $request->bb,
-                    //'rs14' => $request->,
-                    //'rs15' => $request->norm,
+
                     'rs16' => $request->kategoritriage,
                     'rs17' => $kdpegsimrs,
-                    // 'rs18' => $request->norm,
-                    // 'rs19' => $request->norm,
                     'rs20' => $kdpegsimrs,
                     'rs21' => $request->tinggibadan,
-                    //'rs22' => $request->norm,
+
                     'sistole' => $request->sistole,
                     'diastole' => $request->diastole,
                     'kesadarans' => $request->kesadaran,

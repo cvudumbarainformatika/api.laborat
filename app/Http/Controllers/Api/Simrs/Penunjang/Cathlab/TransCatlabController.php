@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Cathlab\TransCathlab;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransCatlabController extends Controller
 {
@@ -27,9 +28,18 @@ class TransCatlabController extends Controller
                 'tgl' => date('Y-m-d H:i:s'),
                 'keterangan' => $request->keterangan,
                 'pelaksana1' => $kdpegsimrs,
-                'pelaksana2' => $kdpegsimrs,
             ]
         );
+
+        $result = TransCathlab::with(
+            [
+                'tarif',
+                'pelaksana1',
+                'pelaksana2'
+            ]
+        )
+        ->where('id',$simpan['id'])->first();
+
 
         if(!$simpan){
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
@@ -37,7 +47,25 @@ class TransCatlabController extends Controller
 
         return new JsonResponse([
             'message' =>'Data Berhasil Disimpan...!!!',
-            'result' => $simpan
+            'result' => $result
         ], 200);
+    }
+
+    public function deletecathlab(Request $request)
+    {
+          try {
+            $cathlab = TransCathlab::where('id', $request->id)->first();
+
+            $cathlabx = $cathlab->delete();
+
+            return new JsonResponse([
+                'message' => 'BERHASIL DIHAPUS...!!!'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return new JsonResponse([
+                'message' => 'GAGAL DIHAPUS...!!!'
+            ], 500);
+        }
     }
 }

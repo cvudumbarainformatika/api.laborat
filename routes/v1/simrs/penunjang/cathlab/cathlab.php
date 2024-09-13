@@ -14,4 +14,5 @@ Route::group([
     Route::get('tarifcathlab',[ReqCatlabController::class, 'tarifcathlab']);
 
     Route::post('simpancathlab',[TransCatlabController::class, 'simpancathlab']);
+    Route::post('hapuscathlab',[TransCatlabController::class, 'deletecathlab']);
 });
