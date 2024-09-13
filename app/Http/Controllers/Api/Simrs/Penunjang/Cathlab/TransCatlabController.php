@@ -15,6 +15,7 @@ class TransCatlabController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
+        $flag = $user->kdgroupnakes;
         $simpan = TransCathlab::updateOrCreate(
             [
                 'noreg' => $request->noreg,
@@ -23,11 +24,13 @@ class TransCatlabController extends Controller
                 'kd_tindakan' => $request->tindakan,
                 'js' => $request->js,
                 'jp' => $request->jp,
-            ],
-            [
                 'tgl' => date('Y-m-d H:i:s'),
                 'keterangan' => $request->keterangan,
-                'pelaksana1' => $kdpegsimrs,
+            // ],
+            // [
+                //'pelaksana1' => $flag === 1 ? $kdpegsimrs: null,
+                'pelaksana1' => 'D666',
+                'pelaksana2' => $kdpegsimrs
             ]
         );
 
