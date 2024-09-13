@@ -12,7 +12,8 @@ class PenilaianController extends Controller
 {
     public function index()
     {
-        $data = Mpenilaian::select('kode','group','skor','label')->get();
+        // $data = Mpenilaian::select('kode','group','skor','label')->get();
+        $data = Mpenilaian::select('kode','desc','form')->get();
 
         // $data = Cache::rememberForever('pendidikan', function () {
         //     return Mpendidikan::query()

@@ -28,6 +28,7 @@ class DepoController extends Controller
             ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
             ->where('stokreal.jumlah', '>', 0)
             ->where('stokreal.kdruang', $gudang)
+            ->where('stokreal.flag', '')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->groupBy('stokreal.kdobat')
             ->limit(20)
@@ -107,6 +108,7 @@ class DepoController extends Controller
             // ->where('new_masterobat.nama_obat', 'Like', '%' . request('nama_obat') . '%')
             ->where('stokreal.jumlah', '>', 0)
             ->whereIn('stokreal.kdobat', $obat)
+            ->where('stokreal.flag', '')
             ->orderBy('new_masterobat.nama_obat', 'ASC')
             ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
             ->get();
@@ -155,19 +157,23 @@ class DepoController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        
+
         // jika masih ada yang belum selesai suruh selesaikan dulu
-        $ada=Permintaandepoheder::select('no_permintaan')->where('dari',$request->dari)->where('flag','3')->get();
-        if(count($ada)>0){
-            $arr=collect($ada)->map(function($x){return $x->no_permintaan;});
-            $noper=join(' ,',$arr->all());
-            return new JsonResponse([
-                'message'=>'Selesaikan dulu Transaksi sebelumnya, nomor permintaan : ' . $noper,
-                'arr'=>$arr,
-                'ada'=>$ada,
-                'req'=>$request->all()
-                ]
-            ,410);
+        $ada = Permintaandepoheder::select('no_permintaan')->where('dari', $request->dari)->where('flag', '3')->get();
+        if (count($ada) > 0) {
+            $arr = collect($ada)->map(function ($x) {
+                return $x->no_permintaan;
+            });
+            $noper = join(' ,', $arr->all());
+            return new JsonResponse(
+                [
+                    'message' => 'Selesaikan dulu Transaksi sebelumnya, nomor permintaan : ' . $noper,
+                    'arr' => $arr,
+                    'ada' => $ada,
+                    'req' => $request->all()
+                ],
+                410
+            );
         }
         // return new JsonResponse([
         //     'message'=>'lpt',
@@ -508,7 +514,9 @@ class DepoController extends Controller
                     }
                 ]);
             },
-            'mutasigudangkedepo', 'asal:kode,nama', 'menuju:kode,nama',
+            'mutasigudangkedepo',
+            'asal:kode,nama',
+            'menuju:kode,nama',
         ])
             ->where('no_permintaan', 'Like', '%' . $nopermintaan . '%')
             ->when($gudang, function ($wew) use ($gudang) {

@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Mpenilaian extends Model
 {
     use HasFactory;
-    protected $table = 'm_penilaian';
+    protected $table = 'm_penilaians';
     protected $guarded = ['id'];
+    protected $casts = [
+      'form' => 'array'
+  ];
 }

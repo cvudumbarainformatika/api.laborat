@@ -157,38 +157,20 @@ class DistribusigudangController extends Controller
             ->where('kdruang', $request->kdgudang)
             ->groupBy('kdobat', 'kdruang')
             ->first();
-        // return new JsonResponse([
-        //     'message' => 'test st',
-        //     'allStok' => $allStok,
-        //     //     'caristok' => $caristok,
-        //     //     'nobatch' => $nobatch,
-        // ], 410);
+
         if ((int)$request->jumlah_minta > (int)$allStok->jumlah) {
             return new JsonResponse(['message' => 'Stok tidak mencukupi, sisa stok : ' . $allStok->jumlah], 410);
         }
         try {
             DB::connection('farmasi')->beginTransaction();
             $jmldiminta = $request->jumlah_minta;
-            $caristok = Stokreal::where('kdobat', $request->kodeobat)
+            $caristok = Stokreal::lockForUpdate()
+                ->where('kdobat', $request->kodeobat)
                 ->where('kdruang', $request->kdgudang)
                 ->where('jumlah', '>', 0)
                 ->orderBy('tglexp', 'ASC')
                 ->get();
-            // $sisaStok = collect($caristok)->sum('jumlah');
-            // $stok = $caristok[0]->jumlah;
-            // $sisa = $stok - $jmldiminta;
-            $noper = collect($caristok)->pluck('nopenerimaan');
-            $nobatch = collect($caristok)->pluck('nobatch');
-            $rincipen = PenerimaanRinci::where('kdobat', $request->kodeobat)
-                ->whereIn('nopenerimaan', $noper)
-                ->whereIn('no_batch', $nobatch)
-                ->get();
-            // return new JsonResponse([
-            //     'message' => 'test',
-            //     'noper' => $noper,
-            //     'caristok' => $caristok,
-            //     'nobatch' => $nobatch,
-            // ], 410);
+
             if (count($caristok) <= 0) {
                 return new JsonResponse(['message' => 'Stok Tidak ditemukan, apakah stok sudah habis?'], 410);
             }
@@ -198,19 +180,6 @@ class DistribusigudangController extends Controller
                 $sisa = $caristok[$index]->jumlah;
                 if ($sisa < $masuk) {
                     $sisax = $masuk - $sisa;
-                    // $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')
-                    //     ->where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     ->where('no_batch', $caristok[$index]->nobatch)
-                    //     ->first();
-                    $hargaBeli = collect($rincipen)->where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                        ->where('no_batch', $caristok[$index]->nobatch)
-                        ->first();
-                    // return new JsonResponse([
-                    //     'message' => 'test',
-                    //     'rincipen' => $rincipen,
-                    //     'hargaBeli' => $hargaBeli,
-                    // ], 410);
 
                     $mutasi = Mutasigudangkedepo::updateOrCreate(
                         [
@@ -222,27 +191,10 @@ class DistribusigudangController extends Controller
                         [
                             'jml' => $sisa,
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                            'harga' => $hargaBeli->harga_netto_kecil ?? 0,
+                            'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,
                         ]
                     );
-                    // $dataStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     ->where('kdruang', $request->kdgudang)
-                    //     ->get();
-                    // foreach ($dataStok as $key) {
-                    //     // $key->jumlah = 0;
-                    //     // $key->save();
-                    //     $key->update(['jumlah' => 0]);
-                    // }
-                    // $dataStok =  Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     ->where('kdruang', $request->kdgudang)
-                    //     ->where('nobatch', $caristok[$index]->nobatch)
-                    //     ->get();
-                    // foreach ($dataStok as $st) {
-                    //     $st->update(['jumlah' => 0]);
-                    // }
                     Stokreal::where('id', $caristok[$index]->id)
                         ->update(['jumlah' => 0]);
 
@@ -252,21 +204,7 @@ class DistribusigudangController extends Controller
                     //return $jmldiminta;
                 } else {
                     $sisax = $sisa - $masuk;
-                    // $hargaBeli = PenerimaanRinci::select('harga_netto_kecil')
-                    //     ->where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     ->where('no_batch', $caristok[$index]->nobatch)
-                    //     ->first();
 
-                    $hargaBeli = collect($rincipen)->where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                        ->where('no_batch', $caristok[$index]->nobatch)
-                        ->first();
-                    // return new JsonResponse([
-                    //     'message' => 'test else',
-                    //     'rincipen' => $rincipen,
-                    //     'hargaBeli' => $hargaBeli,
-                    //     'net' => $hargaBeli->harga_netto_kecil,
-                    // ], 410);
                     $mutasi = Mutasigudangkedepo::updateOrCreate(
                         [
                             'no_permintaan' => $request->nopermintaan,
@@ -277,61 +215,11 @@ class DistribusigudangController extends Controller
                         [
                             'jml' => $masuk,
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                            'harga' => $hargaBeli->harga_netto_kecil ?? 0,
+                            'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,
                         ]
                     );
-                    // // nol kan semua
-                    // $getStok = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     // ->where('nodistribusi', $caristok[$index]->nodistribusi)
-                    //     ->where('kdruang', $request->kdgudang)
-                    //     ->get();
-                    // foreach ($getStok as $key) {
-                    //     // $key->jumlah = 0;
-                    //     // $key->save();
-                    //     $key->update(['jumlah' => 0]);
-                    // }
-                    // // ambil data dengan nopenerimaan yang sama di yang terakhir
-                    // $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     // ->where('nodistribusi', $caristok[$index]->nodistribusi)
-                    //     ->where('kdruang', $request->kdgudang)
-                    //     ->latest()
-                    //     ->first();
-                    // // tumpuk di situ stok nya
-                    // // $data->jumlah = $sisax;
-                    // // $data->save();
-                    // $data->update(['jumlah' => $sisax]);
 
-                    // ambil data dengan nopenerimaan yang sama di yang terakhir
-                    // $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     ->where('kdruang', $request->kdgudang)
-                    //     ->where('nobatch', $caristok[$index]->nobatch)
-                    //     ->when($caristok[$index]->nodistribusi === null || $caristok[$index]->nodistribusi === '', function ($q) use ($caristok, $index) {
-                    //         $q->where('nodistribusi', '');
-                    //     })
-                    //     ->when($caristok[$index]->nodistribusi, function ($q) use ($caristok, $index) {
-                    //         $q->where('nodistribusi', $caristok[$index]->nodistribusi);
-                    //     })
-                    //     ->latest()
-                    //     ->first();
-                    // ambil data dengan nopenerimaan yang sama di yang terakhir
-                    // $data = Stokreal::where('nopenerimaan', $caristok[$index]->nopenerimaan)
-                    //     ->where('kdobat', $caristok[$index]->kdobat)
-                    //     ->where('kdruang', $request->kdgudang)
-                    //     ->where('nobatch', $caristok[$index]->nobatch)
-                    //     ->oldest()
-                    //     ->get();
-                    // //jumlah datanya ada berapa
-                    // $jumlah = count($data);
-                    // // nolkan nomor distribusi yang lain
-                    // foreach ($data as $st) {
-                    //     $st->update(['jumlah' => 0]);
-                    // }
-                    // // tumpuk di index terakhir stok nya
-                    // $data[$jumlah - 1]->update(['jumlah' => $sisax]);
                     Stokreal::where('id', $caristok[$index]->id)
                         ->update(['jumlah' => $sisax]);
                     $masuk = 0;
