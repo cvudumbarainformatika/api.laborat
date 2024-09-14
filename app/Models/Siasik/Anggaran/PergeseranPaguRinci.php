@@ -32,5 +32,11 @@ class PergeseranPaguRinci extends Model
     public function realisasi(){
         return $this->hasMany(NpdLS_rinci::class, 'idserahterima_rinci', 'idpp');
     }
+    public function realisasi_spjpanjar(){
+        return $this->hasMany(SpjPanjar_Rinci::class, 'iditembelanjanpd', 'idpp');
+    }
+    public function contrapost(){
+        return $this->hasMany(Contrapost::class,'idpp', 'idpp');
+    }
 
 }
