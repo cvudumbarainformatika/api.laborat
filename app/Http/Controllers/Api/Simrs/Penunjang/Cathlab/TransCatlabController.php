@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Cathlab;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Penunjang\Cathlab\ReqCathlab;
 use App\Models\Simrs\Penunjang\Cathlab\TransCathlab;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,12 @@ class TransCatlabController extends Controller
 {
     public function simpancathlab(Request $request)
     {
+        $cek = ReqCathlab::where('nota',$request->nota)->where('flag','1')->count();
+        if($cek > 0)
+        {
+            return new JsonResponse(['message' => 'MAAF DATA INI SUDAH DIKUNCI...!!!'], 500);
+        }
+
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
         $flag = $user->kdgroupnakes;
@@ -56,6 +63,12 @@ class TransCatlabController extends Controller
 
     public function deletecathlab(Request $request)
     {
+        $cek = ReqCathlab::where('nota',$request->nota)->where('flag','1')->count();
+        if($cek > 0)
+        {
+            return new JsonResponse(['message' => 'MAAF DATA INI SUDAH DIKUNCI...!!!'], 500);
+        }
+
           try {
             $cathlab = TransCathlab::where('id', $request->id)->first();
 

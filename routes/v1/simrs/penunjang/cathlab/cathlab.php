@@ -12,6 +12,7 @@ Route::group([
     Route::get('reqcathlab',[ReqCatlabController::class, 'reqcathlab']);
     Route::post('terimapasien',[ReqCatlabController::class, 'terimapasien']);
     Route::get('tarifcathlab',[ReqCatlabController::class, 'tarifcathlab']);
+    Route::post('updateflag',[ReqCatlabController::class, 'updateflag']);
 
     Route::post('simpancathlab',[TransCatlabController::class, 'simpancathlab']);
     Route::post('hapuscathlab',[TransCatlabController::class, 'deletecathlab']);
