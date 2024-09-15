@@ -20,9 +20,43 @@ use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use DateTime;
+use PhpOffice\PhpSpreadsheet\Calculation\TextData\Format;
 
 class NPD_LSController extends Controller
 {
+    public function listnpdls()
+    {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
+        $tahunawal=date('Y');
+        $tahun=date('Y');
+        $npdls = NpdLS_heder::select(
+            'npdls_heder.nonpdls',
+                    'npdls_heder.tglnpdls',
+                    'npdls_heder.pptk',
+                    'npdls_heder.bidang',
+                    'npdls_heder.kegiatanblud',
+                    'npdls_heder.penerima',
+                    'npdls_heder.keterangan',
+                    'npdls_heder.noserahterima',
+                    'npdls_heder.nopencairan',
+                    'npdls_heder.userentry')
+            ->where('userentry', $pegawai)
+            ->when(request('q'),function ($query) {
+                $query->where('nonpdls', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('tglnpdls', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('pptk', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('bidang', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerima', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('keterangan', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('nopencairan', 'LIKE', '%' . request('q') . '%')
+                ;
+            })->whereBetween('tglnpdls', [$tahunawal.'-01-01', $tahun.'-12-31'])
+            ->get();
+        return new JsonResponse($npdls);
+    }
     public function perusahaan()
     {
         $phk = Mpihakketiga::select('kode','nama','alamat','npwp','norek','bank','kodemapingrs','namasuplier')
@@ -61,6 +95,19 @@ class NPD_LSController extends Controller
                 't_tampung.harga',
                 't_tampung.pagu',
                 't_tampung.idpp')
+                ->with(['realisasi_spjpanjar'=> function ($realisasi) {
+                    $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                        'spjpanjar_rinci.jumlahbelanjapanjar');
+                    },'realisasi'=> function ($realisasi) {
+                    $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                        'npdls_rinci.nominalpembayaran')
+                                        // ->sum('nominalpembayaran')
+                                        // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
+                                        ;
+                    },'contrapost'=> function ($realisasi) {
+                    $realisasi->select('contrapost.idpp',
+                                        'contrapost.nominalcontrapost');
+                    }])
         // ->with('masterobat', function($sel){
         //     $sel->select('new_masterobat.kode108',
         //                 'new_masterobat.uraian108',
