@@ -252,29 +252,26 @@ class DetailbillingbynoregIgdController extends Controller
 
     public static function eresep($noreg)
     {
-        $query = Resepkeluarheder::select(DB::raw('round(sum((resep_keluar_r.harga_jual * resep_keluar_r.jumlah)+resep_keluar_r.nilai_r),2) as subtotal'))
+        $query_nonracikan = Resepkeluarheder::select(DB::raw('round(sum((resep_keluar_r.harga_jual * resep_keluar_r.jumlah)+resep_keluar_r.nilai_r),2) as subtotal'))
                 ->leftjoin('resep_keluar_r','resep_keluar_h.noresep','resep_keluar_r.noresep')
                 ->where('resep_keluar_h.noreg', $noreg)
                 ->get();
-        $eresep = $query->sum('subtotal');
 
-        $queryx = Resepkeluarheder::select(DB::raw('round(sum(resep_keluar_racikan_r.harga_jual * resep_keluar_racikan_r.jumlah),2) as subtotal'))
+        $query_racikan = Resepkeluarheder::select(DB::raw('round(sum(resep_keluar_racikan_r.harga_jual * resep_keluar_racikan_r.jumlah),2) as subtotal'))
                 ->leftjoin('resep_keluar_racikan_r','resep_keluar_h.noresep','resep_keluar_racikan_r.noresep')
                 ->where('resep_keluar_h.noreg', $noreg)
                 ->get();
-        $query_racikan = Returpenjualan_h::select(DB::raw('round(sum(resep_keluar_racikan_r.nilai_r),2) as subtotal'))
-        ->leftjoin('resep_keluar_racikan_r','resep_keluar_h.noresep','resep_keluar_racikan_r.noresep')
-        ->where('resep_keluar_h.noreg', $noreg)
-        ->groupBy('resep_keluar_h.noresep','resep_keluar_racikan_r.namaracikan')
-        ->get();
-
-        $query = Resepkeluarheder::select(DB::raw('round(sum((resep_keluar_r.harga_jual * resep_keluar_r.jumlah)+resep_keluar_r.nilai_r),2) as subtotal'))
-                ->leftjoin('resep_keluar_r','resep_keluar_h.noresep','resep_keluar_r.noresep')
+        $query_racikan_r = Resepkeluarheder::select(DB::raw('round(sum(resep_keluar_racikan_r.nilai_r),2) as subtotal'))
+                ->leftjoin('resep_keluar_racikan_r','resep_keluar_h.noresep','resep_keluar_racikan_r.noresep')
                 ->where('resep_keluar_h.noreg', $noreg)
                 ->get();
-        $eresep = $query->sum('subtotal');
 
-        $eresep = $query->sum('subtotal')+$queryx->sum('subtotal')+$query_racikan->sum('subtotal');
+        $query_retur = Returpenjualan_h::select(DB::raw('round(sum((retur_penjualan_r.harga_jual * retur_penjualan_r.jumlah_retur)+retur_penjualan_r.nilai_r),2) as subtotal'))
+                ->leftjoin('retur_penjualan_r','resep_keluar_h.noresep','retur_penjualan_r.noresep')
+                ->where('retur_penjualan_h.noreg', $noreg)
+                ->get();
+
+        $eresep = $query_nonracikan->sum('subtotal')+$query_racikan->sum('subtotal')+$query_racikan_r->sum('subtotal')-$query_retur->sum('subtotal');
         return $eresep;
     }
 }
