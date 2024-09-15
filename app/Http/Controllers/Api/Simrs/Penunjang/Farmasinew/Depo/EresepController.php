@@ -251,7 +251,7 @@ class EresepController extends Controller
             )
             ->leftjoin('stokreal', 'new_masterobat.kd_obat', '=', 'stokreal.kdobat')
             // ->where('stokreal.kdruang', request('kdruang'))
-            ->where('new_masterobat.status_konsinyasi', '')
+            //->where('new_masterobat.status_konsinyasi', '')
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
             ->when(request('tiperesep'), function ($q) {
                 if (request('tiperesep') === 'prb') {

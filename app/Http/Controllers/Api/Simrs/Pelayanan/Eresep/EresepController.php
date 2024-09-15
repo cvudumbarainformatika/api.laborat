@@ -763,7 +763,7 @@ class EresepController extends Controller
             ->where('stokreal.kdruang', request()->kdruang)
             // ->where('stokreal.jumlah', '>', 0)
             ->whereIn('new_masterobat.sistembayar', $sistembayar)
-            //->where('new_masterobat.status_konsinyasi', '')
+            ->where('new_masterobat.status_konsinyasi', '')
             ->when(request()->tiperesep === 'prb', function ($q) {
                 $q->where('new_masterobat.status_prb', '!=', '');
             })
