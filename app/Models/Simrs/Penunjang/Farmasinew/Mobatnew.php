@@ -231,7 +231,7 @@ class Mobatnew extends Model
 
     public function pagu()
     {
-        return $this->hasOne(PergeseranPaguRinci::class, 'koderek108', 'kode108');
+        return $this->belongsTo(PergeseranPaguRinci::class, 'kode108', 'koderek108');
     }
     public function realisasi()
     {
