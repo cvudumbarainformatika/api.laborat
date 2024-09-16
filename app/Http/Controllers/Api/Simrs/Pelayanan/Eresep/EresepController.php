@@ -126,11 +126,11 @@ class EresepController extends Controller
                 $groupsistembayar = $records['groupsistembayar'];
                 $jenis_perbekalan[] = $records['jenis_perbekalan'];
             }
-      
+
         // try {
 
             DB::connection('farmasi')->beginTransaction();
-            
+
             $cekjumlahstok = Stokreal::select('stokreal.kdobat as kdobat', DB::raw('sum(jumlah) as jumlahstok'))
                 ->whereIn('kdobat', $kdobat)
                 ->where('kdruang', $kddepo)
@@ -210,13 +210,13 @@ class EresepController extends Controller
                     'kodeobat' => $x->kdobat
                 ];
             })->all();
-        
+
             $collection = collect($results);
 
             $sorted = $collection->sortBy(function ($item) use ($kdobat) {
                 return array_search($item['kodeobat'], $kdobat);
             })->values()->toArray();
-            
+
             $jumlahstok = [];
             $alokasi = [];
             $sistembayar = [];
@@ -271,9 +271,9 @@ class EresepController extends Controller
                 $colom = 'depoigd';
                 $lebel = 'D-IR';
             }
-            
+
             $sudahAda=Resepkeluarheder::where('noresep',$noreseps)->first();
-            if($sudahAda){           
+            if($sudahAda){
                 if($sudahAda->noreg !== $noreg) $noreseps=null;
             }
             if ($noreseps === '' || $noreseps === null) {
@@ -286,7 +286,7 @@ class EresepController extends Controller
             }
 
             return self::simpancopyresep($request, $alokasi, $statuses, $noresep, $cekpemberian, $user, $kdobat, $cekpemberianobat);
-           
+
         // } catch (\Exception $e) {
         //     DB::connection('farmasi')->rollBack();
         //         return new JsonResponse([
@@ -299,24 +299,24 @@ class EresepController extends Controller
 
     public static function simpancopyresep($request, $alokasi, $statuses, $noresep, $cekpemberian, $user, $kdobat, $cekpemberianobat){
 
-     
+
 
         foreach ($request->kirimResep as $key => $record) {
             try {
-              
+
                 // return new JsonResponse($alokasi[$key]);
                 if ($record['jenisresep'] === 'nonRacikan') {
                     if ($record['jumlah_diminta'] > $alokasi[$key]) {
                         throw new \Exception('Maaf Stok Alokasi Tidak Mencukupi...!!!');
                     }
-                   
+
                 } else {
 
                     if ($record['jumlah'] > $alokasi[$key]) {
                         throw new \Exception('Maaf Stok Alokasi Tidak Mencukupi...!!!');
                     }
                 }
-                
+
                 if ($record['kodedepo'] === 'Gd-05010101') {
                     $tiperesep = $record['tiperesep'] ?? 'normal';
                     $iter_expired = $record['iter_expired'] ?? null;
@@ -325,14 +325,14 @@ class EresepController extends Controller
                         $iter_expired =  null;
                         $iter_jml =  null;
                     }
-                        
+
                     $lanjut = $record['lanjuTr'];
-                  
+
                     foreach (json_decode($cekpemberian, true) as $ky => $obatkonsumsi) {
-                      
+
                         if ($obatkonsumsi['kdobat'] === $record['kodeobat']) {
                             if ($obatkonsumsi['status'] === 1 && $lanjut !== '1') {
-        
+
                             $cekpemberianobat = true;
                             $resp = [
                                 'messageError' => '',
@@ -343,7 +343,7 @@ class EresepController extends Controller
                             }
                         }
                     }
-                    
+
                 } else {
                     $tiperesep =  'normal';
                     $iter_expired =  null;
@@ -492,7 +492,7 @@ class EresepController extends Controller
                     //     $simpanrinci->load('mobat:kd_obat,nama_obat');
                     // }
                 }
-    
+
                 $endas = Resepkeluarheder::where('noreg', $record['noreg'])->with(
                     'permintaanresep.mobat:kd_obat,nama_obat',
                     'permintaanracikan.mobat:kd_obat,nama_obat'
@@ -651,8 +651,8 @@ class EresepController extends Controller
                 'total' => $total,
             ];
         }
-       
-       
+
+
         $collection = collect($response);
 
         $sorted = $collection->sortBy(function ($item) use ($kdobat) {

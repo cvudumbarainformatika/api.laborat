@@ -115,11 +115,12 @@ class BillingbynoregController extends Controller
         $ambulan = DetailbillingbynoregIgdController::ambulan($noreg);
         $farmasi = DetailbillingbynoregIgdController::farmasi($noreg);
         $biayamatrei = DetailbillingbynoregIgdController::biayamatrei($noreg);
+        $eresep = DetailbillingbynoregIgdController::eresep($noreg);
         $tindakanx = (int) $tindakan->sum('subtotal');
         $biayamatreix = (int) $biayamatrei->sum('subtotal');
 
         $totalall = $adminigd + $tindakanx + $laborat + $radiologi + $fisioterapi + $hd + $penunjanglain + $cardio + $eeg + $endoscopy + $bdrs + $okigd +  $tindakanokigd
-                    + $okranap + $tindakanokranap + $perawatanjenasah + $ambulan + $farmasi + $biayamatreix;
+                    + $okranap + $tindakanokranap + $perawatanjenasah + $ambulan + $farmasi + $biayamatreix + $eresep;
         return new JsonResponse(
             [
                 'heder' => $noreg,
@@ -141,6 +142,7 @@ class BillingbynoregController extends Controller
                 'perawatanjenasah' => isset($perawatanjenasah) ?  $perawatanjenasah : 0,
                 'ambulan' => isset($ambulan) ?  $ambulan : 0,
                 'farmasi' => isset($farmasi) ?  $farmasi : 0,
+                'eresep' => isset($eresep) ?  $eresep : 0,
                 'biayamatrei' => isset($biayamatreix) ?  $biayamatreix : 0,
                 'totalall' => isset($totalall) ?  $totalall : 0,
             ]);

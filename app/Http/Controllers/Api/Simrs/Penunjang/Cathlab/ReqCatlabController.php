@@ -115,4 +115,15 @@ class ReqCatlabController extends Controller
 
         return new JsonResponse($data);
     }
+
+    public function updateflag(Request $request)
+    {
+        $updatekunjungan = ReqCathlab::where('nota',$request->nota)->first();
+        $updatekunjungan->flag = '1';
+        $updatekunjungan->save();
+
+        return new JsonResponse([
+            'message' => 'DATA SUDAH DIKUNCI...!!!'
+        ], 200);
+    }
 }
