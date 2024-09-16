@@ -10,6 +10,7 @@ use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -97,6 +98,11 @@ class Pegawai extends Model
         return $this->hasMany(Alpha::class);
     }
 
+    public function npd_heder()
+    {
+        return $this->hasMany(NpdLS_heder::class, 'nip', 'nip');
+    }
+
     public function getTtdpegawaiUrlAttribute()
     {
         $image = URL::to('/storage/' . $this->ttdpegawai);
@@ -134,8 +140,8 @@ class Pegawai extends Model
             return null;
         }
 
-        $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
-        // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}"; 
+        $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}";
+        // $image = "http://192.168.100.100/simpeg/foto/{$this->nip}/{$this->foto}";
         // $exist = file_exists($image);
         // if (!$image || !$exist) {
         //     return null;
@@ -156,7 +162,7 @@ class Pegawai extends Model
             return $result;
         } else {
             return null;
-        } 
+        }
 
     }
 
