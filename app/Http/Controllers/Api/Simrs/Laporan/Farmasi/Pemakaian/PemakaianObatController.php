@@ -18,7 +18,7 @@ class PemakaianObatController extends Controller
         $dateAwal = Carbon::parse(request('from'));
         $dateAkhir = Carbon::parse(request('to'));
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
+        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         $gudangdepo = ['Gd-03010100', 'Gd-03010101', 'Gd-05010100', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']; //
         $obat = Mobatnew::select(
             'kd_obat',
@@ -53,6 +53,17 @@ class PemakaianObatController extends Controller
                         ->whereBetween('tglpenerimaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
                         ->groupBy('penerimaan_r.kdobat');
                 },
+                // 'mutasikeluar' => function ($mut) {
+                //     $mut->select(
+                //         'mutasi_gudangdepo.kd_obat',
+                //         DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'),
+                //         DB::raw('sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga) as subtotal'),
+                //     )
+                //         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                //         ->whereBetween('permintaan_h.tgl_kirim_depo', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+                //         ->where('permintaan_h.dari', 'LIKE', '%R-%');
+                // },
+
                 'mutasikeluar' => function ($mut) {
                     $mut->select(
                         'mutasi_gudangdepo.kd_obat',
@@ -61,7 +72,8 @@ class PemakaianObatController extends Controller
                     )
                         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->whereBetween('permintaan_h.tgl_kirim_depo', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
-                        ->where('permintaan_h.dari', 'LIKE', '%R-%');
+                        ->where('permintaan_h.dari', 'LIKE', '%R-%')
+                        ->groupBy('mutasi_gudangdepo.kd_obat');
                 },
 
                 'resepkeluar' => function ($kel) {
@@ -100,6 +112,7 @@ class PemakaianObatController extends Controller
                         ->groupBy('resep_keluar_h.sistembayar', 'retur_penjualan_r.kdobat');
                 }
             ])
+            // ->where('nama_obat', 'LIKE', '%oksi%')
             ->get();
         $obat->append('harga');
         return new JsonResponse([
@@ -157,7 +170,8 @@ class PemakaianObatController extends Controller
                     )
                         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->whereBetween('permintaan_h.tgl_kirim_depo', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
-                        ->where('permintaan_h.dari', 'LIKE', '%R-%');
+                        ->where('permintaan_h.dari', 'LIKE', '%R-%')
+                        ->groupBy('mutasi_gudangdepo.kd_obat');
                 },
 
                 'resepkeluar' => function ($kel) {
