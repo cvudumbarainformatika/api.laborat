@@ -267,7 +267,7 @@ class DetailbillingbynoregIgdController extends Controller
                 ->get();
 
         $query_retur = Returpenjualan_h::select(DB::raw('round(sum((retur_penjualan_r.harga_jual * retur_penjualan_r.jumlah_retur)+retur_penjualan_r.nilai_r),2) as subtotal'))
-                ->leftjoin('retur_penjualan_r','resep_keluar_h.noresep','retur_penjualan_r.noresep')
+                ->leftjoin('retur_penjualan_r','retur_penjualan_h.noresep','retur_penjualan_r.noresep')
                 ->where('retur_penjualan_h.noreg', $noreg)
                 ->get();
 
