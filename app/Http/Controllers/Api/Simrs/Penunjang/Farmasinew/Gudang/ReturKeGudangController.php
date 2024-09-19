@@ -49,6 +49,12 @@ class ReturKeGudangController extends Controller
                 ->orderBy('tglexp', 'ASC')
                 ->get();
             $stokNya = collect($stok);
+            $stokG = Stokrel::lockForUpdate()
+                ->whereIn('kdobat', $kode)
+                ->where('kdruang', $request->gudang)
+                ->orderBy('tglexp', 'ASC')
+                ->get();
+            $stokGud = collect($stokG);
             foreach ($request->details as $det) {
                 $cekStok = $stokNya->whereIn('kdobat', $det['kd_obat']);
                 $jml = $cekStok->sum('jumlah');
@@ -99,8 +105,28 @@ class ReturKeGudangController extends Controller
                         );
                         $rinciNya[] = $rinci;
                         $cekStok->update(['jumlah' => 0]);
-                        // Stokrel::where('id', $cekStok->id)
-                        // ->update(['jumlah' => 0]);
+                        // update stok gudand
+                        $stGu = $stokGud->where('kdobat', $key['kd_obat'])
+                            ->where('nopenerimaan', $cekStok->nopenerimaan)
+                            ->where('nobatch', $cekStok->nobatch)
+                            ->first();
+                        if (!$stGu) {
+                            $stgNb = $stokGud->where('kdobat', $key['kd_obat'])
+                                ->where('nopenerimaan', $cekStok->nopenerimaan)
+                                ->first();
+                            if (!$stgNb) {
+                                return new JsonResponse([
+                                    'message' => 'Stok ' . $key['nama_obat'] . ' dengan nomor penerimaan ' . $cekStok->nopenerimaan . ' tidak ditemukan di gudang'
+                                ], 410);
+                            }
+                            $tot = $stgNb->jumlah + $sisa;
+                            $stgNb->update(['jumlah' => $tot]);
+
+                            $masuk = $sisax;
+                        }
+                        $tot = $stGu->jumlah + $sisa;
+                        $stGu->update(['jumlah' => $tot]);
+
 
                         $masuk = $sisax;
                     } else {
@@ -121,8 +147,28 @@ class ReturKeGudangController extends Controller
                         $rinciNya[] = $rinci;
                         $cekStok->update(['jumlah' => $sisax]);
 
+                        // update stok gudand
+                        $stGu = $stokGud->where('kdobat', $key['kd_obat'])
+                            ->where('nopenerimaan', $cekStok->nopenerimaan)
+                            ->where('nobatch', $cekStok->nobatch)
+                            ->first();
+                        if (!$stGu) {
+                            $stgNb = $stokGud->where('kdobat', $key['kd_obat'])
+                                ->where('nopenerimaan', $cekStok->nopenerimaan)
+                                ->first();
+                            if (!$stgNb) {
+                                return new JsonResponse([
+                                    'message' => 'Stok ' . $key['nama_obat'] . ' dengan nomor penerimaan ' . $cekStok->nopenerimaan . ' tidak ditemukan di gudang'
+                                ], 410);
+                            }
+                            $tot = $stgNb->jumlah + $masuk;
+                            $stgNb->update(['jumlah' => $tot]);
+                            $masuk = 0;
+                        }
                         // Stokrel::where('id', $cekStok->id)
                         //     ->update(['jumlah' => $sisax]);
+                        $tot = $stGu->jumlah + $masuk;
+                        $stGu->update(['jumlah' => $tot]);
 
                         $masuk = 0;
                     }
