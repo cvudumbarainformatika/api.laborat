@@ -38,6 +38,7 @@ class AutogenController extends Controller
     {
         // Tindakan
         $nota = TindakanSambung::whereNull('rs73_id')
+            ->whereNotNull('ket')
             // ->limit(10)
             ->get();
         foreach ($nota as $key) {
