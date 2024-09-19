@@ -19,6 +19,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Ranap\Views\Kunjunganview;
+use App\Models\Simrs\Tindakan\Tindakan;
+use App\Models\Simrs\Tindakan\TindakanSambung;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +34,27 @@ use function PHPUnit\Framework\isNull;
 class AutogenController extends Controller
 {
 
-
+    public function tindakanId()
+    {
+        // Tindakan
+        $nota = TindakanSambung::whereNull('rs73_id')
+            // ->limit(10)
+            ->get();
+        foreach ($nota as $key) {
+            $tind = Tindakan::where('rs2', '=', $key->nota)
+                ->where('rs1', '=', $key->noreg)
+                ->where('rs4', '=', $key->kd_tindakan)
+                ->orderBy('id', 'ASC')
+                ->first();
+            if ($tind) {
+                $key->update(['rs73_id' => $tind->id]);
+            }
+        }
+        $data = [
+            'nota' => $nota,
+        ];
+        return $data;
+    }
     public function coba()
     {
         $data = ceil(0.2);
