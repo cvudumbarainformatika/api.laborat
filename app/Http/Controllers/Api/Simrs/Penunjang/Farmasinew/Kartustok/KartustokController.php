@@ -29,7 +29,7 @@ class KartustokController extends Controller
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
+        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // $date->format('Y-m-d')
         // return new JsonResponse($dateAwal);
 
