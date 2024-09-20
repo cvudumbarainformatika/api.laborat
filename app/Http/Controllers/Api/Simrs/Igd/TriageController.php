@@ -62,7 +62,9 @@ class TriageController extends Controller
                     'scoresuhu' => $request->scoresuhu,
                     'totalscore' => $request->totalscore,
                     'hasilprimarusurve' => $request->hasilprimarysurve,
-                    'hasilsecondsurve' => $request->hasilsecondsurve
+                    'hasilsecondsurve' => $request->hasilsecondsurve,
+                    'gangguanperilaku' => $request->gangguanperilaku,
+                    'falsetriage' => $request->falsetriage
                 ]
             );
 
@@ -100,7 +102,7 @@ class TriageController extends Controller
                 'pernapasanx' => $simpan['rs10'],
                 'nadi' => $simpan['rs11'],
                 'bb' => $simpan['rs13'],
-                'tinggibadan' => $simpan['rs21'],
+                'tb' => $simpan['rs21'],
                 'sistole' => $simpan['sistole'],
                 'diastole' => $simpan['diastole'],
                 'kesadaran' => $simpan['kesadarans'],
@@ -123,6 +125,9 @@ class TriageController extends Controller
                 'hasilprimarusurve' => $simpan['hasilprimarusurve'],
                 'hasilsecondsurve' => $simpan['hasilsecondsurve'],
 
+                'gangguanperilaku' => $simpan['gangguanperilaku'],
+                'falsetriage' => $simpan['falsetriage'],
+
                 'eye' => $simpanx['rs14'],
                 'verbal' => $simpanx['rs15'],
                 'motorik' => $simpanx['rs16'],
@@ -135,8 +140,6 @@ class TriageController extends Controller
                 'nyeri' => $simpanx['nyeri'],
                 'lochea' => $simpanx['lochea'],
                 'proteinurin' => $simpanx['proteinurin'],
-                'disability' => $simpanx['rs20'],
-                'disability' => $simpanx['rs20'],
                 'disability' => $simpanx['rs20'],
             ];
             return new JsonResponse([
