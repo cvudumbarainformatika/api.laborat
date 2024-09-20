@@ -20,4 +20,5 @@ Route::group([
 
     // retur ke gudang
     Route::post('/simpan-retur', [ReturKeGudangController::class, 'simpan']);
+    Route::get('/list-retur', [ReturKeGudangController::class, 'lisRetur']);
 });

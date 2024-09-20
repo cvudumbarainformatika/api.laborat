@@ -221,4 +221,34 @@ class ReturKeGudangController extends Controller
         }
         return $has . $n . "/" . date("d") . "/" . date("m") . "/" . date("Y") . "-" . $kode;
     }
+    public function lisRetur()
+    {
+        $head = ReturGudang::with([
+            'details' => function ($det) {
+                $det->select(
+                    'no_retur',
+                    'kd_obat',
+                    'alasan',
+                    DB::raw('sum(jumlah_retur) as jumlah_retur')
+                )
+                    ->with('masterobat:kd_obat,satuan_k,nama_obat,status_fornas,status_forkid,status_generik,status_kronis,status_prb')
+                    ->groupBy('kd_obat', 'no_retur');
+            },
+            'depos:kode,nama',
+            'gudangs:kode,nama',
+            'user:kdpegsimrs,nama',
+        ])
+            ->where('no_retur', 'like', '%' . request('q') . '%')
+            ->where('depo', '=', request('depo'))
+            ->orderBy('tgl_retur', 'DESC')
+            ->paginate(request('per_page'));
+
+        $data = collect($head)['data'];
+        $meta = collect($head)->except('data');
+
+        return new JsonResponse([
+            'data' => $data,
+            'meta' => $meta,
+        ]);
+    }
 }
