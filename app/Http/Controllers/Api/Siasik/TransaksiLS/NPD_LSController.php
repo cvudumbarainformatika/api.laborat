@@ -168,11 +168,14 @@ class NPD_LSController extends Controller
         ->with('rincianbast', function($rinci) use ($tahun) {
             $rinci->where('nobast', request('kodebast'))
                     ->select('bast_r.nobast',
+                            'bast_r.nopenerimaan',
                             'bast_r.id',
                             'bast_r.kdobat',
                             'bast_r.harga_net',
                             'bast_r.jumlah',
-                            'bast_r.subtotal')
+                            // 'bast_r.subtotal',
+                            DB::raw('(harga_net * jumlah) as totalobat'))
+                            // ->selectRaw('sum(harga_net * jumlah) as totalobat')
         // ->with('penerimaanrinci', function($rinci) use ($tahun) {
         //     $rinci->select('penerimaan_r.nopenerimaan',
         //                     'penerimaan_r.kdobat',
@@ -180,7 +183,7 @@ class NPD_LSController extends Controller
         //                     'penerimaan_r.harga_netto_kecil',
         //                     'penerimaan_r.jml_all_penerimaan',
         //                     'penerimaan_r.subtotal')
-                    ->with('masterobat', function ($rekening) use ($tahun){
+                    ->with('masterobat',function ($rekening) use ($tahun){
                         $rekening->select('new_masterobat.kd_obat',
                                         'new_masterobat.kode50',
                                         'new_masterobat.uraian50',
@@ -393,7 +396,21 @@ class NPD_LSController extends Controller
             ], 500);
         }
     }
-
+    public function delete(Request $request)
+    {
+        $data = NpdLS_rinci::find($request->id);
+        $count = NpdLS_rinci::where('nonpdls', $data->nonpdls)->get();
+        $delete = $data->delete();
+        if(!$delete){
+            return new JsonResponse(['message' => 'Data Gagal Dihapus'], 410);
+        }
+        if (count($count) === 1){
+            $header = NpdLS_heder::find($data->nonpdls);
+            $header->delete();
+            return new JsonResponse(['message'=>'Data Header dan detail telah dihapus'], 200);
+        }
+        return new JsonResponse(['message' => 'Data Telah Dihapus'], 200);
+    }
     public static function buatnomor(){
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
