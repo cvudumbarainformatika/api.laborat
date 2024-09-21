@@ -14,8 +14,10 @@ class MapingKfaController extends Controller
 {
     public function getMasterObat()
     {
-        $obat = Mobatnew::select('kd_obat', 'nama_obat', 'kode_kfa', 'kode_kfa_93')->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+        $obat = Mobatnew::select('kd_obat', 'nama_obat', 'kode_kfa', 'kode_kfa_93')
+            ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
             ->with(['kfa'])
+            ->where('flag', '')
             ->paginate(request('per_page'));
         $data = collect($obat)['data'];
         $meta = collect($obat)->except('data');

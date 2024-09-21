@@ -45,9 +45,9 @@ class TindakanController extends Controller
         DB::select('call nota_tindakan(@nomor)');
         $x = DB::table('rs1')->select('rs14')->get();
         $wew = $x[0]->rs14;
-        if($request->kdpoli === 'POL014'){
+        if ($request->kdpoli === 'POL014') {
             $notatindakan = FormatingHelper::notatindakan($wew, 'T-IG');
-        }else{
+        } else {
             $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
         }
 
@@ -81,8 +81,8 @@ class TindakanController extends Controller
         );
 
         TindakanSambung::updateOrCreate(
-            ['nota'=> $request->nota ?? $notatindakan, 'noreg'=> $request->noreg, 'kd_tindakan' => $request->kdtindakan],
-            ['ket' => $request->keterangan]
+            ['nota' => $request->nota ?? $notatindakan, 'noreg' => $request->noreg, 'kd_tindakan' => $request->kdtindakan],
+            ['ket' => $request->keterangan, 'rs73_id' => $simpantindakan->id]
         );
 
 

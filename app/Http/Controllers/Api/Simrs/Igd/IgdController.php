@@ -131,7 +131,7 @@ class IgdController extends Controller
                 'rs251.rs14 as eye',
                 'rs251.rs15 as verbal',
                 'rs251.rs16 as motorik',
-                'rs250.spo2',
+                'rs250.spo2','rs250.gangguanperilaku','rs250.falsetriage',
                 'rs251.flaghamil',
                 'rs251.haidterakir as haid',
                 'rs251.gravida',

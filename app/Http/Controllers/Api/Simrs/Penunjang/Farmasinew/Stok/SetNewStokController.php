@@ -16,6 +16,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname as StokStokopname;
@@ -362,28 +363,29 @@ class SetNewStokController extends Controller
 
         return new JsonResponse($data);
     }
-    public function cekPenerimaan(Request $request){
+    public function cekPenerimaan(Request $request)
+    {
         $gudangs = ['Gd-05010100', 'Gd-03010100'];
-        if (!in_array($request->kdruang, $gudangs)){
+        if (!in_array($request->kdruang, $gudangs)) {
             return new JsonResponse([
-                'message'=>'Yang bisa cek penerimaan hanya gudang',
-            ],410);        
+                'message' => 'Yang bisa cek penerimaan hanya gudang',
+            ], 410);
         }
-        
-        $penrimaanrinci=PenerimaanRinci::where('kdobat',$request->kdobat)->get();
-        $nope=PenerimaanRinci::where('kdobat',$request->kdobat)->distinct('nopenerimaan')->pluck('nopenerimaan');
-        $stok=FarmasinewStokreal::whereIn('nopenerimaan',$nope)
-        ->where('kdobat',$request->kdobat)
-        ->where('kdruang',$request->kdruang)
-        ->get();
-        $noba=$stok->pluck('nobatch')->toArray();
-        $tgl=$stok[0]->tglpenerimaan??null;
-        $da=[];
-        $msg='Tidak Ditemukan data penerimaan yang membutuhkan perubahan';
-        if(count($penrimaanrinci)!== count($stok)){
-            foreach($penrimaanrinci as $key){
-                if(!in_array($key['no_batch'],$noba)){
-                        // $da[]=$key;
+
+        $penrimaanrinci = PenerimaanRinci::where('kdobat', $request->kdobat)->get();
+        $nope = PenerimaanRinci::where('kdobat', $request->kdobat)->distinct('nopenerimaan')->pluck('nopenerimaan');
+        $stok = FarmasinewStokreal::whereIn('nopenerimaan', $nope)
+            ->where('kdobat', $request->kdobat)
+            ->where('kdruang', $request->kdruang)
+            ->get();
+        $noba = $stok->pluck('nobatch')->toArray();
+        $tgl = $stok[0]->tglpenerimaan ?? null;
+        $da = [];
+        $msg = 'Tidak Ditemukan data penerimaan yang membutuhkan perubahan';
+        if (count($penrimaanrinci) !== count($stok)) {
+            foreach ($penrimaanrinci as $key) {
+                if (!in_array($key['no_batch'], $noba)) {
+                    // $da[]=$key;
                     FarmasinewStokreal::updateOrCreate(
                         [
                             'nopenerimaan' => $key['nopenerimaan'],
@@ -397,23 +399,22 @@ class SetNewStokController extends Controller
                             'tglpenerimaan' => $tgl,
                             'jumlah' => 0,
                             'flag' => ''
-            
-                        ]
-                        );
-                        $msg='Ada Penambahan Penerimaan';
-                }
 
+                        ]
+                    );
+                    $msg = 'Ada Penambahan Penerimaan';
+                }
             }
         }
 
-        
+
         return new JsonResponse([
-            'message'=>$msg,
-            'penrimaanrinci'=>$penrimaanrinci,
-            'nope'=>$nope,
-            'stok'=>$stok,
-            'noba'=>$noba,
-            'da'=>$da,
+            'message' => $msg,
+            'penrimaanrinci' => $penrimaanrinci,
+            'nope' => $nope,
+            'stok' => $stok,
+            'noba' => $noba,
+            'da' => $da,
         ]);
     }
     public function newPerbaikanStok(Request $request)
@@ -449,7 +450,7 @@ class SetNewStokController extends Controller
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
+        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
 
         $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
         if (in_array($koderuangan, $gudangs)) {
@@ -498,15 +499,26 @@ class SetNewStokController extends Controller
                 ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                 ->groupBy('mutasi_gudangdepo.kd_obat')
                 ->first();
-            $rusak=BarangRusak::select(
+            $rusak = BarangRusak::select(
                 'kd_obat',
                 DB::raw('sum(jumlah) as jumlah')
-                )
-                ->whereBetween('tgl_rusak',[$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('kd_obat',$kdobat)
-                    ->where('kunci','1')
-                    ->groupBy('kd_obat')
-                    ->first();
+            )
+                ->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->where('kd_obat', $kdobat)
+                ->where('kunci', '1')
+                ->groupBy('kd_obat')
+                ->first();
+            $returGudang = ReturGudangDetail::select(
+                'retur_gudang_details.kd_obat',
+                DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+            )
+                ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                ->where('retur_gudangs.gudang', $koderuangan)
+                ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->where('retur_gudang_details.kd_obat', $kdobat)
+                ->where('retur_gudangs.kunci', '1')
+                ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.gudang')
+                ->first();
 
             $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                 ->where('kdruang', $koderuangan)->first();
@@ -517,10 +529,11 @@ class SetNewStokController extends Controller
             $mutma = $mutasiMasuk->jumlah ?? 0;
             $mutkel = $mutasiKeluar->jumlah ?? 0;
             $rus = $rusak->jumlah ?? 0;
-            $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma;
+            $retG = $returGudang->jumlah ?? 0;
+            $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
             $keluar = (float)$mutkel + (float)$rus;
             $sisa = (float)$masuk - (float)$keluar;
-              
+
             if ((float)$sisa != (float)$tts) {
                 $masukin = $sisa;
                 $index = 0;
@@ -610,6 +623,7 @@ class SetNewStokController extends Controller
                 'mutma' => $mutma,
                 'mutkel' => $mutkel,
                 'rus' => $rus,
+                'retG' => $retG,
                 'stok' => $stok ?? [],
                 'message' => $message
             ];
@@ -716,20 +730,20 @@ class SetNewStokController extends Controller
                     ->whereNotIn('resep_keluar_h.noresep', $noresep)
                     ->groupBy('resep_keluar_r.kdobat')
                     ->first();
-                
-                    
-                    $retur = Returpenjualan_r::select(
-                        'retur_penjualan_r.kdobat',
-                        DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
-                    )
-                        ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
-                        ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
-                        ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                        ->where('resep_keluar_h.depo', $koderuangan)
-                        
-                        ->where('retur_penjualan_r.kdobat', $kdobat)
-                        ->groupBy('retur_penjualan_r.kdobat')
-                        ->first();
+
+
+                $retur = Returpenjualan_r::select(
+                    'retur_penjualan_r.kdobat',
+                    DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
+                )
+                    ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('resep_keluar_h.depo', $koderuangan)
+
+                    ->where('retur_penjualan_r.kdobat', $kdobat)
+                    ->groupBy('retur_penjualan_r.kdobat')
+                    ->first();
 
                 $resepKeluarRacikan = Resepkeluarrinciracikan::select(
                     'resep_keluar_racikan_r.kdobat',
@@ -765,7 +779,19 @@ class SetNewStokController extends Controller
                     ->first();
             }
 
+            // retur gudang
 
+            $returGudang = ReturGudangDetail::select(
+                'retur_gudang_details.kd_obat',
+                DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+            )
+                ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                ->where('retur_gudangs.depo', $koderuangan)
+                ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                ->where('retur_gudang_details.kd_obat', $kdobat)
+                ->where('retur_gudangs.kunci', '1')
+                ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo')
+                ->first();
 
             $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                 ->where('kdruang', $koderuangan)->first();
@@ -781,9 +807,10 @@ class SetNewStokController extends Controller
             $mutkel = $mutasiKeluar->jumlah ?? 0;
             $reskel = $resepKeluar->jumlah ?? 0;
             $reskelrac = $resepKeluarRacikan->jumlah ?? 0;
+            $retG = $returGudang->jumlah ?? 0;
             if ($koderuangan === 'Gd-04010103') {
                 $masuk = (float)$sal + (float)$peny + (float)$mutma + (float)$kem + (float) $ret;
-                $keluar = (float)$mutkel + (float)$dist + (float)$reskel + (float)$reskelrac;
+                $keluar = (float)$mutkel + (float)$dist + (float)$reskel + (float)$reskelrac + (float)$retG;
                 $sisa = (float)$masuk - (float)$keluar;
                 if ((float)$sisa != (float)$tts) {
                     // cek ketorolac
@@ -865,7 +892,7 @@ class SetNewStokController extends Controller
                 }
             } else {
                 $masuk = (float)$sal + (float)$peny + (float)$mutma + (float) $ret;
-                $keluar = (float)$mutkel + (float)$reskel + (float)$reskelrac;
+                $keluar = (float)$mutkel + (float)$reskel + (float)$reskelrac + (float)$retG;
                 $sisa = (float)$masuk - (float)$keluar;
 
                 if ((float)$sisa != (float)$tts) {
@@ -956,7 +983,7 @@ class SetNewStokController extends Controller
                 'penerimaan' => 0,
                 'mutasiMasuk' => $mutasiMasuk,
                 'mutasiKeluar' => $mutasiKeluar,
-                'noresep' => $noresep??[],
+                'noresep' => $noresep ?? [],
                 'resepKeluar' => $resepKeluar,
                 'retur' => $retur,
                 'resepKeluarRacikan' => $resepKeluarRacikan,
@@ -972,6 +999,7 @@ class SetNewStokController extends Controller
                 'reskelrac' => $reskelrac,
                 'kem' => $kem,
                 'dist' => $dist,
+                'retG' => $retG,
                 'masuk' => $masuk,
                 'keluar' => $keluar,
                 'sisa' => $sisa,
