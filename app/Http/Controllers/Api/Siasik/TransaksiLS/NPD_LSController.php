@@ -276,11 +276,19 @@ class NPD_LSController extends Controller
                                         't_tampung.harga',
                                         't_tampung.pagu',
                                         't_tampung.idpp')
-                                        ->with('realisasi', function ($realisasi) {
+                                        ->with(['realisasi_spjpanjar'=> function ($realisasi) {
+                                            $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                                                'spjpanjar_rinci.jumlahbelanjapanjar');
+                                            },'realisasi'=> function ($realisasi) {
                                             $realisasi->select('npdls_rinci.idserahterima_rinci',
                                                                 'npdls_rinci.nominalpembayaran')
-                                            ->selectRaw('sum(nominalpembayaran) as total_realisasi');
-                                        });
+                                                                // ->sum('nominalpembayaran')
+                                                                // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
+                                                                ;
+                                            },'contrapost'=> function ($realisasi) {
+                                            $realisasi->select('contrapost.idpp',
+                                                                'contrapost.nominalcontrapost');
+                                            }]);
                             });
                     });
         })
