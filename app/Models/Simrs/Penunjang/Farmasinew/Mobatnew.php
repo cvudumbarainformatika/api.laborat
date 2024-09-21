@@ -16,6 +16,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFisik;
@@ -236,5 +237,13 @@ class Mobatnew extends Model
     public function realisasi()
     {
         return $this->hasMany(NpdLS_rinci::class, 'koderek108', 'kode108');
+    }
+    public function returgudang()
+    {
+        return $this->hasMany(ReturGudangDetail::class, 'kd_obat', 'kd_obat');
+    }
+    public function returdepo()
+    {
+        return $this->hasMany(ReturGudangDetail::class, 'kd_obat', 'kd_obat');
     }
 }

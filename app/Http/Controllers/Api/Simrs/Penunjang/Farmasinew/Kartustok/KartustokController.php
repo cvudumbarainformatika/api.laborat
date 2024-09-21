@@ -220,6 +220,32 @@ class KartustokController extends Controller
                     )->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kunci', '1')
                         ->groupBy('kd_obat');
+                },
+                // retur gudang (masuk gudang)
+                'returgudang' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'retur_gudang_details.kd_obat',
+                        'retur_gudangs.tgl_retur',
+                        DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                    )
+                        ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                        ->where('retur_gudangs.gudang', request('koderuangan'))
+                        ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('retur_gudangs.kunci', '1')
+                        ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.gudang');
+                },
+                // retur depo (keluar depo)
+                'returdepo' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'retur_gudang_details.kd_obat',
+                        'retur_gudangs.tgl_retur',
+                        DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                    )
+                        ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                        ->where('retur_gudangs.depo', request('koderuangan'))
+                        ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('retur_gudangs.kunci', '1')
+                        ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo');
                 }
 
             ])
@@ -456,7 +482,36 @@ class KartustokController extends Controller
                         'created_at',
                     )->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kunci', '1');
+                },
+                // retur gudang (masuk gudang)
+                'returgudang' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'retur_gudang_details.kd_obat',
+                        'retur_gudangs.tgl_retur',
+                        'retur_gudangs.no_retur',
+                        DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                    )
+                        ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                        ->where('retur_gudangs.gudang', request('koderuangan'))
+                        ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('retur_gudangs.kunci', '1')
+                        ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.gudang', 'retur_gudangs.no_retur');
+                },
+                // retur depo (keluar depo)
+                'returdepo' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'retur_gudang_details.kd_obat',
+                        'retur_gudangs.tgl_retur',
+                        'retur_gudangs.no_retur',
+                        DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                    )
+                        ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                        ->where('retur_gudangs.depo', request('koderuangan'))
+                        ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('retur_gudangs.kunci', '1')
+                        ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo', 'retur_gudangs.no_retur');
                 }
+
 
             ])
 
