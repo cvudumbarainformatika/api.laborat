@@ -115,15 +115,17 @@ class BastController extends Controller
                             'nobast' => $nobast,
                             'nopenerimaan' => $penerimaan['nopenerimaan'],
                             'kdobat' => $rinci['kdobat'],
+                            'no_batch' => $rinci['no_batch'],
 
                         ],
                         [
+                            'tgl_exp' => $rinci['tgl_exp'],
                             'jumlah' => $rinci['jml_terima_k'],
                             'harga' => $rinci['harga_kcl'],
                             'diskon' => $rinci['diskon'],
                             'ppn' => $rinci['ppn'],
                             'harga_net' => $rinci['harga_netto_kecil'],
-                            'subtotal' => $penerimaan['subtotal_bast'],
+                            'subtotal' => $rinci['subtotal'],
                             'user' => $user['kodesimrs'],
                         ]
                     );
