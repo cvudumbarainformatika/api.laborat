@@ -15,6 +15,7 @@ use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiPendapatan\DataSTS;
 use App\Models\Siasik\TransaksiPendapatan\PendapatanLain;
 use App\Models\Siasik\TransaksiPendapatan\PendapatanLainRinci;
+use App\Models\Siasik\TransaksiPendapatan\PengeluaranKas;
 use App\Models\Siasik\TransaksiPendapatan\TranskePPK;
 use App\Models\Siasik\TransaksiPjr\CpPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\CpSisaPanjar_Header;
@@ -25,6 +26,7 @@ use App\Models\Siasik\TransaksiPjr\SpjPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\SPM_GU;
 use App\Models\Siasik\TransaksiPjr\SpmUP;
 use App\Models\Siasik\TransaksiSaldo\SaldoAwal_PPK;
+use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +42,7 @@ class BKUController extends Controller
     }
     public function bkuppk()
     {
-
+        $thnsekarang=date('Y');
         $awal=request('tahun').'-'. request('bulan').'-01';
         $akhir=request('tahun').'-'. request('bulan').'-31';
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
@@ -49,7 +51,13 @@ class BKUController extends Controller
         $setor=TranskePPK::orderBy('tgltrans', 'asc')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
-
+        $kaskecil=PengeluaranKas::where('kd_kas', 'K0002')
+        ->select('pengeluarankhaskecil.nominal',
+                'pengeluarankhaskecil.tanggalpengeluaran',
+                'pengeluarankhaskecil.kd_kas',
+                'pengeluarankhaskecil.nomorpengeluaran')
+        ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->get();
         // $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
         //     $rinci -> with('plainlain',function($tgl){
         //         $tgl->orderBy('rs2','desc');
@@ -117,10 +125,15 @@ class BKUController extends Controller
         ->select('pegawai.nip',
                 'pegawai.nama')
         ->get();
+        $silpa=SisaAnggaran::where('tahun', $thnsekarang)
+        ->orderBy('tanggal', 'asc')
+        ->whereBetween('tanggal', [$awal, $akhir])
+        ->get();
         $ppk = [
             'saldo' => $saldo,
+            'silpa' => $silpa,
             'setor' => $setor,
-            // 'sts' => $sts,
+            'kaskecil' => $kaskecil,
             // 'pendapatan' => $pendapatan,
             'spm' => $spm,
             'spmgu' => $spmgu,
