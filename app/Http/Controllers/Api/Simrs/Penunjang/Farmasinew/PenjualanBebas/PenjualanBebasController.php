@@ -66,7 +66,7 @@ class PenjualanBebasController extends Controller
                 $q->where('kode_identitas', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
             })
-
+            ->groupBy('kode_identitas')
             ->orderBy('nama', 'ASC')
             ->limit(15)
             ->get();

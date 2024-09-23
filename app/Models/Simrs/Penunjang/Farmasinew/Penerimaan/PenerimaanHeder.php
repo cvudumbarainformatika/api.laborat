@@ -22,6 +22,10 @@ class PenerimaanHeder extends Model
     {
         return $this->hasMany(PenerimaanRinci::class, 'nopenerimaan', 'nopenerimaan');
     }
+    public function bastr()
+    {
+        return $this->hasMany(BastrinciM::class, 'nopenerimaan', 'nopenerimaan');
+    }
 
     public function pihakketiga()
     {
@@ -62,6 +66,6 @@ class PenerimaanHeder extends Model
 
     public function penjualanrinci()
     {
-        return $this->hasMany(Resepkeluarrinci::class,'nopenerimaan','nopenerimaan');
+        return $this->hasMany(Resepkeluarrinci::class, 'nopenerimaan', 'nopenerimaan');
     }
 }

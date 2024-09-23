@@ -101,6 +101,8 @@ class BastController extends Controller
                         'jumlah_bastx' => $request->jumlah_bastx ?? $request->jumlah_bast,
                         'nilai_retur' => $penerimaan['subtotal_retur'] ?? 0,
                         'user_bast' => $user['kodesimrs'],
+                        'subtotal' => $penerimaan['subtotal_bast'],
+                        'subtotal_bast' => $penerimaan['subtotal_bast'],
                     ]);
                     $trm[] = $terima;
                 }
@@ -194,7 +196,8 @@ class BastController extends Controller
             ->whereNotNull('tgl_bast')
             ->with(
                 'faktur',
-                'penerimaanrinci',
+                'penerimaanrinci.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
+                'bastr.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
                 'pihakketiga',
                 'terima:kdpegsimrs,nama',
                 'bast:kdpegsimrs,nama',
