@@ -101,7 +101,6 @@ class BastController extends Controller
                         'jumlah_bastx' => $request->jumlah_bastx ?? $request->jumlah_bast,
                         'nilai_retur' => $penerimaan['subtotal_retur'] ?? 0,
                         'user_bast' => $user['kodesimrs'],
-                        'subtotal' => $penerimaan['subtotal_bast'],
                         'subtotal_bast' => $penerimaan['subtotal_bast'],
                     ]);
                     $trm[] = $terima;
@@ -197,7 +196,7 @@ class BastController extends Controller
             ->with(
                 'faktur',
                 'penerimaanrinci.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
-                'bastr.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
+                'bastr.masterobat:kd_obat,nama_obat,satuan_k', // select + mobat sama tambah list bast juga
                 'pihakketiga',
                 'terima:kdpegsimrs,nama',
                 'bast:kdpegsimrs,nama',
@@ -225,6 +224,7 @@ class BastController extends Controller
                 'terima' => $items[0]->terima,
                 'bast' => $items[0]->bast,
                 'bayar' => $items[0]->bayar,
+                'no_npd' => $items[0]->no_npd,
                 'penyedia' => $items[0]->pihakketiga->nama ?? '',
                 'penerimaan' => $items,
             ];
@@ -234,6 +234,45 @@ class BastController extends Controller
             'meta' => $col->except('data'),
             'res' => $col,
             'dat' => $data,
+            'gr' => $groupedResult,
         ]);
+    }
+    public function hapusBast(Request $request)
+    {
+        $bastR = BastrinciM::where('nobast', $request->no_bast)->get();
+        $penerimaanH = PenerimaanHeder::where('nobast', $request->no_bast)
+            ->where('no_npd', '')
+            ->get();
+        if (count($penerimaanH) <= 0) {
+            return new JsonResponse([
+                'message' => 'Gagal dihapus, Data tidak ditemukan, apakah sudah dibayar?'
+            ], 410);
+        }
+        if (count($penerimaanH) > 0) {
+            foreach ($penerimaanH as $terima) {
+                $terima->update([
+                    'nobast' => '',
+                    'tgl_bast' => null,
+                    'jumlah_bast' => 0,
+                    'jumlah_bastx' => 0,
+                    'nilai_retur' =>  0,
+                    'user_bast' => '',
+                    'subtotal_bast' => 0,
+                ]);
+            }
+        }
+        if (count($bastR) > 0) {
+            foreach ($bastR as $key) {
+                $key->delete();
+            }
+        }
+        $data = [
+            'message' => 'Data sudah dihapus',
+            'bastR' => $bastR,
+            'penerimaanH' => $penerimaanH,
+            'req' => $request->all(),
+        ];
+
+        return new JsonResponse($data, 410);
     }
 }

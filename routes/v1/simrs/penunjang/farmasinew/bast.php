@@ -17,5 +17,7 @@ Route::group([
 
     Route::get('/list-bast', [BastController::class, 'listBast']);
 
+    Route::post('/hapus-bast', [BastController::class, 'hapusBast']);
+
     Route::get('/dialogsppajak', [PembebasanpajakController::class, 'dialogsppajak']);
 });
