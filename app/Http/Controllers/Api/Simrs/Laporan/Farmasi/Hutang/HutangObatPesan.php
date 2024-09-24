@@ -57,7 +57,7 @@ class HutangObatPesan extends Controller
             ]
         )
         ->whereBetween('tglpenerimaan', [$dari, $sampai])
-        ->whereIn('jenis_penerimaan', ['Konsinyasi','Pesanan'])
+        ->whereIn('jenis_penerimaan', ['Pesanan'])
         ->get();
 
         return new JsonResponse($data);
