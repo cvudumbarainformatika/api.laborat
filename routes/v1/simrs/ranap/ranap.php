@@ -15,5 +15,7 @@ Route::group([
     Route::get('/mastericd9', [Icd9Controller::class, 'mastericd9']);
 
     Route::get('/kunjunganpasien', [RanapController::class, 'kunjunganpasien']);
+    Route::get('/listjeniskasus', [RanapController::class, 'listjeniskasus']);
     Route::post('/bukalayanan', [RanapController::class, 'bukalayanan']);
+    Route::post('/gantijeniskasus', [RanapController::class, 'gantijeniskasus']);
 });

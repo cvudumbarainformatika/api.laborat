@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\Simrs\Ranap;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\MjenisKasus;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Rs23Meta;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class RanapController extends Controller
@@ -69,13 +72,15 @@ class RanapController extends Controller
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
-            'rs24.rs5 as group_ruangan'
+            'rs24.rs5 as group_ruangan',
+            'rs23_meta.kd_jeniskasus',
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
+            ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->where(function($query) use ($tanggal, $tanggalx) {
                 $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal]);
             })
@@ -175,5 +180,39 @@ class RanapController extends Controller
         }
 
         return new JsonResponse($cekx);
+    }
+
+    public function listjeniskasus()
+    {
+        //  $list = MjenisKasus::select('kode','uraian','gruping','medis','flag')->where('flag','1')->get();
+       $list = Cache::rememberForever('jeniskasus', function () {
+            return MjenisKasus::select('kode','uraian','gruping','medis','flag')->where('flag','1')->get();
+        });
+        return new JsonResponse($list);
+    }
+
+    public function gantijeniskasus(Request $request)
+    {
+       $request->validate([
+           'noreg' => 'required',
+           'kd_jeniskasus' => 'required',
+       ]);
+       $data = Rs23Meta::where('noreg', $request->noreg)->first();
+
+       if (!$data) {
+            $saved = Rs23Meta::create([
+                'noreg' => $request->noreg,
+                'kd_jeniskasus' => $request->kd_jeniskasus,
+                'user_input' => auth()->user()->pegawai_id
+            ]);
+
+            return new JsonResponse($saved);
+       }
+
+       $data->kd_jeniskasus = $request->kd_jeniskasus;
+       $data->user_input = auth()->user()->pegawai_id;
+       $data->save();
+
+       return new JsonResponse($data);
     }
 }
