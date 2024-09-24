@@ -13,8 +13,10 @@ use App\Models\TransaksiLaborat;
 
 use App\Models\Simrs\Master\Mkamar;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
@@ -58,8 +60,46 @@ class AutogenController extends Controller
     }
     public function coba()
     {
-        $data = ceil(0.2);
-        return $data;
+        // $data = BastrinciM::select('penerimaan_h.nobast as pbast', 'bast_r.*')
+        //     ->leftJoin('penerimaan_h', 'penerimaan_h.nobast', '=', 'bast_r.nobast')
+        //     ->whereNull('penerimaan_h.nobast')
+        //     ->get();
+        // if (count($data)) {
+        //     foreach ($data as $key) {
+        //         $key->delete();
+        //     }
+        // }
+        $ada = BastrinciM::select(
+            'bast_r.*',
+            DB::raw('(bast_r.jumlah * bast_r.harga_net) as sub_hi')
+        )
+            ->having('bast_r.subtotal', '>', 'sub_hi')
+            ->get();
+        if (count($ada) > 0) {
+            foreach ($ada as $key) {
+                $key->update(['subtotal' => $key['sub_hi']]);
+            }
+        }
+        // $trm = PenerimaanHeder::where('nobast', '!=', '')
+        //     ->where('subtotal_bast', 0)
+        //     ->get();
+        // if (count($trm) > 0) {
+        //     foreach ($trm as $t) {
+        //         $ri = BastrinciM::where('nopenerimaan', $t['nopenerimaan'])->first();
+        //         if ($ri) {
+        //             $t->update(['subtotal_bast' => $ri->subtotal]);
+        //         }
+        //         // return [
+        //         //     $t,
+        //         //     $ri
+        //         // ];
+        //     }
+        // }
+        return [
+            // $data,
+            $ada,
+            // $trm,
+        ];
     }
     public function index(Request $request)
     {

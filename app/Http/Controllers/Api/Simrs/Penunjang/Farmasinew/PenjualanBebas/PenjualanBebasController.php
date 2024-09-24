@@ -31,6 +31,7 @@ class PenjualanBebasController extends Controller
             ->leftJoin('resep_keluar_h', 'resep_keluar_h.noreg', '=', 'kunjungan_penjualans.noreg')
             ->whereBetween('kunjungan_penjualans.tgl_kunjungan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->where('depo', request('kdruang'))
+            ->groupBy('kunjungan_penjualans.tgl_kunjungan', 'kunjungan_penjualans.kode_identitas')
             ->paginate(request('per_page'));
 
         $data = [
