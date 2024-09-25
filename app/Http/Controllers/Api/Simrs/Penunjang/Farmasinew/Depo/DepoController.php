@@ -454,13 +454,13 @@ class DepoController extends Controller
                     'nodistribusi' => $wew->no_permintaan,
                     'kdobat' => $wew->kd_obat,
                     'nobatch' => $wew->nobatch,
+                    'tglexp' => $wew->tglexp,
                 ],
                 [
                     'tglpenerimaan' => $wew->tglpenerimaan,
                     'jumlah' => $wew->jml,
                     'kdruang' => $request->tujuan,
                     'harga' => $wew->harga,
-                    'tglexp' => $wew->tglexp,
                 ]
             );
         }

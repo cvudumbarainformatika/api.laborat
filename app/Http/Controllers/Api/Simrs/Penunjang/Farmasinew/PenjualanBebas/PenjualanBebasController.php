@@ -945,49 +945,62 @@ class PenjualanBebasController extends Controller
     }
     public function hapus(Request $request)
     {
-        $header = Resepkeluarheder::where('noresep', $request->noresep)
-            ->whereNull('flag_pembayaran')
-            ->first();
-        if (!$header) {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $header = Resepkeluarheder::where('noresep', $request->noresep)
+                ->whereNull('flag_pembayaran')
+                ->first();
+            if (!$header) {
+                return new JsonResponse([
+                    'message' => 'Data tidak ditemukan, apakah Sudah dibayar?'
+                ], 410);
+            }
+            $rinci = Resepkeluarrinci::where('noresep', $request->noresep)
+                ->get();
+            $stok = [];
+            // balikin by fifo
+            foreach ($rinci as $ri) {
+                $jumlah = $ri['jumlah'];
+                $tmpstok = Stokrel::lockForUpdate()
+                    ->where('kdobat', $ri['kdobat'])
+                    ->where('nopenerimaan', $ri['nopenerimaan'])
+                    ->where('kdruang', $header->depo)
+                    ->orderBy('tglexp', 'DESC')
+                    ->orderBy('id', 'DESC')
+                    ->first();
+                $jmlS = $tmpstok->jumlah;
+                $tot = (float)$jumlah + (float)$jmlS;
+                $tmpstok->update([
+                    'jumlah' => $tot
+                ]);
+                $stok[] = $tmpstok;
+                // return $jumlah;
+                $ri->delete();
+            }
+            $header->delete();
+            $data = [
+                'header' => $header,
+                'rinci' => $rinci,
+                'stok' => $stok,
+                'jumlah' => $jumlah,
+                'jmlS' => $jmlS,
+                'tot' => $tot,
+                'req' => $request->all()
+            ];
+
+            DB::connection('farmasi')->commit();
             return new JsonResponse([
-                'message' => 'Data tidak ditemukan, apakah Sudah dibayar?'
+                'message' => 'Data Sudah dihapus',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json([
+                'message' => 'ada kesalahan',
+                'error' =>  $e,
+                'error e' => '' . $e,
+                'stok' => $dataStok ?? null
             ], 410);
         }
-        $rinci = Resepkeluarrinci::where('noresep', $request->noresep)
-            ->get();
-        $stok = [];
-        // balikin by fifo
-        foreach ($rinci as $ri) {
-            $jumlah = $ri['jumlah'];
-            $tmpstok = Stokrel::lockForUpdate()
-                ->where('kdobat', $ri['kdobat'])
-                ->where('nopenerimaan', $ri['nopenerimaan'])
-                ->where('kdruang', $header->depo)
-                ->orderBy('tglexp', 'DESC')
-                ->orderBy('id', 'DESC')
-                ->first();
-            $jmlS = $tmpstok->jumlah;
-            $tot = (float)$jumlah + (float)$jmlS;
-            $tmpstok->update([
-                'jumlah' => $tot
-            ]);
-            $stok[] = $tmpstok;
-            // return $jumlah;
-            $ri->delete();
-        }
-        $$header->delete();
-        $data = [
-            'header' => $header,
-            'rinci' => $rinci,
-            'stok' => $stok,
-            'jumlah' => $jumlah,
-            'jmlS' => $jmlS,
-            'tot' => $tot,
-            'req' => $request->all()
-        ];
-        return new JsonResponse([
-            'message' => 'Data Sudah dihapus',
-            'data' => $data
-        ]);
     }
 }
