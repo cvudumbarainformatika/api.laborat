@@ -446,7 +446,7 @@ class SetNewStokController extends Controller
         // $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
-        $tglAkhir = $x . date('-t');
+        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
