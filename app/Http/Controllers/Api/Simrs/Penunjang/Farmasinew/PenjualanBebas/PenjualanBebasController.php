@@ -25,8 +25,23 @@ class PenjualanBebasController extends Controller
         $list = KunjunganPenjualan::select('kunjungan_penjualans.*')
             ->where('nama', 'LIKE', '%' . request('q') . '%')
             ->with([
-                'rincian:noreg,noresep,kdobat,aturan,harga_jual,jumlah',
-                'rincian.mobat:kd_obat,nama_obat,satuan_k'
+                // 'rincian:noreg,noresep,kdobat,aturan,harga_jual,jumlah',
+                // 'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                // 'rincian.heder:noresep,flag_pembayaran,nama_pejabat'
+                'rincian' => function ($ri) {
+                    $ri->select(
+                        'resep_keluar_r.noreg',
+                        'resep_keluar_r.noresep',
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_r.aturan',
+                        'resep_keluar_r.harga_jual',
+                        'resep_keluar_r.jumlah',
+                        'resep_keluar_h.flag_pembayaran',
+                        'resep_keluar_h.nama_pejabat'
+                    )
+                        ->with(['mobat:kd_obat,nama_obat,satuan_k'])
+                        ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep');
+                }
             ])
             ->leftJoin('resep_keluar_h', 'resep_keluar_h.noreg', '=', 'kunjungan_penjualans.noreg')
             ->whereBetween('kunjungan_penjualans.tgl_kunjungan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
@@ -590,6 +605,7 @@ class PenjualanBebasController extends Controller
                     'tgl' => date('Y-m-d'),
                     'depo' => $request->depo,
                     'ruangan' => $request->depo,
+                    'nama_pejabat' => $request->nama_pejabat,
                     // 'dokter' =>  $user['kodesimrs'],
                     'sistembayar' => 'UMUM',
 

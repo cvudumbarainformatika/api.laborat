@@ -25,13 +25,17 @@ class KartustokController extends Controller
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
-        $tglAkhir = $x . '-31';
+        $tglAkhir = $x . date('-t');
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // $date->format('Y-m-d')
         // return new JsonResponse($dateAwal);
+        // return new JsonResponse([
+        //     'lalu awal' => $blnLaluAwal,
+        //     'lalu Akhir' => $blnLaluAkhir,
+        // ]);
 
         // $ruangan = Ruang::select('uraian')->where('kode', $koderuangan)->first()->uraian ?? null ;
         // $gudang=Gudang::select('nama')->where('kode', $koderuangan)->first()->nama ?? null;
@@ -278,11 +282,11 @@ class KartustokController extends Controller
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
-        $tglAkhir = $x . '-31';
+        $tglAkhir = $x . date('-t');
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
+        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // $date->format('Y-m-d')
         // return new JsonResponse($dateAwal);
 
