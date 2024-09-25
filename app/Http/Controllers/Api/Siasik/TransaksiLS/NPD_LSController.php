@@ -367,6 +367,7 @@ class NPD_LSController extends Controller
                     'noserahterima'=>$request->noserahterima ?? '',
                     'kunci'=>'1'
                 ]);
+                $penerimaans = [];
             foreach ($request->rincians as $rinci){
 
                 $save->npdlsrinci()->create(
@@ -393,24 +394,25 @@ class NPD_LSController extends Controller
                         'totalls'=>$rinci['totalls'] ?? '',
                         'nominalpembayaran'=>$rinci['nominalpembayaran'] ?? '',
                     ]);
-
+                    //request nomer BAST
+                    $penerimaans[]=$rinci['nopenerimaan'];
                 }
-                foreach($request->penerimaans as $penerimaan){
-                $data = PenerimaanHeder::where('nobast',$penerimaan['nobast'])->first();
-                if ($data) {
-                    $data->update([
-                        'no_npd' => $request['no_npd'],
-                    ]);
-                    $ow[] = $data;
-                }if (!$data) {
-                    return new JsonResponse(['message' => 'Gagal, Nomor BAST Tidak ditemukan'], 410);
-                }
-            }
+                // update penerimaan atas nomer BAST FARMASI
+                PenerimaanHeder::whereIn('nobast', $penerimaans)->update(['no_npd' => $save->nonpdls]);
+            //     $data = PenerimaanHeder::where('nobast',['nopenerimaan'])->get();
+            //     if ($data) {
+            //         $data->update([
+            //             'no_npd' => $save->nonpdls,
+            //         ]);
+            //         $ow[] = $data;
+            //     }if (!$data) {
+            //         return new JsonResponse(['message' => 'Gagal, Nomor BAST Tidak ditemukan'], 410);
+            // }
             return new JsonResponse(
                 [
                     'message' => 'Data Berhasil disimpan...!!!',
                     'result' => $save,
-                    'update penerimaan'=>$ow,
+                    'daaaata' => $penerimaans
                 ], 200);
         } catch (\Exception $er) {
             DB::rollBack();
