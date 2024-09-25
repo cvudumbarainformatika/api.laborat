@@ -446,7 +446,7 @@ class SetNewStokController extends Controller
         // $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
-        $tglAkhir = $x . '-31';
+        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
@@ -455,7 +455,8 @@ class SetNewStokController extends Controller
         $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
         if (in_array($koderuangan, $gudangs)) {
             $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
-                ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                 ->where('kdruang', $koderuangan)
                 ->where('kdobat', $kdobat)
                 ->groupBy('tglopname', 'kdruang', 'kdobat')
@@ -629,7 +630,8 @@ class SetNewStokController extends Controller
             ];
         } else {
             $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
-                ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                 ->where('kdruang', $koderuangan)
                 ->where('kdobat', $kdobat)
                 ->groupBy('tglopname', 'kdruang', 'kdobat')

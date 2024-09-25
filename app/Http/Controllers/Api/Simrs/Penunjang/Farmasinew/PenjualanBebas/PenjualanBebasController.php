@@ -25,8 +25,23 @@ class PenjualanBebasController extends Controller
         $list = KunjunganPenjualan::select('kunjungan_penjualans.*')
             ->where('nama', 'LIKE', '%' . request('q') . '%')
             ->with([
-                'rincian:noreg,noresep,kdobat,aturan,harga_jual,jumlah',
-                'rincian.mobat:kd_obat,nama_obat,satuan_k'
+                // 'rincian:noreg,noresep,kdobat,aturan,harga_jual,jumlah',
+                // 'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                // 'rincian.heder:noresep,flag_pembayaran,nama_pejabat'
+                'rincian' => function ($ri) {
+                    $ri->select(
+                        'resep_keluar_r.noreg',
+                        'resep_keluar_r.noresep',
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_r.aturan',
+                        'resep_keluar_r.harga_jual',
+                        'resep_keluar_r.jumlah',
+                        'resep_keluar_h.flag_pembayaran',
+                        'resep_keluar_h.nama_pejabat'
+                    )
+                        ->with(['mobat:kd_obat,nama_obat,satuan_k'])
+                        ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep');
+                }
             ])
             ->leftJoin('resep_keluar_h', 'resep_keluar_h.noreg', '=', 'kunjungan_penjualans.noreg')
             ->whereBetween('kunjungan_penjualans.tgl_kunjungan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
@@ -590,6 +605,7 @@ class PenjualanBebasController extends Controller
                     'tgl' => date('Y-m-d'),
                     'depo' => $request->depo,
                     'ruangan' => $request->depo,
+                    'nama_pejabat' => $request->nama_pejabat,
                     // 'dokter' =>  $user['kodesimrs'],
                     'sistembayar' => 'UMUM',
 
@@ -924,6 +940,66 @@ class PenjualanBebasController extends Controller
                 // 'tidakAdaAlokasiRacikan' => $tidakAdaAlokasiRacikan,
                 'error' => ' ' . $e,
                 'message' => 'rolled back ada kesalahan'
+            ], 410);
+        }
+    }
+    public function hapus(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $header = Resepkeluarheder::where('noresep', $request->noresep)
+                ->whereNull('flag_pembayaran')
+                ->first();
+            if (!$header) {
+                return new JsonResponse([
+                    'message' => 'Data tidak ditemukan, apakah Sudah dibayar?'
+                ], 410);
+            }
+            $rinci = Resepkeluarrinci::where('noresep', $request->noresep)
+                ->get();
+            $stok = [];
+            // balikin by fifo
+            foreach ($rinci as $ri) {
+                $jumlah = $ri['jumlah'];
+                $tmpstok = Stokrel::lockForUpdate()
+                    ->where('kdobat', $ri['kdobat'])
+                    ->where('nopenerimaan', $ri['nopenerimaan'])
+                    ->where('kdruang', $header->depo)
+                    ->orderBy('tglexp', 'DESC')
+                    ->orderBy('id', 'DESC')
+                    ->first();
+                $jmlS = $tmpstok->jumlah;
+                $tot = (float)$jumlah + (float)$jmlS;
+                $tmpstok->update([
+                    'jumlah' => $tot
+                ]);
+                $stok[] = $tmpstok;
+                // return $jumlah;
+                $ri->delete();
+            }
+            $header->delete();
+            $data = [
+                'header' => $header,
+                'rinci' => $rinci,
+                'stok' => $stok,
+                'jumlah' => $jumlah,
+                'jmlS' => $jmlS,
+                'tot' => $tot,
+                'req' => $request->all()
+            ];
+
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Data Sudah dihapus',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json([
+                'message' => 'ada kesalahan',
+                'error' =>  $e,
+                'error e' => '' . $e,
+                'stok' => $dataStok ?? null
             ], 410);
         }
     }

@@ -1659,7 +1659,8 @@ class EresepController extends Controller
             // $harga = $cariharga[0]->harga;
 
             $jmldiminta = $request->jumlah;
-            $caristok = Stokreal::where('kdobat', $request->kdobat)
+            $caristok = Stokreal::lockForUpdate()
+                ->where('kdobat', $request->kdobat)
                 ->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '>', 0)
                 ->orderBy('tglexp', 'ASC')
@@ -1929,7 +1930,8 @@ class EresepController extends Controller
             DB::connection('farmasi')->rollBack();
             return response()->json([
                 'message' => 'ada kesalahan',
-                'error' => '' . $e,
+                'error' =>  $e,
+                'error e' => '' . $e,
                 'stok' => $dataStok ?? null
             ], 410);
         }

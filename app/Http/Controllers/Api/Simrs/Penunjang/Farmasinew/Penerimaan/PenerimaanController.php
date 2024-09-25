@@ -27,7 +27,7 @@ class PenerimaanController extends Controller
         if (request('q')) {
             $supl = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('q') . '%')->pluck('kode');
         }
-        
+
         // return new JsonResponse($supl);
         $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'kd_ruang')
             ->with([
@@ -44,8 +44,8 @@ class PenerimaanController extends Controller
             ->when(request('gudang'), function ($q) {
                 $q->where('kd_ruang', request('gudang'));
             })
-            ->when(count($supl)>0, function($q) use($supl) {
-                $q->whereIn('kdpbf',$supl);
+            ->when(count($supl) > 0, function ($q) use ($supl) {
+                $q->whereIn('kdpbf', $supl);
             })
             ->where('flag', '1')
             ->get();
@@ -123,11 +123,11 @@ class PenerimaanController extends Controller
                     'no_batch' => $request->no_batch,
                 ],
                 [
+                    'tgl_exp' => $request->tgl_exp,
                     'jml_terima_b' => $request->jml_terima_b,
                     'jml_terima_k' => $request->jml_terima_k,
                     'harga' => $request->harga,
                     'harga_kcl' => $request->harga_kcl,
-                    'tgl_exp' => $request->tgl_exp,
                     'satuan' => $request->satuan_bsr,
                     'satuan_kcl' => $request->satuan_kcl,
                     'isi' => $request->isi,
@@ -289,7 +289,7 @@ class PenerimaanController extends Controller
             'total_faktur_pbf as total',
         )
             // ->leftJoin('siasik.pihak_ketiga', 'siasik.pihak_ketiga.kode', 'penerimaan_h.kdpbf')
-            ->when(request('gudang'),function($q){
+            ->when(request('gudang'), function ($q) {
                 $q->where('gudang', '=', request('gudang'));
             })
             ->when(count($supl) > 0, function ($e) use ($supl) {
@@ -305,11 +305,11 @@ class PenerimaanController extends Controller
                         ->orWhere('nomorsurat', 'Like', '%' . request('cari') . '%');
                 });
             })
-            ->when(request('jenispenerimaan'),function($q){
-                $q->where('jenis_penerimaan',request('jenispenerimaan'));
+            ->when(request('jenispenerimaan'), function ($q) {
+                $q->where('jenis_penerimaan', request('jenispenerimaan'));
             })
-            ->when(request('from'), function($q){
-                $q->whereBetween('tglpenerimaan',[request('from').' 00:00:00', request('to').' 23:59:59']);
+            ->when(request('from'), function ($q) {
+                $q->whereBetween('tglpenerimaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
             })
             ->with([
                 'penerimaanrinci',
@@ -322,7 +322,7 @@ class PenerimaanController extends Controller
         return new JsonResponse([
             'data' => $listpenerimaan,
             'req' => request()->all(),
-            'kode'=>$supl
+            'kode' => $supl
         ]);
     }
 
@@ -533,11 +533,11 @@ class PenerimaanController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus, data tidak ditemukan'], 410);
         }
         $pemesananH = PemesananHeder::where('nopemesanan', $penerimaanH->nopemesanan)->first();
-        
+
         $pemesananR = PemesananRinci::where('nopemesanan', $penerimaanH->nopemesanan)
-        ->where('kdobat', $penerimaanR->kdobat)
-        ->get();
-        
+            ->where('kdobat', $penerimaanR->kdobat)
+            ->get();
+
         if (count($pemesananR) > 0) {
             if (count($pemesananR) > 1) {
                 foreach ($pemesananR as $it) {

@@ -117,10 +117,10 @@ class BastController extends Controller
                             'nopenerimaan' => $penerimaan['nopenerimaan'],
                             'kdobat' => $rinci['kdobat'],
                             'no_batch' => $rinci['no_batch'],
+                            'tgl_exp' => $rinci['tgl_exp'],
 
                         ],
                         [
-                            'tgl_exp' => $rinci['tgl_exp'],
                             'jumlah' => $rinci['jml_terima_k'],
                             'harga' => $rinci['harga_kcl'],
                             'diskon' => $rinci['diskon'],

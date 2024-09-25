@@ -25,13 +25,18 @@ class KartustokController extends Controller
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
-        $tglAkhir = $x . '-31';
+        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
-        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // $date->format('Y-m-d')
         // return new JsonResponse($dateAwal);
+        // return new JsonResponse([
+        //     'lalu awal' => $blnLaluAwal,
+        //     'lalu Akhir' => $blnLaluAkhir,
+        //     'Akhir' => $tglAkhir,
+        // ]);
 
         // $ruangan = Ruang::select('uraian')->where('kode', $koderuangan)->first()->uraian ?? null ;
         // $gudang=Gudang::select('nama')->where('kode', $koderuangan)->first()->nama ?? null;
@@ -41,8 +46,10 @@ class KartustokController extends Controller
         $list = Mobatnew::query()
             ->select('kd_obat', 'nama_obat', 'satuan_k', 'satuan_b', 'id', 'flag', 'merk', 'kandungan')
             ->with([
-                'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
-                    $saldo->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir, $x) {
+                    $saldo
+                        // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                        ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))
                         ->groupBy('kdobat', 'tglopname');
                 },
@@ -50,8 +57,10 @@ class KartustokController extends Controller
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', 'jumlah');
                 },
-                'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir) {
-                    $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir, $x) {
+                    $saldo
+                        // ->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('tglopname', 'LIKE', $x . '%')
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))
                         ->groupBy('kdobat', 'tglopname');
                 },
@@ -278,11 +287,11 @@ class KartustokController extends Controller
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
-        $tglAkhir = $x . '-31';
+        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
-        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-d');
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
+        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // $date->format('Y-m-d')
         // return new JsonResponse($dateAwal);
 
@@ -295,7 +304,9 @@ class KartustokController extends Controller
             ->select('kd_obat', 'nama_obat', 'satuan_k', 'satuan_b', 'id', 'flag', 'merk', 'kandungan')
             ->with([
                 'saldoawal' => function ($saldo) use ($blnLaluAwal, $blnLaluAkhir) {
-                    $saldo->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                    $saldo
+                        // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                        ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))
                         ->groupBy('kdobat', 'tglopname');
                 },
@@ -303,8 +314,10 @@ class KartustokController extends Controller
                     $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', 'jumlah');
                 },
-                'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir) {
-                    $saldo->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                'saldoakhir' => function ($saldo) use ($tglAwal, $tglAkhir, $x) {
+                    $saldo
+                        // ->whereBetween('tglopname', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('tglopname', 'LIKE', $x . '%')
                         ->where('kdruang', request('koderuangan'))->select('tglopname', 'kdobat', DB::raw('sum(jumlah) as jumlah'))
                         ->groupBy('kdobat', 'tglopname');
                 },
