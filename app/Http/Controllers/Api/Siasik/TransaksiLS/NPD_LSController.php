@@ -154,16 +154,18 @@ class NPD_LSController extends Controller
                                             'penerimaan_h.tgl_bast',
                                             'penerimaan_h.nopenerimaan',
                                             'penerimaan_h.jumlah_bastx',
+                                            'penerimaan_h.subtotal_bast',
                                             'penerimaan_h.jenis_penerimaan',
                                             'penerimaan_h.kdpbf')
         ->where('kdpbf', request('kodepenerima'), function ($bast){
             $bast->whereIn('jenis_penerimaan', ['Pesanan']);
         })
-        ->where('nobast', '!=', '')
+        ->where('nobast', '<>', '')
         ->whereNotNull('tgl_bast')
         ->when(request('q'),function ($query) {
             $query->where('nobast', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
+            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('subtotal_bast', 'LIKE', '%' . request('q') . '%');
         })
         ->with('rincianbast', function($rinci) use ($tahun) {
             $rinci->where('nobast', request('kodebast'))
@@ -173,8 +175,9 @@ class NPD_LSController extends Controller
                             'bast_r.kdobat',
                             'bast_r.harga_net',
                             'bast_r.jumlah',
-                            // 'bast_r.subtotal',
-                            DB::raw('(harga_net * jumlah) as totalobat'))
+                            'bast_r.subtotal'
+                            // DB::raw('(harga_net * jumlah) as totalobat')
+                            )
                             // ->selectRaw('sum(harga_net * jumlah) as totalobat')
         // ->with('penerimaanrinci', function($rinci) use ($tahun) {
         //     $rinci->select('penerimaan_r.nopenerimaan',
@@ -223,8 +226,8 @@ class NPD_LSController extends Controller
         // ->orderBy('tgl_bast', 'DESC')
         ->orderBy('nobast', 'asc')
         ->groupBy('nobast')
-        ->paginate(request('per_page'));
-        // ->get();
+        // ->paginate(request('per_page'));
+        ->get();
 
         $konsinyasi = BastKonsinyasi::select('bast_konsinyasis.notranskonsi',
                                             'bast_konsinyasis.nobast',
@@ -294,7 +297,8 @@ class NPD_LSController extends Controller
         })
         ->orderBy('nobast', 'asc')
         ->groupBy('nobast')
-        ->paginate(request('per_page'));
+        // ->paginate(request('per_page'));
+        ->get();
 
         $bast = [
             'penerimaan' => $penerimaan,
@@ -391,10 +395,22 @@ class NPD_LSController extends Controller
                     ]);
 
                 }
+                foreach($request->penerimaans as $penerimaan){
+                $data = PenerimaanHeder::where('nobast',$penerimaan['nobast'])->first();
+                if ($data) {
+                    $data->update([
+                        'no_npd' => $request['no_npd'],
+                    ]);
+                    $ow[] = $data;
+                }if (!$data) {
+                    return new JsonResponse(['message' => 'Gagal, Nomor BAST Tidak ditemukan'], 410);
+                }
+            }
             return new JsonResponse(
                 [
                     'message' => 'Data Berhasil disimpan...!!!',
-                    'result' => $save
+                    'result' => $save,
+                    'update penerimaan'=>$ow,
                 ], 200);
         } catch (\Exception $er) {
             DB::rollBack();
