@@ -134,8 +134,72 @@ class PersediaanFiFoController extends Controller
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
                         ->where('stokopname.kdruang', request('kode_ruang'))
                         ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
+                },
+                'penerimaanrinci' => function ($trm) {
+                    $trm->select(
+                        'penerimaan_r.kdobat',
+                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_h.tglpenerimaan as tgl',
+                        'penerimaan_r.satuan_kcl',
+                        'penerimaan_r.harga_netto_kecil as harga',
+                        DB::raw('sum(penerimaan_r.jml_terima_k) as jumlah'),
+                        DB::raw('sum(penerimaan_r.harga_netto_kecil * penerimaan_r.jml_terima_k) as sub')
+                    )
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.harga_netto_kecil');
+                },
+                'resepkeluar' => function ($kel) {
+                    $kel->select(
+                        'resep_keluar_r.noresep',
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_h.tgl_selesai as tgl',
+                        'resep_keluar_r.jumlah as keluar',
+                        'retur_penjualan_r.jumlah_retur',
+                        'resep_keluar_r.nopenerimaan',
+                        'daftar_hargas.harga',
+                        DB::raw('
+                        CASE
+                        WHEN sum(retur_penjualan_r.jumlah_retur) > 0 THEN sum(resep_keluar_r.jumlah) - sum(retur_penjualan_r.jumlah_retur)
+                        ELSE sum(resep_keluar_r.jumlah)
+                        END
+                        as jumlah
+                        '),
+                        DB::raw('
+                        CASE
+                        WHEN sum(retur_penjualan_r.jumlah_retur) > 0 THEN (sum(resep_keluar_r.jumlah) - sum(retur_penjualan_r.jumlah_retur)) *  daftar_hargas.harga
+                        ELSE sum(resep_keluar_r.jumlah * daftar_hargas.harga)
+                        END
+                        as sub
+                        '),
+                    )
+                        ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                        ->leftJoin('retur_penjualan_r', function ($jr) {
+                            $jr->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep')
+                                ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat');
+                        })
+                        ->leftJoin('daftar_hargas', function ($jr) {
+                            $jr->on('daftar_hargas.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'resep_keluar_r.kdobat');
+                        })
+                        ->havingRaw('jumlah > 0')
+                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with(
+                            'header:noresep,norm',
+                            'header.datapasien:rs1,rs2'
+                        )
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'daftar_hargas.harga');
+                            },
+                            function ($re) {
+                                $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'daftar_hargas.harga', 'resep_keluar_r.noresep');
+                            }
+                        );
                 }
             ])
+            ->limit(20)
             ->get();
         return new JsonResponse([
             'data' => $obat,
