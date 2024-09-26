@@ -114,10 +114,10 @@ class PersediaanFiFoController extends Controller
                 'saldoawal' => function ($st) use ($blnLalu) {
                     $st->select(
                         'stokopname.kdobat',
-                        'stokopname.nopenerimaan as stpen',
+                        'stokopname.nopenerimaan',
                         DB::raw('sum(stokopname.jumlah) as jumlah'),
                         DB::raw('sum(stokopname.jumlah * daftar_hargas.harga) as sub'),
-                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_r.nopenerimaan as pen',
                         'penerimaan_h.jenis_penerimaan',
                         'daftar_hargas.harga',
                     )
@@ -132,7 +132,7 @@ class PersediaanFiFoController extends Controller
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
-                        ->where('stokopname.kdruang', request('kode_ruang'))
+                        // ->where('stokopname.kdruang', request('kode_ruang'))
                         ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
                 },
                 'penerimaanrinci' => function ($trm) {
@@ -197,12 +197,50 @@ class PersediaanFiFoController extends Controller
                                 $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'daftar_hargas.harga', 'resep_keluar_r.noresep');
                             }
                         );
+                },
+                'resepkeluarracikan' => function ($kel) {
+                    $kel->select(
+                        'resep_keluar_racikan_r.noresep',
+                        'resep_keluar_racikan_r.kdobat',
+                        'resep_keluar_h.tgl_selesai as tgl',
+                        'resep_keluar_racikan_r.nopenerimaan',
+                        'daftar_hargas.harga',
+                        DB::raw(' sum(resep_keluar_racikan_r.jumlah) as jumlah'),
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah * daftar_hargas.harga) as sub'),
+                    )
+                        ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
+                        ->leftJoin('daftar_hargas', function ($jr) {
+                            $jr->on('daftar_hargas.nopenerimaan', '=', 'resep_keluar_racikan_r.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'resep_keluar_racikan_r.kdobat');
+                        })
+                        ->havingRaw('jumlah > 0')
+                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with(
+                            'header:noresep,norm',
+                            'header.datapasien:rs1,rs2'
+                        )
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'daftar_hargas.harga');
+                            },
+                            function ($re) {
+                                $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'daftar_hargas.harga', 'resep_keluar_racikan_r.noresep');
+                            }
+                        );
                 }
             ])
-            ->limit(20)
+            // ->limit(20)
             ->get();
+        $anu = collect($obat)->map(function ($it) {
+            $it->saldo = $it->saldoawal;
+            $it->terima = $it->penerimaanrinci;
+            return $it;
+        });
         return new JsonResponse([
-            'data' => $obat,
+            'obat' => $obat,
+            'data' => $anu,
+            'blnLalu' => $blnLalu,
             // 'meta' => $meta,
             'req' => request()->all()
         ]);
