@@ -140,12 +140,16 @@ class PersediaanFiFoController extends Controller
                         'penerimaan_r.kdobat',
                         'penerimaan_r.nopenerimaan',
                         'penerimaan_h.tglpenerimaan as tgl',
+                        'penerimaan_h.jenissurat',
+                        'penerimaan_h.nomorsurat',
+                        'penerimaan_h.kdpbf',
                         'penerimaan_r.satuan_kcl',
                         'penerimaan_r.harga_netto_kecil as harga',
                         DB::raw('sum(penerimaan_r.jml_terima_k) as jumlah'),
                         DB::raw('sum(penerimaan_r.harga_netto_kecil * penerimaan_r.jml_terima_k) as sub')
                     )
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->with('pbf:kode,nama')
                         ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                         ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.harga_netto_kecil');
                 },
@@ -230,7 +234,7 @@ class PersediaanFiFoController extends Controller
                         );
                 }
             ])
-            // ->limit(20)
+            ->limit(20)
             ->get();
         $anu = collect($obat)->map(function ($it) {
             $it->saldo = $it->saldoawal;
