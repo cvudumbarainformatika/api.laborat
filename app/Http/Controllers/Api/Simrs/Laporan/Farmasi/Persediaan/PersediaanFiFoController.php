@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Persediaan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,6 +92,51 @@ class PersediaanFiFoController extends Controller
             ->get();
         // $data = collect($obat)['data'];
         // $meta = collect($obat)->except('data');
+        return new JsonResponse([
+            'data' => $obat,
+            // 'meta' => $meta,
+            'req' => request()->all()
+        ]);
+    }
+    public function getMutasi()
+    {
+        $tglAwal = request('tahun') . '-' . request('bulan') . '-01';
+        $dateAwal = Carbon::parse($tglAwal);
+        $blnLalu = $dateAwal->subMonth()->format('Y-m');
+
+        $obat = Mobatnew::select(
+            'kd_obat',
+            'nama_obat',
+            'satuan_k',
+
+        )
+            ->with([
+                'saldoawal' => function ($st) use ($blnLalu) {
+                    $st->select(
+                        'stokopname.kdobat',
+                        'stokopname.nopenerimaan as stpen',
+                        DB::raw('sum(stokopname.jumlah) as jumlah'),
+                        DB::raw('sum(stokopname.jumlah * daftar_hargas.harga) as sub'),
+                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_h.jenis_penerimaan',
+                        'daftar_hargas.harga',
+                    )
+                        ->leftJoin('daftar_hargas', function ($jo) {
+                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'stokopname.kdobat');
+                        })
+                        ->leftJoin('penerimaan_r', function ($jo) {
+                            $jo->on('penerimaan_r.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                                ->on('penerimaan_r.kdobat', '=', 'stokopname.kdobat');
+                        })
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->where('stokopname.jumlah', '!=', 0)
+                        ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
+                        ->where('stokopname.kdruang', request('kode_ruang'))
+                        ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
+                }
+            ])
+            ->get();
         return new JsonResponse([
             'data' => $obat,
             // 'meta' => $meta,

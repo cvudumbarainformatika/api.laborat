@@ -187,9 +187,9 @@ class DistribusigudangController extends Controller
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'kd_obat' => $caristok[$index]->kdobat,
                             'nobatch' => $caristok[$index]->nobatch,
+                            'jml' => $sisa,
                         ],
                         [
-                            'jml' => $sisa,
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                             'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,
@@ -211,9 +211,9 @@ class DistribusigudangController extends Controller
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'kd_obat' => $caristok[$index]->kdobat,
                             'nobatch' => $caristok[$index]->nobatch,
+                            'jml' => $masuk,
                         ],
                         [
-                            'jml' => $masuk,
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                             'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,
