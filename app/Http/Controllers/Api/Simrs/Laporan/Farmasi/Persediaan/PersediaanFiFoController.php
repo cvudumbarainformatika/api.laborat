@@ -133,7 +133,7 @@ class PersediaanFiFoController extends Controller
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
                         // ->where('stokopname.kdruang', request('kode_ruang'))
-                        ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
+                        ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan');
                 },
                 'penerimaanrinci' => function ($trm) {
                     $trm->select(
@@ -209,7 +209,7 @@ class PersediaanFiFoController extends Controller
                         'resep_keluar_h.tgl_selesai as tgl',
                         'resep_keluar_racikan_r.nopenerimaan',
                         'daftar_hargas.harga',
-                        DB::raw(' sum(resep_keluar_racikan_r.jumlah) as jumlah'),
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah'),
                         DB::raw('sum(resep_keluar_racikan_r.jumlah * daftar_hargas.harga) as sub'),
                     )
                         ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
@@ -232,9 +232,42 @@ class PersediaanFiFoController extends Controller
                                 $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'daftar_hargas.harga', 'resep_keluar_racikan_r.noresep');
                             }
                         );
+                },
+                'pemakaian' => function ($pak) {
+                    $pak->select(
+                        'pemakaian_r.kd_obat as kdobat',
+                        'pemakaian_r.kd_obat',
+                        'pemakaian_r.nopenerimaan',
+                        'pemakaian_h.tgl as tgl',
+                        'pemakaian_h.kdruang',
+                        'daftar_hargas.harga',
+                        DB::raw('sum(pemakaian_r.jumlah) as jumlah'),
+                        DB::raw('sum(pemakaian_r.jumlah * daftar_hargas.harga) as sub'),
+                    )
+                        ->leftJoin('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
+                        ->leftJoin('daftar_hargas', function ($jr) {
+                            $jr->on('daftar_hargas.nopenerimaan', '=', 'pemakaian_r.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'pemakaian_r.kd_obat');
+                        })
+                        ->havingRaw('jumlah > 0')
+                        ->where('pemakaian_h.tgl', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with('ruangan:kode,uraian')
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan');
+                            },
+                            function ($re) {
+                                $re->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan', 'pemakaian_r.nopemakaian');
+                            }
+                        );
                 }
+
             ])
-            ->limit(20)
+            // ->limit(50)
+            ->when(request('kode_ruang') !== 'all', function ($q) {
+                $q->whereIn('gudang', ['', request('kode_ruang')]);
+            })
             ->get();
         $anu = collect($obat)->map(function ($it) {
             $it->saldo = $it->saldoawal;
