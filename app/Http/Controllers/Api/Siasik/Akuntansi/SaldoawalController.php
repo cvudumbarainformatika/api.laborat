@@ -22,25 +22,34 @@ class SaldoawalController extends Controller
     }
 
     public function index(){
-        $saldo=SaldoAwal::all();
+        $year=date('Y');
+        $saldo=SaldoAwal::where('tahun', $year)
+        ->select('kodepsap13',
+                        'uraianpsap13',
+                        'debetkredit',
+                        'debit',
+                        'kredit',
+                        'tahun'
+                ) ->get();
         return new JsonResponse($saldo);
     }
     public function save(Request $request){
-        // $user = auth()->user()->pegawai_id;
-        // $pg= Pegawai::find($user);
-        // $pegawai= $pg->kdpegsimrs;
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
         $year=date('Y');
         $time = date('Y-m-d H:i:s');
         $saldo=SaldoAwal::create([
                 'kodepsap13' => $request['kodepsap13'],
                 'uraianpsap13' => $request['uraianpsap13'],
+                'debetkredit' => $request['debetkredit'],
                 'debit' => $request['debit'],
                 'kredit' => $request['kredit'],
-                'tahun' => $year,
-                'tglentry' => $time,
-                // 'userentry'=> $pegawai
+                'tahun' => $year ?? '',
+                'tglentry' => $time ?? '',
+                'userentry'=> $pegawai ?? ''
 
         ]);
-        return new JsonResponse(['message' => 'Data Berhasil disimpan...!!!', 'result'=> $saldo]);
+        return new JsonResponse(['message' => 'Data Berhasil disimpan...!!!', 'result'=> $saldo],200);
     }
 }
