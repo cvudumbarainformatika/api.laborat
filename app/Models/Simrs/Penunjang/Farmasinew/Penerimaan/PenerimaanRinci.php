@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
 
+use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
@@ -23,6 +24,10 @@ class PenerimaanRinci extends Model
     public function header()
     {
         return $this->belongsTo(PenerimaanHeder::class, 'nopenerimaan', 'nopenerimaan');
+    }
+    public function pbf()
+    {
+        return $this->hasOne(Mpihakketiga::class, 'kode', 'kdpbf');
     }
     public function stokterima()
     {

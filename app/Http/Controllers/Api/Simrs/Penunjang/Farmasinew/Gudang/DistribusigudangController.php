@@ -181,15 +181,14 @@ class DistribusigudangController extends Controller
                 if ($sisa < $masuk) {
                     $sisax = $masuk - $sisa;
 
-                    $mutasi = Mutasigudangkedepo::updateOrCreate(
+                    $mutasi = Mutasigudangkedepo::create(
                         [
                             'no_permintaan' => $request->nopermintaan,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'kd_obat' => $caristok[$index]->kdobat,
                             'nobatch' => $caristok[$index]->nobatch,
-                        ],
-                        [
                             'jml' => $sisa,
+
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                             'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,
@@ -205,15 +204,14 @@ class DistribusigudangController extends Controller
                 } else {
                     $sisax = $sisa - $masuk;
 
-                    $mutasi = Mutasigudangkedepo::updateOrCreate(
+                    $mutasi = Mutasigudangkedepo::create(
                         [
                             'no_permintaan' => $request->nopermintaan,
                             'nopenerimaan' => $caristok[$index]->nopenerimaan,
                             'kd_obat' => $caristok[$index]->kdobat,
                             'nobatch' => $caristok[$index]->nobatch,
-                        ],
-                        [
                             'jml' => $masuk,
+
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                             'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,

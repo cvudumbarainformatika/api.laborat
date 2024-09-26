@@ -18,6 +18,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
+use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PemakaianR;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFisik;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -182,6 +183,10 @@ class Mobatnew extends Model
     public function resepkeluar()
     {
         return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
+    }
+    public function pemakaian()
+    {
+        return $this->hasMany(PemakaianR::class, 'kd_obat', 'kd_obat');
     }
     public function resepkeluarracikan()
     {
