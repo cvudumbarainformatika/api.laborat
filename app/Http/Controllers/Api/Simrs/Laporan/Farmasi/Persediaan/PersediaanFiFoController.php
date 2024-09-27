@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Persediaan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,190 @@ class PersediaanFiFoController extends Controller
         // $meta = collect($obat)->except('data');
         return new JsonResponse([
             'data' => $obat,
+            // 'meta' => $meta,
+            'req' => request()->all()
+        ]);
+    }
+    public function getMutasi()
+    {
+        $tglAwal = request('tahun') . '-' . request('bulan') . '-01';
+        $dateAwal = Carbon::parse($tglAwal);
+        $blnLalu = $dateAwal->subMonth()->format('Y-m');
+
+        $obat = Mobatnew::select(
+            'kd_obat',
+            'nama_obat',
+            'satuan_k',
+
+        )
+            ->with([
+                'saldoawal' => function ($st) use ($blnLalu) {
+                    $st->select(
+                        'stokopname.kdobat',
+                        'stokopname.nopenerimaan',
+                        DB::raw('sum(stokopname.jumlah) as jumlah'),
+                        DB::raw('sum(stokopname.jumlah * daftar_hargas.harga) as sub'),
+                        'penerimaan_r.nopenerimaan as pen',
+                        'penerimaan_h.jenis_penerimaan',
+                        'daftar_hargas.harga',
+                    )
+                        ->leftJoin('daftar_hargas', function ($jo) {
+                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'stokopname.kdobat');
+                        })
+                        ->leftJoin('penerimaan_r', function ($jo) {
+                            $jo->on('penerimaan_r.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                                ->on('penerimaan_r.kdobat', '=', 'stokopname.kdobat');
+                        })
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->where('stokopname.jumlah', '!=', 0)
+                        ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
+                        // ->where('stokopname.kdruang', request('kode_ruang'))
+                        ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan');
+                },
+                'penerimaanrinci' => function ($trm) {
+                    $trm->select(
+                        'penerimaan_r.kdobat',
+                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_h.tglpenerimaan as tgl',
+                        'penerimaan_h.jenissurat',
+                        'penerimaan_h.nomorsurat',
+                        'penerimaan_h.kdpbf',
+                        'penerimaan_r.satuan_kcl',
+                        'penerimaan_r.harga_netto_kecil as harga',
+                        DB::raw('sum(penerimaan_r.jml_terima_k) as jumlah'),
+                        DB::raw('sum(penerimaan_r.harga_netto_kecil * penerimaan_r.jml_terima_k) as sub')
+                    )
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->with('pbf:kode,nama')
+                        ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.harga_netto_kecil');
+                },
+                'resepkeluar' => function ($kel) {
+                    $kel->select(
+                        'resep_keluar_r.noresep',
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_h.tgl_selesai as tgl',
+                        'resep_keluar_r.jumlah as keluar',
+                        'retur_penjualan_r.jumlah_retur',
+                        'resep_keluar_r.nopenerimaan',
+                        'daftar_hargas.harga',
+                        DB::raw('
+                        CASE
+                        WHEN sum(retur_penjualan_r.jumlah_retur) > 0 THEN sum(resep_keluar_r.jumlah) - sum(retur_penjualan_r.jumlah_retur)
+                        ELSE sum(resep_keluar_r.jumlah)
+                        END
+                        as jumlah
+                        '),
+                        DB::raw('
+                        CASE
+                        WHEN sum(retur_penjualan_r.jumlah_retur) > 0 THEN (sum(resep_keluar_r.jumlah) - sum(retur_penjualan_r.jumlah_retur)) *  daftar_hargas.harga
+                        ELSE sum(resep_keluar_r.jumlah * daftar_hargas.harga)
+                        END
+                        as sub
+                        '),
+                    )
+                        ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                        ->leftJoin('retur_penjualan_r', function ($jr) {
+                            $jr->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep')
+                                ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat');
+                        })
+                        ->leftJoin('daftar_hargas', function ($jr) {
+                            $jr->on('daftar_hargas.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'resep_keluar_r.kdobat');
+                        })
+                        ->havingRaw('jumlah > 0')
+                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with(
+                            'header:noresep,norm',
+                            'header.datapasien:rs1,rs2'
+                        )
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'daftar_hargas.harga');
+                            },
+                            function ($re) {
+                                $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'daftar_hargas.harga', 'resep_keluar_r.noresep');
+                            }
+                        );
+                },
+                'resepkeluarracikan' => function ($kel) {
+                    $kel->select(
+                        'resep_keluar_racikan_r.noresep',
+                        'resep_keluar_racikan_r.kdobat',
+                        'resep_keluar_h.tgl_selesai as tgl',
+                        'resep_keluar_racikan_r.nopenerimaan',
+                        'daftar_hargas.harga',
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah'),
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah * daftar_hargas.harga) as sub'),
+                    )
+                        ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
+                        ->leftJoin('daftar_hargas', function ($jr) {
+                            $jr->on('daftar_hargas.nopenerimaan', '=', 'resep_keluar_racikan_r.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'resep_keluar_racikan_r.kdobat');
+                        })
+                        ->havingRaw('jumlah > 0')
+                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with(
+                            'header:noresep,norm',
+                            'header.datapasien:rs1,rs2'
+                        )
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'daftar_hargas.harga');
+                            },
+                            function ($re) {
+                                $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'daftar_hargas.harga', 'resep_keluar_racikan_r.noresep');
+                            }
+                        );
+                },
+                'pemakaian' => function ($pak) {
+                    $pak->select(
+                        'pemakaian_r.kd_obat as kdobat',
+                        'pemakaian_r.kd_obat',
+                        'pemakaian_r.nopenerimaan',
+                        'pemakaian_h.tgl as tgl',
+                        'pemakaian_h.kdruang',
+                        'daftar_hargas.harga',
+                        DB::raw('sum(pemakaian_r.jumlah) as jumlah'),
+                        DB::raw('sum(pemakaian_r.jumlah * daftar_hargas.harga) as sub'),
+                    )
+                        ->leftJoin('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
+                        ->leftJoin('daftar_hargas', function ($jr) {
+                            $jr->on('daftar_hargas.nopenerimaan', '=', 'pemakaian_r.nopenerimaan')
+                                ->on('daftar_hargas.kd_obat', '=', 'pemakaian_r.kd_obat');
+                        })
+                        ->havingRaw('jumlah > 0')
+                        ->where('pemakaian_h.tgl', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with('ruangan:kode,uraian')
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan');
+                            },
+                            function ($re) {
+                                $re->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan', 'pemakaian_r.nopemakaian');
+                            }
+                        );
+                }
+
+            ])
+            // ->limit(50)
+            ->when(request('kode_ruang') !== 'all', function ($q) {
+                $q->whereIn('gudang', ['', request('kode_ruang')]);
+            })
+            ->get();
+        $anu = collect($obat)->map(function ($it) {
+            $it->saldo = $it->saldoawal;
+            $it->terima = $it->penerimaanrinci;
+            return $it;
+        });
+        return new JsonResponse([
+            'obat' => $obat,
+            'data' => $anu,
+            'blnLalu' => $blnLalu,
             // 'meta' => $meta,
             'req' => request()->all()
         ]);

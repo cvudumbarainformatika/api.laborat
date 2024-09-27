@@ -9,4 +9,5 @@ Route::group([
     'prefix' => 'simrs/laporan/farmasi/pemakaian'
 ], function () {
     Route::get('/get-persediaan', [PersediaanFiFoController::class, 'getPersediaan']);
+    Route::get('/get-mutasi', [PersediaanFiFoController::class, 'getMutasi']);
 });

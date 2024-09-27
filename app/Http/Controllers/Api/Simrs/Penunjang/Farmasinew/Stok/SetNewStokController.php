@@ -449,7 +449,7 @@ class SetNewStokController extends Controller
         $tglAkhir = $x . date('-t', strtotime($x . '-01'));
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
-        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
 
         $message = 'Stok sudah Sesuai tidak ada yang perlu di update';

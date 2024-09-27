@@ -156,11 +156,16 @@ class NPD_LSController extends Controller
                                             'penerimaan_h.jumlah_bastx',
                                             'penerimaan_h.subtotal_bast',
                                             'penerimaan_h.jenis_penerimaan',
-                                            'penerimaan_h.kdpbf')
+                                            'penerimaan_h.kdpbf',
+                                            'penerimaan_h.no_npd',)
+
         ->where('kdpbf', request('kodepenerima'), function ($bast){
-            $bast->whereIn('jenis_penerimaan', ['Pesanan']);
+            $bast->whereIn('jenis_penerimaan', ['Pesanan'])
+
+           ;
         })
-        ->where('nobast', '<>', '')
+        ->where('nobast', '!=', '')
+        ->where('no_npd', '=', '')
         ->whereNotNull('tgl_bast')
         ->when(request('q'),function ($query) {
             $query->where('nobast', 'LIKE', '%' . request('q') . '%')
@@ -235,7 +240,8 @@ class NPD_LSController extends Controller
                                             'bast_konsinyasis.tgl_bast',
                                             'bast_konsinyasis.jumlah_bastx',)
         ->where('kdpbf', request('kodepenerima'), function ($bast){
-            $bast->where('nobast', '!=', '');
+            $bast->where('nobast', '!=', '')
+            ->where('no_npd', '=', '');
         })
         ->whereNotNull('tgl_bast')
         ->when(request('q'),function ($query) {
@@ -399,6 +405,7 @@ class NPD_LSController extends Controller
                 }
                 // update penerimaan atas nomer BAST FARMASI
                 PenerimaanHeder::whereIn('nobast', $penerimaans)->update(['no_npd' => $save->nonpdls]);
+                BastKonsinyasi::whereIn('nobast', $penerimaans)->update(['no_npd' => $save->nonpdls]);
             //     $data = PenerimaanHeder::where('nobast',['nopenerimaan'])->get();
             //     if ($data) {
             //         $data->update([
@@ -412,7 +419,7 @@ class NPD_LSController extends Controller
                 [
                     'message' => 'Data Berhasil disimpan...!!!',
                     'result' => $save,
-                    'daaaata' => $penerimaans
+                    'penerimaans' => $penerimaans
                 ], 200);
         } catch (\Exception $er) {
             DB::rollBack();
