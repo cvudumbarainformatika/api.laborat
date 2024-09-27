@@ -448,15 +448,14 @@ class DepoController extends Controller
         // return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!', 'data' => $obatditerima], 410);
         foreach ($obatditerima as $wew) {
 
-            Stokreal::firstOrCreate(
+            Stokreal::create(
                 [
                     'nopenerimaan' => $wew->nopenerimaan,
                     'nodistribusi' => $wew->no_permintaan,
                     'kdobat' => $wew->kd_obat,
                     'nobatch' => $wew->nobatch,
                     'tglexp' => $wew->tglexp,
-                ],
-                [
+
                     'tglpenerimaan' => $wew->tglpenerimaan,
                     'jumlah' => $wew->jml,
                     'kdruang' => $request->tujuan,
