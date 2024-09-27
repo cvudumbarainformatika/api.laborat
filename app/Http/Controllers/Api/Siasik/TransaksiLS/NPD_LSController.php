@@ -74,6 +74,7 @@ class NPD_LSController extends Controller
                     $header->select('nonpk', 'tglpindahbuku');
                 });
             }])
+            ->orderBy('tglnpdls', 'desc')
             ->get();
         return new JsonResponse($npdls);
     }
@@ -115,7 +116,7 @@ class NPD_LSController extends Controller
                 't_tampung.harga',
                 't_tampung.pagu',
                 't_tampung.idpp')
-                ->with(['realisasi_spjpanjar'=> function ($realisasi) {
+                ->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
                     $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
                                         'spjpanjar_rinci.jumlahbelanjapanjar');
                     },'realisasi'=> function ($realisasi) {
@@ -160,9 +161,7 @@ class NPD_LSController extends Controller
                                             'penerimaan_h.no_npd',)
 
         ->where('kdpbf', request('kodepenerima'), function ($bast){
-            $bast->whereIn('jenis_penerimaan', ['Pesanan'])
-
-           ;
+            $bast->whereIn('jenis_penerimaan', ['Pesanan']);
         })
         ->where('nobast', '!=', '')
         ->where('no_npd', '=', '')
@@ -197,7 +196,7 @@ class NPD_LSController extends Controller
                                         'new_masterobat.uraian50',
                                         'new_masterobat.kode108',
                                         'new_masterobat.uraian108')
-                            ->with('pagu', function ($pagu) use ($tahun) {
+                            ->with(['jurnal','pagu'=> function ($pagu) use ($tahun) {
                             $pagu->where('tgl', $tahun)
                                 ->where('kodekegiatanblud', request('kodekegiatan'))
                                 ->where('pagu', '!=', '0')
@@ -225,7 +224,7 @@ class NPD_LSController extends Controller
                                             $realisasi->select('contrapost.idpp',
                                                                 'contrapost.nominalcontrapost');
                                             }]);
-                            });
+                            }]);
                     });
         })
         // ->orderBy('tgl_bast', 'DESC')
@@ -270,7 +269,7 @@ class NPD_LSController extends Controller
                                         'new_masterobat.uraian50',
                                         'new_masterobat.kode108',
                                         'new_masterobat.uraian108')
-                            ->with('pagu', function ($pagu) use ($tahun) {
+                            ->with(['jurnal','pagu' => function ($pagu) use ($tahun) {
                             $pagu->where('tgl', $tahun)
                                 ->where('kodekegiatanblud', request('kodekegiatan'))
                                 ->where('pagu', '!=', '0')
@@ -298,7 +297,7 @@ class NPD_LSController extends Controller
                                             $realisasi->select('contrapost.idpp',
                                                                 'contrapost.nominalcontrapost');
                                             }]);
-                            });
+                            }]);
                     });
         })
         ->orderBy('nobast', 'asc')
@@ -399,6 +398,16 @@ class NPD_LSController extends Controller
                         'hargals'=>$rinci['hargals'] ?? '',
                         'totalls'=>$rinci['totalls'] ?? '',
                         'nominalpembayaran'=>$rinci['nominalpembayaran'] ?? '',
+                        'kode_lo'=>$rinci['kode_lo'] ?? '',
+                        'uraian_lo'=>$rinci['uraian_lo'] ?? '',
+                        'kode_neraca1'=>$rinci['kode_neraca1'] ?? '',
+                        'uraian_neraca1'=>$rinci['uraian_neraca1'] ?? '',
+                        'kode_neraca2'=>$rinci['kode_neraca2'] ?? '',
+                        'uraian_neraca2'=>$rinci['uraian_neraca2'] ?? '',
+                        'kode_lpsal'=>$rinci['kode_lpsal'] ?? '',
+                        'uraian_lpsal'=>$rinci['uraian_lpsal'] ?? '',
+                        'kode_lak'=>$rinci['kode_lak'] ?? '',
+                        'uraian_lak'=>$rinci['uraian_lak'] ?? '',
                     ]);
                     //request nomer BAST
                     $penerimaans[]=$rinci['nopenerimaan'];

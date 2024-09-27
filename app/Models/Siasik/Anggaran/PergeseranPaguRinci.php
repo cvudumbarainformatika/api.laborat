@@ -2,6 +2,7 @@
 
 namespace App\Models\Siasik\Anggaran;
 
+use App\Models\Siasik\Master\Akun_jurnal;
 use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Siasik\TransaksiPjr\SpjPanjar_Rinci;
@@ -37,6 +38,10 @@ class PergeseranPaguRinci extends Model
     }
     public function contrapost(){
         return $this->hasMany(Contrapost::class,'idpp', 'idpp');
+    }
+    public function jurnal()
+    {
+        return $this->hasOne(Akun_jurnal::class, 'kodeall2', 'koderek50');
     }
 
 }
