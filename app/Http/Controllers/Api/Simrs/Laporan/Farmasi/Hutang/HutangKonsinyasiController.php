@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class HutangKonsinyasiController extends Controller
 {
     //
-    public function getHutangKonsinyasi(){
+    public function getHutangKonsinyasix(){
         // hutang konsinyasi adalah barang konsinyasi yang sudah dipakai
         // ambil pihak 3 yang konsinyasi
         $pbf=PenerimaanHeder::select('kdpbf')->where('jenis_penerimaan','Konsinyasi')->distinct()->pluck('kdpbf');
@@ -53,7 +53,7 @@ class HutangKonsinyasiController extends Controller
             $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
         })
         ->leftJoin('persiapan_operasi_rincis',function($jo){
-            $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan') 
+            $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan')
             ->on('persiapan_operasi_rincis.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
         })
         ->whereIn('persiapan_operasi_distribusis.kd_obat',$master)
@@ -95,11 +95,11 @@ class HutangKonsinyasiController extends Controller
             $jo->on('persiapan_operasis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan');
         })
         ->leftJoin('persiapan_operasi_rincis',function($jo){
-            $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan') 
+            $jo->on('persiapan_operasi_rincis.nopermintaan','=','persiapan_operasi_distribusis.nopermintaan')
             ->on('persiapan_operasi_rincis.kd_obat','=','persiapan_operasi_distribusis.kd_obat');
         })
         ->leftJoin('detail_bast_konsinyasis',function($jo){
-            $jo->on('detail_bast_konsinyasis.nopermintaan','=','persiapan_operasi_rincis.nopermintaan') 
+            $jo->on('detail_bast_konsinyasis.nopermintaan','=','persiapan_operasi_rincis.nopermintaan')
             ->on('detail_bast_konsinyasis.kdobat','=','persiapan_operasi_rincis.kd_obat')
             ->on('detail_bast_konsinyasis.noresep','=','persiapan_operasi_rincis.noresep');
         })
@@ -147,5 +147,23 @@ class HutangKonsinyasiController extends Controller
             // 'trm'=>$trm,
             'req'=>request()->all(),
         ]);
+    }
+
+    public function getHutangKonsinyasi()
+    {
+        $dari = request('tgldari') ;
+        $sampai = request('tglsampai') ;
+        $data = BastKonsinyasi::with(
+            [
+                'rinci' => function($penerimaanrinci){
+                    $penerimaanrinci->with(['obat']);
+                },
+                'penyedia'
+            ]
+        )
+        ->whereBetween('tgl_bast',[$dari,$sampai])
+        ->get();
+
+        return new JsonResponse($data);
     }
 }
