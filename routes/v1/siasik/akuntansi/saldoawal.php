@@ -9,6 +9,7 @@ Route::group([
     'prefix' => 'akuntansi/saldoawal'
 ], function () {
     Route::get('/akunsaldo', [SaldoawalController::class, 'akunsaldo']);
+    Route::get('/index', [SaldoawalController::class, 'index']);
     Route::post('/save', [SaldoawalController::class, 'save']);
 
 });
