@@ -326,6 +326,74 @@ class PenerimaanController extends Controller
         ]);
     }
 
+    public function bukaKunciPenerimaan(Request $request)
+    {
+        $head = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)
+            ->where('kunci', '1')
+            ->first();
+        if (!$head) {
+            return new JsonResponse([
+                'message' => 'Penerimaan tidak ditemukan, apakah kunci sudah dibuka? atau penerimaan sudah dihapus?',
+                'data' => $head
+            ], 410);
+        }
+        $rawStok = Stokrel::lockForUpdate()
+            ->where('nopenerimaan', $request->nopenerimaan)
+            ->where('kdruang', $head->gudang)
+            ->get();
+        $rinci = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'no_batch', 'tgl_exp', 'jml_terima_k as jumlah')
+            ->with('masterobat:kd_obat,nama_obat')
+            ->where('nopenerimaan', $request->nopenerimaan)
+            ->get();
+        $stok = collect($rawStok);
+        $ada = [];
+        $str = 'Stok ';
+        foreach ($rinci as $key) {
+            $temp = $stok->where('kdobat', $key['kdobat'])
+                ->where('nobatch', $key['no_batch'])
+                ->where('tglexp', $key['tgl_exp'])
+                ->first();
+            $trm = (float)$key['jumlah'];
+            $st = (float)$temp['jumlah'];
+            $namaOb = $key['masterobat']['nama_obat'] ?? '';
+            $selisih = (float)($trm - $st);
+            if ($selisih != 0) {
+                $tmpStr = $str . $namaOb . ' keluar sebanyak ' . ($selisih) . ', ';
+                $str = $tmpStr;
+                $ada[] = [
+                    'rinc' => $key,
+                    'stok' => $temp,
+                    'selisih' => $selisih,
+                    'cond' => $selisih == 0,
+                    'cond1' => $selisih != 0,
+                ];
+            }
+        }
+        if (sizeof($ada) > 0) {
+            return new JsonResponse([
+                'message' => 'Kunci tidak dibuka, ' . $str,
+                'data' => $ada
+            ], 410);
+        }
+        $data = [
+            'req' => $request->all(),
+            'head' => $head,
+            'stok' => $stok,
+            'rinci' => $rinci,
+        ];
+        foreach ($rawStok as $st) {
+            $st->update(['flag' => '1']);
+        }
+        $head->update(['kunci' => '']);
+        // return new JsonResponse([
+        //     'message' => 'Kunci Penerimaan tidak dibuka',
+        //     'data' => $data
+        // ], 410);
+        return new JsonResponse([
+            'message' => 'Kunci Penerimaan sudah dibuka',
+            'data' => $data
+        ]);
+    }
     public function kuncipenerimaan(Request $request)
     {
         $cek = PenerimaanHeder::where('nopenerimaan', $request->nopenerimaan)->first();
