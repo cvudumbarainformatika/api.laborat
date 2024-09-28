@@ -32,4 +32,21 @@ class Anamnesis extends Model
     {
         return $this->hasOne(KeluhanNyeri::class, 'rs209_id', 'id');
     }
+    public function skreeninggizi()
+    {
+        return $this->hasOne(SkreeningGizi::class, 'rs209_id', 'id');
+    }
+
+    public function kebidanan()
+    {
+        return $this->hasOne(Kebidanan::class, 'rs209_id', 'id');
+    }
+    public function neonatal()
+    {
+        return $this->hasOne(Neonatal::class, 'rs209_id', 'id');
+    }
+    public function pediatrik()
+    {
+        return $this->hasOne(Pediatrik::class, 'rs209_id', 'id');
+    }
 }

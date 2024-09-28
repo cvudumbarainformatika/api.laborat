@@ -7,10 +7,10 @@ use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class KeluhanNyeri extends Model
+class SkreeningGizi extends Model
 {
     use HasFactory;
-    protected $table = 'rs209_nyeri';
+    protected $table = 'rs209_gizi';
     protected $guarded = ['id'];
     protected $casts = [
       'dewasa' => 'array',
