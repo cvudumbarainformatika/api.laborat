@@ -455,7 +455,6 @@ class DepoController extends Controller
                     'kdobat' => $wew->kd_obat,
                     'nobatch' => $wew->nobatch,
                     'tglexp' => $wew->tglexp,
-
                     'tglpenerimaan' => $wew->tglpenerimaan,
                     'jumlah' => $wew->jml,
                     'kdruang' => $request->tujuan,

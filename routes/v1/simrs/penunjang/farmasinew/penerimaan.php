@@ -17,6 +17,7 @@ Route::group([
     Route::post('/simpan', [PenerimaanController::class, 'simpanpenerimaan']);
     Route::post('/kuncipenerimaan', [PenerimaanController::class, 'kuncipenerimaan']);
     Route::post('/tolak-rinci-pesanan', [PenerimaanController::class, 'tolakRinciPesanan']);
+    Route::post('/buka-kunci-penerimaan', [PenerimaanController::class, 'bukaKunciPenerimaan']);
 
     Route::post('/simpanpenerimaanlangsung', [PenerimaanController::class, 'simpanpenerimaanlangsung']);
 
