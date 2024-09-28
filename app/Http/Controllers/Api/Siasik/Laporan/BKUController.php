@@ -48,14 +48,18 @@ class BKUController extends Controller
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
-        $setor=TranskePPK::orderBy('tgltrans', 'asc')
+        $setor=TranskePPK::select('idtrans', 'tgltrans', 'nilai', 'ket')
+        ->orderBy('tgltrans', 'asc')
+        // ->groupBy('tgltrans')
         ->whereBetween('tgltrans', [$awal, $akhir])
+        // ->selectRaw('sum(nilai) as nilaitf')
         ->get();
         $kaskecil=PengeluaranKas::where('kd_kas', 'K0002')
         ->select('pengeluarankhaskecil.nominal',
                 'pengeluarankhaskecil.tanggalpengeluaran',
                 'pengeluarankhaskecil.kd_kas',
                 'pengeluarankhaskecil.nomorpengeluaran')
+        // ->groupBy('tanggalpengeluaran')
         ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->get();
         // $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
