@@ -108,6 +108,7 @@ class PersediaanFiFoController extends Controller
             'kd_obat',
             'nama_obat',
             'satuan_k',
+            'uraian50',
 
         )
             ->with([
@@ -278,6 +279,10 @@ class PersediaanFiFoController extends Controller
 
             ->when(request('kode_ruang') !== 'all', function ($q) {
                 $q->whereIn('gudang', ['', request('kode_ruang')]);
+            })
+            ->where(function ($q) {
+                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
             })
             ->paginate(request('per_page'));
         // ->limit(10)
