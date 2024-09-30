@@ -361,7 +361,10 @@ class SetNewStokController extends Controller
             if ($temp['tts'] !== $temp['sisa']) $data[] = $temp;
         }
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'count data' => sizeof($data),
+            'data' => $data
+        ]);
     }
     public function cekPenerimaan(Request $request)
     {
