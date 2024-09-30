@@ -117,30 +117,24 @@ class PersediaanFiFoController extends Controller
                         'stokopname.kdobat',
                         'stokopname.nopenerimaan',
                         DB::raw('sum(stokopname.jumlah) as jumlah'),
-                        DB::raw('
-                        CASE
-                        WHEN daftar_hargas.harga IS NULL THEN sum(stokopname.jumlah * stokopname.harga)
-                        ELSE sum(stokopname.jumlah * daftar_hargas.harga)
-                        END
-                        as sub
-                        '),
-                        DB::raw('
-                        CASE
-                        WHEN daftar_hargas.harga IS NULL THEN  stokopname.harga
-                        ELSE daftar_hargas.harga
-                        END
-                        as harga
-                        '),
+                        DB::raw('sum(stokopname.jumlah * stokopname.harga) as sub'),
+                        DB::raw('stokopname.harga as harga '),
                         // 'daftar_hargas.harga as dftHar',
                     )
-                        ->leftJoin('daftar_hargas', function ($jo) {
-                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokopname.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'stokopname.kdobat');
-                        })
+
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
                         // ->where('stokopname.kdruang', request('kode_ruang'))
-                        ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('stokopname.kdobat', 'stokopname.tglopname');
+                            },
+                            function ($re) {
+                                $re->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
+                            }
+                        );
+                    // ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
                 },
                 'penerimaanrinci' => function ($trm) {
                     $trm->select(
@@ -158,7 +152,16 @@ class PersediaanFiFoController extends Controller
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->with('pbf:kode,nama')
                         ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
+                        ->when(
+                            request('jenis') === 'rekap',
+                            function ($re) {
+                                $re->groupBy('penerimaan_r.kdobat');
+                            },
+                            function ($re) {
+                                $re->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
+                            }
+                        );
+                    // ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
                 },
                 'resepkeluar' => function ($kel) {
                     $kel->select(
@@ -166,8 +169,9 @@ class PersediaanFiFoController extends Controller
                         'resep_keluar_r.kdobat',
                         'resep_keluar_h.tgl_selesai as tgl',
                         'resep_keluar_r.nopenerimaan',
-                        // 'daftar_hargas.harga as dftHa',
+                        'resep_keluar_r.harga_beli as harga',
                         DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
+                        DB::raw('sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli) as sub')
 
                     )
                         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
@@ -181,7 +185,7 @@ class PersediaanFiFoController extends Controller
                         ->when(
                             request('jenis') === 'rekap',
                             function ($re) {
-                                $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan');
+                                $re->groupBy('resep_keluar_r.kdobat');
                             },
                             function ($re) {
                                 $re->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
@@ -194,7 +198,9 @@ class PersediaanFiFoController extends Controller
                         'resep_keluar_racikan_r.kdobat',
                         'resep_keluar_h.tgl_selesai as tgl',
                         'resep_keluar_racikan_r.nopenerimaan',
+                        'resep_keluar_racikan_r.harga_beli as header_register_callback',
                         DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah'),
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah * resep_keluar_racikan_r.harga_beli) as sub')
                     )
                         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
                         ->havingRaw('jumlah > 0')
@@ -206,7 +212,7 @@ class PersediaanFiFoController extends Controller
                         ->when(
                             request('jenis') === 'rekap',
                             function ($re) {
-                                $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan');
+                                $re->groupBy('resep_keluar_racikan_r.kdobat');
                             },
                             function ($re) {
                                 $re->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'resep_keluar_racikan_r.noresep');
@@ -219,7 +225,9 @@ class PersediaanFiFoController extends Controller
                         'retur_penjualan_r.kdobat',
                         'retur_penjualan_h.tgl_retur as tgl',
                         'retur_penjualan_r.nopenerimaan',
+                        'retur_penjualan_r.harga_beli as harga',
                         DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah'),
+                        DB::raw('sum(retur_penjualan_r.jumlah_retur * retur_penjualan_r.harga_beli) as sub'),
                     )
                         ->join('retur_penjualan_h', 'retur_penjualan_h.noretur', '=', 'retur_penjualan_r.noretur')
                         ->havingRaw('jumlah > 0')
@@ -231,7 +239,7 @@ class PersediaanFiFoController extends Controller
                         ->when(
                             request('jenis') === 'rekap',
                             function ($re) {
-                                $re->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan');
+                                $re->groupBy('retur_penjualan_r.kdobat');
                             },
                             function ($re) {
                                 $re->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
@@ -245,17 +253,23 @@ class PersediaanFiFoController extends Controller
                         'pemakaian_r.nopenerimaan',
                         'pemakaian_h.tgl as tgl',
                         'pemakaian_h.kdruang',
+                        'stokopname.harga as harga',
                         DB::raw('sum(pemakaian_r.jumlah) as jumlah'),
+                        DB::raw('sum(pemakaian_r.jumlah * stokopname.harga) as sub'),
 
                     )
-                        ->leftJoin('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
+                        ->join('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
+                        ->join('stokopname', function ($jo) {
+                            $jo->on('stokopname.kdobat', '=', 'pemakaian_r.kd_obat')
+                                ->on('stokopname.nopenerimaan', '=', 'pemakaian_r.nopenerimaan');
+                        })
                         ->havingRaw('jumlah > 0')
                         ->where('pemakaian_h.tgl', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                         ->with('ruangan:kode,uraian')
                         ->when(
                             request('jenis') === 'rekap',
                             function ($re) {
-                                $re->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan');
+                                $re->groupBy('pemakaian_r.kd_obat');
                             },
                             function ($re) {
                                 $re->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan', 'pemakaian_r.nopemakaian');
