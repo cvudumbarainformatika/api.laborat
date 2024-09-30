@@ -7,17 +7,24 @@ use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PemeriksaanSambung extends Model
+class Penilaian extends Model
 {
     use HasFactory;
     protected $connection = 'mysql';
-    protected $table = 'rs253_sambung';
+    protected $table = 'penilaian';
     protected $guarded = ['id'];
     protected $casts = [
-        'edukasi' => 'array',
-    ];
+        'barthel' => 'array',
+        'norton' => 'array',
+        'humpty_dumpty' => 'array',
+        'morse_fall' => 'array',
+        'ontario' => 'array',
+      ];
 
-
+    public function petugas()
+    {
+       return $this->hasOne(Petugas::class, 'kdpegsimrs','user');
+    }
     
 
     

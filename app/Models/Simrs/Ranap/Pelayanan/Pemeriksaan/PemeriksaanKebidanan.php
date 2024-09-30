@@ -7,18 +7,11 @@ use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PemeriksaanSambung extends Model
+class PemeriksaanKebidanan extends Model
 {
     use HasFactory;
     protected $connection = 'mysql';
-    protected $table = 'rs253_sambung';
+    protected $table = 'rs253_kebidanan';
     protected $guarded = ['id'];
-    protected $casts = [
-        'edukasi' => 'array',
-    ];
-
-
-    
-
     
 }

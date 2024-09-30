@@ -59,7 +59,7 @@ class AnamnesisController extends Controller
        'kebidanan'
        ])
 
-       ->groupBy('rs253.id')
+       ->groupBy('rs209.id')
        ->get();
 
        return $data;
@@ -68,7 +68,7 @@ class AnamnesisController extends Controller
     public function simpananamnesis(Request $request)
     {
 
-      // return $request->all();
+      
 
       $user = Pegawai::find(auth()->user()->pegawai_id);
       $kdpegsimrs = $user->kdpegsimrs;
@@ -416,4 +416,7 @@ class AnamnesisController extends Controller
 
         return new JsonResponse($collapsed->all());
     }
+
+
+    
 }

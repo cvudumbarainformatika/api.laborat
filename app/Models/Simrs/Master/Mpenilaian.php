@@ -12,6 +12,7 @@ class Mpenilaian extends Model
     protected $table = 'm_penilaians';
     protected $guarded = ['id'];
     protected $casts = [
-      'form' => 'array'
+      'form' => 'array',
+      'grupings' => 'array'
   ];
 }
