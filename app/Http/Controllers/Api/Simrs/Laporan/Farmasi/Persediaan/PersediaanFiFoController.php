@@ -304,10 +304,10 @@ class PersediaanFiFoController extends Controller
             });
         $kirim = [];
         if (request('action') === 'download') {
-            $obat = $rwobat->offset(0)
-                ->limit(100)
-                ->get();
-            // $obat = $rwobat->get();
+            // $obat = $rwobat->offset(0)
+            //     ->limit(300)
+            //     ->get();
+            $obat = $rwobat->get();
             $obat->map(function ($it) {
                 $it->saldo = $it->saldoawal;
                 $it->terima = $it->penerimaanrinci;
