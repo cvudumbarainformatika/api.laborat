@@ -72,6 +72,7 @@ class KartustokController extends Controller
                                 $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
                             }
                         ])
+                        ->where('jumlah', '!=', 0)
                         ->where('kdruang', $koderuangan);
                 },
                 // hanya ada jika koderuang itu adalah gudang
@@ -329,6 +330,7 @@ class KartustokController extends Controller
                                 $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
                             }
                         ])
+                        ->where('jumlah', '!=', 0)
                         ->where('kdruang', $koderuangan);
                 },
                 // hanya ada jika koderuang itu adalah gudang
