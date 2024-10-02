@@ -3,7 +3,9 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,5 +32,13 @@ class Resepkeluarrinciracikan extends Model
     public function retur()
     {
         return $this->hasMany(Returpenjualan_h::class, 'noresep', 'noresep');
+    }
+    public function rincipenerimaan()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kdobat');
+    }
+    public function opname()
+    {
+        return $this->hasMany(Stokopname::class, 'kdobat', 'kdobat');
     }
 }
