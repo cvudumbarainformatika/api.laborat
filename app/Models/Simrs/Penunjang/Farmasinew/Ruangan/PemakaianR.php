@@ -26,6 +26,7 @@ class PemakaianR extends Model
     }
     public function rincipenerimaan()
     {
+        // return $this;
         return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kd_obat');
     }
     public function opname()

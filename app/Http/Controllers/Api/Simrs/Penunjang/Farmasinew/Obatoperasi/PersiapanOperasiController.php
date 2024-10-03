@@ -486,7 +486,8 @@ class PersiapanOperasiController extends Controller
         //     ->where('jumlah', '>', 0)
         //     ->orderBy('tglExp', 'ASC')
         //     ->get();
-        $allStok = Stokreal::whereIn('kdobat', $kode)
+        $allStok = Stokreal::lockForUpdate()
+            ->whereIn('kdobat', $kode)
             ->where('kdruang', 'Gd-04010103')
             ->where('jumlah', '>', 0)
             ->orderBy('tglExp', 'ASC')
@@ -801,7 +802,8 @@ class PersiapanOperasiController extends Controller
             $dist = [];
             $distribusi = (float)$request->jumlah_distribusi;
             if ($distribusi > 0) {
-                $stok = Stokreal::where('kdobat', $request->kodeobat)
+                $stok = Stokreal::lockForUpdate()
+                    ->where('kdobat', $request->kodeobat)
                     ->where('kdruang', 'Gd-04010103')
                     ->where('jumlah', '>', 0)
                     ->orderBy('tglExp', 'ASC')

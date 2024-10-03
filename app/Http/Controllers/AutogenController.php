@@ -17,6 +17,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
@@ -100,6 +102,116 @@ class AutogenController extends Controller
             $ada,
             // $trm,
         ];
+    }
+    public function hargaOpname()
+    {
+        $opname = Stokopname::where('tglopname', 'like', '2024-05%')
+            ->where('nopenerimaan', 'like', '%awal%')
+            ->groupBy('kdobat', 'nopenerimaan')
+            ->get();
+        $opnameLater = Stokopname::where('tglopname', 'not like', '2024-05%')
+            ->where('nopenerimaan', 'like', '%awal%')
+            ->get();
+
+        $adaStTrm = Stokopname::select(
+            'stokopname.kdobat',
+            'stokopname.nopenerimaan',
+            'stokopname.harga',
+            'penerimaan_r.harga_netto_kecil',
+        )
+            ->join('penerimaan_r', function ($jo) {
+                $jo->on('penerimaan_r.kdobat', '=', 'stokopname.kdobat')
+                    ->on('penerimaan_r.nopenerimaan', '=', 'stokopname.nopenerimaan')
+                    ->on('penerimaan_r.harga_netto_kecil', '!=', 'stokopname.harga');
+            })
+            // ->where('stokopname.harga', '!=', 'penerimaan_r.harga_netto_kecil')
+            ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan',)
+            ->get();
+        $obat = collect($adaStTrm)->map(function ($it) {
+            return $it->kdobat;
+        })->toArray();
+        $trmny = collect($adaStTrm)->map(function ($it) {
+            return $it->nopenerimaan;
+        })->toArray();
+        $kdobat = array_unique($obat);
+        $noper = array_unique($trmny);
+        // return $noper;
+
+        $opnameTrm = Stokopname::whereIn('nopenerimaan', $noper)
+            ->whereIn('kdobat', $kdobat)
+            ->where('nobatch', '!=', '-')
+            ->where('nobatch', '!=', '')
+            // ->groupBy('kdobat', 'nopenerimaan')
+            ->get();
+        $rincTrm = PenerimaanRinci::select(
+            'nopenerimaan',
+            'kdobat',
+            'no_batch',
+            'tgl_exp',
+            'harga_netto_kecil as harga',
+        )
+            ->whereIn('nopenerimaan', $noper)
+            ->whereIn('kdobat', $kdobat)
+            ->groupBy('nopenerimaan', 'no_batch', 'kdobat', 'tgl_exp', 'harga_netto_kecil')
+            ->get();
+        $col = collect($opnameLater);
+        $opna = collect($opnameTrm);
+        $trmLtr = collect($rincTrm);
+        $adaOpnam = [];
+        $adaOpnamTrm = [];
+        foreach ($opname as $key) {
+            $temp = $col->where('kdobat', $key['kdobat'])
+                ->where('nopenerimaan', $key['nopenerimaan'])
+                ->where('harga', '!=', $key['harga']);
+
+
+            if (sizeof($temp) > 0) {
+                $adaOpnam[] = [
+                    'bln 5' => $key,
+                    'after' => $temp
+                ];
+                foreach ($temp as $t) {
+                    $t->update(['harga' => $key['harga']]);
+                    // return [$t, $key];
+                }
+            }
+        }
+        foreach ($adaStTrm as $trm) {
+            $opm = $opna->where('kdobat', $trm['kdobat'])
+                ->where('nopenerimaan', $trm['nopenerimaan']);
+            if (sizeof($opm) > 0) {
+                foreach ($opm as $key) {
+                    $temp = $trmLtr->where('kdobat', $key['kdobat'])
+                        ->where('nopenerimaan', $key['nopenerimaan'])
+                        ->where('no_batch', $key['nobatch'])
+                        ->where('tgl_exp', $key['tglexp'])
+                        ->where('harga', '!=', $key['harga'])
+                        ->first();
+                    // if ($temp) return [$key, $temp];
+
+                    if ($temp) {
+                        $adaOpnamTrm[] = [
+                            'key' => $key,
+                            'trm' => $temp
+                        ];
+                        $key->update(['harga' => $temp->harga]);
+                    }
+                }
+            }
+        }
+
+
+        $data = [
+            'size ada opname' => count($adaOpnam),
+            // 'size opname mei' => count($opname),
+            'size opname penerimaan' => count($adaOpnamTrm),
+            // 'opname mei' => $opname,
+            // 'opname after mei' => $opnameLater,
+            'ada opname later' => $adaOpnamTrm,
+            // 'opname nopenerimaan' => $opnameTrm,
+            'ada opname' => $adaOpnam,
+        ];
+        return $data;
     }
     public function index(Request $request)
     {
