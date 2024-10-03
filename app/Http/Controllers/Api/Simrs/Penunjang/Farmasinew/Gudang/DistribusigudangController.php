@@ -164,6 +164,13 @@ class DistribusigudangController extends Controller
         try {
             DB::connection('farmasi')->beginTransaction();
             // cek sudah pernah di simpan atau bekum obat dengan nomor permintaan ini
+            $sudahAda = Mutasigudangkedepo::where('no_permintaan', $request->nopermintaan)
+                ->where('kd_obat', $request->kodeobat)
+                ->with('obat:kd_obat,nama_obat')
+                ->first();
+            if ($sudahAda) {
+                return new JsonResponse(['message' => 'Obat ' . $sudahAda->obat->nama_obat . ' sudah di distribusikan'], 410);
+            }
             $jmldiminta = $request->jumlah_minta;
             $caristok = Stokreal::lockForUpdate()
                 ->where('kdobat', $request->kodeobat)
