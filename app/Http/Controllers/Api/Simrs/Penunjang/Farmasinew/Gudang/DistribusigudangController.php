@@ -163,6 +163,7 @@ class DistribusigudangController extends Controller
         }
         try {
             DB::connection('farmasi')->beginTransaction();
+            // cek sudah pernah di simpan atau bekum obat dengan nomor permintaan ini
             $jmldiminta = $request->jumlah_minta;
             $caristok = Stokreal::lockForUpdate()
                 ->where('kdobat', $request->kodeobat)
