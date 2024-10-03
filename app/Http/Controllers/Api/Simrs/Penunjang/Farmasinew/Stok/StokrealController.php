@@ -42,7 +42,7 @@ class StokrealController extends Controller
             ]
         );
         if (!$simpanstokreal) {
-            return new JsonResponse(['message' => 'not ok'], 500);
+            return 500;
         }
         return 200;
     }
