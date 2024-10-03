@@ -34,6 +34,10 @@ class NpdLS_heder extends Model
     {
         return $this->belongsTo(Pegawai::class, 'nip', 'nip');
     }
+    public function pajak()
+    {
+        return $this->belongsTo(TransPajak::class, 'nonpdls', 'nonpdls');
+    }
 
 
 }
