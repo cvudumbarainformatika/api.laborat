@@ -29,8 +29,11 @@ class SaldoawalController extends Controller
                         'debetkredit',
                         'debit',
                         'kredit',
-                        'tahun'
-                ) ->get();
+                        'tahun',
+                        'id',
+                )
+                ->orderBy('kodepsap13', 'asc')
+                ->get();
         return new JsonResponse($saldo);
     }
     public function save(Request $request){
@@ -39,17 +42,47 @@ class SaldoawalController extends Controller
         $pegawai= $pg->kdpegsimrs;
         $year=date('Y');
         $time = date('Y-m-d H:i:s');
-        $saldo=SaldoAwal::create([
-                'kodepsap13' => $request['kodepsap13'],
-                'uraianpsap13' => $request['uraianpsap13'],
-                'debetkredit' => $request['debetkredit'],
-                'debit' => $request['debit'],
-                'kredit' => $request['kredit'],
-                'tahun' => $year ?? '',
-                'tglentry' => $time ?? '',
-                'userentry'=> $pegawai ?? ''
 
-        ]);
+        if (!$request->has('id')){
+            $saldo=SaldoAwal::firstOrCreate(
+            [
+                            'kodepsap13' => $request['kodepsap13'],
+                            'uraianpsap13' => $request['uraianpsap13'],
+                            'debetkredit' => $request['debetkredit'],
+                            'debit' => $request['debit'],
+                            'kredit' => $request['kredit'],
+                            'tahun' => $year ?? '',
+                            'tglentry' => $time ?? '',
+                            'userentry'=> $pegawai ?? ''
+                        ]);
+        } else {
+            $editsaldo = SaldoAwal::find($request->id);
+            $editsaldo->update($request->only([
+                'kodepsap13',
+                'uraianpsap13',
+                'debetkredit',
+                'debit',
+                'kredit'
+            ]));
+            return new JsonResponse(['message' => 'Saldo Berhasil diedit', 'result'=> $editsaldo],200);
+        }
         return new JsonResponse(['message' => 'Data Berhasil disimpan...!!!', 'result'=> $saldo],200);
+    }
+    public function destroy(Request $request)
+    {
+        $id = $request->id;
+        $data = SaldoAwal::where('id', $id);
+        $del = $data->delete();
+
+        if (!$del) {
+            return response()->json([
+                'message' => 'Error on Delete'
+            ], 500);
+        }
+
+        // $user->log("Menghapus Data Jabatan {$data->nama}");
+        return response()->json([
+            'message' => 'Data sukses terhapus'
+        ], 200);
     }
 }

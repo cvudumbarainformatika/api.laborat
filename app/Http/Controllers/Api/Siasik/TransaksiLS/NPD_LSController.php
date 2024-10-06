@@ -502,12 +502,12 @@ class NPD_LSController extends Controller
     {
         $header = NpdLS_heder::
         where('nonpdls', $request->nonpdls)
-        ->where('kunci', '=', '')
+        ->where('kunci', '!=', '')
         ->get();
         if(count($header) > 0){
             return new JsonResponse(['message' => 'NPD Masih Dikunci'], 500);
         }
-        $findrinci = NpdLS_rinci::where( 'nomerpenerimaan',$request->nopenerimaan)->first();
+        $findrinci = NpdLS_rinci::where( 'nopenerimaan',$request->nopenerimaan)->first();
         if (!$findrinci){
             return new JsonResponse( $findrinci, 200);
         }
