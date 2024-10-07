@@ -16,9 +16,12 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Rs141;
@@ -102,6 +105,141 @@ class AutogenController extends Controller
             $ada,
             // $trm,
         ];
+    }
+    public function hargaResep()
+    {
+        $resReffAwal = Resepkeluarrinci::select(
+            'resep_keluar_r.kdobat',
+            'resep_keluar_r.nopenerimaan',
+            'resep_keluar_r.harga_beli',
+            'stokreal.harga',
+        )
+            ->join('stokreal', function ($jo) {
+                $jo->on('stokreal.kdobat', '=', 'resep_keluar_r.kdobat')
+                    ->on('stokreal.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
+                    ->on('stokreal.harga', '!=', 'resep_keluar_r.harga_beli');
+            })
+            ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan',)
+            ->get();
+
+        $resReff = Resepkeluarrinci::select(
+            'resep_keluar_r.kdobat',
+            'resep_keluar_r.nopenerimaan',
+            'resep_keluar_r.harga_beli',
+            'penerimaan_r.harga_netto_kecil',
+        )
+            ->join('penerimaan_r', function ($jo) {
+                $jo->on('penerimaan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+                    ->on('penerimaan_r.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
+                    ->on('penerimaan_r.harga_netto_kecil', '!=', 'resep_keluar_r.harga_beli');
+            })
+            ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan',)
+            ->get();
+
+        $data = [
+            'resReffAwal' => $resReffAwal,
+            'resReff' => $resReff,
+        ];
+        return $data;
+    }
+    public function hargaStok()
+    {
+
+        $opnameMei = Stokopname::where('tglopname', 'like', '2024-05%')
+            ->where('nopenerimaan', 'like', '%awal%')
+            ->where('harga', '>', 0)
+            ->groupBy('kdobat', 'nopenerimaan')
+            ->get();
+        $stokAwal = Stokrel::where('nopenerimaan', 'like', '%awal%')
+            ->where('nobatch', '!=', '-')
+            ->where('nobatch', '!=', '')
+            ->get();
+        $referenceAwal = collect($opnameMei);
+        // cek
+        $adaBedaStAwal = [];
+        foreach ($stokAwal as $key) {
+            $reff = $referenceAwal->where('nopenerimaan', $key['nopenerimaan'])
+                ->where('kdobat', $key['kdobat'])
+                ->where('harga', '!=', $key['harga'])
+                ->first();
+            if ($reff) {
+                // $harga = $referenceHarga->where('nopenerimaan', $key['nopenerimaan'])
+                //     ->where('kd_obat', $key['kdobat']);
+                $adaBedaStAwal[] = [
+                    'reff' => $reff,
+                    'key' => $key,
+                    // 'harga' => $harga
+                ];
+                $key->update(['harga' => $reff->harga]);
+                // return $adaBedaStAwal;
+            }
+        }
+
+        $stokReff = Stokrel::select(
+            'stokreal.kdobat',
+            'stokreal.nopenerimaan',
+            'stokreal.harga',
+            'penerimaan_r.harga_netto_kecil',
+        )
+            ->join('penerimaan_r', function ($jo) {
+                $jo->on('penerimaan_r.kdobat', '=', 'stokreal.kdobat')
+                    ->on('penerimaan_r.nopenerimaan', '=', 'stokreal.nopenerimaan')
+                    ->on('penerimaan_r.harga_netto_kecil', '!=', 'stokreal.harga');
+            })
+            ->groupBy('stokreal.kdobat', 'stokreal.nopenerimaan',)
+            ->get();
+        $obat = collect($stokReff)->map(function ($it) {
+            return $it->kdobat;
+        })->toArray();
+        $trmny = collect($stokReff)->map(function ($it) {
+            return $it->nopenerimaan;
+        })->toArray();
+        $kdobat = array_unique($obat);
+        $noper = array_unique($trmny);
+
+        $stokTrm = Stokrel::whereIn('nopenerimaan', $noper)
+            ->whereIn('kdobat', $kdobat)
+            ->where('nobatch', '!=', '-')
+            ->where('nobatch', '!=', '')
+            // ->groupBy('kdobat', 'nopenerimaan')
+            ->get();
+        $rincTrm = PenerimaanRinci::select(
+            'nopenerimaan',
+            'kdobat',
+            'no_batch',
+            'tgl_exp',
+            'harga_netto_kecil as harga',
+        )
+            ->whereIn('nopenerimaan', $noper)
+            ->whereIn('kdobat', $kdobat)
+            ->groupBy('nopenerimaan', 'no_batch', 'kdobat', 'tgl_exp', 'harga_netto_kecil')
+            ->get();
+        $reffTrm = collect($rincTrm);
+        $adaBedaStTrm = [];
+        foreach ($stokTrm as $key) {
+            $reff = $reffTrm->where('nopenerimaan', $key['nopenerimaan'])
+                ->where('kdobat', $key['kdobat'])
+                ->where('no_batch', $key['nobatch'])
+                ->where('tgl_exp', $key['tglexp'])
+                ->where('harga', '!=', $key['harga'])
+                ->first();
+            if ($reff) {
+                $adaBedaStTrm[] = [
+                    'reff' => $reff,
+                    'key' => $key,
+                    // 'harga' => $harga
+                ];
+                $key->update(['harga' => $reff->harga]);
+                // return $adaBedaStTrm;
+            }
+        }
+        $data = [
+            'count adaBedaStAwal' => sizeof($adaBedaStAwal),
+            'count adaBedaStTrm' => sizeof($adaBedaStTrm),
+            'adaBedaStAwal' => $adaBedaStAwal,
+            'adaBedaStTrm' => $adaBedaStTrm,
+        ];
+        return $data;
     }
     public function hargaOpname()
     {

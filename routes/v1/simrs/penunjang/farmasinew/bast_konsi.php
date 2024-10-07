@@ -8,7 +8,8 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/penunjang/farmasinew/bast-konsi'
 ], function () {
-    Route::get('/penyedia', [KonsinyasiController::class, 'getPenyedia']);
+    Route::get('/penyedia', [KonsinyasiController::class, 'newGetPenyedia']);
+    // Route::get('/penyedia', [KonsinyasiController::class, 'getPenyedia']);
     Route::get('/perusahaan', [KonsinyasiController::class, 'perusahaan']);
     Route::get('/notrans', [KonsinyasiController::class, 'notranskonsi']);
     Route::get('/transaksi', [KonsinyasiController::class, 'transkonsiwithrinci']);

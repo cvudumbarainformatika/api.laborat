@@ -53,6 +53,8 @@ Route::get('/', function () {
 
 Route::get('/autogen', [AutogenController::class, 'index']);
 Route::get('/autogen/harga-opname', [AutogenController::class, 'hargaOpname']);
+Route::get('/autogen/harga-stok', [AutogenController::class, 'hargaStok']);
+Route::get('/autogen/harga-resep', [AutogenController::class, 'hargaResep']);
 Route::post('/autogen/create_coba', [AutogenController::class, 'create_coba']);
 Route::get('/autogen/coba', [AutogenController::class, 'coba']);
 Route::get('/autogen/baru', [AutogenController::class, 'baru']);
