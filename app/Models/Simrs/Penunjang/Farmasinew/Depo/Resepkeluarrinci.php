@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
@@ -31,6 +32,11 @@ class Resepkeluarrinci extends Model
     {
         return $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
     }
+    // ini rincian untuk list konsinyasi
+    public function rincian()
+    {
+        return $this->hasMany(PersiapanOperasiRinci::class, 'noresep', 'noresep');
+    }
     public function stok()
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kdobat');
@@ -50,5 +56,10 @@ class Resepkeluarrinci extends Model
     public function opname()
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kdobat');
+    }
+    // ini untuk list konsinyasi
+    public function penerimaanrinci()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'nopenerimaan', 'nopenerimaan');
     }
 }

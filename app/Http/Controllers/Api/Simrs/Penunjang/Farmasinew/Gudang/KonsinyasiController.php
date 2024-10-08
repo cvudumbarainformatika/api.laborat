@@ -45,6 +45,112 @@ class KonsinyasiController extends Controller
 
         return new JsonResponse($data);
     }
+    public function newGetPenyedia()
+    {
+        // tujuannnya untuk mencari kode pbf yang barangnya belum masuk list konsinyasi
+        $res = Resepkeluarrinci::select(
+            'resep_keluar_r.noresep',
+            'resep_keluar_r.kdobat',
+            'resep_keluar_r.jumlah',
+            'resep_keluar_r.nopenerimaan',
+            'new_masterobat.status_konsinyasi',
+            // 'persiapan_operasi_distribusis.jumlah',
+        )
+            ->leftJoin('detail_bast_konsinyasis', function ($q) {
+                $q->on('detail_bast_konsinyasis.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
+                    ->on('detail_bast_konsinyasis.noresep', '=', 'resep_keluar_r.noresep')
+                    ->on('detail_bast_konsinyasis.kdobat', '=', 'resep_keluar_r.kdobat');
+            })
+            ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_keluar_r.kdobat')
+            ->where('resep_keluar_r.jumlah', '>', 0)
+            ->where('new_masterobat.status_konsinyasi', '=', '1')
+            ->whereNull('detail_bast_konsinyasis.jumlah')
+            ->groupBy('resep_keluar_r.nopenerimaan')
+            ->get();
+        $resep = collect($res)->map(function ($q) {
+            return $q->nopenerimaan;
+        });
+        // return new JsonResponse($resep);
+        $rwpenye = PenerimaanHeder::select('kdpbf')
+            ->where(function ($q) {
+                $q->where('jenis_penerimaan', '=', 'Konsinyasi')
+                    ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
+            })
+            ->whereIn('nopenerimaan', $resep)
+            ->distinct('kdpbf')->get();
+        $penye = collect($rwpenye)->map(function ($p) {
+            return $p->kdpbf;
+        });
+        $penyedia = Mpihakketiga::select('kode', 'nama')->whereIn('kode', $penye)->get();
+        return new JsonResponse($penyedia);
+    }
+    public function newGetListPemakaianKonsinyasi()
+    {
+        // tujuan nya untuk megambil data obat konsinyasi yang belum masuk list sesuai dengan pbf
+        $rwpene = PenerimaanHeder::select('nopenerimaan')
+            ->where(function ($q) {
+                $q->where('jenis_penerimaan', '=', 'Konsinyasi')
+                    ->orWhere('jenis_penerimaan', '=', 'penggantian barang');
+            })
+            ->where('kdpbf', '=', request('penyedia'))
+            ->whereNull('tgl_bast')
+            ->distinct('nopenerimaan')
+            ->get();
+        $pene = collect($rwpene)->map(function ($p) {
+            return $p->nopenerimaan;
+        });
+        $resep = Resepkeluarrinci::select(
+            'resep_keluar_r.noresep',
+            'resep_keluar_r.kdobat',
+            'resep_keluar_r.jumlah',
+            'resep_keluar_r.nopenerimaan',
+            'resep_keluar_r.harga_beli',
+            'new_masterobat.status_konsinyasi',
+        )
+            ->with([
+                'mobat:kd_obat,nama_obat,satuan_k',
+                'heder:noresep,norm,noreg,dokter,tgl_permintaan,tgl_selesai',
+                'heder.dokter:kdpegsimrs,nama',
+                'heder.datapasien:rs1,rs2',
+                'rincian.header',
+                'penerimaanrinci' => function ($p) {
+                    $p->select(
+                        'penerimaan_r.nopenerimaan',
+                        'penerimaan_r.bebaspajak',
+                        'penerimaan_r.kdobat',
+                        'penerimaan_r.satuan_kcl',
+                        'penerimaan_r.harga_kcl',
+                        'penerimaan_r.ppn',
+                        'penerimaan_r.ppn_rp_kecil',
+                        'penerimaan_r.diskon',
+                        'penerimaan_r.diskon_rp_kecil',
+                        'penerimaan_r.harga_netto_kecil',
+                        'penerimaan_r.jml_terima_k',
+                    )
+                        ->join('resep_keluar_r', function ($j) {
+                            $j->on('resep_keluar_r.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                                ->on('resep_keluar_r.kdobat', '=', 'penerimaan_r.kdobat');
+                        })
+                        ->with('header:nopenerimaan,tglpenerimaan');
+                }
+            ])
+            ->leftJoin('detail_bast_konsinyasis', function ($q) {
+                $q->on('detail_bast_konsinyasis.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
+                    ->on('detail_bast_konsinyasis.noresep', '=', 'resep_keluar_r.noresep')
+                    ->on('detail_bast_konsinyasis.kdobat', '=', 'resep_keluar_r.kdobat');
+            })
+            ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_keluar_r.kdobat')
+            ->where('resep_keluar_r.jumlah', '>', 0)
+            ->whereIn('resep_keluar_r.nopenerimaan', $pene)
+            ->where('new_masterobat.status_konsinyasi', '=', '1')
+            ->whereNull('detail_bast_konsinyasis.jumlah')
+            ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.noresep')
+            ->get();
+
+        $data = $resep;
+        // $data['pene'] = $pene;
+        return new JsonResponse($data);
+    }
     public function getPenyedia()
     {
         $res = PersiapanOperasiRinci::select(

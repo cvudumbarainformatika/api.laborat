@@ -11,8 +11,10 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/penunjang/farmasinew/gudang'
 ], function () {
-    Route::get('/list-pemakaian-konsinyasi', [KonsinyasiController::class, 'getListPemakaianKonsinyasi']);
-    Route::get('/penyedia', [KonsinyasiController::class, 'getPenyedia']);
+    // Route::get('/list-pemakaian-konsinyasi', [KonsinyasiController::class, 'getListPemakaianKonsinyasi']);
+    Route::get('/list-pemakaian-konsinyasi', [KonsinyasiController::class, 'newGetListPemakaianKonsinyasi']);
+    Route::get('/penyedia', [KonsinyasiController::class, 'newGetPenyedia']);
+    // Route::get('/penyedia', [KonsinyasiController::class, 'getPenyedia']);
     //pemfakturan
     Route::get('/list-belum-faktur', [PemfakturanController::class, 'getPenerimaanBelumAdaFaktur']);
     Route::post('/simpan', [PemfakturanController::class, 'simpan']);
