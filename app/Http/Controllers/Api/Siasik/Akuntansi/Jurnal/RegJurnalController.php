@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Api\Siasik\Akuntansi\Jurnal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\TransaksiLS\NpkLS_heder;
+use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
+use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,7 +24,14 @@ class RegJurnalController extends Controller
             'serahterima_heder.tgltrans',
             'serahterima_heder.kegiatanblud',
             'serahterima_heder.nopencairan',
-        )->where('nopencairan', '=', '')
+        )
+        ->when(request('q'),function ($query) {
+            $query
+            ->where('noserahterimapekerjaan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('tgltrans', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('nokontrak', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
+        })
         ->where('kunci', '!=', '')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->with(['rinci'=>function($rinci){
@@ -29,19 +40,118 @@ class RegJurnalController extends Controller
                         'serahterima50.uraianrek50',
                         'serahterima50.itembelanja',
                         'serahterima50.nominalpembayaran')
+                        ->when(request('q'),function ($query) {
+                            $query
+                            ->where('nominalpembayaran', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('koderek50', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('uraianrek50', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('itembelanja', 'LIKE', '%' . request('q') . '%');
+                        })
                         ->with('jurnal', function($jurnal){
                             $jurnal->select('akun_jurnal.kodeall2',
                                     'akun_jurnal.kode_lra',
                                     'akun_jurnal.uraian_lra',
                                     'akun_jurnal.kode_lo',
                                     'akun_jurnal.uraian_lo',
+                                    'akun_jurnal.kode_neraca1',
+                                    'akun_jurnal.uraian_neraca1',
                                     'akun_jurnal.kode_neraca2',
-                                    'akun_jurnal.uraian_neraca2');
+                                    'akun_jurnal.uraian_neraca2')
+                                    ->when(request('q'),function ($query) {
+                                        $query
+                                        ->where('kode_lra', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('uraian_lra', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('kode_lo', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('uraian_lo', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('kode_neraca2', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('kode_neraca2', 'LIKE', '%' . request('q') . '%');
+                                    });
                         });
                 // ->selectRaw('sum(nominalpembayaran) as total');
         }])
         ->orderBy('tgltrans', 'desc')
         ->get();
-        return new JsonResponse($stp);
+
+        $bastfarmasi=PenerimaanHeder::select('penerimaan_h.nobast',
+                                            'penerimaan_h.tgl_bast',
+                                            'penerimaan_h.jenis_penerimaan',
+                                            'penerimaan_h.kdpbf',
+                                            'penerimaan_h.no_npd',)
+
+        ->where('nobast', '!=', '')
+        // ->where('no_npd', '=', '')
+        // ->whereNotNull('tgl_bast')
+        ->whereIn('jenis_penerimaan', ['Pesanan'])
+        ->when(request('q'),function ($query) {
+            $query->where('nobast', 'LIKE', '%' . request('q') . '%');
+        })
+        ->with('rincianbast', function($rinci) use ($tahun) {
+            $rinci->select('bast_r.nobast',
+                            'bast_r.nopenerimaan',
+                            'bast_r.kdobat',
+                            'bast_r.harga_net',
+                            'bast_r.jumlah',
+                            'bast_r.subtotal'
+                            // DB::raw('(harga_net * jumlah) as totalobat')
+                            )
+                    ->with('masterobat',function ($rekening) use ($tahun){
+                        $rekening->select('new_masterobat.kd_obat',
+                                        'new_masterobat.kode50',
+                                        'new_masterobat.uraian50',
+                                        'new_masterobat.kode108',
+                                        'new_masterobat.uraian108')
+                            ->with('jurnal');
+                    });
+        })
+        // ->orderBy('tgl_bast', 'DESC')
+        ->whereBetween('tgl_bast', [$awal, $akhir])
+        ->orderBy('nobast', 'asc')
+        ->groupBy('nobast')
+        ->get();
+
+        // $cairnonstp=NpkLS_heder::select('nonpk','tglpindahbuku')
+        // ->with('npdls', function ($npd){
+        //     $npd->select('nonpk','nonpdls','serahterimapekerjaan','kegiatanblud','nopencairan')
+        //     ->where('nopencairan', '!=', '');
+        //     if('serahterimapekerjaan' !== '1'){
+        //         $npd->with('npdlsrinci', function($x){
+        //             $x->select('nonpdls','koderek50','nominalpembayaran')
+        //             ->with('mapjurnal',function($sel){
+        //                 $sel->select('kodeall',
+        //                         'kode50',
+        //                         'kode_bastcair1',
+        //                         'uraian_bastcair1',
+        //                         'kode_bastcairx',
+        //                         'uraian_bastcairx',
+        //                         'kode_bastcair2',
+        //                         'uraian_bastcair2',);
+        //             });
+        //         });
+        //     }else{
+        //         $npd->with('npdlsrinci', function($x){
+        //             $x->select('nonpdls','koderek50','nominalpembayaran')
+        //             ->with('mapjurnal',function($sel){
+        //                 $sel->select('kodeall',
+        //                         'kode50',
+        //                         'kode_cair1',
+        //                         'uraian_cair1',
+        //                         'kode_cairx',
+        //                         'uraian_cairx',
+        //                         'kode_cair2',
+        //                         'uraian_cair2',);
+        //             });
+        //         });
+        //     }
+        // })
+        // ->whereBetween('tglpindahbuku', [$awal, $akhir])
+        // ->get();
+
+        $regjurnal = [
+            'stp' => $stp,
+            'bastfarmasi' => $bastfarmasi,
+            // 'pencairan' => $cairnonstp,
+
+        ];
+        return new JsonResponse($regjurnal);
     }
 }

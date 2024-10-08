@@ -17,4 +17,8 @@ class NpkLS_heder extends Model
     {
         return $this->hasMany(NpkLS_rinci::class, 'nonpk', 'nonpk');
     }
+    public function npdls()
+    {
+        return $this->hasMany(NpdLS_heder::class, 'nonpk', 'nonpk');
+    }
 }
