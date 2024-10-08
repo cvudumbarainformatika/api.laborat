@@ -48,23 +48,21 @@ class RegJurnalController extends Controller
                             ->orWhere('itembelanja', 'LIKE', '%' . request('q') . '%');
                         })
                         ->with('jurnal', function($jurnal){
-                            $jurnal->select('akun_jurnal.kodeall2',
-                                    'akun_jurnal.kode_lra',
-                                    'akun_jurnal.uraian_lra',
-                                    'akun_jurnal.kode_lo',
-                                    'akun_jurnal.uraian_lo',
-                                    'akun_jurnal.kode_neraca1',
-                                    'akun_jurnal.uraian_neraca1',
-                                    'akun_jurnal.kode_neraca2',
-                                    'akun_jurnal.uraian_neraca2')
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                                    'akun_mapjurnal.kode50',
+                                    'akun_mapjurnal.uraian50',
+                                    'akun_mapjurnal.kode_bast',
+                                    'akun_mapjurnal.uraian_bast',
+                                    'akun_mapjurnal.kode_bastx',
+                                    'akun_mapjurnal.uraian_bastx',)
                                     ->when(request('q'),function ($query) {
                                         $query
-                                        ->where('kode_lra', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('uraian_lra', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('kode_lo', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('uraian_lo', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('kode_neraca2', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('kode_neraca2', 'LIKE', '%' . request('q') . '%');
+                                        ->where('kode50', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('uraian50', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('kode_bast', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('uraian_bast', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('kode_bastx', 'LIKE', '%' . request('q') . '%')
+                                        ->orWhere('uraian_bastx', 'LIKE', '%' . request('q') . '%');
                                     });
                         });
                 // ->selectRaw('sum(nominalpembayaran) as total');
@@ -109,47 +107,51 @@ class RegJurnalController extends Controller
         ->groupBy('nobast')
         ->get();
 
-        // $cairnonstp=NpkLS_heder::select('nonpk','tglpindahbuku')
-        // ->with('npdls', function ($npd){
-        //     $npd->select('nonpk','nonpdls','serahterimapekerjaan','kegiatanblud','nopencairan')
-        //     ->where('nopencairan', '!=', '');
-        //     if('serahterimapekerjaan' !== '1'){
-        //         $npd->with('npdlsrinci', function($x){
-        //             $x->select('nonpdls','koderek50','nominalpembayaran')
-        //             ->with('mapjurnal',function($sel){
-        //                 $sel->select('kodeall',
-        //                         'kode50',
-        //                         'kode_bastcair1',
-        //                         'uraian_bastcair1',
-        //                         'kode_bastcairx',
-        //                         'uraian_bastcairx',
-        //                         'kode_bastcair2',
-        //                         'uraian_bastcair2',);
-        //             });
-        //         });
-        //     }else{
-        //         $npd->with('npdlsrinci', function($x){
-        //             $x->select('nonpdls','koderek50','nominalpembayaran')
-        //             ->with('mapjurnal',function($sel){
-        //                 $sel->select('kodeall',
-        //                         'kode50',
-        //                         'kode_cair1',
-        //                         'uraian_cair1',
-        //                         'kode_cairx',
-        //                         'uraian_cairx',
-        //                         'kode_cair2',
-        //                         'uraian_cair2',);
-        //             });
-        //         });
-        //     }
-        // })
-        // ->whereBetween('tglpindahbuku', [$awal, $akhir])
-        // ->get();
+        $cairnonstp=NpkLS_heder::select('nonpk','tglpindahbuku')
+        ->with('npdls', function ($npd){
+            $npd->select('nonpk',
+                        'nonpdls',
+                        'serahterimapekerjaan',
+                        'kegiatanblud',
+                        'nopencairan')
+            ->where('nopencairan', '!=', '');
+            // if('serahterimapekerjaan' !== '1'){
+            //     $npd->with('npdlsrinci', function($x){
+            //         $x->select('nonpdls','koderek50','nominalpembayaran')
+            //         ->with('mapjurnal',function($sel){
+            //             $sel->select('kodeall',
+            //                     'kode50',
+            //                     'kode_bastcair1',
+            //                     'uraian_bastcair1',
+            //                     'kode_bastcairx',
+            //                     'uraian_bastcairx',
+            //                     'kode_bastcair2',
+            //                     'uraian_bastcair2',);
+            //         });
+            //     });
+            // }else{
+            //     $npd->with('npdlsrinci', function($x){
+            //         $x->select('nonpdls','koderek50','nominalpembayaran')
+            //         ->with('mapjurnal',function($sel){
+            //             $sel->select('kodeall',
+            //                     'kode50',
+            //                     'kode_cair1',
+            //                     'uraian_cair1',
+            //                     'kode_cairx',
+            //                     'uraian_cairx',
+            //                     'kode_cair2',
+            //                     'uraian_cair2',);
+            //         });
+            //     });
+            // }
+        })
+        ->whereBetween('tglpindahbuku', [$awal, $akhir])
+        ->get();
 
         $regjurnal = [
             'stp' => $stp,
             'bastfarmasi' => $bastfarmasi,
-            // 'pencairan' => $cairnonstp,
+            'pencairan' => $cairnonstp,
 
         ];
         return new JsonResponse($regjurnal);
