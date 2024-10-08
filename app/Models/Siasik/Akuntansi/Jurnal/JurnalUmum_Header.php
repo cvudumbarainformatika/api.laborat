@@ -12,4 +12,10 @@ class JurnalUmum_Header extends Model
     protected $guarded = ['id'];
     protected $table = 'jurnalumum_heder';
     public $timestamps = false;
+
+    public function rincianjurnalumum()
+    {
+        return $this->hasMany(JurnalUmum_Rinci::class, 'nobukti', 'nobukti');
+    }
+
 }

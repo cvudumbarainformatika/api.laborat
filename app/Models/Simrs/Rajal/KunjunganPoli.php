@@ -55,6 +55,7 @@ use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use App\Models\Simrs\Sharing\SharingTrans;
@@ -387,5 +388,9 @@ class KunjunganPoli extends Model
     public function doktersimpeg()
     {
         return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
+    }
+    public function penilaiananamnesis()
+    {
+        return $this->hasMany(Penilaian::class, 'rs1', 'rs1');
     }
 }
