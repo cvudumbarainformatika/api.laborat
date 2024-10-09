@@ -25,6 +25,7 @@ class TindakanController extends Controller
             'rs30.rs2 as tindakan',
             'rs30.rs8 as sarana',
             'rs30.rs9 as pelayanan',
+            'rs30.rs51 as flaghari',
             DB::raw('rs30.rs8 + rs30.rs9 as tarif'),
             'prosedur_mapping.icd9',
             'rs30.rs4 as kdpoli'
@@ -195,6 +196,106 @@ class TindakanController extends Controller
             ->orWhere('rs1', 'Like', '%' . request('tindakan') . '%')
             ->get();
         return new JsonResponse($dialogoperasi);
+    }
+
+
+    public function getTindakanRanap()
+    {
+       $data = Tindakan::select(
+           'id','rs1',
+           'rs1 as noreg',
+           'rs2 as nota',
+           'rs3 as tglinput',
+
+           'rs4 as kdtindakan',
+           'rs6 as hargasarana',
+           'rs7 as hargasarana',
+           'rs8 as pelaksanaSatu',
+           'rs9 as kddpjp',
+           'rs13 as hargapelayanan',
+           'rs14 as hargapelayanan',
+           'rs20 as keterangan',
+           'rs22 as kdruangan',
+           'rs23 as pelaksanaDua',
+           'rs24 as kdsistembayar',
+       )
+       ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
+       ->where('rs1', request('noreg'))
+           ->get();
+
+        return new JsonResponse($data);
+    }
+
+    public function simpantindakanranap(Request $request)
+    {
+        DB::select('call nota_tindakan(@nomor)');
+        $x = DB::table('rs1')->select('rs14')->get();
+        $wew = $x[0]->rs14;
+        if ($request->kdpoli === 'POL014') {
+            $notatindakan = FormatingHelper::notatindakan($wew, 'T-IG');
+        } else {
+            $notatindakan = FormatingHelper::notatindakan($wew, 'T-RI');
+        }
+
+
+        $wew = FormatingHelper::session_user();
+        $kdpegsimrs = $wew['kodesimrs'];
+
+        // $pelaksanaSatu  = $request->pelaksanaSatu
+
+        $simpantindakan = Tindakan::firstOrNew(
+            [
+                // 'rs8' => $request->kodedokter,
+                'rs2' => $request->nota ?? $notatindakan,
+                'rs1' => $request->noreg,
+                'rs4' => $request->kdtindakan
+            ],
+            [
+                'rs3' => date('Y-m-d H:i:s'),
+                'rs4' => $request->kdtindakan ?? '',
+                // 'rs5' => $request->jmltindakan,
+                'rs6' => $request->hargasarana ?? '',
+                'rs7' => $request->hargasarana,
+                'rs8' => $request->pelaksanaSatu ?? '',
+                'rs9' => $request->kddpjp ?? '', // iki dokter dpjp
+                'rs13' => $request->hargapelayanan ?? '',
+                'rs14' => $request->hargapelayanan ?? '',
+                // 'rs15' => $request->noreg,
+                'rs20' => $request->keterangan ?? '',
+                'rs22' => $request->kdpoli ?? '',
+                'rs23' => $request->pelaksanaDua,
+
+                'rs24' => $request->kdsistembayar,
+            ]
+        );
+
+        TindakanSambung::updateOrCreate(
+            ['nota' => $request->nota ?? $notatindakan, 'noreg' => $request->noreg, 'kd_tindakan' => $request->kdtindakan],
+            ['ket' => $request->keterangan, 'rs73_id' => $simpantindakan->id]
+        );
+
+
+        if (!$simpantindakan) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
+
+        $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
+        $simpantindakan->save();
+
+        $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+
+        // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+
+        $simpantindakan->load('mastertindakan:rs1,rs2');
+        return new JsonResponse(
+            [
+                'message' => 'Tindakan Berhasil Disimpan.',
+                'result' => $simpantindakan,
+                'nota' => $nota
+            ],
+            200
+        );
     }
 
     //public static function

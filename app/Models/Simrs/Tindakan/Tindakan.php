@@ -59,7 +59,7 @@ class Tindakan extends Model
     }
     public function pegawai()
     {
-        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'rs9');
     }
     public function petugas()
     {

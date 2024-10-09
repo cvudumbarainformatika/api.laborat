@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\PegawaiResource;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PegawaiController extends Controller
 {
@@ -51,6 +53,23 @@ class PegawaiController extends Controller
         // return response()->json([
         //     'data' => $data
         // ]);
+    }
+
+
+    public function allNakes()
+    {
+        
+        $data = Cache::remember('allnakes', now()->addMinutes(30), function () {
+            $nakes = ['1','2','3'];
+            return Petugas::select('id', 'nik', 'nip', 'nama', 'jabatan', 'kdpegsimrs', 'aktif','kddpjp','kdgroupnakes')
+            ->where('aktif', 'AKTIF')
+            ->whereIn('kdgroupnakes', $nakes)
+            ->get();
+        });
+
+    //    $data = Petugas::select('id', 'nik', 'nip', 'nama', 'jabatan', 'kdpegsimrs', 'aktif')
+    //         ->where('aktif', 'AKTIF')->get();
+        return new JsonResponse($data);
     }
     //------route public end -----
 }

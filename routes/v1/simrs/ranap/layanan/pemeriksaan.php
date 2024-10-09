@@ -14,4 +14,5 @@ Route::group([
 
     Route::get('/penilaian', [PemeriksaanPenilaianController::class, 'list']);
     Route::post('/penilaian/simpan', [PemeriksaanPenilaianController::class, 'simpan']);
+    
 });

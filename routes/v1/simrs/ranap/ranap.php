@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Logistik\Sigarang\PegawaiController;
 use App\Http\Controllers\Api\Logistik\Sigarang\RuangController;
 use App\Http\Controllers\Api\Simrs\Master\Icd9Controller;
 use App\Http\Controllers\Api\Simrs\Ranap\RanapController;
@@ -13,6 +14,7 @@ Route::group([
 ], function () {
     Route::get('/listruanganranap', [RuanganController::class, 'listruanganranap']);
     Route::get('/mastericd9', [Icd9Controller::class, 'mastericd9']);
+    Route::get('/allNakes', [PegawaiController::class, 'allNakes']);
 
     Route::get('/kunjunganpasien', [RanapController::class, 'kunjunganpasien']);
     Route::get('/listjeniskasus', [RanapController::class, 'listjeniskasus']);

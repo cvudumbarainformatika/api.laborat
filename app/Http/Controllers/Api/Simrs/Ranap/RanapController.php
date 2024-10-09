@@ -73,6 +73,7 @@ class RanapController extends Controller
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
             'rs24.rs5 as group_ruangan',
+            'rs24.rs4 as kdgroup_ruangan',
             'rs23_meta.kd_jeniskasus',
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
