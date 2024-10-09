@@ -13,5 +13,7 @@ Route::group([
 
     Route::get('/permen50', [JurnalManualController::class, 'permen50']);
     Route::get('/jurnalumumotot', [JurnalManualController::class, 'jurnalumumotot']);
+    Route::get('/getrincian', [JurnalManualController::class, 'getrincian']);
 
+    Route::post('/simpanjurnalmanual',[JurnalManualController::class, 'simpanjurnalmanual']);
 });
