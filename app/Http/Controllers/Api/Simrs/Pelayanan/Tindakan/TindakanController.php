@@ -119,9 +119,11 @@ class TindakanController extends Controller
         $hapus = $cari->delete();
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
+        TindakanSambung::where('rs73_id', $request->id)->delete();
         EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
@@ -199,30 +201,37 @@ class TindakanController extends Controller
     }
 
 
+    public static function dataTindakanByNoreg($noreg)
+    {
+        $data = Tindakan::select(
+            'id','rs1','rs4',
+            'rs1 as noreg',
+            'rs2 as nota',
+            'rs3 as tglinput',
+ 
+            'rs4 as kdtindakan',
+            'rs5',
+            'rs6 as hargasarana',
+            'rs7 as hargasarana',
+            'rs8 as pelaksanaSatu',
+            'rs9 as kddpjp',
+            'rs13 as hargapelayanan',
+            'rs14 as hargapelayanan',
+            'rs20 as keterangan',
+            'rs22 as kdruangan',
+            'rs23 as pelaksanaDua',
+            'rs24 as kdsistembayar',
+        )
+        ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
+        ->where('rs1', $noreg)->get();
+
+        return $data;
+    }
+
     public function getTindakanRanap()
     {
-       $data = Tindakan::select(
-           'id','rs1',
-           'rs1 as noreg',
-           'rs2 as nota',
-           'rs3 as tglinput',
-
-           'rs4 as kdtindakan',
-           'rs6 as hargasarana',
-           'rs7 as hargasarana',
-           'rs8 as pelaksanaSatu',
-           'rs9 as kddpjp',
-           'rs13 as hargapelayanan',
-           'rs14 as hargapelayanan',
-           'rs20 as keterangan',
-           'rs22 as kdruangan',
-           'rs23 as pelaksanaDua',
-           'rs24 as kdsistembayar',
-       )
-       ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
-       ->where('rs1', request('noreg'))
-           ->get();
-
+       
+        $data = self::dataTindakanByNoreg(request('noreg'));
         return new JsonResponse($data);
     }
 
@@ -243,7 +252,7 @@ class TindakanController extends Controller
 
         // $pelaksanaSatu  = $request->pelaksanaSatu
 
-        $simpantindakan = Tindakan::firstOrNew(
+        $tindakan = Tindakan::firstOrNew(
             [
                 // 'rs8' => $request->kodedokter,
                 'rs2' => $request->nota ?? $notatindakan,
@@ -269,29 +278,36 @@ class TindakanController extends Controller
             ]
         );
 
-        TindakanSambung::updateOrCreate(
-            ['nota' => $request->nota ?? $notatindakan, 'noreg' => $request->noreg, 'kd_tindakan' => $request->kdtindakan],
-            ['ket' => $request->keterangan, 'rs73_id' => $simpantindakan->id]
-        );
-
-
-        if (!$simpantindakan) {
+        if (!$tindakan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
         }
 
-        $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
-        $simpantindakan->save();
+        $idTindakan = $tindakan->id;
+
+        $tindakan->sambungan()->updateOrCreate(
+            ['rs73_id' => $idTindakan],
+            [
+                'nota' => $tindakan->rs2, 'noreg' => $request->noreg, 
+                'kd_tindakan' => $request->kdtindakan,
+                'ket' => $request->keterangan,
+                'rs73_id' => $idTindakan
+            ],  
+            // ['ket' => $request->keterangan]
+        );
+
+        $tindakan->rs5 = (int)$tindakan->rs5 + (int)$request->jmltindakan;
+        $tindakan->save();
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
         // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
-        $simpantindakan->load('mastertindakan:rs1,rs2');
+        $tindakan->load('mastertindakan:rs1,rs2,rs4');
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
-                'result' => $simpantindakan,
+                'result' => $tindakan,
                 'nota' => $nota
             ],
             200
