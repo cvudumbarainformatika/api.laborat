@@ -9,5 +9,5 @@ Route::group([
     'prefix' => 'simrs/ranap/layanan/tindakan'
 ], function () {
     Route::post('/simpantindakanranap', [TindakanController::class, 'simpantindakanranap']);
-    Route::get('/listtindakanranap', [TindakanController::class, 'getTindakanRanap']);
+    Route::get('/listtindakanranap', [TindakanController::class, 'getTindakanRanap']); // fixed
 });
