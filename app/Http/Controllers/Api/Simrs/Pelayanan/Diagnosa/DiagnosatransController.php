@@ -75,6 +75,7 @@ class DiagnosatransController extends Controller
             200
         );
     }
+    
 
     public function hapusdiagnosa(Request $request)
     {
@@ -88,5 +89,15 @@ class DiagnosatransController extends Controller
         }
         $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
+
+    public function getDiagnosaByNoreg()
+    {
+       $noreg=request('noreg');
+
+       $data = Diagnosa::where('rs1', $noreg)->with('masterdiagnosa')->get();
+
+       return new JsonResponse($data);
+
     }
 }

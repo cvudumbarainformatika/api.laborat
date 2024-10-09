@@ -186,7 +186,26 @@ class DistribusigudangController extends Controller
             $masuk = $jmldiminta;
             while ($masuk > 0) {
                 $sisa = $caristok[$index]->jumlah;
-                if ($sisa < $masuk) {
+                if ($sisa >= $masuk) {
+                    $sisax = $sisa - $masuk;
+
+                    $mutasi = Mutasigudangkedepo::create(
+                        [
+                            'no_permintaan' => $request->nopermintaan,
+                            'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                            'kd_obat' => $caristok[$index]->kdobat,
+                            'nobatch' => $caristok[$index]->nobatch,
+                            'jml' => $masuk,
+                            'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                            'harga' => $caristok[$index]->harga ?? 0,
+                            'tglexp' => $caristok[$index]->tglexp,
+                        ]
+                    );
+
+                    Stokreal::where('id', $caristok[$index]->id)
+                        ->update(['jumlah' => $sisax]);
+                    $masuk = 0;
+                } else {
                     $sisax = $masuk - $sisa;
 
                     $mutasi = Mutasigudangkedepo::create(
@@ -196,7 +215,6 @@ class DistribusigudangController extends Controller
                             'kd_obat' => $caristok[$index]->kdobat,
                             'nobatch' => $caristok[$index]->nobatch,
                             'jml' => $sisa,
-
                             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
                             'harga' => $caristok[$index]->harga ?? 0,
                             'tglexp' => $caristok[$index]->tglexp,
@@ -208,28 +226,49 @@ class DistribusigudangController extends Controller
 
                     $masuk = $sisax;
                     $index = $index + 1;
-                    //return $jmldiminta;
-                } else {
-                    $sisax = $sisa - $masuk;
-
-                    $mutasi = Mutasigudangkedepo::create(
-                        [
-                            'no_permintaan' => $request->nopermintaan,
-                            'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                            'kd_obat' => $caristok[$index]->kdobat,
-                            'nobatch' => $caristok[$index]->nobatch,
-                            'jml' => $masuk,
-
-                            'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                            'harga' => $caristok[$index]->harga ?? 0,
-                            'tglexp' => $caristok[$index]->tglexp,
-                        ]
-                    );
-
-                    Stokreal::where('id', $caristok[$index]->id)
-                        ->update(['jumlah' => $sisax]);
-                    $masuk = 0;
                 }
+                // if ($sisa < $masuk) {
+                //     $sisax = $masuk - $sisa;
+
+                //     $mutasi = Mutasigudangkedepo::create(
+                //         [
+                //             'no_permintaan' => $request->nopermintaan,
+                //             'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                //             'kd_obat' => $caristok[$index]->kdobat,
+                //             'nobatch' => $caristok[$index]->nobatch,
+                //             'jml' => $sisa,
+                //             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                //             'harga' => $caristok[$index]->harga ?? 0,
+                //             'tglexp' => $caristok[$index]->tglexp,
+                //         ]
+                //     );
+                //     Stokreal::where('id', $caristok[$index]->id)
+                //         ->update(['jumlah' => 0]);
+
+
+                //     $masuk = $sisax;
+                //     $index = $index + 1;
+                // } else {
+                //     $sisax = $sisa - $masuk;
+
+                //     $mutasi = Mutasigudangkedepo::create(
+                //         [
+                //             'no_permintaan' => $request->nopermintaan,
+                //             'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                //             'kd_obat' => $caristok[$index]->kdobat,
+                //             'nobatch' => $caristok[$index]->nobatch,
+                //             'jml' => $masuk,
+
+                //             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
+                //             'harga' => $caristok[$index]->harga ?? 0,
+                //             'tglexp' => $caristok[$index]->tglexp,
+                //         ]
+                //     );
+
+                //     Stokreal::where('id', $caristok[$index]->id)
+                //         ->update(['jumlah' => $sisax]);
+                //     $masuk = 0;
+                // }
             }
             $user = FormatingHelper::session_user();
             $rinciPer = Permintaandeporinci::where('no_permintaan', $request->nopermintaan)

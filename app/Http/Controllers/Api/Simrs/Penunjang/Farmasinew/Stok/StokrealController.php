@@ -556,6 +556,7 @@ class StokrealController extends Controller
 
         $permintaan = Permintaandeporinci::select(
             'permintaan_h.tgl_permintaan as tgl',
+            'permintaan_h.no_permintaan',
             'permintaan_h.flag',
             'permintaan_h.dari',
             'permintaan_r.kdobat',
