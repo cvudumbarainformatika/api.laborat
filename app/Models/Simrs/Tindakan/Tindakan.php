@@ -15,7 +15,8 @@ class Tindakan extends Model
 {
     use HasFactory;
     protected $table = 'rs73';
-    protected $guarded = [''];
+    protected $guarded = ['id'];
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected $appends = ['subtotal'];
 
@@ -59,7 +60,7 @@ class Tindakan extends Model
     }
     public function pegawai()
     {
-        return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'rs9');
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'rs9');
     }
     public function petugas()
     {

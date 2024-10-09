@@ -140,7 +140,7 @@ class IgdController extends Controller
                 'rs251.rs7 as jalannafas','rs251.rs9 as pernapasan','rs251.rs19 as sirkulasi','rs251.rs20 as disability'
                 )->leftjoin('rs251','rs250.rs1','rs251.rs1');
             },
-            // 'gambars',
+            'penilaiananamnesis',
             // 'fisio',
             // 'laporantindakan',
             // 'psikiatri',

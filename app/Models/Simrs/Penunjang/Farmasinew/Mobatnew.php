@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew;
 
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Master\Akun_jurnal;
+use App\Models\Siasik\Master\Akun_mapjurnal;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandeporinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
@@ -258,6 +259,6 @@ class Mobatnew extends Model
     }
     public function jurnal()
     {
-        return $this->hasOne(Akun_jurnal::class, 'kodeall2', 'kode50');
+        return $this->hasOne(Akun_mapjurnal::class, 'kodeall', 'kode50');
     }
 }

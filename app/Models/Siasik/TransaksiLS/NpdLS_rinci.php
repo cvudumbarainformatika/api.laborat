@@ -4,6 +4,7 @@ namespace App\Models\Siasik\TransaksiLS;
 
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
+use App\Models\Siasik\Master\Akun_mapjurnal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,5 +28,9 @@ class NpdLS_rinci extends Model
     public function headerls()
     {
         return $this->belongsTo(NpdLS_heder::class, 'nonpdls', 'nonpdls');
+    }
+    public function mapjurnal()
+    {
+        return $this->belongsTo(Akun_mapjurnal::class, 'koderek50', 'kodeall');
     }
 }
