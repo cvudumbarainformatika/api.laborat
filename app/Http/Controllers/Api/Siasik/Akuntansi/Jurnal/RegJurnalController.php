@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Siasik\Akuntansi\Jurnal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
@@ -10,6 +11,9 @@ use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+use function PHPUnit\Framework\returnValue;
 
 class RegJurnalController extends Controller
 {
@@ -107,51 +111,66 @@ class RegJurnalController extends Controller
         ->groupBy('nobast')
         ->get();
 
-        $cairnonstp=NpkLS_heder::select('nonpk','tglpindahbuku')
-        ->with('npdls', function ($npd){
-            $npd->select('nonpk',
-                        'nonpdls',
-                        'serahterimapekerjaan',
-                        'kegiatanblud',
-                        'nopencairan')
-            ->where('nopencairan', '!=', '');
-            // if('serahterimapekerjaan' !== '1'){
-            //     $npd->with('npdlsrinci', function($x){
-            //         $x->select('nonpdls','koderek50','nominalpembayaran')
-            //         ->with('mapjurnal',function($sel){
-            //             $sel->select('kodeall',
-            //                     'kode50',
-            //                     'kode_bastcair1',
-            //                     'uraian_bastcair1',
-            //                     'kode_bastcairx',
-            //                     'uraian_bastcairx',
-            //                     'kode_bastcair2',
-            //                     'uraian_bastcair2',);
-            //         });
-            //     });
-            // }else{
-            //     $npd->with('npdlsrinci', function($x){
-            //         $x->select('nonpdls','koderek50','nominalpembayaran')
-            //         ->with('mapjurnal',function($sel){
-            //             $sel->select('kodeall',
-            //                     'kode50',
-            //                     'kode_cair1',
-            //                     'uraian_cair1',
-            //                     'kode_cairx',
-            //                     'uraian_cairx',
-            //                     'kode_cair2',
-            //                     'uraian_cair2',);
-            //         });
-            //     });
-            // }
-        })
-        ->whereBetween('tglpindahbuku', [$awal, $akhir])
+        $cairstp=NpkLS_heder::select('npdls_heder.nonpk',
+                'npdls_heder.nonpdls',
+                'npdls_heder.serahterimapekerjaan',
+                'npdls_heder.kegiatanblud',
+                'npdls_heder.nopencairan',
+                'npdls_rinci.nonpdls',
+                'npdls_rinci.koderek50',
+                'npdls_rinci.nominalpembayaran',
+                'npkls_heder.tglpindahbuku',
+                'akun_mapjurnal.kode50',
+                'akun_mapjurnal.kode_bastcair1',
+                'akun_mapjurnal.uraian_bastcair1',
+                'akun_mapjurnal.kode_bastcairx',
+                'akun_mapjurnal.uraian_bastcairx',
+                'akun_mapjurnal.kode_bastcair2',
+                'akun_mapjurnal.uraian_bastcair2',
+                DB::raw('sum(npdls_rinci.nominalpembayaran) as total'))
+        ->groupBy('npdls_rinci.koderek50','npdls_rinci.nonpdls')
+        ->join('npdls_heder', 'npdls_heder.nonpk', '=','npkls_heder.nonpk')
+        ->join('npdls_rinci', 'npdls_rinci.nonpdls', '=','npdls_heder.nonpdls')
+        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','npdls_rinci.koderek50')
+        ->where('npdls_heder.nopencairan', '!=', '')
+        ->whereIn('npdls_heder.serahterimapekerjaan',['1', '3'])
+        ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
+        ->orderBy('npkls_heder.tglpindahbuku', 'asc')
         ->get();
+
+        $cairnostp=NpkLS_heder::select('npdls_heder.nonpk',
+                    'npdls_heder.nonpdls',
+                    'npdls_heder.serahterimapekerjaan',
+                    'npdls_heder.kegiatanblud',
+                    'npdls_heder.nopencairan',
+                    'npdls_rinci.nonpdls',
+                    'npdls_rinci.koderek50',
+                    'npdls_rinci.nominalpembayaran',
+                    'npkls_heder.tglpindahbuku',
+                    'akun_mapjurnal.kode50',
+                    'akun_mapjurnal.kode_cair1',
+                    'akun_mapjurnal.uraian_cair1',
+                    'akun_mapjurnal.kode_cairx',
+                    'akun_mapjurnal.uraian_cairx',
+                    'akun_mapjurnal.kode_cair2',
+                    'akun_mapjurnal.uraian_cair2',
+                    DB::raw('sum(npdls_rinci.nominalpembayaran) as total'))
+        ->groupBy('npdls_rinci.koderek50','npdls_rinci.nonpdls')
+        ->join('npdls_heder', 'npdls_heder.nonpk', '=','npkls_heder.nonpk')
+        ->join('npdls_rinci', 'npdls_rinci.nonpdls', '=','npdls_heder.nonpdls')
+        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','npdls_rinci.koderek50')
+        ->where('npdls_heder.nopencairan', '!=', '')
+        ->whereIn('npdls_heder.serahterimapekerjaan',['2'])
+        ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
+        ->orderBy('npkls_heder.tglpindahbuku', 'asc')
+        ->get();
+
 
         $regjurnal = [
             'stp' => $stp,
             'bastfarmasi' => $bastfarmasi,
-            'pencairan' => $cairnonstp,
+            'cair_stp' => $cairstp,
+            'cair_nostp' => $cairnostp,
 
         ];
         return new JsonResponse($regjurnal);

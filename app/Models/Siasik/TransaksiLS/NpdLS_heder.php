@@ -13,14 +13,14 @@ class NpdLS_heder extends Model
     protected $guarded = ['id'];
     protected $table = 'npdls_heder';
     public $timestamps = false;
-    protected $appends = ['nip'];
+    // protected $appends = ['nip'];
 
-    public function getNipAttribute()
-    {
-        $string = $this->kodepptk;
-        $newstring = str_replace(' ', '', $string);
-        return $newstring;
-    }
+    // public function getNipAttribute()
+    // {
+    //     $string = $this->kodepptk;
+    //     $newstring = str_replace(' ', '', $string);
+    //     return $newstring;
+    // }
     public function npdlsrinci()
     {
         return $this->hasMany(NpdLS_rinci::class, 'nonpdls', 'nonpdls');
