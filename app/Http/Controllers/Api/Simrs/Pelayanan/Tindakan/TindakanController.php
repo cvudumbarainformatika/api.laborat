@@ -55,44 +55,69 @@ class TindakanController extends Controller
 
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
-        $simpantindakan = Tindakan::firstOrNew(
-            [
-                // 'rs8' => $request->kodedokter,
-                'rs2' => $request->nota ?? $notatindakan,
-                'rs1' => $request->noreg,
-                'rs4' => $request->kdtindakan
-            ],
-            [
-                // 'rs1' => $request->noreg,
-                // 'rs2' => $request->nota ?? $notatindakan,
-                'rs3' => date('Y-m-d H:i:s'),
-                'rs4' => $request->kdtindakan,
-                // 'rs5' => $request->jmltindakan,
-                'rs6' => $request->hargasarana,
-                'rs7' => $request->hargasarana,
-                'rs8' => $request->kodedokter,
-                'rs9' => $kdpegsimrs, //auth()->user()->pegawai_id,
-                'rs13' => $request->hargapelayanan,
-                'rs14' => $request->hargapelayanan,
-                // 'rs15' => $request->noreg,
-                'rs20' => $request->keterangan ?? '',
-                'rs22' => $request->kdpoli,
-                'rs24' => $request->kdsistembayar,
-            ]
-        );
+        // $simpantindakan = Tindakan::firstOrNew(
+        //     [
+        //         // 'rs8' => $request->kodedokter,
+        //         'rs2' => $request->nota ?? $notatindakan,
+        //         'rs1' => $request->noreg,
+        //         'rs4' => $request->kdtindakan
+        //     ],
+        //     [
+        //         // 'rs1' => $request->noreg,
+        //         // 'rs2' => $request->nota ?? $notatindakan,
+        //         'rs3' => date('Y-m-d H:i:s'),
+        //         'rs4' => $request->kdtindakan,
+        //         // 'rs5' => $request->jmltindakan,
+        //         'rs6' => $request->hargasarana,
+        //         'rs7' => $request->hargasarana,
+        //         'rs8' => $request->kodedokter,
+        //         'rs9' => $kdpegsimrs, //auth()->user()->pegawai_id,
+        //         'rs13' => $request->hargapelayanan,
+        //         'rs14' => $request->hargapelayanan,
+        //         // 'rs15' => $request->noreg,
+        //         'rs20' => $request->keterangan ?? '',
+        //         'rs22' => $request->kdpoli,
+        //         'rs24' => $request->kdsistembayar,
+        //     ]
+        // );
+
+        $nota = $request->nota ?? $notatindakan;
+
+        $simpantindakan = Tindakan::where(['rs1' => $request->noreg, 'rs4' => $request->kdtindakan, 'rs2' => $nota])->first();
+        if (!$simpantindakan) {
+            $simpantindakan = new Tindakan();
+            $simpantindakan->rs5 = $request->jmltindakan ?? '';
+        } else {
+            $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
+        }
+
+        $simpantindakan->rs2 = $nota;
+        $simpantindakan->rs1 = $request->noreg ?? '';
+        $simpantindakan->rs3 = date('Y-m-d H:i:s');
+        $simpantindakan->rs4 = $request->kdtindakan ?? '';
+        $simpantindakan->rs6 = $request->hargasarana ?? '';
+        $simpantindakan->rs7 = $request->hargasarana ?? '';
+        $simpantindakan->rs8 = $request->kodedokter ?? '';
+        $simpantindakan->rs9 = $kdpegsimrs ?? '';
+        $simpantindakan->rs13 = $request->hargapelayanan ?? '';
+        $simpantindakan->rs14 = $request->hargapelayanan ?? '';
+        $simpantindakan->rs20 = $request->keterangan ?? '';
+        $simpantindakan->rs22 = $request->kdpoli  ?? '';
+        // $simpantindakan->rs23 = $request->pelaksanaDua ?? '';
+        $simpantindakan->rs24 = $request->kdsistembayar ?? '';
+        $simpantindakan->save();
+
+        if (!$simpantindakan) {
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        }
 
         TindakanSambung::updateOrCreate(
             ['nota' => $request->nota ?? $notatindakan, 'noreg' => $request->noreg, 'kd_tindakan' => $request->kdtindakan],
             ['ket' => $request->keterangan, 'rs73_id' => $simpantindakan->id]
         );
 
-
-        if (!$simpantindakan) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        }
-
-        $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
-        $simpantindakan->save();
+        // $simpantindakan->rs5 = (int)$simpantindakan->rs5 + (int)$request->jmltindakan;
+        // $simpantindakan->save();
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
@@ -250,33 +275,31 @@ class TindakanController extends Controller
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
 
-        // $pelaksanaSatu  = $request->pelaksanaSatu
+        $nota = $request->nota ?? $notatindakan;
 
-        $tindakan = Tindakan::firstOrNew(
-            [
-                // 'rs8' => $request->kodedokter,
-                'rs2' => $request->nota ?? $notatindakan,
-                'rs1' => $request->noreg,
-                'rs4' => $request->kdtindakan
-            ],
-            [
-                'rs3' => date('Y-m-d H:i:s'),
-                'rs4' => $request->kdtindakan ?? '',
-                // 'rs5' => $request->jmltindakan,
-                'rs6' => $request->hargasarana ?? '',
-                'rs7' => $request->hargasarana,
-                'rs8' => $request->pelaksanaSatu ?? '',
-                'rs9' => $request->kddpjp ?? '', // iki dokter dpjp
-                'rs13' => $request->hargapelayanan ?? '',
-                'rs14' => $request->hargapelayanan ?? '',
-                // 'rs15' => $request->noreg,
-                'rs20' => $request->keterangan ?? '',
-                'rs22' => $request->kdpoli ?? '',
-                'rs23' => $request->pelaksanaDua,
+        $tindakan = Tindakan::where(['rs1' => $request->noreg, 'rs4' => $request->kdtindakan, 'rs2' => $nota])->first();
+        if (!$tindakan) {
+            $tindakan = new Tindakan();
+            $tindakan->rs5 = $request->jmltindakan ?? '';
+        } else {
+            $tindakan->rs5 = (int)$tindakan->rs5 + (int)$request->jmltindakan;
+        }
 
-                'rs24' => $request->kdsistembayar,
-            ]
-        );
+        $tindakan->rs2 = $nota;
+        $tindakan->rs1 = $request->noreg ?? '';
+        $tindakan->rs3 = date('Y-m-d H:i:s');
+        $tindakan->rs4 = $request->kdtindakan ?? '';
+        $tindakan->rs6 = $request->hargasarana ?? '';
+        $tindakan->rs7 = $request->hargasarana ?? '';
+        $tindakan->rs8 = $request->pelaksanaSatu ?? '';
+        $tindakan->rs9 = $request->kddpjp ?? '';
+        $tindakan->rs13 = $request->hargapelayanan ?? '';
+        $tindakan->rs14 = $request->hargapelayanan ?? '';
+        $tindakan->rs20 = $request->keterangan ?? '';
+        $tindakan->rs22 = $request->kdpoli  ?? '';
+        $tindakan->rs23 = $request->pelaksanaDua ?? '';
+        $tindakan->rs24 = $request->kdsistembayar ?? '';
+        $tindakan->save();
 
         if (!$tindakan) {
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
@@ -295,8 +318,8 @@ class TindakanController extends Controller
             // ['ket' => $request->keterangan]
         );
 
-        $tindakan->rs5 = (int)$tindakan->rs5 + (int)$request->jmltindakan;
-        $tindakan->save();
+        
+        // $tindakan->save();
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();

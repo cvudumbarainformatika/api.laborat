@@ -15,7 +15,8 @@ class Tindakan extends Model
 {
     use HasFactory;
     protected $table = 'rs73';
-    protected $guarded = [''];
+    protected $guarded = ['id'];
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected $appends = ['subtotal'];
 
