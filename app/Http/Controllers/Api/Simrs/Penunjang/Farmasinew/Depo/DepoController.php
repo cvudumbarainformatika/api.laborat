@@ -443,50 +443,98 @@ class DepoController extends Controller
         //     ->where('no_permintaan', $request->no_permintaan)
         //     ->groupBy('no_permintaan', 'kd_obat', 'nopenerimaan')
         //     ->get();
-        $obatditerima = Mutasigudangkedepo::where('no_permintaan', $request->no_permintaan)
-            ->get();
-        // return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!', 'data' => $obatditerima], 410);
-        foreach ($obatditerima as $wew) {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $obatditerima = Mutasigudangkedepo::select(
+                'nopenerimaan',
+                'no_permintaan',
+                'kd_obat',
+                'nobatch',
+                'tglexp',
+                'tglpenerimaan',
+                'harga',
+                DB::raw('sum(jml) as jumlah')
+            )
+                ->where('no_permintaan', $request->no_permintaan)
+                ->groupBy(
+                    'nopenerimaan',
+                    'kd_obat',
+                    'nobatch',
+                    'tglexp',
+                    'harga',
+                )
+                ->get();
+            // return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!', 'data' => $obatditerima], 410);
+            foreach ($obatditerima as $wew) {
+                $stoknya = Stokreal::lockForUpdate()
+                    ->where('kdobat', $wew->kd_obat)
+                    ->where('nopenerimaan', $wew->nopenerimaan)
+                    ->where('nobatch', $wew->nobatch)
+                    ->where('kdruang', $request->tujuan)
+                    ->where('tglexp', $wew->tglexp)
+                    ->orderBy('id', 'DESC')
+                    ->first();
+                if ($stoknya) {
+                    $total = (float)$wew->jumlah + (float)$stoknya->jumlah;
+                    $stoknya->update(['jumlah' => $total]);
+                } else {
+                    $create = Stokreal::create(
+                        [
+                            'nopenerimaan' => $wew->nopenerimaan,
+                            'nodistribusi' => $wew->no_permintaan,
+                            'kdobat' => $wew->kd_obat,
+                            'nobatch' => $wew->nobatch,
+                            'tglexp' => $wew->tglexp,
+                            'tglpenerimaan' => $wew->tglpenerimaan,
+                            'jumlah' => $wew->jumlah,
+                            'kdruang' => $request->tujuan,
+                            'harga' => $wew->harga,
+                        ]
+                    );
+                }
+            }
 
-            Stokreal::create(
-                [
-                    'nopenerimaan' => $wew->nopenerimaan,
-                    'nodistribusi' => $wew->no_permintaan,
-                    'kdobat' => $wew->kd_obat,
-                    'nobatch' => $wew->nobatch,
-                    'tglexp' => $wew->tglexp,
-                    'tglpenerimaan' => $wew->tglpenerimaan,
-                    'jumlah' => $wew->jml,
-                    'kdruang' => $request->tujuan,
-                    'harga' => $wew->harga,
+            $user = FormatingHelper::session_user();
+            $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
+
+            $kuncipermintaan->update([
+                'flag' => '4',
+                'tgl_terima_depo' => date('Y-m-d H:i:s'),
+                'user_terima_depo' => $user['kodesimrs'],
+
+            ]);
+
+            // $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
+            $msg = [
+                'data' => [
+                    'aksi' => 'kunci',
+                    'dari' => $kuncipermintaan->dari,
+                    'no_permintaan' => $kuncipermintaan->no_permintaan,
+                    'depo' => $kuncipermintaan->dari,
+                    'flag' => $kuncipermintaan->flag,
+                    // 'kodeobats' => $kdobat,
+
                 ]
-            );
+            ];
+            event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!',
+                'stoknya' => $stoknya ?? null,
+                'create' => $create ?? null,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan ',
+                'result' => '' . $e,
+                'err' =>  $e,
+                'caristok' => $caristok ?? '',
+                'mutasi' => $mutasi ?? '',
+                'stoknya' => $data ?? '',
+                'rinciPer' => $rinciPer ?? '',
+            ], 410);
         }
-
-        $user = FormatingHelper::session_user();
-        $kuncipermintaan = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->first();
-
-        $kuncipermintaan->update([
-            'flag' => '4',
-            'tgl_terima_depo' => date('Y-m-d H:i:s'),
-            'user_terima_depo' => $user['kodesimrs'],
-
-        ]);
-
-        // $kdobat = Permintaandeporinci::select('kdobat')->where('no_permintaan', $request->no_permintaan)->get();
-        $msg = [
-            'data' => [
-                'aksi' => 'kunci',
-                'dari' => $kuncipermintaan->dari,
-                'no_permintaan' => $kuncipermintaan->no_permintaan,
-                'depo' => $kuncipermintaan->dari,
-                'flag' => $kuncipermintaan->flag,
-                // 'kodeobats' => $kdobat,
-
-            ]
-        ];
-        event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
-        return new JsonResponse(['message' => 'Permintaan Berhasil Diterima & Masuk Ke stok...!!!'], 200);
     }
 
     public function listMutasi()

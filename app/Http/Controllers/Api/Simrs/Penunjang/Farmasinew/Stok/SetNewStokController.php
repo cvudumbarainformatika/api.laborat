@@ -429,7 +429,7 @@ class SetNewStokController extends Controller
         $data = self::getDataTrans($depo, $obat);
 
 
-        return new JsonResponse($data);
+        return new JsonResponse($data['data'], $data['status']);
     }
     public static function getDataTrans($koderuangan, $kdobat)
     {
@@ -442,208 +442,245 @@ class SetNewStokController extends Controller
         //     ['nama' => 'Depo Rawat Jalan', 'kode' => 'Gd-05010101', 'lama' => 'AP0001'],
         //     ['nama' => 'Depo IGD', 'kode' => 'Gd-02010104', 'lama' => 'AP0007']
         // ];
-        $gudangs = ['Gd-05010100', 'Gd-03010100'];
-        $depos = ['Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
-        $koderuangan = $koderuangan;
-        $bulan = date('m');
-        $tahun = date('Y');
-        // $bulan = request('bulan');
-        // $tahun = request('tahun');
-        $x = $tahun . '-' . $bulan;
-        $tglAwal = $x . '-01';
-        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
-        $dateAwal = Carbon::parse($tglAwal);
-        $dateAkhir = Carbon::parse($tglAkhir);
-        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
 
-        $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
-        if (in_array($koderuangan, $gudangs)) {
-            $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
-                // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
-                ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
-                ->where('kdruang', $koderuangan)
-                ->where('kdobat', $kdobat)
-                ->groupBy('tglopname', 'kdruang', 'kdobat')
-                ->first();
-            $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
-                ->where('kdobat', $kdobat)
-                ->pluck('id');
-            $penyesuaian = PenyesuaianStok::select('stokreal_id', DB::raw('sum(penyesuaian) as jumlah'))
-                ->whereIn('stokreal_id', $stokid)
-                ->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->groupBy('stokreal_id')
-                ->first();
-            $penerimaan = PenerimaanRinci::select(
-                'penerimaan_r.kdobat',
-                DB::raw('sum(jml_terima_k) as jumlah')
-            )
-                ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
-                ->whereBetween('penerimaan_h.tglpenerimaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('penerimaan_h.gudang', $koderuangan)
-                ->where('penerimaan_h.kunci', '1')
-                ->where('penerimaan_r.kdobat', $kdobat)
-                ->groupBy('penerimaan_r.kdobat')
-                ->first();
-            $mutasiMasuk = Mutasigudangkedepo::select(
-                'mutasi_gudangdepo.kd_obat as kdobat',
-                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
-            )
-                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('permintaan_h.dari', $koderuangan)
-                ->where('mutasi_gudangdepo.kd_obat', $kdobat)
-                ->groupBy('mutasi_gudangdepo.kd_obat')
-                ->first();
-            $mutasiKeluar = Mutasigudangkedepo::select(
-                'mutasi_gudangdepo.kd_obat as kdobat',
-                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
-            )
-                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('permintaan_h.tujuan', $koderuangan)
-                ->where('mutasi_gudangdepo.kd_obat', $kdobat)
-                ->groupBy('mutasi_gudangdepo.kd_obat')
-                ->first();
-            $rusak = BarangRusak::select(
-                'kd_obat',
-                DB::raw('sum(jumlah) as jumlah')
-            )
-                ->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('kd_obat', $kdobat)
-                ->where('kunci', '1')
-                ->groupBy('kd_obat')
-                ->first();
-            $returGudang = ReturGudangDetail::select(
-                'retur_gudang_details.kd_obat',
-                DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
-            )
-                ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
-                ->where('retur_gudangs.gudang', $koderuangan)
-                ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('retur_gudang_details.kd_obat', $kdobat)
-                ->where('retur_gudangs.kunci', '1')
-                ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.gudang')
-                ->first();
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $data = [];
+            $gudangs = ['Gd-05010100', 'Gd-03010100'];
+            $depos = ['Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+            $koderuangan = $koderuangan;
+            $bulan = date('m');
+            $tahun = date('Y');
+            // $bulan = request('bulan');
+            // $tahun = request('tahun');
+            $x = $tahun . '-' . $bulan;
+            $tglAwal = $x . '-01';
+            $tglAkhir = $x . date('-t', strtotime($x . '-01'));
+            $dateAwal = Carbon::parse($tglAwal);
+            $dateAkhir = Carbon::parse($tglAkhir);
+            $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
+            $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
 
-            $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
-                ->where('kdruang', $koderuangan)->first();
-            $tts = $totalStok->jumlah ?? 0;
-            $sal = $saldoAwal->total ?? 0;
-            $peny = $penyesuaian->jumlah ?? 0;
-            $trm = $penerimaan->jumlah ?? 0;
-            $mutma = $mutasiMasuk->jumlah ?? 0;
-            $mutkel = $mutasiKeluar->jumlah ?? 0;
-            $rus = $rusak->jumlah ?? 0;
-            $retG = $returGudang->jumlah ?? 0;
-            $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
-            $keluar = (float)$mutkel + (float)$rus;
-            $sisa = (float)$masuk - (float)$keluar;
+            $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
+            if (in_array($koderuangan, $gudangs)) {
+                $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
+                    // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                    ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
+                    ->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->groupBy('tglopname', 'kdruang', 'kdobat')
+                    ->first();
+                $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->pluck('id');
+                $penyesuaian = PenyesuaianStok::select('stokreal_id', DB::raw('sum(penyesuaian) as jumlah'))
+                    ->whereIn('stokreal_id', $stokid)
+                    ->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->groupBy('stokreal_id')
+                    ->first();
+                $penerimaan = PenerimaanRinci::select(
+                    'penerimaan_r.kdobat',
+                    DB::raw('sum(jml_terima_k) as jumlah')
+                )
+                    ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+                    ->whereBetween('penerimaan_h.tglpenerimaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('penerimaan_h.gudang', $koderuangan)
+                    ->where('penerimaan_h.kunci', '1')
+                    ->where('penerimaan_r.kdobat', $kdobat)
+                    ->groupBy('penerimaan_r.kdobat')
+                    ->first();
+                $mutasiMasuk = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('permintaan_h.dari', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy('mutasi_gudangdepo.kd_obat')
+                    ->first();
+                $mutasiKeluar = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('permintaan_h.tujuan', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy('mutasi_gudangdepo.kd_obat')
+                    ->first();
+                $rusak = BarangRusak::select(
+                    'kd_obat',
+                    DB::raw('sum(jumlah) as jumlah')
+                )
+                    ->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('kd_obat', $kdobat)
+                    ->where('kunci', '1')
+                    ->groupBy('kd_obat')
+                    ->first();
+                $returGudang = ReturGudangDetail::select(
+                    'retur_gudang_details.kd_obat',
+                    DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                )
+                    ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                    ->where('retur_gudangs.gudang', $koderuangan)
+                    ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('retur_gudang_details.kd_obat', $kdobat)
+                    ->where('retur_gudangs.kunci', '1')
+                    ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.gudang')
+                    ->first();
 
-            // cek rincian
-            $stok = FarmasinewStokreal::lockForUpdate()
-                ->where('kdobat', $kdobat)
-                ->where('kdruang', $koderuangan)
-                ->orderBy('tglexp', 'DESC')
-                ->orderBy('id', 'DESC')
-                ->get();
-            $nopeSt = collect($stok)->map(function ($it) {
-                return $it->nopenerimaan;
-            })->toArray();
-            $uniNopeSt = array_unique($nopeSt);
-            $head = PenerimaanHeder::select('penerimaan_h.nopenerimaan')
-                ->join('penerimaan_r', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
-                ->whereBetween('penerimaan_h.tglpenerimaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('penerimaan_h.gudang', $koderuangan)
-                ->where('penerimaan_r.kdobat', $kdobat)
-                ->where('penerimaan_h.kunci', '1')
-                ->distinct('nopenerimaan')
-                ->get('nopenerimaan');
-            $nope = collect($head)->map(function ($it) {
-                return $it->nopenerimaan;
-            })->toArray();
-            $uniNope = array_unique($nope);
-            // bandinagkan jumlah masuk dan keluar
-            $penerimaanRinci = PenerimaanRinci::select(
-                'penerimaan_r.kdobat',
-                'penerimaan_r.nopenerimaan',
-                'penerimaan_r.tgl_exp',
-                'penerimaan_r.no_batch',
-                DB::raw('sum(penerimaan_r.jml_terima_k) as jumlah'),
-                'penerimaan_h.tglpenerimaan',
-            )
-                ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
-                ->where('penerimaan_r.kdobat', $kdobat)
-                ->whereIn('penerimaan_r.nopenerimaan', $uniNope)
-                ->orderby('penerimaan_h.tglpenerimaan', 'DESC')
-                ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan')
-                ->get();
+                $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                    ->where('kdruang', $koderuangan)->first();
+                $tts = $totalStok->jumlah ?? 0;
+                $sal = $saldoAwal->total ?? 0;
+                $peny = $penyesuaian->jumlah ?? 0;
+                $trm = $penerimaan->jumlah ?? 0;
+                $mutma = $mutasiMasuk->jumlah ?? 0;
+                $mutkel = $mutasiKeluar->jumlah ?? 0;
+                $rus = $rusak->jumlah ?? 0;
+                $retG = $returGudang->jumlah ?? 0;
+                $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
+                $keluar = (float)$mutkel + (float)$rus;
+                $sisa = (float)$masuk - (float)$keluar;
 
-            $mutasiKeluarRinci = Mutasigudangkedepo::select(
-                'mutasi_gudangdepo.kd_obat as kdobat',
-                'mutasi_gudangdepo.nopenerimaan',
-                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
-            )
-                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('permintaan_h.tujuan', $koderuangan)
-                ->where('mutasi_gudangdepo.kd_obat', $kdobat)
-                ->whereIn('mutasi_gudangdepo.nopenerimaan', $uniNopeSt)
-                ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan')
-                ->get();
+                // cek rincian
+                $stok = FarmasinewStokreal::lockForUpdate()
+                    ->where('kdobat', $kdobat)
+                    ->where('kdruang', $koderuangan)
+                    ->orderBy('tglexp', 'DESC')
+                    ->orderBy('id', 'DESC')
+                    ->get();
+                $nopeSt = collect($stok)->map(function ($it) {
+                    return $it->nopenerimaan;
+                })->toArray();
+                $uniNopeSt = array_unique($nopeSt);
+                $head = PenerimaanHeder::select('penerimaan_h.nopenerimaan')
+                    ->join('penerimaan_r', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+                    ->whereBetween('penerimaan_h.tglpenerimaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('penerimaan_h.gudang', $koderuangan)
+                    ->where('penerimaan_r.kdobat', $kdobat)
+                    ->where('penerimaan_h.kunci', '1')
+                    ->distinct('nopenerimaan')
+                    ->get('nopenerimaan');
+                $nope = collect($head)->map(function ($it) {
+                    return $it->nopenerimaan;
+                })->toArray();
+                $uniNope = array_unique($nope);
+                // bandinagkan jumlah masuk dan keluar
+                $penerimaanRinci = PenerimaanRinci::select(
+                    'penerimaan_r.kdobat',
+                    'penerimaan_r.nopenerimaan',
+                    'penerimaan_r.tgl_exp',
+                    'penerimaan_r.no_batch',
+                    DB::raw('sum(penerimaan_r.jml_terima_k) as jumlah'),
+                    'penerimaan_h.tglpenerimaan',
+                )
+                    ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+                    ->where('penerimaan_r.kdobat', $kdobat)
+                    ->whereIn('penerimaan_r.nopenerimaan', $uniNope)
+                    ->orderby('penerimaan_h.tglpenerimaan', 'DESC')
+                    ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan')
+                    ->get();
 
-            $nopeMu = collect($mutasiKeluarRinci)->map(function ($it) {
-                return $it->nopenerimaan;
-            })->toArray();
-            $uniNopeMu = array_unique($nopeMu);
-            $saldoAwalRinci = StokStokopname::select('tglopname', 'jumlah', 'kdobat', 'nopenerimaan', 'tglexp')
-                // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
-                ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
-                ->where('kdruang', $koderuangan)
-                ->where('kdobat', $kdobat)
-                ->whereIn('nopenerimaan', $uniNopeMu)
-                ->orderBy('tglexp', 'DESC')
-                ->get();
+                $mutasiKeluarRinci = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    'mutasi_gudangdepo.nopenerimaan',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('permintaan_h.tujuan', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->whereIn('mutasi_gudangdepo.nopenerimaan', $uniNopeSt)
+                    ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan')
+                    ->get();
 
-            // return [
-            //     'stok' => $stok,
-            //     'nope' => $nope,
-            //     'uniNope' => $uniNope,
-            //     'penerimaanRinci' => $penerimaanRinci,
-            //     'mutasiKeluarRinci' => $mutasiKeluarRinci,
-            //     'saldoAwalRinci' => $saldoAwalRinci,
-            //     'tts' => $tts,
-            //     'sisa' => $sisa,
-            // ];
-            if ((float)$sisa != (float)$tts) {
-                $ada = $sisa;
-                $index = 0;
-                // $stok = FarmasinewStokreal::where('kdobat', $kdobat)
-                //     ->where('kdruang', $koderuangan)
-                //     ->orderBy('tglexp', 'DESC')
-                //     ->orderBy('id', 'DESC')
-                //     ->get();
-                $tolalIndex = count($stok) - 1;
-                // // nolkan semua stok
-                foreach ($stok as $st) {
-                    $st->update([
-                        'jumlah' => 0
-                    ]);
-                }
-                $ret = [];
-                if ($ada > 0) {
+                $nopeMu = collect($mutasiKeluarRinci)->map(function ($it) {
+                    return $it->nopenerimaan;
+                })->toArray();
+                $uniNopeMu = array_unique($nopeMu);
+                $saldoAwalRinci = StokStokopname::select('tglopname', 'jumlah', 'kdobat', 'nopenerimaan', 'tglexp')
+                    // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                    ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
+                    ->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->whereIn('nopenerimaan', $uniNopeMu)
+                    ->orderBy('tglexp', 'DESC')
+                    ->get();
 
-                    if (sizeof($penerimaanRinci) > 0) {
-                        foreach ($penerimaanRinci as $trm) {
-                            $mutKelNya = collect($mutasiKeluarRinci)
-                                ->where('kdobat', $trm->kdobat)
-                                ->where('nopenerimaan', $trm->nopenerimaan)
-                                ->first();
-                            $sisaTrm = (float)$trm->jumlah - (float)$mutKelNya->jumlah;
-                            if ($sisaTrm > 0) {
-                                $stokNya = collect($stok)
+                // return [
+                //     'stok' => $stok,
+                //     'nope' => $nope,
+                //     'uniNope' => $uniNope,
+                //     'penerimaanRinci' => $penerimaanRinci,
+                //     'mutasiKeluarRinci' => $mutasiKeluarRinci,
+                //     'saldoAwalRinci' => $saldoAwalRinci,
+                //     'tts' => $tts,
+                //     'sisa' => $sisa,
+                // ];
+                if ((float)$sisa != (float)$tts) {
+                    $ada = $sisa;
+                    $index = 0;
+                    // $stok = FarmasinewStokreal::where('kdobat', $kdobat)
+                    //     ->where('kdruang', $koderuangan)
+                    //     ->orderBy('tglexp', 'DESC')
+                    //     ->orderBy('id', 'DESC')
+                    //     ->get();
+                    $tolalIndex = count($stok) - 1;
+                    // // nolkan semua stok
+                    foreach ($stok as $st) {
+                        $st->update([
+                            'jumlah' => 0
+                        ]);
+                    }
+                    $ret = [];
+                    if ($ada > 0) {
+
+                        if (sizeof($penerimaanRinci) > 0) {
+                            foreach ($penerimaanRinci as $trm) {
+                                $mutKelNya = collect($mutasiKeluarRinci)
                                     ->where('kdobat', $trm->kdobat)
                                     ->where('nopenerimaan', $trm->nopenerimaan)
+                                    ->first();
+                                $sisaTrm = (float)$trm->jumlah - (float)$mutKelNya->jumlah;
+                                if ($sisaTrm > 0) {
+                                    $stokNya = collect($stok)
+                                        ->where('kdobat', $trm->kdobat)
+                                        ->where('nopenerimaan', $trm->nopenerimaan)
+                                        ->first();
+                                    if ((float)$sisaTrm >= (float)$ada) {
+                                        $sisaJumlah = 0;
+                                        $stokNya->update(['jumlah' => $ada]);
+                                    } else if ((float)$ada > 0) {
+                                        $sisaJumlah = (float)$ada - (float) $sisaTrm;
+                                        $stokNya->update(['jumlah' => $sisaTrm]);
+                                    }
+
+                                    $ada = $sisaJumlah;
+                                }
+                                $temp = [
+                                    'mutKelNya' => $mutKelNya ?? [],
+                                    'trm' => $trm ?? null,
+                                    'sisaTrm' => $sisaTrm ?? 0,
+                                    'stokNya' => $stokNya ?? null,
+                                    'sisaJumlah' => $sisaJumlah ?? null,
+                                    'ada' => $ada ?? null,
+                                    // 'saldoAwalRinci' => $saldoAwalRinci,
+                                ];
+                                $ret[] = $temp;
+                            }
+                        }
+                        foreach ($saldoAwalRinci as $awl) {
+                            $mutKelNya = collect($mutasiKeluarRinci)
+                                ->where('kdobat', $awl->kdobat)
+                                ->where('nopenerimaan', $awl->nopenerimaan)
+                                ->first();
+                            $sisaTrm = (float)$awl->jumlah - (float)$mutKelNya->jumlah;
+                            if ($sisaTrm > 0) {
+                                $stokNya = collect($stok)
+                                    ->where('kdobat', $awl->kdobat)
+                                    ->where('nopenerimaan', $awl->nopenerimaan)
                                     ->first();
                                 if ((float)$sisaTrm >= (float)$ada) {
                                     $sisaJumlah = 0;
@@ -657,7 +694,7 @@ class SetNewStokController extends Controller
                             }
                             $temp = [
                                 'mutKelNya' => $mutKelNya ?? [],
-                                'trm' => $trm ?? null,
+                                'awl' => $awl ?? null,
                                 'sisaTrm' => $sisaTrm ?? 0,
                                 'stokNya' => $stokNya ?? null,
                                 'sisaJumlah' => $sisaJumlah ?? null,
@@ -666,517 +703,746 @@ class SetNewStokController extends Controller
                             ];
                             $ret[] = $temp;
                         }
+                        $message = 'Cek Stok Gudang selesai, Stok sudah di update';
                     }
-                    foreach ($saldoAwalRinci as $awl) {
-                        $mutKelNya = collect($mutasiKeluarRinci)
-                            ->where('kdobat', $awl->kdobat)
-                            ->where('nopenerimaan', $awl->nopenerimaan)
-                            ->first();
-                        $sisaTrm = (float)$awl->jumlah - (float)$mutKelNya->jumlah;
-                        if ($sisaTrm > 0) {
-                            $stokNya = collect($stok)
-                                ->where('kdobat', $awl->kdobat)
-                                ->where('nopenerimaan', $awl->nopenerimaan)
-                                ->first();
-                            if ((float)$sisaTrm >= (float)$ada) {
-                                $sisaJumlah = 0;
-                                $stokNya->update(['jumlah' => $ada]);
-                            } else if ((float)$ada > 0) {
-                                $sisaJumlah = (float)$ada - (float) $sisaTrm;
-                                $stokNya->update(['jumlah' => $sisaTrm]);
-                            }
 
-                            $ada = $sisaJumlah;
+                    // $temp = [
+                    //     'mutKelNya' => $mutKelNya ?? [],
+                    //     'trm' => $trm ?? null,
+                    //     'sisaTrm' => $sisaTrm ?? 0,
+                    //     'stokNya' => $stokNya ?? null,
+                    //     'sisaJumlah' => $sisaJumlah ?? null,
+                    //     'saldoAwalRinci' => $saldoAwalRinci,
+                    // ];
+                    // $ret[] = $temp;
+
+                    // while ($masukin > 0) {
+                    //     $penrimaanrinci = PenerimaanRinci::where('nopenerimaan', $stok[$index]['nopenerimaan'])
+                    //         ->where('kdobat', $stok[$index]['kdobat'])
+                    //         ->where('no_batch', $stok[$index]['nobatch'])
+                    //         ->first();
+                    //     if ($penrimaanrinci) {
+                    //         $ada = $penrimaanrinci->jml_terima_k;
+                    //         if ($penrimaanrinci->no_batch == '-') {
+                    //             $stok[$index]->update([
+                    //                 'jumlah' => $masukin
+                    //             ]);
+                    //             $masukin = 0;
+                    //         } else {
+
+                    //             if ($ada > $masukin) {
+                    //                 $stok[$index]->update([
+                    //                     'jumlah' => $masukin
+                    //                 ]);
+                    //                 $masukin = 0;
+                    //             } else {
+                    //                 $sisax = $masukin - $ada;
+                    //                 $stok[$index]->update([
+                    //                     'jumlah' => $ada
+                    //                 ]);
+                    //                 $masukin = $sisax;
+                    //                 $index += 1;
+                    //                 // if ($index < $tolalIndex) $index += 1;
+                    //                 // else {
+                    //                 //     $stok[$index]->update([
+                    //                 //         'jumlah' => $ada + $sisax
+                    //                 //     ]);
+                    //                 // }
+                    //             }
+                    //         }
+                    //     } else {
+                    //         $stok[$index]->update([
+                    //             'jumlah' => $masukin
+                    //         ]);
+                    //         $masukin = 0;
+                    //     }
+                    //     $message = 'Cek Stok Gudang selesai, Stok sudah di update';
+                    // }
+                    if ($sisa == 0) {
+                        foreach ($stok as $st) {
+                            $st->update([
+                                'jumlah' => $sisa
+                            ]);
                         }
-                        $temp = [
-                            'mutKelNya' => $mutKelNya ?? [],
-                            'awl' => $awl ?? null,
-                            'sisaTrm' => $sisaTrm ?? 0,
-                            'stokNya' => $stokNya ?? null,
-                            'sisaJumlah' => $sisaJumlah ?? null,
-                            'ada' => $ada ?? null,
-                            // 'saldoAwalRinci' => $saldoAwalRinci,
-                        ];
-                        $ret[] = $temp;
+                        $message = 'Cek Stok Gudang selesai, Stok Habis';
                     }
-                    $message = 'Cek Stok Gudang selesai, Stok sudah di update';
+                    if ($sisa < 0) {
+                        $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
+                    }
                 }
 
-                // $temp = [
-                //     'mutKelNya' => $mutKelNya ?? [],
-                //     'trm' => $trm ?? null,
-                //     'sisaTrm' => $sisaTrm ?? 0,
-                //     'stokNya' => $stokNya ?? null,
-                //     'sisaJumlah' => $sisaJumlah ?? null,
-                //     'saldoAwalRinci' => $saldoAwalRinci,
+
+                $data = [
+                    'saldoAwal' => $saldoAwal ?? [],
+                    'stokid' => $stokid,
+                    'penyesuaian' => $penyesuaian,
+                    'penerimaan' => $penerimaan,
+                    'mutasiMasuk' => $mutasiMasuk,
+                    'mutasiKeluar' => $mutasiKeluar,
+                    'totalStok' => $totalStok,
+                    'masuk' => $masuk,
+                    'keluar' => $keluar,
+
+                    'stok' => $stok ?? [],
+                    'ret' => $ret ?? [],
+                    'nope' => $nope,
+                    'uniNope' => $uniNope,
+                    'penerimaanRinci' => $penerimaanRinci,
+                    'mutasiKeluarRinci' => $mutasiKeluarRinci,
+                    'saldoAwalRinci' => $saldoAwalRinci,
+
+                    'tts' => $tts,
+                    'sisa' => $sisa,
+                    'sal' => $sal,
+                    'peny' => $peny,
+                    'trm' => $trm,
+                    'mutma' => $mutma,
+                    'mutkel' => $mutkel,
+                    'rus' => $rus,
+                    'retG' => $retG,
+                    // 'stok' => $stok ?? [],
+                    'message' => $message
+                ];
+            } else {
+                /*
+             * harus memetakan mutasi masuk dan mutasi keluar berdasarkan
+             * kode obat, momor penerimaan, dan kalo bisa nomor batch, tgl exp dan harga
+             */
+
+                $saldoAwalDepoRinci = StokStokopname::select(
+                    'tglopname',
+                    'nopenerimaan',
+                    'kdobat',
+                    'nobatch',
+                    'harga',
+                    DB::raw('sum(jumlah) as total')
+                )
+                    // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
+                    ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
+                    ->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
+                    ->get();
+
+                $saldoAwal = collect($saldoAwalDepoRinci)->sum('total');
+
+                $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
+                    ->where('kdobat', $kdobat)
+                    ->pluck('id');
+                $penyesuaian = PenyesuaianStok::select('stokreal_id', DB::raw('sum(penyesuaian) as jumlah'))
+                    ->whereIn('stokreal_id', $stokid)
+                    // ->whereNull('flag') // local only
+                    ->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->groupBy('stokreal_id')
+                    ->first();
+
+                $mutasiMasukDepoRinci = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    'mutasi_gudangdepo.nopenerimaan',
+                    'mutasi_gudangdepo.nobatch',
+                    'mutasi_gudangdepo.tglexp',
+                    'mutasi_gudangdepo.no_permintaan',
+                    'permintaan_h.tgl_terima_depo',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('permintaan_h.dari', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy(
+                        'mutasi_gudangdepo.kd_obat',
+                        'mutasi_gudangdepo.nopenerimaan',
+                    )
+                    ->orderby('permintaan_h.tgl_terima_depo', 'DESC')
+                    ->get();
+                $mutasiMasuk = collect($mutasiMasukDepoRinci)->sum('jumlah');
+
+                $mutasiKeluarDepoRinci = Mutasigudangkedepo::select(
+                    'mutasi_gudangdepo.kd_obat as kdobat',
+                    'mutasi_gudangdepo.nopenerimaan',
+                    'mutasi_gudangdepo.nobatch',
+                    'mutasi_gudangdepo.tglexp',
+                    'mutasi_gudangdepo.no_permintaan',
+                    'permintaan_h.tgl_kirim_depo',
+                    DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                )
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('permintaan_h.tujuan', $koderuangan)
+                    ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                    ->groupBy(
+                        'mutasi_gudangdepo.kd_obat',
+                        'mutasi_gudangdepo.nopenerimaan',
+                    )
+                    ->get();
+                $mutasiKeluar = collect($mutasiKeluarDepoRinci)->sum('jumlah');
+                // // jika bukan depo ok
+                if ($koderuangan !== 'Gd-04010103') {
+
+                    //     // $noresep = Resepkeluarrinci::select(
+                    //     //     'resep_keluar_r.noresep',
+                    //     // )
+                    //     //     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                    //     //     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    //     //     ->where('resep_keluar_h.depo', $koderuangan)
+                    //     //     ->where('resep_keluar_r.kdobat', $kdobat)
+                    //     //     ->pluck('resep_keluar_r.noresep');
+
+                    $resepKeluarRinci = Resepkeluarrinci::select(
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_r.nopenerimaan',
+                        DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                    )
+                        ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                        ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+                        ->where('resep_keluar_r.kdobat', $kdobat)
+                        ->where('resep_keluar_r.jumlah', '>', 0)
+                        ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
+                        ->get();
+                    $resepKeluar = collect($resepKeluarRinci)->sum('jumlah');
+                    $returRinci = Returpenjualan_r::select(
+                        'retur_penjualan_r.kdobat',
+                        'retur_penjualan_r.nopenerimaan',
+                        DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
+                    )
+                        ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                        ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+                        // ->whereIn('noresep', $noresep)
+                        ->where('retur_penjualan_r.kdobat', $kdobat)
+                        ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
+                        ->get();
+                    $retur = collect($returRinci)->sum('jumlah');
+
+                    $resepKeluarRacikanRinci = Resepkeluarrinciracikan::select(
+                        'resep_keluar_racikan_r.kdobat',
+                        'resep_keluar_racikan_r.nopenerimaan',
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
+                    )
+                        ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+                        ->where('resep_keluar_racikan_r.kdobat', $kdobat)
+                        ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan')
+                        ->get();
+                    $resepKeluarRacikan = collect($resepKeluarRacikanRinci)->sum('jumlah');
+                } else {
+                    $noresep = PersiapanOperasiRinci::select(
+                        'persiapan_operasi_rincis.noresep',
+                    )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
+                        ->groupBy('persiapan_operasi_rincis.noresep')
+                        ->pluck('persiapan_operasi_rincis.noresep');
+
+                    $resepKeluarRinci = Resepkeluarrinci::select(
+                        'resep_keluar_r.kdobat',
+                        'resep_keluar_r.nopenerimaan',
+                        DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                    )
+                        ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+                        ->where('resep_keluar_r.kdobat', $kdobat)
+                        ->whereNotIn('resep_keluar_h.noresep', $noresep)
+                        ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
+                        ->get();
+                    $resepKeluar = collect($resepKeluarRinci)->sum('jumlah');
+
+
+                    $returRinci = Returpenjualan_r::select(
+                        'retur_penjualan_r.kdobat',
+                        'retur_penjualan_r.nopenerimaan',
+                        DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
+                    )
+                        ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                        ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+
+                        ->where('retur_penjualan_r.kdobat', $kdobat)
+                        ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
+                        ->get();
+                    $retur = collect($returRinci)->sum('jumlah');
+
+                    $resepKeluarRacikanRinci = Resepkeluarrinciracikan::select(
+                        'resep_keluar_racikan_r.kdobat',
+                        'resep_keluar_racikan_r.nopenerimaan',
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
+                    )
+                        ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('resep_keluar_h.depo', $koderuangan)
+                        ->where('resep_keluar_racikan_r.kdobat', $kdobat)
+                        ->whereNotIn('resep_keluar_h.noresep', $noresep)
+                        ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan')
+                        ->get();
+                    $resepKeluarRacikan = collect($resepKeluarRacikanRinci)->sum('jumlah');
+
+                    //     // $persiapanOperasi = PersiapanOperasiRinci::select(
+                    //     //     'persiapan_operasi_rincis.kd_obat',
+                    //     //     DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as minta'),
+                    //     //     DB::raw('sum(persiapan_operasi_rincis.jumlah_distribusi) as distribusi'),
+                    //     //     DB::raw('sum(persiapan_operasi_rincis.jumlah_kembali) as kembali'),
+                    //     //     DB::raw('sum(persiapan_operasi_rincis.jumlah_resep) as resep'),
+                    //     // )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                    //     //     ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    //     //     ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
+                    //     //     ->first();
+
+                    $persiapanOperasiDistribusiRinci = PersiapanOperasiDistribusi::select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as distribusi'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as kembali'),
+                    )
+                        ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        ->get();
+                    $distribusiOk = collect($persiapanOperasiDistribusiRinci)->sum('distribusi');
+                    $kembaliOk = collect($persiapanOperasiDistribusiRinci)->sum('kembali');
+
+                    foreach ($persiapanOperasiDistribusiRinci as $key) {
+                        $rawNoper[] = $key->nopenerimaan;
+                    }
+                }
+
+                // retur gudang
+
+                $returGudangRinci = ReturGudangDetail::select(
+                    'retur_gudang_details.kd_obat',
+                    'retur_gudang_details.nopenerimaan',
+                    DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
+                )
+                    ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
+                    ->where('retur_gudangs.depo', $koderuangan)
+                    ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->where('retur_gudang_details.kd_obat', $kdobat)
+                    ->where('retur_gudangs.kunci', '1')
+                    ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo', 'retur_gudang_details.nopenerimaan')
+                    ->get();
+                $returGudang = collect($returGudangRinci)->sum('jumlah');
+                $rawNoper = [];
+                foreach ($saldoAwalDepoRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($mutasiMasukDepoRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($mutasiKeluarDepoRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($resepKeluarRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($returRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($resepKeluarRacikanRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                // sudut pandang foreach
+                $noper = array_unique($rawNoper);
+
+                $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                    ->where('kdruang', $koderuangan)->first();
+
+                $tts = $totalStok->jumlah ?? 0;
+                $sal = $saldoAwal ?? 0;
+                $peny = $penyesuaian->jumlah ?? 0;
+                $mutma = $mutasiMasuk ?? 0;
+                $ret = $retur ?? 0;
+                $kem = $kembaliOk ?? 0;
+                //keluar
+                $dist = $distribusiOk ?? 0;
+                $mutkel = $mutasiKeluar ?? 0;
+                $reskel = $resepKeluar ?? 0;
+                $reskelrac = $resepKeluarRacikan ?? 0;
+                $retG = $returGudang ?? 0;
+
+
+
+                // return [
+                //     'saldoAwalDepoRinci' => $saldoAwalDepoRinci,
+                //     'mutasiMasukDepoRinci' => $mutasiMasukDepoRinci,
+                //     'mutasiKeluarDepoRinci' => $mutasiKeluarDepoRinci,
+                //     'resepKeluarRinci' => $resepKeluarRinci,
+                //     'returRinci' => $returRinci,
+                //     'resepKeluarRacikanRinci' => $resepKeluarRacikanRinci,
+                //     'persiapanOperasiDistribusiRinci' => $persiapanOperasiDistribusiRinci ?? [],
+                //     'returGudangRinci' => $returGudangRinci,
+                //     'saldoAwal' => $saldoAwal,
+                //     'mutasiMasuk' => $mutasiMasuk,
+                //     'mutasiKeluar' => $mutasiKeluar,
+                //     'resepKeluar' => $resepKeluar,
+                //     'retur' => $retur,
+                //     'resepKeluarRacikan' => $resepKeluarRacikan,
+                //     'distribusiOk' => $distribusiOk ?? null,
+                //     'kembaliOk' => $kembaliOk ?? null,
+                //     'returGudang' => $returGudang,
                 // ];
-                // $ret[] = $temp;
 
-                // while ($masukin > 0) {
-                //     $penrimaanrinci = PenerimaanRinci::where('nopenerimaan', $stok[$index]['nopenerimaan'])
-                //         ->where('kdobat', $stok[$index]['kdobat'])
-                //         ->where('no_batch', $stok[$index]['nobatch'])
-                //         ->first();
-                //     if ($penrimaanrinci) {
-                //         $ada = $penrimaanrinci->jml_terima_k;
-                //         if ($penrimaanrinci->no_batch == '-') {
-                //             $stok[$index]->update([
-                //                 'jumlah' => $masukin
-                //             ]);
-                //             $masukin = 0;
-                //         } else {
+                $stok = FarmasinewStokreal::lockForUpdate()
+                    ->where('kdobat', $kdobat)
+                    ->where('kdruang', $koderuangan)
+                    ->orderBy('tglexp', 'DESC')
+                    ->orderBy('nodistribusi', 'DESC')
+                    ->get();
+                $hasil = [];
+                $anuaad = 0;
+                $anumas = 0;
+                $anukel = 0;
+                if ($koderuangan === 'Gd-04010103') {
+                    $masuk = (float)$sal + (float)$peny + (float)$mutma + (float)$kem + (float) $ret;
+                    $keluar = (float)$mutkel + (float)$dist + (float)$reskel + (float)$reskelrac + (float)$retG;
+                    $sisa = (float)$masuk - (float)$keluar;
+                    if ((float)$sisa != (float)$tts) {
+                        //     // cek ketorolac
+                        $ada = $sisa;
+                        if ($sisa > 0) {
+                            // nol kan semua
+                            foreach ($stok as $st) {
+                                $st->update([
+                                    'jumlah' => 0
+                                ]);
+                            }
+                            foreach ($noper as $key) {
+                                // masuk
+                                $salAwal =  collect($saldoAwalDepoRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
+                                $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $retDep =  collect($returRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $kemB =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->kembali ?? 0;
+                                // keluar
+                                $disT =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->distribusi ?? 0;
+                                $mutKel =  collect($mutasiKeluarDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $resKel =  collect($resepKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $resKelRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
 
-                //             if ($ada > $masukin) {
-                //                 $stok[$index]->update([
-                //                     'jumlah' => $masukin
-                //                 ]);
-                //                 $masukin = 0;
-                //             } else {
-                //                 $sisax = $masukin - $ada;
-                //                 $stok[$index]->update([
-                //                     'jumlah' => $ada
-                //                 ]);
-                //                 $masukin = $sisax;
-                //                 $index += 1;
-                //                 // if ($index < $tolalIndex) $index += 1;
-                //                 // else {
-                //                 //     $stok[$index]->update([
-                //                 //         'jumlah' => $ada + $sisax
-                //                 //     ]);
-                //                 // }
-                //             }
-                //         }
-                //     } else {
-                //         $stok[$index]->update([
-                //             'jumlah' => $masukin
-                //         ]);
-                //         $masukin = 0;
-                //     }
-                //     $message = 'Cek Stok Gudang selesai, Stok sudah di update';
-                // }
-                if ($sisa == 0) {
-                    foreach ($stok as $st) {
-                        $st->update([
-                            'jumlah' => $sisa
-                        ]);
+                                $maSuk = (float) $salAwal + (float) $mutMas + (float) $kemB + (float) $retDep;
+                                $keLuar = (float)$mutKel + (float)$resKel + (float)$resKelRac + (float)$retGud + (float)$disT;
+                                $sisanya = $maSuk - $keLuar;
+
+                                $tmpmas = $anumas + $maSuk;
+                                $anumas = $tmpmas;
+                                $tmpkel = $anukel + $keLuar;
+                                $anumas = $tmpkel;
+
+                                if ($sisanya > 0) {
+                                    $temp = $anuaad + $sisanya;
+                                    $anuaad = $temp;
+                                    $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
+                                    if ($stokNya) {
+                                        if ((float)$sisanya >= (float)$ada) {
+                                            $sisaJumlah = 0;
+                                            $stokNya->update(['jumlah' => $ada]);
+                                        } else if ((float)$ada > 0) {
+                                            $sisaJumlah = (float)$ada - (float) $sisanya;
+                                            $stokNya->update(['jumlah' => $sisanya]);
+                                        }
+                                        $ada = $sisaJumlah;
+                                    } else {
+                                        return [
+                                            'data' => [
+                                                'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
+                                            ],
+                                            'status' => 410
+                                        ];
+                                    }
+                                }
+
+                                $hasil[] = [
+                                    'nopenerimaan' => $key,
+                                    'maSuk' => $maSuk,
+                                    'keLuar' => $keLuar,
+                                    'sisanya' => $sisanya,
+                                    'salAwal' => $salAwal,
+                                    'mutMas' => $mutMas,
+                                    'retDep' => $retDep,
+                                    'mutKel' => $mutKel,
+                                    'resKel' => $resKel,
+                                    'resKelRac' => $resKelRac,
+                                    'retGud' => $retGud,
+                                ];
+                            }
+                            $message = 'Cek Stok Depo selesai, Stok sudah di update';
+                        }
+                        //     $index = 0;
+
+                        //     $tolalIndex = count($stok) - 1;
+                        //     foreach ($stok as $st) {
+                        //         $st->update([
+                        //             'jumlah' => 0
+                        //         ]);
+                        //     }
+                        //     while ($masuk > 0) {
+                        //         $distribusi = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
+                        //             ->where('no_permintaan', $stok[$index]['nodistribusi'])
+                        //             ->where('nobatch', $stok[$index]['nobatch'])
+                        //             ->orderBy('id', 'DESC') // jaga2 data double
+                        //             ->first();
+                        //         if ($distribusi) {
+                        //             $ada = $distribusi->jml;
+                        //             if ($ada > $masuk) {
+                        //                 $stok[$index]->update([
+                        //                     'jumlah' => $masuk
+                        //                 ]);
+                        //                 $masuk = 0;
+                        //             } else {
+                        //                 $sisax = $masuk - $ada;
+                        //                 $stok[$index]->update([
+                        //                     'jumlah' => $ada
+                        //                 ]);
+                        //                 $masuk = $sisax;
+                        //                 $index += 1;
+                        //             }
+                        //         } else {
+                        //             $distribusi2 = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
+                        //                 ->where('no_permintaan', $stok[$index]['nodistribusi'])
+                        //                 ->orderBy('id', 'DESC') // jaga2 data double
+                        //                 ->first();
+                        //             if ($distribusi2) {
+                        //                 $ada = $distribusi2->jml;
+                        //                 if ($ada > $masuk) {
+                        //                     $stok[$index]->update([
+                        //                         'jumlah' => $masuk
+                        //                     ]);
+                        //                     $masuk = 0;
+                        //                 } else {
+                        //                     $sisax = $masuk - $ada;
+                        //                     $stok[$index]->update([
+                        //                         'jumlah' => $ada
+                        //                     ]);
+                        //                     $masuk = $sisax;
+                        //                     $index += 1;
+                        //                 }
+                        //             } else {
+                        //                 $stok[$index]->update([
+                        //                     'jumlah' => $masuk
+                        //                 ]);
+                        //                 $masuk = 0;
+                        //             }
+                        //         }
+                        //     }
+                        //     $message = 'Cek Stok Depo Ok selesai, Stok sudah di update';
+                        if ($sisa == 0) {
+                            foreach ($stok as $st) {
+                                $st->update([
+                                    'jumlah' => $sisa
+                                ]);
+                            }
+                            $message = 'Cek Stok Depo Ok selesai, Stok Habis';
+                        }
+                        if ($sisa < 0) {
+
+                            $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
+                        }
                     }
-                    $message = 'Cek Stok Gudang selesai, Stok Habis';
+                } else {
+                    $masuk = (float)$sal + (float)$peny + (float)$mutma + (float) $ret;
+                    $keluar = (float)$mutkel + (float)$reskel + (float)$reskelrac + (float)$retG;
+                    $sisa = (float)$masuk - (float)$keluar;
+
+                    if ((float)$sisa != (float)$tts) {
+                        //     // cek ketorolac
+                        $ada = $sisa;
+                        if ($sisa > 0) {
+                            // nol kan semua
+                            foreach ($stok as $st) {
+                                $st->update([
+                                    'jumlah' => 0
+                                ]);
+                            }
+                            foreach ($noper as $key) {
+                                // masuk
+                                $salAwal =  collect($saldoAwalDepoRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
+                                $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $retDep =  collect($returRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                // keluar
+                                $mutKel =  collect($mutasiKeluarDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $resKel =  collect($resepKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $resKelRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                                $maSuk = (float) $salAwal + (float) $mutMas + (float) $retDep;
+                                $keLuar = (float)$mutKel + (float)$resKel + (float)$resKelRac + (float)$retGud;
+                                $sisanya = $maSuk - $keLuar;
+
+                                $tmpmas = $anumas + $maSuk;
+                                $anumas = $tmpmas;
+                                $tmpkel = $anukel + $keLuar;
+                                $anumas = $tmpkel;
+
+                                if ($sisanya > 0) {
+                                    $temp = $anuaad + $sisanya;
+                                    $anuaad = $temp;
+                                    $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
+                                    if ($stokNya) {
+                                        if ((float)$sisanya >= (float)$ada) {
+                                            $sisaJumlah = 0;
+                                            $stokNya->update(['jumlah' => $ada]);
+                                        } else if ((float)$ada > 0) {
+                                            $sisaJumlah = (float)$ada - (float) $sisanya;
+                                            $stokNya->update(['jumlah' => $sisanya]);
+                                        }
+
+                                        $ada = $sisaJumlah;
+                                    } else {
+                                        return [
+                                            'data' => [
+                                                'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
+                                            ],
+                                            'status' => 410
+                                        ];
+                                    }
+                                }
+
+                                $hasil[] = [
+                                    'nopenerimaan' => $key,
+                                    'maSuk' => $maSuk,
+                                    'keLuar' => $keLuar,
+                                    'sisanya' => $sisanya,
+                                    'salAwal' => $salAwal,
+                                    'mutMas' => $mutMas,
+                                    'retDep' => $retDep,
+                                    'mutKel' => $mutKel,
+                                    'resKel' => $resKel,
+                                    'resKelRac' => $resKelRac,
+                                    'retGud' => $retGud,
+                                ];
+                            }
+                            $message = 'Cek Stok Depo selesai, Stok sudah di update';
+                        }
+                        //     $index = 0;
+
+
+                        //     while ($masuk > 0) {
+                        //         $distribusi = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
+                        //             ->where('no_permintaan', $stok[$index]['nodistribusi'])
+                        //             ->where('nobatch', $stok[$index]['nobatch'])
+                        //             ->orderBy('id', 'DESC') // jaga2 data double
+                        //             ->first();
+                        //         if ($distribusi) {
+                        //             $ada = $distribusi->jml;
+                        //             if ($ada > $masuk) {
+                        //                 $stok[$index]->update([
+                        //                     'jumlah' => $masuk
+                        //                 ]);
+                        //                 $masuk = 0;
+                        //             } else {
+                        //                 $sisax = $masuk - $ada;
+                        //                 $stok[$index]->update([
+                        //                     'jumlah' => $ada
+                        //                 ]);
+                        //                 $masuk = $sisax;
+                        //                 $index += 1;
+                        //             }
+                        //         } else {
+                        //             $distribusi2 = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
+                        //                 ->where('no_permintaan', $stok[$index]['nodistribusi'])
+                        //                 ->orderBy('id', 'DESC') // jaga2 data double
+                        //                 ->first();
+                        //             if ($distribusi2) {
+                        //                 $ada = $distribusi2->jml;
+                        //                 if ($ada > $masuk) {
+                        //                     $stok[$index]->update([
+                        //                         'jumlah' => $masuk
+                        //                     ]);
+                        //                     $masuk = 0;
+                        //                 } else {
+                        //                     $sisax = $masuk - $ada;
+                        //                     $stok[$index]->update([
+                        //                         'jumlah' => $ada
+                        //                     ]);
+                        //                     $masuk = $sisax;
+                        //                     $index += 1;
+                        //                 }
+                        //             } else {
+                        //                 $stok[$index]->update([
+                        //                     'jumlah' => $masuk
+                        //                 ]);
+                        //                 $masuk = 0;
+                        //             }
+                        //         }
+                        if ($sisa == 0) {
+                            foreach ($stok as $st) {
+                                $st->update([
+                                    'jumlah' => $sisa
+                                ]);
+                            }
+                            $message = 'Cek Stok Depo selesai, Stok Habis';
+                        }
+                        if ($sisa < 0) {
+                            $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
+                        }
+                    }
+                    //     $message = 'Cek Stok Depo selesai, Stok sudah di update';
+                    // }
                 }
-                if ($sisa < 0) {
-                    $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
-                }
+
+
+
+                $data = [
+                    'anuaad' => $anuaad,
+                    'anumas' => $anumas,
+                    'anukel' => $anukel,
+                    'hasil' => $hasil,
+                    'saldoAwal' => $saldoAwal,
+                    'stokid' => $stokid,
+                    'penyesuaian' => $penyesuaian,
+
+                    'saldoAwalDepoRinci' => $saldoAwalDepoRinci,
+                    'mutasiMasukDepoRinci' => $mutasiMasukDepoRinci,
+                    'mutasiKeluarDepoRinci' => $mutasiKeluarDepoRinci,
+                    'resepKeluarRinci' => $resepKeluarRinci,
+                    'returRinci' => $returRinci,
+                    'resepKeluarRacikanRinci' => $resepKeluarRacikanRinci,
+                    'persiapanOperasiDistribusiRinci' => $persiapanOperasiDistribusiRinci ?? [],
+                    'returGudangRinci' => $returGudangRinci,
+                    'mutasiMasuk' => $mutasiMasuk,
+                    'mutasiKeluar' => $mutasiKeluar,
+                    'noresep' => $noresep ?? [],
+                    'resepKeluar' => $resepKeluar,
+                    'retur' => $retur,
+                    'resepKeluarRacikan' => $resepKeluarRacikan,
+                    'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi ?? null,
+
+                    'rawNoper' => $rawNoper,
+                    'noper' => $noper,
+
+                    'tts' => $tts,
+                    'sal' => $sal,
+                    'peny' => $peny,
+                    'mutma' => $mutma,
+                    'ret' => $ret,
+                    'mutkel' => $mutkel,
+                    'reskel' => $reskel,
+                    'reskelrac' => $reskelrac,
+                    'kem' => $kem,
+                    'dist' => $dist,
+                    'retG' => $retG,
+                    'masuk' => $masuk,
+                    'keluar' => $keluar,
+                    'sisa' => $sisa,
+                    'message' => $message
+                ];
             }
-
-
+            DB::connection('farmasi')->commit();
             return [
-                'saldoAwal' => $saldoAwal ?? [],
-                'stokid' => $stokid,
-                'penyesuaian' => $penyesuaian,
-                'penerimaan' => $penerimaan,
-                'mutasiMasuk' => $mutasiMasuk,
-                'mutasiKeluar' => $mutasiKeluar,
-                'totalStok' => $totalStok,
-                'masuk' => $masuk,
-                'keluar' => $keluar,
-
-                'stok' => $stok ?? [],
-                'ret' => $ret ?? [],
-                'nope' => $nope,
-                'uniNope' => $uniNope,
-                'penerimaanRinci' => $penerimaanRinci,
-                'mutasiKeluarRinci' => $mutasiKeluarRinci,
-                'saldoAwalRinci' => $saldoAwalRinci,
-
-                'tts' => $tts,
-                'sisa' => $sisa,
-                'sal' => $sal,
-                'peny' => $peny,
-                'trm' => $trm,
-                'mutma' => $mutma,
-                'mutkel' => $mutkel,
-                'rus' => $rus,
-                'retG' => $retG,
-                // 'stok' => $stok ?? [],
-                'message' => $message
+                'data' => $data,
+                'status' => 200,
             ];
-        } else {
-            $saldoAwal = StokStokopname::select('tglopname', 'jumlah', 'kdobat', DB::raw('sum(jumlah) as total'))
-                // ->whereBetween('tglopname', [$blnLaluAwal . ' 00:00:00', $blnLaluAkhir . ' 23:59:59'])
-                ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
-                ->where('kdruang', $koderuangan)
-                ->where('kdobat', $kdobat)
-                ->groupBy('tglopname', 'kdruang', 'kdobat')
-                ->first();
-            $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
-                ->where('kdobat', $kdobat)
-                ->pluck('id');
-            $penyesuaian = PenyesuaianStok::select('stokreal_id', DB::raw('sum(penyesuaian) as jumlah'))
-                ->whereIn('stokreal_id', $stokid)
-                // ->whereNull('flag') // local only
-                ->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->groupBy('stokreal_id')
-                ->first();
-
-            $mutasiMasuk = Mutasigudangkedepo::select(
-                'mutasi_gudangdepo.kd_obat as kdobat',
-                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
-            )
-                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('permintaan_h.dari', $koderuangan)
-                ->where('mutasi_gudangdepo.kd_obat', $kdobat)
-                ->groupBy('mutasi_gudangdepo.kd_obat')
-                ->first();
-            $mutasiKeluar = Mutasigudangkedepo::select(
-                'mutasi_gudangdepo.kd_obat as kdobat',
-                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
-            )
-                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                ->whereBetween('permintaan_h.tgl_kirim_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('permintaan_h.tujuan', $koderuangan)
-                ->where('mutasi_gudangdepo.kd_obat', $kdobat)
-                ->groupBy('mutasi_gudangdepo.kd_obat')
-                ->first();
-
-            // jika bukan depo ok
-            if ($koderuangan !== 'Gd-04010103') {
-
-                // $noresep = Resepkeluarrinci::select(
-                //     'resep_keluar_r.noresep',
-                // )
-                //     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                //     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                //     ->where('resep_keluar_h.depo', $koderuangan)
-                //     ->where('resep_keluar_r.kdobat', $kdobat)
-                //     ->pluck('resep_keluar_r.noresep');
-
-                $resepKeluar = Resepkeluarrinci::select(
-                    'resep_keluar_r.kdobat',
-                    DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
-                )
-                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                    ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    ->where('resep_keluar_r.kdobat', $kdobat)
-                    ->groupBy('resep_keluar_r.kdobat')
-                    ->first();
-                $retur = Returpenjualan_r::select(
-                    'retur_penjualan_r.kdobat',
-                    DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
-                )
-                    ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
-                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
-                    ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    // ->whereIn('noresep', $noresep)
-                    ->where('retur_penjualan_r.kdobat', $kdobat)
-                    ->groupBy('retur_penjualan_r.kdobat')
-                    ->first();
-
-                $resepKeluarRacikan = Resepkeluarrinciracikan::select(
-                    'resep_keluar_racikan_r.kdobat',
-                    DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
-                )
-                    ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
-                    ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    ->where('resep_keluar_racikan_r.kdobat', $kdobat)
-                    ->groupBy('resep_keluar_racikan_r.kdobat')
-                    ->first();
-            } else {
-                $noresep = PersiapanOperasiRinci::select(
-                    'persiapan_operasi_rincis.noresep',
-                )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                    ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
-                    ->groupBy('persiapan_operasi_rincis.noresep')
-                    ->pluck('persiapan_operasi_rincis.noresep');
-
-                $resepKeluar = Resepkeluarrinci::select(
-                    'resep_keluar_r.kdobat',
-                    DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
-                )
-                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                    ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    ->where('resep_keluar_r.kdobat', $kdobat)
-                    ->whereNotIn('resep_keluar_h.noresep', $noresep)
-                    ->groupBy('resep_keluar_r.kdobat')
-                    ->first();
-
-
-                $retur = Returpenjualan_r::select(
-                    'retur_penjualan_r.kdobat',
-                    DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
-                )
-                    ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
-                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
-                    ->whereBetween('retur_penjualan_h.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-
-                    ->where('retur_penjualan_r.kdobat', $kdobat)
-                    ->groupBy('retur_penjualan_r.kdobat')
-                    ->first();
-
-                $resepKeluarRacikan = Resepkeluarrinciracikan::select(
-                    'resep_keluar_racikan_r.kdobat',
-                    DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
-                )
-                    ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
-                    ->whereBetween('resep_keluar_h.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    ->where('resep_keluar_racikan_r.kdobat', $kdobat)
-                    ->whereNotIn('resep_keluar_h.noresep', $noresep)
-                    ->groupBy('resep_keluar_racikan_r.kdobat')
-                    ->first();
-
-                // $persiapanOperasi = PersiapanOperasiRinci::select(
-                //     'persiapan_operasi_rincis.kd_obat',
-                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as minta'),
-                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_distribusi) as distribusi'),
-                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_kembali) as kembali'),
-                //     DB::raw('sum(persiapan_operasi_rincis.jumlah_resep) as resep'),
-                // )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                //     ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                //     ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
-                //     ->first();
-
-                $persiapanOperasiDistribusi = PersiapanOperasiDistribusi::select(
-                    'persiapan_operasi_distribusis.kd_obat',
-                    DB::raw('sum(persiapan_operasi_distribusis.jumlah) as distribusi'),
-                    DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as kembali'),
-                )->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                    ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                    ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
-                    ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
-                    ->first();
-            }
-
-            // retur gudang
-
-            $returGudang = ReturGudangDetail::select(
-                'retur_gudang_details.kd_obat',
-                DB::raw('sum(retur_gudang_details.jumlah_retur) as jumlah')
-            )
-                ->leftJoin('retur_gudangs', 'retur_gudangs.no_retur', '=', 'retur_gudang_details.no_retur')
-                ->where('retur_gudangs.depo', $koderuangan)
-                ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
-                ->where('retur_gudang_details.kd_obat', $kdobat)
-                ->where('retur_gudangs.kunci', '1')
-                ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo')
-                ->first();
-
-            $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
-                ->where('kdruang', $koderuangan)->first();
-
-            $tts = $totalStok->jumlah ?? 0;
-            $sal = $saldoAwal->total ?? 0;
-            $peny = $penyesuaian->jumlah ?? 0;
-            $mutma = $mutasiMasuk->jumlah ?? 0;
-            $ret = $retur->jumlah ?? 0;
-            $kem = $persiapanOperasiDistribusi->kembali ?? 0;
-            //keluar
-            $dist = $persiapanOperasiDistribusi->distribusi ?? 0;
-            $mutkel = $mutasiKeluar->jumlah ?? 0;
-            $reskel = $resepKeluar->jumlah ?? 0;
-            $reskelrac = $resepKeluarRacikan->jumlah ?? 0;
-            $retG = $returGudang->jumlah ?? 0;
-            if ($koderuangan === 'Gd-04010103') {
-                $masuk = (float)$sal + (float)$peny + (float)$mutma + (float)$kem + (float) $ret;
-                $keluar = (float)$mutkel + (float)$dist + (float)$reskel + (float)$reskelrac + (float)$retG;
-                $sisa = (float)$masuk - (float)$keluar;
-                if ((float)$sisa != (float)$tts) {
-                    // cek ketorolac
-                    $masuk = $sisa;
-                    $index = 0;
-                    $stok = FarmasinewStokreal::where('kdobat', $kdobat)
-                        ->where('kdruang', $koderuangan)
-                        ->orderBy('tglexp', 'DESC')
-                        ->orderBy('nodistribusi', 'DESC')
-                        ->get();
-                    $tolalIndex = count($stok) - 1;
-                    foreach ($stok as $st) {
-                        $st->update([
-                            'jumlah' => 0
-                        ]);
-                    }
-                    while ($masuk > 0) {
-                        $distribusi = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
-                            ->where('no_permintaan', $stok[$index]['nodistribusi'])
-                            ->where('nobatch', $stok[$index]['nobatch'])
-                            ->orderBy('id', 'DESC') // jaga2 data double
-                            ->first();
-                        if ($distribusi) {
-                            $ada = $distribusi->jml;
-                            if ($ada > $masuk) {
-                                $stok[$index]->update([
-                                    'jumlah' => $masuk
-                                ]);
-                                $masuk = 0;
-                            } else {
-                                $sisax = $masuk - $ada;
-                                $stok[$index]->update([
-                                    'jumlah' => $ada
-                                ]);
-                                $masuk = $sisax;
-                                $index += 1;
-                            }
-                        } else {
-                            $distribusi2 = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
-                                ->where('no_permintaan', $stok[$index]['nodistribusi'])
-                                ->orderBy('id', 'DESC') // jaga2 data double
-                                ->first();
-                            if ($distribusi2) {
-                                $ada = $distribusi2->jml;
-                                if ($ada > $masuk) {
-                                    $stok[$index]->update([
-                                        'jumlah' => $masuk
-                                    ]);
-                                    $masuk = 0;
-                                } else {
-                                    $sisax = $masuk - $ada;
-                                    $stok[$index]->update([
-                                        'jumlah' => $ada
-                                    ]);
-                                    $masuk = $sisax;
-                                    $index += 1;
-                                }
-                            } else {
-                                $stok[$index]->update([
-                                    'jumlah' => $masuk
-                                ]);
-                                $masuk = 0;
-                            }
-                        }
-                    }
-                    $message = 'Cek Stok Depo Ok selesai, Stok sudah di update';
-                    if ($sisa == 0) {
-                        foreach ($stok as $st) {
-                            $st->update([
-                                'jumlah' => $sisa
-                            ]);
-                        }
-                        $message = 'Cek Stok Depo Ok selesai, Stok Tidak berubah';
-                    }
-                    if ($sisa < 0) {
-
-                        $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
-                    }
-                }
-            } else {
-                $masuk = (float)$sal + (float)$peny + (float)$mutma + (float) $ret;
-                $keluar = (float)$mutkel + (float)$reskel + (float)$reskelrac + (float)$retG;
-                $sisa = (float)$masuk - (float)$keluar;
-
-                if ((float)$sisa != (float)$tts) {
-                    // cek ketorolac
-                    $masuk = $sisa;
-                    $index = 0;
-                    $stok = FarmasinewStokreal::where('kdobat', $kdobat)
-                        ->where('kdruang', $koderuangan)
-                        ->orderBy('tglexp', 'DESC')
-                        ->orderBy('nodistribusi', 'DESC')
-                        ->get();
-                    foreach ($stok as $st) {
-                        $st->update([
-                            'jumlah' => 0
-                        ]);
-                    }
-                    while ($masuk > 0) {
-                        $distribusi = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
-                            ->where('no_permintaan', $stok[$index]['nodistribusi'])
-                            ->where('nobatch', $stok[$index]['nobatch'])
-                            ->orderBy('id', 'DESC') // jaga2 data double
-                            ->first();
-                        if ($distribusi) {
-                            $ada = $distribusi->jml;
-                            if ($ada > $masuk) {
-                                $stok[$index]->update([
-                                    'jumlah' => $masuk
-                                ]);
-                                $masuk = 0;
-                            } else {
-                                $sisax = $masuk - $ada;
-                                $stok[$index]->update([
-                                    'jumlah' => $ada
-                                ]);
-                                $masuk = $sisax;
-                                $index += 1;
-                            }
-                        } else {
-                            $distribusi2 = Mutasigudangkedepo::where('kd_obat', $stok[$index]['kdobat'])
-                                ->where('no_permintaan', $stok[$index]['nodistribusi'])
-                                ->orderBy('id', 'DESC') // jaga2 data double
-                                ->first();
-                            if ($distribusi2) {
-                                $ada = $distribusi2->jml;
-                                if ($ada > $masuk) {
-                                    $stok[$index]->update([
-                                        'jumlah' => $masuk
-                                    ]);
-                                    $masuk = 0;
-                                } else {
-                                    $sisax = $masuk - $ada;
-                                    $stok[$index]->update([
-                                        'jumlah' => $ada
-                                    ]);
-                                    $masuk = $sisax;
-                                    $index += 1;
-                                }
-                            } else {
-                                $stok[$index]->update([
-                                    'jumlah' => $masuk
-                                ]);
-                                $masuk = 0;
-                            }
-                        }
-                    }
-                    $message = 'Cek Stok Depo selesai, Stok sudah di update';
-                    if ($sisa == 0) {
-                        foreach ($stok as $st) {
-                            $st->update([
-                                'jumlah' => $sisa
-                            ]);
-                        }
-                        $message = 'Cek Stok Depo selesai, Stok Tidak berubah';
-                    }
-                    if ($sisa < 0) {
-
-                        $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
-                    }
-                }
-            }
-
-
-
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
             return [
-                'saldoAwal' => $saldoAwal,
-                'stokid' => $stokid,
-                'penyesuaian' => $penyesuaian,
-                'penerimaan' => 0,
-                'mutasiMasuk' => $mutasiMasuk,
-                'mutasiKeluar' => $mutasiKeluar,
-                'noresep' => $noresep ?? [],
-                'resepKeluar' => $resepKeluar,
-                'retur' => $retur,
-                'resepKeluarRacikan' => $resepKeluarRacikan,
-                // 'persiapanOperasi' => $persiapanOperasi ?? null,
-                'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi ?? null,
-                'tts' => $tts,
-                'sal' => $sal,
-                'peny' => $peny,
-                'mutma' => $mutma,
-                'ret' => $ret,
-                'mutkel' => $mutkel,
-                'reskel' => $reskel,
-                'reskelrac' => $reskelrac,
-                'kem' => $kem,
-                'dist' => $dist,
-                'retG' => $retG,
-                'masuk' => $masuk,
-                'keluar' => $keluar,
-                'sisa' => $sisa,
-                'message' => $message
+                'result' => '' . $e,
+                'err' =>  $e,
+                'data' => $data,
+                'status' => 410
             ];
         }
     }

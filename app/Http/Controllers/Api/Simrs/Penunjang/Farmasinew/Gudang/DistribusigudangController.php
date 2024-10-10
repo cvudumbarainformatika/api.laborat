@@ -202,8 +202,9 @@ class DistribusigudangController extends Controller
                         ]
                     );
 
-                    Stokreal::where('id', $caristok[$index]->id)
-                        ->update(['jumlah' => $sisax]);
+                    // Stokreal::where('id', $caristok[$index]->id)
+                    //     ->update(['jumlah' => $sisax]);
+                    $caristok[$index]->update(['jumlah' => $sisax]);
                     $masuk = 0;
                 } else {
                     $sisax = $masuk - $sisa;
@@ -220,8 +221,9 @@ class DistribusigudangController extends Controller
                             'tglexp' => $caristok[$index]->tglexp,
                         ]
                     );
-                    Stokreal::where('id', $caristok[$index]->id)
-                        ->update(['jumlah' => 0]);
+                    // Stokreal::where('id', $caristok[$index]->id)
+                    //     ->update(['jumlah' => 0]);
+                    $caristok[$index]->update(['jumlah' => 0]);
 
 
                     $masuk = $sisax;
@@ -295,7 +297,9 @@ class DistribusigudangController extends Controller
                 ]
             ];
             event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+
             DB::connection('farmasi')->commit();
+
             $nyamuta = Mutasigudangkedepo::select('kd_obat', DB::raw('sum(jml) as jml'))->where('no_permintaan', $request->nopermintaan)
                 ->where('kd_obat', $request->kodeobat)
                 ->first();
