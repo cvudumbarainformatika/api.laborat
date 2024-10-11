@@ -82,9 +82,35 @@ class JurnalManualController extends Controller
 
     public function getrincian()
     {
-        $data = JurnalUmum_Rinci::where('nobukti', request('nobukti'))
+        $data = JurnalUmum_Header::with(
+            [
+                'rincianjurnalumum'
+            ]
+        )
+        ->where('nobukti', request('nobukti'))
         ->get();
 
         return new JsonResponse($data);
+    }
+
+    public function hapusrincians(Request $request)
+    {
+        $data = JurnalUmum_Rinci::select('nobukti')->where('id', $request->id);
+        $hapusB = $data->delete();
+        $cari = JurnalUmum_Rinci::where('nobukti', $request->nobukti)->count();
+        // return ($cari);
+        if($cari === null || $cari === 0)
+        {
+            $dataheder =  JurnalUmum_Header::where('nobukti', $request->nobukti);
+            $hapusheder = $dataheder->delete();
+        }
+        return new JsonResponse (['message' => 'Data Berhasil Dihapus', 'nobukti' => $request->nobukti], 200);
+    }
+
+    public function VerifData(Request $request)
+    {
+        $dataheder =  JurnalUmum_Header::where('nobukti', $request->nobukti);
+        $updateheder = $dataheder->update(['verif' => '1']);
+        return new JsonResponse (['message' => 'Data Berhasil DiVerif', 'nobukti' => $request->nobukti], 200);
     }
 }

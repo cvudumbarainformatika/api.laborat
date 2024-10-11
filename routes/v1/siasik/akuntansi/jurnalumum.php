@@ -16,4 +16,6 @@ Route::group([
     Route::get('/getrincian', [JurnalManualController::class, 'getrincian']);
 
     Route::post('/simpanjurnalmanual',[JurnalManualController::class, 'simpanjurnalmanual']);
+    Route::post('/hapusrincians',[JurnalManualController::class, 'hapusrincians']);
+    Route::post('/VerifData',[JurnalManualController::class, 'VerifData']);
 });
