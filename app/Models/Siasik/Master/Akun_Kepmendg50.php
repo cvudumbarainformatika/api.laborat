@@ -14,7 +14,7 @@ class Akun_Kepmendg50 extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'akun_permendagri50';
-    protected $timestamp = false;
+    public $timestamps = false;
 
     protected $appends = ['kodeall'];
     public function getKodeallAttribute(){

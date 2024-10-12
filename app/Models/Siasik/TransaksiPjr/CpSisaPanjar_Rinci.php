@@ -12,7 +12,7 @@ class CpSisaPanjar_Rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'pengembaliansisapanjar_rinci';
-    protected $timestamp = false;
+    public $timestamps = false;
     // public function kasrinci()
     // {
     //     return $this->hasMany(GeserKas_Rinci::class, 'notrans', 'notrans');

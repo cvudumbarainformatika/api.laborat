@@ -11,5 +11,5 @@ class SPM_GU extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'transSpmgu';
-    protected $timestamp = false;
+    public $timestamps = false;
 }

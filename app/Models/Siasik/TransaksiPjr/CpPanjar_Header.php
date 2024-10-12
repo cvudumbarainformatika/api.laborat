@@ -11,7 +11,7 @@ class CpPanjar_Header extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'pengembalianpanjar_heder';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function cppjr_rinci()
     {
         return $this->hasMany(CpPanjar_Rinci::class, 'nopengembalianpanjar', 'nopengembalianpanjar');

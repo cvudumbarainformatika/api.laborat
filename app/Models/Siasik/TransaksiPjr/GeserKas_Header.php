@@ -11,7 +11,7 @@ class GeserKas_Header extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'pergeseranTheder';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function kasrinci()
     {
         return $this->hasMany(GeserKas_Rinci::class, 'notrans', 'notrans');

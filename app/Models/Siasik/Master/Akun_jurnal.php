@@ -11,5 +11,5 @@ class Akun_jurnal extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'akun_jurnal';
-    public $timestamp = false;
+    public $timestamps = false;
 }

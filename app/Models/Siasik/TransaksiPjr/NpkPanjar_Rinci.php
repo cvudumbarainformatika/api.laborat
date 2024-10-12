@@ -11,7 +11,7 @@ class NpkPanjar_Rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'npkpanjar_rinci';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function npkhead()
     {
         return $this->belongsTo(NpkPanjar_Header::class, 'nonpk', 'nonpk');

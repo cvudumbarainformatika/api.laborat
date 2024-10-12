@@ -11,5 +11,5 @@ class RekeningBank extends Model
     // protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'keu_rekening_master';
-    protected $timestamp = false;
+    public $timestamps = false;
 }

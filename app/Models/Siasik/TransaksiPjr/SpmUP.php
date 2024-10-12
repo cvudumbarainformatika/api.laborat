@@ -11,5 +11,10 @@ class SpmUP extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'transSpm';
-    protected $timestamp = false;
+    public $timestamps = false;
+
+    // public function mapjurnal()
+    // {
+    //     return $this->belongsTo(SPM_GU::class, 'noSpm', 'noSpm');
+    // }
 }

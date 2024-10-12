@@ -11,5 +11,5 @@ class Nihil extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'pengembalianup';
-    protected $timestamp = false;
+    public $timestamps = false;
 }

@@ -11,7 +11,7 @@ class GeserKas_Rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'pergeseranTrinci';
-    protected $timestamp = false;
+    public $timestamps = false;
     // public function npkhead()
     // {
     //     return $this->hasMany(NpkPanjar_Header::class, 'nonpk', 'nonpk');

@@ -11,5 +11,5 @@ class CpPanjar_Rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'pengembalianpanjar_rinci';
-    protected $timestamp = false;
+    public $timestamps = false;
 }

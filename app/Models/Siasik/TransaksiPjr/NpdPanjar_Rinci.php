@@ -11,7 +11,7 @@ class NpdPanjar_Rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'npdpanjar_rinci';
-    protected $timestamp = false;
+    public $timestamps = false;
     // public function nota_head()
     // {
     //     return $this->belongsTo(NotaPanjar_Header::class, 'nonpdpanjar', 'nonpd');

@@ -16,7 +16,7 @@ class Akun50_2024 extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'akun50_2024';
-    public $timestamp = false;
+    public $timestamps = false;
     protected $appends = ['kodeall'];
     public function getKodeallAttribute(){
         return "{$this->akun}.{$this->kelompok}.{$this->jenis}.{$this->objek}.{$this->rincian_objek}.{$this->subrincian_objek}";

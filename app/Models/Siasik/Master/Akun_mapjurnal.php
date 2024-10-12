@@ -11,5 +11,5 @@ class Akun_mapjurnal extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'akun_mapjurnal';
-    public $timestamp = false;
+    public $timestamps = false;
 }

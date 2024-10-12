@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\Siasik\Akuntansi\Jurnal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
+use App\Models\Siasik\TransaksiPjr\SPM_GU;
+use App\Models\Siasik\TransaksiPjr\SpmUP;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Http\JsonResponse;
@@ -171,12 +174,48 @@ class RegJurnalController extends Controller
         ->orderBy('npkls_heder.tglpindahbuku', 'asc')
         ->get();
 
+        $contrapost = Contrapost::select('contrapost.nocontrapost',
+                    'contrapost.tglcontrapost',
+                    'contrapost.kegiatanblud',
+                    'contrapost.koderek50',
+                    'contrapost.rincianbelanja',
+                    'contrapost.nominalcontrapost',
+                    'akun_mapjurnal.kode50',
+                    'akun_mapjurnal.kode_cair1',
+                    'akun_mapjurnal.uraian_cair1',
+                    'akun_mapjurnal.kode_cairx',
+                    'akun_mapjurnal.uraian_cairx',
+                    'akun_mapjurnal.kode_cair2',
+                    'akun_mapjurnal.uraian_cair2',
+                    'akun_mapjurnal.kd_blud',
+                    'akun_mapjurnal.ur_blud')
+        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','contrapost.koderek50')
+        ->whereBetween('contrapost.tglcontrapost', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->orderBy('contrapost.tglcontrapost', 'asc')
+        ->get();
+
+        $spmup = SpmUP::select('transSpm.noSpm',
+            'transSpm.tglSpm',
+            'transSpm.uraianPekerjaan',
+            'transSpm.jumlahspp')
+        ->whereBetween('transSpm.tglSpm', [$awal, $akhir])
+        ->get();
+
+        $spmgu = SPM_GU::select('transSpmgu.noSpm',
+            'transSpmgu.tglSpm',
+            'transSpmgu.uraianPekerjaan',
+            'transSpmgu.jumlahspp')
+        ->whereBetween('transSpmgu.tglSpm', [$awal, $akhir])
+        ->get();
 
         $regjurnal = [
             'stp' => $stp,
             'bastfarmasi' => $bastfarmasi,
             'cair_stp' => $cairstp,
             'cair_nostp' => $cairnostp,
+            'contrapost' => $contrapost,
+            'spmup' => $spmup,
+            'spmgu' => $spmgu,
 
         ];
         return new JsonResponse($regjurnal);

@@ -11,7 +11,7 @@ class NotaPanjar_Rinci extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'notapanjar_rinci';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function spj_head()
     {
         return $this->hasMany(SpjPanjar_Header::class, 'notapanjar', 'nonotapanjar');

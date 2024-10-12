@@ -11,7 +11,7 @@ class NpdPanjar_Header extends Model
     protected $connection = 'siasik';
     protected $guarded = ['id'];
     protected $table = 'npdpanjar_heder';
-    protected $timestamp = false;
+    public $timestamps = false;
     public function npdpjr_rinci()
     {
         return $this->hasMany(NpdPanjar_Rinci::class, 'nonpdpanjar', 'nonpdpanjar');
