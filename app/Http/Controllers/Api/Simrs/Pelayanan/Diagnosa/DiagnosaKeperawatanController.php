@@ -16,9 +16,21 @@ class DiagnosaKeperawatanController extends Controller
 {
     public function diagnosakeperawatan()
     {
-        $listdiagnosa = Mdiagnosakeperawatan::with(['intervensis'])
+        $listdiagnosa = Mdiagnosakeperawatan::select('kode', 'nama')
+        ->with(['intervensis:id,nama,group,mdiagnosakeperawatan_kode,kdSnwmed,display'])
             ->get();
+
+
         return new JsonResponse($listdiagnosa);
+    }
+
+
+    public function listdiagnosakeperawatan()
+    {
+       $data = Diagnosakeperawatan::where('noreg', request('noreg'))
+       ->with('intervensi', 'intervensi.masterintervensi')->get();
+
+       return new JsonResponse($data);
     }
 
     public function simpandiagnosakeperawatan(Request $request)

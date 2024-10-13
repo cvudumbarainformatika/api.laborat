@@ -229,7 +229,7 @@ class TindakanController extends Controller
     public static function dataTindakanByNoreg($noreg)
     {
         $data = Tindakan::select(
-            'id','rs1','rs4',
+            'id','rs1','rs2','rs4',
             'rs1 as noreg',
             'rs2 as nota',
             'rs3',

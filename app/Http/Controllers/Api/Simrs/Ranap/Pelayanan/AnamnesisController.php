@@ -67,9 +67,12 @@ class AnamnesisController extends Controller
     
     public function simpananamnesis(Request $request)
     {
+      $data = self::storeAnamnesis($request);
+      return new JsonResponse($data);
+    }
 
-      
-
+    public static function storeAnamnesis($request)
+    {
       $user = Pegawai::find(auth()->user()->pegawai_id);
       $kdpegsimrs = $user->kdpegsimrs;
 
@@ -96,7 +99,7 @@ class AnamnesisController extends Controller
                   // 'scorenyeri' => $request->skorNyeri ?? 0,
                   // 'keteranganscorenyeri' => $request->keluhanNyeri ?? '',
                   'kdruang'=> $request->kdruang,
-                  'awal'=> '1',
+                  'awal'=> $request->awal ?? null,
                   'user'  => $kdpegsimrs,
                 ]
             );
@@ -120,7 +123,7 @@ class AnamnesisController extends Controller
                 'riwayatpenyakitkeluarga' => $request->form['rwPenyKlrg'] ?? '',
                 'riwayat_pekerjaan_yang_berhubungan_dengan_zat_berbahaya' => $request->form['rwPkrjDgZatBahaya'] ?? '',
                 'kdruang'=> $request->kdruang,
-                'awal'=> '1',
+                'awal'=> $request->awal ?? null,
                 'user'  => $kdpegsimrs,
             ]
           );
@@ -356,16 +359,30 @@ class AnamnesisController extends Controller
 
 
         DB::commit();
-        return new JsonResponse([
-            'message' => 'BERHASIL DISIMPAN',
-            'result' => self::getdata($request->noreg),
-        ], 200);
-      } catch (\Throwable $th) {
+        // return new JsonResponse([
+        //     'message' => 'BERHASIL DISIMPAN',
+        //     'result' => self::getdata($request->noreg),
+        // ], 200);
+
+        $data = [
+          'success' => true,
+          'message' => 'BERHASIL DISIMPAN',
+          'idAnamnesis' => $simpananamnesis->id,
+          'result' => self::getdata($request->noreg),
+        ];
+
+        return $data;
+      } catch (\Exception $th) {
         DB::rollBack();
-        return new JsonResponse(['message' => 'GAGAL DISIMPAN','err'=>$th], 500);
+        // return new JsonResponse(['message' => 'GAGAL DISIMPAN','err'=>$th], 500);
+        $data = [
+          'success' => false,
+          'message' => 'GAGAL DISIMPAN',
+          'result' => $th->getMessage(),
+        ];
+
+        return $data;
       }
-      
-        
     }
 
     public function hapusanamnesis(Request $request)

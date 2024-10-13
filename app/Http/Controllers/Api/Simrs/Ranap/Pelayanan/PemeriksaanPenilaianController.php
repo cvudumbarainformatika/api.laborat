@@ -32,8 +32,14 @@ class PemeriksaanPenilaianController extends Controller
 
       return $data;
     }
-    
+
     public function simpan(Request $request)
+    {
+      $data = self::store($request);
+      return new JsonResponse($data);
+    }
+    
+    public static function store($request)
     {
 
       // return $request->all();
@@ -58,7 +64,7 @@ class PemeriksaanPenilaianController extends Controller
                   'ontario' => $request->ontario,
                   
                   'kdruang'=> $request->kdruang,
-                  'awal'=> '1',
+                  'awal'=> $request->awal ?? null,
                   'user'  => $kdpegsimrs,
                   'group_nakes'  => $user->kdgroupnakes,
                 ]
@@ -82,7 +88,7 @@ class PemeriksaanPenilaianController extends Controller
                 'ontario' => $request->ontario,
                 
                 'kdruang'=> $request->kdruang,
-                'awal'=> '1',
+                'awal'=> $request->awal ?? null,
                 'user'  => $kdpegsimrs,
                 'group_nakes'  => $user->kdgroupnakes,
             ]
@@ -91,13 +97,29 @@ class PemeriksaanPenilaianController extends Controller
 
         
         DB::commit();
-        return response()->json([
-            'message' => 'BERHASIL DISIMPAN',
-            'result' => self::getdata($request->noreg),
-        ], 200);
+        // return response()->json([
+        //     'message' => 'BERHASIL DISIMPAN',
+        //     'result' => self::getdata($request->noreg),
+        // ], 200);
+
+        $data = [
+          'success' => true,
+          'message' => 'BERHASIL DISIMPAN',
+          'idPenilaian' => $simpan->id,
+          'result' => self::getdata($request->noreg),
+        ];
+
+        return $data;
       } catch (\Throwable $th) {
         DB::rollBack();
-        return new JsonResponse(['message' => 'GAGAL DISIMPAN','err'=>$th], 500);
+        // return new JsonResponse(['message' => 'GAGAL DISIMPAN','err'=>$th], 500);
+        $data = [
+          'success' => false,
+          'message' => 'GAGAL DISIMPAN',
+          'result' => $th->getMessage(),
+        ];
+
+        return $data;
       }
       
         

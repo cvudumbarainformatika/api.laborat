@@ -75,6 +75,7 @@ class RanapController extends Controller
             'rs24.rs5 as group_ruangan',
             'rs24.rs4 as kdgroup_ruangan',
             'rs23_meta.kd_jeniskasus',
+            'memodiagnosadokter.diagnosa as memodiagnosa',
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
@@ -82,6 +83,7 @@ class RanapController extends Controller
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
+            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->where(function($query) use ($tanggal, $tanggalx) {
                 $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal]);
             })

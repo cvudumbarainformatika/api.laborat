@@ -45,6 +45,7 @@ use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
+use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Tindakan\Tindakan;
 use App\Models\Simrs\Visite\Visite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -480,5 +481,10 @@ class Kunjunganranap extends Model
     public function sepranap()
     {
        return $this->hasOne(Sepranap::class, 'rs1', 'rs1');
+    }
+
+    public function memo()
+    {
+       return $this->hasOne(Memodiagnosadokter::class, 'noreg', 'rs1');
     }
 }
