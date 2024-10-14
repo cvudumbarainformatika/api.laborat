@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\Siasik\Akuntansi\Jurnal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
+use App\Models\Siasik\TransaksiPjr\Nihil;
 use App\Models\Siasik\TransaksiPjr\SPM_GU;
 use App\Models\Siasik\TransaksiPjr\SpmUP;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
@@ -208,6 +210,11 @@ class RegJurnalController extends Controller
         ->whereBetween('transSpmgu.tglSpm', [$awal, $akhir])
         ->get();
 
+        $nihil = Nihil::select('pengembalianup.nopengembalian',
+        'pengembalianup.tgltrans',
+        'pengembalianup.jmlpengembalianreal')
+        ->whereBetween('pengembalianup.tgltrans', [$awal, $akhir])
+        ->get();
         $regjurnal = [
             'stp' => $stp,
             'bastfarmasi' => $bastfarmasi,
@@ -216,7 +223,7 @@ class RegJurnalController extends Controller
             'contrapost' => $contrapost,
             'spmup' => $spmup,
             'spmgu' => $spmgu,
-
+            'nihil' => $nihil
         ];
         return new JsonResponse($regjurnal);
     }

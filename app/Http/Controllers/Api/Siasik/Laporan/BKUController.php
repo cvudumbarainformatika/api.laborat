@@ -43,24 +43,29 @@ class BKUController extends Controller
     public function bkuppk()
     {
         $thnsekarang=date('Y');
+        // $date = date('Y-m-d');
         $awal=request('tahun').'-'. request('bulan').'-01';
         $akhir=request('tahun').'-'. request('bulan').'-31';
+        $getdate=date('Y-m-d', strtotime($awal));
+        // $kurangdariawal=  $getdate < $awal;
+        // return $kurangdariawal;
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
         $setor=TranskePPK::select('idtrans', 'tgltrans', 'nilai', 'ket')
         ->orderBy('tgltrans', 'asc')
-        // ->groupBy('tgltrans')
+        ->groupBy('tgltrans')
         ->whereBetween('tgltrans', [$awal, $akhir])
-        // ->selectRaw('sum(nilai) as nilaitf')
+        ->selectRaw('sum(nilai) as total')
         ->get();
         $kaskecil=PengeluaranKas::where('kd_kas', 'K0002')
         ->select('pengeluarankhaskecil.nominal',
                 'pengeluarankhaskecil.tanggalpengeluaran',
                 'pengeluarankhaskecil.kd_kas',
                 'pengeluarankhaskecil.nomorpengeluaran')
-        // ->groupBy('tanggalpengeluaran')
+        ->groupBy('tanggalpengeluaran')
         ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->selectRaw('sum(nominal) as total')
         ->get();
         // $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
         //     $rinci -> with('plainlain',function($tgl){
@@ -83,13 +88,32 @@ class BKUController extends Controller
         // ->with('pendapatanlain')
         // ->get();
 
-        $npkls = NpkLS_heder::with(['npklsrinci'=> function($npk)
+        $npkls = NpkLS_heder::select('npkls_heder.nonpk',
+        'npkls_heder.tglpindahbuku',
+        'npkls_heder.nopencairan')
+        ->with('npklsrinci', function($npk)
             {
-                $npk->with(['npdlshead'=> function ($npdrinci){
-                    $npdrinci->with(['npdlsrinci']);
-                }]);
-            }])
+                $npk
+                ->select('npkls_rinci.nonpk',
+                'npkls_rinci.kegiatanblud',
+                'npkls_rinci.nonpdls',
+                'npkls_rinci.total')
+                ->with('npdlshead', function ($npdrinci){
+                    $npdrinci->select('npdls_heder.nonpdls',
+                    'npdls_heder.kegiatanblud')
+                    ->with('npdlsrinci', function($rinci){
+                        $rinci->select('npdls_rinci.nonpdls',
+                        'npdls_rinci.nominalpembayaran',
+                        'npdls_rinci.koderek50',
+                        'npdls_rinci.rincianbelanja',
+                        'npdls_rinci.tglentry')
+                        ->groupBy('tglentry');
+
+                    });
+                });
+            })
         ->whereBetween('tglpindahbuku', [$awal, $akhir])
+        ->selectRaw('sum(npdls_rinci.nominalpembayaran) as total')
         ->get();
 
         // $npklsa = NpkLS_heder::whereBetween('tglnpk', [$awal, $akhir])->pluck('nonpk');
@@ -102,25 +126,31 @@ class BKUController extends Controller
         //     ])
         //     ->whereIn('nonpk', $npklsa)->get();
         // }
-
-
         $nihil = Nihil::select(
-            'nopengembalian',
-            'tgltrans',
-            'jmlup',
-            'jmlspj',
-            'jmlcp',
-            'jmlpengembalianup',
-            'jmlsisaup',
-            'jmlpengembalianreal',)
+            'pengembalianup.nopengembalian',
+            'pengembalianup.tgltrans',
+            'pengembalianup.jmlpengembalianreal')
+        ->groupBy('tgltrans')
+        ->selectRaw('sum(jmlpengembalianreal) as total')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
 
 
-        $spm = SpmUP::orderBy('tglSpm','desc')
+        $spm = SpmUP::select('transSpm.tglSpm',
+        'transSpm.noSpm',
+        'transSpm.uraian',
+        'transSpm.jumlahspp')
+        ->groupBy('tglSpm')
+        ->selectRaw('sum(jumlahspp) as total')
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
-        $spmgu = SPM_GU::orderBy('tglSpm','desc')
+
+        $spmgu = SPM_GU::select('transSpmgu.tglSpm',
+        'transSpmgu.noSpm',
+        'transSpmgu.uraian',
+        'transSpmgu.jumlahspp')
+        ->groupBy('tglSpm')
+        ->selectRaw('sum(jumlahspp) as total')
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
 
@@ -129,10 +159,18 @@ class BKUController extends Controller
         ->select('pegawai.nip',
                 'pegawai.nama')
         ->get();
-        $silpa=SisaAnggaran::where('tahun', $thnsekarang)
+
+        $silpa=SisaAnggaran::select('silpa.notrans',
+        'silpa.tanggal',
+        'silpa.tahun',
+        'silpa.nominal')
+        ->where('tahun', $thnsekarang)
+        ->groupBy('tanggal')
+        ->selectRaw('sum(nominal) as total')
         ->orderBy('tanggal', 'asc')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
+
         $ppk = [
             'saldo' => $saldo,
             'silpa' => $silpa,
