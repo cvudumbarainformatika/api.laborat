@@ -302,7 +302,12 @@ class LaboratController extends Controller
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
     public function hapuspermintaanlaboratbaru(Request $request)
-    {
+    {   
+        $cek = Laboratpemeriksaan::whereIn('id', $request->id)->where('rs18','=','1')->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa dihapus!'], 500);
+        }
+
         $hapus = Laboratpemeriksaan::whereIn('id', $request->id)->delete();
         $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->get();
 
