@@ -119,6 +119,12 @@ class RadiologimetaController extends Controller
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
+
+        $kunci = $cari->rs12 === '1';
+        if ($kunci) {
+            return new JsonResponse(['message' => 'Maaf, Data telah dikunci'], 500);
+        }
+
         $hapus = $cari->delete();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
