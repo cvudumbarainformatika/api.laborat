@@ -45,6 +45,7 @@ class RanapController extends Controller
             'rs23.rs6 as ketruangan',
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
+            'rs23.rs10 as kodedokter',
             'rs21.rs2 as dokter',
             'rs23.rs19 as kdsistembayar',
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
