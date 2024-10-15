@@ -45,7 +45,11 @@ class RadiologimetaController extends Controller
         {
             $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'G-RAD');
         }else{
-            $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
+            if($request->isRanap === true){
+                $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'I-RAD');
+            }else{
+                $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
+            }
         }
 
         $userid = FormatingHelper::session_user();
@@ -62,9 +66,9 @@ class RadiologimetaController extends Controller
                 'rs7' => $request->keterangan,
                 'rs8' => $request->kodedokter, //$request->kodedokter
                 'rs9' => '1',
-                'rs10' => $request->kodepoli,
+                'rs10' => $request->kodepoli, // ruangan
                 'rs11' => $userid['kodesimrs'],
-                'rs13' => $request->kodepoli,
+                'rs13' => $request->isRanap ? $request->kdgroup_ruangan : $request->kodepoli, // group_ruangan
                 'rs14' => $request->kodesistembayar, //$request->kd_akun
                 'rs15' => $request->tpemeriksaan,
                 'cito' => $request->cito === 'Iya' ? 'Cito' : '',
@@ -102,6 +106,11 @@ class RadiologimetaController extends Controller
         $nota = Transpermintaanradiologi::select('rs2 as nota')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+    public function getdata()
+    {
+        $data = Transpermintaanradiologi::select('*')->where('rs1', request('noreg'))->orderBy('id', 'DESC')->get();
+        return new JsonResponse($data);
     }
 
     public function hapusradiologi(Request $request)
