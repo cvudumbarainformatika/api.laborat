@@ -15,7 +15,7 @@ class PemeriksaanPenilaianController extends Controller
 {
     public function list()
     {
-      
+
       $data = self::getdata(request('noreg'));
        return new JsonResponse($data);
     }
@@ -38,7 +38,7 @@ class PemeriksaanPenilaianController extends Controller
       $data = self::store($request);
       return new JsonResponse($data);
     }
-    
+
     public static function store($request)
     {
 
@@ -62,14 +62,14 @@ class PemeriksaanPenilaianController extends Controller
                   'humpty_dumpty' => $request->humpty_dumpty,
                   'morse_fall' => $request->morse_fall,
                   'ontario' => $request->ontario,
-                  
+
                   'kdruang'=> $request->kdruang,
                   'awal'=> $request->awal ?? null,
                   'user'  => $kdpegsimrs,
                   'group_nakes'  => $user->kdgroupnakes,
                 ]
             );
-            if ($hasil === 1) { 
+            if ($hasil === 1) {
                 $simpan = Penilaian::where('id', $request->id)->first();
             } else {
                 $simpan = null;
@@ -86,7 +86,7 @@ class PemeriksaanPenilaianController extends Controller
                 'humpty_dumpty' => $request->humpty_dumpty,
                 'morse_fall' => $request->morse_fall,
                 'ontario' => $request->ontario,
-                
+
                 'kdruang'=> $request->kdruang,
                 'awal'=> $request->awal ?? null,
                 'user'  => $kdpegsimrs,
@@ -95,7 +95,7 @@ class PemeriksaanPenilaianController extends Controller
           );
         }
 
-        
+
         DB::commit();
         // return response()->json([
         //     'message' => 'BERHASIL DISIMPAN',
@@ -121,8 +121,22 @@ class PemeriksaanPenilaianController extends Controller
 
         return $data;
       }
-      
-        
+
+
+    }
+
+    public static function delete(Request $request)
+    {
+        $datapenilaian =  Penilaian::where('id', $request->id);
+        $hapuspenilaian = $datapenilaian->delete();
+
+        $data = [
+            'success' => true,
+            'message' => 'BERHASIL DIHAPUS',
+            'result' => self::getdata($request->noreg)
+        ];
+
+        return $data;
     }
 
 }
