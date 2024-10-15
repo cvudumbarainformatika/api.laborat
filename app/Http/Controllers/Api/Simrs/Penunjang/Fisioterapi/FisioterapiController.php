@@ -14,8 +14,8 @@ class FisioterapiController extends Controller
     public function permintaanfisioterapipoli(Request $request)
     {
         DB::select('call nota_permintaanfisio(@nomor)');
-        $x = DB::table('rs1')->select('rs14')->get();
-        $wew = $x[0]->rs14;
+        $x = DB::table('rs1')->select('rs29')->get();
+        $wew = $x[0]->rs29;
         if($request->kodepoli === 'POL014')
         {
             $notapermintaanfisioterapi = $request->nota ?? FormatingHelper::notatindakan($wew, '/PFIS-IG');
