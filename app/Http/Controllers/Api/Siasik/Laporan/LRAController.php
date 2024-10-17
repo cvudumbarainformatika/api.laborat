@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Siasik\Anggaran\Anggaran_Pendapatan;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
+use App\Models\Siasik\Anggaran\Tampung_pendapatan;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
@@ -195,7 +196,9 @@ class LRAController extends Controller
                                         '4.1.04.16.01',
                                         '4.1.04.16.01.0001'])
         ->get();
-        $nilaipendapatan = Anggaran_Pendapatan::where('tahun', $thn)->select('anggaran_pendapatan.nilai')
+        // $nilaipendapatan = Anggaran_Pendapatan::where('tahun', $thn)->select('anggaran_pendapatan.nilai')
+        // ->get();
+        $nilaipendapatan = Tampung_pendapatan::where('tahun', $thn)->select('t_tampung_pendapatan.pagu as nilai', 't_tampung_pendapatan.notrans')
         ->get();
         $realisasipendapatan=TranskePPK::select('t_terima_ppk.nilai','t_terima_ppk.tgltrans')
         ->orderBy('tgltrans', 'asc')
