@@ -387,6 +387,7 @@ class NPD_LSController extends Controller
     public function simpannpd(Request $request)
     {
         $this->validate($request,[
+            'nonpdls' => 'unique:siasik.npdls_heder,nonpdls',
             'keterangan' => 'required|min:3',
             'pptk' => 'required',
             'tglnpdls' => 'required',
@@ -577,24 +578,27 @@ class NPD_LSController extends Controller
         // $nomer=Transaksi::latest();
         $cek = NpdLS_heder::count();
         if ($cek == null){
-            $urut = "00001";
+            $urut = "000001";
             $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($pegawai).'/'.strtoupper($huruf).'/'.$thn;
         }
         else{
             $ambil=NpdLS_heder::all()->last();
-            $urut = (int)substr($ambil->nonpdls, 0, 5) + 1;
+            $urut = (int)substr($ambil->id, 0, 5) + 1;
             //cara menyambungkan antara tgl dn kata dihubungkan tnda .
             // $urut = "000" . $urut;
             if(strlen($urut) == 1){
-                $urut = "0000" . $urut;
+                $urut = "00000" . $urut;
             }
             else if(strlen($urut) == 2){
-                $urut = "000" . $urut;
+                $urut = "0000" . $urut;
             }
             else if(strlen($urut) == 3){
-                $urut = "00" . $urut;
+                $urut = "000" . $urut;
             }
             else if(strlen($urut) == 4){
+                $urut = "00" . $urut;
+            }
+            else if(strlen($urut) == 5){
                 $urut = "0" . $urut;
             }
             else {
