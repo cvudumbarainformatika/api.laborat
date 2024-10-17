@@ -7,12 +7,14 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Laporan\Operasi\PermintaanOperasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\MkamarRanap;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
@@ -33,6 +35,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranaplaluracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanheder;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
@@ -40,12 +43,15 @@ use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Oksigen\Oksigen;
+use App\Models\Simrs\Penunjang\Operasi\PermintaanOperasiIrd;
 use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Tindakan\Tindakan;
 use App\Models\Simrs\Visite\Visite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -370,7 +376,24 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
     }
+    public function pemeriksaan()
+    {
+        return $this->hasMany(PemeriksaanUmum::class, 'rs1', 'rs1');
+    }
+    public function penilaian()
+    {
+        return $this->hasMany(Penilaian::class, 'rs1', 'rs1');
+    }
 
+    public function diagnosamedis()
+    {
+        return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
+    }
+
+    public function diagnosakeperawatan()
+    {
+       return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'rs1');
+    }
     public function diagnosa()
     {
         return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
@@ -384,6 +407,20 @@ class Kunjunganranap extends Model
     public function radiologi()
     {
         return $this->hasMany(Transpermintaanradiologi::class, 'rs1', 'rs1');
+    }
+
+    public function fisio()
+    {
+       return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'rs1');
+    }
+
+    public function operasi()
+    {
+        return $this->hasMany(PermintaanOperasi::class, 'rs1', 'rs1');
+    }
+    public function operasi_ird()
+    {
+        return $this->hasMany(PermintaanOperasiIrd::class, 'rs1', 'rs1');
     }
 
     public function hasilradiologi()

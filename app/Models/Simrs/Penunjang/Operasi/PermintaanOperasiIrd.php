@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Models\Simrs\Laporan\Operasi;
+namespace App\Models\Simrs\Penunjang\Operasi;
 
 use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PermintaanOperasi extends Model
+class PermintaanOperasiIrd extends Model
 {
     use HasFactory;
-    protected $table = 'rs200';
+    protected $table = 'rs225';
     protected $guarded = ['id'];
 
 
