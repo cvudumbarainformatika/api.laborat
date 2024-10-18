@@ -27,12 +27,12 @@ class BankDarahController extends Controller
        return new JsonResponse($data);
     }
 
-    // public function getnota()
-    // {
-    //     $nota = PermintaanOperasi::select('rs2 as nota')->where('rs1', request('noreg'))
-    //         ->orderBy('id', 'DESC')->get();
-    //     return new JsonResponse($nota);
-    // }
+    public function getnota()
+    {
+        $nota = PermintaanBankdarah::select('rs2 as nota')->where('rs1', request('noreg'))
+            ->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
     // public function getdata()
     // {
     //     $data = PermintaanOperasi::select('*')->where('rs1', request('noreg'))
@@ -98,24 +98,24 @@ class BankDarahController extends Controller
       );
     }
 
-    // public function hapusdata(Request $request)
-    // {
-    //     $cari = PermintaanOperasi::find($request->id);
-    //     if (!$cari) {
-    //         return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
-    //     }
+    public function hapusdata(Request $request)
+    {
+        $cari = PermintaanBankdarah::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+        }
 
-    //     $kunci = $cari->rs12 === '1';
-    //     if ($kunci) {
-    //         return new JsonResponse(['message' => 'Maaf, Data telah dikunci'], 500);
-    //     }
+        $kunci = $cari->rs14 === '1'; // ini masih tanda tanya
+        if ($kunci) {
+            return new JsonResponse(['message' => 'Maaf, Data telah dikunci'], 500);
+        }
 
-    //     $hapus = $cari->delete();
-    //     if (!$hapus) {
-    //         return new JsonResponse(['message' => 'gagal dihapus'], 500);
-    //     }
-    //     $nota = PermintaanOperasi::select('rs2 as nota')->where('rs1', $request->noreg)
-    //         ->groupBy('rs2')->orderBy('id', 'DESC')->get();
-    //     return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
-    // }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        $nota = PermintaanBankdarah::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
+    }
 }

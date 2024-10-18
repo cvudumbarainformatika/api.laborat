@@ -310,6 +310,10 @@ class RanapController extends Controller
                 'operasi_ird'=> function ($q) {
                     $q->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes')
                     ->orderBy('id', 'DESC');
+                },
+                'bankdarah'=> function ($q) {
+                    $q
+                    ->orderBy('id', 'DESC');
                 }
             ])->first();
 

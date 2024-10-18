@@ -21,6 +21,7 @@ use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
+use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
@@ -421,6 +422,10 @@ class Kunjunganranap extends Model
     public function operasi_ird()
     {
         return $this->hasMany(PermintaanOperasiIrd::class, 'rs1', 'rs1');
+    }
+    public function bankdarah()
+    {
+        return $this->hasMany(PermintaanBankdarah::class, 'rs1', 'rs1');
     }
 
     public function hasilradiologi()
