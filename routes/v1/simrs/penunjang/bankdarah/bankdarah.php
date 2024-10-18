@@ -11,6 +11,6 @@ Route::group([
     Route::get('/getmaster', [BankDarahController::class, 'getmaster']);
     // Route::get('/getnota', [OperasiIrdController::class, 'getnota']);
     // Route::get('/getdata', [OperasiIrdController::class, 'getdata']);
-    // Route::post('/permintaanoperasi', [OperasiIrdController::class, 'simpandata']);
+    Route::post('/simpanpermintaan', [BankDarahController::class, 'simpandata']);
     // Route::post('/hapuspermintaan', [OperasiIrdController::class, 'hapusdata']);
 });

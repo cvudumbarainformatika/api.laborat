@@ -14,6 +14,7 @@
   {"nama":"master-sistembayar", "ketId":null, "controller":"AuthController", "method":"authuser"},
   {"nama":"kamar", "ketId":null, "controller":"KamarController", "method":"index"},
   {"nama":"dokter", "ketId":null, "controller":"NakesController", "method":"dokter"},
+  {"nama":"list_nakes", "ketId":null, "controller":"PegawaiController", "method":"listnakes"},
   {"nama":"ruanganranap", "ketId":null, "controller":"RuanganController", "method":"listruanganranap"},
   {"nama":"jeniskasus", "ketId":null, "controller":"RanapController", "method":"listjenikkasus"},
   {"nama":"m_bdrs", "ketId":null, "controller":"BankDarahController", "method":"getmaster"}
