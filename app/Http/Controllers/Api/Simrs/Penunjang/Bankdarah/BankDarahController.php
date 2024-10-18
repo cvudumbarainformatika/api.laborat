@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Penunjang\BankDarah;
+namespace App\Http\Controllers\Api\Simrs\Penunjang\Bankdarah;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
