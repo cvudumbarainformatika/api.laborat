@@ -53,7 +53,8 @@ class HutangObatPesan extends Controller
                 'penerimaanrinci' => function($penerimaanrinci){
                     $penerimaanrinci->with(['masterobat']);
                 },
-                'pihakketiga'
+                'pihakketiga',
+                'pemeseanan_heder'
             ]
         )
         ->whereBetween('tglpenerimaan', [$dari, $sampai])
