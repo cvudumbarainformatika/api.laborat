@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Penunjang\BankDarah\BankDarahController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Bankdarah\BankDarahController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
