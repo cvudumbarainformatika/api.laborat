@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Simrs\Laporan\Operasi;
+namespace App\Models\Simrs\Penunjang\Operasi;
 
 use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -15,5 +15,6 @@
   {"nama":"kamar", "ketId":null, "controller":"KamarController", "method":"index"},
   {"nama":"dokter", "ketId":null, "controller":"NakesController", "method":"dokter"},
   {"nama":"ruanganranap", "ketId":null, "controller":"RuanganController", "method":"listruanganranap"},
-  {"nama":"jeniskasus", "ketId":null, "controller":"RanapController", "method":"listjenikkasus"}
+  {"nama":"jeniskasus", "ketId":null, "controller":"RanapController", "method":"listjenikkasus"},
+  {"nama":"m_bdrs", "ketId":null, "controller":"BankDarahController", "method":"getmaster"}
 ]
