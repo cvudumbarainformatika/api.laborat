@@ -73,6 +73,7 @@ class RanapController extends Controller
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
+            'rs24.rs3 as kelas_ruangan',
             'rs24.rs5 as group_ruangan',
             'rs24.rs4 as kdgroup_ruangan',
             'rs23_meta.kd_jeniskasus',
@@ -312,9 +313,15 @@ class RanapController extends Controller
                     ->orderBy('id', 'DESC');
                 },
                 'bankdarah'=> function ($q) {
-                    $q
-                    ->orderBy('id', 'DESC');
-                }
+                    $q->orderBy('id', 'DESC');
+                },
+                'apheresis'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                'cathlab'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                
             ])->first();
 
         if (!$cekx) {

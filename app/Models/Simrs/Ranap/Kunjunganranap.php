@@ -21,8 +21,10 @@ use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
+use App\Models\Simrs\Penunjang\Apheresis\PermintaanApheresis;
 use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
+use App\Models\Simrs\Penunjang\Cathlab\ReqCathlab;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
@@ -426,6 +428,14 @@ class Kunjunganranap extends Model
     public function bankdarah()
     {
         return $this->hasMany(PermintaanBankdarah::class, 'rs1', 'rs1');
+    }
+    public function apheresis()
+    {
+        return $this->hasMany(PermintaanApheresis::class, 'noreg', 'rs1');
+    }
+    public function cathlab()
+    {
+        return $this->hasMany(ReqCathlab::class, 'noreg', 'rs1');
     }
 
     public function hasilradiologi()
