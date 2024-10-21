@@ -321,6 +321,19 @@ class RanapController extends Controller
                 'cathlab'=> function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
+                'permintaanambulan'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                'oksigen'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                'penunjanglain'=> function ($q) {
+                    $q->with('masterpenunjang')
+                    ->orderBy('id', 'DESC');
+                },
+                'perawatanjenazah'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
                 
             ])->first();
 

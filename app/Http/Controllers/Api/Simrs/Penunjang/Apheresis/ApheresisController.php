@@ -102,6 +102,13 @@ class ApheresisController extends Controller
 
     public function hapusdata(Request $request)
     {
+
+        $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=','1')->get();
+
+        if (count($cekKasir) > 0) {
+            return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal '.$cekKasir[0]->rs42], 500);
+        }
+
         $cari = PermintaanApheresis::find($request->id);
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);

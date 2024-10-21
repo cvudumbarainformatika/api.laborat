@@ -21,6 +21,7 @@ use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
+use App\Models\Simrs\Penunjang\Ambulan\ReqAmbulan;
 use App\Models\Simrs\Penunjang\Apheresis\PermintaanApheresis;
 use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
@@ -40,11 +41,13 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
+use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
 use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Oksigen\Oksigen;
 use App\Models\Simrs\Penunjang\Operasi\PermintaanOperasiIrd;
 use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
@@ -436,6 +439,19 @@ class Kunjunganranap extends Model
     public function cathlab()
     {
         return $this->hasMany(ReqCathlab::class, 'noreg', 'rs1');
+    }
+    public function permintaanambulan()
+    {
+        return $this->hasMany(ReqAmbulan::class, 'rs1', 'rs1');
+    }
+    
+    public function penunjanglain()
+    {
+        return $this->hasMany(Lain::class, 'rs1', 'rs1');
+    }
+    public function perawatanjenazah()
+    {
+        return $this->hasMany(KamarjenazahPermintaan::class, 'rs1', 'rs1');
     }
 
     public function hasilradiologi()
