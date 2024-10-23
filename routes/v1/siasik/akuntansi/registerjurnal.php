@@ -9,5 +9,8 @@ Route::group([
     'prefix' => 'akuntansi/registerjurnal'
 ], function () {
     Route::get('/regjurnal', [RegJurnalController::class, 'listjurnal']);
+    Route::post('/postingjurnal', [RegJurnalController::class, 'savejurnal']);
+    Route::get('/getjurnalpost', [RegJurnalController::class, 'getjurnalpost']);
+    Route::post('/verifjurnal', [RegJurnalController::class, 'verifjurnal']);
 
 });

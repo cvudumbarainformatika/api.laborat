@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Siasik\Akuntansi\Jurnal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
+use App\Models\Siasik\Akuntansi\Jurnal\Jurnal_Posting;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
@@ -284,5 +286,111 @@ class RegJurnalController extends Controller
             'spjpanjar' => $spjpanjar,
         ];
         return new JsonResponse($regjurnal);
+    }
+
+
+    public function savejurnal(Request $request){
+        // return $data;
+        DB::beginTransaction();
+        try {
+            $data = [];
+            foreach($request->jurnal as $post){
+                $notrans = [
+                    'notrans'=>$post['notrans'],
+                    'tanggal'=>$post['tanggal'],
+                    'kegiatan'=>$post['kegiatan'],
+                    'keterangan'=>$post['keterangan'],
+                    'kode'=>$post['kode'],
+                    'uraian'=>$post['uraian'],
+                    'debit'=>$post['debit'],
+                    'kredit'=>$post['kredit'],
+                ];
+                $detail = [
+
+                    // 'd_pjk'=>$post['d_pjk'],
+                    // 'k_pjk'=>$post['k_pjk'],
+                    // 'd_pjk1'=>$post['d_pjk1'],
+                    // 'k_pjk1'=>$post['k_pjk1'],
+                ];
+                $hasil = [
+                    'notrans'=>$post['notrans'],
+                    'tanggal'=>$post['tanggal'],
+                    'kegiatan'=>$post['kegiatan'],
+                    'keterangan'=>$post['keterangan'],
+                    'kode'=>$post['kode'],
+                    'uraian'=>$post['uraian'],
+                    'debit'=>$post['debit'],
+                    'kredit'=>$post['kredit'],
+                    // 'd_pjk'=>$post['d_pjk'],
+                    // 'k_pjk'=>$post['k_pjk'],
+                    // 'd_pjk1'=>$post['d_pjk1'],
+                    // 'k_pjk1'=>$post['k_pjk1'],
+
+                ];
+                Create_JurnalPosting::updateOrCreate($notrans, $detail);
+                $data[]=$hasil;
+            }
+            // Jurnal_Posting::upsert([$data],
+            // [
+            //     'notrans', 'tanggal', 'kegiatan', 'keterangan'
+            // ],
+            // [
+            //     'debit', 'kredit'
+            // ]);
+
+            DB::commit();
+            return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil disimpan...!!!',
+                    'result' => $data
+                ], 200);
+        } catch (\Exception $th) {
+           DB::rollBack();
+           return new JsonResponse(
+            [
+                'message' => 'Data Tidak Valid',
+                'result' => $th->getMessage()
+            ], 500);
+        }
+    }
+    public function getjurnalpost(){
+        $awal=request('tahun').'-'. request('bulan').'-01';
+        $akhir=request('tahun').'-'. request('bulan').'-31';
+        $data = Create_JurnalPosting::select(
+            'jurnal_postingotom.notrans',
+                    'jurnal_postingotom.tanggal',
+                    'jurnal_postingotom.kegiatan',
+                    'jurnal_postingotom.keterangan',
+                    'jurnal_postingotom.kode',
+                    'jurnal_postingotom.uraian',
+                    'jurnal_postingotom.debit',
+                    'jurnal_postingotom.kredit',
+                    'jurnal_postingotom.verif')
+        // ->where('jurnal_postingotom.verif', '=', null)
+        ->where('jurnal_postingotom.verif', request('jenis'))
+        ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->where(function($query){
+            $query->when(request('q'), function($q){
+                $q->where('notrans', 'like', '%'.request('q').'%')
+                ->orWhere('tanggal', 'like', '%'.request('q').'%')
+                ->orWhere('kegiatan', 'like', '%'.request('q').'%')
+                ->orWhere('keterangan', 'like', '%'.request('q').'%')
+                ->orWhere('debit', 'like', '%'.request('q').'%')
+                ->orWhere('kredit', 'like', '%'.request('q').'%');
+            });
+        })
+        ->get();
+        return new JsonResponse($data);
+    }
+    public function verifjurnal(Request $request){
+        $time = date('Y-m-d H:i:s');
+        $data = Create_JurnalPosting::where('notrans', $request->notrans);
+        // return $data;
+        $data->update([
+            'verif' => '1',
+            'tglverif' => $time
+
+    ]);
+        return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', 'notrans' => $request->notrans], 200);
     }
 }
