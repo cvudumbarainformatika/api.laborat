@@ -96,9 +96,10 @@ class ReturKeGudangController extends Controller
                                 'kd_obat' => $key['kd_obat'],
                                 'nopenerimaan' => $cekStok->nopenerimaan,
                                 'no_batch' => $cekStok->nobatch,
-                                'tgl_exp' => $cekStok->tglexp,
+                                'harga' => $cekStok->harga,
                             ],
                             [
+                                'tgl_exp' => $cekStok->tglexp,
                                 'jumlah_retur' => $sisa,
                                 'alasan' => $key['alasan'],
                             ]
@@ -115,19 +116,32 @@ class ReturKeGudangController extends Controller
                                 ->where('nopenerimaan', $cekStok->nopenerimaan)
                                 ->first();
                             if (!$stgNb) {
-                                return new JsonResponse([
-                                    'message' => 'Stok ' . $key['nama_obat'] . ' dengan nomor penerimaan ' . $cekStok->nopenerimaan . ' tidak ditemukan di gudang'
-                                ], 410);
+                                Stokrel::create(
+                                    [
+                                        'nopenerimaan' => $cekStok->nopenerimaan,
+                                        'kdobat' => $cekStok->kdobat,
+                                        'kdruang' => $request->gudang,
+                                        'nobatch' => $cekStok->nobatch,
+                                        'harga' => $cekStok->harga,
+                                        'tglexp' => $cekStok->tglexp,
+                                        'tglpenerimaan' => $cekStok->tglpenerimaan,
+                                        'jumlah' => $cekStok->jumlah,
+
+                                    ]
+                                );
+                                // $masuk = $sisax;
+                                // return new JsonResponse([
+                                //     'message' => 'Stok ' . $key['nama_obat'] . ' dengan nomor penerimaan ' . $cekStok->nopenerimaan . ' tidak ditemukan di gudang'
+                                // ], 410);
+                            } else {
+                                $tot = $stgNb->jumlah + $sisa;
+                                $stgNb->update(['jumlah' => $tot]);
+                                // $masuk = $sisax;
                             }
-                            $tot = $stgNb->jumlah + $sisa;
-                            $stgNb->update(['jumlah' => $tot]);
-
-                            $masuk = $sisax;
+                        } else {
+                            $tot = $stGu->jumlah + $sisa;
+                            $stGu->update(['jumlah' => $tot]);
                         }
-                        $tot = $stGu->jumlah + $sisa;
-                        $stGu->update(['jumlah' => $tot]);
-
-
                         $masuk = $sisax;
                     } else {
                         $sisax = $sisa - $masuk;
@@ -137,9 +151,10 @@ class ReturKeGudangController extends Controller
                                 'kd_obat' => $key['kd_obat'],
                                 'nopenerimaan' => $cekStok->nopenerimaan,
                                 'no_batch' => $cekStok->nobatch,
-                                'tgl_exp' => $cekStok->tglexp,
+                                'harga' => $cekStok->harga,
                             ],
                             [
+                                'tgl_exp' => $cekStok->tglexp,
                                 'jumlah_retur' => $masuk,
                                 'alasan' => $key['alasan'],
                             ]
@@ -157,18 +172,30 @@ class ReturKeGudangController extends Controller
                                 ->where('nopenerimaan', $cekStok->nopenerimaan)
                                 ->first();
                             if (!$stgNb) {
-                                return new JsonResponse([
-                                    'message' => 'Stok ' . $key['nama_obat'] . ' dengan nomor penerimaan ' . $cekStok->nopenerimaan . ' tidak ditemukan di gudang'
-                                ], 410);
+                                Stokrel::create(
+                                    [
+                                        'nopenerimaan' => $cekStok->nopenerimaan,
+                                        'kdobat' => $cekStok->kdobat,
+                                        'kdruang' => $request->gudang,
+                                        'nobatch' => $cekStok->nobatch,
+                                        'harga' => $cekStok->harga,
+                                        'tglexp' => $cekStok->tglexp,
+                                        'tglpenerimaan' => $cekStok->tglpenerimaan,
+                                        'jumlah' => $masuk,
+
+                                    ]
+                                );
+                            } else {
+                                $tot = $stgNb->jumlah + $masuk;
+                                $stgNb->update(['jumlah' => $tot]);
                             }
-                            $tot = $stgNb->jumlah + $masuk;
-                            $stgNb->update(['jumlah' => $tot]);
-                            $masuk = 0;
+                            // $masuk = 0;
+                        } else {
+                            $tot = $stGu->jumlah + $masuk;
+                            $stGu->update(['jumlah' => $tot]);
                         }
                         // Stokrel::where('id', $cekStok->id)
                         //     ->update(['jumlah' => $sisax]);
-                        $tot = $stGu->jumlah + $masuk;
-                        $stGu->update(['jumlah' => $tot]);
 
                         $masuk = 0;
                     }

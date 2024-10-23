@@ -176,7 +176,7 @@ class DistribusigudangController extends Controller
                 ->where('kdobat', $request->kodeobat)
                 ->where('kdruang', $request->kdgudang)
                 ->where('jumlah', '>', 0)
-                ->orderBy('tglexp', 'ASC')
+                ->orderBy('tglpenerimaan', 'ASC')
                 ->get();
 
             if (count($caristok) <= 0) {
@@ -272,14 +272,19 @@ class DistribusigudangController extends Controller
                 //     $masuk = 0;
                 // }
             }
+            $nyamuta = Mutasigudangkedepo::select('kd_obat', DB::raw('sum(jml) as jml'))->where('no_permintaan', $request->nopermintaan)
+                ->where('kd_obat', $request->kodeobat)
+                ->first();
             $user = FormatingHelper::session_user();
+            $distibusi = $nyamuta->jml ?? 0;
             $rinciPer = Permintaandeporinci::where('no_permintaan', $request->nopermintaan)
                 ->where('kdobat', $request->kodeobat)
                 ->first();
             if ($rinciPer) {
                 $rinciPer->update(
                     [
-                        'jumlah_diverif' => $request->jumlah_minta,
+                        // 'jumlah_diverif' => $request->jumlah_minta, //  ini diganti jumlah yang terdistribusi
+                        'jumlah_diverif' => $distibusi, //
                         'user_verif' => $user['kodesimrs'],
                         'tgl_verif' => date('Y-m-d H:i:s'),
                     ]
@@ -300,9 +305,7 @@ class DistribusigudangController extends Controller
 
             DB::connection('farmasi')->commit();
 
-            $nyamuta = Mutasigudangkedepo::select('kd_obat', DB::raw('sum(jml) as jml'))->where('no_permintaan', $request->nopermintaan)
-                ->where('kd_obat', $request->kodeobat)
-                ->first();
+
             // [
             //     'no_permintaan' => $request->nopermintaan,
             //     'nopenerimaan' => $caristok[$index]->nopenerimaan,

@@ -16,4 +16,8 @@ class ReturGudangDetail extends Model
     {
         return $this->belongsTo(Mobatnew::class, 'kd_obat', 'kd_obat');
     }
+    public function header()
+    {
+        return $this->belongsTo(ReturGudang::class, 'no_retur', 'no_retur');
+    }
 }

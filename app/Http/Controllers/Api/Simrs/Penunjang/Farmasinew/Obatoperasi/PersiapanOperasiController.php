@@ -490,7 +490,7 @@ class PersiapanOperasiController extends Controller
             ->whereIn('kdobat', $kode)
             ->where('kdruang', 'Gd-04010103')
             ->where('jumlah', '>', 0)
-            ->orderBy('tglExp', 'ASC')
+            ->orderBy('tglpenerimaan', 'ASC')
             ->get();
         $anu = $allStok->toArray();
         $col = collect($anu);
@@ -806,7 +806,7 @@ class PersiapanOperasiController extends Controller
                     ->where('kdobat', $request->kodeobat)
                     ->where('kdruang', 'Gd-04010103')
                     ->where('jumlah', '>', 0)
-                    ->orderBy('tglExp', 'ASC')
+                    ->orderBy('tglpenerimaan', 'ASC')
                     ->get();
                 $index = 0;
                 while ($distribusi > 0) {

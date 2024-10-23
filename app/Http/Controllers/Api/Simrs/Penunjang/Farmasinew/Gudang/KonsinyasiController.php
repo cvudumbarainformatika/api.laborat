@@ -102,7 +102,7 @@ class KonsinyasiController extends Controller
         $resep = Resepkeluarrinci::select(
             'resep_keluar_r.noresep',
             'resep_keluar_r.kdobat',
-            'resep_keluar_r.jumlah',
+            DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
             'resep_keluar_r.nopenerimaan',
             'resep_keluar_r.harga_beli',
             'new_masterobat.status_konsinyasi',

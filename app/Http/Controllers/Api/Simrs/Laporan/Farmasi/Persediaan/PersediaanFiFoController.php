@@ -24,22 +24,23 @@ class PersediaanFiFoController extends Controller
                 'stok' => function ($st) {
                     $st->select(
                         'stokreal.kdobat',
-                        'stokreal.nopenerimaan as stpen',
+                        'stokreal.nopenerimaan',
                         DB::raw('sum(stokreal.jumlah) as jumlah'),
-                        DB::raw('sum(stokreal.jumlah * daftar_hargas.harga) as sub'),
-                        'penerimaan_r.nopenerimaan',
+                        DB::raw('sum(stokreal.jumlah * stokreal.harga) as sub'),
+                        // 'penerimaan_r.nopenerimaan',
                         'penerimaan_h.jenis_penerimaan',
-                        'daftar_hargas.harga',
+                        'stokreal.harga',
+                        // 'daftar_hargas.harga',
                     )
-                        ->leftJoin('daftar_hargas', function ($jo) {
-                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokreal.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'stokreal.kdobat');
-                        })
-                        ->leftJoin('penerimaan_r', function ($jo) {
-                            $jo->on('penerimaan_r.nopenerimaan', '=', 'stokreal.nopenerimaan')
-                                ->on('penerimaan_r.kdobat', '=', 'stokreal.kdobat');
-                        })
-                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        // ->leftJoin('daftar_hargas', function ($jo) {
+                        //     $jo->on('daftar_hargas.nopenerimaan', '=', 'stokreal.nopenerimaan')
+                        //         ->on('daftar_hargas.kd_obat', '=', 'stokreal.kdobat');
+                        // })
+                        // ->leftJoin('penerimaan_r', function ($jo) {
+                        //     $jo->on('penerimaan_r.nopenerimaan', '=', 'stokreal.nopenerimaan')
+                        //         ->on('penerimaan_r.kdobat', '=', 'stokreal.kdobat');
+                        // })
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'stokreal.nopenerimaan')
                         ->where('stokreal.jumlah', '!=', 0)
                         ->when(
                             request('kode_ruang') === 'all',
@@ -51,27 +52,44 @@ class PersediaanFiFoController extends Controller
                                 $sp->where('stokreal.kdruang', request('kode_ruang'));
                             }
                         )
-                        ->groupBy('stokreal.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
+                        ->groupBy('stokreal.kdobat', 'stokreal.nopenerimaan', 'stokreal.harga');
                 },
+                // ***** ini untuk testing ****
+                // 'saldoawal' => function ($st) {
+                //     $st->select(
+                //         'stokopname_sementaras.kdobat',
+                //         'stokopname_sementaras.nopenerimaan',
+                //         DB::raw('sum(stokopname_sementaras.jumlah) as jumlah'),
+                //         DB::raw('sum(stokopname_sementaras.jumlah * stokopname_sementaras.harga) as sub'),
+                //         'penerimaan_h.jenis_penerimaan',
+                //         'stokopname_sementaras.harga',
+                //     )
+                //         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'stokopname_sementaras.nopenerimaan')
+                //         ->where('stokopname_sementaras.jumlah', '!=', 0)
+                //         ->where('stokopname_sementaras.tglopname', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                //         ->when(
+                //             request('kode_ruang') === 'all',
+                //             function ($re) {
+                //                 $gd = ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+                //                 $re->whereIn('stokopname_sementaras.kdruang', $gd);
+                //             },
+                //             function ($sp) {
+                //                 $sp->where('stokopname_sementaras.kdruang', request('kode_ruang'));
+                //             }
+                //         )
+                //         ->groupBy('stokopname_sementaras.kdobat', 'stokopname_sementaras.nopenerimaan');
+                // }
+                // ***** ini Aslinya ****
                 'saldoawal' => function ($st) {
                     $st->select(
                         'stokopname.kdobat',
-                        'stokopname.nopenerimaan as stpen',
+                        'stokopname.nopenerimaan',
                         DB::raw('sum(stokopname.jumlah) as jumlah'),
-                        DB::raw('sum(stokopname.jumlah * daftar_hargas.harga) as sub'),
-                        'penerimaan_r.nopenerimaan',
+                        DB::raw('sum(stokopname.jumlah * stokopname.harga) as sub'),
                         'penerimaan_h.jenis_penerimaan',
-                        'daftar_hargas.harga',
+                        'stokopname.harga',
                     )
-                        ->leftJoin('daftar_hargas', function ($jo) {
-                            $jo->on('daftar_hargas.nopenerimaan', '=', 'stokopname.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'stokopname.kdobat');
-                        })
-                        ->leftJoin('penerimaan_r', function ($jo) {
-                            $jo->on('penerimaan_r.nopenerimaan', '=', 'stokopname.nopenerimaan')
-                                ->on('penerimaan_r.kdobat', '=', 'stokopname.kdobat');
-                        })
-                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+                        ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'stokopname.nopenerimaan')
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
                         ->when(
@@ -84,10 +102,13 @@ class PersediaanFiFoController extends Controller
                                 $sp->where('stokopname.kdruang', request('kode_ruang'));
                             }
                         )
-                        ->groupBy('stokopname.kdobat', 'penerimaan_r.nopenerimaan', 'daftar_hargas.harga');
+                        ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan');
                 }
             ])
-            ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+            ->where(function ($mo) {
+                $mo->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
+            })
             ->where('status_konsinyasi', '=', '')
             ->get();
         // $data = collect($obat)['data'];
@@ -112,6 +133,22 @@ class PersediaanFiFoController extends Controller
 
         )
             ->with([
+                // ***** ini buat testing *********
+                // 'saldoawal' => function ($st) use ($blnLalu) {
+                //     $st->select(
+                //         'stokopname_sementaras.kdobat',
+                //         'stokopname_sementaras.nopenerimaan',
+                //         DB::raw('sum(stokopname_sementaras.jumlah) as jumlah'),
+                //         DB::raw('sum(stokopname_sementaras.jumlah * stokopname_sementaras.harga) as sub'),
+                //         DB::raw('stokopname_sementaras.harga as harga'),
+                //         // 'daftar_hargas.harga as dftHar',
+                //     )
+
+                //         ->where('stokopname_sementaras.jumlah', '!=', 0)
+                //         ->where('stokopname_sementaras.tglopname', 'LIKE', $blnLalu . '%')
+                //         ->groupBy('stokopname_sementaras.kdobat', 'stokopname_sementaras.nopenerimaan', 'stokopname_sementaras.tglopname');
+                // },
+                // ***** ini Aslinya *********
                 'saldoawal' => function ($st) use ($blnLalu) {
                     $st->select(
                         'stokopname.kdobat',
@@ -124,17 +161,6 @@ class PersediaanFiFoController extends Controller
 
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
-                        // ->with('rincipenerimaan:kdobat,nopenerimaan,harga_netto_kecil as harga')
-                        // ->where('stokopname.kdruang', request('kode_ruang'))
-                        // ->when(
-                        //     request('jenis') === 'rekap',
-                        //     function ($re) {
-                        //         $re->groupBy('stokopname.kdobat', 'stokopname.tglopname');
-                        //     },
-                        //     function ($re) {
-                        //         $re->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
-                        //     }
-                        // );
                         ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
                 },
                 'penerimaanrinci' => function ($trm) {
@@ -153,15 +179,7 @@ class PersediaanFiFoController extends Controller
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->with('pbf:kode,nama')
                         ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        // ->when(
-                        //     request('jenis') === 'rekap',
-                        //     function ($re) {
-                        //         $re->groupBy('penerimaan_r.kdobat');
-                        //     },
-                        //     function ($re) {
-                        //         $re->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
-                        //     }
-                        // );
+
                         ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
                 },
                 'resepkeluar' => function ($kel) {
@@ -181,8 +199,6 @@ class PersediaanFiFoController extends Controller
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
-                            // 'rincipenerimaan:kdobat,nopenerimaan,harga_netto_kecil as harga',
-                            // 'opname:kdobat,nopenerimaan,harga',
                         )
                         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
                 },

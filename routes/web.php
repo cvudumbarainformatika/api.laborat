@@ -6,6 +6,7 @@ use App\Events\RefreshEvent;
 use App\Helpers\Routes\RouteHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\SetNewStokController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\DvlpController;
@@ -69,6 +70,11 @@ Route::get('/autogen/hapus-scontrol', [AutogenController::class, 'hapusSKontrol'
 Route::get('/autogen/tgl-selesai', [AutogenController::class, 'tglSelesaiResep']);
 Route::get('/autogen/reset-counter', [AutogenController::class, 'resetCounter']);
 Route::get('/autogen/tindakan-id', [AutogenController::class, 'tindakanId']);
+
+Route::get('/perbaikan-data', [SetNewStokController::class, 'perbaikanData']);
+Route::get('/perbaikan-data-depo', [SetNewStokController::class, 'PerbaikanDataPerDepo']);
+Route::get('/harga-penerimaan', [SetNewStokController::class, 'perbaikanHargaKeluarOk']);
+Route::get('/harga-keluar', [SetNewStokController::class, 'perbaikanHargaKeluar']);
 
 Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);

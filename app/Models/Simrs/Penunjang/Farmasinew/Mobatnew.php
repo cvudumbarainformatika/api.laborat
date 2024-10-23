@@ -21,8 +21,11 @@ use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PemakaianR;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFisik;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokopnameSementara;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokrealSementara;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -102,10 +105,7 @@ class Mobatnew extends Model
     {
         return $this->hasMany(StokOpnameFisik::class, 'kdobat', 'kd_obat');
     }
-    public function stok()
-    {
-        return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
-    }
+
     public function stokrealgudang()
     {
         return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
@@ -144,6 +144,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Mminmaxobat::class, 'kd_obat', 'kd_obat');
     }
+    public function stok()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kd_obat');
+    }
     public function saldoawal()
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kd_obat');
@@ -152,6 +156,21 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kd_obat');
     }
+    // ini untuk test
+    // public function saldoawal()
+    // {
+    //     return $this->hasMany(StokopnameSementara::class, 'kdobat', 'kd_obat');
+    // }
+    // public function saldoakhir()
+    // {
+    //     return $this->hasMany(StokopnameSementara::class, 'kdobat', 'kd_obat');
+    // }
+    // public function stok()
+    // {
+    //     return $this->hasMany(StokrealSementara::class, 'kdobat', 'kd_obat');
+    // }
+
+    // test end
     public function oneopname()
     {
         return $this->hasOne(Stokopname::class, 'kdobat', 'kd_obat');
@@ -256,6 +275,10 @@ class Mobatnew extends Model
     public function returdepo()
     {
         return $this->hasMany(ReturGudangDetail::class, 'kd_obat', 'kd_obat');
+    }
+    public function penyesuaian()
+    {
+        return $this->hasMany(PenyesuaianStok::class, 'kdobat', 'kd_obat');
     }
     public function jurnal()
     {
