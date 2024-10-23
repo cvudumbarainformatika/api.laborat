@@ -2961,13 +2961,14 @@ class SetNewStokController extends Controller
 
 
                 $data = [
-                    'saldoAwal' => $saldoAwal ?? [],
-                    'stokid' => $stokid,
+                    // 'saldoAwal' => $saldoAwal ?? [],
+                    // 'stokid' => $stokid,
+                    'kdobat' => $kdobat,
                     'penyesuaian' => $penyesuaian,
                     'penerimaan' => $penerimaan,
                     'mutasiMasuk' => $mutasiMasuk,
                     'mutasiKeluar' => $mutasiKeluar,
-                    'totalStok' => $totalStok,
+                    // 'totalStok' => $totalStok,
                     'masuk' => $masuk,
                     'keluar' => $keluar,
 
@@ -2977,7 +2978,7 @@ class SetNewStokController extends Controller
                     'ksekPenKur' => $ksekPenKur,
                     'gaAdaLeb' => $gaAdaLeb,
                     // 'hasilOpname' => $hasilOpname,
-                    // 'opNya' => $opNya,
+                    'opNya' => $opNya,
 
                     'stok' => $stok ?? [],
                     'ret' => $ret ?? [],
@@ -3604,21 +3605,109 @@ class SetNewStokController extends Controller
          * 3. resep keluar racikan
          * 4. retur resep
          **/
-        // // mutasi
-        // $mutasi = self::perbaikanHargaDiMutasi();
-        // //resep
-        // $resep = self::perbaikanHargaDiResep();
+        // mutasi
+        $mutasi = self::perbaikanHargaDiMutasi();
+        //resep
+        $resep = self::perbaikanHargaDiResep();
         //resep racikan
         $resepRacikan = self::perbaikanHargaDiResepRacikan();
+        //retur racikan
+        $returResep = self::perbaikanHargaDiReturResep();
 
 
         return [
-            // 'mutasi' => $mutasi,
-            // 'resep' => $resep,
+            'mutasi' => $mutasi,
+            'resep' => $resep,
             'resepRacikan' => $resepRacikan,
+            'returResep' => $returResep,
         ];
     }
 
+    public static function perbaikanHargaDiReturResep()
+    {
+
+        $data = [];
+        $resPenSource = Returpenjualan_r::select(
+            'retur_penjualan_r.nopenerimaan',
+            'retur_penjualan_r.kdobat',
+            'penerimaan_r.harga_netto_kecil'
+        )->leftJoin('penerimaan_r', function ($jo) {
+            $jo->on('penerimaan_r.nopenerimaan', '=', 'retur_penjualan_r.nopenerimaan')
+                ->on('penerimaan_r.kdobat', '=', 'retur_penjualan_r.kdobat')
+                ->on('penerimaan_r.harga_netto_kecil', '=', 'retur_penjualan_r.harga_beli');
+        })
+            ->where('retur_penjualan_r.nopenerimaan', 'NOT LIKE', '%awal%')
+            ->whereNull('penerimaan_r.harga_netto_kecil')
+            // ->limit(10) /////////////////////////// ini nanti di coment
+            ->get();
+        $nopeMutPen = collect($resPenSource)->map(function ($it) {
+            return $it->nopenerimaan;
+        })->toArray();
+        $nopeMutPenUni = array_unique($nopeMutPen);
+        $kdobatMutPen = collect($resPenSource)->map(function ($it) {
+            return $it->kdobat;
+        })->toArray();
+        $kdobatMutPenUni = array_unique($kdobatMutPen);
+        $mutasiPenToTr = Returpenjualan_r::whereIn('nopenerimaan', $nopeMutPenUni)->whereIn('kdobat', $kdobatMutPenUni)->where('jumlah_retur', '>', 0)->get();
+        $penernya = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'no_batch', 'tgl_exp', 'harga_netto_kecil')->with('header:nopenerimaan,tglpenerimaan')->whereIn('nopenerimaan', $nopeMutPenUni)->whereIn('kdobat', $kdobatMutPenUni)->get();
+        foreach ($mutasiPenToTr as $mut) {
+            $trm = collect($penernya)->where('nopenerimaan', $mut->nopenerimaan)->where('kdobat', $mut->kdobat)->first();
+            if ($trm) {
+                if ($mut->harga_beli != $trm->harga_netto_kecil) $mut->update(['harga_beli' => $trm->harga_netto_kecil]);
+            }
+            // return [
+            //     'mut' => $mut,
+            //     'trm' => $trm,
+            // ];
+
+            $data[] = [
+                'mut' => $mut,
+                'trm' => $trm,
+            ];
+        }
+
+
+        $resStokSource = Returpenjualan_r::select(
+            'retur_penjualan_r.nopenerimaan',
+            'retur_penjualan_r.kdobat',
+            'stokopname.harga'
+        )->leftJoin('stokopname', function ($jo) {
+            $jo->on('stokopname.nopenerimaan', '=', 'retur_penjualan_r.nopenerimaan')
+                ->on('stokopname.kdobat', '=', 'retur_penjualan_r.kdobat')
+                ->on('stokopname.harga', '=', 'retur_penjualan_r.harga_beli');
+        })
+            ->where('retur_penjualan_r.nopenerimaan', 'LIKE', '%awal%')
+            ->whereNull('stokopname.harga')
+            // ->limit(10) /////////////////////////// ini nanti di coment
+            ->get();
+
+        $nopeMutSt = collect($resStokSource)->map(function ($it) {
+            return $it->nopenerimaan;
+        })->toArray();
+        $nopeMutStUni = array_unique($nopeMutSt);
+        $kdobatMutSt = collect($resStokSource)->map(function ($it) {
+            return $it->kdobat;
+        })->toArray();
+        $kdobatMutStUni = array_unique($kdobatMutSt);
+        $mutasiStToTr = Returpenjualan_r::whereIn('nopenerimaan', $nopeMutStUni)->whereIn('kdobat', $kdobatMutStUni)->where('jumlah_retur', '>', 0)->get();
+        $saldonya = StokStokopname::whereIn('nopenerimaan', $nopeMutStUni)->whereIn('kdobat', $kdobatMutStUni)->get();
+        foreach ($mutasiStToTr as $mut) {
+            $trm = collect($saldonya)->where('nopenerimaan', $mut->nopenerimaan)->where('kdobat', $mut->kdobat)->first();
+            if ($trm) {
+                if ($mut->harga_beli != $trm->harga) $mut->update(['harga_beli' => $trm->harga]);
+            }
+            // return  [
+            //     'mut' => $mut,
+            //     'trm' => $trm,
+            // ];
+            $data[] =  [
+                'mut' => $mut,
+                'trm' => $trm,
+            ];
+        }
+
+        return $data;
+    }
     public static function perbaikanHargaDiResepRacikan()
     {
 
@@ -3649,13 +3738,13 @@ class SetNewStokController extends Controller
         foreach ($mutasiPenToTr as $mut) {
             $trm = collect($penernya)->where('nopenerimaan', $mut->nopenerimaan)->where('kdobat', $mut->kdobat)->first();
             if ($trm) {
-                // if ($mut->harga_beli != $trm->harga_netto_kecil) $mut->update(['harga_beli' => $trm->harga_netto_kecil]);
+                if ($mut->harga_beli != $trm->harga_netto_kecil) $mut->update(['harga_beli' => $trm->harga_netto_kecil]);
             }
+            // return [
+            //     'mut' => $mut,
+            //     'trm' => $trm,
+            // ];
 
-            return [
-                'mut' => $mut,
-                'trm' => $trm,
-            ];
             $data[] = [
                 'mut' => $mut,
                 'trm' => $trm,
@@ -3690,7 +3779,7 @@ class SetNewStokController extends Controller
         foreach ($mutasiStToTr as $mut) {
             $trm = collect($saldonya)->where('nopenerimaan', $mut->nopenerimaan)->where('kdobat', $mut->kdobat)->first();
             if ($trm) {
-                // if ($mut->harga_beli != $trm->harga) $mut->update(['harga_beli' => $trm->harga]);
+                if ($mut->harga_beli != $trm->harga) $mut->update(['harga_beli' => $trm->harga]);
             }
             // return  [
             //     'mut' => $mut,
