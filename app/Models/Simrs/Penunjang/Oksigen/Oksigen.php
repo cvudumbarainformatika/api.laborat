@@ -15,9 +15,9 @@ class Oksigen extends Model
 
     public function getSubtotalAttribute($data)
     {
-        $harga1 = $this->rs4;
-        $harga2 = $this->rs5;
-        $harga3 = $this->rs6;
+        $harga1 = (int) $this->rs4;
+        $harga2 = (int) $this->rs5;
+        $harga3 = (int) $this->rs6;
         $subtotal = ($harga1+$harga2)*$harga3;
         return ($subtotal);
     }

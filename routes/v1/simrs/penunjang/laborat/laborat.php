@@ -11,6 +11,7 @@ Route::group([
 ], function () {
     Route::get('/dialoglaboratpoli', [LaboratController::class, 'listmasterpemeriksaanpoli']);
     Route::get('/getnota', [LaboratController::class, 'getnota']);
+    Route::get('/getdata', [LaboratController::class, 'getdata']);
     Route::post('/simpanpermintaanlaborat', [LaboratController::class, 'simpanpermintaanlaborat']);
     Route::post('/simpanpermintaanlaboratbaru', [LaboratController::class, 'simpanpermintaanlaboratbaru']);
     Route::post('/hapuspermintaanlaborat', [LaboratController::class, 'hapuspermintaanlaborat']);

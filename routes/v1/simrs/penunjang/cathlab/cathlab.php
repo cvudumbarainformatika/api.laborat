@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Penunjang\Cathlab\PermintaanCathlabController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Cathlab\ReqCatlabController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Cathlab\TransCatlabController;
 use Illuminate\Support\Facades\Route;
@@ -16,4 +17,9 @@ Route::group([
 
     Route::post('simpancathlab',[TransCatlabController::class, 'simpancathlab']);
     Route::post('hapuscathlab',[TransCatlabController::class, 'deletecathlab']);
+
+
+    Route::get('/getnota', [PermintaanCathlabController::class, 'getnota']);
+    Route::post('/simpanpermintaan', [PermintaanCathlabController::class, 'simpandata']);
+    Route::post('/hapuspermintaan', [PermintaanCathlabController::class, 'hapusdata']);
 });

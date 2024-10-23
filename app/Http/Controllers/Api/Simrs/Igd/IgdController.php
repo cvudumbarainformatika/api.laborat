@@ -140,7 +140,14 @@ class IgdController extends Controller
                 'rs251.rs7 as jalannafas','rs251.rs9 as pernapasan','rs251.rs19 as sirkulasi','rs251.rs20 as disability'
                 )->leftjoin('rs251','rs250.rs1','rs251.rs1');
             },
-            'penilaiananamnesis',
+            'penilaiananamnesis' => function($penilaiananamnesis){
+                $penilaiananamnesis->select([
+                    'id','rs1','rs1 as noreg',
+                    'rs2 as norm','rs3 as tgl',
+                    'barthel','norton','humpty_dumpty','morse_fall','ontario','user','kdruang','awal','group_nakes'
+                   ])
+                   ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
+            },
             // 'fisio',
             // 'laporantindakan',
             // 'psikiatri',

@@ -163,7 +163,13 @@ class LaboratController extends Controller
             {
                 $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
             }else{
-                $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
+                if($request->isRanap === true)
+                {
+                    $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'I-LAB');
+                } else {
+
+                    $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
+                }
             }
 
             // $thumb = [];
@@ -258,7 +264,7 @@ class LaboratController extends Controller
         } catch (\Exception $e) {
             // May day,  rollback!!! rollback!!!
             DB::rollback();
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e], 500);
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e->getMessage()], 500);
         }
 
 
@@ -272,6 +278,12 @@ class LaboratController extends Controller
         $nota = LaboratMeta::select('nota')->where('noreg', request('noreg'))
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
+    }
+    public function getdata()
+    {
+        $data = LaboratMeta::select('*')->where('noreg', request('noreg'))
+        ->with('details.pemeriksaanlab')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($data);
     }
 
     public function hapuspermintaanlaborat(Request $request)
@@ -290,7 +302,12 @@ class LaboratController extends Controller
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
     public function hapuspermintaanlaboratbaru(Request $request)
-    {
+    {   
+        $cek = Laboratpemeriksaan::whereIn('id', $request->id)->where('rs18','=','1')->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa dihapus!'], 500);
+        }
+
         $hapus = Laboratpemeriksaan::whereIn('id', $request->id)->delete();
         $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->get();
 

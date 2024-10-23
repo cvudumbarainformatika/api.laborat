@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -67,5 +68,10 @@ class PenerimaanHeder extends Model
     public function penjualanrinci()
     {
         return $this->hasMany(Resepkeluarrinci::class, 'nopenerimaan', 'nopenerimaan');
+    }
+
+    public function pemeseanan_heder()
+    {
+        return $this->hasOne(PemesananHeder::class,'nopemesanan', 'nopemesanan');
     }
 }

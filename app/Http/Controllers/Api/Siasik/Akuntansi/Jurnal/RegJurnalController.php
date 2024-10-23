@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Api\Siasik\Akuntansi\Jurnal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
+use App\Models\Siasik\TransaksiLS\TransPajak;
+use App\Models\Siasik\TransaksiPjr\Nihil;
+use App\Models\Siasik\TransaksiPjr\SpjPanjar_Header;
+use App\Models\Siasik\TransaksiPjr\SpjPanjar_Rinci;
 use App\Models\Siasik\TransaksiPjr\SPM_GU;
 use App\Models\Siasik\TransaksiPjr\SpmUP;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
@@ -31,51 +36,65 @@ class RegJurnalController extends Controller
             'serahterima_heder.tgltrans',
             'serahterima_heder.kegiatanblud',
             'serahterima_heder.nopencairan',
+            'serahterima_heder.kunci',
+            'serahterima50.noserahterimapekerjaan',
+            'serahterima50.koderek50',
+            'serahterima50.uraianrek50',
+            'serahterima50.itembelanja',
+            'serahterima50.nominalpembayaran',
+            'akun_mapjurnal.kodeall',
+            'akun_mapjurnal.kode50',
+            'akun_mapjurnal.uraian50',
+            'akun_mapjurnal.kode_bast',
+            'akun_mapjurnal.uraian_bast',
+            'akun_mapjurnal.kode_bastx',
+            'akun_mapjurnal.uraian_bastx'
         )
+        ->join('serahterima50', 'serahterima50.noserahterimapekerjaan', 'serahterima_heder.noserahterimapekerjaan')
+        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', 'serahterima50.koderek50')
         ->when(request('q'),function ($query) {
             $query
-            ->where('noserahterimapekerjaan', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('tgltrans', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('nokontrak', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
+            ->where('serahterima_heder.noserahterimapekerjaan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('serahterima_heder.tgltrans', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('serahterima_heder.kegiatanblud', 'LIKE', '%' . request('q') . '%');
         })
-        ->where('kunci', '!=', '')
-        ->whereBetween('tgltrans', [$awal, $akhir])
-        ->with(['rinci'=>function($rinci){
-            $rinci->select('serahterima50.noserahterimapekerjaan',
-                        'serahterima50.koderek50',
-                        'serahterima50.uraianrek50',
-                        'serahterima50.itembelanja',
-                        'serahterima50.nominalpembayaran')
-                        ->when(request('q'),function ($query) {
-                            $query
-                            ->where('nominalpembayaran', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('koderek50', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('uraianrek50', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('itembelanja', 'LIKE', '%' . request('q') . '%');
-                        })
-                        ->with('jurnal', function($jurnal){
-                            $jurnal->select('akun_mapjurnal.kodeall',
-                                    'akun_mapjurnal.kode50',
-                                    'akun_mapjurnal.uraian50',
-                                    'akun_mapjurnal.kode_bast',
-                                    'akun_mapjurnal.uraian_bast',
-                                    'akun_mapjurnal.kode_bastx',
-                                    'akun_mapjurnal.uraian_bastx',)
-                                    ->when(request('q'),function ($query) {
-                                        $query
-                                        ->where('kode50', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('uraian50', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('kode_bast', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('uraian_bast', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('kode_bastx', 'LIKE', '%' . request('q') . '%')
-                                        ->orWhere('uraian_bastx', 'LIKE', '%' . request('q') . '%');
-                                    });
-                        });
-                // ->selectRaw('sum(nominalpembayaran) as total');
-        }])
-        ->orderBy('tgltrans', 'desc')
+        ->where('serahterima_heder.kunci', '!=', '')
+        ->whereBetween('serahterima_heder.tgltrans', [$awal, $akhir])
+        // ->with(['rinci'=>function($rinci){
+        //     $rinci->select('serahterima50.noserahterimapekerjaan',
+        //                 'serahterima50.koderek50',
+        //                 'serahterima50.uraianrek50',
+        //                 'serahterima50.itembelanja',
+        //                 'serahterima50.nominalpembayaran')
+        //                 ->when(request('q'),function ($query) {
+        //                     $query
+        //                     ->where('nominalpembayaran', 'LIKE', '%' . request('q') . '%')
+        //                     ->orWhere('koderek50', 'LIKE', '%' . request('q') . '%')
+        //                     ->orWhere('uraianrek50', 'LIKE', '%' . request('q') . '%')
+        //                     ->orWhere('itembelanja', 'LIKE', '%' . request('q') . '%');
+        //                 })
+        //                 ->with('jurnal', function($jurnal){
+        //                     $jurnal->select('akun_mapjurnal.kodeall',
+        //                             'akun_mapjurnal.kode50',
+        //                             'akun_mapjurnal.uraian50',
+        //                             'akun_mapjurnal.kode_bast',
+        //                             'akun_mapjurnal.uraian_bast',
+        //                             'akun_mapjurnal.kode_bastx',
+        //                             'akun_mapjurnal.uraian_bastx',)
+        //                             ->when(request('q'),function ($query) {
+        //                                 $query
+        //                                 ->where('kode50', 'LIKE', '%' . request('q') . '%')
+        //                                 ->orWhere('uraian50', 'LIKE', '%' . request('q') . '%')
+        //                                 ->orWhere('kode_bast', 'LIKE', '%' . request('q') . '%')
+        //                                 ->orWhere('uraian_bast', 'LIKE', '%' . request('q') . '%')
+        //                                 ->orWhere('kode_bastx', 'LIKE', '%' . request('q') . '%')
+        //                                 ->orWhere('uraian_bastx', 'LIKE', '%' . request('q') . '%');
+        //                             });
+        //                 });
+        //         // ->selectRaw('sum(nominalpembayaran) as total');
+        // }])
         ->get();
+
 
         $bastfarmasi=PenerimaanHeder::select('penerimaan_h.nobast',
                                             'penerimaan_h.tgl_bast',
@@ -114,6 +133,7 @@ class RegJurnalController extends Controller
         ->groupBy('nobast')
         ->get();
 
+        // PENCAIRAN STP //
         $cairstp=NpkLS_heder::select('npdls_heder.nonpk',
                 'npdls_heder.nonpdls',
                 'npdls_heder.serahterimapekerjaan',
@@ -144,6 +164,7 @@ class RegJurnalController extends Controller
         ->orderBy('npkls_heder.tglpindahbuku', 'asc')
         ->get();
 
+        // PENCAIRAN TANPA STP //
         $cairnostp=NpkLS_heder::select('npdls_heder.nonpk',
                     'npdls_heder.nonpdls',
                     'npdls_heder.serahterimapekerjaan',
@@ -172,6 +193,24 @@ class RegJurnalController extends Controller
         ->whereIn('npdls_heder.serahterimapekerjaan',['2'])
         ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
         ->orderBy('npkls_heder.tglpindahbuku', 'asc')
+        ->get();
+
+
+
+        $pajakls = TransPajak::select('npdls_pajak.nonpdls',
+                'npdls_pajak.pph21',
+                'npdls_pajak.pph22',
+                'npdls_pajak.pph23',
+                'npdls_pajak.pph25',
+                'npdls_pajak.pasal4',
+                'npdls_pajak.ppnpusat',
+                'npdls_pajak.pajakdaerah',
+                'npdls_heder.nonpk',
+                'npdls_heder.kegiatanblud',
+                'npkls_heder.tglpindahbuku')
+        ->join('npdls_heder', 'npdls_heder.nonpdls', 'npdls_pajak.nonpdls')
+        ->join('npkls_heder', 'npkls_heder.nonpk', 'npdls_heder.nonpk')
+        ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
         ->get();
 
         $contrapost = Contrapost::select('contrapost.nocontrapost',
@@ -208,15 +247,41 @@ class RegJurnalController extends Controller
         ->whereBetween('transSpmgu.tglSpm', [$awal, $akhir])
         ->get();
 
+        $spjpanjar=SpjPanjar_Header::select('spjpanjar_heder.nospjpanjar',
+                    'spjpanjar_heder.tglspjpanjar',
+                    'spjpanjar_heder.kegiatanblud',
+                    'spjpanjar_rinci.nospjpanjar',
+                    'spjpanjar_rinci.koderek50',
+                    'spjpanjar_rinci.rincianbelanja50',
+                    'spjpanjar_rinci.jumlahbelanjapanjar',
+                    'akun_mapjurnal.kode50',
+                    'akun_mapjurnal.kode_cair1',
+                    'akun_mapjurnal.uraian_cair1',
+                    'akun_mapjurnal.kode_cairx',
+                    'akun_mapjurnal.uraian_cairx',
+                    'akun_mapjurnal.kode_cair2',
+                    'akun_mapjurnal.uraian_cair2')
+        ->join('spjpanjar_rinci', 'spjpanjar_rinci.nospjpanjar', '=','spjpanjar_heder.nospjpanjar')
+        ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','spjpanjar_rinci.koderek50')
+        ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir])
+        ->get();
+
+        $nihil = Nihil::select('pengembalianup.nopengembalian',
+        'pengembalianup.tgltrans',
+        'pengembalianup.jmlpengembalianreal')
+        ->whereBetween('pengembalianup.tgltrans', [$awal, $akhir])
+        ->get();
         $regjurnal = [
             'stp' => $stp,
             'bastfarmasi' => $bastfarmasi,
             'cair_stp' => $cairstp,
             'cair_nostp' => $cairnostp,
+            'pajakls' => $pajakls,
             'contrapost' => $contrapost,
             'spmup' => $spmup,
             'spmgu' => $spmgu,
-
+            'nihil' => $nihil,
+            'spjpanjar' => $spjpanjar,
         ];
         return new JsonResponse($regjurnal);
     }

@@ -336,6 +336,30 @@ class CpptController extends Controller
 
     }
 
+    // updateAsPlanInst
+    public function updateAsPlanInst(Request $request)
+    {
+      $user = Pegawai::find(auth()->user()->pegawai_id);
+      $kdpegsimrs = $user->kdpegsimrs;
+
+      $cppt = Cppt::find($request->id)->update([
+        
+        'asessment'=> $request->asessment,
+        'plann'=> $request->plann,
+        'instruksi'=> $request->instruksi,
+        'user' => $kdpegsimrs,
+        'nakes'=> $user->kdgroupnakes,
+      ]);
+      
+
+      return new JsonResponse([
+        'success' => true,
+        'message' => 'success',
+        'result' => $cppt
+      ]);
+
+    }
+
 
     
 }

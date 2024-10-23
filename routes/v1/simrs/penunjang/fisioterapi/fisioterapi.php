@@ -9,6 +9,7 @@ Route::group([
     'prefix' => 'simrs/penunjang/fisioterapi'
 ], function () {
     Route::get('/getnota', [FisioterapiController::class, 'getnota']);
+    Route::get('/getdata', [FisioterapiController::class, 'getdata']);
     Route::post('/permintaanfisioterapipoli', [FisioterapiController::class, 'permintaanfisioterapipoli']);
     Route::post('/hapuspermintaan', [FisioterapiController::class, 'hapuspermintaan']);
 });
