@@ -40,6 +40,10 @@ use function PHPUnit\Framework\isNull;
 
 class AutogenController extends Controller
 {
+    public function pass()
+    {
+        echo bcrypt('123456789');
+    }
 
     public function tindakanId()
     {

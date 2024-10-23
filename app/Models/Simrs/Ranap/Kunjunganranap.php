@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Laporan\Operasi\PermintaanOperasi;
@@ -56,6 +57,7 @@ use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
+use App\Models\Simrs\Ranap\Pelayanan\Cppt;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Tindakan\Tindakan;
@@ -452,6 +454,14 @@ class Kunjunganranap extends Model
     public function perawatanjenazah()
     {
         return $this->hasMany(KamarjenazahPermintaan::class, 'rs1', 'rs1');
+    }
+    public function hais()
+    {
+        return $this->hasMany(HaisTrans::class, 'noreg', 'rs1');
+    }
+    public function cppt()
+    {
+        return $this->hasMany(Cppt::class, 'noreg', 'rs1');
     }
 
     public function hasilradiologi()

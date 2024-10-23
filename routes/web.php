@@ -12,6 +12,7 @@ use App\Http\Controllers\DvlpController;
 use App\Http\Controllers\NotifRefreshController;
 use App\Http\Controllers\PengesahanQrController;
 use App\Http\Controllers\PrintController;
+use App\Http\Controllers\ResetterPasswordController;
 use App\Websockets\SocketHandler\UpdatePostSocketHandler;
 use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 use Illuminate\Http\Request;
@@ -69,6 +70,7 @@ Route::get('/autogen/hapus-scontrol', [AutogenController::class, 'hapusSKontrol'
 Route::get('/autogen/tgl-selesai', [AutogenController::class, 'tglSelesaiResep']);
 Route::get('/autogen/reset-counter', [AutogenController::class, 'resetCounter']);
 Route::get('/autogen/tindakan-id', [AutogenController::class, 'tindakanId']);
+Route::get('/autogen/reset-password', [ResetterPasswordController::class, 'index']);
 
 Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);

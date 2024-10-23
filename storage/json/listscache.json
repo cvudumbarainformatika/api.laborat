@@ -18,5 +18,6 @@
   {"nama":"ruanganranap", "ketId":null, "controller":"RuanganController", "method":"listruanganranap"},
   {"nama":"jeniskasus", "ketId":null, "controller":"RanapController", "method":"listjenikkasus"},
   {"nama":"m_bdrs", "ketId":null, "controller":"BankDarahController", "method":"getmaster"},
-  {"nama":"m_tindakan_apheresis", "ketId":null, "controller":"ApheresisController", "method":"getmaster"}
+  {"nama":"m_tindakan_apheresis", "ketId":null, "controller":"ApheresisController", "method":"getmaster"},
+  {"nama":"m_hais", "ketId":null, "controller":"HaisController", "method":"getmaster"}
 ]
