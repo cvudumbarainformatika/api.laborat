@@ -468,6 +468,7 @@ class DepoController extends Controller
                     ->where('kdobat', $wew->kd_obat)
                     ->where('nopenerimaan', $wew->nopenerimaan)
                     ->where('harga', $wew->harga)
+                    ->where('kdruang', $request->tujuan)
                     ->orderBy('tglpenerimaan', 'DESC')
                     ->first();
                 if ($stoknya) {
