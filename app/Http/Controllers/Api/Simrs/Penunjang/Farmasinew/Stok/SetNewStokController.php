@@ -608,6 +608,7 @@ class SetNewStokController extends Controller
                 //     'tts' => $tts,
                 //     'sisa' => $sisa,
                 // ];
+                $err = [];
                 if ((float)$sisa != (float)$tts) {
                     $ada = $sisa;
                     $index = 0;
@@ -648,12 +649,13 @@ class SetNewStokController extends Controller
                                     }
                                     $ada = $sisaJumlah;
                                 } else {
-                                    return [
+                                    $err[] = [
                                         'data' => [
                                             'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
                                         ],
                                         'status' => 410
                                     ];
+                                    $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
                                 }
                             }
                             // $tmpmas = $anumas + $maSuk;
@@ -773,6 +775,7 @@ class SetNewStokController extends Controller
                     'totalStok' => $totalStok,
                     'masuk' => $masuk,
                     'keluar' => $keluar,
+                    'err' => $err,
 
                     'stok' => $stok ?? [],
                     'ret' => $ret ?? [],
@@ -1086,6 +1089,7 @@ class SetNewStokController extends Controller
                     ->orderBy('tglpenerimaan', 'DESC')
                     ->orderBy('nodistribusi', 'DESC')
                     ->get();
+                $err = [];
                 $hasil = [];
                 $anuaad = 0;
                 $anumas = 0;
@@ -1140,12 +1144,14 @@ class SetNewStokController extends Controller
                                         }
                                         $ada = $sisaJumlah;
                                     } else {
-                                        return [
+                                        $err[] = [
                                             'data' => [
                                                 'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
                                             ],
                                             'status' => 410
                                         ];
+
+                                        $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
                                     }
                                 }
 
@@ -1227,12 +1233,13 @@ class SetNewStokController extends Controller
 
                                         $ada = $sisaJumlah;
                                     } else {
-                                        return [
+                                        $err[] = [
                                             'data' => [
                                                 'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
                                             ],
                                             'status' => 410
                                         ];
+                                        $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
                                     }
                                 }
 
@@ -1276,6 +1283,7 @@ class SetNewStokController extends Controller
                     'saldoAwal' => $saldoAwal,
                     'stokid' => $stokid,
                     'penyesuaian' => $penyesuaian,
+                    'err' => $err,
 
                     'saldoAwalDepoRinci' => $saldoAwalDepoRinci,
                     'mutasiMasukDepoRinci' => $mutasiMasukDepoRinci,
