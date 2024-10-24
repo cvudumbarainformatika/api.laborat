@@ -366,7 +366,8 @@ class SetNewStokController extends Controller
             // return new JsonResponse($obat);
 
             $temp = self::getDataTrans($depo, $obat);
-            if ($temp['tts'] !== $temp['sisa']) $data[] = $temp;
+            $ada = $temp['tts'] ?? false;
+            if ($ada) if ($temp['tts'] !== $temp['sisa']) $data[] = $temp;
         }
 
         return new JsonResponse([
