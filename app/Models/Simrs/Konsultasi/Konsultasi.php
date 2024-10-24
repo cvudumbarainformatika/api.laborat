@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Konsultasi;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Visite\Visite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,11 @@ class Konsultasi extends Model
     public function tarif()
     {
         return $this->hasOne(Visite::class, 'rs1', 'noreg');
+    }
+
+    public function petugas()
+    {
+        return $this->hasOne(Petugas::class, 'kddokterkonsul', 'kdpegsimrs');
     }
 
     

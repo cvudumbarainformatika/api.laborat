@@ -433,7 +433,10 @@ class RanapController extends Controller
                 
                         ])
                       ->orderBy('tgl', 'DESC');
-                }
+                },
+                'konsultasi'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
                 
             ])->first();
 
