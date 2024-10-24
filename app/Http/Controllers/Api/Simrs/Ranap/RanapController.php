@@ -272,6 +272,9 @@ class RanapController extends Controller
                 'diagnosakeperawatan'=> function ($q) {
                     $q->with('intervensi', 'intervensi.masterintervensi');
                 },
+                'diagnosakebidanan'=> function ($q) {
+                    $q->with('intervensi', 'intervensi.masterintervensi');
+                },
                 'tindakan'=> function ($q) {
                     $q->select(
                         'id','rs1','rs2','rs4',

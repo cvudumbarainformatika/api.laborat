@@ -8,6 +8,7 @@ use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Laporan\Operasi\PermintaanOperasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\MkamarRanap;
@@ -15,6 +16,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
@@ -401,6 +403,14 @@ class Kunjunganranap extends Model
     public function diagnosakeperawatan()
     {
        return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'rs1');
+    }
+    public function diagnosakebidanan()
+    {
+       return $this->hasMany(Diagnosakebidanan::class, 'noreg', 'rs1');
+    }
+    public function konsultasi()
+    {
+       return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
     }
     public function diagnosa()
     {
