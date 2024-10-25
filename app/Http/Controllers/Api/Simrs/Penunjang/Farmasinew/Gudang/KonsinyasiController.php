@@ -135,8 +135,8 @@ class KonsinyasiController extends Controller
                 }
             ])
             ->leftJoin('detail_bast_konsinyasis', function ($q) {
-                $q->on('detail_bast_konsinyasis.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
-                    ->on('detail_bast_konsinyasis.noresep', '=', 'resep_keluar_r.noresep')
+                $q->on('detail_bast_konsinyasis.noresep', '=', 'resep_keluar_r.noresep')
+                    // ->on('detail_bast_konsinyasis.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
                     ->on('detail_bast_konsinyasis.kdobat', '=', 'resep_keluar_r.kdobat');
             })
             ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_keluar_r.kdobat')

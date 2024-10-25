@@ -366,8 +366,8 @@ class SetNewStokController extends Controller
             // return new JsonResponse($obat);
 
             $temp = self::getDataTrans($depo, $obat);
-            $ada = $temp['tts'] ?? false;
-            if ($ada) if ($temp['tts'] !== $temp['sisa']) $data[] = $temp;
+
+            if ($temp['data']['tts'] !== $temp['data']['sisa']) $data[] = $temp['data'];
         }
 
         return new JsonResponse([
@@ -2756,6 +2756,12 @@ class SetNewStokController extends Controller
             $dateAkhir = Carbon::parse($tglAkhir);
             $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
             $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
+            $parameter = [
+                'kdobat' => $kdobat,
+                'koderuangan' => $koderuangan,
+                'now' => $x,
+                'blnLalu' => $blnLaluAwal,
+            ];
 
             if ($sekarang == $x) return 'Fitur ini tidak dibuat untuk stok bulan ini';
 
@@ -2842,9 +2848,13 @@ class SetNewStokController extends Controller
                     ->groupBy('retur_gudang_details.nopenerimaan', 'retur_gudang_details.kd_obat', 'retur_gudangs.gudang')
                     ->get();
                 $returGudang = collect($returGudangRinci)->sum('jumlah');
-
-                $totalStok = StokrealSementara::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
-                    ->where('kdruang', $koderuangan)->first();
+                if ($x == $sekarang) {
+                    $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                        ->where('kdruang', $koderuangan)->first();
+                } else {
+                    $totalStok = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                        ->where('kdruang', $koderuangan)->where('tglopname', 'LIKE', $x . '%')->first();
+                }
                 $tts = $totalStok->jumlah ?? 0;
                 $sal = $saldoAwal ?? 0;
                 $peny = $penyesuaian ?? 0;
@@ -2889,6 +2899,7 @@ class SetNewStokController extends Controller
                 $penKur = [];
                 $penLeb = [];
                 $penPas = [];
+                $penAll = [];
                 // pembetulan nomor penerimaan
                 foreach ($uniNopeSt as $key) {
                     $salAwal =  collect($saldoAwalRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
@@ -2928,40 +2939,68 @@ class SetNewStokController extends Controller
                             'peny' => $peny,
                         ];
                     }
-                }
-                // eksekusi perbaikan nomor penerimaan
-                $ksekPenKur = [];
-                $gaAdaLeb = [];
-                $penLebNya = collect($penLeb);
-                foreach ($penKur as $kur) {
-
-                    $ksekPenKur[] = [
-                        '$kur[sisanya]' => $kur['sisanya'],
-                        'kur' => $kur,
-                        'adaLeb' => $adaLeb ?? null,
-                        'mutasiRinciNya' => $mutasiRinciNya ?? null,
-                        'rincTrm' => $rincTrm ?? null,
+                    $penAll[] = [
+                        'noper' => $key,
+                        'sisanya' => $sisanya,
+                        'maSuk' => $maSuk,
+                        'keLuar' => $keLuar,
+                        'peny' => $peny,
                     ];
                 }
+                $opNya = [];
+
+                $parameter['nopenerimaan'] = $uniNopeSt;
+                $parameter['penPas'] = $penPas;
+                $parameter['penKur'] = $penKur;
+                $parameter['penLeb'] = $penLeb;
+                $parameter['penAll'] = $penAll;
+                $parameter['tts'] = $tts;
+                $parameter['sisa'] = $sisa;
+                $parameter['keluar'] = $keluar;
+
+
+
+                // $parameter[] = [
+                //     'nopenerimaan' => $uniNopeSt,
+                //     'penPas' => $penPas,
+                //     'penKur' => $penKur,
+                //     'penLeb' => $penLeb,
+                // ];
+                $eksekusi = self::nopenerimaanGudang($parameter);
+
+                // eksekusi perbaikan nomor penerimaan
+                // $ksekPenKur = [];
+                // $gaAdaLeb = [];
+                // $penLebNya = collect($penLeb);
+                // foreach ($penKur as $kur) {
+
+                //     $ksekPenKur[] = [
+                //         '$kur[sisanya]' => $kur['sisanya'],
+                //         'kur' => $kur,
+                //         'adaLeb' => $adaLeb ?? null,
+                //         'mutasiRinciNya' => $mutasiRinciNya ?? null,
+                //         'rincTrm' => $rincTrm ?? null,
+                //     ];
+                // }
 
 
                 // pembetulan stok opname
-                $hasilOpname = StokStokopname::where('kdobat', $kdobat)
-                    ->where('kdruang', $koderuangan)
-                    ->where('tglopname', 'like', '%' . $x . '%')
-                    ->get();
-                $colHasOp = collect($hasilOpname);
-                $opNya = [];
-                if (sizeof($penLeb) > 0) {
-                    foreach ($penLeb as $pen) {
-                        $op =  $colHasOp->firstWhere('nopenerimaan', $pen['noper']);
+                // $hasilOpname = StokStokopname::where('kdobat', $kdobat)
+                //     ->where('kdruang', $koderuangan)
+                //     ->where('tglopname', 'like', '%' . $x . '%')
+                //     ->get();
+                // $colHasOp = collect($hasilOpname);
 
-                        $opNya[] = [
-                            'pen' => $pen,
-                            'op' => $op
-                        ];
-                    }
-                }
+                // if (sizeof($penLeb) > 0) {
+                //     foreach ($penLeb as $pen) {
+                //         $op =  $colHasOp->firstWhere('nopenerimaan', $pen['noper']);
+
+                //         $opNya[] = [
+                //             'pen' => $pen,
+                //             'op' => $op
+                //         ];
+                //     }
+                // }
 
 
 
@@ -2973,6 +3012,7 @@ class SetNewStokController extends Controller
                     // 'saldoAwal' => $saldoAwal ?? [],
                     // 'stokid' => $stokid,
                     'kdobat' => $kdobat,
+                    'eksekusi' => $eksekusi,
                     'penyesuaian' => $penyesuaian,
                     'penerimaan' => $penerimaan,
                     'mutasiMasuk' => $mutasiMasuk,
@@ -2984,8 +3024,8 @@ class SetNewStokController extends Controller
                     'penLeb' => $penLeb,
                     'penKur' => $penKur,
                     'penPas' => $penPas,
-                    'ksekPenKur' => $ksekPenKur,
-                    'gaAdaLeb' => $gaAdaLeb,
+                    // 'ksekPenKur' => $ksekPenKur,
+                    // 'gaAdaLeb' => $gaAdaLeb,
                     // 'hasilOpname' => $hasilOpname,
                     'opNya' => $opNya,
 
@@ -3452,6 +3492,7 @@ class SetNewStokController extends Controller
 
 
                 $data = [
+                    'kdobat' => $kdobat,
                     'penKur' => $penKur,
                     'penLeb' => $penLeb,
                     'penPas' => $penPas,
@@ -3521,7 +3562,102 @@ class SetNewStokController extends Controller
             ];
         }
     }
+    public static function nopenerimaanGudang($head)
+    {
+        $opname = StokStokopname::where('kdobat', $head['kdobat'])
+            ->where('kdruang', $head['koderuangan'])
+            ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
+            ->get();
+        $mutasiKeluarRinci = Mutasigudangkedepo::select(
+            'mutasi_gudangdepo.*'
+        )
+            ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+            ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+            ->where('permintaan_h.tujuan', $head['koderuangan'])
+            ->where('mutasi_gudangdepo.kd_obat', $head['kdobat'])
+            ->when(
+                $head['sisa'] == 0,
+                function ($q) {
+                    $q->orderBy('mutasi_gudangdepo.jml', 'DESC');
+                },
+                function ($q) {
+                    $q->orderBy('mutasi_gudangdepo.tglpenerimaan', 'ASC');
+                }
+            )
+            ->get();
+        $mutasi = collect($mutasiKeluarRinci);
+        $retMutasi = [];
+        $leb = collect($head['penLeb']);
+        if ($head['sisa'] == 0) {
+            if (count($head['penKur']) > 0) {
+                foreach ($head['penKur'] as $key) {
+                    $adaKurang = -$key['sisanya'] ?? 0;
+                    while ($adaKurang > 0) {
+                        $adaLeb = $leb->where('sisanya', '>', 0)->first();
+                        $lebnya = (float)$adaLeb['sisanya'];
+                        $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil as harga', 'no_batch as nobatch', 'tgl_exp as tglexp')->with('header:nopenerimaan,tglpenerimaan')->where('nopenerimaan', $adaLeb['noper'])->where('kdobat', $head['kdobat'])->first();
+                        $mutnya = $mutasi->where('nopenerimaan', $key['noper'])->first();
+                        $kurnya = (float)$mutnya['jml'];
+                        if ($kurnya <= $lebnya) {
+                            $mutnya->update(['nopenerimaan' => $penerimaan->nopenerimaan]);
+                            if ($mutnya['tglpenerimaan'] != $penerimaan->header->tglpenerimaan) $mutnya->update(['tglpenerimaan' => $penerimaan->header->tglpenerimaan]);
+                            if ($mutnya['harga'] != $penerimaan->harga) $mutnya->update(['harga' => $penerimaan->harga]);
+                            if ($mutnya['nobatch'] != $penerimaan->nobatch) $mutnya->update(['nobatch' => $penerimaan->nobatch]);
+                            if ($mutnya['tglexp'] != $penerimaan->tglexp) $mutnya->update(['tglexp' => $penerimaan->tglexp]);
 
+                            $adaKurang = 0;
+                        } else {
+                            $mutnya->update(['nopenerimaan' => $penerimaan->nopenerimaan]);
+                            if ($mutnya['tglpenerimaan'] != $penerimaan->header->tglpenerimaan) $mutnya->update(['tglpenerimaan' => $penerimaan->header->tglpenerimaan]);
+                            if ($mutnya['harga'] != $penerimaan->harga) $mutnya->update(['harga' => $penerimaan->harga]);
+                            if ($mutnya['nobatch'] != $penerimaan->nobatch) $mutnya->update(['nobatch' => $penerimaan->nobatch]);
+                            if ($mutnya['tglexp'] != $penerimaan->tglexp) $mutnya->update(['tglexp' => $penerimaan->tglexp]);
+                            $adaKurang = $kurnya - $lebnya;
+                        }
+                    }
+                    $retMutasi[] = [
+                        'key' => $key,
+                        'mutnya' => $mutnya,
+                        'adaKurang' => $adaKurang,
+                        'adaLeb' => $adaLeb,
+                        'penerimaan' => $penerimaan,
+                        'lebnya' => $lebnya,
+                        'kurnya' => $kurnya,
+                    ];
+                }
+            }
+        } else if ($head['sisa'] > 0) {
+            // untuk yang lalu ga usah mikir mana yang keluar dulaun, yang penting ga ada nomor penerimaan yang mutasinya minus
+            // dan hasil stok opnamenya sesuai
+            $pelengkap = [];
+            foreach ($head['nopenerimaan'] as $key) {
+                if (str_contains($key, 'awal')) {
+                    $temp = StokStokopname::where('kdobat', $head['kdobat'])
+                        ->where('kdruang', $head['koderuangan'])
+                        ->where('nopenerimaan', $key)
+                        ->first();
+                    $pelengkap[] = $temp;
+                } else {
+                    $temp = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil as harga', 'no_batch as nobatch', 'tgl_exp as tglexp')->with('header:nopenerimaan,tglpenerimaan')->where('nopenerimaan', $key)->where('kdobat', $head['kdobat'])->first();
+                    if ($temp) {
+                        $temp->tglpenerimaan = $temp->header->tglpenerimaan;
+                        $pelengkap[] = $temp;
+                    }
+                }
+            }
+            $retMutasi[] = [
+                'opname' => $opname,
+                'pelengkap' => $pelengkap,
+            ];
+        }
+        return [
+            'retMutasi' => $retMutasi,
+            'head' => $head,
+            // 'opname' => $opname,
+            'mutasiKeluarRinci' => $mutasiKeluarRinci,
+        ];
+    }
+    public static function nopenerimaanDepo($head) {}
     public function perbaikanHargaKeluarOk()
     {
         $tanpaNoper = Resepkeluarrinci::select('noresep')->where('nopenerimaan', '')->distinct()->pluck('noresep');
@@ -3731,6 +3867,7 @@ class SetNewStokController extends Controller
                 ->on('penerimaan_r.harga_netto_kecil', '=', 'resep_keluar_racikan_r.harga_beli');
         })
             ->where('resep_keluar_racikan_r.nopenerimaan', 'NOT LIKE', '%awal%')
+            ->where('resep_keluar_racikan_r.jumlah', '>', 0)
             ->whereNull('penerimaan_r.harga_netto_kecil')
             // ->limit(10) /////////////////////////// ini nanti di coment
             ->get();
@@ -3771,6 +3908,7 @@ class SetNewStokController extends Controller
                 ->on('stokopname.harga', '=', 'resep_keluar_racikan_r.harga_beli');
         })
             ->where('resep_keluar_racikan_r.nopenerimaan', 'LIKE', '%awal%')
+            ->where('resep_keluar_racikan_r.jumlah', '>', 0)
             ->whereNull('stokopname.harga')
             // ->limit(10) /////////////////////////// ini nanti di coment
             ->get();
@@ -3816,6 +3954,7 @@ class SetNewStokController extends Controller
                 ->on('penerimaan_r.harga_netto_kecil', '=', 'resep_keluar_r.harga_beli');
         })
             ->where('resep_keluar_r.nopenerimaan', 'NOT LIKE', '%awal%')
+            ->where('resep_keluar_r.jumlah', '>', 0)
             ->whereNull('penerimaan_r.harga_netto_kecil')
             // ->limit(10) /////////////////////////// ini nanti di coment
             ->get();
@@ -3856,6 +3995,7 @@ class SetNewStokController extends Controller
                 ->on('stokopname.harga', '=', 'resep_keluar_r.harga_beli');
         })
             ->where('resep_keluar_r.nopenerimaan', 'LIKE', '%awal%')
+            ->where('resep_keluar_r.jumlah', '>', 0)
             ->whereNull('stokopname.harga')
             // ->limit(10) /////////////////////////// ini nanti di coment
             ->get();
