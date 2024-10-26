@@ -70,6 +70,8 @@ class LisController extends Controller
                         ->update([
                             'nilainormal' => $key['REF_RANGE'],
                             'satuan' => $key['UNIT'],
+                            'loinc'=> $key['LOINC_OBV'] ?? '',
+                            'display_loinc'=> $key['LOINC_NM'] ?? ''
                         ]);
                 }
             } else {
@@ -93,6 +95,8 @@ class LisController extends Controller
                         ->update([
                             'nilainormal' => $key['REF_RANGE'],
                             'satuan' => $key['UNIT'],
+                            'loinc'=> $key['LOINC_OBV'] ?? '',
+                            'display_loinc'=> $key['LOINC_NM'] ?? ''
                         ]);
                 }
 
