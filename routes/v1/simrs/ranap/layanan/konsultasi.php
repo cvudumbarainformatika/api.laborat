@@ -14,4 +14,12 @@ Route::group([
     Route::post('/simpandata', [KonsultasiController::class, 'simpandata']);
     Route::post('/hapusdata', [KonsultasiController::class, 'hapusdata']);
 
+
+
+    // Route::get('/notifNotRead', [KonsultasiController::class, 'notifRkd']);
+    Route::get('/getdatarkd', [KonsultasiController::class, 'getdatarkd']);
+    Route::post('/updateFlag', [KonsultasiController::class, 'updateFlag']);
+    Route::post('/updateJawaban', [KonsultasiController::class, 'updateJawaban']);
+
+
 });

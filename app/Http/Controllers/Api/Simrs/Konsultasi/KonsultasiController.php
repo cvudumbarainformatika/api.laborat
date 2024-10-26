@@ -13,6 +13,7 @@ use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class KonsultasiController extends Controller
 {
@@ -27,13 +28,13 @@ class KonsultasiController extends Controller
         return new JsonResponse(['message' => 'Maaf Dokter Tidak Terdaftar di simrs'], 500);
       }
 
-      $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
+      // $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
 
 
-      $tarifKonsul = self::cekTarip($spesialis, $request);
-      if (!$tarifKonsul) {
-        return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
-      }
+      // $tarifKonsul = self::cekTarip($spesialis, $request);
+      // if (!$tarifKonsul) {
+      //   return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
+      // }
 
       // return $tarifKonsul;
 
@@ -71,6 +72,154 @@ class KonsultasiController extends Controller
     }
 
 
+    
+
+    public function hapusdata(Request $request)
+    {
+        $cek = Konsultasi::find($request->id);
+        if (!$cek) {
+          return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
+        }
+
+        $hapus = $cek->delete();
+        if (!$hapus) {
+          return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+    }
+
+    
+
+    public function getdatarkd()
+    {
+      $user = FormatingHelper::session_user();
+       $data = Konsultasi::selectRaw('
+        id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user
+       ')->where('kddokterkonsul', $user['kodesimrs'])
+       ->with([
+        'dokterkonsul'=>function($q){
+          $q->select('nama','kdpegsimrs','nip','nik','foto','aktif')
+          ->where('aktif','AKTIF');
+        },
+        'nakesminta'=>function($q){
+          $q->select('nama','kdpegsimrs','nip','nik','foto','aktif')
+          ->where('aktif','AKTIF');
+        },
+        'userinput'=>function($q){
+          $q->select('nama','kdpegsimrs','nip','nik','foto','aktif')
+          ->where('aktif','AKTIF');
+        },
+        'kunjunganranap'=>function($q){
+          $q->select(
+            'rs23.rs1','rs23.rs2','rs23.rs3','rs23.rs5','rs23.rs41 as statuspulang', 'rs15.rs2 as nama',
+            'rs24.rs2 as ruangan',
+            'rs24.rs3 as kelas_ruangan',
+            'rs24.rs4 as kdgroup_ruangan',
+            )
+            ->leftJoin('rs15','rs15.rs1','rs23.rs2')
+            ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
+            ;
+        },
+        'kunjunganpoli'=>function($q){
+          $q->select(
+            'rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs19 as statuspulang', 'rs15.rs2 as nama',
+            )
+            ->leftJoin('rs15','rs15.rs1','rs17.rs2')
+            ->where('rs17.rs8', '!=', 'POL014')
+            ;
+        },
+        'kunjunganigd'=>function($q){
+          $q->select(
+            'rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs19 as statuspulang', 'rs15.rs2 as nama',
+            )
+            ->leftJoin('rs15','rs15.rs1','rs17.rs2')
+            ->where('rs17.rs8', '=', 'POL014')
+            ;
+        },
+
+       ])
+       ->orderBy('id', 'desc')
+       ->paginate(50);
+
+       return response()->json($data);
+    }
+
+    public function updateFlag(Request $request)
+    {
+       $data = Konsultasi::find($request->id);
+       $data->flag = '1';
+       $data->save();
+    }
+    public function updateJawaban(Request $request)
+    {
+
+      $user = FormatingHelper::session_user();
+
+      $dokter = Petugas::where('kdpegsimrs', $user['kodesimrs'])->where('aktif', 'AKTIF')->first();
+
+      if (!$dokter) {
+        return new JsonResponse(['message' => 'Maaf Dokter Tidak Terdaftar di simrs'], 500);
+      }
+
+      $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
+
+      // cek tarif
+      $tarifKonsul = self::cekTarip($spesialis, $request);
+      if (!$tarifKonsul) {
+        return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
+      }
+
+      $data = Konsultasi::find($request->id);
+      if (!$data) {
+        return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
+      }
+
+      $tglJawab = $data->tgl_jawaban;
+
+      if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
+
+        $hari_ini = date('Y-m-d H:i:s');
+        $data->tgl_jawaban = $hari_ini;
+
+        // cari tarif dokter dan masukkan ke tarif jika dlm 1 hari belum ada data masuk
+
+        //cek data tarif harini untuk dokter
+        $cekTarif = Visite::select('*')
+        ->where('rs1', $request->noreg)
+        ->where('rs3', $dokter->kdpegsimrs)
+        ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
+        ->where('rs6', $tarifKonsul['flag_biaya'])
+        ->get();
+
+        // jika billing belum masuk
+        if (count($cekTarif) === 0) {
+
+          Visite::create([
+            'rs1' => $request->noreg,
+            'rs2' => $hari_ini,
+            'rs3' => $dokter->kdpegsimrs,
+            'rs4' => $tarifKonsul['sarana'],
+            'rs5' => $tarifKonsul['pelayanan'],
+            'rs6' => $tarifKonsul['flag_biaya'],
+            'rs8' => $request->kdgroup_ruangan,
+            'rs9' => $user['kodesimrs'],
+          ]);
+        }
+
+      }
+
+
+
+       
+      $data->flag = '2';
+      
+      $data->jawaban = $request->jawaban;
+      $data->kdruang = $request->kdruang;
+      $data->save();
+
+      return new JsonResponse(['message' => 'Jawaban tersimpan', 'result' => $data], 200);
+    }
+
     public static function cekTarip($spesialis, $request)
     {
         // select * from rs30tarif where (rs3='K5#' or rs3='K6#') 
@@ -87,6 +236,7 @@ class KonsultasiController extends Controller
 
         $sarana=0;
 				$pelayanan=0;
+        $flag_biaya=$rsx->rs3;
 
         if ($spesialis) {
           if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
@@ -134,20 +284,11 @@ class KonsultasiController extends Controller
 
         $tarif = (int) $sarana + (int) $pelayanan;
 
-        return $tarif;
-    }
-
-    public function hapusdata(Request $request)
-    {
-        $cek = Konsultasi::find($request->id);
-        if (!$cek) {
-          return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
-        }
-
-        $hapus = $cek->delete();
-        if (!$hapus) {
-          return new JsonResponse(['message' => 'gagal dihapus'], 500);
-        }
-        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+        return [
+          'flag_biaya' => $flag_biaya,
+          'tarif' => $tarif,
+          'sarana' => $sarana,
+          'pelayanan' => $pelayanan
+        ];
     }
 }

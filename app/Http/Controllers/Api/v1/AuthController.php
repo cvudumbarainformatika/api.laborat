@@ -8,11 +8,14 @@ use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\Akses\Menu;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
+use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -55,14 +58,6 @@ class AuthController extends Controller
         $me = auth()->user();
         $pegawaiId = $me->pegawai_id;
 
-        // $keycache = 'authuser' . $pegawaiId;
-
-        // $user = User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
-
-        // $user = cache()->remember('account_' . $me->id, now()->addHours(8), function () use($me) {
-        //     return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
-        // });
-
         $user = Cache::rememberForever('account_' . $me->id, function () use ($me) {
             return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
         });
@@ -98,15 +93,46 @@ class AuthController extends Controller
             ->where('rs1','!=','')
             ->get();
         });
-        
 
+
+        $pegawai = Petugas::select('id','kdpegsimrs','kdgroupnakes','aktif','statusspesialis')->find($pegawaiId);
+
+        $notifRkd = [
+            'notif' => 0,
+            'kddokterkonsul' => $pegawai->kdpegsimrs
+        ];
+
+        if ($pegawai) {
+            if ($pegawai->kdgroupnakes === '1' && strtoupper($pegawai->aktif) === 'AKTIF') {
+
+                $cari = Konsultasi::select(DB::raw('count(kddokterkonsul) as notif'), 'kddokterkonsul')
+                ->where('kddokterkonsul','=', $pegawai->kdpegsimrs)
+                ->where(function ($q) {
+                    $q->where('flag', '=', '')
+                    ->orWhereNull('flag');
+                })
+                ->groupBy('kddokterkonsul')
+                ->orderBy('kddokterkonsul')
+                ->get();
+
+                if (count($cari) > 0) {
+                    $notifRkd = $cari[0];
+                }
+                //    ->where('kddokterkonsul','=', $pegawai->kdpegsimrs)
+                //    ->where('flag','=',null)
+                //    ->firstOrFail();
+            }
+        }
+        
+        
         
 
         $result = [
             'apps' => $apps,
             'akses' => $akses,
             'user' => $user,
-            'mSistemBayar' => $masterSistemBayar
+            'mSistemBayar' => $masterSistemBayar,
+            'notifRkd' => $notifRkd
         ];
         return new JsonResponse($result);
     }
