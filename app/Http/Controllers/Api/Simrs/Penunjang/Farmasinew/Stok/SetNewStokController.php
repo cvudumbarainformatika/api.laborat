@@ -1682,7 +1682,8 @@ class SetNewStokController extends Controller
             $temp = $data['data'] ?? $data;
             // $anu[] = $temp;
             $ada = $temp['penKur'] ?? false;
-            if ($ada) if (sizeof($temp['penKur']) > 0) $anu[] = $temp;
+            $gaktm = $temp['gaKtm'] ?? false;
+            if ($ada) if (sizeof($temp['penKur']) > 0 || $gaktm) $anu[] = $temp;
             else $mbuh[] = $temp;
         }
 
@@ -2902,6 +2903,14 @@ class SetNewStokController extends Controller
                 $penAll = [];
                 // pembetulan nomor penerimaan
                 foreach ($uniNopeSt as $key) {
+                    if ($x == $sekarang) {
+                        $stOP = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                            ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->first();
+                    } else {
+                        $stOP = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
+                            ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->where('tglopname', 'LIKE', $x . '%')->first();
+                    }
+                    $stOpnya = $stOP->jumlah ?? 0;
                     $salAwal =  collect($saldoAwalRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
                     $mutMas =  collect($mutasiMasukRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $trm =  collect($penerimaanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
@@ -2913,10 +2922,14 @@ class SetNewStokController extends Controller
                     $maSuk = (float) $salAwal + (float) $mutMas + (float) $trm + (float) $retGu + (float)$peny;
                     $keLuar = (float)$mutKel + (float)$rus;
                     $sisanya = $maSuk - $keLuar;
-                    if ($sisanya == 0) {
+                    $sts = $sisanya - $stOpnya;
+
+                    if ($sisanya == $stOpnya) {
                         $penPas[] = [
                             'noper' => $key,
                             'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
                             'maSuk' => $maSuk,
                             'keLuar' => $keLuar,
                             'peny' => $peny,
@@ -2925,6 +2938,19 @@ class SetNewStokController extends Controller
                         $penKur[] = [
                             'noper' => $key,
                             'sisanya' => $sisanya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
+                            'maSuk' => $maSuk,
+                            'keLuar' => $keLuar,
+                            'peny' => $peny,
+                        ];
+                    } else if ($sisanya < $stOpnya) {
+                        $penKur[] = [
+                            'noper' => $key,
+                            'sisanyaPeng' => $sisanya,
+                            'sisanya' => $sts,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
                             'maSuk' => $maSuk,
                             'keLuar' => $keLuar,
                             'peny' => $peny,
@@ -2933,7 +2959,8 @@ class SetNewStokController extends Controller
                         $penLeb[] = [
                             'noper' => $key,
                             'sisanya' => $sisanya,
-                            // 'stokNya' => $stokNya,
+                            'sts' => $sts,
+                            'stOpnya' => $stOpnya,
                             'maSuk' => $maSuk,
                             'keLuar' => $keLuar,
                             'peny' => $peny,
@@ -2967,6 +2994,7 @@ class SetNewStokController extends Controller
                 //     'penLeb' => $penLeb,
                 // ];
                 $eksekusi = self::nopenerimaanGudang($parameter);
+                $gaKtm = $eksekusi['gaKtm'] ?? false;
 
                 // eksekusi perbaikan nomor penerimaan
                 // $ksekPenKur = [];
@@ -3013,6 +3041,7 @@ class SetNewStokController extends Controller
                     // 'stokid' => $stokid,
                     'kdobat' => $kdobat,
                     'eksekusi' => $eksekusi,
+                    'gaKtm' => $gaKtm,
                     'penyesuaian' => $penyesuaian,
                     'penerimaan' => $penerimaan,
                     'mutasiMasuk' => $mutasiMasuk,
@@ -3575,84 +3604,111 @@ class SetNewStokController extends Controller
             ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
             ->where('permintaan_h.tujuan', $head['koderuangan'])
             ->where('mutasi_gudangdepo.kd_obat', $head['kdobat'])
-            ->when(
-                $head['sisa'] == 0,
-                function ($q) {
-                    $q->orderBy('mutasi_gudangdepo.jml', 'DESC');
-                },
-                function ($q) {
-                    $q->orderBy('mutasi_gudangdepo.tglpenerimaan', 'ASC');
-                }
-            )
+            // ->when($head['sisa'] == 0, function ($q) {
+            //     $q->orderBy('mutasi_gudangdepo.jml', 'DESC');
+            // }, function ($q) {
+            //     // $q->orderBy('mutasi_gudangdepo.no_permintaan', 'ASC');
+            //     $q->orderBy('mutasi_gudangdepo.jml', 'DESC');
+            // })
+            ->orderBy('mutasi_gudangdepo.jml', 'DESC')
             ->get();
         $mutasi = collect($mutasiKeluarRinci);
         $retMutasi = [];
         $leb = collect($head['penLeb']);
+        $opnaNya = collect($opname);
+        $gaKtm = false;
+        $pelengkaps = [];
+        $targets = [];
         if ($head['sisa'] == 0) {
-            if (count($head['penKur']) > 0) {
-                foreach ($head['penKur'] as $key) {
-                    $adaKurang = -$key['sisanya'] ?? 0;
-                    while ($adaKurang > 0) {
-                        $adaLeb = $leb->where('sisanya', '>', 0)->first();
-                        $lebnya = (float)$adaLeb['sisanya'];
-                        $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil as harga', 'no_batch as nobatch', 'tgl_exp as tglexp')->with('header:nopenerimaan,tglpenerimaan')->where('nopenerimaan', $adaLeb['noper'])->where('kdobat', $head['kdobat'])->first();
-                        $mutnya = $mutasi->where('nopenerimaan', $key['noper'])->first();
-                        $kurnya = (float)$mutnya['jml'];
-                        if ($kurnya <= $lebnya) {
-                            $mutnya->update(['nopenerimaan' => $penerimaan->nopenerimaan]);
-                            if ($mutnya['tglpenerimaan'] != $penerimaan->header->tglpenerimaan) $mutnya->update(['tglpenerimaan' => $penerimaan->header->tglpenerimaan]);
-                            if ($mutnya['harga'] != $penerimaan->harga) $mutnya->update(['harga' => $penerimaan->harga]);
-                            if ($mutnya['nobatch'] != $penerimaan->nobatch) $mutnya->update(['nobatch' => $penerimaan->nobatch]);
-                            if ($mutnya['tglexp'] != $penerimaan->tglexp) $mutnya->update(['tglexp' => $penerimaan->tglexp]);
-
-                            $adaKurang = 0;
-                        } else {
-                            $mutnya->update(['nopenerimaan' => $penerimaan->nopenerimaan]);
-                            if ($mutnya['tglpenerimaan'] != $penerimaan->header->tglpenerimaan) $mutnya->update(['tglpenerimaan' => $penerimaan->header->tglpenerimaan]);
-                            if ($mutnya['harga'] != $penerimaan->harga) $mutnya->update(['harga' => $penerimaan->harga]);
-                            if ($mutnya['nobatch'] != $penerimaan->nobatch) $mutnya->update(['nobatch' => $penerimaan->nobatch]);
-                            if ($mutnya['tglexp'] != $penerimaan->tglexp) $mutnya->update(['tglexp' => $penerimaan->tglexp]);
-                            $adaKurang = $kurnya - $lebnya;
-                        }
-                    }
-                    $retMutasi[] = [
-                        'key' => $key,
-                        'mutnya' => $mutnya,
-                        'adaKurang' => $adaKurang,
-                        'adaLeb' => $adaLeb,
-                        'penerimaan' => $penerimaan,
-                        'lebnya' => $lebnya,
-                        'kurnya' => $kurnya,
-                    ];
-                }
+            foreach ($head['penLeb'] as $key) {
+                $targets[] = [
+                    'boleh' => $key['sisanya'],
+                    'sisa' => $key['sisanya'],
+                    'noper' => $key['noper'],
+                ];
             }
         } else if ($head['sisa'] > 0) {
             // untuk yang lalu ga usah mikir mana yang keluar dulaun, yang penting ga ada nomor penerimaan yang mutasinya minus
             // dan hasil stok opnamenya sesuai
-            $pelengkap = [];
+
+            foreach ($head['penLeb'] as $key) {
+                $targets[] = [
+                    'boleh' => $key['sisanya'] - $opnaNya->where('nopenerimaan', $key['noper'])->sum('jumlah')  ?? 0,
+                    'sisa' => $key['sisanya'],
+                    'noper' => $key['noper'],
+                ];
+            }
+        }
+        if (sizeof($targets) > 0) {
             foreach ($head['nopenerimaan'] as $key) {
                 if (str_contains($key, 'awal')) {
                     $temp = StokStokopname::where('kdobat', $head['kdobat'])
                         ->where('kdruang', $head['koderuangan'])
                         ->where('nopenerimaan', $key)
                         ->first();
-                    $pelengkap[] = $temp;
+                    $pelengkaps[] = $temp;
                 } else {
                     $temp = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'harga_netto_kecil as harga', 'no_batch as nobatch', 'tgl_exp as tglexp')->with('header:nopenerimaan,tglpenerimaan')->where('nopenerimaan', $key)->where('kdobat', $head['kdobat'])->first();
                     if ($temp) {
                         $temp->tglpenerimaan = $temp->header->tglpenerimaan;
-                        $pelengkap[] = $temp;
+                        $pelengkaps[] = $temp;
+                    }
+                }
+            }
+            foreach ($targets as $target) {
+                $boleh = $target['boleh'] ?? 0;
+                if ($boleh > 0) {
+                    foreach ($head['penKur'] as $key) {
+                        $adaKurang = -$key['sisanya'] ?? 0;
+                        $targetJumlah = $adaKurang - $boleh == 0 ? $boleh : ($adaKurang - $boleh < 0 ? $adaKurang : $adaKurang - $boleh);
+                        $dataBolehDiganti = [];
+                        $accJumlah = 0;
+                        $entries = $mutasi->where('nopenerimaan', $key['noper'])->all();
+                        foreach ($entries as $entry) {
+                            if ($entry['jml'] == $targetJumlah) {
+                                $dataBolehDiganti = [];
+                                $accJumlah = $entry['jml'];
+                                $dataBolehDiganti[] = $entry;
+                            } else if ($entry['jml'] <= ($targetJumlah - $accJumlah)) {
+                                $accJumlah += $entry['jml'];
+                                $dataBolehDiganti[] = $entry;
+                            }
+                            if ($accJumlah == $targetJumlah) {
+                                break;
+                            }
+                        }
+                        if ($accJumlah == $targetJumlah) {
+                            foreach ($dataBolehDiganti as $entry) {
+                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+
+                                $entry->update(['nopenerimaan' => $target['noper']]);
+                                if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                            }
+                        } else {
+                            $gaKtm = $dataBolehDiganti;
+                        }
                     }
                 }
             }
             $retMutasi[] = [
+                'targetJumlah' => $targetJumlah ?? null,
+                'accJumlah' => $accJumlah ?? null,
+                'targets' => $targets,
                 'opname' => $opname,
-                'pelengkap' => $pelengkap,
+                'pelengkaps' => $pelengkaps,
+                'pelengkap' => $pelengkap ?? null,
+                'penerimaan' => $penerimaan ?? null,
+                'dataBolehDiganti' => $dataBolehDiganti ?? null,
+                // 'penerimaan tgl' => $penerimaan->tglpenerimaan ?? null,
             ];
         }
+        if (sizeof($head['penKur']) > 0 && sizeof($targets) == 0)  $gaKtm = $head['penKur'];
         return [
             'retMutasi' => $retMutasi,
             'head' => $head,
+            'gaKtm' => $gaKtm,
             // 'opname' => $opname,
             'mutasiKeluarRinci' => $mutasiKeluarRinci,
         ];
