@@ -12,6 +12,7 @@ use App\Models\Siasik\TransaksiLS\NpkLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
 use App\Models\Siasik\TransaksiLS\TransPajak;
+use App\Models\Siasik\TransaksiPendapatan\TranskePPK;
 use App\Models\Siasik\TransaksiPjr\Nihil;
 use App\Models\Siasik\TransaksiPjr\SpjPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\SpjPanjar_Rinci;
@@ -199,23 +200,25 @@ class RegJurnalController extends Controller
 
 
 
-        $pajakls = TransPajak::select('npdls_pajak.nonpdls',
-                'npdls_pajak.pph21',
-                'npdls_pajak.pph22',
-                'npdls_pajak.pph23',
-                'npdls_pajak.pph25',
-                'npdls_pajak.pasal4',
-                'npdls_pajak.ppnpusat',
-                'npdls_pajak.pajakdaerah',
-                'npdls_heder.nonpk',
-                'npdls_heder.kegiatanblud',
-                'npkls_heder.tglpindahbuku')
+        $pajakls = TransPajak::select(
+            'npdls_pajak.nonpdls',
+                    'npdls_pajak.pph21',
+                    'npdls_pajak.pph22',
+                    'npdls_pajak.pph23',
+                    'npdls_pajak.pph25',
+                    'npdls_pajak.pasal4',
+                    'npdls_pajak.ppnpusat',
+                    'npdls_pajak.pajakdaerah',
+                    'npdls_heder.nonpk',
+                    'npdls_heder.kegiatanblud',
+                    'npkls_heder.tglpindahbuku')
         ->join('npdls_heder', 'npdls_heder.nonpdls', 'npdls_pajak.nonpdls')
         ->join('npkls_heder', 'npkls_heder.nonpk', 'npdls_heder.nonpk')
         ->whereBetween('npkls_heder.tglpindahbuku', [$awal, $akhir])
         ->get();
 
-        $contrapost = Contrapost::select('contrapost.nocontrapost',
+        $contrapost = Contrapost::select(
+            'contrapost.nocontrapost',
                     'contrapost.tglcontrapost',
                     'contrapost.kegiatanblud',
                     'contrapost.koderek50',
@@ -235,21 +238,24 @@ class RegJurnalController extends Controller
         ->orderBy('contrapost.tglcontrapost', 'asc')
         ->get();
 
-        $spmup = SpmUP::select('transSpm.noSpm',
-            'transSpm.tglSpm',
-            'transSpm.uraianPekerjaan',
-            'transSpm.jumlahspp')
+        $spmup = SpmUP::select(
+            'transSpm.noSpm',
+                    'transSpm.tglSpm',
+                    'transSpm.uraianPekerjaan',
+                    'transSpm.jumlahspp')
         ->whereBetween('transSpm.tglSpm', [$awal, $akhir])
         ->get();
 
-        $spmgu = SPM_GU::select('transSpmgu.noSpm',
-            'transSpmgu.tglSpm',
-            'transSpmgu.uraianPekerjaan',
-            'transSpmgu.jumlahspp')
+        $spmgu = SPM_GU::select(
+            'transSpmgu.noSpm',
+                    'transSpmgu.tglSpm',
+                    'transSpmgu.uraianPekerjaan',
+                    'transSpmgu.jumlahspp')
         ->whereBetween('transSpmgu.tglSpm', [$awal, $akhir])
         ->get();
 
-        $spjpanjar=SpjPanjar_Header::select('spjpanjar_heder.nospjpanjar',
+        $spjpanjar=SpjPanjar_Header::select(
+            'spjpanjar_heder.nospjpanjar',
                     'spjpanjar_heder.tglspjpanjar',
                     'spjpanjar_heder.kegiatanblud',
                     'spjpanjar_rinci.nospjpanjar',
@@ -268,10 +274,21 @@ class RegJurnalController extends Controller
         ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir])
         ->get();
 
-        $nihil = Nihil::select('pengembalianup.nopengembalian',
-        'pengembalianup.tgltrans',
-        'pengembalianup.jmlpengembalianreal')
+        $nihil = Nihil::select(
+            'pengembalianup.nopengembalian',
+                    'pengembalianup.tgltrans',
+                    'pengembalianup.jmlpengembalianreal')
         ->whereBetween('pengembalianup.tgltrans', [$awal, $akhir])
+        ->get();
+
+        $transkeppk=TranskePPK::select(
+            't_terima_ppk.nilai',
+                    't_terima_ppk.tgltrans',
+                    't_terima_ppk.idtrans',
+                    't_terima_ppk.ket'
+                    )
+        ->orderBy('tgltrans', 'asc')
+        ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
         $regjurnal = [
             'stp' => $stp,
@@ -284,6 +301,7 @@ class RegJurnalController extends Controller
             'spmgu' => $spmgu,
             'nihil' => $nihil,
             'spjpanjar' => $spjpanjar,
+            'transkeppk' => $transkeppk
         ];
         return new JsonResponse($regjurnal);
     }

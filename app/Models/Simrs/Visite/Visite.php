@@ -11,6 +11,7 @@ class Visite extends Model
     protected $table = 'rs140';
     protected $guarded = ['id'];
     protected $appends = ['subtotal'];
+    public $timestamps = false;
 
     public function getSubtotalAttribute()
     {
