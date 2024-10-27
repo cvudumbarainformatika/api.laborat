@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
@@ -473,6 +474,12 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(Cppt::class, 'noreg', 'rs1');
     }
+    public function edukasi()
+    {
+        return $this->hasMany(Transedukasi::class, 'rs1', 'rs1');
+    }
+
+    
 
     public function hasilradiologi()
     {

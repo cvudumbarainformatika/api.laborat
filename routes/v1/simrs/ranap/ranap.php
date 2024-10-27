@@ -17,7 +17,9 @@ Route::group([
     Route::get('/allNakes', [PegawaiController::class, 'allNakes']);
 
     Route::get('/kunjunganpasien', [RanapController::class, 'kunjunganpasien']);
+    Route::post('/gantidpjp', [RanapController::class, 'gantidpjp']);
     Route::get('/listjeniskasus', [RanapController::class, 'listjeniskasus']);
     Route::post('/bukalayanan', [RanapController::class, 'bukalayanan']);
     Route::post('/gantijeniskasus', [RanapController::class, 'gantijeniskasus']);
+
 });
