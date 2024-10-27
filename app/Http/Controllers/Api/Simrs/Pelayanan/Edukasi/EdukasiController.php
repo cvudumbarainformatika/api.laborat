@@ -60,13 +60,13 @@ class EdukasiController extends Controller
 
     public function mpenerimaedukasi()
     {
-        $lispenerimaedukasi = Mpenerimaedukasi::all();
+        $lispenerimaedukasi = Mpenerimaedukasi::select('id','penerimaedukasi','hidden')->get();
         return new JsonResponse($lispenerimaedukasi);
     }
 
     public function mkebutuhanedukasi()
     {
-        $mkebutuhanedukasi = Mkebutuhanedukasi::all();
+        $mkebutuhanedukasi = Mkebutuhanedukasi::select('id','kebutuhanedukasi','hidden')->get();
         return new JsonResponse($mkebutuhanedukasi);
     }
 }

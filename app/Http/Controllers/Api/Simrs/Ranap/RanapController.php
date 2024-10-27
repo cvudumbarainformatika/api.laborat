@@ -437,6 +437,13 @@ class RanapController extends Controller
                 'konsultasi'=> function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
+                'edukasi'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                'dokumenluar' => function ($neo) {
+                    $neo->with(['pegawai:id,nama'])
+                    ->orderBy('id', 'DESC');
+                },
                 
             ])->first();
 
@@ -481,5 +488,19 @@ class RanapController extends Controller
        $data->save();
 
        return new JsonResponse($data);
+    }
+
+    public function gantidpjp(Request $request)
+    {
+        $carikunjungan = Kunjunganranap::where('rs1', $request->noreg)->first();
+        $carikunjungan->rs10 = $request->kdpegsimrs;
+        $carikunjungan->save();
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $carikunjungan->load('datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp'),
+            ],
+            200
+        );
     }
 }

@@ -111,13 +111,19 @@ class KonsultasiController extends Controller
         },
         'kunjunganranap'=>function($q){
           $q->select(
-            'rs23.rs1','rs23.rs2','rs23.rs3','rs23.rs5','rs23.rs41 as statuspulang', 'rs15.rs2 as nama',
+            'rs23.rs1','rs23.rs2','rs23.rs3','rs23.rs5','rs23.rs41 as statuspulang', 'rs15.rs2 as nama','rs23.rs19 as kodesistembayar', // ini untuk farmasi
             'rs24.rs2 as ruangan',
             'rs24.rs3 as kelas_ruangan',
             'rs24.rs4 as kdgroup_ruangan',
             )
             ->leftJoin('rs15','rs15.rs1','rs23.rs2')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
+            ->with([
+              'diagnosamedis'=>function($q){
+                $q->with('masterdiagnosa')
+                ->where('rs13', '!=', 'POL014');
+              }
+            ])
             ;
         },
         'kunjunganpoli'=>function($q){
@@ -202,7 +208,7 @@ class KonsultasiController extends Controller
             'rs5' => $tarifKonsul['pelayanan'],
             'rs6' => $tarifKonsul['flag_biaya'],
             'rs8' => $request->kdgroup_ruangan,
-            'rs9' => $user['kodesimrs'],
+            'rs9' => $request->kodesistembayar
           ]);
         }
 
