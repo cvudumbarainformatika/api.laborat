@@ -98,28 +98,6 @@ class PostKunjunganRajalHelper
         ->where('rs17.rs1', $noreg)
         ->whereNotIn('rs17.rs8', $bukanPoli)
         ->where('rs17.rs19', '=', '1') // kunjungan selesai
-        // ->where('rs17.rs3', 'LIKE', '%' . $tgl . '%')
-        
-        // ->whereBetween('rs17.rs3', [$tgl, $tglx])
-        // ->where('rs17.rs8', $user->kdruangansim ?? '')
-        // ->where('rs17.rs3', 'LIKE', '%' . $kemarin . '%')
-        // ->where('rs17.rs8', '!=', 'POL014')
-        // ->where('rs17.rs19', '=', '1') // kunjungan selesai
-
-        // ->where('rs19.rs5', '=', '1')
-        // ->where('rs19.rs4', '=', 'Poliklinik')
-        // ->whereNull('satsets.uuid')
-
-        // ->where(function ($query) {
-        //     $query->where('rs15.rs2', 'LIKE', '%' . request('q') . '%') //pasien nama
-        //         ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%') //pasien
-        //         ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%') //KUNJUNGAN
-        //         ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%') //KUNJUNGAN
-        //         ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
-        //         ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
-        //         // ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
-        //         ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
-        // })
 
         ->with([
             'satset:uuid', 'satset_error:uuid',
@@ -259,7 +237,8 @@ class PostKunjunganRajalHelper
                                 // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
                                 // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
                             ]);
-                    }
+                    },
+                    'petugas:id,nik,nama,satset_uuid',
 
                 ])
                 ->orderBy('id', 'DESC');
@@ -277,8 +256,6 @@ class PostKunjunganRajalHelper
       
 
         ->orderby('rs17.rs3', 'ASC')
-        // ->limit(1)
-        // ->get();
         ->first();
 
         // return $data;
@@ -480,7 +457,8 @@ class PostKunjunganRajalHelper
                                 // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
                                 // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
                             ]);
-                    }
+                    },
+                    'petugas:id,nik,nama,satset_uuid',
 
                 ])
                 ->orderBy('id', 'DESC');
@@ -511,6 +489,8 @@ class PostKunjunganRajalHelper
 
       $pasien_uuid = $data->pasien_uuid;
       $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
+    //   $apoteker_uuid = $data->apotek ? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
+
       if (!$pasien_uuid) {
         $getPasienFromSatset = self::getPasienByNikSatset($data);
         $pasien_uuid = $getPasienFromSatset['data']['uuid'];
@@ -520,6 +500,11 @@ class PostKunjunganRajalHelper
         $getFromSatset = self::getPractitionerFromSatset($data);
         $practitioner_uuid = $getFromSatset['data']['uuid'];
       }
+
+    //   if ( $data->apotek && !$apoteker_uuid) {
+    //     $getFromSatset = self::getApotekerFromSatset($data);
+    //     $apoteker_uuid = $getFromSatset['data']['uuid'];
+    //   }
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
       if ($send['message'] === 'success') {
@@ -578,6 +563,7 @@ class PostKunjunganRajalHelper
       }
       return $send;
     }
+    
     public static function generateUuid()
     {
         return (string) Str::orderedUuid();
@@ -871,8 +857,9 @@ class PostKunjunganRajalHelper
 
         // PUSH MEDICATION
         for ($i=0; $i < count($apotek['nonracikan']) ; $i++) { 
-            array_push($body['entry'], $apotek['nonracikan'][$i][0]);
-            array_push($body['entry'], $apotek['nonracikan'][$i][1]);
+            array_push($body['entry'], $apotek['nonracikan'][$i][0]); // Medication
+            array_push($body['entry'], $apotek['nonracikan'][$i][1]); // MedicationRequest
+            array_push($body['entry'], $apotek['nonracikan'][$i][2]); // MedicationDispense
         }
 
 
@@ -2004,7 +1991,6 @@ class PostKunjunganRajalHelper
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
 
-
         $resep = $request->apotek;
 
         // Pengiriman data peresepan obat akan menggunakan 2 resources yaitu Medication dan MedicationRequest. 
@@ -2033,7 +2019,8 @@ class PostKunjunganRajalHelper
         $display = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs4'] ?? '-' : '-') : '-';
         $uraian = $diag ? ($diag['masterdiagnosa'] ? $diag['masterdiagnosa']['rs3'] ?? '-' : '-') : '-';
 
-
+        $locationFarmasiRajal = '692c5cbc-3355-4044-ab0a-657392a20a10';
+        $displayFarmasiRajal = 'Farmasi Poli Rawat Jalan';
 
         $kirimObatNonRacikan = [];
         $kirimObatRacikan = [];
@@ -2047,7 +2034,8 @@ class PostKunjunganRajalHelper
                 $tgl_selesai = $resep[$i]['tgl_selesai']?? Carbon::now();
 
 
-                
+                $apoteker_uuid = $resep[$i]['petugas'] ? $resep[$i]['petugas']['satset_uuid'] : null;
+                $nama_apoteker = $resep[$i]['petugas'] ? $resep[$i]['petugas']['nama'] : '-';
 
 
                 if (count($nonRacikan) > 0) {
@@ -2069,6 +2057,8 @@ class PostKunjunganRajalHelper
                             $routeName = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['name'] ?? '-';
 
                             $medication_id = self::generateUuid();
+
+                            $medicationRequest_id = self::generateUuid();
 
                             $konsumsiX = (int)$nonRacikan[$j]['konsumsi'] >=30 ?? false;
                             $kronis = (int)$nonRacikan[$j]['mobat']['status_kronis'] === '1' ?? false;
@@ -2106,6 +2096,8 @@ class PostKunjunganRajalHelper
 
                             $medication = 
                             [
+
+                                // Medication
                                 
                                 [
                                     "fullUrl" => "urn:uuid:".$medication_id,
@@ -2273,8 +2265,10 @@ class PostKunjunganRajalHelper
                                     ],
                                     "request" => ["method" => "POST", "url" => "Medication"],
                                 ],
+
+                                // MedicationRequest
                                 [
-                                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                                    "fullUrl" => "urn:uuid:".$medicationRequest_id,
                                     "resource" => [
                                         "resourceType" => "MedicationRequest",
                                         "identifier" => [
@@ -2326,11 +2320,11 @@ class PostKunjunganRajalHelper
                                         "dosageInstruction" => [
                                             [
                                                 "sequence" => 1,
-                                                "text" => $nonRacikan[$j]['konsumsi_perhari']." ".$nonRacikan[$j]['mobat']['satuan_k']."  per hari",
+                                                "text" => $nonRacikan[$j]['aturan']." ".$nonRacikan[$j]['keterangan'],
                                                 "additionalInstruction" => [
                                                     ["text" => $nonRacikan[$j]['keterangan']]
                                                 ],
-                                                "patientInstruction" => $nonRacikan[$j]['konsumsi_perhari']." ".$nonRacikan[$j]['mobat']['satuan_k']."  per hari dengan keterangan " .$nonRacikan[$j]['keterangan'] ,
+                                                "patientInstruction" => $nonRacikan[$j]['aturan']." ".$nonRacikan[$j]['keterangan'],
                                                 "timing" => [
                                                     "repeat" => [
                                                         "frequency" => $nonRacikan[$j]['konsumsi_perhari'],
@@ -2381,7 +2375,7 @@ class PostKunjunganRajalHelper
                                                 "start" => Carbon::parse($tgl_selesai)->toIso8601String(),
                                                 "end" => Carbon::parse($tglObatHabis)->toIso8601String(),
                                             ],
-                                            "numberOfRepeatsAllowed" => 0,
+                                            // "numberOfRepeatsAllowed" => 0,
                                             // "quantity" => [
                                             //     "value" => 120,
                                             //     "unit" => "TAB",
@@ -2399,7 +2393,130 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                                     "request" => ["method" => "POST", "url" => "MedicationRequest"],
-                                ]
+                                ],
+
+
+                                // "MedicationDispense"
+                                [
+                                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                                    "resource" => [
+                                        "resourceType" => "MedicationDispense",
+                                        "identifier" => [
+                                            [
+                                                "use" => "official",
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
+                                                "value" => $noresep,
+                                            ],
+                                            [
+                                                "use" => "official",
+                                                "system" =>
+                                                    "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
+                                                "value" => $kdobat,
+                                            ],
+                                        ],
+                                        "status" => "completed",
+                                        "category" => [
+                                            "coding" => [
+                                                [
+                                                    "system" =>
+                                                        "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
+                                                    "code" => "outpatient",
+                                                    "display" => "Outpatient",
+                                                ],
+                                            ],
+                                        ],
+                                        "medicationReference" => [
+                                            // "reference" => "urn:uuid:{{Medication_forDispense}}",
+                                            "reference" => "urn:uuid:".$medication_id,
+                                            "display" => $display,
+                                        ],
+                                        "subject" => [
+                                            "reference" => "Patient/".$pasien_uuid,
+                                            "display" => $request->nama,
+                                        ],
+                                        "context" => ["reference" => "urn:uuid:".$encounter],
+                                        "performer" => [
+                                            [
+                                                "actor" => [
+                                                    "reference" => "Practitioner/".$apoteker_uuid,
+                                                    "display" => $nama_apoteker,
+                                                ],
+                                            ],
+                                        ],
+                                        "location" => [
+                                            "reference" => "Location/".$locationFarmasiRajal,
+                                            "display" => $displayFarmasiRajal,
+                                        ],
+                                        "authorizingPrescription" => [
+                                            [
+                                                // "reference" => "urn:uuid:{{MedicationRequest_id}}"
+                                                "reference" => "urn:uuid:".$medicationRequest_id
+                                            ],
+                                        ],
+                                        // "quantity" => [
+                                        //     "value" => 120,
+                                        //     "system" =>
+                                        //         "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                        //     "code" => "TAB",
+                                        // ],
+                                        "daysSupply" => [
+                                            "value" => $nonRacikan[$j]['konsumsi_perhari'],
+                                            "unit" => "Day",
+                                            "system" => "http://unitsofmeasure.org",
+                                            "code" => "d",
+                                        ],
+                                        "whenPrepared" => Carbon::parse($tgl_kirim)->toIso8601String(), // ini otw tgl diterima
+                                        "whenHandedOver" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                        "dosageInstruction" => [
+                                            [
+                                                "sequence" => 1,
+                                                // "additionalInstruction" => [
+                                                //     [
+                                                //         "coding" => [
+                                                //             [
+                                                //                 "system" => "http://snomed.info/sct",
+                                                //                 "code" => "418577003",
+                                                //                 "display" =>
+                                                //                     "Take at regular intervals. Complete the prescribed course unless otherwise directed",
+                                                //             ],
+                                                //         ],
+                                                //     ],
+                                                // ],
+                                                "patientInstruction" => $nonRacikan[$j]['aturan']." ".$nonRacikan[$j]['keterangan'],
+                                                "timing" => [
+                                                    "repeat" => [
+                                                        "frequency" => $nonRacikan[$j]['konsumsi_perhari'],
+                                                        "period" => 1,
+                                                        "periodUnit" => "d",
+                                                    ],
+                                                ],
+                                                // "doseAndRate" => [
+                                                //     [
+                                                //         "type" => [
+                                                //             "coding" => [
+                                                //                 [
+                                                //                     "system" =>
+                                                //                         "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                                                //                     "code" => "ordered",
+                                                //                     "display" => "Ordered",
+                                                //                 ],
+                                                //             ],
+                                                //         ],
+                                                //         "doseQuantity" => [
+                                                //             "value" => 4,
+                                                //             "unit" => "TAB",
+                                                //             "system" =>
+                                                //                 "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                                //             "code" => "TAB",
+                                                //         ],
+                                                //     ],
+                                                // ],
+                                            ],
+                                        ],
+                                    ],
+                                    "request" => ["method" => "POST", "url" => "MedicationDispense"],
+                                ],
                             ];
 
                             if ($longTerm) {
@@ -2425,6 +2542,8 @@ class PostKunjunganRajalHelper
         
         
     }
+
+    
     static function screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
