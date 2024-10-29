@@ -2994,8 +2994,8 @@ class SetNewStokController extends Controller
                     // 'saldoAwal' => $saldoAwal ?? [],
                     // 'stokid' => $stokid,
                     'kdobat' => $kdobat,
-                    'eksekusi' => $eksekusi,
                     'gaKtm' => $gaKtm,
+                    'eksekusi' => $eksekusi,
                     'penyesuaian' => $penyesuaian,
                     'penerimaan' => $penerimaan,
                     'mutasiMasuk' => $mutasiMasuk,
@@ -3490,8 +3490,8 @@ class SetNewStokController extends Controller
 
                 $data = [
                     'kdobat' => $kdobat,
-                    'eksekusi' => $eksekusi,
                     'gaKtm' => $gaKtm,
+                    'eksekusi' => $eksekusi,
                     'penKur' => $penKur,
                     'penLeb' => $penLeb,
                     'penPas' => $penPas,
@@ -3697,7 +3697,7 @@ class SetNewStokController extends Controller
             ->where('resep_keluar_h.depo', $head['koderuangan'])
             ->where('resep_keluar_r.kdobat', $head['kdobat'])
             ->where('resep_keluar_r.jumlah', '>', 0)
-            ->orderBy('resep_keluar_r.noresep', 'ASC')
+            ->orderBy('resep_keluar_r.jumlah', 'DESC')
             ->get();
 
         $mutasi = $head['koderuangan'] == 'Gd-03010101' ? collect($mutasiKeluarRinci) : collect($resepKeluarRinci);
@@ -3766,9 +3766,29 @@ class SetNewStokController extends Controller
                             foreach ($dataBolehDiganti as $entry) {
                                 $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
 
-                                // $entry->update(['nopenerimaan' => $target['noper']]);
-                                // if ($head['koderuangan'] != 'Gd-03010101') if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                $entry->update(['nopenerimaan' => $target['noper']]);
+                                if ($head['koderuangan'] == 'Gd-03010101') {
+                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                } else {
+                                    if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                }
                             }
+                        } else if ($accJumlah < $targetJumlah) {
+                            foreach ($dataBolehDiganti as $entry) {
+                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+
+                                $entry->update(['nopenerimaan' => $target['noper']]);
+                                if ($head['koderuangan'] == 'Gd-03010101') {
+                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                } else {
+                                    if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                }
+                            }
+                            $gaKtm = ['else' => $dataBolehDiganti];
                         } else {
                             $gaKtm = $dataBolehDiganti;
                         }
