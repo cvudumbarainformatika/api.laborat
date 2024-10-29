@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/pelayanan/igd/anamnesis'
+    'prefix' => 'simrs/igd/anamnesis'
 ],function () {
     Route::post('/simpananamnesis', [AnamnesisController::class, 'simpananamnesis']);
 
