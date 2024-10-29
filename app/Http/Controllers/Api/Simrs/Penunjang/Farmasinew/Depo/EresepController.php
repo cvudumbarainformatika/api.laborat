@@ -1570,7 +1570,7 @@ class EresepController extends Controller
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
             ->where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '>', 0)
-            ->orderBy('tglexp')
+            ->orderBy('id')
             ->first();
         $jumlahstok = (int)$cekjumlahstok->jumlahstok;
         if ((int)$request->jumlah > $jumlahstok) {
@@ -1663,7 +1663,7 @@ class EresepController extends Controller
                 ->where('kdobat', $request->kdobat)
                 ->where('kdruang', $request->kodedepo)
                 ->where('jumlah', '>', 0)
-                ->orderBy('tglexp', 'ASC')
+                ->orderBy('tglpenerimaan', 'ASC')
                 ->get();
 
             $index = 0;
@@ -1730,10 +1730,13 @@ class EresepController extends Controller
                                 ]
                             );
                         }
-                        Stokreal::where('id', $caristok[$index]->id)
-                            ->update([
-                                'jumlah' => $sisax
-                            ]);
+                        $caristok[$index]->update([
+                            'jumlah' => $sisax
+                        ]);
+                        // Stokreal::where('id', $caristok[$index]->id)
+                        //     ->update([
+                        //         'jumlah' => $sisax
+                        //     ]);
 
 
                         $masuk = 0;
@@ -1789,10 +1792,13 @@ class EresepController extends Controller
                             );
                         }
 
-                        Stokreal::where('id', $caristok[$index]->id)
-                            ->update([
-                                'jumlah' => 0
-                            ]);
+                        $caristok[$index]->update([
+                            'jumlah' => 0
+                        ]);
+                        // Stokreal::where('id', $caristok[$index]->id)
+                        //     ->update([
+                        //         'jumlah' => 0
+                        //     ]);
 
                         $masuk = $sisax;
                         $index = $index + 1;

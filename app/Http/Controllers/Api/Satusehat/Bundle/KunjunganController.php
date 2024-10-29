@@ -476,6 +476,7 @@ class KunjunganController extends Controller
         // }
 
         $practitioner = $data->datasimpeg['satset_uuid'];
+        $apoteker = $data->apotek? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
         // if (!$practitioner) {
         //     return response()->json([
         //         'message' => 'Maaf ... Dokter Ini Belum Terkoneksi Ke Satu Sehat'
@@ -512,7 +513,7 @@ class KunjunganController extends Controller
         // $send = BridgingSatsetHelper::post_bundle($request->token, $form, $request->noreg);
         // return $send;
 
-        $send = PostKunjunganRajalHelper::form($data, $pasien_uuid, $practitioner);
+        $send = PostKunjunganRajalHelper::form($data, $pasien_uuid, $practitioner, $apoteker);
         // if ($send['message'] === 'success') {
         //   $token = AuthSatsetHelper::accessToken();
         //   $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);

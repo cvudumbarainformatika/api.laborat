@@ -5,8 +5,11 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Edukasi\Transedukasi;
+use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
+use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Laporan\Operasi\PermintaanOperasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\MkamarRanap;
@@ -14,6 +17,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
@@ -21,7 +25,11 @@ use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
 use App\Models\Simrs\Penjaminan\Klaimranap;
 use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
+use App\Models\Simrs\Penunjang\Ambulan\ReqAmbulan;
+use App\Models\Simrs\Penunjang\Apheresis\PermintaanApheresis;
+use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
+use App\Models\Simrs\Penunjang\Cathlab\ReqCathlab;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajallalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanheder;
@@ -37,11 +45,13 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
+use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
 use App\Models\Simrs\Penunjang\Keperawatan\Keperawatan;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Oksigen\Oksigen;
 use App\Models\Simrs\Penunjang\Operasi\PermintaanOperasiIrd;
 use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
@@ -50,6 +60,7 @@ use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
+use App\Models\Simrs\Ranap\Pelayanan\Cppt;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Tindakan\Tindakan;
@@ -394,6 +405,14 @@ class Kunjunganranap extends Model
     {
        return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'rs1');
     }
+    public function diagnosakebidanan()
+    {
+       return $this->hasMany(Diagnosakebidanan::class, 'noreg', 'rs1');
+    }
+    public function konsultasi()
+    {
+       return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
+    }
     public function diagnosa()
     {
         return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
@@ -422,6 +441,45 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(PermintaanOperasiIrd::class, 'rs1', 'rs1');
     }
+    public function bankdarah()
+    {
+        return $this->hasMany(PermintaanBankdarah::class, 'rs1', 'rs1');
+    }
+    public function apheresis()
+    {
+        return $this->hasMany(PermintaanApheresis::class, 'noreg', 'rs1');
+    }
+    public function cathlab()
+    {
+        return $this->hasMany(ReqCathlab::class, 'noreg', 'rs1');
+    }
+    public function permintaanambulan()
+    {
+        return $this->hasMany(ReqAmbulan::class, 'rs1', 'rs1');
+    }
+    
+    public function penunjanglain()
+    {
+        return $this->hasMany(Lain::class, 'rs1', 'rs1');
+    }
+    public function perawatanjenazah()
+    {
+        return $this->hasMany(KamarjenazahPermintaan::class, 'rs1', 'rs1');
+    }
+    public function hais()
+    {
+        return $this->hasMany(HaisTrans::class, 'noreg', 'rs1');
+    }
+    public function cppt()
+    {
+        return $this->hasMany(Cppt::class, 'noreg', 'rs1');
+    }
+    public function edukasi()
+    {
+        return $this->hasMany(Transedukasi::class, 'rs1', 'rs1');
+    }
+
+    
 
     public function hasilradiologi()
     {

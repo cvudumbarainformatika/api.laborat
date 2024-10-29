@@ -65,15 +65,21 @@ class KartustokController extends Controller
                         ->groupBy('kdobat', 'tglopname');
                 },
                 // untuk ambil penyesuaian stok awal
-                'stok' => function ($stok) use ($koderuangan, $tglAwal, $tglAkhir) {
+                'stok' => function ($stok) use ($koderuangan, $tglAwal, $tglAkhir, $x) {
                     $stok->select('id', 'kdobat', 'nopenerimaan', 'nobatch', 'jumlah')
                         ->with([
-                            'ssw' => function ($q) use ($tglAwal, $tglAkhir) {
-                                $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                            'ssw' => function ($q) use ($tglAwal, $tglAkhir, $x) {
+                                $q->where('tgl_penyesuaian', 'LIKE', $x . '%');
+                                // $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
                             }
                         ])
                         ->where('jumlah', '!=', 0)
                         ->where('kdruang', $koderuangan);
+                },
+                'penyesuaian' => function ($q) use ($koderuangan, $x) {
+                    $q->join('stokreal', 'stokreal.id', '=', 'penyesuaian_stoks.stokreal_id')
+                        ->where('kdruang', $koderuangan)
+                        ->where('tgl_penyesuaian', 'LIKE', $x . '%');
                 },
                 // hanya ada jika koderuang itu adalah gudang
                 'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
@@ -323,15 +329,22 @@ class KartustokController extends Controller
                         ->groupBy('kdobat', 'tglopname');
                 },
                 // untuk ambil penyesuaian stok awal
-                'stok' => function ($stok) use ($koderuangan, $tglAwal, $tglAkhir) {
+                'stok' => function ($stok) use ($koderuangan, $tglAwal, $tglAkhir, $x) {
                     $stok->select('id', 'kdobat', 'nopenerimaan', 'nobatch', 'jumlah')
                         ->with([
-                            'ssw' => function ($q) use ($tglAwal, $tglAkhir) {
-                                $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                            'ssw' => function ($q) use ($tglAwal, $tglAkhir, $x) {
+                                $q->where('tgl_penyesuaian', 'LIKE', $x . '%');
+                                // $q->whereBetween('tgl_penyesuaian', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
                             }
                         ])
                         ->where('jumlah', '!=', 0)
                         ->where('kdruang', $koderuangan);
+                },
+
+                'penyesuaian' => function ($q) use ($koderuangan, $x) {
+                    $q->join('stokreal', 'stokreal.id', '=', 'penyesuaian_stoks.stokreal_id')
+                        ->where('kdruang', $koderuangan)
+                        ->where('tgl_penyesuaian', 'LIKE', $x . '%');
                 },
                 // hanya ada jika koderuang itu adalah gudang
                 'penerimaanrinci' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {

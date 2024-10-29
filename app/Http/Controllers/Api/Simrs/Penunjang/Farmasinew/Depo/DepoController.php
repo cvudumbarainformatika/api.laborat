@@ -459,8 +459,6 @@ class DepoController extends Controller
                 ->groupBy(
                     'nopenerimaan',
                     'kd_obat',
-                    'nobatch',
-                    'tglexp',
                     'harga',
                 )
                 ->get();
@@ -469,10 +467,9 @@ class DepoController extends Controller
                 $stoknya = Stokreal::lockForUpdate()
                     ->where('kdobat', $wew->kd_obat)
                     ->where('nopenerimaan', $wew->nopenerimaan)
-                    ->where('nobatch', $wew->nobatch)
+                    ->where('harga', $wew->harga)
                     ->where('kdruang', $request->tujuan)
-                    ->where('tglexp', $wew->tglexp)
-                    ->orderBy('id', 'DESC')
+                    ->orderBy('tglpenerimaan', 'DESC')
                     ->first();
                 if ($stoknya) {
                     $total = (float)$wew->jumlah + (float)$stoknya->jumlah;

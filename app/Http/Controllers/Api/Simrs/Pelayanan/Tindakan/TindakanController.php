@@ -137,6 +137,7 @@ class TindakanController extends Controller
 
     public function hapustindakanpoli(Request $request)
     {
+        
         $cari = Tindakan::find($request->id);
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
@@ -262,6 +263,13 @@ class TindakanController extends Controller
 
     public function simpantindakanranap(Request $request)
     {
+
+        $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=','1')->get();
+
+        if (count($cekKasir) > 0) {
+            return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal '.$cekKasir[0]->rs42], 500);
+        }
+
         DB::select('call nota_tindakan(@nomor)');
         $x = DB::table('rs1')->select('rs14')->get();
         $wew = $x[0]->rs14;

@@ -121,6 +121,7 @@ class PenerimaanController extends Controller
                     'nopenerimaan' => $nopenerimaan,
                     'kdobat' => $request->kdobat,
                     'no_batch' => $request->no_batch,
+                    'harga_netto_kecil' => $request->harga_netto_kecil,
                 ],
                 [
                     'tgl_exp' => $request->tgl_exp,
@@ -138,7 +139,6 @@ class PenerimaanController extends Controller
                     'ppn_rp' => $request->ppn_rp ?? 0,
                     'ppn_rp_kecil' => $request->ppn_rp_kecil ?? 0,
                     'harga_netto' => $request->harga_netto,
-                    'harga_netto_kecil' => $request->harga_netto_kecil,
                     'jml_pesan' => $request->jml_pesan,
                     'jml_terima_lalu' => $request->jml_terima_lalu,
                     'jml_all_penerimaan' => $request->jml_all_penerimaan,

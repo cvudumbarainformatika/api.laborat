@@ -640,7 +640,7 @@ class PenjualanBebasController extends Controller
                 ->whereIn('kdobat', $request->kode)
                 ->where('jumlah', '>', 0)
                 ->where('kdruang', $request->depo)
-                ->orderBy('tglexp', 'ASC')
+                ->orderBy('tglpenerimaan', 'ASC')
                 ->get();
             $collectStok = collect($stok);
 

@@ -113,6 +113,11 @@ class Resepkeluarheder extends Model
         return $this->hasMany(KunjunganPoli::class,'rs1','noreg');
     }
 
+    public function petugas()
+    {
+       return $this->hasOne(Petugas::class, 'id', 'user');
+    }
+
 
 
 }

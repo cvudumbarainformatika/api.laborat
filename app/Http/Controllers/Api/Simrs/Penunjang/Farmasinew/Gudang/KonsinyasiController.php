@@ -102,7 +102,7 @@ class KonsinyasiController extends Controller
         $resep = Resepkeluarrinci::select(
             'resep_keluar_r.noresep',
             'resep_keluar_r.kdobat',
-            'resep_keluar_r.jumlah',
+            DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
             'resep_keluar_r.nopenerimaan',
             'resep_keluar_r.harga_beli',
             'new_masterobat.status_konsinyasi',
@@ -135,8 +135,8 @@ class KonsinyasiController extends Controller
                 }
             ])
             ->leftJoin('detail_bast_konsinyasis', function ($q) {
-                $q->on('detail_bast_konsinyasis.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
-                    ->on('detail_bast_konsinyasis.noresep', '=', 'resep_keluar_r.noresep')
+                $q->on('detail_bast_konsinyasis.noresep', '=', 'resep_keluar_r.noresep')
+                    // ->on('detail_bast_konsinyasis.nopenerimaan', '=', 'resep_keluar_r.nopenerimaan')
                     ->on('detail_bast_konsinyasis.kdobat', '=', 'resep_keluar_r.kdobat');
             })
             ->join('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_keluar_r.kdobat')

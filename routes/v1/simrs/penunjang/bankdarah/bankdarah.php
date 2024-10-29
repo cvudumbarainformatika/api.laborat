@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Penunjang\BankDarah\BankDarahController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Bankdarah\BankDarahController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -9,8 +9,8 @@ Route::group([
     'prefix' => 'simrs/penunjang/bankdarah'
 ], function () {
     Route::get('/getmaster', [BankDarahController::class, 'getmaster']);
-    // Route::get('/getnota', [OperasiIrdController::class, 'getnota']);
+    Route::get('/getnota', [BankDarahController::class, 'getnota']);
     // Route::get('/getdata', [OperasiIrdController::class, 'getdata']);
-    // Route::post('/permintaanoperasi', [OperasiIrdController::class, 'simpandata']);
-    // Route::post('/hapuspermintaan', [OperasiIrdController::class, 'hapusdata']);
+    Route::post('/simpanpermintaan', [BankDarahController::class, 'simpandata']);
+    Route::post('/hapuspermintaan', [BankDarahController::class, 'hapusdata']);
 });

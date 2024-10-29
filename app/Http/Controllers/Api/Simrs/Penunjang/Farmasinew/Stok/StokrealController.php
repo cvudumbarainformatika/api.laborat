@@ -25,24 +25,52 @@ class StokrealController extends Controller
     public static function stokreal($nopenerimaan, $request)
     {
         //return ($request->kdobat);
-        $simpanstokreal = Stokrel::updateOrCreate(
-            [
-                'nopenerimaan' => $nopenerimaan,
-                'kdobat' => $request->kdobat,
-                'kdruang' => $request->kdruang,
-                'nobatch' => $request->no_batch,
-            ],
-            [
-                'tglexp' => $request->tgl_exp,
-                'harga' => $request->harga_netto_kecil,
-                'tglpenerimaan' => $request->tglpenerimaan,
-                'jumlah' => $request->jml_terima_k,
-                'flag' => 1
+        // $simpanstokreal = Stokrel::updateOrCreate(
+        //     [
+        //         'nopenerimaan' => $nopenerimaan,
+        //         'kdobat' => $request->kdobat,
+        //         'kdruang' => $request->kdruang,
+        //         'nobatch' => $request->no_batch,
+        //     ],
+        //     [
+        //         'tglexp' => $request->tgl_exp,
+        //         'harga' => $request->harga_netto_kecil,
+        //         'tglpenerimaan' => $request->tglpenerimaan,
+        //         'jumlah' => $request->jml_terima_k,
+        //         'flag' => 1
 
-            ]
-        );
-        if (!$simpanstokreal) {
-            return 500;
+        //     ]
+        // );
+        $ada = Stokrel::where('nopenerimaan', $nopenerimaan)
+            ->where('kdobat', $request->kdobat)
+            ->where('kdruang', $request->kdruang)
+            ->where('nobatch', $request->no_batch)
+            ->where('harga', $request->harga_netto_kecil)
+            ->where('flag', '1')
+            ->first();
+        if ($ada) {
+            $prev = (float)$ada->jumlah;
+            $rec = (float)$request->jml_terima_k;
+            $sub = $rec + $prev;
+            $ada->update(['jumlah' => $sub]);
+        } else {
+            $simpanstokreal = Stokrel::create(
+                [
+                    'nopenerimaan' => $nopenerimaan,
+                    'kdobat' => $request->kdobat,
+                    'kdruang' => $request->kdruang,
+                    'nobatch' => $request->no_batch,
+                    'harga' => $request->harga_netto_kecil,
+                    'tglexp' => $request->tgl_exp,
+                    'tglpenerimaan' => $request->tglpenerimaan,
+                    'jumlah' => $request->jml_terima_k,
+                    'flag' => 1
+
+                ]
+            );
+            if (!$simpanstokreal) {
+                return 500;
+            }
         }
         return 200;
     }

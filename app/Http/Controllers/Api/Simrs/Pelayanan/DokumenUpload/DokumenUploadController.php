@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\DokumenUpload;
 
 use App\Http\Controllers\Controller;
@@ -10,12 +9,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+use Intervention\Image\Facades\Image;
+
 class DokumenUploadController extends Controller
 {
 
     public function master()
     {
-        $data= MdokumenUpload::pluck('nama');
+        $data= MdokumenUpload::when(request()->ranap, function ($query) {
+            $query->where('ranap', '1');
+        })
+        ->pluck('nama');
         return new JsonResponse($data);
     }
 
@@ -32,6 +36,7 @@ class DokumenUploadController extends Controller
 
                 for ($i = 0; $i < count($files); $i++) {
                     $file = $files[$i];
+                    
                     $originalname = $file->getClientOriginalName();
                     $penamaan = date('YmdHis') . '-' . $i . '-' . $request->norm . '.' . $file->getClientOriginalExtension();
                     $data = DokumenUpload::where([
@@ -48,13 +53,34 @@ class DokumenUploadController extends Controller
                     } else {
                         $gallery = new DokumenUpload();
                     }
-                    $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
+
+                    $folder = $request->isRanap ? 'dokumen_luar_ranap' : 'dokumen_luar_poli';
+
+                    if (!is_dir(storage_path("app/public/$folder"))) {
+                      mkdir(storage_path("app/public/$folder"), 0775, true);
+                    }
+          
+                    // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
+                    // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
+
+
+                    $img=Image::make($file)->resize(600, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
+
+                    // $img = Image::make($file);
+
+                    $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                    
+
+
+                    
 
                     $gallery->noreg = $request->noreg;
                     $gallery->norm = $request->norm;
                     $gallery->nama = $request->nama;
-                    $gallery->path = $path;
-                    $gallery->url = 'dokumen_luar_poli/' . $penamaan;
+                    $gallery->path = "public/$folder/$penamaan";
+                    $gallery->url = $folder . '/' . $penamaan;
                     $gallery->original = $originalname;
                     $gallery->user_input = $user;
                     $gallery->save();
