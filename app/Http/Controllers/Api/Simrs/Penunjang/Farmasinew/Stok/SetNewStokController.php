@@ -3112,15 +3112,17 @@ class SetNewStokController extends Controller
                     ->get();
                 $mutasiKeluar = collect($mutasiKeluarDepoRinci)->sum('jumlah');
 
-
+                $headerResep = Resepkeluarheder::select('noresep')->where('tgl_selesai', 'LIKE', '%' . $x . '%')
+                    ->where('depo', $koderuangan)->distinct()->pluck('noresep');
                 $resepKeluarRinci = Resepkeluarrinci::select(
                     'resep_keluar_r.kdobat',
                     'resep_keluar_r.nopenerimaan',
                     DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
                 )
-                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                    ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $x . '%')
-                    ->where('resep_keluar_h.depo', $koderuangan)
+                    // ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                    // ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $x . '%')
+                    // ->where('resep_keluar_h.depo', $koderuangan)
+                    ->whereIn('noresep', $headerResep)
                     ->where('resep_keluar_r.kdobat', $kdobat)
                     ->where('resep_keluar_r.jumlah', '>', 0)
                     ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
@@ -3132,10 +3134,10 @@ class SetNewStokController extends Controller
                     DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
                 )
                     ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
-                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    // ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
                     ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $x . '%')
-                    ->where('resep_keluar_h.depo', $koderuangan)
-                    // ->whereIn('noresep', $noresep)
+                    // ->where('resep_keluar_h.depo', $koderuangan)
+                    ->whereIn('retur_penjualan_r.noresep', $headerResep)
                     ->where('retur_penjualan_r.kdobat', $kdobat)
                     ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
                     ->get();
@@ -3146,9 +3148,10 @@ class SetNewStokController extends Controller
                     'resep_keluar_racikan_r.nopenerimaan',
                     DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
                 )
-                    ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
-                    ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $x . '%')
-                    ->where('resep_keluar_h.depo', $koderuangan)
+                    // ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    // ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $x . '%')
+                    // ->where('resep_keluar_h.depo', $koderuangan)
+                    ->whereIn('noresep', $headerResep)
                     ->where('resep_keluar_racikan_r.kdobat', $kdobat)
                     ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan')
                     ->get();
@@ -3693,6 +3696,7 @@ class SetNewStokController extends Controller
         )
             ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
             ->where('resep_keluar_h.flag', '3')
+            // ->whereIn('resep_keluar_h.flag', ['3', '4'])
             ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
             ->where('resep_keluar_h.depo', $head['koderuangan'])
             ->where('resep_keluar_r.kdobat', $head['kdobat'])
