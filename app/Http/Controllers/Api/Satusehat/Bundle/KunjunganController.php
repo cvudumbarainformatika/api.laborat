@@ -27,7 +27,7 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
 
-            return PostKunjunganRajalHelper::cobarajal('89618/10/2024/J');
+            return PostKunjunganRajalHelper::cobarajal('89905/10/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
             // return self::cekKunjunganRajal('74748/09/2024/J');
         }
