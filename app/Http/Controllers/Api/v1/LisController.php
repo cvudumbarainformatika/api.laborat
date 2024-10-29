@@ -71,7 +71,9 @@ class LisController extends Controller
                             'nilainormal' => $key['REF_RANGE'],
                             'satuan' => $key['UNIT'],
                             'loinc'=> $key['LOINC_OBV'] ?? '',
-                            'display_loinc'=> $key['LOINC_NM'] ?? ''
+                            'display_loinc'=> $key['LOINC_NM'] ?? '',
+                            'loinc_paket'=> $key['LOINC_REQ'] ?? '',
+                            'display_loinc_paket'=> $key['LOINC_REQNM'] ?? '',
                         ]);
                 }
             } else {
@@ -96,7 +98,9 @@ class LisController extends Controller
                             'nilainormal' => $key['REF_RANGE'],
                             'satuan' => $key['UNIT'],
                             'loinc'=> $key['LOINC_OBV'] ?? '',
-                            'display_loinc'=> $key['LOINC_NM'] ?? ''
+                            'display_loinc'=> $key['LOINC_NM'] ?? '',
+                            'loinc_paket'=> $key['LOINC_REQ'] ?? '',
+                            'display_loinc_paket'=> $key['LOINC_REQNM'] ?? '',
                         ]);
                 }
 
