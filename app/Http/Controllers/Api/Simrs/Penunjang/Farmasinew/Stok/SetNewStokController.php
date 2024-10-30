@@ -1667,8 +1667,15 @@ class SetNewStokController extends Controller
         $depo = request('kdruang');
         $month = request('month');
         $year = request('year');
+        $limit = request('limit');
+        $offset = (request('page') - 1) * $limit;
 
-        $kdobat = Mobatnew::select('kd_obat')->pluck('kd_obat');
+
+        $kdobat = Mobatnew::select('kd_obat')
+            ->when($limit, function ($q) use ($limit, $offset) {
+                $q->limit($limit)->offset($offset);
+            })
+            ->pluck('kd_obat');
         $anu = [];
         $mbuh = [];
         foreach ($kdobat as $obat) {
@@ -1690,6 +1697,9 @@ class SetNewStokController extends Controller
         return new JsonResponse([
             'count data' => sizeof($anu),
             'data' => $anu,
+            'limit' => $limit,
+            'offset' => $offset,
+            'page' => request('page'),
             'mbuh' => $mbuh
         ]);
     }
@@ -3695,12 +3705,13 @@ class SetNewStokController extends Controller
             'resep_keluar_r.jumlah',
         )
             ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-            ->where('resep_keluar_h.flag', '3')
-            // ->whereIn('resep_keluar_h.flag', ['3', '4'])
+            // ->where('resep_keluar_h.flag', '3')
+            ->whereIn('resep_keluar_h.flag', ['3', '4'])
             ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
             ->where('resep_keluar_h.depo', $head['koderuangan'])
             ->where('resep_keluar_r.kdobat', $head['kdobat'])
             ->where('resep_keluar_r.jumlah', '>', 0)
+            ->orderBy('resep_keluar_h.flag', 'ASC')
             ->orderBy('resep_keluar_r.jumlah', 'DESC')
             ->get();
 
