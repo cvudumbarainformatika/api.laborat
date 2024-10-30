@@ -192,6 +192,7 @@ class PostKunjunganRajalHelper
                     // 'rincianracik.mobat:kd_obat,nama_obat',
                     'rincian' => function ($ri) {
                         $ri->select(
+                            'resep_keluar_r.id',
                             'resep_keluar_r.kdobat',
                             'resep_keluar_r.noresep',
                             'resep_keluar_r.jumlah',
@@ -510,10 +511,7 @@ class PostKunjunganRajalHelper
         $practitioner_uuid = $getFromSatset['data']['uuid'];
       }
 
-    //   if ( $data->apotek && !$apoteker_uuid) {
-    //     $getFromSatset = self::getApotekerFromSatset($data);
-    //     $apoteker_uuid = $getFromSatset['data']['uuid'];
-    //   }
+
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
       if ($send['message'] === 'success') {
@@ -676,9 +674,9 @@ class PostKunjunganRajalHelper
         $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         // $tebus = self::tebusObat($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $screeningGizi = self::screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
-        // $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
-        // return $apotek;
+        // return $laborats;
 
         $body =
         [
@@ -857,7 +855,8 @@ class PostKunjunganRajalHelper
 
         // PUSH PROCEDURE
         for ($i=0; $i < count($procedure) ; $i++) { 
-            array_push($body['entry'], $procedure[$i]);
+            // array_push($body['entry'], $procedure[$i]);
+            if ($procedure[$i]!== null) array_push($body['entry'], $procedure[$i]);
         }
 
         // PUSH PLANNING
@@ -874,6 +873,15 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $apotek['nonracikan'][$i][1]); // MedicationRequest
             array_push($body['entry'], $apotek['nonracikan'][$i][2]); // MedicationForDispense
             array_push($body['entry'], $apotek['nonracikan'][$i][3]); // MedicationDispense
+        }
+
+        // PUSH LABORAT
+        for ($i=0; $i < count($laborats) ; $i++) { 
+            $serviceRequest = $laborats[$i]['serviceRequests'];
+            $hasil = $laborats[$i]['hasil'];
+            // array_push($body['entry'], $laborats[$i]);
+            if ($serviceRequest !== null) array_push($body['entry'], $serviceRequest);
+            if ($hasil !== null) array_push($body['entry'], $hasil);
         }
 
 
@@ -1480,80 +1488,85 @@ class PostKunjunganRajalHelper
                 $dt = Carbon::parse($isi->rs3)->locale('id');
                 $dt->settings(['formatFunction' => 'translatedFormat']);
                 $waktuPerform = $dt->format('l, j F Y');
-                $procedure = 
-                [
-                    "fullUrl" => "urn:uuid:".self::generateUuid(),
-                    "resource" => [
-                        "resourceType" => "Procedure",
-                        "status" => "completed",
-                        "category" => [
-                            "coding" => [
+
+                $petugas_id = $isi->petugas['satset_uuid'] ?? null;
+                $procedure = null;
+                if ($petugas_id != null) {
+                    $procedure = 
+                    [
+                        "fullUrl" => "urn:uuid:".self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "Procedure",
+                            "status" => "completed",
+                            "category" => [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
+                                        "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                    ],
+                                ],
+                                "text" => $isi->maapingsnowmed['display'] ?? '-'
+                            ],
+                            "code" => [
+                                "coding" => [
+                                    [
+                                        "system" => "http://hl7.org/fhir/sid/icd-9-cm",
+                                        "code" => $isi->maapingprocedure['icd9'] ?? '-',
+                                        "display" => $isi->maapingprocedure['prosedur'] ?? '-',
+                                    ],
+                                ],
+                            ],
+                            "subject" => [
+                                "reference" => "Patient/$pasien_uuid",
+                                "display" => "",
+                            ],
+                            "encounter" => [
+                                "reference" => "urn:uuid:$encounter",
+                                "display" => $isi->keterangan." pada ".$waktuPerform
+                            ],
+                            "performedPeriod" => [
+                                "start" => Carbon::parse($isi->rs3)->toIso8601String(),
+                                "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
+                            ],
+                            "performer" => [
                                 [
-                                    "system" => "http://snomed.info/sct",
-                                    "code" => $isi->maapingsnowmed['kdSnowmed'] ?? '-',
-                                    "display" => $isi->maapingsnowmed['display'] ?? '-',
+                                    "actor" => [
+                                        "reference" => "Practitioner/".$isi->petugas['satset_uuid'],
+                                        "display" => $isi->petugas['nama'],
+                                    ],
                                 ],
                             ],
-                            "text" => $isi->maapingsnowmed['display'] ?? '-'
+                            // "reasonCode" => [
+                            //     [
+                            //         "coding" => [
+                            //             [
+                            //                 "system" => "http://hl7.org/fhir/sid/icd-10",
+                            //                 "code" => "A15.0",
+                            //                 "display" =>
+                            //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
+                            //             ],
+                            //         ],
+                            //     ],
+                            // ],
+                            // "bodySite" => [
+                            //     [
+                            //         "coding" => [
+                            //             [
+                            //                 "system" => "http://snomed.info/sct",
+                            //                 "code" => "74101002",
+                            //                 "display" => "Both lungs",
+                            //             ],
+                            //         ],
+                            //     ],
+                            // ],
+                            // "note" => [
+                            //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
+                            // ],
                         ],
-                        "code" => [
-                            "coding" => [
-                                [
-                                    "system" => "http://hl7.org/fhir/sid/icd-9-cm",
-                                    "code" => $isi->maapingprocedure['icd9'] ?? '-',
-                                    "display" => $isi->maapingprocedure['prosedur'] ?? '-',
-                                ],
-                            ],
-                        ],
-                        "subject" => [
-                            "reference" => "Patient/$pasien_uuid",
-                            "display" => "",
-                        ],
-                        "encounter" => [
-                            "reference" => "urn:uuid:$encounter",
-                            "display" => $isi->keterangan." pada ".$waktuPerform
-                        ],
-                        "performedPeriod" => [
-                            "start" => Carbon::parse($isi->rs3)->toIso8601String(),
-                            "end" => Carbon::parse($isi->rs3)->addMinutes(12)->toIso8601String(),
-                        ],
-                        "performer" => [
-                            [
-                                "actor" => [
-                                    "reference" => "Practitioner/".$isi->petugas['satset_uuid'],
-                                    "display" => $isi->petugas['nama'],
-                                ],
-                            ],
-                        ],
-                        // "reasonCode" => [
-                        //     [
-                        //         "coding" => [
-                        //             [
-                        //                 "system" => "http://hl7.org/fhir/sid/icd-10",
-                        //                 "code" => "A15.0",
-                        //                 "display" =>
-                        //                     "Tuberculosis of lung, confirmed by sputum microscopy with or without culture",
-                        //             ],
-                        //         ],
-                        //     ],
-                        // ],
-                        // "bodySite" => [
-                        //     [
-                        //         "coding" => [
-                        //             [
-                        //                 "system" => "http://snomed.info/sct",
-                        //                 "code" => "74101002",
-                        //                 "display" => "Both lungs",
-                        //             ],
-                        //         ],
-                        //     ],
-                        // ],
-                        // "note" => [
-                        //     ["text" => "Nebulisasi untuk melegakan sesak napas"],
-                        // ],
-                    ],
-                    "request" => ["method" => "POST", "url" => "Procedure"],
-                ];
+                        "request" => ["method" => "POST", "url" => "Procedure"],
+                    ];
+                }
                 // $adaTindakan[] = $isi;
                 $adaTindakan[] = $procedure;
                 }
@@ -2069,6 +2082,7 @@ class PostKunjunganRajalHelper
                             $gudang = $nonRacikan[$j]['mobat']['gudang'] ?? '-';
                             $kdobat = $nonRacikan[$j]['kdobat'];
                             $idObat = $nonRacikan[$j]['mobat']['id'];
+                            $idRincian = $nonRacikan[$j]['id'];
                             $dosage_form = $nonRacikan[$j]['mobat']['kfa']['dosage_form']['code'] ?? '-';
                             $dosage_form_display = $nonRacikan[$j]['mobat']['kfa']['dosage_form']['name'] ?? '-';
                             $routeCode = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['code'] ?? '-';
@@ -2132,7 +2146,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $kdobat."-".$idResep,
+                                                "value" => $idObat."-".$idRincian,
                                             ],
                                         ],
                                         "code" => [
@@ -2432,7 +2446,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $idResep."-".date("His"),
+                                                "value" => $idResep."-".$idRincian,
                                             ],
                                         ],
                                         "code" => [
@@ -2776,16 +2790,19 @@ class PostKunjunganRajalHelper
                     $diagnosa_masalah = $laborats[$i]['diagnosa_masalah'];
                     $catatan = $laborats[$i]['catatan_permintaan'];
                     $kode = $value[0]['pemeriksaanlab']['rs1'];
-                    $hasil = $value[0]['pemeriksaanlab']['rs21'] ?? null;
+                    $hasil = $value[0]['rs21'] === '' ? null : (float) $value[0]['rs21'];
+                    $satuan = $value[0]['pemeriksaanlab']['rs22'] === '' ? null : $value[0]['pemeriksaanlab']['rs22'];
+                    $HL = $value[0]['rs27'] ?? null;
                     $tgl_selesai = $value[0]['rs29'] ?? Carbon::now();
 
-                    $LOINC = !$value[0]['IS_PAKET'] ? ($value[0]['LOINC'] ?? null) : null;
+                    $LOINC = !$value[0]['IS_PAKET'] ? ($value[0]['LOINC'] === '' || $value[0]['LOINC'] === null ? null : $value[0]['LOINC']) : null;
                     $DISPLAY_LOINC = !$value[0]['IS_PAKET'] ? ($value[0]['DISPLAY_LOINC'] ?? null) : null;
 
                     $serviceRequests = null;
-
+                    $hasil_lab = null;
                     $paket = $value[0]['IS_PAKET'];
-                    if (!$paket && $LOINC !== null) {
+
+                    if (!$paket && $LOINC !== null && $hasil !== null) {
                         $serviceRequests = 
                         [
                             "fullUrl" => "urn:uuid:".$servisRequestId,
@@ -2895,9 +2912,9 @@ class PostKunjunganRajalHelper
 
                         //spesimen
 
-                        $hasil_lab = null;
+                        // $hasil_lab = null;
                         // hasil lab
-                        if ($hasil !== null) {
+                        // if ($hasil !== null) {
                             $hasil_lab = 
                             [
                                 "fullUrl" => "urn:uuid:".self::generateUuid(),
@@ -2942,24 +2959,9 @@ class PostKunjunganRajalHelper
                                     ],
                                     // "specimen" => ["reference" => "Specimen/"],
                                     "basedOn" => [["reference" => "ServiceRequest/".$servisRequestId]],
-                                    "valueQuantity" => [
-                                        "value" => $hasil,
-                                        "unit" => "mg/dL", // ini satuan
-                                        "system" => "http://unitsofmeasure.org",
-                                        "code" => "mg/dL",
-                                    ],
-                                    "interpretation" => [
-                                        [
-                                            "coding" => [
-                                                [
-                                                    "system" =>
-                                                        "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                                                    "code" => "H",
-                                                    "display" => "High",
-                                                ],
-                                            ],
-                                        ],
-                                    ],
+                                    
+                                    
+                                    
                                     // "referenceRange" => [
                                     //     [
                                     //         "high" => [
@@ -2998,7 +3000,42 @@ class PostKunjunganRajalHelper
                                 ],
                                 "request" => ["method" => "POST", "url" => "Observation"],
                             ];
-                        }
+
+                            $includHasil = 
+                            [
+                                "valueQuantity" => [
+                                        "value" => $hasil,
+                                        "unit" => $satuan, // ini satuan
+                                        // "system" => "http://unitsofmeasure.org",
+                                        // "code" => $satuan,
+                                ]
+                            ];
+
+                            $includeHL =
+                            [
+                                "interpretation" => 
+                                [
+                                    [
+                                        "coding" => [
+                                            [
+                                                "system" =>
+                                                    "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                                                "code" => $HL,
+                                                "display" => $HL==="H" ? "High" : "Low",
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ];
+                            
+
+                            // if ($hasil) {
+                            //    $hasil_lab['resource']['valueQuantity'] = $includHasil['valueQuantity'];
+                            // }
+
+                            // if ($HL) {
+                            //     $hasil_lab['resource']['interpretation'] = $includeHL['interpretation'];
+                            // }
                         
                     }
                     
@@ -3006,6 +3043,10 @@ class PostKunjunganRajalHelper
                     $data[] = [
                         'serviceRequests' => $serviceRequests,
                         'hasil' => $hasil_lab,
+                        'value' => $hasil,
+                        'loinc' => $LOINC,
+                        'paket' => $paket,
+                        'HL'=> $HL,
                     ];
                 }
 
