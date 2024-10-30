@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Siasik\Akuntansi\BukuBesar;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
 use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Header;
+use App\Models\Siasik\Akuntansi\SaldoAwal;
 use App\Models\Siasik\Master\Akun50_2024;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -14,96 +15,15 @@ use Illuminate\Support\Facades\DB;
 class BukubesarController extends Controller
 {
     public function akunkepmend(){
-        // $kode1=Akun50_2024::addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'))->get();
-        $level1=Akun50_2024::select('uraian','kodeall3')
-            ->where('subrincian_objek', '=', '')
-            ->where('rincian_objek', '=', '')
-            ->where('objek', '=', '')
-            ->where('jenis', '=', '')
-            ->where('kelompok', '=', '')
-            // ->when(request('kode2'), function($kode2){
-            //     $kode2->where('subrincian_objek', '=', '')
-            //         ->where('rincian_objek', '=', '')
-            //         ->where('objek', '=', '')
-            //         ->where('jenis', '=', '');
-            // })
-            // ->when(request('kode3'), function($kode3){
-            //     $kode3->where('subrincian_objek', '=', '')
-            //         ->where('rincian_objek', '=', '')
-            //         ->where('objek', '=', '');
-            // })
-            // ->when(request('kode4'), function($kode4){
-            //     $kode4->where('subrincian_objek', '=', '')
-            //         ->where('rincian_objek', '=', '');
-            // })
-            // ->when(request('kode5'), function($kode5){
-            //     $kode5->where('subrincian_objek', '=', '');
-            // })
-            // ->when(request('kode6'), function($kode6){
-            //     $kode6->where('subrincian_objek', '!=', '');
-            // })
+
+        $akun=Akun50_2024::select('uraian','kodeall3')
+
             ->when(request('q'), function($q){
-                $q->where('uraian', 'LIKE', '%'.request('q').'%');
+                $q->where('uraian', 'LIKE', '%'.request('q').'%')
+                ->where('kodeall3', 'LIKE', '%'.request('q').'%');
             })
             ->get();
-        $level2=Akun50_2024::select('uraian','kodeall3')
-            ->where('subrincian_objek', '=', '')
-            ->where('rincian_objek', '=', '')
-            ->where('objek', '=', '')
-            ->where('jenis', '=', '')
-            ->where('kelompok', '!=', '')
-            ->when(request('q'), function($q){
-                $q->where('uraian', 'LIKE', '%'.request('q').'%');
-            })
-            ->get();
-        $level3=Akun50_2024::select('uraian','kodeall3')
-            ->where('subrincian_objek', '=', '')
-            ->where('rincian_objek', '=', '')
-            ->where('objek', '=', '')
-            ->where('jenis', '!=', '')
-            ->where('kelompok', '!=', '')
-            ->when(request('q'), function($q){
-                $q->where('uraian', 'LIKE', '%'.request('q').'%');
-            })
-            ->get();
-        $level4=Akun50_2024::select('uraian','kodeall3')
-            ->where('subrincian_objek', '=', '')
-            ->where('rincian_objek', '=', '')
-            ->where('objek', '!=', '')
-            ->where('jenis', '!=', '')
-            ->where('kelompok', '!=', '')
-            ->when(request('q'), function($q){
-                $q->where('uraian', 'LIKE', '%'.request('q').'%');
-            })
-            ->get();
-        $level5=Akun50_2024::select('uraian','kodeall3')
-            ->where('subrincian_objek', '=', '')
-            ->where('rincian_objek', '!=', '')
-            ->where('objek', '!=', '')
-            ->where('jenis', '!=', '')
-            ->where('kelompok', '!=', '')
-            ->when(request('q'), function($q){
-                $q->where('uraian', 'LIKE', '%'.request('q').'%');
-            })
-            ->get();
-        $level6=Akun50_2024::select('uraian','kodeall3')
-            ->where('subrincian_objek', '!=', '')
-            ->where('rincian_objek', '!=', '')
-            ->where('objek', '!=', '')
-            ->where('jenis', '!=', '')
-            ->where('kelompok', '!=', '')
-            ->when(request('q'), function($q){
-                $q->where('uraian', 'LIKE', '%'.request('q').'%');
-            })
-            ->get();
-        $akun = [
-            'level1' => $level1,
-            'level2' => $level2,
-            'level3' => $level3,
-            'level4' => $level4,
-            'level5' => $level5,
-            'level6' => $level6,
-        ];
+
         return new JsonResponse($akun);
     }
     public function getBukubesar(){
@@ -154,8 +74,6 @@ class BukubesarController extends Controller
                 $xx->where('jurnal_postingotom.kode', request('level'));
             });
         })
-
-
         ->where(function($query){
             $query->when(request('q'), function($q){
                 $q->where('notrans', 'like', '%'.request('q').'%')
@@ -204,9 +122,37 @@ class BukubesarController extends Controller
         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
         ->get();
 
+        $saldoawal = SaldoAwal::select(
+            'saldoawal.tglentry as tanggal',
+            'saldoawal.kodepsap13 as kode6',
+            'saldoawal.uraianpsap13 as uraian',
+            'saldoawal.debit',
+            'saldoawal.kredit',
+        )->addSelect(
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'saldoawal.kodepsap13')
+        ->with(['lvl1' => function($sel){
+            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        }, 'lvl2' => function($sel){
+            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        },'lvl3' => function($sel){
+            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        },'lvl4' => function($sel){
+            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        },'lvl5' => function($sel){
+            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        }])
+        ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->get();
+
         $data = [
             'jurnalotom' => $jurnalotom,
-            'jurnalmanual' => $jurnalmanual
+            'jurnalmanual' => $jurnalmanual,
+            'saldoawal' => $saldoawal,
         ];
         return new JsonResponse ($data);
     }
