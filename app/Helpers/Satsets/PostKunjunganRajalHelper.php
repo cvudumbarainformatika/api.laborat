@@ -2089,9 +2089,7 @@ class PostKunjunganRajalHelper
                             $routeName = $nonRacikan[$j]['mobat']['kfa']['response']['result']['rute_pemberian']['name'] ?? '-';
 
                             $medication_id = self::generateUuid();
-                            $medicationForDispense = self::generateUuid();
 
-                            $medicationRequest_id = self::generateUuid();
 
                             $konsumsiX = (int)$nonRacikan[$j]['konsumsi'] >=30 ?? false;
                             $kronis = (int)$nonRacikan[$j]['mobat']['status_kronis'] === '1' ?? false;
@@ -2102,6 +2100,7 @@ class PostKunjunganRajalHelper
                             $pembagian = ceil($bagi);
 
                             $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
+                            $medicationRequest_id = self::generateUuid();
 
                             $tambahan = 
                             [
@@ -2126,6 +2125,7 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                             ];
+                            $medicationForDispense = self::generateUuid();
 
                             $medication = 
                             [
