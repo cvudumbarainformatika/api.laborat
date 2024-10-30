@@ -2446,7 +2446,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $idResep."-".$idRincian,
+                                                "value" => $idRincian."-".date('His'),
                                             ],
                                         ],
                                         "code" => [
