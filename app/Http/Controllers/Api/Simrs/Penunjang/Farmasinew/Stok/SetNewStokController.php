@@ -1699,6 +1699,7 @@ class SetNewStokController extends Controller
             'data' => $anu,
             'limit' => $limit,
             'offset' => $offset,
+            'page' => request('page'),
             'mbuh' => $mbuh
         ]);
     }
