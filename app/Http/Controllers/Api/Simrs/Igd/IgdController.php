@@ -109,7 +109,9 @@ class IgdController extends Controller
     {
         $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
         ->with([
-            'anamnesis',
+            'anamnesis' => function($anamnesis){
+                $anamnesis->with(['anamnesetambahan','anamnesebps','anamnesenips']);
+            },
             'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
             'permintaanperawatanjenazah',
             'triage' => function($triage) {

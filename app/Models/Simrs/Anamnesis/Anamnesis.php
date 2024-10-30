@@ -49,4 +49,16 @@ class Anamnesis extends Model
     {
         return $this->hasOne(Pediatrik::class, 'rs209_id', 'id');
     }
+    public function anamnesetambahan()
+    {
+        return $this->hasOne(AnamnesisTambahan::class, 'id_heder', 'id');
+    }
+    public function anamnesebps()
+    {
+        return $this->hasOne(AnamnesisBps::class, 'id_heder', 'id');
+    }
+    public function anamnesenips()
+    {
+        return $this->hasOne(AnamnesisNips::class, 'id_heder', 'id');
+    }
 }

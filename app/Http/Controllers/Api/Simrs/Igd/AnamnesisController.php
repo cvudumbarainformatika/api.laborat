@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Simrs\Igd;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Anamnesis\AnamnesisBps;
+use App\Models\Simrs\Anamnesis\AnamnesisNips;
 use App\Models\Simrs\Anamnesis\AnamnesisTambahan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,26 +90,72 @@ class AnamnesisController extends Controller
                 'alat_bantu_jalan' => $request->aktivitasAlatBnatujalan,
                 'sebutkanalatbantujalan' => $request->sebutkanalatbantujalan,
                 'bicara' => $request->kebutuhankomunikasidanedukasi,
-                'sebutkankomunakasilainya' => $request->sebutkankomunaksilainnya,
+                'sebutkankomunaksilainnya' => $request->sebutkankomunaksilainnya,
                 'penerjemah' => $request->penerjemah,
                 'sebutkanpenerjemah' => $request->sebutkanpenerjemah,
                 'bahasa_isyarat' => $request->bahasaisyarat,
                 'hambatan' => $request->hamabatan,
-                'sebutkanhambatan' => $request->id,
-                'riwayat_demam' => $request->id,
-                'berkeringat_malam_hari' => $request->id,
-                'riwayat_bepergian' => $request->id,
-                'riwayat_pemakaian_obat' => $request->id,
-                'riwayat_bb_turun' => $request->id,
+                'sebutkanhambatan' => $request->sebutkanhambatan,
+                'riwayat_demam' => $request->riwayatdemam,
+                'berkeringat_malam_hari' => $request->berkeringat,
+                'riwayat_bepergian' => $request->riwayatbepergian,
+                'riwayat_pemakaian_obat' => $request->obatjangkapanjang,
+                'riwayat_bb_turun' => $request->bbturun,
                 'kdruang' => 'POL014',
-                'user' => $request->id,
-
+                'user' => $kdpegsimrs,
             ]
         );
 
+        if($request->metode === 'bps')
+        {
+            $simpanbps = AnamnesisBps::create(
+                [
+                    'noreg' => $request->noreg,
+                    'norm' => $request->norm,
+                    'id_heder' => $simpananamnesis->id,
+                    'ekspresi_wajah' => $request->ekspresiwajah,
+                    'gerakan_tangan' => $request->gerakantangan,
+                    'kepatuhan_ventilasi_mekanik' => $request->kepatuhanventilasimekanik,
+                    'skor' => $request->scroebps,
+                    'keterangan_skor' => $request->ketscorebps,
+                    'ruangan' => 'POL014',
+                    'user' => $kdpegsimrs,
+
+                ]
+            );
+        }
+
+        if($request->metode === 'nrt')
+        {
+            $simpannips = AnamnesisNips::create(
+                [
+                    'noreg' => $request->noreg,
+                    'norm' => $request->norm,
+                    'id_heder' => $simpananamnesis->id,
+                    'ekspresi_wajah' => $request->ekspresiwajahnips,
+                    'menangis' => $request->menangis,
+                    'pola_nafas' => $request->polanafas,
+                    'lengan' => $request->lengan,
+                    'kaki' => $request->kaki,
+                    'keadaan_rangsangan' => $request->keadaanrangsangan,
+                    'skor' => $request->scroenips,
+                    'ket_skor' => $request->ketscorenips,
+                    'ruangan' => 'POL014',
+                    'user' => $kdpegsimrs,
+
+                ]
+            );
+        }
+
+        $hasil = Anamnesis::with(
+            [
+                'anamnesetambahan','anamnesebps','anamnesenips'
+            ]
+        )->where('rs1', $request->noreg)->get();
+
         return new JsonResponse([
             'message' => 'BERHASIL DISIMPAN',
-            'result' => $simpananamnesis
+            'result' => $hasil
         ], 200);
     }
 }
