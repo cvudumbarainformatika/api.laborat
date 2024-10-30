@@ -11,4 +11,6 @@ Route::group([
     'prefix' => 'satusehat/bundle'
 ], function () {
     Route::get('/kirim-kunjungan', [KunjunganController::class, 'index']);
+
+    Route::get('/cek-medication', [KunjunganController::class, 'medication']);
 });

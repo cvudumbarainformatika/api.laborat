@@ -27,7 +27,7 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
 
-            return PostKunjunganRajalHelper::cobarajal('90417/10/2024/J');
+            return PostKunjunganRajalHelper::cobarajal('90706/10/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
             // return self::cekKunjunganRajal('74748/09/2024/J');
         }
@@ -732,6 +732,21 @@ class KunjunganController extends Controller
 
     return $data;
     // return self::kirimKunjunganIgd($data);
+    }
+
+
+
+    // cek medication
+
+    public function medication()
+    {
+      $token = AuthSatsetHelper::accessToken();
+      // $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
+      // $params = '/Medication/d4fb621c-02ab-4834-8c6c-70c9df1d8393';
+      $params = '/Medication/44aa339e-0069-47a1-b456-fd8fc7664fbe';
+
+      $send = BridgingSatsetHelper::get_data($token, $params);
+      return $send;
     }
 
 
