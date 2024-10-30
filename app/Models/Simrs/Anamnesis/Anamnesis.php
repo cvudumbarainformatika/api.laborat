@@ -51,7 +51,7 @@ class Anamnesis extends Model
     }
     public function anamnesetambahan()
     {
-        return $this->hasOne(AnamnesisTambahan::class, 'id_heder', 'id');
+        return $this->hasMany(AnamnesisTambahan::class, 'id_heder', 'id');
     }
     public function anamnesebps()
     {
