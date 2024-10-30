@@ -48,6 +48,16 @@ class AnamnesisController extends Controller
                 $simpananamnesis = null;
             }
         } else {
+            // $hasil = Anamnesis::join('rs209_igd_tambahan','rs209.id','rs209_igd_tambahan.id_heder')
+            // ->where('rs1', $request->noreg)
+            // ->limit(1)
+            // ->orderBy('rs209.id','Desc')
+            // ->get();
+            // return new JsonResponse([
+            //     'message' => 'BERHASIL DISIMPAN',
+            //     'result' => $hasil
+            // ], 200);
+
             $simpananamnesis = Anamnesis::create(
                 [
                     'rs1' => $request->noreg,
@@ -125,7 +135,7 @@ class AnamnesisController extends Controller
             );
         }
 
-        if($request->metode === 'nrt')
+        if($request->metode === 'nips')
         {
             $simpannips = AnamnesisNips::create(
                 [
@@ -151,7 +161,10 @@ class AnamnesisController extends Controller
             [
                 'anamnesetambahan','anamnesebps','anamnesenips'
             ]
-        )->where('rs1', $request->noreg)->get();
+        )->where('rs1', $request->noreg)
+        ->limit(1)
+        ->orderBy('id','Desc')
+        ->get();
 
         return new JsonResponse([
             'message' => 'BERHASIL DISIMPAN',
