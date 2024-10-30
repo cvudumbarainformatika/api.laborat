@@ -872,7 +872,7 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $apotek['nonracikan'][$i][0]); // Medication
             array_push($body['entry'], $apotek['nonracikan'][$i][1]); // MedicationRequest
             array_push($body['entry'], $apotek['nonracikan'][$i][2]); // MedicationForDispense
-            array_push($body['entry'], $apotek['nonracikan'][$i][3]); // MedicationDispense
+            // array_push($body['entry'], $apotek['nonracikan'][$i][3]); // MedicationDispense
         }
 
         // PUSH LABORAT
@@ -2748,173 +2748,173 @@ class PostKunjunganRajalHelper
 
                                 // Medication
                                 
-                                [
-                                    "fullUrl" => "urn:uuid:".$medicationForDispense,
-                                    "resource" => 
-                                    [
-                                        "resourceType" => "Medication",
-                                        "meta" => [
-                                            "profile" => [
-                                                "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
-                                            ],
-                                        ],
-                                        "identifier" => [
-                                            [
-                                                "system" =>
-                                                    "http://sys-ids.kemkes.go.id/medication/".$organization_id,
-                                                "use" => "official",
-                                                "value" => $idRincian."-".date('His'),
-                                            ],
-                                        ],
-                                        "code" => [
-                                            "coding" => [
-                                                [
-                                                    "system" => "http://sys-ids.kemkes.go.id/kfa",
-                                                    "code" => $kode_kfa,
-                                                    "display" => $display,
-                                                    // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
-                                                ],
-                                            ],
-                                        ],
-                                        "status" => "active",
-                                        "manufacturer" => ["reference" => "Organization/".$organization_id],
-                                        "form" => [
-                                            "coding" => [
-                                                [
-                                                    "system" =>
-                                                        "http://terminology.kemkes.go.id/CodeSystem/medication-form",
-                                                    "code" => $dosage_form,
-                                                    "display" => $dosage_form_display,
-                                                ],
-                                            ],
-                                        ],
+                                // [
+                                //     "fullUrl" => "urn:uuid:".$medicationForDispense,
+                                //     "resource" => 
+                                //     [
+                                //         "resourceType" => "Medication",
+                                //         "meta" => [
+                                //             "profile" => [
+                                //                 "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
+                                //             ],
+                                //         ],
+                                //         "identifier" => [
+                                //             [
+                                //                 "system" =>
+                                //                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
+                                //                 "use" => "official",
+                                //                 "value" => $idRincian."-".date('His'),
+                                //             ],
+                                //         ],
+                                //         "code" => [
+                                //             "coding" => [
+                                //                 [
+                                //                     "system" => "http://sys-ids.kemkes.go.id/kfa",
+                                //                     "code" => $kode_kfa,
+                                //                     "display" => $display,
+                                //                     // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                                //                 ],
+                                //             ],
+                                //         ],
+                                //         "status" => "active",
+                                //         "manufacturer" => ["reference" => "Organization/".$organization_id],
+                                //         "form" => [
+                                //             "coding" => [
+                                //                 [
+                                //                     "system" =>
+                                //                         "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                                //                     "code" => $dosage_form,
+                                //                     "display" => $dosage_form_display,
+                                //                 ],
+                                //             ],
+                                //         ],
 
-                                        // khusus racikan
-                                        // "ingredient" => [
-                                        //     [
-                                        //         "itemCodeableConcept" => [
-                                        //             "coding" => [
-                                        //                 [
-                                        //                     "system" =>
-                                        //                         "http://sys-ids.kemkes.go.id/kfa",
-                                        //                     "code" => "91000330",
-                                        //                     "display" => "Rifampin",
-                                        //                 ],
-                                        //             ],
-                                        //         ],
-                                        //         "isActive" => true,
-                                        //         "strength" => [
-                                        //             "numerator" => [
-                                        //                 "value" => 150,
-                                        //                 "system" => "http://unitsofmeasure.org",
-                                        //                 "code" => "mg",
-                                        //             ],
-                                        //             "denominator" => [
-                                        //                 "value" => 1,
-                                        //                 "system" =>
-                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
-                                        //                 "code" => "TAB",
-                                        //             ],
-                                        //         ],
-                                        //     ],
-                                        //     [
-                                        //         "itemCodeableConcept" => [
-                                        //             "coding" => [
-                                        //                 [
-                                        //                     "system" =>
-                                        //                         "http://sys-ids.kemkes.go.id/kfa",
-                                        //                     "code" => "91000328",
-                                        //                     "display" => "Isoniazid",
-                                        //                 ],
-                                        //             ],
-                                        //         ],
-                                        //         "isActive" => true,
-                                        //         "strength" => [
-                                        //             "numerator" => [
-                                        //                 "value" => 75,
-                                        //                 "system" => "http://unitsofmeasure.org",
-                                        //                 "code" => "mg",
-                                        //             ],
-                                        //             "denominator" => [
-                                        //                 "value" => 1,
-                                        //                 "system" =>
-                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
-                                        //                 "code" => "TAB",
-                                        //             ],
-                                        //         ],
-                                        //     ],
-                                        //     [
-                                        //         "itemCodeableConcept" => [
-                                        //             "coding" => [
-                                        //                 [
-                                        //                     "system" =>
-                                        //                         "http://sys-ids.kemkes.go.id/kfa",
-                                        //                     "code" => "91000329",
-                                        //                     "display" => "Pyrazinamide",
-                                        //                 ],
-                                        //             ],
-                                        //         ],
-                                        //         "isActive" => true,
-                                        //         "strength" => [
-                                        //             "numerator" => [
-                                        //                 "value" => 400,
-                                        //                 "system" => "http://unitsofmeasure.org",
-                                        //                 "code" => "mg",
-                                        //             ],
-                                        //             "denominator" => [
-                                        //                 "value" => 1,
-                                        //                 "system" =>
-                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
-                                        //                 "code" => "TAB",
-                                        //             ],
-                                        //         ],
-                                        //     ],
-                                        //     [
-                                        //         "itemCodeableConcept" => [
-                                        //             "coding" => [
-                                        //                 [
-                                        //                     "system" =>
-                                        //                         "http://sys-ids.kemkes.go.id/kfa",
-                                        //                     "code" => "91000288",
-                                        //                     "display" => "Ethambutol",
-                                        //                 ],
-                                        //             ],
-                                        //         ],
-                                        //         "isActive" => true,
-                                        //         "strength" => [
-                                        //             "numerator" => [
-                                        //                 "value" => 275,
-                                        //                 "system" => "http://unitsofmeasure.org",
-                                        //                 "code" => "mg",
-                                        //             ],
-                                        //             "denominator" => [
-                                        //                 "value" => 1,
-                                        //                 "system" =>
-                                        //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
-                                        //                 "code" => "TAB",
-                                        //             ],
-                                        //         ],
-                                        //     ],
-                                        // ],
-                                        "extension" => [
-                                            [
-                                                "url" =>
-                                                    "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
-                                                "valueCodeableConcept" => [
-                                                    "coding" => [
-                                                        [
-                                                            "system" =>
-                                                                "http://terminology.kemkes.go.id/CodeSystem/medication-type",
-                                                            "code" => "NC",
-                                                            "display" => "Non-compound",
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                    "request" => ["method" => "POST", "url" => "Medication"],
-                                ],
+                                //         // khusus racikan
+                                //         // "ingredient" => [
+                                //         //     [
+                                //         //         "itemCodeableConcept" => [
+                                //         //             "coding" => [
+                                //         //                 [
+                                //         //                     "system" =>
+                                //         //                         "http://sys-ids.kemkes.go.id/kfa",
+                                //         //                     "code" => "91000330",
+                                //         //                     "display" => "Rifampin",
+                                //         //                 ],
+                                //         //             ],
+                                //         //         ],
+                                //         //         "isActive" => true,
+                                //         //         "strength" => [
+                                //         //             "numerator" => [
+                                //         //                 "value" => 150,
+                                //         //                 "system" => "http://unitsofmeasure.org",
+                                //         //                 "code" => "mg",
+                                //         //             ],
+                                //         //             "denominator" => [
+                                //         //                 "value" => 1,
+                                //         //                 "system" =>
+                                //         //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                //         //                 "code" => "TAB",
+                                //         //             ],
+                                //         //         ],
+                                //         //     ],
+                                //         //     [
+                                //         //         "itemCodeableConcept" => [
+                                //         //             "coding" => [
+                                //         //                 [
+                                //         //                     "system" =>
+                                //         //                         "http://sys-ids.kemkes.go.id/kfa",
+                                //         //                     "code" => "91000328",
+                                //         //                     "display" => "Isoniazid",
+                                //         //                 ],
+                                //         //             ],
+                                //         //         ],
+                                //         //         "isActive" => true,
+                                //         //         "strength" => [
+                                //         //             "numerator" => [
+                                //         //                 "value" => 75,
+                                //         //                 "system" => "http://unitsofmeasure.org",
+                                //         //                 "code" => "mg",
+                                //         //             ],
+                                //         //             "denominator" => [
+                                //         //                 "value" => 1,
+                                //         //                 "system" =>
+                                //         //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                //         //                 "code" => "TAB",
+                                //         //             ],
+                                //         //         ],
+                                //         //     ],
+                                //         //     [
+                                //         //         "itemCodeableConcept" => [
+                                //         //             "coding" => [
+                                //         //                 [
+                                //         //                     "system" =>
+                                //         //                         "http://sys-ids.kemkes.go.id/kfa",
+                                //         //                     "code" => "91000329",
+                                //         //                     "display" => "Pyrazinamide",
+                                //         //                 ],
+                                //         //             ],
+                                //         //         ],
+                                //         //         "isActive" => true,
+                                //         //         "strength" => [
+                                //         //             "numerator" => [
+                                //         //                 "value" => 400,
+                                //         //                 "system" => "http://unitsofmeasure.org",
+                                //         //                 "code" => "mg",
+                                //         //             ],
+                                //         //             "denominator" => [
+                                //         //                 "value" => 1,
+                                //         //                 "system" =>
+                                //         //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                //         //                 "code" => "TAB",
+                                //         //             ],
+                                //         //         ],
+                                //         //     ],
+                                //         //     [
+                                //         //         "itemCodeableConcept" => [
+                                //         //             "coding" => [
+                                //         //                 [
+                                //         //                     "system" =>
+                                //         //                         "http://sys-ids.kemkes.go.id/kfa",
+                                //         //                     "code" => "91000288",
+                                //         //                     "display" => "Ethambutol",
+                                //         //                 ],
+                                //         //             ],
+                                //         //         ],
+                                //         //         "isActive" => true,
+                                //         //         "strength" => [
+                                //         //             "numerator" => [
+                                //         //                 "value" => 275,
+                                //         //                 "system" => "http://unitsofmeasure.org",
+                                //         //                 "code" => "mg",
+                                //         //             ],
+                                //         //             "denominator" => [
+                                //         //                 "value" => 1,
+                                //         //                 "system" =>
+                                //         //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                                //         //                 "code" => "TAB",
+                                //         //             ],
+                                //         //         ],
+                                //         //     ],
+                                //         // ],
+                                //         "extension" => [
+                                //             [
+                                //                 "url" =>
+                                //                     "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                                //                 "valueCodeableConcept" => [
+                                //                     "coding" => [
+                                //                         [
+                                //                             "system" =>
+                                //                                 "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                                //                             "code" => "NC",
+                                //                             "display" => "Non-compound",
+                                //                         ],
+                                //                     ],
+                                //                 ],
+                                //             ],
+                                //         ],
+                                //     ],
+                                //     "request" => ["method" => "POST", "url" => "Medication"],
+                                // ],
                                 // "MedicationDispense"
                                 [
                                     "fullUrl" => "urn:uuid:".self::generateUuid(),
@@ -2948,7 +2948,7 @@ class PostKunjunganRajalHelper
                                         "medicationReference" => [
                                             // "reference" => "urn:uuid:{{Medication_forDispense}}",
                                             // "reference" => "urn:uuid:".$medicationForDispense,
-                                            "reference" => "Medication/".$medicationForDispense,
+                                            "reference" => "Medication/".$medication_id,
                                             "display" => $display,
                                         ],
                                         "subject" => [
