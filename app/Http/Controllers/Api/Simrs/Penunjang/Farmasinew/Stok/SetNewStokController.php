@@ -760,6 +760,11 @@ class SetNewStokController extends Controller
                         $message = 'Cek Stok Gudang selesai, Stok Habis';
                     }
                     if ($sisa < 0) {
+                        foreach ($stok as $st) {
+                            $st->update([
+                                'jumlah' => 0
+                            ]);
+                        }
                         $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
                     }
                 }
@@ -1180,7 +1185,11 @@ class SetNewStokController extends Controller
                             $message = 'Cek Stok Depo Ok selesai, Stok Habis';
                         }
                         if ($sisa < 0) {
-
+                            foreach ($stok as $st) {
+                                $st->update([
+                                    'jumlah' => 0
+                                ]);
+                            }
                             $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
                         }
                     }
@@ -1268,6 +1277,11 @@ class SetNewStokController extends Controller
                             $message = 'Cek Stok Depo selesai, Stok Habis';
                         }
                         if ($sisa < 0) {
+                            foreach ($stok as $st) {
+                                $st->update([
+                                    'jumlah' => 0
+                                ]);
+                            }
                             $message = 'Sisa Stok kurang dari 0, Stok Tidak diganti silahkan cek transaksi';
                         }
                     }
