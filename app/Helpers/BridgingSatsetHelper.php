@@ -114,7 +114,7 @@ class BridgingSatsetHelper
         $response = Http::withToken($token)->get($url);
         $data = json_decode($response, true);
 
-        return $data;
+        // return $data;
         // JIKA ERROR
         $error = $data['resourceType'] === 'OperationOutcome';
 
