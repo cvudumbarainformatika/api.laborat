@@ -1539,7 +1539,9 @@ class EresepController extends Controller
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
     }
-
+    /**
+     * old obat keluar
+     */
     public function eresepobatkeluar(Request $request)
     {
         if ($request->jenisresep == 'Racikan') {
@@ -1810,6 +1812,218 @@ class EresepController extends Controller
             return response()->json([
                 'message' => 'ada kesalahan',
                 'error' =>  $e,
+                'error e' => '' . $e,
+                'stok' => $dataStok ?? null
+            ], 410);
+        }
+    }
+    /**
+     * new obat keluar
+     */
+    public function newEresepobatkeluar(Request $request)
+    {
+        if ($request->jenisresep == 'Racikan') {
+            $simpanrinci = Resepkeluarrinciracikan::with('mobat:kd_obat,nama_obat')
+                ->where('noresep', $request->noresep)
+                ->where('namaracikan', $request->namaracikan)
+                ->where('kdobat', $request->kdobat)
+                ->first();
+            if ($simpanrinci) {
+                return new JsonResponse([
+                    'rinci' => $simpanrinci,
+                    'message' => 'Data Sudah Disimpan'
+                ], 201);
+            }
+        } else {
+            $simpanrinci = Resepkeluarrinci::with('mobat:kd_obat,nama_obat')
+                ->where('noresep', $request->noresep)
+                ->where('kdobat', $request->kdobat)
+                ->first();
+            if ($simpanrinci) {
+                return new JsonResponse([
+                    'rinci' => $simpanrinci,
+                    'message' => 'Data Sudah Disimpan'
+                ], 201);
+            }
+        }
+        // return new JsonResponse($request->all());
+        $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
+            ->where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
+            ->where('jumlah', '>', 0)
+            ->orderBy('id')
+            ->first();
+        $jumlahstok = (int)$cekjumlahstok->jumlahstok;
+        if ((int)$request->jumlah > $jumlahstok) {
+            return new JsonResponse(['message' => 'Maaf Stok Tidak Mencukupi...!!!'], 500);
+        }
+
+        $user = FormatingHelper::session_user();
+        try {
+            $temp = DB::connection('farmasi')->transaction(function () use ($request, $user) {
+                if ($request->jumlah == 0) {
+
+                    if ($request->jenisresep == 'Racikan') {
+                        $simpanrinci = Resepkeluarrinciracikan::create(
+                            [
+                                'noreg' => $request->noreg,
+                                'noresep' => $request->noresep,
+                                'tiperacikan' => $request->tiperacikan,
+                                'namaracikan' => $request->namaracikan,
+                                'kdobat' => $request->kdobat,
+                                // 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                'nopenerimaan' => 0,
+                                'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                                'jumlah' => $request->jumlah,
+                                // 'harga_beli' => $caristok[$index]->harga,
+                                'harga_beli' => 0,
+                                // 'hpp' => $harga,
+                                'hpp' => 0,
+                                // 'harga_jual' => $hargajual,
+                                'harga_jual' => 0,
+                                // 'nilai_r' => $request->nilai_r,
+                                'nilai_r' => 0,
+                                'user' => $user['kodesimrs']
+                            ]
+                        );
+                    } else {
+                        $simpanrinci = Resepkeluarrinci::create(
+                            [
+                                'noreg' => $request->noreg,
+                                'noresep' => $request->noresep,
+                                'kdobat' => $request->kdobat,
+                                'kandungan' => $request->kandungan ?? '',
+                                'fornas' => $request->fornas ?? '',
+                                'forkit' => $request->forkit ?? '',
+                                'generik' => $request->generik ?? '',
+                                'kode108' => $request->kode108,
+                                'uraian108' => $request->uraian108,
+                                'kode50' => $request->kode50,
+                                'uraian50' => $request->uraian50,
+                                // 'nopenerimaan' => $caristok[$index]->nopenerimaan,
+                                'nopenerimaan' => '',
+                                // 'jumlah' => $caristok[$index]->jumlah,
+                                'jumlah' => $request->jumlah,
+                                // 'harga_beli' => $caristok[$index]->harga,
+                                'harga_beli' => 0,
+                                // 'hpp' => $harga,
+                                'hpp' => 0,
+                                // 'harga_jual' => $hargajual,
+                                'harga_jual' => 0,
+                                // 'nilai_r' => $request->nilai_r,
+                                'nilai_r' => 0,
+                                'aturan' => $request->aturan,
+                                // 'konsumsi' => $request->konsumsi,
+                                'konsumsi' => 0,
+                                'keterangan' => $request->keterangan ?? '',
+                                'user' => $user['kodesimrs']
+                            ]
+                        );
+                    }
+                    if (!$simpanrinci) {
+                        throw new \Exception('Rincian Gagal Disimpan...!');
+                    }
+                    $simpanrinci->load('mobat:kd_obat,nama_obat');
+                    // DB::connection('farmasi')->commit();
+                    return [
+                        'rinci' => $simpanrinci,
+                        'message' => 'Data Disimpan dengan jumlah 0'
+                    ];
+                }
+                $jmldiminta = $request->jumlah;
+                $caristok = Stokreal::lockForUpdate()
+                    ->where('kdobat', $request->kdobat)
+                    ->where('kdruang', $request->kodedepo)
+                    ->where('jumlah', '>', 0)
+                    ->orderBy('tglpenerimaan', 'ASC')
+                    ->get();
+
+                foreach ($caristok as $stokItem) { // Perbaikan: ganti while dengan foreach
+                    if ($jmldiminta <= 0) break; // Perbaikan: keluar dari loop jika jumlah sudah cukup
+
+                    $sisa = $stokItem->jumlah;
+                    $har = HargaHelper::getHarga($request->kdobat, $request->groupsistembayar);
+                    $res = $har['res'];
+                    if ($res) {
+                        throw new \Exception($har['message']); // Perbaikan: lempar exception jika harga tidak ditemukan
+                    }
+
+                    $hargajual = $har['hargaJual'];
+                    $harga = $har['harga'];
+
+                    // Tentukan jumlah yang akan dikurangi pada stok saat ini
+                    $pengurangan = min($jmldiminta, $sisa); // Perbaikan: kurangi sesuai kebutuhan atau stok yang tersedia
+
+                    if ($request->jenisresep == 'Racikan') {
+                        $simpanrinci = Resepkeluarrinciracikan::create([
+                            'noreg' => $request->noreg,
+                            'noresep' => $request->noresep,
+                            'namaracikan' => $request->namaracikan,
+                            'tiperacikan' => $request->tiperacikan,
+                            'kdobat' => $request->kdobat,
+                            'nopenerimaan' => $stokItem->nopenerimaan,
+                            'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
+                            'jumlah' => $pengurangan, // Perbaikan: set jumlah sesuai pengurangan
+                            'harga_beli' => $stokItem->harga,
+                            'hpp' => $harga,
+                            'harga_jual' => $hargajual,
+                            'nilai_r' => $request->nilai_r ?? 0,
+                            'keterangan_bypass' => $request->keterangan_bypass,
+                            'user' => $user['kodesimrs']
+                        ]);
+                    } else {
+                        $simpanrinci = Resepkeluarrinci::create([
+                            'noreg' => $request->noreg,
+                            'noresep' => $request->noresep,
+                            'kdobat' => $request->kdobat,
+                            'kandungan' => $request->kandungan ?? '',
+                            'fornas' => $request->fornas ?? '',
+                            'forkit' => $request->forkit ?? '',
+                            'generik' => $request->generik ?? '',
+                            'kode108' => $request->kode108,
+                            'uraian108' => $request->uraian108,
+                            'kode50' => $request->kode50,
+                            'uraian50' => $request->uraian50,
+                            'nopenerimaan' => $stokItem->nopenerimaan,
+                            'jumlah' => $pengurangan, // Perbaikan: set jumlah sesuai pengurangan
+                            'harga_beli' => $stokItem->harga,
+                            'hpp' => $harga,
+                            'harga_jual' => $hargajual,
+                            'nilai_r' => $request->nilai_r ?? 0,
+                            'aturan' => $request->aturan,
+                            'konsumsi' => $request->konsumsi,
+                            'keterangan' => $request->keterangan ?? '',
+                            'keterangan_bypass' => $request->keterangan_bypass,
+                            'user' => $user['kodesimrs']
+                        ]);
+                    }
+                    if (!$simpanrinci) {
+                        throw new \Exception('Rincian Obat gagal disimpan');
+                    }
+                    // Update jumlah stok pada item
+                    $stokItem->decrement('jumlah', $pengurangan); // Perbaikan: langsung update jumlah dalam satu langkah
+                    $jmldiminta -= $pengurangan; // Perbaikan: kurangi permintaan yang sudah terpenuhi
+
+                    $simpanrinci->load('mobat:kd_obat,nama_obat');
+                }
+                return [
+                    'rinci' => $simpanrinci,
+                    'stok' => $caristok ?? [],
+                ];
+            });
+            return new JsonResponse([
+                'temp' => $temp,
+                'rinci' => $temp['rinci'],
+                'stok' => $temp['stok'] ?? [],
+                'message' => 'Data Berhasil Disimpan...!!!'
+            ], 200);
+
+            // $jmldiminta = $request->jumlah;
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json([
+                'message' => 'ada kesalahan : ' . $e->getMessage(),
+                'err line' =>  $e->getLine(),
+                'err file' =>  $e->getFile(),
                 'error e' => '' . $e,
                 'stok' => $dataStok ?? null
             ], 410);
@@ -2566,6 +2780,7 @@ class EresepController extends Controller
             ->where('aktif', '=', 'AKTIF')
 
             ->where('ruang', '=', 'R00025')
+            ->whereNotNull('satset_uuid')
 
 
             ->get();
@@ -2575,6 +2790,7 @@ class EresepController extends Controller
 
     public function simPelIOnfOb(Request $request)
     {
+        // return $request->all();
         try {
             DB::connection('farmasi')->beginTransaction();
             $data = PelayananInformasiObat::updateOrCreate(
@@ -2595,6 +2811,7 @@ class EresepController extends Controller
                     'menyusui' => $request->menyusui,
                     'uraian_pertanyaan' => $request->uraian_pertanyaan,
                     'jenis_pertanyaan' => $request->jenis_pertanyaan,
+                    'kode' => $request->kode,
                     'jawaban' => $request->jawaban,
                     'referensi' => $request->referensi,
                     'apoteker' => $request->apoteker,

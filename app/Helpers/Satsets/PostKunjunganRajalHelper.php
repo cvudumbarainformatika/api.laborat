@@ -2192,7 +2192,7 @@ class PostKunjunganRajalHelper
                                     "identifier" => [
                                         [
                                             "system" => "http://sys-ids.kemkes.go.id/observation/".$organization_id,
-                                            "value" => $kode,
+                                            "value" => $kode.'-'.$i+1,
                                         ],
                                     ],
                                     "status" => "final",
@@ -2269,6 +2269,9 @@ class PostKunjunganRajalHelper
                                 "request" => ["method" => "POST", "url" => "Observation"],
                             ];
 
+
+                           
+
                             $includHasil = 
                             [
                                 "valueQuantity" => [
@@ -2279,6 +2282,8 @@ class PostKunjunganRajalHelper
                                 ]
                             ];
 
+                            
+                            $critical = self::criticalx($HL);
                             $includeHL =
                             [
                                 "interpretation" => 
@@ -2288,8 +2293,8 @@ class PostKunjunganRajalHelper
                                             [
                                                 "system" =>
                                                     "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                                                "code" => $HL,
-                                                "display" => $HL==="H" ? "High" : "Low",
+                                                "code" => $critical['code'],
+                                                "display" => $critical['display'],
                                             ],
                                         ],
                                     ],
@@ -2329,6 +2334,43 @@ class PostKunjunganRajalHelper
         
         
     }
+
+    static  function criticalx($val)
+    {
+        $highLow = ['!','1'];
+        $code = null;
+        $display = null;
+        switch ($val) {
+            case 'H':
+              $code= 'H';
+              $display = 'High';
+              break;
+            case 'L':
+              $code = 'L';
+              $display = 'Low';
+              break;
+            case 'H*':
+              $code = 'HH';
+              $display = 'Critical high';
+              break;
+            case 'L*':
+              $code = 'LL';
+              $display = 'Critical low';
+              break;
+            case 'N':
+              $code = 'N';
+              $display = 'Normal';
+              break;
+            default:
+              //code block
+          }
+
+        return [
+            'code' => $code,
+            'display' => $display
+        ];
+    }
+    
 
 
     static function apotek($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
@@ -5830,6 +5872,8 @@ class PostKunjunganRajalHelper
                     ],
                     "request" => ["method" => "POST", "url" => "ServiceRequest"],
                 ],
+
+                // Sampel / Specimen
                 [
                     "fullUrl" => "urn:uuid:720dc004-857d-45d3-8868-85c0fcfe6115",
                     "resource" => [
@@ -5924,6 +5968,8 @@ class PostKunjunganRajalHelper
                     ],
                     "request" => ["method" => "POST", "url" => "Specimen"],
                 ],
+
+                // observation hasil laboratorium
                 [
                     "fullUrl" => "urn:uuid:37139eb6-f6bb-42bc-b28e-cc36aac186f7",
                     "resource" => [
@@ -6034,6 +6080,8 @@ class PostKunjunganRajalHelper
                     ],
                     "request" => ["method" => "POST", "url" => "Observation"],
                 ],
+
+                // DIAGNOSTIC REPORT
                 [
                     "fullUrl" => "urn:uuid:816f9528-5f2e-4fa2-b594-9c59486ba9e1",
                     "resource" => [
