@@ -27,7 +27,7 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
 
-            return PostKunjunganRajalHelper::cobarajal('90706/10/2024/J');
+            return PostKunjunganRajalHelper::cobarajal('91258/10/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
             // return self::cekKunjunganRajal('74748/09/2024/J');
         }
@@ -743,9 +743,13 @@ class KunjunganController extends Controller
       $token = AuthSatsetHelper::accessToken();
       // $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
       // $params = '/Medication/d4fb621c-02ab-4834-8c6c-70c9df1d8393';
-      $params = '/Medication/44aa339e-0069-47a1-b456-fd8fc7664fbe';
+      // $params = '/Medication/44aa339e-0069-47a1-b456-fd8fc7664fbe';
+      // $params = '/Medication/977fa8cc-de04-4e81-9b41-2c66e4543441'; // Gabapentin 300 mg Kapsul (DEXA MEDICA)
+      // $params = '/Medication/54ec09bc-4cbe-4c6c-9eeb-1eb64450b319'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
+      // $params = '/Medication/681be0cb-9870-49cc-b179-89659ff68590'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
+      $params = '/Medication/64d4de51-9fb9-4f42-aad5-06ce6116103d'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
 
-      $send = BridgingSatsetHelper::get_data($token, $params);
+      $send = BridgingSatsetHelper::get_data_nosave($token, $params);
       return $send;
     }
 

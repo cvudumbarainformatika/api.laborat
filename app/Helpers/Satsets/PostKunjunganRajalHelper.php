@@ -248,9 +248,24 @@ class PostKunjunganRajalHelper
             'neonatusmedis',
             'neonatuskeperawatan',
             'pediatri',
+            'diet',
 
             'laborats' => function ($t) {
-                $t->with('details.pemeriksaanlab')
+                $t->with([
+                    'details' => function ($d) {
+                        $d->with(['pemeriksaanlab'=>function($p){
+                            $p->select('rs49.*',
+                            'rs49_spesimen.jenis_spesimen',
+                            'rs49_spesimen.jumlah_spesimen',
+                            'rs49_spesimen.volume_spesimen_klinis',
+                            'rs49_spesimen.cara_pengambilan_spesimen',
+                            'rs49_spesimen.cairan_fiksasi',
+                            'rs49_spesimen.volume_cairan_fiksasi',
+                            )
+                            ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1');
+                        }]);
+                    }
+                ])
                     ->orderBy('id', 'DESC');
             },
           ])
@@ -473,8 +488,23 @@ class PostKunjunganRajalHelper
             'neonatusmedis',
             'neonatuskeperawatan',
             'pediatri',
+            'diet',
             'laborats' => function ($t) {
-                $t->with('details.pemeriksaanlab')
+                $t->with([
+                    'details' => function ($d) {
+                        $d->with(['pemeriksaanlab'=>function($p){
+                            $p->select('rs49.*',
+                            'rs49_spesimen.jenis_spesimen',
+                            'rs49_spesimen.jumlah_spesimen',
+                            'rs49_spesimen.volume_spesimen_klinis',
+                            'rs49_spesimen.cara_pengambilan_spesimen',
+                            'rs49_spesimen.cairan_fiksasi',
+                            'rs49_spesimen.volume_cairan_fiksasi',
+                            )
+                            ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1');
+                        }]);
+                    }
+                ])
                     ->orderBy('id', 'DESC');
             },
           ])
@@ -573,7 +603,7 @@ class PostKunjunganRajalHelper
     
     public static function generateUuid()
     {
-        return (string) Str::orderedUuid();
+        return (string) Str::uuid();
     }
 
     public static function form($request, $pasien_uuid, $practitioner_uuid)
@@ -675,8 +705,9 @@ class PostKunjunganRajalHelper
         $screeningGizi = self::screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $diet = self::diet($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
-        // return $apotek;
+        // return $laborats;
 
         $body =
         [
@@ -863,6 +894,10 @@ class PostKunjunganRajalHelper
         if ($plann['spri'] !== null) array_push($body['entry'], $plann['spri']);
         if ($plann['konsul'] !== null) array_push($body['entry'], $plann['konsul']);
         if ($plann['kontrol'] !== null) array_push($body['entry'], $plann['kontrol']);
+
+
+        // PUSH DIET
+        if ($diet !== null) array_push($body['entry'], $diet);
 
         // PUSH ALLERGY INTOLERANCE
         if ($alergyIntoleran !== null) array_push($body['entry'], $alergyIntoleran);
@@ -2013,11 +2048,6 @@ class PostKunjunganRajalHelper
 
         return $allergy;
     }
-
-    
-    
-
-    
     static function screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
@@ -3106,6 +3136,82 @@ class PostKunjunganRajalHelper
             'racikan' => $kirimObatRacikan,
             'nonracikan' => $kirimObatNonRacikan,
         ];
+
+
+        return $data;
+        
+        
+    }
+    static function diet($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $diet = count($request->diet) > 0 ? $request->diet[0] : null;
+        $data = null;
+        if ($diet) {
+            $data =
+            [
+                "fullUrl" => "urn:uuid:".self::generateUuid(),
+                "resource" => 
+                [
+                    "resourceType" => "Composition",
+                    "identifier" => [
+                        "system" => "http://sys-ids.kemkes.go.id/composition/".$organization_id,
+                        "value" => $diet['Id'].'-'.$diet['diet'],
+                    ],
+                    "status" => "final",
+                    "type" => [
+                        "coding" => [
+                            [
+                                "system" => "http://loinc.org",
+                                "code" => "18842-5",
+                                "display" => "Discharge summary",
+                            ],
+                        ],
+                    ],
+                    "category" => [
+                        [
+                            "coding" => [
+                                [
+                                    "system" => "http://loinc.org",
+                                    "code" => "LP173421-1",
+                                    "display" => "Report",
+                                ],
+                            ],
+                        ],
+                    ],
+                    "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                    "encounter" => [
+                        "reference" => "Encounter/".$encounter,
+                        "display" => "Kunjungan  di hari ".$tgl_kunjungan,
+                    ],
+                    "date" => Carbon::parse($diet['tgl'])->toIso8601String(),
+                    "author" => [["reference" => "Practitioner/".$practitioner_uuid, "display" => $nama_practitioner]],
+                    "title" => "Resume Medis Rawat Jalan",
+                    "custodian" => ["reference" => "Organization/".$organization_id],
+                    "section" => [
+                        [
+                            "code" => [
+                                "coding" => [
+                                    [
+                                        "system" => "http://loinc.org",
+                                        "code" => "42344-2",
+                                        "display" => "Discharge diet (narrative)",
+                                    ],
+                                ],
+                            ],
+                            "text" => [
+                                "status" => "additional",
+                                "div" => $diet['assessmen'],
+                            ],
+                        ],
+                    ],
+                    
+                ],
+                "request" => ["method" => "POST", "url" => "Composition"],
+            ];
+        }
+
+        
 
 
         return $data;

@@ -108,6 +108,16 @@ class BridgingSatsetHelper
         return $organization_id;
     }
 
+    public static function get_data_nosave($token, $params)
+    {
+        $url = self::base_url() . $params;
+        $response = Http::withToken($token)->get($url);
+        $data = json_decode($response, true);
+
+        return $data;
+        
+    }
+
     public static function get_data($token, $params)
     {
         $url = self::base_url() . $params;
