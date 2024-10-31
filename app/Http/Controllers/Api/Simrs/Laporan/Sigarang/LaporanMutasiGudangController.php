@@ -150,7 +150,9 @@ class LaporanMutasiGudangController extends Controller
             $recent = MonthlyStokUpdate::select('kode_rs')->distinct('kode_rs')
                 ->where('sisa_stok', '>', 0)
                 ->whereIn('kode_ruang', $kodeDepo)
-                ->whereBetween('tanggal', [$from, $to])->orderBy('kode_rs', 'ASC')->get();
+                // ->whereBetween('tanggal', [$from, $to])
+                ->where('tanggal', 'LIKE', '%' . $anu . '%')
+                ->orderBy('kode_rs', 'ASC')->get();
         }
         $col = collect($recent);
 
@@ -159,12 +161,13 @@ class LaporanMutasiGudangController extends Controller
             ->filter(request(['q']))
             ->with([
                 'satuan:kode,nama',
-                'monthly' => function ($m) use ($from, $to, $kodeDepo) {
+                'monthly' => function ($m) use ($from, $to, $kodeDepo, $anu) {
                     $m->select('tanggal', 'sisa_stok as totalStok', 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->whereIn('kode_ruang', $kodeDepo)
-                        ->whereBetween('tanggal', [$from, $to]);
+                        // ->whereBetween('tanggal', [$from, $to]);
+                        ->where('tanggal', 'LIKE', '%' . $anu . '%');
                     // ->groupBy('kode_rs', 'harga');
                 },
                 'recent' => function ($m) use ($kodeDepo) {
@@ -175,15 +178,16 @@ class LaporanMutasiGudangController extends Controller
                         ->where('sisa_stok', '>', 0);
                     // ->groupBy('kode_rs', 'harga', 'kode_ruang');
                 },
-                'stok_awal' => function ($m) use ($fromA, $toA, $kodeDepo) {
+                'stok_awal' => function ($m) use ($fromA, $toA, $kodeDepo, $prev) {
                     $m->select('tanggal', 'sisa_stok as totalStok', 'harga', 'no_penerimaan', 'kode_rs', 'kode_ruang')
                         // ->selectRaw('round(sum(sisa_stok),2) as totalStok')
                         ->selectRaw('round(sisa_stok*harga,2) as totalRp')
                         ->whereIn('kode_ruang', $kodeDepo)
-                        ->whereBetween('tanggal', [$fromA, $toA]);
+                        ->where('tanggal', 'LIKE', '%' . $prev . '%');
+                    // ->whereBetween('tanggal', [$fromA, $toA]);
                     // ->groupBy('kode_rs', 'harga', 'kode_ruang');
                 },
-                'detailDistribusiDepo' => function ($m) use ($fromN, $toN, $col) {
+                'detailDistribusiDepo' => function ($m) use ($fromN, $toN, $col, $anu) {
                     $m->select(
                         'detail_distribusi_depos.kode_rs',
                         'detail_distribusi_depos.no_penerimaan',
@@ -201,10 +205,11 @@ class LaporanMutasiGudangController extends Controller
                                     ->groupBy('kode_rs', 'no_penerimaan');
                             }
                         ])
-                        ->whereBetween('distribusi_depos.tanggal', [$fromN, $toN])
+                        ->where('distribusi_depos.tanggal', 'LIKE', '%' . $anu . '%')
+                        // ->whereBetween('distribusi_depos.tanggal', [$fromN, $toN])
                         ->where('distribusi_depos.status', '>', 1);
                 },
-                'detailDistribusiLangsung' => function ($m) use ($from, $to, $col) {
+                'detailDistribusiLangsung' => function ($m) use ($from, $to, $col, $anu) {
                     $m->select(
                         'distribusi_langsungs.ruang_tujuan',
                         'detail_distribusi_langsungs.kode_rs',
@@ -217,7 +222,8 @@ class LaporanMutasiGudangController extends Controller
                         ->when(request('kode_ruang') !== 'all' && request('kode_ruang') !== 'Gd-02010102', function ($q) {
                             $q->where('distribusi_langsungs.ruang_tujuan', request('kode_ruang'));
                         })
-                        ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
+                        ->where('distribusi_langsungs.tanggal', 'LIKE', '%' . $anu . '%')
+                        // ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
                         // ->with('recentstok')
                         ->with([
                             'stokruangan' => function ($q) use ($col) {
@@ -228,7 +234,7 @@ class LaporanMutasiGudangController extends Controller
                         ])
                         ->where('distribusi_langsungs.status', '>', 1);
                 },
-                'detailPermintaanruangan' => function ($m) use ($from, $to, $col) {
+                'detailPermintaanruangan' => function ($m) use ($from, $to, $col, $anu) {
 
                     $m->select(
                         'detail_permintaanruangans.kode_rs',
@@ -261,7 +267,8 @@ class LaporanMutasiGudangController extends Controller
                                     ]);
                             }
                         ])
-                        ->whereBetween('permintaanruangans.tanggal_verif', [$from, $to])
+                        ->where('permintaanruangans.tanggal_verif', 'LIKE', '%' . $anu . '%')
+                        // ->whereBetween('permintaanruangans.tanggal_verif', [$from, $to])
                         ->where('permintaanruangans.status', '>=', 7)
                         ->where('detail_permintaanruangans.jumlah_distribusi', '>', 0);
                 },
@@ -271,6 +278,7 @@ class LaporanMutasiGudangController extends Controller
 
 
         $data = $barang->orderBy('kode_108', 'ASC')->orderBy('nama', 'ASC')->get();
+        // $data = $anu;
         // foreach ($data as $barang) {
         //     foreach ($barang->detailPemakaianruangan as $det) {
         //         $det->append('harga');
