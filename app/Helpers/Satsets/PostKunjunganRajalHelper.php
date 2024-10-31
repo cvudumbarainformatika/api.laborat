@@ -2272,34 +2272,34 @@ class PostKunjunganRajalHelper
 
                            
 
-                            $includHasil = 
-                            [
-                                "valueQuantity" => [
-                                        "value" => $hasil,
-                                        "unit" => $satuan, // ini satuan
-                                        // "system" => "http://unitsofmeasure.org",
-                                        // "code" => $satuan,
-                                ]
-                            ];
+                            // $includHasil = 
+                            // [
+                            //     "valueQuantity" => [
+                            //             "value" => $hasil,
+                            //             "unit" => $satuan, // ini satuan
+                            //             // "system" => "http://unitsofmeasure.org",
+                            //             // "code" => $satuan,
+                            //     ]
+                            // ];
 
                             
-                            $critical = self::criticalx($HL);
-                            $includeHL =
-                            [
-                                "interpretation" => 
-                                [
-                                    [
-                                        "coding" => [
-                                            [
-                                                "system" =>
-                                                    "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                                                "code" => $critical['code'],
-                                                "display" => $critical['display'],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ];
+                            // $critical = self::criticalx($HL);
+                            // $includeHL =
+                            // [
+                            //     "interpretation" => 
+                            //     [
+                            //         [
+                            //             "coding" => [
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                            //                     "code" => $critical['code'],
+                            //                     "display" => $critical['display'],
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //     ],
+                            // ];
                             
 
                             // if ($hasil) {
