@@ -1094,8 +1094,8 @@ class PostKunjunganRajalHelper
                 "coding" => [
                     [
                         "system" => "http://loinc.org",
-                        "code" => "8480-6",
-                        "display" => "Systolic blood pressure",
+                        "code" => "8462-4",
+                        "display" => "Diastolic blood pressure",
                     ],
                 ],
             ],
@@ -1143,8 +1143,8 @@ class PostKunjunganRajalHelper
                 "coding" => [
                     [
                         "system" => "http://loinc.org",
-                        "code" => "8480-6",
-                        "display" => "Systolic blood pressure",
+                        "code" => "8310-5",
+                        "display" => "Body temperature",
                     ],
                 ],
             ],
