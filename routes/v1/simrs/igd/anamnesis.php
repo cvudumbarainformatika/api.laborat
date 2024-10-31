@@ -9,6 +9,6 @@ Route::group([
     'prefix' => 'simrs/igd/anamnesis'
 ],function () {
     Route::post('/simpananamnesis', [AnamnesisController::class, 'simpananamnesis']);
-
+    Route::post('/hapusanamnesis', [AnamnesisController::class, 'hapusanamnesis']);
 });
 
