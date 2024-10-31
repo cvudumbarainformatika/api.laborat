@@ -1919,12 +1919,15 @@ class EresepController extends Controller
                             ]
                         );
                     }
+                    if (!$simpanrinci) {
+                        throw new \Exception('Rincian Gagal Disimpan...!');
+                    }
                     $simpanrinci->load('mobat:kd_obat,nama_obat');
-                    DB::connection('farmasi')->commit();
-                    return new JsonResponse([
+                    // DB::connection('farmasi')->commit();
+                    return [
                         'rinci' => $simpanrinci,
                         'message' => 'Data Disimpan dengan jumlah 0'
-                    ], 200);
+                    ];
                 }
                 $jmldiminta = $request->jumlah;
                 $caristok = Stokreal::lockForUpdate()
