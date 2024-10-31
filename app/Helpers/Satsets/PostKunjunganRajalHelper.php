@@ -2192,7 +2192,7 @@ class PostKunjunganRajalHelper
                                     "identifier" => [
                                         [
                                             "system" => "http://sys-ids.kemkes.go.id/observation/".$organization_id,
-                                            "value" => $kode.'-'.$i+1,
+                                            "value" => $kode.'-'.date('YmdHis'),
                                         ],
                                     ],
                                     "status" => "final",
