@@ -1431,17 +1431,17 @@ class PostKunjunganRajalHelper
                             "resourceType" => "CarePlan",
                             "status" => "active",
                             "intent" => "plan",
-                            // "category" => [
-                            //     [
-                            //         "coding" => [
-                            //             [
-                            //                 "system" => "http://snomed.info/sct",
-                            //                 "code" => "736372004",
-                            //                 "display" => "Discharge care plan",
-                            //             ],
-                            //         ],
-                            //     ],
-                            // ],
+                            "category" => [
+                                [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://snomed.info/sct",
+                                            "code" => "736372004",
+                                            "display" => "Discharge care plan",
+                                        ],
+                                    ],
+                                ],
+                            ],
                             "title" => $title,
                             "description" => $intervensis[$i]['masterintervensi']['nama'],
                             "subject" => [
