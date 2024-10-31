@@ -229,48 +229,6 @@ class DistribusigudangController extends Controller
                     $masuk = $sisax;
                     $index = $index + 1;
                 }
-                // if ($sisa < $masuk) {
-                //     $sisax = $masuk - $sisa;
-
-                //     $mutasi = Mutasigudangkedepo::create(
-                //         [
-                //             'no_permintaan' => $request->nopermintaan,
-                //             'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                //             'kd_obat' => $caristok[$index]->kdobat,
-                //             'nobatch' => $caristok[$index]->nobatch,
-                //             'jml' => $sisa,
-                //             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                //             'harga' => $caristok[$index]->harga ?? 0,
-                //             'tglexp' => $caristok[$index]->tglexp,
-                //         ]
-                //     );
-                //     Stokreal::where('id', $caristok[$index]->id)
-                //         ->update(['jumlah' => 0]);
-
-
-                //     $masuk = $sisax;
-                //     $index = $index + 1;
-                // } else {
-                //     $sisax = $sisa - $masuk;
-
-                //     $mutasi = Mutasigudangkedepo::create(
-                //         [
-                //             'no_permintaan' => $request->nopermintaan,
-                //             'nopenerimaan' => $caristok[$index]->nopenerimaan,
-                //             'kd_obat' => $caristok[$index]->kdobat,
-                //             'nobatch' => $caristok[$index]->nobatch,
-                //             'jml' => $masuk,
-
-                //             'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-                //             'harga' => $caristok[$index]->harga ?? 0,
-                //             'tglexp' => $caristok[$index]->tglexp,
-                //         ]
-                //     );
-
-                //     Stokreal::where('id', $caristok[$index]->id)
-                //         ->update(['jumlah' => $sisax]);
-                //     $masuk = 0;
-                // }
             }
             $nyamuta = Mutasigudangkedepo::select('kd_obat', DB::raw('sum(jml) as jml'))->where('no_permintaan', $request->nopermintaan)
                 ->where('kd_obat', $request->kodeobat)
@@ -305,18 +263,6 @@ class DistribusigudangController extends Controller
 
             DB::connection('farmasi')->commit();
 
-
-            // [
-            //     'no_permintaan' => $request->nopermintaan,
-            //     'nopenerimaan' => $caristok[$index]->nopenerimaan,
-            //     'kd_obat' => $caristok[$index]->kdobat,
-            //     'nobatch' => $caristok[$index]->nobatch,
-
-            //     'jml' => $masuk,
-            //     'tglpenerimaan' => $caristok[$index]->tglpenerimaan,
-            //     'harga' => $hargaBeli->harga_netto_kecil ?? 0,
-            //     'tglexp' => $caristok[$index]->tglexp,
-            // ]);
             return new JsonResponse([
                 'message' => 'Data Berhasil Disimpan',
                 'data' => $nyamuta,

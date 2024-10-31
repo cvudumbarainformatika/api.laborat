@@ -1993,7 +1993,9 @@ class EresepController extends Controller
                             'user' => $user['kodesimrs']
                         ]);
                     }
-
+                    if (!$simpanrinci) {
+                        throw new \Exception('Rincian Obat gagal disimpan');
+                    }
                     // Update jumlah stok pada item
                     $stokItem->decrement('jumlah', $pengurangan); // Perbaikan: langsung update jumlah dalam satu langkah
                     $jmldiminta -= $pengurangan; // Perbaikan: kurangi permintaan yang sudah terpenuhi
