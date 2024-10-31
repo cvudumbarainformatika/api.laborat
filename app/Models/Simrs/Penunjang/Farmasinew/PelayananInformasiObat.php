@@ -10,4 +10,7 @@ class PelayananInformasiObat extends Model
     use HasFactory;
     protected $connection = 'farmasi';
     protected $guarded = ['id'];
+    protected $casts = [
+        'kode' => 'array',
+    ];
 }

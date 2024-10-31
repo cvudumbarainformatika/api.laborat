@@ -2780,6 +2780,7 @@ class EresepController extends Controller
             ->where('aktif', '=', 'AKTIF')
 
             ->where('ruang', '=', 'R00025')
+            ->whereNotNull('satset_uuid')
 
 
             ->get();
@@ -2789,6 +2790,7 @@ class EresepController extends Controller
 
     public function simPelIOnfOb(Request $request)
     {
+        // return $request->all();
         try {
             DB::connection('farmasi')->beginTransaction();
             $data = PelayananInformasiObat::updateOrCreate(
@@ -2809,6 +2811,7 @@ class EresepController extends Controller
                     'menyusui' => $request->menyusui,
                     'uraian_pertanyaan' => $request->uraian_pertanyaan,
                     'jenis_pertanyaan' => $request->jenis_pertanyaan,
+                    'kode' => $request->kode,
                     'jawaban' => $request->jawaban,
                     'referensi' => $request->referensi,
                     'apoteker' => $request->apoteker,
