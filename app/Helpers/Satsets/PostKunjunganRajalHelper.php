@@ -3,6 +3,7 @@
 namespace App\Helpers\Satsets;
 
 use App\Helpers\AuthSatsetHelper;
+use App\Helpers\BridgingLoincHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Models\Pasien;
 use App\Models\Satset\Satset;
@@ -262,8 +263,10 @@ class PostKunjunganRajalHelper
                             'rs49_spesimen.cairan_fiksasi',
                             'rs49_spesimen.volume_cairan_fiksasi',
                             )
-                            ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1');
-                        }]);
+                            ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                            ->orderBy('id', 'ASC');
+                        }
+                    ]);
                     }
                 ])
                     ->orderBy('id', 'DESC');
@@ -526,7 +529,7 @@ class PostKunjunganRajalHelper
 
     public static function kirimKunjungan($data)
     {
-
+        // return $data;
       $pasien_uuid = $data->pasien_uuid;
       $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
     //   $apoteker_uuid = $data->apotek ? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
@@ -703,11 +706,11 @@ class PostKunjunganRajalHelper
         $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         // $tebus = self::tebusObat($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $screeningGizi = self::screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
-        $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        // $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $diet = self::diet($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
 
-        // return $laborats;
+        // return $apotek;
 
         $body =
         [
@@ -903,21 +906,29 @@ class PostKunjunganRajalHelper
         if ($alergyIntoleran !== null) array_push($body['entry'], $alergyIntoleran);
 
         // PUSH MEDICATION
+        // for ($i=0; $i < count($apotek['nonracikan']) ; $i++) { 
+        //     array_push($body['entry'], $apotek['nonracikan'][$i][0]); // Medication
+        //     array_push($body['entry'], $apotek['nonracikan'][$i][1]); // MedicationRequest
+        //     array_push($body['entry'], $apotek['nonracikan'][$i][2]); // MedicationForDispense
+        //     array_push($body['entry'], $apotek['nonracikan'][$i][3]); // MedicationDispense
+        // }
         for ($i=0; $i < count($apotek['nonracikan']) ; $i++) { 
-            array_push($body['entry'], $apotek['nonracikan'][$i][0]); // Medication
-            array_push($body['entry'], $apotek['nonracikan'][$i][1]); // MedicationRequest
-            array_push($body['entry'], $apotek['nonracikan'][$i][2]); // MedicationForDispense
-            array_push($body['entry'], $apotek['nonracikan'][$i][3]); // MedicationDispense
+            if($apotek['nonracikan'][$i]['medication']) array_push($body['entry'], $apotek['nonracikan'][$i]['medication']); // Medication
+            if($apotek['nonracikan'][$i]['medication_request']) array_push($body['entry'], $apotek['nonracikan'][$i]['medication_request']); // MedicationRequest
+        }
+        for ($i=0; $i < count($apotek['nonracikan']) ; $i++) { 
+            if($apotek['nonracikan'][$i]['medicationD']) array_push($body['entry'], $apotek['nonracikan'][$i]['medicationD']); // Medication
+            if($apotek['nonracikan'][$i]['medication_dispense']) array_push($body['entry'], $apotek['nonracikan'][$i]['medication_dispense']); // MedicationRequest
         }
 
         // PUSH LABORAT
-        for ($i=0; $i < count($laborats) ; $i++) { 
-            $serviceRequest = $laborats[$i]['serviceRequests'];
-            $hasil = $laborats[$i]['hasil'];
-            // array_push($body['entry'], $laborats[$i]);
-            if ($serviceRequest !== null) array_push($body['entry'], $serviceRequest);
-            if ($hasil !== null) array_push($body['entry'], $hasil);
-        }
+        // for ($i=0; $i < count($laborats) ; $i++) { 
+        //     $serviceRequest = $laborats[$i]['serviceRequests'];
+        //     $hasil = $laborats[$i]['hasil'];
+        //     // array_push($body['entry'], $laborats[$i]);
+        //     if ($serviceRequest !== null) array_push($body['entry'], $serviceRequest);
+        //     if ($hasil !== null) array_push($body['entry'], $hasil);
+        // }
 
 
         // return $body;
@@ -2072,6 +2083,7 @@ class PostKunjunganRajalHelper
                     $obj->IS_PAKET = $obj['pemeriksaanlab']['rs21'] === '' ? false : true;
                     $obj->LOINC = $obj['pemeriksaanlab']['loinc']; // ini jika paket gak dipake
                     $obj->DISPLAY_LOINC = $obj['pemeriksaanlab']['display_loinc'];
+                    $obj->ADA_SPESIMEN = $obj['pemeriksaanlab']['jenis_spesimen'];
 
                     $obj->puasa_pasien = $obj['puasa_pasien'];
                     return $obj;
@@ -2100,7 +2112,24 @@ class PostKunjunganRajalHelper
                     $hasil_lab = null;
                     $paket = $value[0]['IS_PAKET'];
 
+                    $spesimen_uuid = self::generateUuid();
+                    $idPemeriksaan = $value[0]['id'];
+
+
+
+                    $spesimen = null;
+                    $spesimenx=null;
+                    
+                    $brwse = null;
+                    if ($LOINC !== null) {
+                        $brwse = count(BridgingLoincHelper::getLoincByKode($LOINC)['Results'])> 0 ? BridgingLoincHelper::getLoincByKode($LOINC)['Results'][0]: null;
+                        $spesimen = $brwse['SYSTEM'] ?? null;
+                    }
+
                     if (!$paket && $LOINC !== null && $hasil !== null) {
+
+                        
+
                         $serviceRequests = 
                         [
                             "fullUrl" => "urn:uuid:".$servisRequestId,
@@ -2175,7 +2204,7 @@ class PostKunjunganRajalHelper
                                 //     ],
                                 // ],
                                 "subject" => ["reference" => "Patient/".$pasien_uuid],
-                                "encounter" => ["reference" => "urn:uuid:".$encounter],
+                                "encounter" => ["reference" => "Encounter/".$encounter],
                                 "occurrenceDateTime" => Carbon::parse($tgl_permintaan)->toIso8601String(),
                                 "requester" => [
                                     "reference" => "Practitioner/".$practitioner_uuid,
@@ -2209,6 +2238,104 @@ class PostKunjunganRajalHelper
                         ];
 
                         //spesimen
+                        if($spesimen != null){
+                            $spesimenx =
+                            [
+                                "fullUrl" => "urn:uuid:".$spesimen_uuid,
+                                "resource" => [
+                                    "resourceType" => "Specimen",
+                                    "identifier" => [
+                                        [
+                                            "system" =>
+                                                "http://sys-ids.kemkes.go.id/specimen/".$organization_id,
+                                            "value" => $idPemeriksaan,
+                                            "assigner" => ["reference" => "Organization/".$organization_id],
+                                        ],
+                                    ],
+                                    "status" => "available", // * ["available" "unavailable" "unsatisfactory" "entered-in-error" ]
+                                    "type" => [ //*
+                                        "coding" => [
+                                            [
+                                                "system" => "http://snomed.info/sct",
+                                                "code" => "122575003",
+                                                "display" => "Urine specimen",
+                                            ],
+                                        ],
+                                    ],
+                                    "condition" => [["text" => "Kondisi Spesimen Baik"]],
+                                    "collection" => [
+                                        "method" => [
+                                            "coding" => [
+                                                [
+                                                    "system" => "http://snomed.info/sct",
+                                                    "code" => "82078001",
+                                                    "display" =>
+                                                        "Collection of blood specimen for laboratory",
+                                                ],
+                                            ],
+                                        ],
+                                        "collectedDateTime" => "2023-03-27T15:00:00+00:00",
+                                        "quantity" => ["value" => 30, "unit" => "mL"],
+                                        "collector" => [
+                                            "reference" => "Practitioner/N10000001",
+                                            "display" => "Dokter Bronsig",
+                                        ],
+                                        "fastingStatusCodeableConcept" => [
+                                            "coding" => [
+                                                [
+                                                    "system" =>
+                                                        "http://terminology.hl7.org/CodeSystem/v2-0916",
+                                                    "code" => "NF",
+                                                    "display" =>
+                                                        "The patient indicated they did not fast prior to the procedure.",
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    "subject" => [ // *
+                                        "reference" => "Patient/".$pasien_uuid,
+                                        "display" => $request->nama,
+                                    ],
+                                    "request" => [
+                                        [
+                                            "reference" =>
+                                                "ServiceRequest/".$servisRequestId,
+                                        ],
+                                    ],
+                                    // "extension" => [
+                                    //     [
+                                    //         "url" =>
+                                    //             "https://fhir.kemkes.go.id/r4/StructureDefinition/TransportedTime",
+                                    //         "valueDateTime" => "2023-03-27T15:15:00+00:00",
+                                    //     ],
+                                    //     [
+                                    //         "url" =>
+                                    //             "https://fhir.kemkes.go.id/r4/StructureDefinition/TransportedPerson",
+                                    //         "valueContactDetail" => [
+                                    //             "name" => "Burhan",
+                                    //             "telecom" => [
+                                    //                 ["system" => "phone", "value" => "021-5375162"],
+                                    //             ],
+                                    //         ],
+                                    //     ],
+                                    //     [
+                                    //         "url" =>
+                                    //             "https://fhir.kemkes.go.id/r4/StructureDefinition/ReceivedPerson",
+                                    //         "valueReference" => [
+                                    //             "reference" => "Practitioner/10006926841",
+                                    //             "display" => "Dr. John Doe",
+                                    //         ],
+                                    //     ],
+                                    // ],
+                                    "receivedTime" => Carbon::parse($tgl_permintaan)->toIso8601String(),
+                                    // "processing" => [
+                                    //     ["timeDateTime" => "2023-03-28T16:30:00+00:00"],
+                                    // ],
+                                ],
+                                "request" => ["method" => "POST", "url" => "Specimen"],
+                            ];
+                        }
+                        
 
                         // $hasil_lab = null;
                         // hasil lab
@@ -2342,14 +2469,20 @@ class PostKunjunganRajalHelper
                         
                     }
                     
-
+                    
                     $data[] = [
                         'serviceRequests' => $serviceRequests,
                         'hasil' => $hasil_lab,
+                        'spesimen' => $spesimen,
                         'value' => $hasil,
                         'loinc' => $LOINC,
                         'paket' => $paket,
+                        'paket_loinc' => $value[0]['pemeriksaanlab']['loinc_paket'] ?? null,
                         'HL'=> $HL,
+                        'id_pemeriksaan'=> $idPemeriksaan,
+                        'nama_pemeriksaan'=> $value[0]['GROUP'],
+                        'loinc_browser' => $brwse
+                        // 'datax' => $value[0]
                     ];
                 }
 
@@ -2442,6 +2575,9 @@ class PostKunjunganRajalHelper
         $kirimObatRacikan = [];
         $preview = [];
 
+
+        $medicationRequestNonRacikan = [];
+
         if (count($resep) > 0) {
             for ($i=0; $i < count($resep) ; $i++) { 
                 $nonRacikan = $resep[$i]['rincian'];
@@ -2485,8 +2621,8 @@ class PostKunjunganRajalHelper
 
                             $longTerm = $konsumsiX && $kronis;
 
-                            $bagi = $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
-                            $pembagian = ceil($bagi);
+                            $bagi = $nonRacikan[$j]['qty'] === 0 ? 0 : $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            $pembagian = $bagi === 0 ? 0 : ceil($bagi);
 
                             $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
                             $medicationRequest_id = self::generateUuid();
@@ -2514,13 +2650,608 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                             ];
-                            $medicationForDispense_id = self::generateUuid();
 
-                            $medication = 
-                            [
+                            // $medication = 
+                            // [
 
-                                // Medication
+                            //     // Medication
                                 
+                            //     [
+                            //         "fullUrl" => "urn:uuid:".$medication_id,
+                            //         "resource" => [
+                            //             "resourceType" => "Medication",
+                            //             "meta" => [
+                            //                 "profile" => [
+                            //                     "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
+                            //                 ],
+                            //             ],
+                            //             "identifier" => [
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://sys-ids.kemkes.go.id/medication/".$organization_id,
+                            //                     "use" => "official",
+                            //                     "value" => $idObat."-".$idRincian,
+                            //                 ],
+                            //             ],
+                            //             "code" => [
+                            //                 "coding" => [
+                            //                     [
+                            //                         "system" => "http://sys-ids.kemkes.go.id/kfa",
+                            //                         "code" => $kode_kfa,
+                            //                         "display" => $display,
+                            //                         // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             "status" => "active",
+                            //             // "manufacturer" => ["reference" => "Organization/".$organization_id],
+                            //             "form" => [
+                            //                 "coding" => [
+                            //                     [
+                            //                         "system" =>
+                            //                             "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                            //                         "code" => $dosage_form,
+                            //                         "display" => $dosage_form_display,
+                            //                     ],
+                            //                 ],
+                            //             ],
+
+                            //             // khusus racikan
+                            //             // "ingredient" => [
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000330",
+                            //             //                     "display" => "Rifampin",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 150,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000328",
+                            //             //                     "display" => "Isoniazid",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 75,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000329",
+                            //             //                     "display" => "Pyrazinamide",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 400,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000288",
+                            //             //                     "display" => "Ethambutol",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 275,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             // ],
+                            //             "extension" => [
+                            //                 [
+                            //                     "url" =>
+                            //                         "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                            //                     "valueCodeableConcept" => [
+                            //                         "coding" => [
+                            //                             [
+                            //                                 "system" =>
+                            //                                     "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                            //                                 "code" => "NC",
+                            //                                 "display" => "Non-compound",
+                            //                             ],
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //         "request" => ["method" => "POST", "url" => "Medication"],
+                            //     ],
+                            //     // MedicationRequest
+                            //     [
+                            //         "fullUrl" => "urn:uuid:".$medicationRequest_id,
+                            //         "resource" => [
+                            //             "resourceType" => "MedicationRequest",
+                            //             "identifier" => [
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
+                            //                     "use" => "official",
+                            //                     "value" => $noresep."-".$idRincian,
+                            //                 ],
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
+                            //                     "use" => "official",
+                            //                     "value" => $idRincian."-".$j,
+                            //                 ],
+                            //             ],
+                            //             "status" => "completed",
+                            //             "intent" => "order",
+                            //             "category" => [
+                            //                 [
+                            //                     "coding" => [
+                            //                         [
+                            //                             "system" =>
+                            //                                 "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                            //                             "code" => "outpatient",
+                            //                             "display" => "Outpatient",
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             "priority" => "routine",
+                            //             "medicationReference" => [
+                            //                 "reference" => "Medication/".$medication_id,
+                            //                 "display" => $display,
+                            //             ],
+                            //             "subject" => [
+                            //                 "reference" => "Patient/".$pasien_uuid,
+                            //                 "display" => $request->nama,
+                            //             ],
+                            //             "encounter" => [
+                            //                 "reference" => "Encounter/".$encounter,
+                            //             ],
+                            //             "authoredOn" => Carbon::parse($tgl_kirim)->toIso8601String(),
+                            //             "requester" => [
+                            //                 "reference" => "Practitioner/".$practitioner_uuid,
+                            //                 "display" => $nama_practitioner,
+                            //             ],
+                                        
+                            //             "dosageInstruction" => [
+                            //                 [
+                            //                     "sequence" => 1,
+                            //                     "text" => $nonRacikan[$j]['aturan']." ".$nonRacikan[$j]['keterangan'],
+                            //                     "additionalInstruction" => [
+                            //                         ["text" => $nonRacikan[$j]['keterangan']]
+                            //                     ],
+                            //                     "patientInstruction" => $nonRacikan[$j]['aturan']." ".$nonRacikan[$j]['keterangan'],
+                            //                     "timing" => [
+                            //                         "repeat" => [
+                            //                             "frequency" => $nonRacikan[$j]['konsumsi_perhari'],
+                            //                             "period" => 1,
+                            //                             "periodUnit" => "d",
+                            //                         ],
+                            //                     ],
+                            //                     "route" => [
+                            //                         "coding" => [
+                            //                             [
+                            //                                 "system" => "http://www.whocc.no/atc",
+                            //                                 "code" => $routeCode,
+                            //                                 "display" => $routeName,
+                            //                             ],
+                            //                         ],
+                            //                     ],
+                            //                     // "doseAndRate" => [
+                            //                     //     [
+                            //                     //         "type" => [
+                            //                     //             "coding" => [
+                            //                     //                 [
+                            //                     //                     "system" =>
+                            //                     //                         "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                            //                     //                     "code" => "ordered",
+                            //                     //                     "display" => "Ordered",
+                            //                     //                 ],
+                            //                     //             ],
+                            //                     //         ],
+                            //                     //         "doseQuantity" => [
+                            //                     //             "value" => $nonRacikan[$j]['qty'],
+                            //                     //             "unit" => $nonRacikan[$j]['mobat']['satuan_k'],
+                            //                     //             "system" =>
+                            //                     //                 "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //                     //             "code" => "TAB",
+                            //                     //         ],
+                            //                     //     ],
+                            //                     // ],
+                            //                 ],
+                            //             ],
+                            //             "dispenseRequest" => [
+                            //                 "dispenseInterval" => [
+                            //                     "value" => $nonRacikan[$j]['konsumsi_perhari'],
+                            //                     "unit" => "days",
+                            //                     "system" => "http://unitsofmeasure.org",
+                            //                     "code" => "d",
+                            //                 ],
+                            //                 "validityPeriod" => [
+                            //                     "start" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                            //                     "end" => Carbon::parse($tglObatHabis)->toIso8601String(),
+                            //                 ],
+                            //                 // "numberOfRepeatsAllowed" => 0,
+                            //                 // "quantity" => [
+                            //                 //     "value" => 120,
+                            //                 //     "unit" => "TAB",
+                            //                 //     "system" =>
+                            //                 //         "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //                 //     "code" => "TAB",
+                            //                 // ],
+                            //                 "expectedSupplyDuration" => [
+                            //                     "value" => $pembagian,
+                            //                     "unit" => "days",
+                            //                     "system" => "http://unitsofmeasure.org",
+                            //                     "code" => "d",
+                            //                 ],
+                            //                 "performer" => ["reference" => "Organization/".$organization_id],
+                            //             ],
+                            //         ],
+                            //         "request" => ["method" => "POST", "url" => "MedicationRequest"],
+                            //     ],
+
+
+
+                            //     // Medication
+                                
+                            //     [
+                            //         "fullUrl" => "urn:uuid:".$medicationForDispense_id,
+                            //         "resource" => 
+                            //         [
+                            //             "resourceType" => "Medication",
+                            //             "meta" => [
+                            //                 "profile" => [
+                            //                     "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
+                            //                 ],
+                            //             ],
+                            //             "identifier" => [
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://sys-ids.kemkes.go.id/medication/".$organization_id,
+                            //                     "use" => "official",
+                            //                     "value" => $idRincian."-".date('His'),
+                            //                 ],
+                            //             ],
+                            //             "code" => [
+                            //                 "coding" => [
+                            //                     [
+                            //                         "system" => "http://sys-ids.kemkes.go.id/kfa",
+                            //                         "code" => $kode_kfa,
+                            //                         "display" => $display,
+                            //                         // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             "status" => "active",
+                            //             "manufacturer" => ["reference" => "Organization/".$organization_id],
+                            //             "form" => [
+                            //                 "coding" => [
+                            //                     [
+                            //                         "system" =>
+                            //                             "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                            //                         "code" => $dosage_form,
+                            //                         "display" => $dosage_form_display,
+                            //                     ],
+                            //                 ],
+                            //             ],
+
+                            //             // khusus racikan
+                            //             // "ingredient" => [
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000330",
+                            //             //                     "display" => "Rifampin",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 150,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000328",
+                            //             //                     "display" => "Isoniazid",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 75,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000329",
+                            //             //                     "display" => "Pyrazinamide",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 400,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             //     [
+                            //             //         "itemCodeableConcept" => [
+                            //             //             "coding" => [
+                            //             //                 [
+                            //             //                     "system" =>
+                            //             //                         "http://sys-ids.kemkes.go.id/kfa",
+                            //             //                     "code" => "91000288",
+                            //             //                     "display" => "Ethambutol",
+                            //             //                 ],
+                            //             //             ],
+                            //             //         ],
+                            //             //         "isActive" => true,
+                            //             //         "strength" => [
+                            //             //             "numerator" => [
+                            //             //                 "value" => 275,
+                            //             //                 "system" => "http://unitsofmeasure.org",
+                            //             //                 "code" => "mg",
+                            //             //             ],
+                            //             //             "denominator" => [
+                            //             //                 "value" => 1,
+                            //             //                 "system" =>
+                            //             //                     "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //                 "code" => "TAB",
+                            //             //             ],
+                            //             //         ],
+                            //             //     ],
+                            //             // ],
+                            //             "extension" => [
+                            //                 [
+                            //                     "url" =>
+                            //                         "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                            //                     "valueCodeableConcept" => [
+                            //                         "coding" => [
+                            //                             [
+                            //                                 "system" =>
+                            //                                     "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                            //                                 "code" => "NC",
+                            //                                 "display" => "Non-compound",
+                            //                             ],
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //         "request" => ["method" => "POST", "url" => "Medication"],
+                            //     ],
+                            //     // "MedicationDispense"
+                            //     [
+                            //         "fullUrl" => "urn:uuid:".self::generateUuid(),
+                            //         "resource" => [
+                            //             "resourceType" => "MedicationDispense",
+                            //             "identifier" => [
+                            //                 [
+                            //                     "use" => "official",
+                            //                     "system" =>
+                            //                         "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
+                            //                     "value" => $noresep."-".$idResep.'-'.$j,
+                            //                 ],
+                            //                 [
+                            //                     "use" => "official",
+                            //                     "system" =>
+                            //                         "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
+                            //                     "value" => $idRincian.'-'.date('His').'-'.$j,
+                            //                 ],
+                            //             ],
+                            //             "status" => "completed",
+                            //             "category" => [
+                            //                 "coding" => [
+                            //                     [
+                            //                         "system" =>
+                            //                             "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category",
+                            //                         "code" => "outpatient",
+                            //                         "display" => "Outpatient",
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             "medicationReference" => [
+                            //                 // "reference" => "urn:uuid:{{Medication_forDispense}}",
+                            //                 // "reference" => "urn:uuid:".$medicationForDispense,
+                            //                 "reference" => "Medication/".$medicationForDispense_id,
+                            //                 "display" => $display,
+                            //             ],
+                            //             "subject" => [
+                            //                 "reference" => "Patient/".$pasien_uuid,
+                            //                 "display" => $request->nama,
+                            //             ],
+                            //             "context" => ["reference" => "Encounter/".$encounter],
+                            //             // "context" => ["reference" => "urn:uuid:".$encounter],
+                            //             // "context" => ["reference" => "urn:uuid:".self::generateUuid()],
+                            //             "performer" => [
+                            //                 [
+                            //                     "actor" => [
+                            //                         "reference" => "Practitioner/".$apoteker_uuid,
+                            //                         "display" => $nama_apoteker,
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             "location" => [
+                            //                 "reference" => "Location/".$locationFarmasiRajal,
+                            //                 "display" => $displayFarmasiRajal,
+                            //             ],
+                            //             "authorizingPrescription" => [
+                            //                 [
+                            //                     // "reference" => "urn:uuid:{{MedicationRequest_id}}"
+                            //                     "reference" => "MedicationRequest/".$medicationRequest_id
+                            //                 ],
+                            //             ],
+                            //             // "quantity" => [
+                            //             //     "value" => 120,
+                            //             //     "system" =>
+                            //             //         "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //             //     "code" => "TAB",
+                            //             // ],
+                            //             "daysSupply" => [
+                            //                 "value" => $nonRacikan[$j]['konsumsi_perhari'],
+                            //                 "unit" => "Day",
+                            //                 "system" => "http://unitsofmeasure.org",
+                            //                 "code" => "d",
+                            //             ],
+                            //             "whenPrepared" => Carbon::parse($tgl_kirim)->toIso8601String(), // ini otw tgl diterima
+                            //             "whenHandedOver" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                            //             "dosageInstruction" => [
+                            //                 [
+                            //                     "sequence" => 1,
+                            //                     // "additionalInstruction" => [
+                            //                     //     [
+                            //                     //         "coding" => [
+                            //                     //             [
+                            //                     //                 "system" => "http://snomed.info/sct",
+                            //                     //                 "code" => "418577003",
+                            //                     //                 "display" =>
+                            //                     //                     "Take at regular intervals. Complete the prescribed course unless otherwise directed",
+                            //                     //             ],
+                            //                     //         ],
+                            //                     //     ],
+                            //                     // ],
+                            //                     "patientInstruction" => $nonRacikan[$j]['aturan']." ".$nonRacikan[$j]['keterangan'],
+                            //                     "timing" => [
+                            //                         "repeat" => [
+                            //                             "frequency" => $nonRacikan[$j]['konsumsi_perhari'],
+                            //                             "period" => 1,
+                            //                             "periodUnit" => "d",
+                            //                         ],
+                            //                     ],
+                            //                     // "doseAndRate" => [
+                            //                     //     [
+                            //                     //         "type" => [
+                            //                     //             "coding" => [
+                            //                     //                 [
+                            //                     //                     "system" =>
+                            //                     //                         "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                            //                     //                     "code" => "ordered",
+                            //                     //                     "display" => "Ordered",
+                            //                     //                 ],
+                            //                     //             ],
+                            //                     //         ],
+                            //                     //         "doseQuantity" => [
+                            //                     //             "value" => 4,
+                            //                     //             "unit" => "TAB",
+                            //                     //             "system" =>
+                            //                     //                 "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                            //                     //             "code" => "TAB",
+                            //                     //         ],
+                            //                     //     ],
+                            //                     // ],
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //         "request" => ["method" => "POST", "url" => "MedicationDispense"],
+                            //     ],
+                            // ];
+
+
+                             // Medication
+                            if ($pembagian > 0) {
+                                $medicationForRequest =   
                                 [
                                     "fullUrl" => "urn:uuid:".$medication_id,
                                     "resource" => [
@@ -2686,8 +3417,9 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                                     "request" => ["method" => "POST", "url" => "Medication"],
-                                ],
+                                ];
                                 // MedicationRequest
+                                $medicationRequest =
                                 [
                                     "fullUrl" => "urn:uuid:".$medicationRequest_id,
                                     "resource" => [
@@ -2814,12 +3546,10 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                                     "request" => ["method" => "POST", "url" => "MedicationRequest"],
-                                ],
+                                ];
 
-
-
-                                // Medication
-                                
+                                $medicationForDispense_id = Str::uuid();
+                                $medicationForDispense =
                                 [
                                     "fullUrl" => "urn:uuid:".$medicationForDispense_id,
                                     "resource" => 
@@ -2986,8 +3716,9 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                                     "request" => ["method" => "POST", "url" => "Medication"],
-                                ],
-                                // "MedicationDispense"
+                                ];
+
+                                $medicationDispense =
                                 [
                                     "fullUrl" => "urn:uuid:".self::generateUuid(),
                                     "resource" => [
@@ -3110,19 +3841,30 @@ class PostKunjunganRajalHelper
                                         ],
                                     ],
                                     "request" => ["method" => "POST", "url" => "MedicationDispense"],
-                                ],
-                            ];
+                                ];
+
+                            }
+                            
 
                             if ($longTerm) {
-                                array_push($medication[1]['resource'],$tambahan);
+                                array_push($medicationForRequest['resource'],$tambahan);
+                                array_push($medicationForDispense['resource'],$tambahan);
                             }
+                            // if ($longTerm) {
+                            //     array_push($medication[1]['resource'],$tambahan);
+                            // }
 
-                            $kirimObatNonRacikan[] = $medication;
-                            $preview[]= [
-                                'medication' => $medication_id,
-                                'medication_request' => $medicationRequest_id,
-                                'medication_dispense' => $medicationForDispense_id
+                            $kirimObatNonRacikan[] = [
+                                'medication' => $medicationForRequest ?? null,
+                                'medication_request' => $medicationRequest ?? null,
+                                'medicationD' => $medicationForDispense ?? null,
+                                'medication_dispense' => $medicationDispense ?? null,
                             ];
+                            // $preview[]= [
+                            //     'medication' => $medication_id,
+                            //     'medication_request' => $medicationRequest_id,
+                            //     'medication_dispense' => $medicationForDispense_id
+                            // ];
                         }
                     }
                 }

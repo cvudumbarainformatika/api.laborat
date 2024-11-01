@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Simrs\Master\MspesimenLab;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,6 +21,11 @@ class PemeriksaanLaborat extends Model
     public function transaksi_laborat_luar()
     {
         return $this->hasMany(LaboratLuar::class, 'kd_lab', 'rs1');
+    }
+
+    public function spesimen()
+    {
+       return $this->hasOne(MspesimenLab::class, 'rs1', 'rs1');
     }
 
     // public function paket_laborats(){

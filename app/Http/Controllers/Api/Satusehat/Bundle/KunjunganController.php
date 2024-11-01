@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Satusehat\Bundle;
 
 use App\Helpers\AuthSatsetHelper;
+use App\Helpers\BridgingLoincHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Helpers\PostKunjunganHelper;
 use App\Helpers\Satsets\CobaPostKunjunganRajalHelper;
@@ -27,7 +28,7 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
 
-            return PostKunjunganRajalHelper::cobarajal('91258/10/2024/J');
+            return PostKunjunganRajalHelper::cobarajal('91841/11/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
             // return self::cekKunjunganRajal('74748/09/2024/J');
         }
@@ -750,6 +751,11 @@ class KunjunganController extends Controller
       $params = '/Medication/64d4de51-9fb9-4f42-aad5-06ce6116103d'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
 
       $send = BridgingSatsetHelper::get_data_nosave($token, $params);
+      return $send;
+    }
+    public function cari_loinc()
+    {
+      $send = BridgingLoincHelper::getLoincByKode('20977-5');
       return $send;
     }
 

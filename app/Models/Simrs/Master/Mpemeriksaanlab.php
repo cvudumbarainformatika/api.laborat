@@ -11,4 +11,10 @@ class Mpemeriksaanlab extends Model
     protected $table = 'rs49';
     protected $guarded = ['id'];
     public $timestamps = false;
+
+
+    public function spesimen()
+    {
+       return $this->hasOne(MspesimenLab::class, 'rs1', 'rs1');
+    }
 }

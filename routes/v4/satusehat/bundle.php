@@ -13,4 +13,5 @@ Route::group([
     Route::get('/kirim-kunjungan', [KunjunganController::class, 'index']);
 
     Route::get('/cek-medication', [KunjunganController::class, 'medication']);
+    Route::get('/cari-loinc', [KunjunganController::class, 'cari_loinc']);
 });
