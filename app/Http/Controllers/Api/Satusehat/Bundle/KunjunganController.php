@@ -748,7 +748,7 @@ class KunjunganController extends Controller
       // $params = '/Medication/977fa8cc-de04-4e81-9b41-2c66e4543441'; // Gabapentin 300 mg Kapsul (DEXA MEDICA)
       // $params = '/Medication/54ec09bc-4cbe-4c6c-9eeb-1eb64450b319'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
       // $params = '/Medication/681be0cb-9870-49cc-b179-89659ff68590'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
-      $params = '/Medication/64d4de51-9fb9-4f42-aad5-06ce6116103d'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
+      $params = '/Medication/0cfd23a3-8a1f-4a93-b358-c6a0fcf542f9'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
 
       $send = BridgingSatsetHelper::get_data_nosave($token, $params);
       return $send;
