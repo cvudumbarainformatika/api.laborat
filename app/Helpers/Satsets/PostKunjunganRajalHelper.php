@@ -3267,7 +3267,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => (string)$idObat."-".(string)$idRincian,
+                                                "value" => (string)$idObat."R-".(string)$idRincian,
                                             ],
                                         ],
                                         "code" => [
@@ -3430,13 +3430,13 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
                                                 "use" => "official",
-                                                "value" => (string)$noresep."-".(string)$idRincian,
+                                                "value" => (string)$noresep."R-".(string)$idRincian,
                                             ],
                                             [
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
                                                 "use" => "official",
-                                                "value" => (string)$idRincian."-".(string)$j,
+                                                "value" => (string)$idRincian."R-".(string)$j,
                                             ],
                                         ],
                                         "status" => "completed",
@@ -3566,7 +3566,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => (string)$idRincian."-".date('His'),
+                                                "value" => (string)$idRincian."D-".date('His'),
                                             ],
                                         ],
                                         "code" => [
@@ -3729,13 +3729,13 @@ class PostKunjunganRajalHelper
                                                 "use" => "official",
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
-                                                "value" => (string)$noresep."-".(string)$idResep.'-'.(string)$j,
+                                                "value" => (string)$noresep."D-".(string)$idResep."D-".(string)$j,
                                             ],
                                             [
                                                 "use" => "official",
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
-                                                "value" => (string)$idRincian.'-'.date('His').'-'.(string)$j,
+                                                "value" => (string)$idRincian."D-".date('His')."D-".(string)$j,
                                             ],
                                         ],
                                         "status" => "completed",
