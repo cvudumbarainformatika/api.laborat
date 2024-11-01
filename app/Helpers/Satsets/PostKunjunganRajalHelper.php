@@ -2621,7 +2621,8 @@ class PostKunjunganRajalHelper
 
                             $longTerm = $konsumsiX && $kronis;
 
-                            $bagi = $nonRacikan[$j]['qty'] === 0 ? 0 : $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            $bagi = ($nonRacikan[$j]['konsumsi_perhari'] === 0 || $nonRacikan[$j]['konsumsi_perhari'] === null || $nonRacikan[$j]['konsumsi_perhari'] === '') ? 0 : $nonRacikan[$j]['qty'] / $nonRacikan[$j]['konsumsi_perhari'];
+                            // return $bagi;
                             $pembagian = $bagi === 0 ? 0 : ceil($bagi);
 
                             $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
