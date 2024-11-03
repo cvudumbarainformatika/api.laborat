@@ -17,4 +17,9 @@ class Mpemeriksaanlab extends Model
     {
        return $this->hasOne(MspesimenLab::class, 'rs1', 'rs1');
     }
+
+    public function loinclab()
+    {
+       return $this->hasMany(MloincLab::class, 'code', 'loinc');
+    }
 }

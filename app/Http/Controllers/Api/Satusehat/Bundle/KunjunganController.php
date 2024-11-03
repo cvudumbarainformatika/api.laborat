@@ -28,7 +28,7 @@ class KunjunganController extends Controller
 
         if ($jenis_kunjungan === 'rajal') {
 
-            return PostKunjunganRajalHelper::cobarajal('91841/11/2024/J');
+            return PostKunjunganRajalHelper::cobarajal('70565/08/2024/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
             // return self::cekKunjunganRajal('74748/09/2024/J');
         }
@@ -748,7 +748,8 @@ class KunjunganController extends Controller
       // $params = '/Medication/977fa8cc-de04-4e81-9b41-2c66e4543441'; // Gabapentin 300 mg Kapsul (DEXA MEDICA)
       // $params = '/Medication/54ec09bc-4cbe-4c6c-9eeb-1eb64450b319'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
       // $params = '/Medication/681be0cb-9870-49cc-b179-89659ff68590'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
-      $params = '/Medication/5384cc93-172b-4402-be17-f486ab25243b'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
+      // $params = '/Medication/d17af9df-b938-4e8f-903d-8f8a89a1a851'; 
+      $params = '/Medication/e1abed75-4290-492a-a11f-eca1a1483f99'; 
 
       $send = BridgingSatsetHelper::get_data_nosave($token, $params);
       return $send;

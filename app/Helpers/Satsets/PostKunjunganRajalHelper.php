@@ -10,10 +10,13 @@ use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Allergy;
+use App\Models\Simrs\Master\Msnomed;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+
+use function PHPUnit\Framework\isEmpty;
 
 class PostKunjunganRajalHelper
 {
@@ -255,6 +258,7 @@ class PostKunjunganRajalHelper
                 $t->with([
                     'details' => function ($d) {
                         $d->with(['pemeriksaanlab'=>function($p){
+                            // $p->orderBy('id', 'ASC');
                             $p->select('rs49.*',
                             'rs49_spesimen.jenis_spesimen',
                             'rs49_spesimen.jumlah_spesimen',
@@ -262,14 +266,15 @@ class PostKunjunganRajalHelper
                             'rs49_spesimen.cara_pengambilan_spesimen',
                             'rs49_spesimen.cairan_fiksasi',
                             'rs49_spesimen.volume_cairan_fiksasi',
-                            )
+                            )->with('loinclab')
                             ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
                             ->orderBy('id', 'ASC');
                         }
-                    ]);
+                        ])->orderBy('rs4', 'ASC');
                     }
+                    
                 ])
-                    ->orderBy('id', 'DESC');
+                ->orderBy('id', 'DESC');
             },
           ])
 
@@ -495,20 +500,24 @@ class PostKunjunganRajalHelper
             'laborats' => function ($t) {
                 $t->with([
                     'details' => function ($d) {
-                        $d->with(['pemeriksaanlab'=>function($p){
-                            $p->select('rs49.*',
-                            'rs49_spesimen.jenis_spesimen',
-                            'rs49_spesimen.jumlah_spesimen',
-                            'rs49_spesimen.volume_spesimen_klinis',
-                            'rs49_spesimen.cara_pengambilan_spesimen',
-                            'rs49_spesimen.cairan_fiksasi',
-                            'rs49_spesimen.volume_cairan_fiksasi',
-                            )
-                            ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1');
-                        }]);
+                        $d->with(['pemeriksaanlab.loinclab'=>function($p){
+                            $p->orderBy('id', 'ASC');
+                            // $p->select('rs49.*',
+                            // 'rs49_spesimen.jenis_spesimen',
+                            // 'rs49_spesimen.jumlah_spesimen',
+                            // 'rs49_spesimen.volume_spesimen_klinis',
+                            // 'rs49_spesimen.cara_pengambilan_spesimen',
+                            // 'rs49_spesimen.cairan_fiksasi',
+                            // 'rs49_spesimen.volume_cairan_fiksasi',
+                            // )
+                            // ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                            // ->orderBy('id', 'ASC');
+                        }
+                        ])->orderBy('rs4', 'ASC');
                     }
+                    
                 ])
-                    ->orderBy('id', 'DESC');
+                ->orderBy('id', 'DESC');
             },
           ])
 
@@ -662,9 +671,13 @@ class PostKunjunganRajalHelper
         $organization_id = BridgingSatsetHelper::organization_id();
 
 
+        $specimenSnomeds =  Msnomed::whereNotNull('spesimen')->get();
+
+
         // DIAGNOSA
 
         $diagnosa = [];
+        $refference = [];
         foreach ($request->diagnosa as $key => $value) {
             $uuid = self::generateUuid();
             $data = [
@@ -685,6 +698,15 @@ class PostKunjunganRajalHelper
             ];
 
             $diagnosa[] = $data;
+
+            $refference[] = [
+                "reference" => "$uuid",
+                'code' => $value['masterdiagnosa']['rs1'],
+                "jenis" => $value['rs4'],
+                "display" => $value['masterdiagnosa']['rs4'],
+                "displayInd" => $value['masterdiagnosa']['rs3'],
+                "rank" => $key + 1
+            ];
         }
 
 
@@ -702,15 +724,15 @@ class PostKunjunganRajalHelper
         $observation = self::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
-        $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $plann = self::planning($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $refference);
         $alergyIntoleran = self::allergyIntoleran($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         // $tebus = self::tebusObat($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $screeningGizi = self::screeningGizi($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
-        // $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $diet = self::diet($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
+        $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $specimenSnomeds);
 
-        // return $apotek;
+        return $plann;
 
         $body =
         [
@@ -925,13 +947,17 @@ class PostKunjunganRajalHelper
         // }
 
         // PUSH LABORAT
-        // for ($i=0; $i < count($laborats) ; $i++) { 
-        //     $serviceRequest = $laborats[$i]['serviceRequests'];
-        //     $hasil = $laborats[$i]['hasil'];
-        //     // array_push($body['entry'], $laborats[$i]);
-        //     if ($serviceRequest !== null) array_push($body['entry'], $serviceRequest);
-        //     if ($hasil !== null) array_push($body['entry'], $hasil);
-        // }
+        for ($i=0; $i < count($laborats) ; $i++) { 
+            $serviceRequest = $laborats[$i]['serviceRequests'];
+            $hasil = $laborats[$i]['hasil'];
+            $spesimen = $laborats[$i]['spesimen'];
+            $diagnosticReport = $laborats[$i]['diagnosticReport'];
+            // array_push($body['entry'], $laborats[$i]);
+            if ($serviceRequest !== null) array_push($body['entry'], $serviceRequest);
+            if ($hasil !== null) array_push($body['entry'], $hasil);
+            if ($spesimen !== null) array_push($body['entry'], $spesimen);
+            if ($diagnosticReport !== null) array_push($body['entry'], $diagnosticReport);
+        }
 
 
         // return $body;
@@ -1627,12 +1653,14 @@ class PostKunjunganRajalHelper
         return $adaTindakan;
     }
 
-    static function planning($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    static function planning($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $refference)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
         $spri = null;
         $konsul = null;
         $kontrol = null;
+
+        $prognosis = null;
         //   foreach ($data as $key => $value) {
 
         // $spri[] = $value->planning;
@@ -1653,7 +1681,7 @@ class PostKunjunganRajalHelper
             $isi = $planning[0];
             $plann = $isi->rs4;
 
-            
+            $prognosisId = self::generateUuid();
 
             if ($plann === 'Rawat Inap' && $isi->spri !== null) {
 
@@ -1931,7 +1959,7 @@ class PostKunjunganRajalHelper
                                         "display" => $display,
                                     ],
                                 ],
-                                "text" => "Kontrol ".$uraian,
+                                "text" => $uraian,
                             ],
                         ],
                         "locationCode" => [
@@ -1956,8 +1984,235 @@ class PostKunjunganRajalHelper
                     ],
                     "request" => ["method" => "POST", "url" => "ServiceRequest"],
                 ];
+
+
+                $ref = collect($refference)->filter(function ($item) use ($icd10) {
+                    return $item['code'] === $icd10;
+                })->first();
+
+                if ($ref) {
+                    $prognosis = 
+                    [
+                        "fullUrl" => "urn:uuid:".$prognosisId,
+                        "resource" => [
+                            "resourceType" => "ClinicalImpression",
+                            "identifier" => [
+                                [
+                                    "use" => "official",
+                                    "system" =>
+                                        "http://sys-ids.kemkes.go.id/clinicalimpression/".$organization_id,
+                                    "value" => "PROGNCOND-".$request->noreg,
+                                ],
+                            ],
+                            "status" => "completed",
+                            // "description" => $uraian,
+                            "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                            "encounter" => [
+                                "reference" => "Encounter/$encounter",
+                                "display" => "Kunjungan $request->nama di hari $tgl_kunjungan",
+                            ],
+                            "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+                            // "date" => "2023-10-31T03:15:31+00:00",
+                            "assessor" => ["reference" => "Practitioner/".$practitioner_uuid, "display" => $nama_practitioner],
+                            "problem" => [
+                                ["reference" => "Condition/".$ref['reference']],
+                            ],
+                            // INI UNTUK refference [' Observation','QuestionnaireResponse,' DiagnosticReport','ImagingStudy']
+                            // "investigation" => [
+                            //     [
+                            //         "code" => ["text" => "Pemeriksaan ".$uraian],
+                            //         "item" => [
+                            //             [
+                            //                 "reference" =>
+                            //                     "urn:uuid:{{DiagnosticReport_Rad}}",
+                            //             ],
+                            //             ["reference" => "urn:uuid:"],
+                            //         ],
+                            //     ],
+                            // ],
+                            "summary" =>
+                                "Prognosis terhadap ".$uraian,
+                            // "finding" => [
+                            //     [
+                            //         "itemCodeableConcept" => [
+                            //             "coding" => [
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://hl7.org/fhir/sid/icd-10",
+                            //                     "code" => $icd10,
+                            //                     "display" => $display,
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //         "itemReference" => [
+                            //             "reference" =>
+                            //                 // "urn:uuid:{{Condition_DiagnosisPrimer}}",
+                            //                 "Condition/".$ref->reference,
+                            //         ],
+                            //     ],
+                            //     [
+                            //         "itemCodeableConcept" => [
+                            //             "coding" => [
+                            //                 [
+                            //                     "system" =>
+                            //                         "http://hl7.org/fhir/sid/icd-10",
+                            //                     "code" => "E44.1",
+                            //                     "display" =>
+                            //                         "Mild protein-calorie malnutrition",
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //         "itemReference" => [
+                            //             "reference" =>
+                            //                 "urn:uuid:{{Condition_DiagnosisSekunder}}",
+                            //         ],
+                            //     ],
+                            // ],
+
+                            # Kumpulan Code Prognosis di http://terminology.kemkes.go.id/CodeSystem/clinical-term
+                            # 1. Prognosis baik || PR000001
+                            # 2. Prognosis dubia et bonam / cenderung baik || PR000002
+                            # 3. Prognosis dubia et malam / cenderung tidak baik || PR000003
+                            # 4. Prognosis tidak baik || PR000004
+
+
+                            # Kumpulan Code Prognosis di http://snomed.info/sct
+                            # 1. Prognosis good || 170968001
+                            # 2. Fair prognosis || 65872000
+                            # 3. Guarded prognosis || 67334001
+                            # 4. Prognosis bad || 170969009
+
+                            "prognosisCodeableConcept" => [
+                                [
+                                    "coding" => [
+                                        [
+                                            "system" => "http://snomed.info/sct",
+                                            "code" => "65872000",
+                                            "display" => "Fair prognosis",
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        "request" => ["method" => "POST", "url" => "ClinicalImpression"],
+                    ];
+                }
             }
             
+        } else {
+            // Untuk Prognosis ... Cek dulu apakah Pasien dari Konsul Internal Atau Bukan
+            $ref = collect($refference)->filter(function ($item) {
+                return $item['jenis'] === 'Primer';
+            })->first();
+
+            $pasienKonsul = !isEmpty($request->rs4);
+            
+            if ($ref && !$pasienKonsul) {
+                $prognosis = 
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" => [
+                        "resourceType" => "ClinicalImpression",
+                        "identifier" => [
+                            [
+                                "use" => "official",
+                                "system" =>
+                                    "http://sys-ids.kemkes.go.id/clinicalimpression/".$organization_id,
+                                "value" => "PROGNCOND-".$request->noreg,
+                            ],
+                        ],
+                        "status" => "completed",
+                        // "description" => $ref['displayInd'],
+                        "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                        "encounter" => [
+                            "reference" => "Encounter/$encounter",
+                            "display" => "Kunjungan $request->nama di hari $tgl_kunjungan",
+                        ],
+                        "effectiveDateTime" => Carbon::parse($request->tgl_kunjungan)->toIso8601String(),
+                        // "date" => "2023-10-31T03:15:31+00:00",
+                        "assessor" => ["reference" => "Practitioner/".$practitioner_uuid, "display" => $nama_practitioner],
+                        "problem" => [
+                            ["reference" => "Condition/".$ref['reference']],
+                        ],
+                        // INI UNTUK refference [' Observation','QuestionnaireResponse,' DiagnosticReport','ImagingStudy']
+                        // "investigation" => [
+                        //     [
+                        //         "code" => ["text" => "Pemeriksaan ".$uraian],
+                        //         "item" => [
+                        //             [
+                        //                 "reference" =>
+                        //                     "urn:uuid:{{DiagnosticReport_Rad}}",
+                        //             ],
+                        //             ["reference" => "urn:uuid:"],
+                        //         ],
+                        //     ],
+                        // ],
+                        "summary" => "PROGNOSIS TERHADAP ". $ref['displayInd'],
+                        // "finding" => [
+                        //     [
+                        //         "itemCodeableConcept" => [
+                        //             "coding" => [
+                        //                 [
+                        //                     "system" =>
+                        //                         "http://hl7.org/fhir/sid/icd-10",
+                        //                     "code" => $icd10,
+                        //                     "display" => $display,
+                        //                 ],
+                        //             ],
+                        //         ],
+                        //         "itemReference" => [
+                        //             "reference" =>
+                        //                 // "urn:uuid:{{Condition_DiagnosisPrimer}}",
+                        //                 "Condition/".$ref->reference,
+                        //         ],
+                        //     ],
+                        //     [
+                        //         "itemCodeableConcept" => [
+                        //             "coding" => [
+                        //                 [
+                        //                     "system" =>
+                        //                         "http://hl7.org/fhir/sid/icd-10",
+                        //                     "code" => "E44.1",
+                        //                     "display" =>
+                        //                         "Mild protein-calorie malnutrition",
+                        //                 ],
+                        //             ],
+                        //         ],
+                        //         "itemReference" => [
+                        //             "reference" =>
+                        //                 "urn:uuid:{{Condition_DiagnosisSekunder}}",
+                        //         ],
+                        //     ],
+                        // ],
+
+                        # Kumpulan Code Prognosis di http://terminology.kemkes.go.id/CodeSystem/clinical-term
+                        # 1. Prognosis baik || PR000001
+                        # 2. Prognosis dubia et bonam / cenderung baik || PR000002
+                        # 3. Prognosis dubia et malam / cenderung tidak baik || PR000003
+                        # 4. Prognosis tidak baik || PR000004
+
+
+                        # Kumpulan Code Prognosis di http://snomed.info/sct
+                        # 1. Prognosis good || 170968001
+                        # 2. Fair prognosis || 65872000
+                        # 3. Guarded prognosis || 67334001
+                        # 4. Prognosis bad || 170969009
+
+                        "prognosisCodeableConcept" => [
+                            [
+                                "coding" => [
+                                    [
+                                        "system" => "http://snomed.info/sct",
+                                        "code" => "170968001",
+                                        "display" => "Prognosis good",
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    "request" => ["method" => "POST", "url" => "ClinicalImpression"],
+                ];
+            }
         }
         
         //   }
@@ -1965,7 +2220,11 @@ class PostKunjunganRajalHelper
         $data = [
             'spri'=>$spri,
             'konsul'=>$konsul,
-            'kontrol'=>$kontrol
+            'kontrol'=>$kontrol,
+            'prognosis'=>$prognosis,
+            'refference' => $refference,
+            'pasienKonsul'=> !isEmpty($request->rs4)
+
         ];
         return $data;
         
@@ -2068,7 +2327,7 @@ class PostKunjunganRajalHelper
         
         
     }
-    static function laborats($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id)
+    static function laborats($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid, $organization_id, $specimenSnomeds)
     {
         $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
         $laborats = $request->laborats;
@@ -2087,6 +2346,28 @@ class PostKunjunganRajalHelper
                     $obj->LOINC = $obj['pemeriksaanlab']['loinc']; // ini jika paket gak dipake
                     $obj->DISPLAY_LOINC = $obj['pemeriksaanlab']['display_loinc'];
                     $obj->ADA_SPESIMEN = $obj['pemeriksaanlab']['jenis_spesimen'];
+
+                    $metode = !empty($obj['metode']) ? strtolower($obj['metode']) : null;
+                    $satuan = $obj['pemeriksaanlab']['satuan'];
+                    $obj->SATUAN = $satuan;
+                    $arr = $obj['pemeriksaanlab']['loinclab'];
+                    $ARRX = null;
+                    if (count($arr) > 0 && count($arr) === 1) {
+                        $ARRX = $arr[0];
+                    } elseif (count($arr) > 0 && count($arr) > 1) {
+                        $filt = collect($arr)->filter(function($item) use ($metode) { 
+                            return Str::contains(strtolower($item['metode_analisis']), $metode);
+                        });
+                        $reIndexed = array_values($filt->toArray());
+                        if (count($reIndexed) === 0) {
+                            $ARRX = $arr[0];
+                        } else {
+                            $ARRX = $reIndexed[0];
+                        }
+
+                    }
+
+                    $obj->PEMETAAN = $ARRX;
 
                     $obj->puasa_pasien = $obj['puasa_pasien'];
                     return $obj;
@@ -2120,128 +2401,133 @@ class PostKunjunganRajalHelper
 
 
 
-                    $spesimen = null;
+                    $pemetaan = $value[0]['PEMETAAN'];
+                    $snomedSpesimen = null;
                     $spesimenx=null;
+                    $diagnosticReport = null;
                     
-                    $brwse = null;
-                    if ($LOINC !== null) {
-                        $brwse = count(BridgingLoincHelper::getLoincByKode($LOINC)['Results'])> 0 ? BridgingLoincHelper::getLoincByKode($LOINC)['Results'][0]: null;
-                        $spesimen = $brwse['SYSTEM'] ?? null;
-                    }
+                    // $brwse = null;
+                    // if ($LOINC !== null) {
+                    //     $brwse = count(BridgingLoincHelper::getLoincByKode($LOINC)['Results'])> 0 ? BridgingLoincHelper::getLoincByKode($LOINC)['Results'][0]: null;
+                    //     $spesimen = $brwse['SYSTEM'] ?? null;
+                    // }
 
                     if (!$paket && $LOINC !== null && $hasil !== null) {
 
                         
 
-                        $serviceRequests = 
-                        [
-                            "fullUrl" => "urn:uuid:".$servisRequestId,
-                            "resource" => [
-                                "resourceType" => "ServiceRequest",
-                                "identifier" => [
-                                    [
-                                        "system" =>
-                                            "http://sys-ids.kemkes.go.id/servicerequest/".$organization_id,
-                                            "value" => $kode, // ini nota
-                                    ]
-                                    // [
-                                    //     "use" => "usual",
-                                    //     "type" => [
-                                    //         "coding" => [
-                                    //             [
-                                    //                 "system" =>
-                                    //                     "http://terminology.hl7.org/CodeSystem/v2-0203",
-                                    //                 "code" => "ACSN",
-                                    //             ],
-                                    //         ],
-                                    //     ],
-                                    //     "system" =>
-                                    //         "http://sys-ids.kemkes.go.id/acsn/{{Org_ID}}",
-                                    //     "value" => "",
-                                    // ],
-                                ],
-                                "status" => "active",
-                                "intent" => "order",
-                                "category" => [
-                                    [
-                                        "coding" => [
-                                            [
-                                                "system" => "http://snomed.info/sct",
-                                                "code" => "108252007",
-                                                "display" => "Laboratory procedure",
+                        if($pemetaan != null){
+
+                            // service request
+                            $serviceRequests = 
+                            [
+                                "fullUrl" => "urn:uuid:".$servisRequestId,
+                                "resource" => [
+                                    "resourceType" => "ServiceRequest",
+                                    "identifier" => [
+                                        [
+                                            "system" =>
+                                                "http://sys-ids.kemkes.go.id/servicerequest/".$organization_id,
+                                                "value" => "RJ-{$idPemeriksaan}", // ini nota
+                                        ]
+                                        // [
+                                        //     "use" => "usual",
+                                        //     "type" => [
+                                        //         "coding" => [
+                                        //             [
+                                        //                 "system" =>
+                                        //                     "http://terminology.hl7.org/CodeSystem/v2-0203",
+                                        //                 "code" => "ACSN",
+                                        //             ],
+                                        //         ],
+                                        //     ],
+                                        //     "system" =>
+                                        //         "http://sys-ids.kemkes.go.id/acsn/{{Org_ID}}",
+                                        //     "value" => "",
+                                        // ],
+                                    ],
+                                    "status" => "active",
+                                    "intent" => "order",
+                                    "category" => [
+                                        [
+                                            "coding" => [
+                                                [
+                                                    "system" => "http://snomed.info/sct",
+                                                    "code" => "108252007",
+                                                    "display" => "Laboratory procedure",
+                                                ],
                                             ],
                                         ],
                                     ],
-                                ],
-                                "priority" => $cito === 'Tidak' ? "routine" : "urgent", // "routine" "urgent"  yg cito harap pake urgent
-                                "code" => [
-                                    "coding" => [
+                                    "priority" => $cito === 'Tidak' ? "routine" : "urgent", // "routine" "urgent"  yg cito harap pake urgent
+                                    "code" => [
+                                        "coding" => [
+                                            [
+                                                "system" => "http://loinc.org",
+                                                // "code" => "24648-8",
+                                                "code" => $LOINC,
+                                                "display" => $DISPLAY_LOINC,
+                                            ],
+                                        ],
+                                        "text" => "Pemeriksaan ".$value[0]['GROUP'],
+                                    ],
+                                    // "orderDetail" => [
+                                    //     [
+                                    //         "coding" => [
+                                    //             [
+                                    //                 "system" =>
+                                    //                     "http://dicom.nema.org/resources/ontology/DCM",
+                                    //                 "code" => "DX",
+                                    //             ],
+                                    //         ],
+                                    //         "text" => "Modality Code: DX",
+                                    //     ],
+                                    //     [
+                                    //         "coding" => [
+                                    //             [
+                                    //                 "system" =>
+                                    //                     "http://sys-ids.kemkes.go.id/ae-title",
+                                    //                 "display" => "XR0001",
+                                    //             ],
+                                    //         ],
+                                    //     ],
+                                    // ],
+                                    "subject" => ["reference" => "Patient/".$pasien_uuid],
+                                    "encounter" => ["reference" => "Encounter/".$encounter],
+                                    "occurrenceDateTime" => Carbon::parse($tgl_permintaan)->toIso8601String(),
+                                    "requester" => [
+                                        "reference" => "Practitioner/".$practitioner_uuid,
+                                        "display" => $nama_practitioner,
+                                    ],
+                                    "performer" => [
                                         [
-                                            "system" => "http://loinc.org",
-                                            // "code" => "24648-8",
-                                            "code" => $LOINC,
-                                            "display" => $DISPLAY_LOINC,
+                                            "reference" => "Practitioner/".$drs[1]['id'],
+                                            "display" => $drs[1]['text'],
                                         ],
                                     ],
-                                    "text" => "Pemeriksaan ".$value[0]['GROUP'],
+                                    "reasonCode" => [
+                                        [
+                                            "text" =>
+                                                "Permintaan pemeriksaan untuk diagnosa masalah ".$diagnosa_masalah,
+                                        ],
+                                    ]
+                                    // "reasonReference"=> [
+                                    //     ["reference"=> "Condition/{{Condition_KeluhanUtama}}"]                                    
+                                    // ],
+                                    // "note"=> [
+                                    //     ["text"=> "Pasien tidak perlu berpuasa terlebih dahulu"]
+                                    // ],
+                                    // "supportingInfo" => [
+                                    //     // ["reference" => "urn:uuid:{{Observation_PraRad}}"],
+                                    //     // ["reference" => "urn:uuid:{{Procedure_PraRad}}"],
+                                    //     ["reference" => "urn:uuid:Procedure/{{Procedure_StatusPuasa_Paket}}"],
+                                    // ],
                                 ],
-                                // "orderDetail" => [
-                                //     [
-                                //         "coding" => [
-                                //             [
-                                //                 "system" =>
-                                //                     "http://dicom.nema.org/resources/ontology/DCM",
-                                //                 "code" => "DX",
-                                //             ],
-                                //         ],
-                                //         "text" => "Modality Code: DX",
-                                //     ],
-                                //     [
-                                //         "coding" => [
-                                //             [
-                                //                 "system" =>
-                                //                     "http://sys-ids.kemkes.go.id/ae-title",
-                                //                 "display" => "XR0001",
-                                //             ],
-                                //         ],
-                                //     ],
-                                // ],
-                                "subject" => ["reference" => "Patient/".$pasien_uuid],
-                                "encounter" => ["reference" => "Encounter/".$encounter],
-                                "occurrenceDateTime" => Carbon::parse($tgl_permintaan)->toIso8601String(),
-                                "requester" => [
-                                    "reference" => "Practitioner/".$practitioner_uuid,
-                                    "display" => $nama_practitioner,
-                                ],
-                                "performer" => [
-                                    [
-                                        "reference" => "Practitioner/".$drs[1]['id'],
-                                        "display" => $drs[1]['text'],
-                                    ],
-                                ],
-                                "reasonCode" => [
-                                    [
-                                        "text" =>
-                                            "Permintaan pemeriksaan untuk diagnosa masalah ".$diagnosa_masalah,
-                                    ],
-                                ]
-                                // "reasonReference"=> [
-                                //     ["reference"=> "Condition/{{Condition_KeluhanUtama}}"]                                    
-                                // ],
-                                // "note"=> [
-                                //     ["text"=> "Pasien tidak perlu berpuasa terlebih dahulu"]
-                                // ],
-                                // "supportingInfo" => [
-                                //     // ["reference" => "urn:uuid:{{Observation_PraRad}}"],
-                                //     // ["reference" => "urn:uuid:{{Procedure_PraRad}}"],
-                                //     ["reference" => "urn:uuid:Procedure/{{Procedure_StatusPuasa_Paket}}"],
-                                // ],
-                            ],
-                            "request" => ["method" => "POST", "url" => "ServiceRequest"],
-                        ];
+                                "request" => ["method" => "POST", "url" => "ServiceRequest"],
+                            ];
 
-                        //spesimen
-                        if($spesimen != null){
+                            // SPESIMEN
+                            $snomedSpesimen = self::cariSpecimenSnomed($specimenSnomeds, $pemetaan['spesimen']);
                             $spesimenx =
                             [
                                 "fullUrl" => "urn:uuid:".$spesimen_uuid,
@@ -2251,7 +2537,7 @@ class PostKunjunganRajalHelper
                                         [
                                             "system" =>
                                                 "http://sys-ids.kemkes.go.id/specimen/".$organization_id,
-                                            "value" => $idPemeriksaan,
+                                            "value" => "SPE-{$idPemeriksaan}",
                                             "assigner" => ["reference" => "Organization/".$organization_id],
                                         ],
                                     ],
@@ -2259,42 +2545,45 @@ class PostKunjunganRajalHelper
                                     "type" => [ //*
                                         "coding" => [
                                             [
-                                                "system" => "http://snomed.info/sct",
-                                                "code" => "122575003",
-                                                "display" => "Urine specimen",
+                                                "system" => $snomedSpesimen['system'],
+                                                "code" => "{$snomedSpesimen['code']}",
+                                                "display" => $snomedSpesimen['display'],
                                             ],
                                         ],
                                     ],
                                     "condition" => [["text" => "Kondisi Spesimen Baik"]],
-                                    "collection" => [
-                                        "method" => [
-                                            "coding" => [
-                                                [
-                                                    "system" => "http://snomed.info/sct",
-                                                    "code" => "82078001",
-                                                    "display" =>
-                                                        "Collection of blood specimen for laboratory",
-                                                ],
-                                            ],
-                                        ],
-                                        "collectedDateTime" => "2023-03-27T15:00:00+00:00",
-                                        "quantity" => ["value" => 30, "unit" => "mL"],
-                                        "collector" => [
-                                            "reference" => "Practitioner/N10000001",
-                                            "display" => "Dokter Bronsig",
-                                        ],
-                                        "fastingStatusCodeableConcept" => [
-                                            "coding" => [
-                                                [
-                                                    "system" =>
-                                                        "http://terminology.hl7.org/CodeSystem/v2-0916",
-                                                    "code" => "NF",
-                                                    "display" =>
-                                                        "The patient indicated they did not fast prior to the procedure.",
-                                                ],
-                                            ],
-                                        ],
-                                    ],
+                                    // "collection" => [
+                                    //     "method" => [
+                                    //         "coding" => [
+                                    //             [
+                                    //                 "system" => "http://snomed.info/sct",
+                                    //                 "code" => "82078001",
+                                    //                 "display" =>
+                                    //                     "Collection of blood specimen for laboratory",
+                                    //             ],
+                                    //         ],
+                                    //     ],
+                                    //     "collectedDateTime" => "2023-03-27T15:00:00+00:00",
+                                    //     "quantity" => ["value" => 30, "unit" => "mL"],
+                                    //     "collector" => [
+                                    //         "reference" => "Practitioner/N10000001",
+                                    //         "display" => "Dokter Bronsig",
+                                    //     ],
+                                    //     ['F','NF','NG] ['Patient was fasting prior to the procedure.',
+                                    //     'The patient indicated they did not fast prior to the procedure.',
+                                    //     'Not Given - Patient was not asked at the time of the procedure.' ]
+                                    //     "fastingStatusCodeableConcept" => [ 
+                                    //         "coding" => [
+                                    //             [
+                                    //                 "system" =>
+                                    //                     "http://terminology.hl7.org/CodeSystem/v2-0916",
+                                    //                 "code" => "NF",
+                                    //                 "display" =>
+                                    //                     "The patient indicated they did not fast prior to the procedure.",
+                                    //             ],
+                                    //         ],
+                                    //     ],
+                                    // ],
                                     "subject" => [ // *
                                         "reference" => "Patient/".$pasien_uuid,
                                         "display" => $request->nama,
@@ -2337,22 +2626,19 @@ class PostKunjunganRajalHelper
                                 ],
                                 "request" => ["method" => "POST", "url" => "Specimen"],
                             ];
-                        }
-                        
 
-                        // $hasil_lab = null;
-                        // hasil lab
-                        // if ($hasil !== null) {
+                            // HASIL
+                            $hasilId = self::generateUuid();
                             $hasil_lab = 
                             [
-                                "fullUrl" => "urn:uuid:".self::generateUuid(),
+                                "fullUrl" => "urn:uuid:".$hasilId,
                                 "resource" => 
                                 [
                                     "resourceType" => "Observation",
                                     "identifier" => [
                                         [
                                             "system" => "http://sys-ids.kemkes.go.id/observation/".$organization_id,
-                                            "value" => $kode.'-'.date('YmdHis'),
+                                            "value" => "LAB-{$idPemeriksaan}",
                                         ],
                                     ],
                                     "status" => "final",
@@ -2428,47 +2714,121 @@ class PostKunjunganRajalHelper
                                 ],
                                 "request" => ["method" => "POST", "url" => "Observation"],
                             ];
-
-
-                           
-
-                            // $includHasil = 
-                            // [
-                            //     "valueQuantity" => [
-                            //             "value" => $hasil,
-                            //             "unit" => $satuan, // ini satuan
-                            //             // "system" => "http://unitsofmeasure.org",
-                            //             // "code" => $satuan,
-                            //     ]
-                            // ];
+                            $includHasil = 
+                            [
+                                "valueQuantity" => [
+                                        "value" => $hasil,
+                                        "unit" => $pemetaan['satuan'], // ini satuan
+                                        "system" => "http://unitsofmeasure.org",
+                                        "code" => $pemetaan['satuan'],
+                                ]
+                            ];
 
                             
-                            // $critical = self::criticalx($HL);
-                            // $includeHL =
-                            // [
-                            //     "interpretation" => 
-                            //     [
-                            //         [
-                            //             "coding" => [
-                            //                 [
-                            //                     "system" =>
-                            //                         "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
-                            //                     "code" => $critical['code'],
-                            //                     "display" => $critical['display'],
-                            //                 ],
-                            //             ],
-                            //         ],
-                            //     ],
-                            // ];
+                            $critical = self::criticalx($HL);
+                            $includeHL =
+                            [
+                                "interpretation" => 
+                                [
+                                    [
+                                        "coding" => [
+                                            [
+                                                "system" =>
+                                                    "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                                                "code" => $critical['code'],
+                                                "display" => $critical['display'],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ];
                             
 
-                            // if ($hasil) {
-                            //    $hasil_lab['resource']['valueQuantity'] = $includHasil['valueQuantity'];
-                            // }
+                            if ($hasil) {
+                               $hasil_lab['resource']['valueQuantity'] = $includHasil['valueQuantity'];
+                            }
 
-                            // if ($HL) {
-                            //     $hasil_lab['resource']['interpretation'] = $includeHL['interpretation'];
-                            // }
+                            if ($HL) {
+                                $hasil_lab['resource']['interpretation'] = $includeHL['interpretation'];
+                            }
+
+
+                            // DIAGNOSTIK REPORT
+                            $diagnosticReport =
+                            [
+                                "fullUrl" => "urn:uuid:".self::generateUuid(),
+                                "resource" => [
+                                    "resourceType" => "DiagnosticReport",
+                                    "identifier" => [
+                                        [
+                                            "system" =>
+                                                "http://sys-ids.kemkes.go.id/diagnostic/$organization_id/lab",
+                                            "use" => "official",
+                                            "value" => "DR-{$idPemeriksaan}",
+                                        ],
+                                    ],
+                                    "status" => "amended",
+                                    "category" => [
+                                        [
+                                            "coding" => [
+                                                [
+                                                    "system" =>
+                                                        "http://terminology.hl7.org/CodeSystem/v2-0074",
+                                                    "code" => "LAB",
+                                                    "display" => "Laboratory",
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                    "code" => [
+                                        "coding" => [
+                                            [
+                                                "system" => "http://loinc.org",
+                                                "code" => $LOINC,
+                                                "display" => $DISPLAY_LOINC,
+                                            ],
+                                        ],
+                                    ],
+                                    "subject" => ["reference" => "Patient/".$pasien_uuid],
+                                    "encounter" => [
+                                        "reference" =>
+                                            "Encounter/".$encounter,
+                                    ],
+                                    "effectiveDateTime" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                    "issued" => Carbon::parse($tgl_selesai)->toIso8601String(),
+                                    "performer" => [
+                                        ["reference" => "Practitioner/".$drs[0]['id']],
+                                        ["reference" => "Organization/".$organization_id],
+                                    ],
+                                    // "imagingStudy" => [
+                                    //     [
+                                    //         "reference" =>
+                                    //             "urn:uuid:c4f3bfe3-91cd-40c4-b986-000c2150f051",
+                                    //     ],
+                                    // ],
+                                    
+                                    "specimen" => [
+                                        [
+                                            "reference" => "Specimen/".$spesimen_uuid,
+                                        ],
+                                    ],
+                                    "result" => [
+                                        [
+                                            "reference" => "Observation/".$hasilId,
+                                        ],
+                                    ],
+                                    "basedOn" => [
+                                        [
+                                            "reference" => "ServiceRequest/".$servisRequestId,
+                                        ],
+                                    ],
+                                    "conclusion" => "",
+                                ],
+                                "request" => ["method" => "POST", "url" => "DiagnosticReport"],
+                            ];
+                        }
+                        
+                            
                         
                     }
                     
@@ -2476,7 +2836,10 @@ class PostKunjunganRajalHelper
                     $data[] = [
                         'serviceRequests' => $serviceRequests,
                         'hasil' => $hasil_lab,
-                        'spesimen' => $spesimen,
+                        'spesimen' => $spesimenx,
+                        'diagnosticReport' => $diagnosticReport,
+                        'pemetaan' => $pemetaan,
+                        'snomedSpesimen' => $snomedSpesimen,
                         'value' => $hasil,
                         'loinc' => $LOINC,
                         'paket' => $paket,
@@ -2484,7 +2847,7 @@ class PostKunjunganRajalHelper
                         'HL'=> $HL,
                         'id_pemeriksaan'=> $idPemeriksaan,
                         'nama_pemeriksaan'=> $value[0]['GROUP'],
-                        'loinc_browser' => $brwse
+                        'datax' => $value[0]
                         // 'datax' => $value[0]
                     ];
                 }
@@ -2535,6 +2898,23 @@ class PostKunjunganRajalHelper
             'code' => $code,
             'display' => $display
         ];
+    }
+    static  function cariSpecimenSnomed($arr, $val)
+    {
+        // INI JIKA PAKE LIKE
+        // $finder = collect($arr)->filter(function ($item) use ($val) {
+        //     return Str::contains(strtolower($item['spesimen']), strtolower(($val)));
+        // });
+
+        // $reIndexed = array_values($finder->toArray());
+        // if (count($reIndexed) === 0) {
+        //     return  $finder[0];
+        // } 
+        // return $reIndexed[0];
+
+        return collect($arr)->filter(function($item) use ($val) {
+            return trim(strtolower($item['spesimen'])) === trim(strtolower($val));
+        })->first();
     }
     
 
@@ -2631,6 +3011,8 @@ class PostKunjunganRajalHelper
                             $tglObatHabis = Carbon::parse($tgl_selesai)->addDays($pembagian);
                             $medicationRequest_id = self::generateUuid();
 
+
+
                             $tambahan = 
                             [
                                 "reasonCode" => [
@@ -2655,15 +3037,18 @@ class PostKunjunganRajalHelper
                                     ],
                             ];
 
-                           
-
-
+                            $a = "A".$idRincian;
+                            $bbb = "B".$idRincian;
+                            $c = "C".$idRincian;
+                            $d = "D".$idRincian;
+                            $eee = "E".$idRincian;
+                            $f = "F".$idRincian;
                              // Medication
                             if ($pembagian > 0) {
 
 
                                 // Medication For Request
-                                $a = "{$idRincian}MFR{$idObat}";
+                                
                                 $medicationForRequest =   
                                 [
                                     "fullUrl" => "urn:uuid:".$medication_id,
@@ -2679,7 +3064,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $a,
+                                                "value" => $a
                                             ],
                                         ],
                                         "code" => [
@@ -2687,8 +3072,7 @@ class PostKunjunganRajalHelper
                                                 [
                                                     "system" => "http://sys-ids.kemkes.go.id/kfa",
                                                     "code" => $kode_kfa,
-                                                    "display" => $display,
-                                                    // "display" => "Obat Anti Tuberculosis / Rifampicin 150 mg / Isoniazid 75 mg / Pyrazinamide 400 mg / Ethambutol 275 mg Kaplet Salut Selaput (KIMIA FARMA)",
+                                                    "display" => $display
                                                 ],
                                             ],
                                         ],
@@ -2834,8 +3218,8 @@ class PostKunjunganRajalHelper
 
 
                                 // MedicationRequest
-                                $bbb = "{$noresep}MR{$idRincian}";
-                                $c = "{$idRincian}MR{$j}";
+                                
+                                
                                 $medicationRequest =
                                 [
                                     "fullUrl" => "urn:uuid:".$medicationRequest_id,
@@ -2846,13 +3230,13 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $bbb,
+                                                "value" => $bbb
                                             ],
                                             [
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $c,
+                                                "value" => $c
                                             ],
                                         ],
                                         "status" => "completed",
@@ -2968,7 +3352,7 @@ class PostKunjunganRajalHelper
 
                                 // Medication For Dispense
                                 $medicationForDispense_id = Str::uuid();
-                                $d = "{$idRincian}MFD{$idObat}";
+                                
                                 $medicationForDispense =
                                 [
                                     "fullUrl" => "urn:uuid:".$medicationForDispense_id,
@@ -2985,7 +3369,7 @@ class PostKunjunganRajalHelper
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/medication/".$organization_id,
                                                 "use" => "official",
-                                                "value" => $d,
+                                                "value" => $d
                                             ],
                                         ],
                                         "code" => [
@@ -3139,8 +3523,8 @@ class PostKunjunganRajalHelper
                                 ];
 
                                 // medicationDispense;
-                                $eee = "{$noresep}MD{$idRincian}";
-                                $f = "{$idRincian}MD{$j}";
+                                
+                                
                                 $medicationDispense =
                                 [
                                     "fullUrl" => "urn:uuid:".self::generateUuid(),
@@ -3151,13 +3535,13 @@ class PostKunjunganRajalHelper
                                                 "use" => "official",
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription/".$organization_id,
-                                                "value" => $eee,
+                                                "value" => $eee
                                             ],
                                             [
                                                 "use" => "official",
                                                 "system" =>
                                                     "http://sys-ids.kemkes.go.id/prescription-item/".$organization_id,
-                                                "value" => $f,
+                                                "value" => $f
                                             ],
                                         ],
                                         "status" => "completed",
@@ -3172,8 +3556,6 @@ class PostKunjunganRajalHelper
                                             ],
                                         ],
                                         "medicationReference" => [
-                                            // "reference" => "urn:uuid:{{Medication_forDispense}}",
-                                            // "reference" => "urn:uuid:".$medicationForDispense,
                                             "reference" => "Medication/".$medicationForDispense_id,
                                             "display" => $display,
                                         ],
@@ -3182,8 +3564,6 @@ class PostKunjunganRajalHelper
                                             "display" => $request->nama,
                                         ],
                                         "context" => ["reference" => "Encounter/".$encounter],
-                                        // "context" => ["reference" => "urn:uuid:".$encounter],
-                                        // "context" => ["reference" => "urn:uuid:".self::generateUuid()],
                                         "performer" => [
                                             [
                                                 "actor" => [
@@ -3198,7 +3578,6 @@ class PostKunjunganRajalHelper
                                         ],
                                         "authorizingPrescription" => [
                                             [
-                                                // "reference" => "urn:uuid:{{MedicationRequest_id}}"
                                                 "reference" => "MedicationRequest/".$medicationRequest_id
                                             ],
                                         ],
@@ -8062,6 +8441,7 @@ class PostKunjunganRajalHelper
                     ],
                     "request" => ["method" => "POST", "url" => "Observation"],
                 ],
+
                 [
                     "fullUrl" => "urn:uuid:816f9852-5f2e-4fa2-b594-9c59486ba9e1",
                     "resource" => [
