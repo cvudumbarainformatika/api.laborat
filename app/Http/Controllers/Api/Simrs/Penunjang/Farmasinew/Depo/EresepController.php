@@ -22,6 +22,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
+use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRacikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRinci;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -1089,6 +1090,7 @@ class EresepController extends Controller
                 $q->where('pelayanan_id', 'AP0001');
             },
             'kwitansi',
+            'telaah',
             'diagnosas:rs1,rs3,rs13',
             'diagnosas.masterdiagnosa:rs1,rs3,rs4',
             'ruanganranap',
@@ -1136,36 +1138,62 @@ class EresepController extends Controller
                     ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('resep_keluar_h.tiperesep', '!=', 'penjualan')
-            ->where('resep_keluar_h.depo', request('kddepo'));
+            ->where('resep_keluar_h.depo', request('kddepo'))
+            ->when(request('tipe'), function ($qu) {
+                if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+                    $qu->where('resep_keluar_h.tiperesep', request('tipe'))
+                        ->where('resep_keluar_h.noresep_asal', '')
+                        ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
+                } else {
+                    $qu->where('resep_keluar_h.tiperesep', request('tipe'));
+                }
+            })
+            ->when(request('flag'), function ($qu) use ($tgl, $tglx) {
+                if (request('flag') === 'semua') {
+                    $qu->where(function ($q) use ($tgl, $tglx) {
+                        $q->where(function ($m) use ($tgl, $tglx) {
+                            $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
+                                ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+                        })->orWhere(function ($q) use ($tgl, $tglx) {
+                            $q->where('resep_keluar_h.flag', '')
+                                ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+                        });
+                    });
+                } else {
+                    $qu->where('resep_keluar_h.flag', request('flag'))->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+                }
+            }, function ($qu) use ($tgl, $tglx) {
+                $qu->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+            });
         // ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
 
-        if (request('tipe')) {
-            if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
-                $query->where('resep_keluar_h.tiperesep', request('tipe'))
-                    ->where('resep_keluar_h.noresep_asal', '')
-                    ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
-            } else {
-                $query->where('resep_keluar_h.tiperesep', request('tipe'));
-            }
-        }
+        // if (request('tipe')) {
+        //     if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+        //         $query->where('resep_keluar_h.tiperesep', request('tipe'))
+        //             ->where('resep_keluar_h.noresep_asal', '')
+        //             ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
+        //     } else {
+        //         $query->where('resep_keluar_h.tiperesep', request('tipe'));
+        //     }
+        // }
 
-        if (request('flag')) {
-            if (request('flag') === 'semua') {
-                $query->where(function ($q) use ($tgl, $tglx) {
-                    $q->where(function ($m) use ($tgl, $tglx) {
-                        $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
-                            ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
-                    })->orWhere(function ($q) use ($tgl, $tglx) {
-                        $q->where('resep_keluar_h.flag', '')
-                            ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-                    });
-                });
-            } else {
-                $query->where('resep_keluar_h.flag', request('flag'));
-            }
-        } else {
-            $query->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-        }
+        // if (request('flag')) {
+        //     if (request('flag') === 'semua') {
+        //         $query->where(function ($q) use ($tgl, $tglx) {
+        //             $q->where(function ($m) use ($tgl, $tglx) {
+        //                 $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
+        //                     ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+        //             })->orWhere(function ($q) use ($tgl, $tglx) {
+        //                 $q->where('resep_keluar_h.flag', '')
+        //                     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+        //             });
+        //         });
+        //     } else {
+        //         $query->where('resep_keluar_h.flag', request('flag'));
+        //     }
+        // } else {
+        //     $query->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+        // }
         if (request('sistembayar')) {
             $query->where('resep_keluar_h.sistembayar', request('sistembayar'));
         }
@@ -1449,6 +1477,7 @@ class EresepController extends Controller
         if ($data) {
             $user = auth()->user()->pegawai_id;
             $data->flag = '2';
+            $data->tgl_diterima = date('Y-m-d H:i:s');
             $data->user = $user;
             $data->save();
             // $msg = [
@@ -3551,6 +3580,37 @@ class EresepController extends Controller
         return new JsonResponse([
             'message' => 'Tanggal Pelayanan Obat sudah terisi',
             'data' => $data
+        ]);
+    }
+
+
+    public function simpanTelaahResep(Request $request)
+    {
+        $user = auth()->user()->pegawai_id;
+        $toSave = array_merge($request->all(), ['user_input' => $user]);
+        $simpan = TelaahResep::updateOrCreate(
+            [
+                'noresep' => $request->noresep,
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+            ],
+            $toSave
+        );
+        if (!$simpan) {
+            return new JsonResponse([
+                'message' => 'Telaah Resep Gagal disimpan',
+                'req' => $request->all(),
+                'user' => $user,
+                'toSave' => $toSave,
+                'simpan' => $simpan,
+            ], 410);
+        }
+        return new JsonResponse([
+            'message' => 'Telaah Resep Sudah disimpan',
+            'req' => $request->all(),
+            'user' => $user,
+            'toSave' => $toSave,
+            'simpan' => $simpan,
         ]);
     }
 }
