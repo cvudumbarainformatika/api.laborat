@@ -69,46 +69,12 @@ class AutogenController extends Controller
     }
     public function coba()
     {
-        // $data = BastrinciM::select('penerimaan_h.nobast as pbast', 'bast_r.*')
-        //     ->leftJoin('penerimaan_h', 'penerimaan_h.nobast', '=', 'bast_r.nobast')
-        //     ->whereNull('penerimaan_h.nobast')
-        //     ->get();
-        // if (count($data)) {
-        //     foreach ($data as $key) {
-        //         $key->delete();
-        //     }
-        // }
-        $ada = BastrinciM::select(
-            'bast_r.*',
-            DB::raw('(bast_r.jumlah * bast_r.harga_net) as sub_hi')
-        )
-            ->having('bast_r.subtotal', '>', 'sub_hi')
-            ->get();
-        if (count($ada) > 0) {
-            foreach ($ada as $key) {
-                $key->update(['subtotal' => $key['sub_hi']]);
-            }
-        }
-        // $trm = PenerimaanHeder::where('nobast', '!=', '')
-        //     ->where('subtotal_bast', 0)
-        //     ->get();
-        // if (count($trm) > 0) {
-        //     foreach ($trm as $t) {
-        //         $ri = BastrinciM::where('nopenerimaan', $t['nopenerimaan'])->first();
-        //         if ($ri) {
-        //             $t->update(['subtotal_bast' => $ri->subtotal]);
-        //         }
-        //         // return [
-        //         //     $t,
-        //         //     $ri
-        //         // ];
-        //     }
-        // }
-        return [
-            // $data,
-            $ada,
-            // $trm,
-        ];
+        $text = 'BAB darah mulai tadi pagi >3x,';
+        $q = preg_replace('/[^a-z\d]+/i', ' ', $text);
+        $q = preg_replace('/\s+/', ' ', $q);
+        $q = trim($q);
+
+        echo $q;
     }
     public function hargaResep()
     {
@@ -357,32 +323,15 @@ class AutogenController extends Controller
     }
     public function index(Request $request)
     {
-        // $n = 42064;
-        // $panjang = strlen($n);
-        // $has=null;
-        // for($i=1;$i<=4-$panjang;$i++){$has=$has."0";}
+        
+        // echo $this->translate("nyeri kepala, mual", "id", "en");
 
-        // return date("y").date("m").date("d").$has.$n."R";
-        // return new JsonResponse($query['data']);
+        $text = 'sesak , panas(+) batuk(+)';
+        $q = preg_replace('/[^a-z\d]+/i', ' ', $text);
+        $q = preg_replace('/\s+/', ' ', $q);
+        $q = trim($q);
 
-        // $contents = File::get(storage_path('json/listscache.json'));
-        // return JsonResponse::fromJsonString($contents);
-
-        // $waktu = '2024-08-14 10:08:19';
-        // $detik = (int)'14399';
-        // $now = Carbon::now();
-        // $a = Carbon::createFromFormat('Y-m-d H:i:s', $waktu);
-        // $b = Carbon::createFromFormat('Y-m-d H:i:s', $waktu)->addSeconds($detik);
-        // return new JsonResponse(
-        //     [
-        //         'waktu' => $waktu,
-        //         'now' => $now->toDateTimeString(),
-        //         'a' => $a->toDateTimeString(),
-        //         'b' => $b->toDateTimeString(),
-        //         'diff' => now()->diffInSeconds(Carbon::parse($b), false),
-        //     ]
-        // );
-        echo $this->translate("berpengawet muntah", "id", "en");
+        echo $q;
     }
 
     public function translate($q, $sl, $tl)

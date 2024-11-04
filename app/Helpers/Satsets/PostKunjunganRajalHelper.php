@@ -10,6 +10,7 @@ use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Allergy;
+use App\Models\Simrs\Master\MkuSnomed;
 use App\Models\Simrs\Master\Msnomed;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -556,10 +557,10 @@ class PostKunjunganRajalHelper
 
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
-    //   if ($send['message'] === 'success') {
-    //     $token = AuthSatsetHelper::accessToken();
-    //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-    //   }
+      if ($send['message'] === 'success') {
+        $token = AuthSatsetHelper::accessToken();
+        $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+      }
       return $send;
     }
 
@@ -721,6 +722,7 @@ class PostKunjunganRajalHelper
 
 
 
+        $anamnesis = self::anamnesis($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $observation = self::observation($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $carePlan = self::carePlan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
         $procedure = self::procedure($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
@@ -731,8 +733,9 @@ class PostKunjunganRajalHelper
         $apotek = self::apotek($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $diet = self::diet($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $specimenSnomeds);
+        $anamnesis = self::anamnesis($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
 
-        return $plann;
+        // return $anamnesis;
 
         $body =
         [
@@ -904,6 +907,9 @@ class PostKunjunganRajalHelper
             array_push($body['entry'], $cond);
         }
 
+        // PUSH ANAMESIS
+        if ($anamnesis['keluhanUtama'] !== null) array_push($body['entry'], $anamnesis['keluhanUtama']);
+
         // PUSH careplan
         for ($i=0; $i < count($carePlan) ; $i++) { 
             array_push($body['entry'], $carePlan[$i]);
@@ -959,6 +965,8 @@ class PostKunjunganRajalHelper
             if ($diagnosticReport !== null) array_push($body['entry'], $diagnosticReport);
         }
 
+        // PUSH PROGNOSIS
+        if ($plann['prognosis'] !== null) array_push($body['entry'], $plann['prognosis']);
 
         // return $body;
 
@@ -969,6 +977,74 @@ class PostKunjunganRajalHelper
         return $send;
 
         
+    }
+
+    public function anamnesis($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        $nama_practitioner = $request->datasimpeg ? $request->datasimpeg['nama']: '-';
+        $data = $request->anamnesis[0];
+        $keluhanUtama = $data['rs4'];
+        // return $keluhanUtama;
+
+        // $q = preg_replace('/[^a-z\d]+/i', ' ', $keluhanUtama);
+        // $q = preg_replace('/\s+/', ' ', $q);
+        // $q = trim($q);
+        $q= strip_tags($keluhanUtama);
+
+        $cari = DB::connection('mysql')->table('m_ku_snomed')
+                ->select('*')
+                ->whereRaw("MATCH (keterangan) AGAINST (? IN BOOLEAN MODE)", ["*".$q."*"])
+                ->orderByRaw("MATCH(keterangan) AGAINST(?) DESC", ["*".$q."*"])
+                ->limit(3)
+                ->get();
+        
+        // return $cari[0];
+        $KU = null;
+       if (count($cari) > 0) {
+            $KU = [
+                "resourceType" => "Condition",
+                "clinicalStatus" => [
+                    "coding" => [
+                        [
+                            "system" =>
+                                "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                            "code" => "active",
+                            "display" => "Active",
+                        ],
+                    ],
+                ],
+                "category" => [
+                    [
+                        "coding" => [
+                            [
+                                "system" =>
+                                    "http://terminology.hl7.org/CodeSystem/condition-category",
+                                "code" => "problem-list-item",
+                                "display" => "Problem List Item",
+                            ],
+                        ],
+                    ],
+                ],
+                "code" => [
+                    "coding" => [
+                        [
+                            "system" => $cari[0]->codesystem,
+                            "code" => $cari[0]->code,
+                            "display" => $cari[0]->display
+                        ],
+                    ],
+                ],
+                "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                "encounter" => ["reference" => "Encounter/".$encounter],
+                // "onsetDateTime" => "2023-02-02T00:00:00+00:00",
+                // "recordedDate" => "2023-08-31T01:00:00+00:00",
+                "recorder" => ["reference" => "Practitioner/".$practitioner_uuid, "display" => $nama_practitioner],
+                "note" => [["text" => $keluhanUtama]],
+            ];
+       }
+        return [
+            'keluhanUtama' => $KU,
+        ];
     }
 
     static function observation($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
