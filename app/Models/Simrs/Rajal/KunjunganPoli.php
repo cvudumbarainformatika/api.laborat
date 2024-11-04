@@ -8,6 +8,7 @@ use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Anamnesis\HistoryPerkawinan;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
@@ -392,5 +393,9 @@ class KunjunganPoli extends Model
     public function penilaiananamnesis()
     {
         return $this->hasMany(Penilaian::class, 'rs1', 'rs1');
+    }
+    public function historyperkawinan()
+    {
+        return $this->hasMany(HistoryPerkawinan::class, 'norm', 'rs2');
     }
 }

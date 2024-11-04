@@ -150,6 +150,7 @@ class IgdController extends Controller
                    ])
                    ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
             },
+            'historyperkawinan',
             // 'fisio',
             // 'laporantindakan',
             // 'psikiatri',
