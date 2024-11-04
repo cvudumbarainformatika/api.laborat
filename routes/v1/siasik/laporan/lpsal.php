@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware' => 'auth:api',
-    'prefix' => 'akuntansi/lpsal'
+    'prefix' => 'laporan/lpsal'
 ], function () {
     Route::get('/index', [LpsalController::class, 'index']);
     Route::post('/saved', [LpsalController::class, 'saved']);

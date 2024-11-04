@@ -11,5 +11,6 @@ Route::group([
 ], function () {
     Route::get('/getbukubesar', [BukubesarController::class, 'getBukubesar']);
     Route::get('/akun', [BukubesarController::class, 'akunkepmend']);
+    Route::get('/getpa', [BukubesarController::class, 'getTtd']);
 
 });

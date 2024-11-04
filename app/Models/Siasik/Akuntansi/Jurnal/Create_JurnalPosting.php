@@ -28,6 +28,10 @@ class Create_JurnalPosting extends Model
     public function lvl5(){
         return $this->belongsTo(Akun50_2024::class,'kode5', 'kodeall3');
     }
+    public function penyesuaian()
+    {
+        return $this->hasMany(JurnalUmum_Rinci::class, 'kodepsap13', 'kode6');
+    }
 
 
 }
