@@ -1032,7 +1032,7 @@ class PostKunjunganRajalHelper
                         "coding" => [
                             [
                                 "system" => $cari[0]->codesystem,
-                                "code" => $cari[0]->code,
+                                "code" => (string) $cari[0]->code,
                                 "display" => $cari[0]->display
                             ],
                         ],
