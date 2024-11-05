@@ -501,18 +501,18 @@ class PostKunjunganRajalHelper
             'laborats' => function ($t) {
                 $t->with([
                     'details' => function ($d) {
-                        $d->with(['pemeriksaanlab.loinclab'=>function($p){
-                            $p->orderBy('id', 'ASC');
-                            // $p->select('rs49.*',
-                            // 'rs49_spesimen.jenis_spesimen',
-                            // 'rs49_spesimen.jumlah_spesimen',
-                            // 'rs49_spesimen.volume_spesimen_klinis',
-                            // 'rs49_spesimen.cara_pengambilan_spesimen',
-                            // 'rs49_spesimen.cairan_fiksasi',
-                            // 'rs49_spesimen.volume_cairan_fiksasi',
-                            // )
-                            // ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
-                            // ->orderBy('id', 'ASC');
+                        $d->with(['pemeriksaanlab'=>function($p){
+                            // $p->orderBy('id', 'ASC');
+                            $p->select('rs49.*',
+                            'rs49_spesimen.jenis_spesimen',
+                            'rs49_spesimen.jumlah_spesimen',
+                            'rs49_spesimen.volume_spesimen_klinis',
+                            'rs49_spesimen.cara_pengambilan_spesimen',
+                            'rs49_spesimen.cairan_fiksasi',
+                            'rs49_spesimen.volume_cairan_fiksasi',
+                            )->with('loinclab')
+                            ->leftJoin('rs49_spesimen', 'rs49.rs1', '=', 'rs49_spesimen.rs1')
+                            ->orderBy('id', 'ASC');
                         }
                         ])->orderBy('rs4', 'ASC');
                     }
@@ -1001,45 +1001,50 @@ class PostKunjunganRajalHelper
         // return $cari[0];
         $KU = null;
        if (count($cari) > 0) {
-            $KU = [
-                "resourceType" => "Condition",
-                "clinicalStatus" => [
-                    "coding" => [
-                        [
-                            "system" =>
-                                "http://terminology.hl7.org/CodeSystem/condition-clinical",
-                            "code" => "active",
-                            "display" => "Active",
-                        ],
-                    ],
-                ],
-                "category" => [
-                    [
+            $KU = 
+            [
+                "fullUrl" => "urn:uuid:" . self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "Condition",
+                    "clinicalStatus" => [
                         "coding" => [
                             [
                                 "system" =>
-                                    "http://terminology.hl7.org/CodeSystem/condition-category",
-                                "code" => "problem-list-item",
-                                "display" => "Problem List Item",
+                                    "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                                "code" => "active",
+                                "display" => "Active",
                             ],
                         ],
                     ],
-                ],
-                "code" => [
-                    "coding" => [
+                    "category" => [
                         [
-                            "system" => $cari[0]->codesystem,
-                            "code" => $cari[0]->code,
-                            "display" => $cari[0]->display
+                            "coding" => [
+                                [
+                                    "system" =>
+                                        "http://terminology.hl7.org/CodeSystem/condition-category",
+                                    "code" => "problem-list-item",
+                                    "display" => "Problem List Item",
+                                ],
+                            ],
                         ],
                     ],
-                ],
-                "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
-                "encounter" => ["reference" => "Encounter/".$encounter],
-                // "onsetDateTime" => "2023-02-02T00:00:00+00:00",
-                // "recordedDate" => "2023-08-31T01:00:00+00:00",
-                "recorder" => ["reference" => "Practitioner/".$practitioner_uuid, "display" => $nama_practitioner],
-                "note" => [["text" => $keluhanUtama]],
+                    "code" => [
+                        "coding" => [
+                            [
+                                "system" => $cari[0]->codesystem,
+                                "code" => (string) $cari[0]->code,
+                                "display" => $cari[0]->display
+                            ],
+                        ],
+                    ],
+                    "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                    "encounter" => ["reference" => "Encounter/".$encounter],
+                    // "onsetDateTime" => "2023-02-02T00:00:00+00:00",
+                    // "recordedDate" => "2023-08-31T01:00:00+00:00",
+                    "recorder" => ["reference" => "Practitioner/".$practitioner_uuid, "display" => $nama_practitioner],
+                    "note" => [["text" => $keluhanUtama]],
+                    ],
+                "request" => ["method" => "POST", "url" => "Condition"],
             ];
        }
         return [
@@ -3113,12 +3118,18 @@ class PostKunjunganRajalHelper
                                     ],
                             ];
 
-                            $a = "A".$idRincian;
-                            $bbb = "B".$idRincian;
-                            $c = "C".$idRincian;
-                            $d = "D".$idRincian;
-                            $eee = "E".$idRincian;
-                            $f = "F".$idRincian;
+                            // $a = "A".$idRincian;
+                            // $bbb = "B".$idRincian;
+                            // $c = "C".$idRincian;
+                            // $d = "D".$idRincian;
+                            // $eee = "E".$idRincian;
+                            // $f = "F".$idRincian;
+                            $a = Str::random(20);
+                            $bbb = Str::random(20);
+                            $c = Str::random(20);
+                            $d = Str::random(20);
+                            $eee = Str::random(20);
+                            $f = Str::random(20);
                              // Medication
                             if ($pembagian > 0) {
 
