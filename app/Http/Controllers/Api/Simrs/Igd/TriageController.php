@@ -179,4 +179,37 @@ class TriageController extends Controller
             ], 500);
         }
     }
+
+    public function getDataTriage()
+    {
+        $result = TriageA::select(
+            'rs250.id','rs250.rs1 as noreg','rs250.rs1',
+            'rs250.doa','rs250.rs6 as tanggal',
+            'rs250.rs8 as suhu',
+            'rs250.rs10 as pernapasan',
+            'rs250.rs11 as nadi',
+            'rs250.rs12 as tensi',
+            'rs250.rs13 as bb',
+            'rs250.rs21 as tb',
+            'rs250.rs10 as pernapasanx',
+            'rs250.sistole',
+            'rs250.diastole',
+            'rs250.kesadarans as kesadaran','rs250.scorediastole','rs250.scoresistole','rs250.scorekesadaran','rs250.scorelochea','rs250.scorenadi','rs250.scorenyeri',
+            'rs250.scorepernapasanx','rs250.scoreproteinurin','rs250.scorespo2','rs250.scoresuhu','rs250.totalscore','rs250.rs16 as kategoritriage','rs250.hasilprimarusurve',
+            'rs250.hasilsecondsurve',
+            'rs251.rs14 as eye',
+            'rs251.rs15 as verbal',
+            'rs251.rs16 as motorik',
+            'rs250.spo2','rs250.gangguanperilaku','rs250.falsetriage',
+            'rs251.flaghamil',
+            'rs251.haidterakir as haid',
+            'rs251.gravida',
+            'rs251.partus',
+            'rs251.abortus','rs251.nyeri','rs251.lochea','rs251.proteinurin',
+            'rs251.rs7 as jalannafas','rs251.rs9 as pernapasan','rs251.rs19 as sirkulasi','rs251.rs20 as disability'
+            )->leftjoin('rs251','rs250.rs1','rs251.rs1')
+            ->where('rs250.rs1', request('noreg'))
+            ->get();
+        return new JsonResponse($result);
+    }
 }
