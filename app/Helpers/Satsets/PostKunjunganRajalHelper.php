@@ -3118,12 +3118,18 @@ class PostKunjunganRajalHelper
                                     ],
                             ];
 
-                            $a = "A".$idRincian;
-                            $bbb = "B".$idRincian;
-                            $c = "C".$idRincian;
-                            $d = "D".$idRincian;
-                            $eee = "E".$idRincian;
-                            $f = "F".$idRincian;
+                            // $a = "A".$idRincian;
+                            // $bbb = "B".$idRincian;
+                            // $c = "C".$idRincian;
+                            // $d = "D".$idRincian;
+                            // $eee = "E".$idRincian;
+                            // $f = "F".$idRincian;
+                            $a = Str::random(20);
+                            $bbb = Str::random(20);
+                            $c = Str::random(20);
+                            $d = Str::random(20);
+                            $eee = Str::random(20);
+                            $f = Str::random(20);
                              // Medication
                             if ($pembagian > 0) {
 

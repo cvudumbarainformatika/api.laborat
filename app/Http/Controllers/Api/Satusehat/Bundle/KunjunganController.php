@@ -749,7 +749,7 @@ class KunjunganController extends Controller
       // $params = '/Medication/54ec09bc-4cbe-4c6c-9eeb-1eb64450b319'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
       // $params = '/Medication/681be0cb-9870-49cc-b179-89659ff68590'; // Calcium Lactate 500 mg Tablet (MERSIFARMA TIRMAKU MERCUSANA)
       // $params = '/Medication/d17af9df-b938-4e8f-903d-8f8a89a1a851'; 
-      $params = '/Medication/e1abed75-4290-492a-a11f-eca1a1483f99'; 
+      $params = '/Medication/c8aafdd4-7772-49e6-8def-ab96cf8e6703'; 
 
       $send = BridgingSatsetHelper::get_data_nosave($token, $params);
       return $send;
