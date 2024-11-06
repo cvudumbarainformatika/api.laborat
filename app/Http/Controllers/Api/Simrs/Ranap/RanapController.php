@@ -444,6 +444,9 @@ class RanapController extends Controller
                     $neo->with(['pegawai:id,nama'])
                     ->orderBy('id', 'DESC');
                 },
+                'informconcern' => function ($neo) {
+                    $neo->orderBy('id', 'DESC');
+                },
                 
             ])->first();
 

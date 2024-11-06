@@ -20,4 +20,24 @@ class PegawaiController extends Controller
       });
       return new JsonResponse($data);
     }
+    public function listNonNakes()
+    {
+       $data = Cache::rememberForever('list_non_nakes', function () {
+        $kd=['1','2','3'];
+        return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
+        ->whereNotIn('kdgroupnakes', $kd)->where('aktif', 'AKTIF')
+        ->get();
+      });
+      return new JsonResponse($data);
+    }
+    public function listAll()
+    {
+       $data = Cache::rememberForever('list_all_pegawai', function () {
+        // $kd=['1','2','3'];
+        return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
+        ->where('aktif', 'AKTIF')
+        ->get();
+      });
+      return new JsonResponse($data);
+    }
 }
