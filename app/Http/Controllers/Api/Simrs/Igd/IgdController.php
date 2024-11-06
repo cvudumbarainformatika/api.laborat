@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Igd;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;

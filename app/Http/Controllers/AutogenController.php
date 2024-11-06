@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 use function PHPUnit\Framework\isNull;
+use Illuminate\Support\Str;
 
 class AutogenController extends Controller
 {
@@ -329,9 +330,25 @@ class AutogenController extends Controller
         $text = 'sesak , panas(+) batuk(+)';
         $q = preg_replace('/[^a-z\d]+/i', ' ', $text);
         $q = preg_replace('/\s+/', ' ', $q);
-        $q = trim($q);
+        $q = trim($q). "-" . bin2hex(random_bytes(10));
 
-        echo $q;
+        $a = Str::random(20);
+                            $bbb = Str::random(20);
+                            $c = Str::random(20);
+                            $d = Str::random(20);
+                            $eee = Str::random(20);
+                            $f = Str::random(20);
+
+        // echo $q;
+        return [
+            'q' => $q,
+            'a' => $a,
+            'bbb' => $bbb,
+            'c' => $c,
+            'd' => $d,
+            'eee' => $eee,
+            'f' => $f
+        ];
     }
 
     public function translate($q, $sl, $tl)

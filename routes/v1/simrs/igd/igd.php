@@ -13,5 +13,7 @@ Route::group([
     Route::post('/simpantriage', [TriageController::class, 'simpantriage']);
 
     Route::post('/hapustriage', [TriageController::class, 'hapustriage']);
+
+    Route::get('/getDataTriage', [TriageController::class, 'getDataTriage']);
 });
 
