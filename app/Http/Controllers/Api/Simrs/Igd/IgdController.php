@@ -153,6 +153,7 @@ class IgdController extends Controller
             },
             'historyperkawinan',
             'historykehamilan',
+            'anamnesekebidanan',
             // 'fisio',
             // 'laporantindakan',
             // 'psikiatri',
