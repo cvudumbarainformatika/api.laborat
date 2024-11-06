@@ -3570,12 +3570,35 @@ class SetNewStokController extends Controller
             ];
         }
     }
+
+    /**
+     * langkah perbaikan
+     * 1. pastikan nomor penerimaan gudang sudah ada di stokopname terakhir adalah sisa dari pernerimaan / mutasi terakhir
+     * 2. jika gudang, maka perbaiki mutasi keluar saja
+     * 3. jika depo paka prioitaskan resep keluar dengan status 3, kemudian racikan dengan status 3, kemudian resep keluar dan racikan dengan status 4,
+     * dan terakhir jika masih belum bisa juga maka perbaiki yang mutasi
+     * 4. jika depo ok maka perbaiki dulu yang di distribusi persiapan operasi, kemudian cari noresepnya berdasarkan rinci persiapan baru kemudian berdasarkan itu cari resep keluar,
+     * dan jika masih belum teratasi maka perbaiki yang mutasi.
+     * 5, jika sisa dan stok opname tidak sama maka, munculkan tanpa perlu diperbaiki
+     */
     public static function nopenerimaanGudang($head)
     {
         $opname = StokStokopname::where('kdobat', $head['kdobat'])
             ->where('kdruang', $head['koderuangan'])
             ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
             ->get();
+        // $penrimaanR = PenerimaanRinci::select('penerimaan_r.nopenerimaan', 'penerimaan_r.kdobat', 'penerimaan_r.harga_netto_kecil as harga', 'penerimaan_r.no_batch as nobatch', 'penerimaan_r.jml_terima_k as jumlah', 'penerimaan_r.tgl_exp as tglexp', 'penerimaan_h.tglpenerimaan')
+        //     ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
+        //     ->whereIn('penerimaan_r.nopenerimaan', $head['nopenerimaan'])->where('penerimaan_r.kdobat', $head['kdobat'])
+        //     ->orderBy('penerimaan_h.tglpenerimaan', 'DESC')->get();
+
+        // return [
+        //     'opname' => $opname,
+        //     'penrimaanR' => $penrimaanR,
+        //     'tts' => $head['tts'],
+        //     'head' => $head,
+
+        // ];
         $mutasiKeluarRinci = Mutasigudangkedepo::select(
             'mutasi_gudangdepo.*'
         )
@@ -3645,7 +3668,6 @@ class SetNewStokController extends Controller
                                 $dataBolehDiganti = [];
                                 $accJumlah = $entry['jml'];
                                 $dataBolehDiganti[] = $entry;
-                                // return 'asu' . $entry;
                             } else if ($entry['jml'] <= ($targetJumlah - $accJumlah)) {
                                 $accJumlah += $entry['jml'];
                                 $dataBolehDiganti[] = $entry;
@@ -3663,6 +3685,16 @@ class SetNewStokController extends Controller
                                 if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
                                 if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
                             }
+                        } else if ($accJumlah <= $targetJumlah) {
+                            foreach ($dataBolehDiganti as $entry) {
+                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+
+                                $entry->update(['nopenerimaan' => $target['noper']]);
+                                if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                            }
+                            $gaKtm = ['else' => $dataBolehDiganti];
                         } else {
                             $gaKtm = $dataBolehDiganti;
                         }
