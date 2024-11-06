@@ -14,5 +14,8 @@ Route::group([
 
     Route::post('/simpanHistoryPerkawiananPasien', [AnamnesisKebidananController::class, 'simpanHistoryPerkawiananPasien']);
     Route::post('/hapusHistoryPerkawiananPasien', [AnamnesisKebidananController::class, 'hapusHistoryPerkawiananPasien']);
+
+    Route::post('/simpanHistoryKehamilan', [AnamnesisKebidananController::class, 'simpanHistoryKehamilan']);
+    Route::post('/hapusHistoryKehamilan', [AnamnesisKebidananController::class, 'hapusHistoryKehamilan']);
 });
 
