@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Hais\HaisTrans;
+use App\Models\Simrs\InformConcern\InformConcern;
 use App\Models\Simrs\Kasir\Biayamaterai;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Konsultasi\Konsultasi;
@@ -544,6 +545,10 @@ class Kunjunganranap extends Model
     public function dokumenluar()
     {
         return $this->hasMany(DokumenUpload::class, 'noreg', 'rs1');
+    }
+    public function informconcern()
+    {
+        return $this->hasMany(InformConcern::class, 'noreg', 'rs1');
     }
     public function datasimpeg()
     {
