@@ -65,12 +65,12 @@ class DiagnosatransController extends Controller
             return new JsonResponse(['message' => 'Diagnosa Gagal Disimpan...!!!'], 500);
         }
 
-        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+        // $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(
             [
                 'message' => 'Diagnosa Berhasil Disimpan...!!!',
                 'result' => $simpandiagnosa,
-                'inacbg' => $inacbg,
+                // 'inacbg' => $inacbg,
             ],
             200
         );
@@ -87,7 +87,7 @@ class DiagnosatransController extends Controller
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
-        $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+        // $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 
