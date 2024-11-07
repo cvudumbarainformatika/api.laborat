@@ -37,6 +37,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
+use App\Models\Simrs\Penunjang\Ambulan\ReqAmbulan;
 use App\Models\Simrs\Penunjang\DietTrans;
 use App\Models\Simrs\Penunjang\Eeg\Eegtrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
@@ -408,5 +409,10 @@ class KunjunganPoli extends Model
     public function anamnesekebidanan()
     {
         return $this->hasMany(AnamnesisKebidanan::class, 'noreg', 'rs1');
+    }
+
+    public function ambulan()
+    {
+        return $this->hasMany(ReqAmbulan::class, 'rs1','rs1');
     }
 }
