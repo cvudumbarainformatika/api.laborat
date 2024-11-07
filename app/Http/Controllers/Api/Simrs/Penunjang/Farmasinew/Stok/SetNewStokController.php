@@ -3161,7 +3161,7 @@ class SetNewStokController extends Controller
                     // ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
                     ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $x . '%')
                     // ->where('resep_keluar_h.depo', $koderuangan)
-                    ->whereIn('retur_penjualan_r.noresep', $headerResep)
+                    // ->whereIn('retur_penjualan_r.noresep', $headerResep)
                     ->where('retur_penjualan_r.kdobat', $kdobat)
                     ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
                     ->get();
