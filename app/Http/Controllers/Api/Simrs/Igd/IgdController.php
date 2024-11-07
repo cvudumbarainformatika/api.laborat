@@ -202,6 +202,9 @@ class IgdController extends Controller
             'ok' => function ($q) {
                 $q->orderBy('id', 'DESC');
             },
+            'diagnosakeperawatan'=> function ($d) {
+                $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+            },
             // 'taskid' => function ($q) {
             //     $q->orderBy('taskid', 'DESC');
             // },
