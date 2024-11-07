@@ -19,6 +19,10 @@ class InformConcern extends Model
         'tujuan' => 'array',
         'resiko' => 'array',
         'prognosis' => 'array',
+        'tindakanMedis' => 'array',
+        'tatacara' => 'array',
+        'resiko' => 'array',
+        'komplikasi' => 'array',
     ];
 
 }
