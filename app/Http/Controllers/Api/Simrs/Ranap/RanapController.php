@@ -16,6 +16,7 @@ class RanapController extends Controller
 {
     public function kunjunganpasien()
     {
+        // coba
         // return request()->all();
         $dokter = request('kddokter');
 
