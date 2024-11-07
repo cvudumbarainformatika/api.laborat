@@ -205,6 +205,9 @@ class IgdController extends Controller
             'diagnosakeperawatan'=> function ($d) {
                 $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
             },
+            'diagnosakebidanan' => function ($diag) {
+                    $diag->with('intervensi.masterintervensi');
+            },
             // 'taskid' => function ($q) {
             //     $q->orderBy('taskid', 'DESC');
             // },
