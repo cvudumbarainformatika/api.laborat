@@ -154,30 +154,15 @@ class IgdController extends Controller
             'historyperkawinan',
             'historykehamilan',
             'anamnesekebidanan',
-            // 'fisio',
-            // 'laporantindakan',
-            // 'psikiatri',
-            // 'pediatri'=> function($neo){
-            //     $neo->with(['pegawai:id,nama']);
-            // },
-            // 'dokumenluar'=> function($neo){
-            //     $neo->with(['pegawai:id,nama']);
-            // },
-            // 'kandungan'=> function($neo){
-            //     $neo->with(['pegawai:id,nama']);
-            // },
-            // 'neonatusmedis'=> function($neo){
-            //     $neo->with(['pegawai:id,nama']);
-            // },
-            // 'neonatuskeperawatan'=> function($neo){
-            //     $neo->with(['pegawai:id,nama']);
-            // },
-            // 'diagnosakeperawatan' => function ($diag) {
-            //     $diag->with('intervensi.masterintervensi');
-            // },
-            // 'diagnosakebidanan' => function ($diag) {
-            //     $diag->with('intervensi.masterintervensi');
-            // },
+            'ambulan' => function($ambulan) {
+                $ambulan->with(
+                    [
+                        'tujuan',
+                        'perawat',
+                        'perawat2'
+                    ]
+                );
+            },
             'laborats' => function ($t) {
                 $t->with('details.pemeriksaanlab')
                     ->orderBy('id', 'DESC');
@@ -201,6 +186,12 @@ class IgdController extends Controller
             },
             'ok' => function ($q) {
                 $q->orderBy('id', 'DESC');
+            },
+            'diagnosakeperawatan'=> function ($d) {
+                $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
+            },
+            'diagnosakebidanan' => function ($diag) {
+                    $diag->with('intervensi.masterintervensi');
             },
             // 'taskid' => function ($q) {
             //     $q->orderBy('taskid', 'DESC');
