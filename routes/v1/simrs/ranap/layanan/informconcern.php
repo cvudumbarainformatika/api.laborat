@@ -11,7 +11,7 @@ Route::group([
 
   // Route::get('/getmaster', [HaisController::class, 'getmaster']);
     Route::post('/simpandata', [InformConcernController::class, 'simpandata']);
-    // Route::post('/hapusdata', [KonsultasiController::class, 'hapusdata']);
+    Route::post('/hapusdata', [InformConcernController::class, 'hapusdata']);
 
 
 
