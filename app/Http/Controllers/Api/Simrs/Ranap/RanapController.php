@@ -447,7 +447,15 @@ class RanapController extends Controller
                 },
                 'informconcern' => function ($neo) {
                     // $neo->withAccessor()
-                    $neo->orderBy('id', 'DESC');
+                    $neo->select([
+                        'id','noreg','norm','tgl','tanggal','pelaksana','pengedukasi','penerimaEdukasi','diagnosis',
+                        'diagnosis','dasarDiagnosis','tindakanMedis','indikasi','tujuan','tujuanLain','tatacara',
+                        'resiko','resikoLain','komplikasi','prognosis','alternatif','hubunganDgPasien',
+                        'keluarga','nama','lp','tglLahir','noKtp','alamat','telepon',
+                        'ttdPetugas','ttdDokter','ttdSaksiPasien','ttdYgMenyatakan','saksiPasien',
+                        'kdDokter','kdPetugas','setuju','kdRuang','user','jenis'
+                    ])
+                    ->orderBy('id', 'DESC');
                 },
                 
             ])->first();
