@@ -29,7 +29,7 @@ class InformConcern extends Model
         'resiko'=>'array'
     ];
 
-    protected $appends = ['ttd_dokter_url', 'ttd_petugas_url','ttd_saksi_pasien_url','ttd_yg_menyatakan_url'];
+    // protected $appends = ['ttd_dokter_url', 'ttd_petugas_url','ttd_saksi_pasien_url','ttd_yg_menyatakan_url'];
 
     public function getTtdDokterUrlAttribute()
     {
