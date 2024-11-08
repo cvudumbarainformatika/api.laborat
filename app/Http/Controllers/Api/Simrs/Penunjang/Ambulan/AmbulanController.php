@@ -19,6 +19,7 @@ class AmbulanController extends Controller
 
     public function simpanreqambulan(Request $request)
     {
+
         $tujuan = TujuanAmbulan::where('rs1', $request->tujuan)->first();
         if($request->pelperawat === 'Rujukan')
         {
@@ -32,7 +33,11 @@ class AmbulanController extends Controller
         DB::select('call nota_ambulan(@nomor)');
         $x = DB::table('rs1')->select('rs283')->get();
         $wew = $x[0]->rs283;
-        $notatindakan = FormatingHelper::notatindakan($wew, 'AMB-IG');
+        if($request->notaambulan === 'BARU'){
+            $notatindakan = FormatingHelper::notatindakan($wew, 'AMB-RI');
+        }else{
+            $notatindakan = $request->notaambulan;
+        }
         $reqambulan = ReqAmbulan::create(
             [
                 'rs1' => $request->noreg,
@@ -55,9 +60,25 @@ class AmbulanController extends Controller
                 'nota' => $notatindakan
             ]
         );
+
+        $nota = ReqAmbulan::select('nota as nota')->where('rs1', $request->noreg)
+        ->groupBy('nota')
+        ->orderBy('id', 'DESC')->get();
+
+        $ambulan = ReqAmbulan::with(
+            [
+                'tujuan',
+                'perawat',
+                'perawat2'
+            ]
+        )->where('id', $reqambulan['id'])
+        ->orderBy('id','Desc')
+        ->get();
+
         return new JsonResponse([
             'message' => 'Permintaan Ambulan Berhasil Dikirim...!!!',
-            'data' => $reqambulan
+            'data' => $ambulan,
+            'nota' => $nota
         ]);
     }
 
