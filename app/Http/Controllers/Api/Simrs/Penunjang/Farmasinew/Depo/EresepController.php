@@ -1141,29 +1141,46 @@ class EresepController extends Controller
             ->where('resep_keluar_h.depo', request('kddepo'))
             ->when(request('tipe'), function ($qu) {
                 if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
+                    $addThree = Carbon::now()->addMonth(3)->format('m');
+                    $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
                     $qu->where('resep_keluar_h.tiperesep', request('tipe'))
                         ->where('resep_keluar_h.noresep_asal', '')
-                        ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
+                        ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d'), $year . '-' . $addThree . '-31']);
                 } else {
                     $qu->where('resep_keluar_h.tiperesep', request('tipe'));
                 }
             })
             ->when(request('flag'), function ($qu) use ($tgl, $tglx) {
-                if (request('flag') === 'semua') {
-                    $qu->where(function ($q) use ($tgl, $tglx) {
-                        $q->where(function ($m) use ($tgl, $tglx) {
-                            $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
-                                ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
-                        })->orWhere(function ($q) use ($tgl, $tglx) {
-                            $q->where('resep_keluar_h.flag', '')
-                                ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+                if (request('tipe') === 'iter') {
+                    if (request('flag') === 'semua') {
+                        $qu->where(function ($q) use ($tgl, $tglx) {
+                            $q->where(function ($m) use ($tgl, $tglx) {
+                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5']);
+                            })->orWhere(function ($q) use ($tgl, $tglx) {
+                                $q->where('resep_keluar_h.flag', '');
+                            });
                         });
-                    });
+                    } else {
+                        $qu->where('resep_keluar_h.flag', request('flag'));
+                    }
                 } else {
-                    $qu->where('resep_keluar_h.flag', request('flag'))->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+                    if (request('flag') === 'semua') {
+                        $qu->where(function ($q) use ($tgl, $tglx) {
+                            $q->where(function ($m) use ($tgl, $tglx) {
+                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
+                                    ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+                            })->orWhere(function ($q) use ($tgl, $tglx) {
+                                $q->where('resep_keluar_h.flag', '')
+                                    ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+                            });
+                        });
+                    } else {
+                        $qu->where('resep_keluar_h.flag', request('flag'))->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
+                    }
                 }
             }, function ($qu) use ($tgl, $tglx) {
-                $qu->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
+                $qu->where('resep_keluar_h.flag', '')
+                    ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
             });
         // ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
 
@@ -1213,6 +1230,14 @@ class EresepController extends Controller
         $listresep = $query->paginate(request('per_page'));
 
         return new JsonResponse($listresep);
+        // $addThree = ((int)date('m') + 3) < 10 ? Carbon::now()->addMonth(3)->format('m') : (((int)date('m') + 3) > 12 ? ('0' . ((int)date('m') + 3) - 12) : ((int)date('m') + 3));
+        $addThree = Carbon::now()->addMonth(3)->format('m');
+        $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
+        return new JsonResponse([
+            'addThree' => $addThree,
+            'year' => $year,
+            'betwween' => [date('Y-m-d 00:00:00'), $year . '-' . $addThree . '-31 23:59:59'],
+        ]);
     }
     public function getSingleResep()
     {

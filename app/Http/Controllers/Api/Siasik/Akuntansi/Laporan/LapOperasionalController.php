@@ -45,7 +45,7 @@ class LapOperasionalController extends Controller
                 },'lvl5' => function($sel){
                     $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
             }])
-            // ->where('jurnal_postingotom.verif', '=', '1')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '8.' . '%')
             // ->where('jurnal_postingotom.tanggal', '>=', $awal)
@@ -81,11 +81,12 @@ class LapOperasionalController extends Controller
                     $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
             }])
             ->where('jurnal_postingotom.kode', 'LIKE', '7.' . '%')
-            // ->where('jurnal_postingotom.verif', '=', '1')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
 
             ->with('penyesuaian',  function($sel) use ($awal,$akhir){
                 $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
+                ->where('jurnalumum_heder.verif', '=', '1')
                 ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
                 ->select('jurnalumum_rinci.kodepsap13',
                         'jurnalumum_heder.tanggal',
