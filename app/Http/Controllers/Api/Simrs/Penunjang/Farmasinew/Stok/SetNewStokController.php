@@ -1676,6 +1676,55 @@ class SetNewStokController extends Controller
         $data = self::getDataToFixByTrans($head);
         return new JsonResponse($data['data'] ?? $data, $data['status'] ?? 200);
     }
+    public function frontPerbaikanDataPerDepo(Request $request)
+    {
+        $depo = request('kdruang');
+        $month = request('bulan');
+        $year = request('tahun');
+        $perbaiki = request('perbaiki') === 'ya';
+        $limit = request('per_page');
+        $offset = (request('page') - 1) * $limit;
+
+        $total = Mobatnew::count();
+        $kdobat = Mobatnew::select('kd_obat', 'nama_obat')
+            ->when($limit, function ($q) use ($limit, $offset) {
+                $q->limit($limit)->offset($offset);
+            })
+            ->get();
+        $anu = [];
+        $mbuh = [];
+        foreach ($kdobat as $obat) {
+            $head = [
+                'depo' => $depo,
+                'obat' => $obat['kd_obat'],
+                'month' => $month,
+                'year' => $year,
+                'perbaiki' => $perbaiki,
+            ];
+            $data = self::getDataToFixByTrans($head);
+            $obat['data'] = $data;
+            $temp = $data['data'] ?? $data;
+            // $anu[] = $temp;
+            $ada = $temp['penKur'] ?? false;
+            $gaktm = $temp['gaKtm'] ?? false;
+            if ($ada) if (sizeof($temp['penKur']) > 0 || $gaktm) {
+                $anu[] = $temp;
+                $obat['perbaikan'] = $temp;
+            } else $mbuh[] = $temp;
+        }
+
+        return new JsonResponse([
+            'count data' => sizeof($anu),
+            'kdobat' => $kdobat,
+            'data' => $anu,
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+            'page' => request('page'),
+            'mbuh' => $mbuh,
+            'req' => $request->all(),
+        ]);
+    }
     public function PerbaikanDataPerDepo(Request $request)
     {
         $depo = request('kdruang');
@@ -3010,6 +3059,7 @@ class SetNewStokController extends Controller
                 $parameter['keluar'] = $keluar;
 
                 $eksekusi = self::nopenerimaanGudang($parameter);
+                $cekOpname = self::opnemeGudang($parameter);
                 $gaKtm = $eksekusi['gaKtm'] ?? false;
                 // }
 
@@ -3019,7 +3069,8 @@ class SetNewStokController extends Controller
                     // 'stokid' => $stokid,
                     'kdobat' => $kdobat,
                     'gaKtm' => $gaKtm,
-                    'eksekusi' => $eksekusi,
+                    'eksekusi' => $eksekusi ?? [],
+                    'cekOpname' => $cekOpname ?? [],
                     'penyesuaian' => $penyesuaian,
                     'penerimaan' => $penerimaan,
                     'mutasiMasuk' => $mutasiMasuk,
@@ -3388,6 +3439,8 @@ class SetNewStokController extends Controller
 
                 $tts = 0;
                 $sisa = 0;
+                $masukMu = 0;
+                $keluarMu = 0;
                 // pembetulan nomor penerimaan
                 foreach ($noper as $key) {
                     if ($x == $sekarang) {
@@ -3414,6 +3467,8 @@ class SetNewStokController extends Controller
                     $sts = $sisanya - $stOpnya;
                     $tts += $stOpnya;
                     $sisa += $sisanya;
+                    $masukMu += $maSuk;
+                    $keluarMu += $keLuar;
 
                     if ($sisanya == $stOpnya) {
                         $penPas[] = [
@@ -3518,11 +3573,16 @@ class SetNewStokController extends Controller
                 $data = [
                     'kdobat' => $kdobat,
                     'gaKtm' => $gaKtm,
-                    'eksekusi' => $eksekusi,
+                    'eksekusi' => $eksekusi ?? [],
                     'penKur' => $penKur,
                     'penLeb' => $penLeb,
                     'penPas' => $penPas,
 
+
+                    'tts' => $tts,
+                    'sisa' => $sisa,
+                    'masuk' => $masukMu,
+                    'keluar' => $keluarMu,
                     // 'anuaad' => $anuaad,
                     // 'anumas' => $anumas,
                     // 'anukel' => $anukel,
@@ -3581,6 +3641,50 @@ class SetNewStokController extends Controller
      * dan jika masih belum teratasi maka perbaiki yang mutasi.
      * 5, jika sisa dan stok opname tidak sama maka, munculkan tanpa perlu diperbaiki
      */
+    public static function opnemeGudang($head)
+    {
+        $opname = StokStokopname::where('kdobat', $head['kdobat'])
+            ->where('kdruang', $head['koderuangan'])
+            ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
+            ->get();
+        $penerimaan = PenerimaanRinci::select('nopenerimaan', 'jml_terima_k', 'harga_netto_kecil', 'no_batch', 'tgl_exp')
+            ->with('header:nopenerimaan,tglpenerimaan')->whereIn('nopenerimaan', $head['nopenerimaan'])->where('kdobat', $head['kdobat'])
+            ->orderBy('nopenerimaan', 'DESC')
+            ->get();
+        // pertanyaan 1 : apakah jumlah stok opname sesuai?
+        // jawab :
+        $jmlOp = collect($opname)->sum('jumlah');
+        $jmlSesuai = $jmlOp == $head['tts'] ? true : false;
+        // pertanyaan 2 : apakah nomor peberimaan yang tertera sudah sesuai?
+        // jawab :
+        $noperTidak = [];
+        $tts = $head['tts'];
+        foreach ($penerimaan as $key) {
+            $key->tglpenerimaan = $key->header->tglpenerimaan;
+            $opnya = collect($opname)->where('nopenerimaan', $key->nopenerimaan);
+            $jml = $opnya->sum('jumlah');
+            $jmlPen = $key->jml_terima_k;
+            if ($tts >= $jmlPen) $sisa = $tts - $jmlPen;
+            else $sisa = 0;
+            $tts = $sisa;
+
+
+            $noperTidak[] = [
+                'key' => $key,
+                'opnya' => $opnya,
+                'jml' => $jml,
+                'jmlPen' => $jmlPen,
+                'sisa' => $sisa,
+            ];
+        }
+        return [
+            'opname' => $opname,
+            'penerimaan' => $penerimaan,
+            'jmlOp' => $jmlOp,
+            'jmlSesuai' => $jmlSesuai,
+            'noperTidak' => $noperTidak,
+        ];
+    }
     public static function nopenerimaanGudang($head)
     {
         $opname = StokStokopname::where('kdobat', $head['kdobat'])
@@ -3676,27 +3780,29 @@ class SetNewStokController extends Controller
                                 break;
                             }
                         }
-                        if ($accJumlah == $targetJumlah) {
-                            foreach ($dataBolehDiganti as $entry) {
-                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+                        if ($head['perbaiki']) {
+                            if ($accJumlah == $targetJumlah) {
+                                foreach ($dataBolehDiganti as $entry) {
+                                    $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
 
-                                $entry->update(['nopenerimaan' => $target['noper']]);
-                                if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
-                                if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
-                                if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
-                            }
-                        } else if ($accJumlah <= $targetJumlah) {
-                            foreach ($dataBolehDiganti as $entry) {
-                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+                                    $entry->update(['nopenerimaan' => $target['noper']]);
+                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                }
+                            } else if ($accJumlah <= $targetJumlah) {
+                                foreach ($dataBolehDiganti as $entry) {
+                                    $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
 
-                                $entry->update(['nopenerimaan' => $target['noper']]);
-                                if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
-                                if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
-                                if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                    $entry->update(['nopenerimaan' => $target['noper']]);
+                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                }
+                                $gaKtm = ['else' => $dataBolehDiganti];
+                            } else {
+                                $gaKtm = $dataBolehDiganti;
                             }
-                            $gaKtm = ['else' => $dataBolehDiganti];
-                        } else {
-                            $gaKtm = $dataBolehDiganti;
                         }
                     }
                 }
@@ -3823,35 +3929,37 @@ class SetNewStokController extends Controller
                                 break;
                             }
                         }
-                        if ($accJumlah == $targetJumlah) {
-                            foreach ($dataBolehDiganti as $entry) {
-                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+                        if ($head['perbaiki']) {
+                            if ($accJumlah == $targetJumlah) {
+                                foreach ($dataBolehDiganti as $entry) {
+                                    $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
 
-                                $entry->update(['nopenerimaan' => $target['noper']]);
-                                if ($head['koderuangan'] == 'Gd-03010101') {
-                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
-                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
-                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
-                                } else {
-                                    if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                    $entry->update(['nopenerimaan' => $target['noper']]);
+                                    if ($head['koderuangan'] == 'Gd-03010101') {
+                                        if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                        if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                        if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                    } else {
+                                        if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                    }
                                 }
-                            }
-                        } else if ($accJumlah < $targetJumlah) {
-                            foreach ($dataBolehDiganti as $entry) {
-                                $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
+                            } else if ($accJumlah < $targetJumlah) {
+                                foreach ($dataBolehDiganti as $entry) {
+                                    $pelengkap = collect($pelengkaps)->firstWhere('nopenerimaan', $target['noper']);
 
-                                $entry->update(['nopenerimaan' => $target['noper']]);
-                                if ($head['koderuangan'] == 'Gd-03010101') {
-                                    if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
-                                    if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
-                                    if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
-                                } else {
-                                    if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                    $entry->update(['nopenerimaan' => $target['noper']]);
+                                    if ($head['koderuangan'] == 'Gd-03010101') {
+                                        if ($entry->harga != $pelengkap->harga) $entry->update(['harga' => $pelengkap->harga]);
+                                        if ($entry->nobatch != $pelengkap->nobatch) $entry->update(['nobatch' => $pelengkap->nobatch]);
+                                        if ($entry->tglexp != $pelengkap->tglexp) $entry->update(['tglexp' => $pelengkap->tglexp]);
+                                    } else {
+                                        if ($entry->harga_beli != $pelengkap->harga) $entry->update(['harga_beli' => $pelengkap->harga]);
+                                    }
                                 }
+                                $gaKtm = ['else' => $dataBolehDiganti];
+                            } else {
+                                $gaKtm = $dataBolehDiganti;
                             }
-                            $gaKtm = ['else' => $dataBolehDiganti];
-                        } else {
-                            $gaKtm = $dataBolehDiganti;
                         }
                     }
                 }
