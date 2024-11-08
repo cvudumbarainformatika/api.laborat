@@ -446,6 +446,7 @@ class RanapController extends Controller
                     ->orderBy('id', 'DESC');
                 },
                 'informconcern' => function ($neo) {
+                    // $neo->withAccessor()
                     $neo->orderBy('id', 'DESC');
                 },
                 

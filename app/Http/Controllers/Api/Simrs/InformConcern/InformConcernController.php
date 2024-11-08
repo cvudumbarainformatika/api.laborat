@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Polyfill\Intl\Idn\Info;
 
 class InformConcernController extends Controller
@@ -31,11 +32,10 @@ class InformConcernController extends Controller
       } else {
         $data = new InformConcern();
       }
-       
       $data->noreg = $request->noreg;
       $data->norm = $request->norm;
       $data->tgl = date('Y-m-d H:i:s');
-      $data->tanggal = $request->tanggal;
+      $data->tanggal = $request->tanggal.' '.date('H:i:s');
       $data->pelaksana = $request->pelaksana;
       $data->pengedukasi = $request->pengedukasi;
       $data->penerimaEdukasi = $request->penerimaEdukasi;
@@ -61,10 +61,7 @@ class InformConcernController extends Controller
       $data->noKtp = $request->noKtp;
       $data->alamat = $request->alamat;
       $data->telepon = $request->telepon;
-      $data->ttdDokter = $request->ttdDokter;
-      $data->ttdSaksiRs = $request->ttdSaksiRs;
-      $data->ttdSaksiPasien = $request->ttdSaksiPasien;
-      $data->ttdygMenyatakan = $request->ttdygMenyatakan;
+     
       $data->kdDokter = $request->kdDokter;
       $data->kdPetugas = $request->kdPetugas;
       $data->saksiPasien = $request->saksiPasien;
@@ -74,8 +71,50 @@ class InformConcernController extends Controller
       $data->user = $user['kodesimrs'] ?? '';
       $data->save();
 
-      return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
+
+      // save image
+      $saved = InformConcern::find($data->id);
+
+      $ttdDokter = self::saveImage($request, $request->ttdDokter, $data->id.'_dokter');
+      $ttdPetugas = self::saveImage($request, $request->ttdPetugas, $data->id.'_petugas');
+      $ttdSaksiPasien = self::saveImage($request, $request->ttdSaksiPasien, $data->id.'_saksi');
+      $ttdygMenyatakan = self::saveImage($request, $request->ttdYgMenyatakan, $data->id.'_ygMenyatakan');
+
+      $saved->ttdDokter = $ttdDokter;
+      $saved->ttdPetugas = $ttdPetugas;
+      $saved->ttdSaksiPasien = $ttdSaksiPasien;
+      $saved->ttdYgMenyatakan = $ttdygMenyatakan;
+
+      $saved->save();
+
+      // return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
+      return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $saved], 200);
     }
+
+    static function saveImage($request, $image, $id)
+    {
+
+      $file=null;
+
+      if ($image && $id) {
+          $name = $id;
+          $noreg = str_replace('/', '-', $request->noreg);
+          $folderPath = "inform_concern/" . $noreg .'_'.$request->jenis. '/';
+
+          $image_parts = explode(";base64,", $image);
+          $image_type_aux = explode("image/", $image_parts[0]);
+          $image_type = $image_type_aux[1];
+          $image_base64 = base64_decode($image_parts[1], true);
+          $file = $folderPath . $name . '.' . $image_type;
+
+          $imageName = $name . '.' . $image_type;
+          Storage::delete('public/' . $folderPath . $imageName);
+          Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+      }
+
+      return $file;
+    }
+
 
 
     
