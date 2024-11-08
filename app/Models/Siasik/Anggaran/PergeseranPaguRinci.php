@@ -2,6 +2,7 @@
 
 namespace App\Models\Siasik\Anggaran;
 
+use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_jurnal;
 use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
@@ -42,6 +43,22 @@ class PergeseranPaguRinci extends Model
     public function jurnal()
     {
         return $this->hasOne(Akun_jurnal::class, 'kodeall2', 'koderek50');
+    }
+
+    public function lvl1(){
+        return $this->belongsTo(Akun50_2024::class,'kode1', 'kodeall3');
+    }
+    public function lvl2(){
+        return $this->belongsTo(Akun50_2024::class,'kode2', 'kodeall3');
+    }
+    public function lvl3(){
+        return $this->belongsTo(Akun50_2024::class,'kode3', 'kodeall3');
+    }
+    public function lvl4(){
+        return $this->belongsTo(Akun50_2024::class,'kode4', 'kodeall3');
+    }
+    public function lvl5(){
+        return $this->belongsTo(Akun50_2024::class,'kode5', 'kodeall3');
     }
 
 }
