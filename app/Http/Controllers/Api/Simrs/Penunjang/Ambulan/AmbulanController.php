@@ -45,11 +45,11 @@ class AmbulanController extends Controller
                 // 'rs8' => $request->noreg,
                 'rs9' => $request->kodedokter,
                 'rs10' => $request->tujuan,
-                'rs11' => $request->keterangan,
+                'rs11' => $request->keterangan ?? '',
                 'rs12' => $request->pelsupir,
-                'rs13' => $request->perawatpendamping1,
-                'rs14' => $request->perawatpendamping2,
-                'rs15' => $request->pelperawat,
+                'rs13' => $request->perawatpendamping1 ?? '',
+                'rs14' => $request->perawatpendamping2 ?? '',
+                'rs15' => $request->pelperawat ?? '',
                 'rs16' => $jp_perawat1,
                 // 'rs17' => $request->noreg,
                 'nota' => $notatindakan
@@ -60,4 +60,25 @@ class AmbulanController extends Controller
             'data' => $reqambulan
         ]);
     }
+
+    public function getnotaAmbulans()
+    {
+        $data = ReqAmbulan::with(
+            [
+                'tujuan',
+                'perawat'
+            ]
+        )
+        ->where('rs1',request('noreg'))
+        ->get();
+        return new JsonResponse($data);
+    }
+
+    public function getnota()
+    {
+        $nota = ReqAmbulan::select('nota as nota')->where('rs1', request('noreg'))
+            ->groupBy('nota')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
+
 }
