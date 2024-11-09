@@ -13,4 +13,9 @@ Route::group([
     // Route::get('/getdata', [OperasiIrdController::class, 'getdata']);
     Route::post('/simpanpermintaan', [BankDarahController::class, 'simpandata']);
     Route::post('/hapuspermintaan', [BankDarahController::class, 'hapusdata']);
+
+    //IGD
+    Route::post('/simpanbankdarah', [BankDarahController::class, 'simpanPermintaanDarahIgd']);
+    Route::post('/hapusdataIgd', [BankDarahController::class, 'hapusdataIgd']);
+
 });

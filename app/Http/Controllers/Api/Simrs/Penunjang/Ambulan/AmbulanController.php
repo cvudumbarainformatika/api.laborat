@@ -102,4 +102,18 @@ class AmbulanController extends Controller
         return new JsonResponse($nota);
     }
 
+    public function hapusreqambulan(Request $request)
+    {
+        $cari = ReqAmbulan::find($request->id);
+        $delete = $cari->delete();
+        if (!$delete) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+
+        $nota = ReqAmbulan::select('nota as nota')->where('rs1', $request->noreg)
+        ->groupBy('nota')
+        ->orderBy('id', 'DESC')->get();
+        return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
+    }
+
 }

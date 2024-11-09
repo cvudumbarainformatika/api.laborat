@@ -154,6 +154,7 @@ class IgdController extends Controller
             'historyperkawinan',
             'historykehamilan',
             'anamnesekebidanan',
+            'bankdarah',
             'ambulan' => function($ambulan) {
                 $ambulan->with(
                     [

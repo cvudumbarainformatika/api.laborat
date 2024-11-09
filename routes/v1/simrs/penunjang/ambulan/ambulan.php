@@ -12,4 +12,5 @@ Route::group([
     Route::get('getnota', [AmbulanController::class, 'getnota']);
     Route::get('getnotaAmbulans',[AmbulanController::class, 'getnotaAmbulans']);
     Route::post('simpanreqambulan',[AmbulanController::class, 'simpanreqambulan']);
+    Route::post('hapusambulan',[AmbulanController::class, 'hapusreqambulan']);
 });
