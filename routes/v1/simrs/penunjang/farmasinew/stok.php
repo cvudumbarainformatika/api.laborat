@@ -17,5 +17,9 @@ Route::group([
     Route::post('/cek-penerimaan', [SetNewStokController::class, 'cekPenerimaan']);
     Route::post('/perbaikan-data', [SetNewStokController::class, 'perbaikanData']);
     Route::post('/perbaikan-data-depo', [SetNewStokController::class, 'PerbaikanDataPerDepo']);
+
+    // with fornt end
     Route::post('/fr-perbaikan-data-depo', [SetNewStokController::class, 'frontPerbaikanDataPerDepo']);
+    Route::post('/fr-perbaikan-data-opname', [SetNewStokController::class, 'frontPerbaikanDataOpname']);
+    Route::post('/fr-perbaikan-data', [SetNewStokController::class, 'frontPerbaikanData']);
 });
