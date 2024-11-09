@@ -1676,6 +1676,24 @@ class SetNewStokController extends Controller
         $data = self::getDataToFixByTrans($head);
         return new JsonResponse($data['data'] ?? $data, $data['status'] ?? 200);
     }
+    public function frontPerbaikanData()
+    {
+        $depo = request('kdruang');
+        $obat = request('kdobat');
+        $month = request('bulan');
+        $year = request('tahun');
+        $perbaiki = request('perbaiki') === 'ya';
+        $head = [
+            'depo' => $depo,
+            'obat' => $obat,
+            'month' => $month,
+            'year' => $year,
+            'perbaiki' => $perbaiki,
+        ];
+        // $data = self::getDataToFix($head);
+        $data = self::getDataToFixByTrans($head);
+        return new JsonResponse($data['data'] ?? $data, $data['status'] ?? 200);
+    }
     public function frontPerbaikanDataPerDepo(Request $request)
     {
         $depo = request('kdruang');
@@ -1724,6 +1742,36 @@ class SetNewStokController extends Controller
             'mbuh' => $mbuh,
             'req' => $request->all(),
         ]);
+    }
+    public function frontPerbaikanDataOpname(Request $request)
+    {
+        $data = [];
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            foreach ($request->all() as $key) {
+                $temp = StokStokopname::updateOrCreate(
+                    [
+                        'id' => $key['id'],
+                    ],
+                    $key
+
+                );
+                $data[] = $temp;
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'req' => $request->all(),
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'req' => $request->all(),
+                'message' => $e->getMessage(),
+                'line' => '' . $e->getLine(),
+                'file' =>  $e->getFile(),
+            ], 410);
+        }
     }
     public function PerbaikanDataPerDepo(Request $request)
     {
@@ -2835,13 +2883,14 @@ class SetNewStokController extends Controller
                 'koderuangan' => $koderuangan,
                 'now' => $x,
                 'blnLalu' => $blnLaluAwal,
+                'perbaiki' => $head['perbaiki'],
             ];
 
             if ($sekarang == $x) return 'Fitur ini tidak dibuat untuk stok bulan ini';
 
             $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
             if (in_array($koderuangan, $gudangs)) {
-                $saldoAwalRinci = StokStokopname::select('tglopname', 'nopenerimaan', 'kdobat', DB::raw('sum(jumlah) as total'))
+                $saldoAwalRinci = StokStokopname::select('tglopname', 'nopenerimaan', 'harga', 'nobatch', 'tglpenerimaan', 'kdobat', DB::raw('sum(jumlah) as total'))
                     ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                     ->where('kdruang', $koderuangan)
                     ->where('kdobat', $kdobat)
@@ -3643,12 +3692,14 @@ class SetNewStokController extends Controller
      */
     public static function opnemeGudang($head)
     {
-        $opname = StokStokopname::where('kdobat', $head['kdobat'])
+        $opname = StokStokopname::select('id', 'kdobat', 'jumlah', 'nobatch', 'nopenerimaan', 'tglexp', 'tglpenerimaan', 'tglopname', 'harga')->where('kdobat', $head['kdobat'])
             ->where('kdruang', $head['koderuangan'])
             ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
+            ->orderBy('nopenerimaan', 'DESC')
             ->get();
-        $penerimaan = PenerimaanRinci::select('nopenerimaan', 'jml_terima_k', 'harga_netto_kecil', 'no_batch', 'tgl_exp')
+        $penerimaan = PenerimaanRinci::select('nopenerimaan', DB::raw('sum(jml_terima_k) as jml_terima_k'), 'harga_netto_kecil', 'no_batch', 'tgl_exp')
             ->with('header:nopenerimaan,tglpenerimaan')->whereIn('nopenerimaan', $head['nopenerimaan'])->where('kdobat', $head['kdobat'])
+            ->groupBy('nopenerimaan', 'harga_netto_kecil')
             ->orderBy('nopenerimaan', 'DESC')
             ->get();
         // pertanyaan 1 : apakah jumlah stok opname sesuai?
@@ -3659,6 +3710,7 @@ class SetNewStokController extends Controller
         // jawab :
         $noperTidak = [];
         $tts = $head['tts'];
+
         foreach ($penerimaan as $key) {
             $key->tglpenerimaan = $key->header->tglpenerimaan;
             $opnya = collect($opname)->where('nopenerimaan', $key->nopenerimaan);
@@ -3667,22 +3719,25 @@ class SetNewStokController extends Controller
             if ($tts >= $jmlPen) $sisa = $tts - $jmlPen;
             else $sisa = 0;
             $tts = $sisa;
-
-
-            $noperTidak[] = [
-                'key' => $key,
-                'opnya' => $opnya,
-                'jml' => $jml,
-                'jmlPen' => $jmlPen,
-                'sisa' => $sisa,
-            ];
+            // sama itu sisa masih lebih dari 0 dan jml===jml pen atau jika sisanya 0 maka jmlPen >= $jml
+            if (!(($sisa > 0 && $jml == $jmlPen) || ($sisa == 0 && $jmlPen >= $jml))) {
+                $noperTidak[] = [
+                    'key' => $key,
+                    'opnya' => $opnya,
+                    'jml' => $jml,
+                    'jmlPen' => $jmlPen,
+                    'sisa' => $sisa,
+                ];
+            }
         }
+        $noperSesuai = sizeof($noperTidak) == 0 ? true : false;
         return [
             'opname' => $opname,
             'penerimaan' => $penerimaan,
             'jmlOp' => $jmlOp,
             'jmlSesuai' => $jmlSesuai,
             'noperTidak' => $noperTidak,
+            'noperSesuai' => $noperSesuai,
         ];
     }
     public static function nopenerimaanGudang($head)
