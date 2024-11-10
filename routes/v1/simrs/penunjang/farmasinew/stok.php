@@ -23,4 +23,5 @@ Route::group([
     Route::post('/fr-perbaikan-data-opname', [SetNewStokController::class, 'frontPerbaikanDataOpname']);
     Route::post('/fr-perbaikan-data', [SetNewStokController::class, 'frontPerbaikanData']);
     Route::post('/fr-data-mutasi', [SetNewStokController::class, 'frontDataMutasi']);
+    Route::post('/fr-data-resep', [SetNewStokController::class, 'frontDataResep']);
 });

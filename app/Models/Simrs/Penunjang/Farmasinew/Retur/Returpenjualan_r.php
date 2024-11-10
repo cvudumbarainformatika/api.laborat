@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Retur;
 
+use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -19,6 +20,10 @@ class Returpenjualan_r extends Model
     public function mobatnew()
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');
+    }
+    public function heder()
+    {
+        return $this->hasOne(Returpenjualan_h::class, 'noretur', 'noretur');
     }
     public function header()
     {

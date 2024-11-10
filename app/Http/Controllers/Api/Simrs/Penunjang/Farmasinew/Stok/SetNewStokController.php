@@ -1683,12 +1683,14 @@ class SetNewStokController extends Controller
         $month = request('bulan');
         $year = request('tahun');
         $perbaiki = request('perbaiki') === 'ya';
+        $tipe = request('tipe') ?? 'default';
         $head = [
             'depo' => $depo,
             'obat' => $obat,
             'month' => $month,
             'year' => $year,
             'perbaiki' => $perbaiki,
+            'tipe' => $tipe,
         ];
         // $data = self::getDataToFix($head);
         $data = self::getDataToFixByTrans($head);
@@ -1702,6 +1704,7 @@ class SetNewStokController extends Controller
         $perbaiki = request('perbaiki') === 'ya';
         $limit = request('per_page');
         $offset = (request('page') - 1) * $limit;
+        $tipe = request('tipe') ?? 'default';
 
         $total = Mobatnew::count();
         $kdobat = Mobatnew::select('kd_obat', 'nama_obat')
@@ -1718,6 +1721,7 @@ class SetNewStokController extends Controller
                 'month' => $month,
                 'year' => $year,
                 'perbaiki' => $perbaiki,
+                'tipe' => $tipe,
             ];
             $data = self::getDataToFixByTrans($head);
             $obat['data'] = $data;
@@ -1787,6 +1791,70 @@ class SetNewStokController extends Controller
         return new JsonResponse([
             'data' => $data,
             'head' => $head,
+            'req' => $request->all(),
+        ]);
+    }
+    public function frontDataResep(Request $request)
+    {
+        $head = Permintaandepoheder::select('no_permintaan')
+            ->where('tujuan', $request->kdruang)
+            ->where('dari', 'NOT LIKE', '%R-%')
+            ->where('tgl_kirim_depo', 'LIKE', '%' . $request->tahun . '-' . $request->bulan . '%')
+            ->pluck('no_permintaan');
+        $data['mutasi'] = Mutasigudangkedepo::with('header:no_permintaan,tgl_kirim_depo,dari,tujuan', 'header.asal:kode,nama')
+            ->whereIn('no_permintaan', $head)
+            ->where('kd_obat', $request->kdobat)
+            ->get();
+
+        $headRuang = Permintaandepoheder::select('no_permintaan')
+            ->where('tujuan', $request->kdruang)
+            ->where('dari', 'LIKE', '%R-%')
+            ->where('tgl_kirim_depo', 'LIKE', '%' . $request->tahun . '-' . $request->bulan . '%')
+            ->pluck('no_permintaan');
+        $data['mutasiruangan'] = Mutasigudangkedepo::with('header:no_permintaan,tgl_kirim_depo,dari,tujuan', 'header.asal:kode,nama', 'header.ruangan:kode,uraian')
+            ->whereIn('no_permintaan', $headRuang)
+            ->where('kd_obat', $request->kdobat)
+            ->get();
+        $headResep = Resepkeluarheder::select('noresep')
+            ->where('depo', $request->kdruang)
+            ->whereIn('flag', ['3', '4'])
+            ->where('tgl_selesai', 'LIKE', '%' . $request->tahun . '-' . $request->bulan . '%')
+            ->pluck('noresep');
+        $data['resep'] = Resepkeluarrinci::with(
+            'heder:noresep,tgl_selesai,ruangan,depo',
+            'heder.poli:rs1,rs2',
+            'heder.ruanganranap:rs1,rs2',
+        )
+            ->whereIn('noresep', $headResep)
+            ->where('kdobat', $request->kdobat)
+            ->where('jumlah', '>', 0)
+            ->get();
+        $data['resepracikan'] = Resepkeluarrinciracikan::with(
+            'header:noresep,tgl_selesai,ruangan,depo',
+            'header.poli:rs1,rs2',
+            'header.ruanganranap:rs1,rs2',
+        )
+            ->whereIn('noresep', $headResep)
+            ->where('kdobat', $request->kdobat)
+            ->where('jumlah', '>', 0)
+            ->get();
+
+        $headRetur = Returpenjualan_h::select('retur_penjualan_h.noretur')
+            ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'retur_penjualan_h.noresep')
+            ->where('resep_keluar_h.depo', $request->kdruang)
+            ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $request->tahun . '-' . $request->bulan . '%')
+            ->pluck('retur_penjualan_h.noretur');
+        $data['retur'] = Returpenjualan_r::whereIn('noretur', $headRetur)
+            ->with(
+                'heder:noretur,tgl_retur',
+                'header:noresep,ruangan',
+                'header.ruanganranap:rs1,rs2',
+                'header.poli:rs1,rs2',
+            )
+            ->where('kdobat', $request->kdobat)
+            ->get();
+        return new JsonResponse([
+            'data' => $data,
             'req' => $request->all(),
         ]);
     }
@@ -2901,6 +2969,7 @@ class SetNewStokController extends Controller
                 'now' => $x,
                 'blnLalu' => $blnLaluAwal,
                 'perbaiki' => $head['perbaiki'],
+                'tipe' => $head['tipe'],
             ];
 
             if ($sekarang == $x) return 'Fitur ini tidak dibuat untuk stok bulan ini';
@@ -3186,9 +3255,11 @@ class SetNewStokController extends Controller
 
                 $saldoAwalDepoRinci = StokStokopname::select(
                     'tglopname',
+                    'tglpenerimaan',
                     'nopenerimaan',
                     'kdobat',
                     'nobatch',
+                    'tglexp',
                     'harga',
                     DB::raw('sum(jumlah) as total')
                 )
@@ -3211,6 +3282,10 @@ class SetNewStokController extends Controller
                     ->get();
                 $penyesuaian = collect($penyesuaianDepoRinci)->sum('jumlah');
 
+                $headMutasiMas = Permintaandepoheder::select('no_permintaan')
+                    ->where('dari', $koderuangan)
+                    ->where('tgl_terima_depo', 'LIKE', '%' . $x . '%')
+                    ->pluck('no_permintaan');
                 $mutasiMasukDepoRinci = Mutasigudangkedepo::select(
                     'mutasi_gudangdepo.kd_obat as kdobat',
                     'mutasi_gudangdepo.nopenerimaan',
@@ -3219,33 +3294,37 @@ class SetNewStokController extends Controller
                     'mutasi_gudangdepo.tglpenerimaan',
                     'mutasi_gudangdepo.no_permintaan',
                     'mutasi_gudangdepo.harga',
-                    'permintaan_h.tgl_terima_depo',
                     DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
                 )
-                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                    ->where('permintaan_h.tgl_terima_depo', 'LIKE', '%' . $x . '%')
-                    ->where('permintaan_h.dari', $koderuangan)
+                    // ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    // ->where('permintaan_h.tgl_terima_depo', 'LIKE', '%' . $x . '%')
+                    // ->where('permintaan_h.dari', $koderuangan)
+                    ->whereIn('no_permintaan', $headMutasiMas)
                     ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                     ->groupBy(
                         'mutasi_gudangdepo.kd_obat',
                         'mutasi_gudangdepo.nopenerimaan',
                     )
-                    ->orderby('permintaan_h.tgl_terima_depo', 'DESC')
+                    ->orderby('no_permintaan', 'DESC')
                     ->get();
                 $mutasiMasuk = collect($mutasiMasukDepoRinci)->sum('jumlah');
-
+                $headMutasiKel = Permintaandepoheder::select('no_permintaan')
+                    ->where('tujuan', $koderuangan)
+                    ->where('tgl_terima_depo', 'LIKE', '%' . $x . '%')
+                    ->pluck('no_permintaan');
                 $mutasiKeluarDepoRinci = Mutasigudangkedepo::select(
                     'mutasi_gudangdepo.kd_obat as kdobat',
                     'mutasi_gudangdepo.nopenerimaan',
                     'mutasi_gudangdepo.nobatch',
                     'mutasi_gudangdepo.tglexp',
                     'mutasi_gudangdepo.no_permintaan',
-                    'permintaan_h.tgl_kirim_depo',
+                    // 'permintaan_h.tgl_kirim_depo',
                     DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
                 )
-                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                    ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $x . '%')
-                    ->where('permintaan_h.tujuan', $koderuangan)
+                    // ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                    // ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $x . '%')
+                    // ->where('permintaan_h.tujuan', $koderuangan)
+                    ->whereIn('no_permintaan', $headMutasiKel)
                     ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                     ->groupBy(
                         'mutasi_gudangdepo.kd_obat',
@@ -3276,9 +3355,9 @@ class SetNewStokController extends Controller
                     DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
                 )
                     ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
-                    // ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
                     ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $x . '%')
-                    // ->where('resep_keluar_h.depo', $koderuangan)
+                    ->where('resep_keluar_h.depo', $koderuangan)
                     // ->whereIn('retur_penjualan_r.noresep', $headerResep)
                     ->where('retur_penjualan_r.kdobat', $kdobat)
                     ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
@@ -3635,6 +3714,7 @@ class SetNewStokController extends Controller
                 $parameter['sisa'] = $sisa;
 
                 $eksekusi = self::nopenerimaanDepo($parameter);
+                $cekOpname = self::opnemeDepo($parameter);
                 $gaKtm = $eksekusi['gaKtm'] ?? false;
 
                 $data = [
@@ -3644,6 +3724,7 @@ class SetNewStokController extends Controller
                     'penKur' => $penKur,
                     'penLeb' => $penLeb,
                     'penPas' => $penPas,
+                    'cekOpname' => $cekOpname ?? [],
 
 
                     'tts' => $tts,
@@ -3654,11 +3735,11 @@ class SetNewStokController extends Controller
                     // 'anumas' => $anumas,
                     // 'anukel' => $anukel,
                     // 'hasil' => $hasil,
-                    // 'saldoAwal' => $saldoAwal,
+                    'saldoAwal' => $saldoAwal,
                     // 'stokid' => $stokid,
-                    // 'penyesuaian' => $penyesuaian,
+                    'penyesuaian' => $penyesuaian,
 
-                    // 'saldoAwalDepoRinci' => $saldoAwalDepoRinci,
+                    'saldoAwalRinci' => $saldoAwalDepoRinci,
                     // 'mutasiMasukDepoRinci' => $mutasiMasukDepoRinci,
                     // 'mutasiKeluarDepoRinci' => $mutasiKeluarDepoRinci,
                     // 'resepKeluarRinci' => $resepKeluarRinci,
@@ -3692,6 +3773,9 @@ class SetNewStokController extends Controller
                     'data' => $data,
                     'result' => '' . $e,
                     'err' =>  $e,
+                    'message' =>  $e->getMessage(),
+                    'line' => '' . $e->getLine(),
+                    'file' =>  $e->getFile(),
                 ],
                 'status' => 410
             ];
@@ -3719,6 +3803,63 @@ class SetNewStokController extends Controller
             ->with('header:nopenerimaan,tglpenerimaan')->whereIn('nopenerimaan', $head['nopenerimaan'])->where('kdobat', $head['kdobat'])
             ->groupBy('nopenerimaan', 'harga_netto_kecil')
             ->orderBy('nopenerimaan', 'DESC')
+            ->get();
+        // pertanyaan 1 : apakah jumlah stok opname sesuai?
+        // jawab :
+        $jmlOp = collect($opname)->sum('jumlah');
+        $jmlSesuai = $jmlOp == $head['tts'] ? true : false;
+        // pertanyaan 2 : apakah nomor peberimaan yang tertera sudah sesuai?
+        // jawab :
+        $noperTidak = [];
+        $tts = $head['tts'];
+
+        foreach ($penerimaan as $key) {
+            $key->tglpenerimaan = $key->header->tglpenerimaan;
+            $opnya = collect($opname)->where('nopenerimaan', $key->nopenerimaan);
+            $jml = $opnya->sum('jumlah');
+            $jmlPen = $key->jml_terima_k;
+            if ($tts >= $jmlPen) $sisa = $tts - $jmlPen;
+            else $sisa = 0;
+            $tts = $sisa;
+            // sama itu sisa masih lebih dari 0 dan jml===jml pen atau jika sisanya 0 maka jmlPen >= $jml
+            if (!(($sisa > 0 && $jml == $jmlPen) || ($sisa == 0 && $jmlPen >= $jml))) {
+                $noperTidak[] = [
+                    'key' => $key,
+                    'opnya' => $opnya,
+                    'jml' => $jml,
+                    'jmlPen' => $jmlPen,
+                    'sisa' => $sisa,
+                ];
+            }
+        }
+        $noperSesuai = sizeof($noperTidak) == 0 ? true : false;
+        return [
+            'opname' => $opname,
+            'penerimaan' => $penerimaan,
+            'jmlOp' => $jmlOp,
+            'jmlSesuai' => $jmlSesuai,
+            'noperTidak' => $noperTidak,
+            'noperSesuai' => $noperSesuai,
+        ];
+    }
+    public static function opnemeDepo($head)
+    {
+        $opname = StokStokopname::select('id', 'kdobat', 'jumlah', 'nobatch', 'nopenerimaan', 'tglexp', 'tglpenerimaan', 'tglopname', 'harga')->where('kdobat', $head['kdobat'])
+            ->where('kdruang', $head['koderuangan'])
+            ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
+            ->orderBy('nopenerimaan', 'DESC')
+            ->get();
+        $headMut = Permintaandepoheder::select('no_permintaan')
+            ->where('dari', $head['koderuangan'])
+            ->where('tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+            ->pluck('no_permintaan');
+        $penerimaan = Mutasigudangkedepo::select('no_permintaan', 'nopenerimaan', DB::raw('sum(jml) as jml_terima_k'), 'harga as harga_netto_kecil', 'nobatch as no_batch', 'tglexp as tgl_exp', 'kd_obat')
+            ->with('header:no_permintaan,tgl_kirim_depo as tglpenerimaan')
+            ->whereIn('nopenerimaan', $head['nopenerimaan'])
+            ->whereIn('no_permintaan', $headMut)
+            ->where('kd_obat', $head['kdobat'])
+            ->groupBy('nopenerimaan', 'harga')
+            ->orderBy('no_permintaan', 'DESC')
             ->get();
         // pertanyaan 1 : apakah jumlah stok opname sesuai?
         // jawab :
@@ -3909,38 +4050,62 @@ class SetNewStokController extends Controller
             ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
             ->get();
         $opnaNya = collect($opname);
+        if ($head['tipe'] === 'default') {
+            $mutasiKeluarRinci = Mutasigudangkedepo::select(
+                'mutasi_gudangdepo.*',
+                'mutasi_gudangdepo.jml as jumlah'
+            )
+                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+                ->where('permintaan_h.tujuan', $head['koderuangan'])
+                ->where('permintaan_h.dari', 'LIKE', '%R-%')
+                ->where('mutasi_gudangdepo.kd_obat', $head['kdobat'])
+                ->orderBy('mutasi_gudangdepo.jml', 'DESC')
+                ->get();
+            $resepKeluarRinci = Resepkeluarrinci::select(
+                'resep_keluar_r.id',
+                'resep_keluar_r.noresep',
+                'resep_keluar_r.nopenerimaan',
+                'resep_keluar_r.kdobat',
+                'resep_keluar_r.harga_beli',
+                'resep_keluar_r.jumlah',
+            )
+                ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                ->whereIn('resep_keluar_h.flag', ['3', '4'])
+                ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
+                ->where('resep_keluar_h.depo', $head['koderuangan'])
+                ->where('resep_keluar_r.kdobat', $head['kdobat'])
+                ->where('resep_keluar_r.jumlah', '>', 0)
+                ->orderBy('resep_keluar_h.flag', 'ASC')
+                ->orderBy('resep_keluar_r.jumlah', 'DESC')
+                ->get();
 
-        $mutasiKeluarRinci = Mutasigudangkedepo::select(
-            'mutasi_gudangdepo.*',
-            'mutasi_gudangdepo.jml as jumlah'
-        )
-            ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-            ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
-            ->where('permintaan_h.tujuan', $head['koderuangan'])
-            ->where('permintaan_h.dari', 'LIKE', '%R-%')
-            ->where('mutasi_gudangdepo.kd_obat', $head['kdobat'])
-            ->orderBy('mutasi_gudangdepo.jml', 'DESC')
-            ->get();
-        $resepKeluarRinci = Resepkeluarrinci::select(
-            'resep_keluar_r.id',
-            'resep_keluar_r.noresep',
-            'resep_keluar_r.nopenerimaan',
-            'resep_keluar_r.kdobat',
-            'resep_keluar_r.harga_beli',
-            'resep_keluar_r.jumlah',
-        )
-            ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-            // ->where('resep_keluar_h.flag', '3')
-            ->whereIn('resep_keluar_h.flag', ['3', '4'])
-            ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
-            ->where('resep_keluar_h.depo', $head['koderuangan'])
-            ->where('resep_keluar_r.kdobat', $head['kdobat'])
-            ->where('resep_keluar_r.jumlah', '>', 0)
-            ->orderBy('resep_keluar_h.flag', 'ASC')
-            ->orderBy('resep_keluar_r.jumlah', 'DESC')
-            ->get();
+            $mutasi = $head['koderuangan'] == 'Gd-03010101' ? collect($mutasiKeluarRinci) : collect($resepKeluarRinci);
+        }
+        if ($head['tipe'] === 'racikan') {
+            // racikan
+            $headRes = Resepkeluarheder::select('noresep')
+                ->whereIn('flag', ['3', '4'])
+                ->where('tgl_selesai', 'LIKE', '%' . $head['now'] . '%')
+                ->where('depo', $head['koderuangan'])
+                ->pluck('noresep');
+            $rinciracikan = Resepkeluarrinciracikan::select('id', 'noresep', 'nopenerimaan', 'kdobat', 'harga_beli', 'jumlah')->whereIn('noresep', $headRes)->get();
+            $mutasi =  collect($rinciracikan);
+        }
+        // mutasi antar
+        if ($head['tipe'] === 'antar') {
+            $head = Permintaandepoheder::select('no_permintaan')
+                ->where('tujuan', $head['koderuangan'])
+                ->where('dari', 'NOT LIKE', '%R-%')
+                ->where('tgl_kirim_depo', 'LIKE', '%' . $head['now'] . '%')
+                ->pluck('no_permintaan');
+            $mutanu = Mutasigudangkedepo::with('header:no_permintaan,tgl_kirim_depo,dari,tujuan', 'header.asal:kode,nama')
+                ->whereIn('no_permintaan', $head)
+                ->where('kd_obat', $head['kdobat'])
+                ->get();
+            $mutasi =  collect($mutanu);
+        }
 
-        $mutasi = $head['koderuangan'] == 'Gd-03010101' ? collect($mutasiKeluarRinci) : collect($resepKeluarRinci);
         $retResep = [];
         $targets = [];
         $gaKtm = false;
