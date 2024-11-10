@@ -1773,6 +1773,23 @@ class SetNewStokController extends Controller
             ], 410);
         }
     }
+
+    public function frontDataMutasi(Request $request)
+    {
+        $head = Permintaandepoheder::select('no_permintaan')
+            ->where('tujuan', $request->kdruang)
+            ->where('tgl_kirim_depo', 'LIKE', '%' . $request->tahun . '-' . $request->bulan . '%')
+            ->pluck('no_permintaan');
+        $data = Mutasigudangkedepo::with('header:no_permintaan,tgl_kirim_depo,dari,tujuan', 'header.asal:kode,nama')
+            ->whereIn('no_permintaan', $head)
+            ->where('kd_obat', $request->kdobat)
+            ->get();
+        return new JsonResponse([
+            'data' => $data,
+            'head' => $head,
+            'req' => $request->all(),
+        ]);
+    }
     public function PerbaikanDataPerDepo(Request $request)
     {
         $depo = request('kdruang');
@@ -2890,11 +2907,12 @@ class SetNewStokController extends Controller
 
             $message = 'Stok sudah Sesuai tidak ada yang perlu di update';
             if (in_array($koderuangan, $gudangs)) {
-                $saldoAwalRinci = StokStokopname::select('tglopname', 'nopenerimaan', 'harga', 'nobatch', 'tglpenerimaan', 'kdobat', DB::raw('sum(jumlah) as total'))
+                $saldoAwalRinci = StokStokopname::select('tglopname', 'nopenerimaan', 'harga', 'tglexp', 'nobatch', 'tglpenerimaan', 'kdobat', DB::raw('sum(jumlah) as total'))
                     ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                     ->where('kdruang', $koderuangan)
                     ->where('kdobat', $kdobat)
                     ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
+                    ->orderBy('tglpenerimaan', 'DESC')
                     ->get();
                 $saldoAwal = collect($saldoAwalRinci)->sum('total');
                 $stokid = FarmasinewStokreal::select('id')->where('kdruang', $koderuangan)
@@ -4041,6 +4059,7 @@ class SetNewStokController extends Controller
             // 'resepKeluarRinci' => $resepKeluarRinci,
         ];
     }
+
     /*************  ✨ Codeium Command ⭐  *************/
     /**
      * @return array
