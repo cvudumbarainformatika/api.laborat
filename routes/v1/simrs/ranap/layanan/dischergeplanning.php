@@ -9,12 +9,12 @@ Route::group([
     'prefix' => 'simrs/ranap/layanan/dischargeplanning'
 ], function () {
 
-  // Route::get('/getmaster', [HaisController::class, 'getmaster']);
+  Route::get('/getmasterprognosis', [DischargePlanningController::class, 'getmasterprognosis']);
     Route::post('/simpandata', [DischargePlanningController::class, 'simpandata']);
     // Route::get('/pemeriksaanumum', [PemeriksaanUmumController::class, 'list']);
 
     // Route::get('/penilaian', [PemeriksaanPenilaianController::class, 'list']);
     // Route::post('/penilaian/simpan', [PemeriksaanPenilaianController::class, 'simpan']);
-    // Route::post('/hapusdata', [HaisController::class, 'hapusdata']);
+    Route::post('/hapusdata', [DischargePlanningController::class, 'hapusdata']);
 
 });

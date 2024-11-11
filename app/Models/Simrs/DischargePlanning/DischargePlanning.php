@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Simrs\Edukasi;
+namespace App\Models\Simrs\DischargePlanning;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

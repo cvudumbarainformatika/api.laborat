@@ -5,13 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Ranap\Pelayanan;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
-use App\Models\Simrs\Anamnesis\Anamnesis;
-use App\Models\Simrs\Anamnesis\KeluhanNyeri;
-use App\Models\Simrs\Edukasi\DischargePlanning;
-use App\Models\Simrs\Ranap\Pelayanan\Cppt;
-use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanSambung;
-use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
-use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
+use App\Models\Simrs\DischargePlanning\DischargePlanning;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +14,11 @@ use Illuminate\Support\Facades\DB;
 class DischargePlanningController extends Controller
 {
     
+    public function getmasterprognosis()
+    {
+        $prognosis = DB::table('rs27')->select('*')->where('flag','')->get();
+        return new JsonResponse($prognosis);
+    }
     public function simpandata(Request $request)
     {
 
@@ -34,12 +33,14 @@ class DischargePlanningController extends Controller
         'rs1' => $request->noreg,
         'rs2' => $request->norm,
         'rs3' => date('Y-m-d H:i:s'),
-        'rs4' => $request->lanjutan,
+        'rs4' => $request->anjuran,
         'rs5' => $request->dokter,
-        'rs6' => $request->ruang,
-        'rs7'=> $request->kdsistembayar,
+        'rs6' => $request->ruangan,
+        'rs7'=> $request->kodesistembayar,
+        'kdruang'=> $request->kdruang,
         'lamaPerawatan'=> $request->lamaPerawatan,
         'tglRencanaPlg'=> $request->tglRencanaPlg,
+        'bayiTglBersama'=> $request->bayiTglBersama,
         'pldiRumah' => $request->pldiRumah,
         'transportasi' => $request->transportasi,
         'prognosis' => $request->prognosis,
@@ -62,7 +63,15 @@ class DischargePlanningController extends Controller
     }
 
 
-   
+   public function hapusdata(Request $request)
+   {
+       $cari = DischargePlanning::find($request->id);
+       if (!$cari) {
+         return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+       }
+       $cari->delete();
+       return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+   }
 
 
     
