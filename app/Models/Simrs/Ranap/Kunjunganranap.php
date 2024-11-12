@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\DischargePlanning\DischargePlanning;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\InformConcern\InformConcern;
@@ -549,6 +550,10 @@ class Kunjunganranap extends Model
     public function informconcern()
     {
         return $this->hasMany(InformConcern::class, 'noreg', 'rs1');
+    }
+    public function dischargeplanning()
+    {
+        return $this->hasMany(DischargePlanning::class, 'rs1', 'rs1');
     }
     public function datasimpeg()
     {

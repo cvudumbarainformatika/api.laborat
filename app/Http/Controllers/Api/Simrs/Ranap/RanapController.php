@@ -457,6 +457,7 @@ class RanapController extends Controller
                     ])
                     ->orderBy('id', 'DESC');
                 },
+                'dischargeplanning'
                 
             ])->first();
 
