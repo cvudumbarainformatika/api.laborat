@@ -58,6 +58,7 @@ use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Planing\Planing_Igd_Lama;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
@@ -420,5 +421,10 @@ class KunjunganPoli extends Model
     public function bankdarah()
     {
         return $this->hasMany(PermintaanBankdarah::class, 'rs1','rs1');
+    }
+
+    public function planheder()
+    {
+        return $this->hasMany(Planing_Igd_Lama::class, 'rs1', 'rs1');
     }
 }
