@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\CekPerbaikanHargaController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\SetNewStokController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,4 +25,8 @@ Route::group([
     Route::post('/fr-perbaikan-data', [SetNewStokController::class, 'frontPerbaikanData']);
     Route::post('/fr-data-mutasi', [SetNewStokController::class, 'frontDataMutasi']);
     Route::post('/fr-data-resep', [SetNewStokController::class, 'frontDataResep']);
+    Route::post('/fr-get-perbaikan-harga', [CekPerbaikanHargaController::class, 'getPerbaikanHarga']);
+    Route::post('/fr-simpan-perbaikan-harga', [CekPerbaikanHargaController::class, 'simpanPerbaikanHarga']);
+    Route::post('/fr-simpan-pecah-nomor', [CekPerbaikanHargaController::class, 'simpanPecahNomor']);
+    Route::post('/fr-ganti-nomor', [CekPerbaikanHargaController::class, 'gantiNomor']);
 });
