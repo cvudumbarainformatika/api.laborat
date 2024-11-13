@@ -181,6 +181,10 @@ class IgdController extends Controller
                 $t->with('details.pemeriksaanlab')
                     ->orderBy('id', 'DESC');
             },
+            'laboratold'=> function ($t) {
+                $t->with('pemeriksaanlab')
+                    ->orderBy('id', 'DESC');
+            },
             'radiologi' => function ($t) {
                 $t->orderBy('id', 'DESC');
             },

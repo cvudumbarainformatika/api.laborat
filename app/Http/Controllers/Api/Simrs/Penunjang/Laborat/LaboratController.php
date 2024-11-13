@@ -279,6 +279,14 @@ class LaboratController extends Controller
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
+
+    public function getnotaold()
+    {
+        $nota = Laboratpemeriksaan::select('rs2')->where('rs1', request('noreg'))
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
+
     public function getdata()
     {
         $data = LaboratMeta::select('*')->where('noreg', request('noreg'))
@@ -302,7 +310,7 @@ class LaboratController extends Controller
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
     public function hapuspermintaanlaboratbaru(Request $request)
-    {   
+    {
         $cek = Laboratpemeriksaan::whereIn('id', $request->id)->where('rs18','=','1')->count();
         if ($cek > 0) {
             return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa dihapus!'], 500);

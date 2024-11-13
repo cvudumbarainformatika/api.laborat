@@ -24,6 +24,11 @@ class Laboratpemeriksaan extends Model
         return $this->hasMany(Laboratpemeriksaan::class, 'rs2', 'nota');
     }
 
+    public function laboratmetas()
+    {
+        return $this->hasMany(LaboratMeta::class, 'rs2', 'nota');
+    }
+
     public function getSubtotalAttribute()
     {
         $harga1 = (int) $this->rs6;

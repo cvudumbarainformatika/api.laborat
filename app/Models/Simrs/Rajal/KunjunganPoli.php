@@ -427,4 +427,9 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Planing_Igd_Lama::class, 'rs1', 'rs1');
     }
+
+    public function laboratold()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
 }
