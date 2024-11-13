@@ -43,33 +43,33 @@ class CekPerbaikanHargaController extends Controller
     }
     public function simpanPerbaikanHarga(Request $request)
     {
-        // $data = Mutasigudangkedepo::where('nopenerimaan', $request->nopenerimaan)
-        //     ->where('kd_obat', $request->kd_obat)
-        //     ->get();
-        // if (sizeof($data) <= 0) {
-        //     return new JsonResponse([
-        //         'message' => 'Data Mutasi Tidak Ditemukan',
-        //         'req' => $request->all(),
-        //     ], 410);
-        // }
-        // foreach ($data as $key) {
-        //     if ($key->harga != $request->harga) $key->update(['harga' => $request->harga]);
-        //     if ($key->nobatch != $request->nobatch) $key->update(['nobatch' => $request->nobatch]);
-        //     if ($key->tglexp != $request->tglexp) $key->update(['tglexp' => $request->tglexp]);
-        //     if ($key->tglpenerimaan != $request->tglpenerimaan) $key->update(['tglpenerimaan' => $request->tglpenerimaan]);
-        // }
-        $data = Mutasigudangkedepo::find($request->id);
-        if (!$data) {
+        $data = Mutasigudangkedepo::where('nopenerimaan', $request->nopenerimaan)
+            ->where('kd_obat', $request->kd_obat)
+            ->get();
+        if (sizeof($data) <= 0) {
             return new JsonResponse([
                 'message' => 'Data Mutasi Tidak Ditemukan',
                 'req' => $request->all(),
             ], 410);
         }
+        foreach ($data as $key) {
+            if ($key->harga != $request->harga) $key->update(['harga' => $request->harga]);
+            if ($key->nobatch != $request->nobatch) $key->update(['nobatch' => $request->nobatch]);
+            if ($key->tglexp != $request->tglexp) $key->update(['tglexp' => $request->tglexp]);
+            if ($key->tglpenerimaan != $request->tglpenerimaan) $key->update(['tglpenerimaan' => $request->tglpenerimaan]);
+        }
+        // $data = Mutasigudangkedepo::find($request->id);
+        // if (!$data) {
+        //     return new JsonResponse([
+        //         'message' => 'Data Mutasi Tidak Ditemukan',
+        //         'req' => $request->all(),
+        //     ], 410);
+        // }
 
-        if ($data->harga != $request->harga) $data->update(['harga' => $request->harga]);
-        if ($data->nobatch != $request->nobatch) $data->update(['nobatch' => $request->nobatch]);
-        if ($data->tglexp != $request->tglexp) $data->update(['tglexp' => $request->tglexp]);
-        if ($data->tglpenerimaan != $request->tglpenerimaan) $data->update(['tglpenerimaan' => $request->tglpenerimaan]);
+        // if ($data->harga != $request->harga) $data->update(['harga' => $request->harga]);
+        // if ($data->nobatch != $request->nobatch) $data->update(['nobatch' => $request->nobatch]);
+        // if ($data->tglexp != $request->tglexp) $data->update(['tglexp' => $request->tglexp]);
+        // if ($data->tglpenerimaan != $request->tglpenerimaan) $data->update(['tglpenerimaan' => $request->tglpenerimaan]);
 
         return new JsonResponse([
             'message' => 'Data Mutasi sudah diganti',
