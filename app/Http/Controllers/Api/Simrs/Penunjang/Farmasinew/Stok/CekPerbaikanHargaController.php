@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -219,5 +225,94 @@ class CekPerbaikanHargaController extends Controller
                 'req' => $request->all(),
             ], 500);
         }
+    }
+
+    /**
+     * Pengecekan Harga
+     */
+    public function getObat(Request $request)
+    {
+        $temp = Mobatnew::select('kd_obat', 'nama_obat')
+            ->when($request->q, function ($query) use ($request) {
+                $query->where('kd_obat', 'like', '%' . $request->q . '%')
+                    ->orWhere('nama_obat', 'like', '%' . $request->q . '%');
+            })
+            ->paginate($request->per_page);
+        $data['data'] = collect($temp)['data'];
+        $data['meta'] = collect($temp)->except('data');
+        $data['kode'] = collect($data['data'])->pluck('kd_obat');
+        if ($request->kdruang) {
+            $noper = [];
+            $now = $request->tahun . "-" . $request->bulan;
+            $data['stok'] = Stokreal::whereIn('kdobat', $data['kode'])->where('kdruang', $request->kdruang)->get();
+            $data['opname'] = Stokopname::whereIn('kdobat', $data['kode'])->where('kdruang', $request->kdruang)->where('tglOpname', 'like', '%' . $now . '%')->get();
+            $headMut = Permintaandepoheder::select('no_permintaan')
+                ->where('dari', $request->kdruang)
+                ->where('tgl_terima_depo', 'LIKE', '%' . $now . '%')
+                ->pluck('no_permintaan');
+            $data['mutasi'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMut)
+                ->whereIn('kd_obat', $data['kode'])
+                ->get();
+
+            $headMutKel = Permintaandepoheder::select('no_permintaan')
+                ->where('tujuan', $request->kdruang)
+                ->where('dari', 'LIKE', 'R-')
+                ->where('tgl_kirim_depo', 'LIKE', '%' . $now . '%')
+                ->pluck('no_permintaan');
+            $data['mutasikeluar'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMutKel)
+                ->whereIn('kd_obat', $data['kode'])
+                ->get();
+
+            $haResep = Resepkeluarheder::select('noresep')
+                ->where('depo', $request->kdruang)
+                ->where('tgl_selesai', 'LIKE', '%' . $now . '%')
+                ->whereIn('flag', ['3', '4'])
+                ->pluck('noresep');
+            $data['resep'] = Resepkeluarrinci::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan')
+                ->whereIn('noresep', $haResep)
+                ->whereIn('kdobat', $data['kode'])
+                ->get();
+            $data['racikan'] = Resepkeluarrinciracikan::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan')
+                ->whereIn('noresep', $haResep)
+                ->whereIn('kdobat', $data['kode'])
+                ->get();
+
+            $heRet = Returpenjualan_h::select('retur_penjualan_h.noretur')
+                ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'retur_penjualan_h.noresep')
+                ->where('resep_keluar_h.depo', $request->kdruang)
+                ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $now . '%')
+                ->pluck('retur_penjualan_h.noretur');
+            $data['retur'] = Returpenjualan_r::select('id', 'noresep', 'noretur', 'kdobat', 'jumlah_retur', 'harga_beli', 'nopenerimaan')
+                ->whereIn('noretur', $heRet)
+                ->whereIn('kdobat', $data['kode'])
+                ->with([
+                    'resep' => function ($q) use ($data) {
+                        $q->select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan')
+                            ->whereIn('kdobat', $data['kode']);
+                    }
+                ])
+                ->get();
+            $noper = array_merge(
+                $data['opname']->pluck('nopenerimaan')->toArray(),
+                $data['mutasi']->pluck('nopenerimaan')->toArray(),
+                $data['mutasikeluar']->pluck('nopenerimaan')->toArray(),
+                $data['resep']->pluck('nopenerimaan')->toArray(),
+                $data['racikan']->pluck('nopenerimaan')->toArray(),
+                $data['retur']->pluck('nopenerimaan')->toArray(),
+                $data['stok']->pluck('nopenerimaan')->toArray()
+            );
+
+            $data['noper'] = array_unique($noper);
+            $data['awal'] = Stokopname::whereIn('kdobat', $data['kode'])->whereIn('nopenerimaan', $data['noper'])->where('tglOpname', 'like', '%2024-05%')->get();
+            $data['penerimaan'] = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
+                ->with('header:nopenerimaan,tglpenerimaan')
+                ->whereIn('kdobat', $data['kode'])
+                ->whereIn('nopenerimaan', $data['noper'])->get();
+        }
+        return new JsonResponse([
+            'message' => 'OK',
+            'data' => $data,
+            'req' => $request->all(),
+        ]);
     }
 }

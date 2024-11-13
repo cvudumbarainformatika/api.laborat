@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Retur;
 
 use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
@@ -36,5 +37,9 @@ class Returpenjualan_r extends Model
     public function opname()
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kdobat');
+    }
+    public function resep()
+    {
+        return $this->hasOne(Resepkeluarrinci::class, 'noresep', 'noresep');
     }
 }
