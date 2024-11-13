@@ -13,16 +13,16 @@ class Planing_Igd_Lama extends Model
 
     public function planranap()
     {
-        return $this->hasOne(Planing_Igd_ranap::class, 'id', 'id_heder');
+        return $this->hasOne(Planing_Igd_ranap::class, 'id_heder', 'id');
     }
 
     public function planrujukan()
     {
-        return $this->hasOne(Planing_Igd_Rujukan::class, 'id', 'id_heder');
+        return $this->hasOne(Planing_Igd_Rujukan::class, 'id_heder', 'id');
     }
 
     public function planpulang()
     {
-        return $this->hasOne(Planing_Igd_Pulang::class, 'id', 'id_heder');
+        return $this->hasOne(Planing_Igd_Pulang::class, 'id_heder', 'id');
     }
 }

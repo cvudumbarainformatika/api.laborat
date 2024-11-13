@@ -155,14 +155,18 @@ class IgdController extends Controller
             'historykehamilan',
             'anamnesekebidanan',
             'bankdarah',
-            'planheder' => function($plan){
-                $plan->with(
-                    [
-                        'planrujukan',
-                        'planranap',
-                        'planpulang'
-                    ]
-                );
+            'planheder' => function($planheder){
+                $planheder->with([
+                    'planranap' => function($planranap){
+                        $planranap->with(
+                            [
+                                'ruangranap'
+                            ]
+                        );
+                    },
+                    'planrujukan',
+                    'planpulang'
+                ]);
             },
             'ambulan' => function($ambulan) {
                 $ambulan->with(
