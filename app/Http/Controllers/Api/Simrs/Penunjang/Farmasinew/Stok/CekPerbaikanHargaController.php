@@ -13,6 +13,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -244,22 +245,22 @@ class CekPerbaikanHargaController extends Controller
         if ($request->kdruang) {
             $noper = [];
             $now = $request->tahun . "-" . $request->bulan;
-            $data['stok'] = Stokreal::whereIn('kdobat', $data['kode'])->where('kdruang', $request->kdruang)->get();
+            $data['stok'] = Stokrel::whereIn('kdobat', $data['kode'])->where('kdruang', $request->kdruang)->get();
             $data['opname'] = Stokopname::whereIn('kdobat', $data['kode'])->where('kdruang', $request->kdruang)->where('tglOpname', 'like', '%' . $now . '%')->get();
             $headMut = Permintaandepoheder::select('no_permintaan')
                 ->where('dari', $request->kdruang)
                 ->where('tgl_terima_depo', 'LIKE', '%' . $now . '%')
                 ->pluck('no_permintaan');
-            $data['mutasi'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMut)
+            $data['mutasi'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'nopenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMut)
                 ->whereIn('kd_obat', $data['kode'])
                 ->get();
 
             $headMutKel = Permintaandepoheder::select('no_permintaan')
                 ->where('tujuan', $request->kdruang)
-                ->where('dari', 'LIKE', 'R-')
+                ->where('dari', 'LIKE', '%R-%')
                 ->where('tgl_kirim_depo', 'LIKE', '%' . $now . '%')
                 ->pluck('no_permintaan');
-            $data['mutasikeluar'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMutKel)
+            $data['mutasikeluar'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'nopenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMutKel)
                 ->whereIn('kd_obat', $data['kode'])
                 ->get();
 
@@ -268,13 +269,15 @@ class CekPerbaikanHargaController extends Controller
                 ->where('tgl_selesai', 'LIKE', '%' . $now . '%')
                 ->whereIn('flag', ['3', '4'])
                 ->pluck('noresep');
-            $data['resep'] = Resepkeluarrinci::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan')
+            $data['resep'] = Resepkeluarrinci::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli as harga', 'nopenerimaan')
                 ->whereIn('noresep', $haResep)
                 ->whereIn('kdobat', $data['kode'])
+                ->where('jumlah', '>', 0)
                 ->get();
-            $data['racikan'] = Resepkeluarrinciracikan::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan')
+            $data['racikan'] = Resepkeluarrinciracikan::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli as harga', 'nopenerimaan')
                 ->whereIn('noresep', $haResep)
                 ->whereIn('kdobat', $data['kode'])
+                ->where('jumlah', '>', 0)
                 ->get();
 
             $heRet = Returpenjualan_h::select('retur_penjualan_h.noretur')
@@ -282,7 +285,7 @@ class CekPerbaikanHargaController extends Controller
                 ->where('resep_keluar_h.depo', $request->kdruang)
                 ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $now . '%')
                 ->pluck('retur_penjualan_h.noretur');
-            $data['retur'] = Returpenjualan_r::select('id', 'noresep', 'noretur', 'kdobat', 'jumlah_retur', 'harga_beli', 'nopenerimaan')
+            $data['retur'] = Returpenjualan_r::select('id', 'noresep', 'noretur', 'kdobat', 'jumlah_retur as jumlah', 'harga_beli as harga', 'nopenerimaan')
                 ->whereIn('noretur', $heRet)
                 ->whereIn('kdobat', $data['kode'])
                 ->with([
@@ -314,5 +317,77 @@ class CekPerbaikanHargaController extends Controller
             'data' => $data,
             'req' => $request->all(),
         ]);
+    }
+    public function simpanPerbaikanHargaDua(Request $request)
+    {
+        $this->validate($request, [
+            'harga' => 'required|numeric|gt:0',
+        ]);
+        try {
+            $data = DB::connection('farmasi')->transaction(function () use ($request) {
+                if ($request->tipe == 'stok') {
+                    $data = Stokrel::find($request->id);
+                    if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                    $data->update([
+                        'harga' => $request->harga,
+                    ]);
+                    return $data;
+                }
+                if ($request->tipe == 'opname') {
+                    $data = Stokopname::find($request->id);
+                    if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                    $data->update([
+                        'harga' => $request->harga,
+                    ]);
+                    return $data;
+                }
+                if ($request->tipe == 'mutasi') {
+                    $data = Mutasigudangkedepo::find($request->id);
+                    if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                    $data->update([
+                        'harga' => $request->harga,
+                    ]);
+                    return $data;
+                }
+                if ($request->tipe == 'resep') {
+                    $data = Resepkeluarrinci::find($request->id);
+                    if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                    $data->update([
+                        'harga_beli' => $request->harga,
+                    ]);
+                    return $data;
+                }
+                if ($request->tipe == 'racikan') {
+                    $data = Resepkeluarrinciracikan::find($request->id);
+                    if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                    $data->update([
+                        'harga_beli' => $request->harga,
+                    ]);
+                    return $data;
+                }
+                if ($request->tipe == 'retur') {
+                    $data = Returpenjualan_r::find($request->id);
+                    if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                    $data->update([
+                        'harga_beli' => $request->harga,
+                    ]);
+                    return $data;
+                }
+            });
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Data Berhasil di Simpan',
+                'data' => $data,
+                'req' => $request->all(),
+            ]);
+        } catch (\Exception $th) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' =>  $th->getLine(),
+                'req' => $request->all(),
+            ]);
+        }
     }
 }

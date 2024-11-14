@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/farmasinew/cekdata'
 ], function () {
     Route::post('/get-obat', [CekPerbaikanHargaController::class, 'getObat']);
+    Route::post('/simpan-perbaikan-harga-dua', [CekPerbaikanHargaController::class, 'simpanPerbaikanHargaDua']);
 });
