@@ -118,6 +118,10 @@ class CekPerbaikanHargaController extends Controller
                         $data[] = $temp;
                     } else {
                         unset($key['id']);
+                        if ($key['kandungan'] == null) $key['kandungan'] = '';
+                        if ($key['fornas'] == null) $key['fornas'] = '';
+                        if ($key['forkit'] == null) $key['forkit'] = '';
+                        if ($key['generik'] == null) $key['generik'] = '';
                         $temp = Resepkeluarrinci::create($key);
                         $data[] = $temp;
                     }
