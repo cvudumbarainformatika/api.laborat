@@ -323,13 +323,20 @@ class DistribusigudangController extends Controller
                     $sisa = $stokItem->jumlah;
 
                     $pengurangan = min($jmldiminta, $sisa); // pengurangan
+
+                    $sudahAdaDetail = Mutasigudangkedepo::where('no_permintaan', $request->nopermintaan)
+                        ->where('nopenerimaan', $stokItem->nopenerimaan)
+                        ->where('kd_obat', $stokItem->kdobat)
+                        ->where('jml', $pengurangan)
+                        ->first();
+                    if ($sudahAdaDetail) break;
                     $mutasi = Mutasigudangkedepo::create(
                         [
                             'no_permintaan' => $request->nopermintaan,
                             'nopenerimaan' => $stokItem->nopenerimaan,
                             'kd_obat' => $stokItem->kdobat,
-                            'nobatch' => $stokItem->nobatch,
                             'jml' => $pengurangan,
+                            'nobatch' => $stokItem->nobatch,
                             'tglpenerimaan' => $stokItem->tglpenerimaan,
                             'harga' => $stokItem->harga ?? 0,
                             'tglexp' => $stokItem->tglexp,
