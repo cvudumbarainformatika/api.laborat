@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Covid\StatusCovid;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Hais\HaisTrans;
@@ -81,6 +82,10 @@ class Kunjunganranap extends Model
     protected $connection = 'mysql';
     //protected $connection = 'farmasi';
 
+    public function statuscovid()
+    {
+        return $this->hasMany(StatusCovid::class, 'noreg', 'noreg');
+    }
     public function relmasterruangranap()
     {
         return $this->hasOne(Mruangranap::class, 'rs1', 'rs5');

@@ -40,6 +40,7 @@ class RanapController extends Controller
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23.rs3 as tglmasuk',
+            'rs17.rs3 as tglmasuk_igd',
             'rs23.rs4 as tglkeluar',
             'rs23.rs5 as kdruangan',
             'rs23.rs5 as kodepoli', // ini khusus resep jangan diganti .... memang namanya aneh kok ranap ada kodepoli? ya? jangan dihapus yaaa.....
@@ -79,8 +80,15 @@ class RanapController extends Controller
             'rs24.rs4 as kdgroup_ruangan',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
+            // 'tflag_covid.flagcovid as flagcovid',
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
+            ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
+            // ->leftjoin('tflag_covid', function ($q) { 
+            //     $q->on('tflag_covid.noreg', 'rs23.rs1')
+            //       ->where('tflag_covid.stat', 'MASUK')
+            //       ->where('tflag_covid.ruang', 'POL014');
+            //  }) // IGD
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
@@ -167,6 +175,7 @@ class RanapController extends Controller
             'rs2 as norm')
             ->where('rs1', '=', $request->noreg)
             ->with([
+                
                 'newapotekrajal' => function ($q) {
                     $q->with([
                         'dokter:nama,kdpegsimrs',
@@ -221,6 +230,17 @@ class RanapController extends Controller
                         'rs253.kdruang',
                         'rs253.user',
                         'rs253.awal',
+                        'rs253.rs5',
+                        'rs253.rs6',
+                        'rs253.rs7',
+                        'rs253.rs8',
+                        'rs253.rs9',
+                        'rs253.rs10',
+                        'rs253.rs11',
+                        'rs253.rs12',
+                        'rs253.rs13',
+                        'rs253.sax',
+                        'rs253.srec',
                         
                         'sambung.keadaanUmum',
                         'sambung.bb' ,
@@ -302,6 +322,9 @@ class RanapController extends Controller
                     $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC');
                 },
                 'radiologi'=> function ($q) {
+                    $q->orderBy('id', 'DESC');
+                },
+                'hasilradiologi'=> function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
                 'fisio'=> function ($q) {
@@ -457,7 +480,11 @@ class RanapController extends Controller
                     ])
                     ->orderBy('id', 'DESC');
                 },
-                'dischargeplanning'
+                'dischargeplanning',
+                'statuscovid' => function ($q) {
+                    $q->where('stat', '=', 'MASUK')
+                    ->where('ruang', '!=', 'POL014');
+                },
                 
             ])->first();
 
