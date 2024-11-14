@@ -1753,6 +1753,7 @@ class SetNewStokController extends Controller
         try {
             DB::connection('farmasi')->beginTransaction();
             foreach ($request->all() as $key) {
+                if ($key['nobatch'] == null) $key['nobatch'] = '';
                 $temp = StokStokopname::updateOrCreate(
                     [
                         'id' => $key['id'],
