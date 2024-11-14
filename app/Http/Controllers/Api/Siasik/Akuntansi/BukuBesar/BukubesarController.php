@@ -81,16 +81,10 @@ class BukubesarController extends Controller
             },'lvl5' => function($sel){
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
-        ->where('jurnal_postingotom.verif', '=', '1')
+        // ->where('jurnal_postingotom.verif', '=', '1')
         // ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-        ->where('jurnal_postingotom.tanggal', '>=', $awal)
-        ->where('jurnal_postingotom.tanggal', '<', $akhir)
-
-        // ->where(function($mew) use($awal){
-        //     $mew->when(request('level'), function($xx){
-        //         $xx->where('jurnal_postingotom.kode', request('level'));
-        //     });
-        // })
+        ->whereDate('jurnal_postingotom.tanggal', '>=', $awal)
+        ->whereDate('jurnal_postingotom.tanggal', '<', $akhir)
         ->where(function($query){
             $query->when(request('q'), function($q){
                 $q->where('notrans', 'like', '%'.request('q').'%')
@@ -164,11 +158,8 @@ class BukubesarController extends Controller
             $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
         ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->orderBy('kode6', 'ASC')
         ->get();
-
-
-
-
 
 
 
@@ -204,6 +195,7 @@ class BukubesarController extends Controller
         ->where('jurnal_postingotom.verif', '=', '1')
         ->where('jurnal_postingotom.tanggal', '<', $awal)
         ->groupBy('tanggal', 'kode6')
+        ->orderBy('kode6', 'ASC')
         ->get();
 
         $sajurnalmanual = JurnalUmum_Header::select(
@@ -236,6 +228,7 @@ class BukubesarController extends Controller
             }])
         ->where('jurnalumum_heder.verif', '=', '1')
         ->where('jurnalumum_heder.tanggal', '<', $awal)
+        ->orderBy('kode6', 'ASC')
         ->get();
 
 
