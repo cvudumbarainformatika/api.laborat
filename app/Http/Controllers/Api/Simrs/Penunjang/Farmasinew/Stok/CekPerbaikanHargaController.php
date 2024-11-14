@@ -138,6 +138,7 @@ class CekPerbaikanHargaController extends Controller
                         $data[] = $temp;
                     } else {
                         unset($key['id']);
+                        if ($key['nobatch'] == null) $key['nobatch'] = '';
                         $temp = Mutasigudangkedepo::create($key);
                         $data[] = $temp;
                     }
@@ -257,7 +258,6 @@ class CekPerbaikanHargaController extends Controller
 
             $headMutKel = Permintaandepoheder::select('no_permintaan')
                 ->where('tujuan', $request->kdruang)
-                ->where('dari', 'LIKE', '%R-%')
                 ->where('tgl_kirim_depo', 'LIKE', '%' . $now . '%')
                 ->pluck('no_permintaan');
             $data['mutasikeluar'] = Mutasigudangkedepo::select('id', 'no_permintaan', 'tglpenerimaan', 'nopenerimaan', 'kd_obat as kdobat', 'jml as jumlah', 'tglexp', 'nobatch', 'harga')->whereIn('no_permintaan', $headMutKel)
@@ -344,10 +344,19 @@ class CekPerbaikanHargaController extends Controller
                 if ($request->tipe == 'mutasi') {
                     $data = Mutasigudangkedepo::find($request->id);
                     if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
-                    $data->update([
-                        'harga' => $request->harga,
-                    ]);
-                    return $data;
+                    $data->update(['harga' => $request->harga]);
+                    if ($data->nobatch != $request->penerimaan['nobatch']) $data->update(['nobatch' => $request->penerimaan['nobatch']]);
+                    if ($data->nobatch != $request->penerimaan['tglexp']) $data->update(['tglexp' => $request->penerimaan['tglexp']]);
+
+                    $tglpenerimaan = $request->penerimaan['header']['tglpenerimaan'] ?? $request->penerimaan['tglpenerimaan'];
+                    if ($data->nobatch != $tglpenerimaan) $data->update(['tglpenerimaan' => $tglpenerimaan]);
+                    return [
+                        'data' => $data,
+                        'penerimaan' => $request->penerimaan,
+                        'nobatch' => $request->penerimaan['nobatch'],
+                        'tglexp' => $request->penerimaan['tglexp'],
+                        'tglpenerimaan' => $tglpenerimaan,
+                    ];
                 }
                 if ($request->tipe == 'resep') {
                     $data = Resepkeluarrinci::find($request->id);
@@ -387,7 +396,7 @@ class CekPerbaikanHargaController extends Controller
                 'file' => $th->getFile(),
                 'line' =>  $th->getLine(),
                 'req' => $request->all(),
-            ]);
+            ], 410);
         }
     }
 }
