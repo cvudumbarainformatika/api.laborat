@@ -3716,8 +3716,8 @@ class SetNewStokController extends Controller
                 $parameter['penPas'] = $penPas;
                 $parameter['penKur'] = $penKur;
                 $parameter['penLeb'] = $penLeb;
-                $parameter['tts'] = $tts;
-                $parameter['sisa'] = $sisa;
+                $parameter['tts'] = round($tts, 2);
+                $parameter['sisa'] = round($sisa, 2);
 
                 $eksekusi = self::nopenerimaanDepo($parameter);
                 $cekOpname = self::opnemeDepo($parameter);
@@ -3733,8 +3733,8 @@ class SetNewStokController extends Controller
                     'cekOpname' => $cekOpname ?? [],
 
 
-                    'tts' => $tts,
-                    'sisa' => $sisa,
+                    'tts' => round($tts, 2),
+                    'sisa' => round($sisa, 2),
                     'masuk' => $masukMu,
                     'keluar' => $keluarMu,
                     // 'anuaad' => $anuaad,
