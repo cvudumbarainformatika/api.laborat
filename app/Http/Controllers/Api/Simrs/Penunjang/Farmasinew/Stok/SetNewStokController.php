@@ -3070,14 +3070,14 @@ class SetNewStokController extends Controller
                     $totalStok = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                         ->where('kdruang', $koderuangan)->where('tglopname', 'LIKE', $x . '%')->first();
                 }
-                $tts = $totalStok->jumlah ?? 0;
-                $sal = $saldoAwal ?? 0;
-                $peny = $penyesuaian ?? 0;
-                $trm = $penerimaan ?? 0;
-                $mutma = $mutasiMasuk ?? 0;
-                $mutkel = $mutasiKeluar ?? 0;
-                $rus = $rusak ?? 0;
-                $retG = $returGudang ?? 0;
+                $tts = round($totalStok->jumlah, 2) ?? 0;
+                $sal = round($saldoAwal, 2) ?? 0;
+                $peny = round($penyesuaian, 2) ?? 0;
+                $trm = round($penerimaan, 2) ?? 0;
+                $mutma = round($mutasiMasuk, 2) ?? 0;
+                $mutkel = round($mutasiKeluar, 2) ?? 0;
+                $rus = round($rusak, 2) ?? 0;
+                $retG = round($returGudang, 2) ?? 0;
                 $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
                 $keluar = (float)$mutkel + (float)$rus;
                 $sisa = (float)$masuk - (float)$keluar;
@@ -3124,7 +3124,7 @@ class SetNewStokController extends Controller
                         $stOP = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                             ->where('kdruang', $koderuangan)->where('nopenerimaan', $key)->where('tglopname', 'LIKE', $x . '%')->first();
                     }
-                    $stOpnya = $stOP->jumlah ?? 0;
+                    $stOpnya = round($stOP->jumlah, 2) ?? 0;
                     $salAwal =  collect($saldoAwalRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
                     $mutMas =  collect($mutasiMasukRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $trm =  collect($penerimaanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
@@ -3133,8 +3133,8 @@ class SetNewStokController extends Controller
                     // keluar
                     $mutKel =  collect($mutasiKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $rus =  collect($rusakRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                    $maSuk = (float) $salAwal + (float) $mutMas + (float) $trm + (float) $retGu + (float)$peny;
-                    $keLuar = (float)$mutKel + (float)$rus;
+                    $maSuk = (float)round($salAwal, 2) + (float)round($mutMas, 2) + (float)round($trm, 2) + (float)round($retGu, 2) + (float)round($peny, 2);
+                    $keLuar = (float)round($mutKel, 2) + (float)round($rus, 2);
                     $sisanya = $maSuk - $keLuar;
                     $sts = $sisanya - $stOpnya;
 
@@ -3589,7 +3589,7 @@ class SetNewStokController extends Controller
                 // } else {
                 $stOPAll = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)->where('tglopname', 'LIKE', $x . '%')->first();
-                $tts = $stOPAll->jumlah ?? 0;
+                $tts = round($stOPAll->jumlah, 2) ?? 0;
                 $sisa = 0;
                 $masukMu = 0;
                 $keluarMu = 0;
@@ -3612,8 +3612,8 @@ class SetNewStokController extends Controller
                     $resepRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
 
-                    $maSuk = (float) $salAwal + (float) $mutMas +  (float) $retPenj + (float)$peny;
-                    $keLuar = (float)$mutKel + (float)$retGud + (float)$resepNRac + (float)$resepRac;
+                    $maSuk = (float)round($salAwal, 2) + (float)round($mutMas, 2) +  (float)round($retPenj, 2) + (float)round($peny, 2);
+                    $keLuar = (float)round($mutKel, 2) + (float)round($retGud, 2) + (float)round($resepNRac, 2) + (float)round($resepRac, 2);
                     $sisanya = $maSuk - $keLuar;
                     $stOpnya = $stOP->jumlah ?? 0;
                     $sts = $sisanya - $stOpnya;
