@@ -3315,7 +3315,7 @@ class SetNewStokController extends Controller
                 $mutasiMasuk = collect($mutasiMasukDepoRinci)->sum('jumlah');
                 $headMutasiKel = Permintaandepoheder::select('no_permintaan')
                     ->where('tujuan', $koderuangan)
-                    ->where('tgl_terima_depo', 'LIKE', '%' . $x . '%')
+                    ->where('tgl_kirim_depo', 'LIKE', '%' . $x . '%')
                     ->pluck('no_permintaan');
                 $mutasiKeluarDepoRinci = Mutasigudangkedepo::select(
                     'mutasi_gudangdepo.kd_obat as kdobat',
