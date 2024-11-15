@@ -3850,7 +3850,7 @@ class SetNewStokController extends Controller
         }
         // pertanyaan 1 : apakah jumlah stok opname sesuai?
         // jawab :
-        $jmlOp = collect($opname)->sum('jumlah');
+        $jmlOp = round(collect($opname)->sum('jumlah'), 2);
         $jmlSesuai = $jmlOp == $head['tts'] ? true : false;
         // pertanyaan 2 : apakah nomor peberimaan yang tertera sudah sesuai?
         // jawab :
@@ -3859,8 +3859,8 @@ class SetNewStokController extends Controller
 
         foreach ($penerimaan as $key) {
             $opnya = collect($opname)->where('nopenerimaan', $key['nopenerimaan']);
-            $jml = $opnya->sum('jumlah');
-            $jmlPen = $key['jml_terima_k'];
+            $jml = round($opnya->sum('jumlah'), 2);
+            $jmlPen = round($key['jml_terima_k'], 2);
             if ($tts >= $jmlPen) $sisa = $tts - $jmlPen;
             else $sisa = 0;
             $tts = $sisa;
@@ -3936,7 +3936,7 @@ class SetNewStokController extends Controller
         }
         // pertanyaan 1 : apakah jumlah stok opname sesuai?
         // jawab :
-        $jmlOp = collect($opname)->sum('jumlah');
+        $jmlOp = round(collect($opname)->sum('jumlah'), 2);
         $jmlSesuai = $jmlOp == $head['tts'] ? true : false;
         // pertanyaan 2 : apakah nomor peberimaan yang tertera sudah sesuai?
         // jawab :
@@ -3945,8 +3945,8 @@ class SetNewStokController extends Controller
 
         foreach ($penerimaan as $key) {
             $opnya = collect($opname)->where('nopenerimaan', $key['nopenerimaan']);
-            $jml = $opnya->sum('jumlah');
-            $jmlPen = $key['jml_terima_k'];
+            $jml = round($opnya->sum('jumlah'), 2);
+            $jmlPen = round($key['jml_terima_k'], 2);
             if ((float)$tts >= (float)$jmlPen) {
                 $sisa = $tts - $jmlPen;
             } else {
