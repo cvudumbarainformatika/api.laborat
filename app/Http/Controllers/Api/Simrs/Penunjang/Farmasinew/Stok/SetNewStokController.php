@@ -3814,7 +3814,8 @@ class SetNewStokController extends Controller
             ->where('tglopname', 'LIKE', '%' . $head['now'] . '%')
             ->orderBy('nopenerimaan', 'DESC')
             ->get();
-        $headerPenerimaan = PenerimaanHeder::select('nopenerimaan')->where('tglpenerimaan', 'LIKE', '%' . $head['now'] . '%')->pluck('nopenerimaan');
+        $headerPenerimaan = PenerimaanHeder::select('nopenerimaan')->where('tglpenerimaan', 'LIKE', '%' . $head['now'] . '%')
+            ->where('gudang', $head['koderuangan'])->pluck('nopenerimaan');
         $penerimaanRw = PenerimaanRinci::select('nopenerimaan', DB::raw('sum(jml_terima_k) as jml_terima_k'), 'harga_netto_kecil', 'no_batch', 'tgl_exp')
             ->with('header:nopenerimaan,tglpenerimaan')
             ->whereIn('nopenerimaan', $headerPenerimaan)
