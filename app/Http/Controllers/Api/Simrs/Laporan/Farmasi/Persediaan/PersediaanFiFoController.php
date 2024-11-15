@@ -267,6 +267,20 @@ class PersediaanFiFoController extends Controller
                         ])
                         ->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan', 'pemakaian_r.nopemakaian');
                 },
+                'penyesuaian' => function ($pak) {
+                    $pak->select(
+                        'penyesuaian_stoks.kdobat',
+                        'penyesuaian_stoks.nopenerimaan',
+                        'penyesuaian_stoks.tgl_penyesuaian as tgl',
+                        'stokreal.harga',
+                        DB::raw('sum(penyesuaian_stoks.penyesuaian) as jumlah'),
+                        DB::raw('sum(penyesuaian_stoks.penyesuaian * stokreal.harga) as sub'),
+
+                    )
+                        ->join('stokreal', 'stokreal.id', '=', 'penyesuaian_stoks.stokreal_id')
+                        ->where('penyesuaian_stoks.tgl_penyesuaian', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->groupBy('penyesuaian_stoks.kdobat', 'penyesuaian_stoks.nopenerimaan');
+                },
                 // 'daftarharga' => function ($q) {
                 //     $q->select(
                 //         'kd_obat',

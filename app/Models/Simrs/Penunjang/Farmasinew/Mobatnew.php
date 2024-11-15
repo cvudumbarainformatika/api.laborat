@@ -75,6 +75,7 @@ class Mobatnew extends Model
         );
     }
 
+
     public function daftarharga()
     {
         return $this->hasMany(DaftarHarga::class, 'kd_obat', 'kd_obat');
