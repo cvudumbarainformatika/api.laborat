@@ -3133,10 +3133,10 @@ class SetNewStokController extends Controller
                     // keluar
                     $mutKel =  collect($mutasiKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $rus =  collect($rusakRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                    $maSuk = (float)round($salAwal, 2) + (float)round($mutMas, 2) + (float)round($trm, 2) + (float)round($retGu, 2) + (float)round($peny, 2);
-                    $keLuar = (float)round($mutKel, 2) + (float)round($rus, 2);
-                    $sisanya = $maSuk - $keLuar;
-                    $sts = $sisanya - $stOpnya;
+                    $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) + (float)round($trm, 2) + (float)round($retGu, 2) + (float)round($peny, 2)), 2);
+                    $keLuar = round(((float)round($mutKel, 2) + (float)round($rus, 2)), 2);
+                    $sisanya = round(($maSuk - $keLuar), 2);
+                    $sts = round(($sisanya - $stOpnya), 2);
 
                     if ($sisanya == $stOpnya) {
                         $penPas[] = [
@@ -3612,11 +3612,11 @@ class SetNewStokController extends Controller
                     $resepRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
 
-                    $maSuk = (float)round($salAwal, 2) + (float)round($mutMas, 2) +  (float)round($retPenj, 2) + (float)round($peny, 2);
-                    $keLuar = (float)round($mutKel, 2) + (float)round($retGud, 2) + (float)round($resepNRac, 2) + (float)round($resepRac, 2);
-                    $sisanya = $maSuk - $keLuar;
-                    $stOpnya = $stOP->jumlah ?? 0;
-                    $sts = $sisanya - $stOpnya;
+                    $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) +  (float)round($retPenj, 2) + (float)round($peny, 2)), 2);
+                    $keLuar = round(((float)round($mutKel, 2) + (float)round($retGud, 2) + (float)round($resepNRac, 2) + (float)round($resepRac, 2)), 2);
+                    $sisanya = round(($maSuk - $keLuar), 2);
+                    $stOpnya = round($stOP->jumlah, 2) ?? 0;
+                    $sts = round(($sisanya - $stOpnya), 2);
                     // $tts += $stOpnya;
                     $sisa += $sisanya;
                     $masukMu += $maSuk;
