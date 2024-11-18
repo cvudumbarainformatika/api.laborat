@@ -205,12 +205,15 @@ class ReturkepbfController extends Controller
                     'no_batch' => $request->no_batch,
                 ],
                 [
+                    'nopenerimaan_default' => $request->nopenerimaan,
+                    'no_batch_default' => $request->no_batch,
                     'jumlah_retur' => $request->jumlah_retur,
                     'kondisi_barang' => $request->kondisi_barang,
                     'tgl_rusak' => $request->tgl_rusak,
                     'harga_net' => $request->harga_neto,
                     'subtotal' => $request->subtotal,
                     'tgl_exp' => $request->tgl_exp ?? null,
+                    'tgl_exp_default' => $request->tgl_exp ?? null,
                     'flag_tbl_rusak' => $request->flag_tbl_rusak ?? '',
                 ]
             );
