@@ -222,9 +222,11 @@ class ReturkepbfController extends Controller
                 ->where('nopenerimaan', $request->nopenerimaan)
                 ->where('nobatch', $request->no_batch)
                 ->first();
-            $barangRusak->tgl_retur = date('Y-m-d H:i:s');
-            $barangRusak->user_retur = $user['kodesimrs'];
-            $barangRusak->save();
+            if ($barangRusak) {
+                $barangRusak->tgl_retur = date('Y-m-d H:i:s');
+                $barangRusak->user_retur = $user['kodesimrs'];
+                $barangRusak->save();
+            }
 
             // mengurangi stok ( pastikan hanya mengurangi satu kali saja)
             // ini belum termasuk jika barang sudah pernah keluar
@@ -253,7 +255,12 @@ class ReturkepbfController extends Controller
             );
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
+            return response()->json([
+                'message' => 'ada kesalahan : ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'error' => $e
+            ], 410);
         }
     }
     public function kunciRetur(Request $request)
