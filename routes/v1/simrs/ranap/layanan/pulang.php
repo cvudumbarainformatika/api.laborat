@@ -12,5 +12,6 @@ Route::group([
 
   Route::get('/getmasterprognosis', [DischargePlanningController::class, 'getmasterprognosis']);
   Route::get('/getmastercarakeluar', [PulangController::class, 'getmastercarakeluar']);
+  Route::post('/simpandata', [PulangController::class, 'simpandata']);
 
 });

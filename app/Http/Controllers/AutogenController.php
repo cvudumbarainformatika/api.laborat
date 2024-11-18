@@ -782,7 +782,7 @@ class AutogenController extends Controller
         $xsignature = base64_encode($sign);
 
         // $apiURL = 'http://135.148.145.64:83/prolims/api/lis/getResult?ONO=220915/37334L';
-        $apiURL = 'http://45.77.35.181:83/prolims/api/lis/order?startDate=20220916&endDate=20220916';
+        $apiURL = 'http://45.77.35.181:83/prolims/api/lis/order?startDate=20220916&endDate=20220916'; // alamat ini sudah gak dipake
 
         $headers = [
             'X-id' => $xid,

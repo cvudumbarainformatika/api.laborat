@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Ranap\Pelayanan\AnatomyController;
 use App\Http\Controllers\Api\Simrs\Ranap\Pelayanan\PemeriksaanPenilaianController;
 use App\Http\Controllers\Api\Simrs\Ranap\Pelayanan\PemeriksaanUmumController;
 use Illuminate\Support\Facades\Route;
@@ -15,5 +16,8 @@ Route::group([
     Route::get('/penilaian', [PemeriksaanPenilaianController::class, 'list']);
     Route::post('/penilaian/simpan', [PemeriksaanPenilaianController::class, 'simpan']);
     Route::post('/penilaian/hapus', [PemeriksaanPenilaianController::class, 'delete']);
+
+
+    Route::get('/getmasteranatomys', [AnatomyController::class, 'getmasteranatomys']);
 
 });
