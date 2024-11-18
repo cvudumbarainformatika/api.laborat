@@ -311,10 +311,16 @@ class CekPerbaikanHargaController extends Controller
 
             $data['noper'] = array_unique($noper);
             $data['awal'] = Stokopname::whereIn('kdobat', $data['kode'])->whereIn('nopenerimaan', $data['noper'])->where('tglOpname', 'like', '%2024-05%')->get();
-            $data['penerimaan'] = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
+            $penerimaan = PenerimaanRinci::select('nopenerimaan', 'kdobat', 'jml_terima_k as jumlah', 'tgl_exp as tglexp', 'no_batch as nobatch', 'harga_netto_kecil as harga')
                 ->with('header:nopenerimaan,tglpenerimaan')
                 ->whereIn('kdobat', $data['kode'])
                 ->whereIn('nopenerimaan', $data['noper'])->get();
+            if (sizeof($penerimaan) > 0) {
+                foreach ($penerimaan as $key) {
+                    $key['tglpenerimaan'] = $key['header']['tglpenerimaan'];
+                }
+            }
+            $data['penerimaan'] = $penerimaan;
         }
         return new JsonResponse([
             'message' => 'OK',
