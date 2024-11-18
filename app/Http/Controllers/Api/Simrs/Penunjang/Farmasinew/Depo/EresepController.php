@@ -269,60 +269,76 @@ class EresepController extends Controller
                     ->orWhere('new_masterobat.kandungan', 'LIKE', '%' . request('q') . '%');
                 // ->orWhere('stokreal.kdobat', 'LIKE', '%' . request('q') . '%');
             })
-            ->with('permintaandeporinci', function ($q) {
-                $q->select(
-                    'permintaan_r.no_permintaan',
-                    'permintaan_r.kdobat',
-                    // 'permintaan_r.jumlah_minta',
-                    'permintaan_h.tujuan as kdruang',
-                    DB::raw('sum(permintaan_r.jumlah_minta) as jumlah_minta')
-                )
-                    ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                    ->leftJoin('mutasi_gudangdepo', function ($anu) {
-                        $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                            ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
-                    })
-                    ->where('permintaan_h.tujuan', request('kdruang'))
-                    // ->whereNull('mutasi_gudangdepo.kd_obat')
-                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                    ->groupBy('permintaan_r.kdobat');
-            })
+            ->with([
+                'onepermintaandeporinci' => function ($q) {
+                    $q->select(
+                        'permintaan_r.no_permintaan',
+                        'permintaan_r.kdobat',
+                        // 'permintaan_r.jumlah_minta',
+                        'permintaan_h.tujuan as kdruang',
+                        DB::raw('sum(permintaan_r.jumlah_minta) as jumlah_minta')
+                    )
+                        ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                        ->leftJoin('mutasi_gudangdepo', function ($anu) {
+                            $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+                        })
+                        ->where('permintaan_h.tujuan', request('kdruang'))
+                        // ->whereNull('mutasi_gudangdepo.kd_obat')
+                        ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                        ->groupBy('permintaan_r.kdobat');
+                },
+                'oneperracikan' => function ($q) {
+                    $q->select(
+                        // 'resep_keluar_racikan_r.kdobat as kdobat',
+                        'resep_permintaan_keluar_racikan.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+                        ->where('resep_keluar_h.depo', request('kdruang'))
+                        ->whereIn('resep_keluar_h.flag', ['', '1', '2']);
+                },
+                'onepermintaan' => function ($q) {
+                    $q->select(
+                        // 'resep_keluar_r.kdobat as kdobat',
+                        'resep_permintaan_keluar.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
+                        ->where('resep_keluar_h.depo', request('kdruang'))
+                        ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                        ->groupBy('resep_permintaan_keluar.kdobat');
+                },
+                'oneobatkel' => function ($q) {
+                    $q->select(
+                        // 'resep_keluar_r.kdobat as kdobat',
+                        'resep_keluar_r.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_r.noresep')
+                        ->where('resep_keluar_h.depo', request('kdruang'))
+                        ->where('resep_keluar_h.flag', '2')
+                        ->where('resep_keluar_r.jumlah', '>', 0)
+                        ->groupBy('resep_keluar_r.kdobat');
+                },
+                'oneobatkelracikan' => function ($q) {
+                    $q->select(
+                        // 'resep_keluar_r.kdobat as kdobat',
+                        'resep_keluar_racikan_r.kdobat as kdobat',
+                        'resep_keluar_h.depo as kdruang',
+                        DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
+                    )
+                        ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_keluar_racikan_r.noresep')
+                        ->where('resep_keluar_h.depo', request('kdruang'))
+                        ->where('resep_keluar_h.flag', '2')
+                        ->where('resep_keluar_racikan_r.jumlah', '>', 0)
+                        ->groupBy('resep_keluar_racikan_r.kdobat');
+                }
+            ])
 
-            ->with('transracikan', function ($q) {
-                $q->select(
-                    // 'resep_keluar_racikan_r.kdobat as kdobat',
-                    'resep_permintaan_keluar_racikan.kdobat as kdobat',
-                    'resep_keluar_h.depo as kdruang',
-                    DB::raw('sum(resep_permintaan_keluar_racikan.jumlah) as jumlah')
-                )
-                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
-                    ->where('resep_keluar_h.depo', request('kdruang'))
-                    ->whereIn('resep_keluar_h.flag', ['', '1', '2']);
-            })
-
-            ->with('transnonracikan', function ($q) {
-                $q->select(
-                    // 'resep_keluar_r.kdobat as kdobat',
-                    'resep_permintaan_keluar.kdobat as kdobat',
-                    'resep_keluar_h.depo as kdruang',
-                    DB::raw('sum(resep_permintaan_keluar.jumlah) as jumlah')
-                )
-                    ->leftjoin('resep_keluar_h', 'resep_keluar_h.noresep', 'resep_permintaan_keluar.noresep')
-                    ->where('resep_keluar_h.depo', request('kdruang'))
-                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                    ->groupBy('resep_permintaan_keluar.kdobat');
-            })
-
-            // ->with('persiapanrinci', function ($q) {
-            //     $q->select(
-            //         'persiapan_operasi_rincis.kd_obat',
-            //         'persiapan_operasi_rincis.jumlah_minta',
-            //         DB::raw('sum(persiapan_operasi_rincis.jumlah_minta) as jumlah'),
-            //     )
-            //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_rincis.nopermintaan')
-            //         ->whereIn('persiapan_operasis.flag', ['', '1'])
-            //         ->groupBy('persiapan_operasi_rincis.kd_obat');
-            // })
 
 
             ->groupBy('new_masterobat.kd_obat')
@@ -333,10 +349,15 @@ class EresepController extends Controller
         $wew = collect($listobat)->map(function ($x, $y) {
             $total = $x->total ?? 0;
             // $jumlahper = request('kdruang') === 'Gd-04010103' ? $x['persiapanrinci'][0]->jumlah ?? 0 : 0;
-            $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
-            $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
-            $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
-            $alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci;
+            // $jumlahtrans = $x['transnonracikan'][0]->jumlah ?? 0;
+            // $jumlahtransx = $x['transracikan'][0]->jumlah ?? 0;
+            // $permintaanobatrinci = $x['permintaandeporinci'][0]->jumlah_minta ?? 0; // mutasi antar depo
+            $jumlahtransx = $x['oneperracikan']->jumlah ?? 0;
+            $jumlahtrans = $x['onepermintaan']->jumlah ?? 0;
+            $permintaanobatrinci = $x['onepermintaandeporinci']->jumlah_minta ?? 0; // mutasi antar depo
+            $resep = $x['oneobatkel']->jumlah ?? 0; // mutasi antar depo
+            $resepkeluarracikan = $x['oneobatkelracikan']->jumlah ?? 0; // mutasi antar depo
+            $alokasi = (float) $total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci + (float)$resep + (float)$resepkeluarracikan;
             $x->alokasi = $alokasi <= 0 ? 0 : $alokasi;
             return $x;
         });

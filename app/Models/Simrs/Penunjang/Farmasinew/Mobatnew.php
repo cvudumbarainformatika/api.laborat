@@ -210,6 +210,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
     }
+    public function oneobatkel()
+    {
+        return $this->hasOne(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
+    }
     public function pemakaian()
     {
         return $this->hasMany(PemakaianR::class, 'kd_obat', 'kd_obat');
@@ -218,10 +222,18 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kd_obat');
     }
+    public function oneobatkelracikan()
+    {
+        return $this->hasOne(Resepkeluarrinciracikan::class, 'kdobat', 'kd_obat');
+    }
 
     public function permintaandeporinci()
     {
         return $this->hasMany(Permintaandeporinci::class, 'kdobat', 'kd_obat');
+    }
+    public function onepermintaandeporinci()
+    {
+        return $this->hasOne(Permintaandeporinci::class, 'kdobat', 'kd_obat');
     }
 
     public function transnonracikan()
@@ -229,11 +241,21 @@ class Mobatnew extends Model
         // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); //diganti ke permintaan
         return $this->hasMany(Permintaanresep::class, 'kdobat', 'kd_obat');
     }
+    public function onepermintaan()
+    {
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); //diganti ke permintaan
+        return $this->hasOne(Permintaanresep::class, 'kdobat', 'kd_obat');
+    }
 
     public function transracikan()
     {
         // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
         return $this->hasMany(Permintaanresepracikan::class, 'kdobat', 'kd_obat');
+    }
+    public function oneperracikan()
+    {
+        // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+        return $this->hasOne(Permintaanresepracikan::class, 'kdobat', 'kd_obat');
     }
 
     public function persiapanrinci()
