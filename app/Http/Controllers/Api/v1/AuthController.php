@@ -59,13 +59,13 @@ class AuthController extends Controller
         $pegawaiId = $me->pegawai_id;
 
         $user = Cache::rememberForever('account_' . $me->id, function () use ($me) {
-            return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim'])->find($me->id);
+            return User::with(['pegawai.role', 'pegawai.ruang', 'pegawai.ruangsim', 'pegawai.ruangan:koderuangan,kdmapping'])->find($me->id);
         });
 
         $loadGudang = array(3, 4, 7);
 
         if (in_array($user->pegawai->role_id, $loadGudang)) {
-            $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.depoSim:kode,nama']);
+            $user->load(['pegawai.depo:kode,nama', 'pegawai.role', 'pegawai.depoSim:kode,nama', 'pegawai.ruangan:koderuangan,kdmapping']);
         }
 
         // $apps = Aplikasi::with(['menus', 'menus.submenus'])->get();
