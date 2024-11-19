@@ -41,6 +41,15 @@ class PemeriksaanUmumController extends Controller
         'rs253.kdruang',
         'rs253.user',
         'rs253.awal',
+        'rs253.rs5',
+        'rs253.rs6',
+        'rs253.rs7',
+        'rs253.rs8',
+        'rs253.rs9',
+        'rs253.rs10',
+        'rs253.rs11',
+        'rs253.rs12',
+        'rs253.rs13',
         
         'sambung.keadaanUmum',
         'sambung.bb' ,
@@ -117,6 +126,18 @@ class PemeriksaanUmumController extends Controller
                   'kdruang'=> $request->kdruang,
                   'awal'=> $request->awal ?? null,
                   'user'  => $kdpegsimrs,
+
+                  // sementara
+                  'rs5' => $request->form['rs5'] ?? '',
+                  'rs6' => $request->form['rs6'] ?? '',
+                  'rs7' => $request->form['rs7'] ?? '',
+                  'rs8' => $request->form['rs8'] ?? '',
+                  'rs9' => $request->form['rs9'] ?? '',
+                  'rs10' => $request->form['rs10'] ?? '',
+                  'rs11' => $request->form['rs11'] ?? '',
+                  'rs12' => $request->form['rs12'] ?? '',
+                  'rs13' => $request->form['rs13'] ?? ''
+                 
                 ]
             );
             if ($hasil === 1) { 
@@ -141,6 +162,17 @@ class PemeriksaanUmumController extends Controller
                   'kdruang'=> $request->kdruang,
                   'awal'=> $request->awal ?? null,
                   'user'  => $kdpegsimrs,
+
+                  // sementara
+                  'rs5' => $request->form['rs5'] ?? '',
+                  'rs6' => $request->form['rs6'] ?? '',
+                  'rs7' => $request->form['rs7'] ?? '',
+                  'rs8' => $request->form['rs8'] ?? '',
+                  'rs9' => $request->form['rs9'] ?? '',
+                  'rs10' => $request->form['rs10'] ?? '',
+                  'rs11' => $request->form['rs11'] ?? '',
+                  'rs12' => $request->form['rs12'] ?? '',
+                  'rs13' => $request->form['rs13'] ?? ''
             ]
           );
         }

@@ -34,7 +34,7 @@ class RanapController extends Controller
         // return $tanggalx;
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
-        $ruangan = request('koderuangan');
+        $ruangan = request('koderuangan') ?? 'xxxx';
         $data = Kunjunganranap::select(
             'rs23.rs1',
             'rs23.rs1 as noreg',
@@ -96,7 +96,9 @@ class RanapController extends Controller
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->where(function($query) use ($tanggal, $tanggalx) {
-                $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal]);
+                $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal])
+                    ->where('rs23.rs1', '!=', '')
+                ;
             })
             // ->whereDate('rs23.rs3', '<=', $tgl)
             // ->whereIn('rs23.rs22', $status)
@@ -106,11 +108,15 @@ class RanapController extends Controller
             // })
 
             ->where(function ($query) use ($ruangan) {
-                $query->where(function ($query) use ($ruangan) {
-                    for ($i = 0; $i < count($ruangan); $i++) {
-                        $query->orWhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                    }
-                });
+                // $query->where(function ($query) use ($ruangan) {
+                //     // for ($i = 0; $i < count($ruangan); $i++) {
+                //     //     $query->orWhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
+                //     // }
+                // });
+                if ($ruangan !== 'SEMUA') {
+                    $query->orWhere('rs24.rs5', 'like',  '%' . $ruangan . '%');
+                } 
+                
             })
 
 
@@ -160,8 +166,8 @@ class RanapController extends Controller
             //         ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             // })
             ->orderby('rs23.rs3', 'ASC')
-            // ->groupBy('rs23.rs1')
-            ->paginate(20);
+            ->groupBy('rs23.rs1')
+            ->paginate(50);
 
         return new JsonResponse($data);
     }
