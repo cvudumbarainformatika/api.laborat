@@ -328,6 +328,87 @@ class CekPerbaikanHargaController extends Controller
             'req' => $request->all(),
         ]);
     }
+    public function simpanPerbaikanHargaArray(Request $request)
+    {
+        try {
+            $data = DB::connection('farmasi')->transaction(function () use ($request) {
+                $items = [];
+                foreach ($request->item as $key) {
+                    if ($request->tipe == 'stok') {
+                        $data = Stokrel::find($key['id']);
+                        if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                        $data->update([
+                            'harga' => $key['harga'],
+                        ]);
+                        if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
+                        $items[] = $data;
+                    }
+                    if ($request->tipe == 'opname') {
+                        $data = Stokopname::find($key['id']);
+                        if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                        $data->update([
+                            'harga' => $key['harga'],
+                        ]);
+                        if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
+                        $items[] = $data;
+                    }
+                    if ($request->tipe == 'mutasi') {
+                        $data = Mutasigudangkedepo::find($key['id']);
+                        if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                        $data->update(['harga' => $key['harga']]);
+                        if ($data->nobatch != $key['nobatch']) $data->update(['nobatch' => $key['nobatch']]);
+                        if ($data->tglexp != $key['tglexp']) $data->update(['tglexp' => $key['tglexp']]);
+                        if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
+                        $items[] = [
+                            'data' => $data,
+                            'penerimaan' => $key,
+                            'nobatch' => $key['nobatch'],
+                            'tglexp' => $key['tglexp'],
+                            'tglpenerimaan' => $key['tglpenerimaan'],
+                        ];
+                    }
+                    if ($request->tipe == 'resep') {
+                        $data = Resepkeluarrinci::find($key['id']);
+                        if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                        $data->update([
+                            'harga_beli' => $key['harga'],
+                        ]);
+                        $items[] = $data;
+                    }
+                    if ($request->tipe == 'racikan') {
+                        $data = Resepkeluarrinciracikan::find($key['id']);
+                        if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                        $data->update([
+                            'harga_beli' => $key['harga'],
+                        ]);
+                        $items[] = $data;
+                    }
+                    if ($request->tipe == 'retur') {
+                        $data = Returpenjualan_r::find($key['id']);
+                        if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
+                        $data->update([
+                            'harga_beli' => $key['harga'],
+                        ]);
+                        $items[] = $data;
+                    }
+                }
+            });
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Data Berhasil di Simpan',
+                'data' => $data,
+                'req' => $request->all(),
+            ]);
+        } catch (\Exception $th) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' =>  $th->getLine(),
+                'req' => $request->all(),
+            ], 410);
+        }
+    }
     public function simpanPerbaikanHargaDua(Request $request)
     {
         $this->validate($request, [

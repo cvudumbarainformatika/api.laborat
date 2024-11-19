@@ -179,8 +179,8 @@ class BastController extends Controller
                 );
             })
             // ->orderBy('nobast', 'DESC')
-            // ->orderBy('tgl_bast', 'DESC')
             // ->get();
+            ->orderBy('tglpenerimaan', 'DESC')
             ->distinct('nobast')
             ->paginate(request('per_page'));
 
@@ -220,6 +220,7 @@ class BastController extends Controller
                 'no_bast' => $kwitansi,
                 'totalSemua' =>  $items[0]->jumlah_bastx ?? $items[0]->jumlah_bast,
                 'tanggal' => $items[0]->tgl_bast,
+                'tgl_pembayaran' => $items[0]->tgl_pembayaran,
                 'nomor' => $items[0]->nopemesanan,
                 'terima' => $items[0]->terima,
                 'bast' => $items[0]->bast,
@@ -242,8 +243,9 @@ class BastController extends Controller
         $bastR = BastrinciM::where('nobast', $request->no_bast)->get();
         $penerimaanH = PenerimaanHeder::where('nobast', $request->no_bast)
             ->where('no_npd', '')
+            ->whereNull('tgl_pembayaran')
             ->get();
-        if (count($penerimaanH) <= 0) {
+        if (sizeof($penerimaanH) <= 0 || sizeof($bastR) <= 0) {
             return new JsonResponse([
                 'message' => 'Gagal dihapus, Data tidak ditemukan, apakah sudah dibayar?'
             ], 410);
@@ -273,6 +275,6 @@ class BastController extends Controller
             'req' => $request->all(),
         ];
 
-        return new JsonResponse($data, 410);
+        return new JsonResponse($data);
     }
 }

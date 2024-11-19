@@ -11,4 +11,5 @@ Route::group([
 ], function () {
     Route::post('/get-obat', [CekPerbaikanHargaController::class, 'getObat']);
     Route::post('/simpan-perbaikan-harga-dua', [CekPerbaikanHargaController::class, 'simpanPerbaikanHargaDua']);
+    Route::post('/simpan-perbaikan-harga-array', [CekPerbaikanHargaController::class, 'simpanPerbaikanHargaArray']);
 });
