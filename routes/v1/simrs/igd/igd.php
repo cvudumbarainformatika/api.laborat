@@ -9,7 +9,9 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/pelayanan/igd'
 ],function () {
+    Route::post('/flagfinish', [IgdController::class, 'flagfinish']);
     Route::post('/terimapasien', [IgdController::class, 'terimapasien']);
+
     Route::post('/simpantriage', [TriageController::class, 'simpantriage']);
 
     Route::post('/hapustriage', [TriageController::class, 'hapustriage']);

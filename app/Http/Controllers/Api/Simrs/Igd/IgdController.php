@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Igd;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -261,6 +262,24 @@ class IgdController extends Controller
             return response()->json([
                 'message' => 'Data tidak ditemukan'
             ], 500);
+        }
+    }
+
+    public function flagfinish(Request $request)
+    {
+        $input = new Request([
+            'noreg' => $request->noreg
+        ]);
+
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
+            $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs8','POL014')->first();
+            $updatekunjungan->rs19 = '1';
+            $updatekunjungan->rs26 = date('Y-m-d H:i:s');
+            $updatekunjungan->save();
+            return new JsonResponse(['message' => 'ok'], 200);
+        } else {
+            return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
     }
 }
