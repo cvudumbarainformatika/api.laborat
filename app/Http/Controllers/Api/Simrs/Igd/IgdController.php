@@ -211,6 +211,9 @@ class IgdController extends Controller
             'diagnosakebidanan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
             },
+            'pemeriksaanfisikpsikologidll' => function($pemeriksaanfisikpsikologidll){
+                $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll');
+            },
             // 'taskid' => function ($q) {
             //     $q->orderBy('taskid', 'DESC');
             // },

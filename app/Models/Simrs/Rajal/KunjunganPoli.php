@@ -61,6 +61,7 @@ use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Planing\Planing_Igd_Lama;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Rekom\Rekomdpjp;
@@ -431,5 +432,10 @@ class KunjunganPoli extends Model
     public function laboratold()
     {
         return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
+    public function pemeriksaanfisikpsikologidll()
+    {
+        return $this->hasMany(PemeriksaanUmum::class, 'rs1','rs1');
     }
 }

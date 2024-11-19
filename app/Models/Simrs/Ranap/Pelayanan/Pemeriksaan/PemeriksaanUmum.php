@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan;
 
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simpeg\Petugas;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaan_Psikologoldll;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -43,8 +44,12 @@ class PemeriksaanUmum extends Model
     {
        return $this->hasOne(Penilaian::class, 'rs1','rs1');
     }
+    public function pemerisaanpsikologidll()
+    {
+        return  $this->hasOne(Pemeriksaan_Psikologoldll::class, 'id_rs253', 'id');
+    }
 
 
 
-    
+
 }
