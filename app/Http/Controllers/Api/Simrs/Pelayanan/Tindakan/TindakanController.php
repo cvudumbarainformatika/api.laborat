@@ -55,6 +55,12 @@ class TindakanController extends Controller
 
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
+        if($kdpegsimrs === '' || $kdpegsimrs === null)
+        {
+            return new JsonResponse([
+                'message' => 'Data Kepegawaian Anda Belum Termaping...!!!'
+            ],410);
+        }
         // $simpantindakan = Tindakan::firstOrNew(
         //     [
         //         // 'rs8' => $request->kodedokter,
@@ -137,7 +143,7 @@ class TindakanController extends Controller
 
     public function hapustindakanpoli(Request $request)
     {
-        
+
         $cari = Tindakan::find($request->id);
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
@@ -145,7 +151,7 @@ class TindakanController extends Controller
         $hapus = $cari->delete();
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
-        
+
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
@@ -234,7 +240,7 @@ class TindakanController extends Controller
             'rs1 as noreg',
             'rs2 as nota',
             'rs3',
- 
+
             'rs4',
             'rs5',
             'rs6',
@@ -256,7 +262,7 @@ class TindakanController extends Controller
 
     public function getTindakanRanap()
     {
-       
+
         $data = self::dataTindakanByNoreg(request('noreg'));
         return new JsonResponse($data);
     }
@@ -318,15 +324,15 @@ class TindakanController extends Controller
         $tindakan->sambungan()->updateOrCreate(
             ['rs73_id' => $idTindakan],
             [
-                'nota' => $tindakan->rs2, 'noreg' => $request->noreg, 
+                'nota' => $tindakan->rs2, 'noreg' => $request->noreg,
                 'kd_tindakan' => $request->kdtindakan,
                 'ket' => $request->keterangan,
                 'rs73_id' => $idTindakan
-            ],  
+            ],
             // ['ket' => $request->keterangan]
         );
 
-        
+
         // $tindakan->save();
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
