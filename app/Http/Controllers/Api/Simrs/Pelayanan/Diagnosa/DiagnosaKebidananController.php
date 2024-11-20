@@ -36,7 +36,7 @@ class DiagnosaKebidananController extends Controller
                         'kode' => $value['kode'],
                         'nama' => $value['nama'],
                         'user_input'=> $user,
-                        //'kdruang' => $value['kdruang'],
+                        'kdruang' => $value['kdruang'] ?? '',
                     ]
                 );
 
