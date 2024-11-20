@@ -327,28 +327,30 @@ class AutogenController extends Controller
         
         // echo $this->translate("nyeri kepala, mual", "id", "en");
 
-        $text = 'sesak , panas(+) batuk(+)';
-        $q = preg_replace('/[^a-z\d]+/i', ' ', $text);
-        $q = preg_replace('/\s+/', ' ', $q);
-        $q = trim($q). "-" . bin2hex(random_bytes(10));
+        // $text = 'sesak , panas(+) batuk(+)';
+        // $q = preg_replace('/[^a-z\d]+/i', ' ', $text);
+        // $q = preg_replace('/\s+/', ' ', $q);
+        // $q = trim($q). "-" . bin2hex(random_bytes(10));
 
-        $a = Str::random(20);
-                            $bbb = Str::random(20);
-                            $c = Str::random(20);
-                            $d = Str::random(20);
-                            $eee = Str::random(20);
-                            $f = Str::random(20);
+        // $a = Str::random(20);
+        //                     $bbb = Str::random(20);
+        //                     $c = Str::random(20);
+        //                     $d = Str::random(20);
+        //                     $eee = Str::random(20);
+        //                     $f = Str::random(20);
 
-        // echo $q;
-        return [
-            'q' => $q,
-            'a' => $a,
-            'bbb' => $bbb,
-            'c' => $c,
-            'd' => $d,
-            'eee' => $eee,
-            'f' => $f
-        ];
+        // // echo $q;
+        // return [
+        //     'q' => $q,
+        //     'a' => $a,
+        //     'bbb' => $bbb,
+        //     'c' => $c,
+        //     'd' => $d,
+        //     'eee' => $eee,
+        //     'f' => $f
+        // ];
+        $sql_groups_titipan=DB::table('rs24')->select('groups')->distinct()->where('rs1', 'ME1')->first();
+        return $sql_groups_titipan;
     }
 
     public function translate($q, $sl, $tl)

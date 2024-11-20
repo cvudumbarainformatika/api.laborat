@@ -87,6 +87,41 @@ class PulangController extends Controller
           );
        }
 
+        $titipan = $kunjunganRanap->titipan;
+        $kelas=$kunjunganRanap->rs5;
+        $kamar=$kunjunganRanap->rs6;
+        $nobed=$kunjunganRanap->rs7;
+
+       if($titipan!=""){
+        // $sql_groups_titipan=$conn->query("select distinct groups from rs24 where rs1='".$titipan."'");
+        $rs_groups_titipan=DB::table('rs24')->select('groups')->distinct()->where('rs1', $titipan)->first();
+        // $rs_groups_titipan=$sql_groups_titipan->fetch_object();
+        // $conn->query("update rs25 set rs3='A',rs4='V' where rs5='".$titipan."' and rs1='".$kamar."' and rs2='".$nobed."'");
+        DB::table('rs25')->where('rs5', $titipan)->where('rs1', $kamar)->where('rs2', $nobed)->update([
+          'rs3' => 'A',
+          'rs4' => 'V'  
+        ]);
+        // $conn->query("update rs25 set rs3='A',rs4='V' where rs6='".$rs_groups_titipan->groups."' and rs1='".$kamar."' and rs2='".$nobed."' and rs5='-'");
+        DB::table('rs25')->where('rs6', $rs_groups_titipan->groups)->where('rs1', $kamar)->where('rs2', $nobed)->where('rs5', '-')->update([
+          'rs3' => 'A',
+          'rs4' => 'V'
+        ]);
+      }else{
+        // $sql_groups=$conn->query("select distinct groups from rs24 where rs1='".$kelas."'");
+        $rs_groups=DB::table('rs24')->select('groups')->distinct()->where('rs1', $kelas)->first();
+        // $rs_groups=$sql_groups->fetch_object();
+        // $conn->query("update rs25 set rs3='A',rs4='V' where rs5='".$kelas."' and rs1='".$kamar."' and rs2='".$nobed."'");
+        DB::table('rs25')->where('rs5', $kelas)->where('rs1', $kamar)->where('rs2', $nobed)->update([
+          'rs3' => 'A',
+          'rs4' => 'V'
+        ]);
+        // $conn->query("update rs25 set rs3='A',rs4='V' where rs6='".$rs_groups->groups."' and rs1='".$kamar."' and rs2='".$nobed."' and rs5='-'");
+        DB::table('rs25')->where('rs6', $rs_groups->groups)->where('rs1', $kamar)->where('rs2', $nobed)->where('rs5', '-')->update([
+          'rs3' => 'A',
+          'rs4' => 'V'
+        ]);
+      }
+
        return new JsonResponse([
         'success' => true,
         'message' => 'success',
