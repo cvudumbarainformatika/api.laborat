@@ -101,16 +101,10 @@ class TransaksiLaborat extends Model
             $filterBy = $reqs['filter_by'];
             //search by nama pasien
             if ($filterBy == 1) {
-                $search->hasByNonDependentSubquery(
-                    'kunjungan_poli',
-                    function ($a) use ($query) {
-                        $a->hasByNonDependentSubquery(
-                            'pasien',
-                            fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%')
-                        );
-                    },
-
-                ) || $search->hasByNonDependentSubquery(
+                $search->hasByNonDependentSubquery('kunjungan_poli',function ($a) use ($query) {
+                        $a->hasByNonDependentSubquery('pasien',fn (BelongsTo $q) => $q->where('rs2', 'LIKE', '%' . $query . '%'));
+                    }
+                )->orHasByNonDependentSubquery(
                     'kunjungan_rawat_inap',
                     function ($b) use ($query) {
                         $b->hasByNonDependentSubquery(
@@ -121,15 +115,10 @@ class TransaksiLaborat extends Model
                 );
                 //search by norm
             } elseif ($filterBy == 2) {
-                $search->hasByNonDependentSubquery(
-                    'kunjungan_poli',
-                    function ($a) use ($query) {
-                        $a->hasByNonDependentSubquery(
-                            'pasien',
-                            fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%')
-                        );
+                $search->hasByNonDependentSubquery('kunjungan_poli',function ($a) use ($query) {
+                        $a->hasByNonDependentSubquery('pasien',fn (BelongsTo $q) => $q->orWhere('rs1', 'LIKE', '%' . $query . '%'));
                     }
-                ) || $search->hasByNonDependentSubquery(
+                )->orHasByNonDependentSubquery(
                     'kunjungan_rawat_inap',
                     function ($b) use ($query) {
                         $b->hasByNonDependentSubquery(
@@ -147,21 +136,21 @@ class TransaksiLaborat extends Model
             // pasien hari ini sudah
             if ($query == 2) {
                 return $search
-                    ->whereDate('rs3', '=', date('Y-m-d'))
-                    ->where('rs20', '<>', '');
+                    ->whereDate('rs51.rs3', '=', date('Y-m-d'))
+                    ->where('rs51.rs20', '<>', '');
             } elseif ($query == 3) {
                 // pasien lalu
                 return
-                    $search->whereDate('rs3', '<', date('Y-m-d'))
-                    ->where('rs20', '=', '');
+                    $search->whereDate('rs51.rs3', '<', date('Y-m-d'))
+                    ->where('rs51.rs20', '=', '');
             } elseif ($query == 4) {
                 // pasien lalu sudah
-                return $search->whereDate('rs3', '<', date('Y-m-d'))
-                    ->where('rs20', '<>', '');
+                return $search->whereDate('rs51.rs3', '<', date('Y-m-d'))
+                    ->where('rs51.rs20', '<>', '');
             } else {
                 // pasien hari ini
-                return $search->whereDate('rs3', '=', date('Y-m-d'))
-                    ->where('rs20', '=', '');
+                return $search->whereDate('rs51.rs3', '=', date('Y-m-d'))
+                    ->where('rs51.rs20', '=', '');
             }
         });
 

@@ -48,20 +48,61 @@ class TransaksiLaboratController extends Controller
     public function query_table($val)
     {
         $y = Carbon::now()->subYears(1);
-        $m = Carbon::now()->subMonth(3);
+        $m = Carbon::now()->subMonth(2);
         $from = now();
         $to = $m;
         $query = TransaksiLaborat::query();
         if ($val === 'total') {
             $select = $query->selectRaw('rs2,rs3');
         } else {
-            $select = $query->selectRaw('rs1,rs2,rs3 as tanggal,rs20,rs8,rs23,rs18,rs21,rs4,rs26,rs27,rs12 as cito');
+            $select = $query->select(
+            'rs51.rs1',
+            'rs51.rs2',
+            'rs51.rs3 as tanggal',
+            'rs51.rs20',
+            'rs51.rs8',
+            'rs51.rs23',
+            'rs51.rs18',
+            'rs51.rs21',
+            'rs51.rs4',
+            'rs51.rs26',
+            'rs51.rs27',
+            'rs51.rs12 as cito',
+            // 'rs51_meta.norm as norm', 
+            // 'rs15.rs2 as nama'
+            )
+            // ->leftjoin('rs51_meta', 'rs51_meta.nota', '=', 'rs51.rs2')
+            // ->leftjoin('rs15', 'rs51_meta.norm', '=', 'rs15.rs1')
+        ;
         }
         $q = $select
-            // ->whereYear('rs3', '>=', $y)
-            ->whereBetween('rs3', [$to, $from])
+            ->whereBetween('rs51.rs3', [$to, $from])
             ->filter(request(['q', 'periode', 'filter_by']))
-            ->orderBy('rs3', 'asc')->groupBy('rs2');
+            // ->when(request('q'), function ($search, $q) {
+            //     $search->where('rs51.rs2', 'like', '%' . $q . '%');
+            // })
+            // ->when(request('periode'), function ($search, $query) {
+            //     // pasien hari ini sudah
+            //     if ($query == 2) {
+            //         return $search
+            //             ->whereDate('rs3', '=', date('Y-m-d'))
+            //             ->where('rs20', '<>', '');
+            //     } elseif ($query == 3) {
+            //         // pasien lalu
+            //         return
+            //             $search->whereDate('rs3', '<', date('Y-m-d'))
+            //             ->where('rs20', '=', '');
+            //     } elseif ($query == 4) {
+            //         // pasien lalu sudah
+            //         return $search->whereDate('rs3', '<', date('Y-m-d'))
+            //             ->where('rs20', '<>', '');
+            //     } else {
+            //         // pasien hari ini
+            //         return $search->whereDate('rs3', '=', date('Y-m-d'))
+            //             ->where('rs20', '=', '');
+            //     }
+            // })
+            ->orderBy('rs51.rs3', 'asc')->groupBy('rs51.rs2');
         return $q;
     }
 
