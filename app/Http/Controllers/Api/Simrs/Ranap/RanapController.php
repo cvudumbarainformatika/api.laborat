@@ -102,7 +102,8 @@ class RanapController extends Controller
                 //     // }
                 // });
                 if ($ruangan !== 'SEMUA') {
-                    $query->where('rs24.groups', 'like',  '%' . $ruangan . '%');
+                    $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
+                    ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
                 } 
                 
             })
