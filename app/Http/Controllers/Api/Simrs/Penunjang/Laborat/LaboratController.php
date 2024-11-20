@@ -27,7 +27,8 @@ class LaboratController extends Controller
                 'rs6 as hargapelayananpolispesialis',
                 'rs21 as gruper',
                 'nilainormal',
-                'satuan'
+                'satuan',
+                'hidden'
             )->where('rs25', '1')
                 ->where('rs1', '!=', 'LAB126')
                 ->where('hidden', '!=', '1')
@@ -45,7 +46,8 @@ class LaboratController extends Controller
                 'rs6 as hargapelayananpolispesialis',
                 'rs21 as gruper',
                 'nilainormal',
-                'satuan'
+                'satuan',
+                'hidden'
             )->where('rs25', '1')->orwhere('rs25', '')
                 ->where('rs1', '!=', 'LAB126')
                 ->where('hidden', '!=', '1')
