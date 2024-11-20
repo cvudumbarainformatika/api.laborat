@@ -95,18 +95,6 @@ class RanapController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
-            ->where(function($query) use ($tanggal, $tanggalx) {
-                $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal])
-                    ->where('rs23.rs1', '!=', '')
-                ;
-            })
-            // ->whereDate('rs23.rs3', '<=', $tgl)
-            // ->whereIn('rs23.rs22', $status)
-
-            // ->where(function ($x) {
-            //     $x->orWhereNull('dokterdpjp');
-            // })
-
             ->where(function ($query) use ($ruangan) {
                 // $query->where(function ($query) use ($ruangan) {
                 //     // for ($i = 0; $i < count($ruangan); $i++) {
@@ -114,10 +102,32 @@ class RanapController extends Controller
                 //     // }
                 // });
                 if ($ruangan !== 'SEMUA') {
-                    $query->orWhere('rs24.rs5', 'like',  '%' . $ruangan . '%');
+                    $query->where('rs24.groups', 'like',  '%' . $ruangan . '%');
                 } 
                 
             })
+            ->where(function($query) use ($tanggal, $tanggalx) {
+                $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal])
+                    ->where('rs23.rs1', '!=', '')
+                ;
+            })
+
+            
+            // ->whereDate('rs23.rs3', '<=', $tgl)
+            // ->whereIn('rs23.rs22', $status)
+
+            // ->where(function ($x) {
+            //     $x->orWhereNull('dokterdpjp');
+            // })
+
+            ->where(function ($q) use ($status) {
+                $q->whereIn('rs23.rs22', $status);
+            })
+
+            
+
+
+
 
 
 
@@ -130,9 +140,7 @@ class RanapController extends Controller
             })
 
 
-            ->where(function ($q) use ($status) {
-                $q->whereIn('rs23.rs22', $status);
-            })
+            
             // ->with([
             //     'newapotekrajal' => function ($newapotekrajal) {
             //         $newapotekrajal->with([
