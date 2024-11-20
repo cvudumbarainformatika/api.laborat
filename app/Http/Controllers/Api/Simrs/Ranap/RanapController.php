@@ -20,16 +20,23 @@ class RanapController extends Controller
         // return request()->all();
         $dokter = request('kddokter');
 
-        if (request('to') === '' || request('from') === null) {
+        if (request('to') === null || request('to') === '') {
             $tgl = Carbon::now()->format('Y-m-d');
-            $tglx = Carbon::now()->format('Y-m-d');
         } else {
             $tgl = request('to') ;
+        }
+
+        if (request('from') === null || request('from') === '') {
+            $tglx = Carbon::now()->format('Y-m-d');
+        } else {
             $tglx = request('from');
         }
 
-        $tanggal = $tgl. ' 23:59:59';
-        $tanggalx = Carbon::now()->subDays(180)->format('Y-m-d'). ' 00:00:00'; 
+        // $tanggal = $tgl. ' 23:59:59';
+        // $tanggalx = $tglx. ' 00:00:00'; 
+        $tanggal = $tgl. ' 00:00:00';
+        $tanggalx = $tglx. ' 23:59:59'; 
+        // $tanggalx = Carbon::now()->subDays(180)->format('Y-m-d'). ' 00:00:00'; 
 
         // return $tanggalx;
 
@@ -48,6 +55,7 @@ class RanapController extends Controller
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
             'rs23.rs10 as kodedokter',
+            // 'rs23.titipan',
             'rs21.rs2 as dokter',
             'rs23.rs19 as kdsistembayar',
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
@@ -78,6 +86,7 @@ class RanapController extends Controller
             'rs24.rs3 as kelas_ruangan',
             'rs24.rs5 as group_ruangan',
             'rs24.rs4 as kdgroup_ruangan',
+            'rs24_titipan.rs2 as dititipkanke',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
@@ -93,6 +102,7 @@ class RanapController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
+            ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->where(function ($query) use ($ruangan) {
@@ -107,11 +117,7 @@ class RanapController extends Controller
                 } 
                 
             })
-            ->where(function($query) use ($tanggal, $tanggalx) {
-                $query->whereBetween('rs23.rs3', [$tanggalx, $tanggal])
-                    ->where('rs23.rs1', '!=', '')
-                ;
-            })
+            
 
             
             // ->whereDate('rs23.rs3', '<=', $tgl)
@@ -120,18 +126,27 @@ class RanapController extends Controller
             // ->where(function ($x) {
             //     $x->orWhereNull('dokterdpjp');
             // })
+            ->where(function($query) use ($tanggal, $tanggalx) {
+                if (request('status') === 'Pulang') {
+                    $query->whereBetween('rs23.rs3', [$tanggal, $tanggalx])
+                        ->where('rs23.rs1', '!=', '')
+                    ;
+                } else {
+                    $query->where('rs23.rs1', '!=', '');
+                }
+                
+            })
 
             ->where(function ($q) use ($status) {
+                // if ($status === 'Belum Pulang') {
+                //     $q->where('rs23.rs22', '');
+                // } else {
+                //     $q->where('rs23.rs22', '!=', '');
+                // }
                 $q->whereIn('rs23.rs22', $status);
             })
 
             
-
-
-
-
-
-
             ->where(function ($query) {
                 $query->when(request('q'), function ($q) {
                     $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
@@ -139,6 +154,7 @@ class RanapController extends Controller
                         ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
                 });
             })
+            
 
 
             
@@ -331,7 +347,9 @@ class RanapController extends Controller
                         'rs23',
                         'rs24',
                     )
-                    ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket']);
+                    ->where('rs22','!=','POL014')
+                    ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
+                    ->orderBy('id', 'DESC');
                 },
                 'laborats' => function ($q) {
                     $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC');

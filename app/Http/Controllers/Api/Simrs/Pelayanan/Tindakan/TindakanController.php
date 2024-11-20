@@ -166,6 +166,13 @@ class TindakanController extends Controller
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
+    public function notatindakanranap()
+    {
+        $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
+            ->where('rs22', request('kodepoli'))
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
 
 
     public function simpandokumentindakanpoli(Request $request)
@@ -233,7 +240,7 @@ class TindakanController extends Controller
     }
 
 
-    public static function dataTindakanByNoreg($noreg)
+    public static function dataTindakanByNoreg($noreg, $ruangan)
     {
         $data = Tindakan::select(
             'id','rs1','rs2','rs4',
@@ -255,7 +262,9 @@ class TindakanController extends Controller
             'rs24',
         )
         ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
-        ->where('rs1', $noreg)->get();
+        ->where('rs1', $noreg)
+        ->where('rs22', '!=', $ruangan)
+        ->get();
 
         return $data;
     }
@@ -263,7 +272,7 @@ class TindakanController extends Controller
     public function getTindakanRanap()
     {
 
-        $data = self::dataTindakanByNoreg(request('noreg'));
+        $data = self::dataTindakanByNoreg(request('noreg'), request('kodepoli'));
         return new JsonResponse($data);
     }
 
@@ -336,6 +345,7 @@ class TindakanController extends Controller
         // $tindakan->save();
 
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
+            ->where('rs22', $request->kodepoli)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
         // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
