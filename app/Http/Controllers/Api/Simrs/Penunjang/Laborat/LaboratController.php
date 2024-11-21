@@ -144,7 +144,10 @@ class LaboratController extends Controller
     public function simpanpermintaanlaboratbaru(Request $request)
     {
         // return $request->form;
-
+        $cek = Laboratpemeriksaan::where('rs2', $request->nota)->where('rs18','=','1')->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa dihapus!'], 500);
+        }
 
         $auth = Pegawai::find(auth()->user()->pegawai_id);
         $user = $auth->kdpegsimrs ?? '';
