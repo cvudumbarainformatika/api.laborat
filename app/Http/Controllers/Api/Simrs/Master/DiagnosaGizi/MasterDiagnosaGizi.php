@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Master\DiagnosaGizi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mdiagnosagizi;
-use App\Models\Simrs\Master\Mintervensikebidanan;
+use App\Models\Simrs\Master\Mintervensigizi;
 use App\Models\Simrs\Master\Mpemeriksaanfisik;
 use App\Models\Simrs\Master\Mtemplategambar;
 use Illuminate\Http\JsonResponse;
@@ -80,11 +80,11 @@ class MasterDiagnosaGizi extends Controller
     {
         $data = null;
         if ($request->has('id')) {
-            $data = Mintervensikebidanan::find($request->id);
+            $data = Mintervensigizi::find($request->id);
             $data->nama = $request->nama;
             $data->save();
         } else {
-          $data = Mintervensikebidanan::create(
+          $data = Mintervensigizi::create(
             ['nama' => $request->nama, 'group' => $request->group, 'mdiagnosagizi_kode' => $request->kode]
           );
         }
@@ -98,7 +98,7 @@ class MasterDiagnosaGizi extends Controller
 
     public function deleteintervensi(Request $request)
     {
-        $data = Mintervensikebidanan::find($request->id);
+        $data = Mintervensigizi::find($request->id);
 
         if (!$data) {
             return new JsonResponse(['message' => 'Maaf, Data Tidak ditemukan...!!!'], 500);

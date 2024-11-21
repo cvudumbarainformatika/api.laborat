@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Master\DiagnosaGizi\MasterDiagnosaGizi;
 use App\Http\Controllers\Api\Simrs\Master\DiagnosaKebidanan\MasterDiagnosaKebidanan;
 use Illuminate\Support\Facades\Route;
 
@@ -9,11 +10,9 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master/diagnosagizi'
 ], function () {
-    Route::post('/store', [MasterDiagnosaKebidanan::class, 'store']);
-    Route::get('/getall', [MasterDiagnosaKebidanan::class, 'index']);
-    Route::post('/storeintervensi', [MasterDiagnosaKebidanan::class, 'storeintervensi']);
-    // Route::get('/getall', [MasterDiagnosaKeperawatan::class, 'index']);
-    Route::post('/delete', [MasterDiagnosaKebidanan::class, 'delete']);
-    Route::post('/deleteintervensi', [MasterDiagnosaKebidanan::class, 'deleteintervensi']);
-    // Route::post('/deletetemplate', [MasterPemeriksaanFisikController::class, 'deletetemplate']);
+    Route::post('/store', [MasterDiagnosaGizi::class, 'store']);
+    Route::get('/getall', [MasterDiagnosaGizi::class, 'index']);
+    Route::post('/storeintervensi', [MasterDiagnosaGizi::class, 'storeintervensi']);
+    Route::post('/delete', [MasterDiagnosaGizi::class, 'delete']);
+    Route::post('/deleteintervensi', [MasterDiagnosaGizi::class, 'deleteintervensi']);
 });
