@@ -14,144 +14,170 @@ class TriageController extends Controller
 {
     public function simpantriage(Request $request)
     {
-        $cek = TriageA::where('rs1', $request->noreg)->count();
-        if($cek > 0){
-            return new JsonResponse(
-                [
-                    'message' => 'Triage Sudah Pernah Di Input...!!!',
-                ],500);
-        }
-        $user = Pegawai::find(auth()->user()->pegawai_id);
-        $kdpegsimrs = $user->kdpegsimrs;
-        try {
-            $simpan = TriageA::create(
-                [
-                    'rs1' => $request->noreg,
-                    'rs2' => $request->norm,
-                    'rs3' => date('Y-m-d H:i:s'),
-                    'rs4' => 'IRD',
-                    'rs5' => 'POL014',
-                    'rs6' => date('Y-m-d H:i:s'),
 
-                    'rs8' => $request->suhu,
-                    'rs9' => '-',
-                    'rs10' => $request->pernapasanx,
-                    'rs11' => $request->nadi,
+        // if($request->has('id')){
+        //     $cek = TriageA::where('rs1', $request->noreg)->count();
+        //     if($cek > 0){
+        //         return new JsonResponse(
+        //             [
+        //                 'message' => 'Triage Sudah Pernah Di Input...!!!',
+        //             ],500);
+        //     }
+        // }else{
 
-                    'rs13' => $request->bb,
+            $user = Pegawai::find(auth()->user()->pegawai_id);
+            $kdpegsimrs = $user->kdpegsimrs;
+            try {
+                $caritanggal = TriageA::where('rs1', $request->noreg)->get();
+                if($caritanggal[0]['rs3'] === '' || $caritanggal[0]['rs3'] === null)
+                {
+                    $rs3 = date('Y-m-d H:i:s');
+                    $rs6 = date('Y-m-d H:i:s');
+                }else{
+                    $rs3 =  $caritanggal[0]['rs3'] ;
+                    $rs6 =  $caritanggal[0]['rs6'] ;
+                }
+                $simpan = TriageA::updateOrCreate(
+                    [
+                        'rs1' => $request->noreg,
+                        'rs2' => $request->norm,
+                        'rs3' => $rs3,
+                        'rs6' => $rs6,
+                    ],
+                    [
 
-                    'rs16' => $request->kategoritriage,
-                    'rs17' => $kdpegsimrs,
-                    'rs20' => $kdpegsimrs,
-                    'rs21' => $request->tinggibadan,
+                        'rs4' => 'IRD',
+                        'rs5' => 'POL014',
+                        'rs8' => $request->suhu,
+                        'rs9' => '-',
+                        'rs10' => $request->pernapasanx,
+                        'rs11' => $request->nadi,
 
-                    'sistole' => $request->sistole,
-                    'diastole' => $request->diastole,
-                    'kesadarans' => $request->kesadaran,
-                    'spo2' => $request->spo2,
-                    'doa' => $request->doa,
-                    'scorediastole' => $request->scorediastole,
-                    'scoresistole' => $request->scoresistole,
-                    'scorekesadaran' => $request->scorekesadaran,
-                    'scorelochea' => $request->scorelochea,
-                    'scorenadi' => $request->scorenadi,
-                    'scorenyeri' => $request->scorenyeri,
-                    'scorepernapasanx' => $request->scorepernapasanx,
-                    'scoreproteinurin' => $request->scoreproteinurin,
-                    'scorespo2' => $request->scorespo2,
-                    'scoresuhu' => $request->scoresuhu,
-                    'totalscore' => $request->totalscore,
-                    'hasilprimarusurve' => $request->hasilprimarysurve,
-                    'hasilsecondsurve' => $request->hasilsecondsurve,
-                    'gangguanperilaku' => $request->gangguanperilaku,
-                    'falsetriage' => $request->falsetriage
-                ]
-            );
+                        'rs13' => $request->bb,
 
-            $simpanx = TriageB::create(
-                [
-                    'rs1' => $request->noreg,
-                    'rs2' => $request->norm,
-                    'rs3' => date('Y-m-d'),
-                    'rs4' => 'IRD',
-                    'rs5' => 'POL014',
-                    'rs7' => $request->jalannafas,
-                    'rs9' => $request->pernapasan,
-                    'rs14' => $request->eye,
-                    'rs15' => $request->verbal,
-                    'rs16' => $request->motorik,
-                    'rs18' => $kdpegsimrs,
-                    'rs19' => $request->sirkulasi,
-                    'flaghamil' => $request->pasienhamil,
-                    'haidterakir' => $request->haid,
-                    'gravida' => $request->gravida,
-                    'partus' => $request->partus,
-                    'abortus' => $request->abortus,
-                    'nyeri' => $request->nyeri,
-                    'lochea' => $request->lochea,
-                    'proteinurin' => $request->proteinurin,
-                    'rs20' => $request->disability,
-                ]
-            );
+                        'rs16' => $request->kategoritriage,
+                        'rs17' => $kdpegsimrs,
+                        'rs20' => $kdpegsimrs,
+                        'rs21' => $request->tinggibadan,
 
-            $result = [
-                'id' => $simpan['id'],
-                'noreg' => $simpan['rs1'],
-                'rs1' => $simpan['rs1'],
-                'suhu' => $simpan['rs8'],
-                'pernapasanx' => $simpan['rs10'],
-                'nadi' => $simpan['rs11'],
-                'bb' => $simpan['rs13'],
-                'tb' => $simpan['rs21'],
-                'sistole' => $simpan['sistole'],
-                'diastole' => $simpan['diastole'],
-                'kesadaran' => $simpan['kesadarans'],
-                'spo2' => $simpan['spo2'],
-                'doa' => $simpan['doa'],
-                'jalannafas' => $simpanx['rs7'],
-                'pernapasan' => $simpanx['rs9'],
-                'scoresistole' => $simpan['scoresistole'],
-                'scorediastole' => $simpan['scorediastole'],
-                'scorekesadaran' => $simpan['scorekesadaran'],
-                'scorelochea' => $simpan['scorelochea'],
-                'scorenadi' => $simpan['scorenadi'],
-                'scorenyeri' => $simpan['scorenyeri'],
-                'scorepernapasanx' => $simpan['scorepernapasanx'],
-                'scoreproteinurin' => $simpan['scoreproteinurin'],
-                'scorespo2' => $simpan['scorespo2'],
-                'scoresuhu' => $simpan['scoresuhu'],
-                'totalscore' => $simpan['totalscore'],
-                'kategoritriage' => $simpan['rs16'],
-                'hasilprimarusurve' => $simpan['hasilprimarusurve'],
-                'hasilsecondsurve' => $simpan['hasilsecondsurve'],
+                        'sistole' => $request->sistole,
+                        'diastole' => $request->diastole,
+                        'kesadarans' => $request->kesadaran,
+                        'spo2' => $request->spo2,
+                        'doa' => $request->doa,
+                        'scorediastole' => $request->scorediastole,
+                        'scoresistole' => $request->scoresistole,
+                        'scorekesadaran' => $request->scorekesadaran,
+                        'scorelochea' => $request->scorelochea,
+                        'scorenadi' => $request->scorenadi,
+                        'scorenyeri' => $request->scorenyeri,
+                        'scorepernapasanx' => $request->scorepernapasanx,
+                        'scoreproteinurin' => $request->scoreproteinurin,
+                        'scorespo2' => $request->scorespo2,
+                        'scoresuhu' => $request->scoresuhu,
+                        'totalscore' => $request->totalscore,
+                        'hasilprimarusurve' => $request->hasilprimarysurve,
+                        'hasilsecondsurve' => $request->hasilsecondsurve,
+                        'gangguanperilaku' => $request->gangguanperilaku,
+                        'falsetriage' => $request->falsetriage
+                    ]
+                );
 
-                'gangguanperilaku' => $simpan['gangguanperilaku'],
-                'falsetriage' => $simpan['falsetriage'],
+                $caritanggal = TriageB::where('rs1', $request->noreg)->get();
+                if($caritanggal[0]['rs3'] === '' || $caritanggal[0]['rs3'] === null)
+                {
+                    $rs3 = date('Y-m-d');
+                }else{
+                    $rs3 =  $caritanggal[0]['rs3'] ;
+                }
+                $simpanx = TriageB::updateOrCreate(
+                    [
+                        'rs1' => $request->noreg,
+                        'rs2' => $request->norm,
+                        'rs3' => $rs3,
+                    ],
+                    [
+                        'rs4' => 'IRD',
+                        'rs5' => 'POL014',
+                        'rs7' => $request->jalannafas,
+                        'rs9' => $request->pernapasan,
+                        'rs14' => $request->eye,
+                        'rs15' => $request->verbal,
+                        'rs16' => $request->motorik,
+                        'rs18' => $kdpegsimrs,
+                        'rs19' => $request->sirkulasi,
+                        'flaghamil' => $request->pasienhamil,
+                        'haidterakir' => $request->haid,
+                        'gravida' => $request->gravida,
+                        'partus' => $request->partus,
+                        'abortus' => $request->abortus,
+                        'nyeri' => $request->nyeri,
+                        'lochea' => $request->lochea,
+                        'proteinurin' => $request->proteinurin,
+                        'rs20' => $request->disability,
+                    ]
+                );
 
-                'eye' => $simpanx['rs14'],
-                'verbal' => $simpanx['rs15'],
-                'motorik' => $simpanx['rs16'],
-                'sirkulasi' => $simpanx['rs19'],
-                'flaghamil' => $simpanx['flaghamil'],
-                'haid' => $simpanx['haidterakir'],
-                'gravida' => $simpanx['gravida'],
-                'partus' => $simpanx['partus'],
-                'abortus' => $simpanx['abortus'],
-                'nyeri' => $simpanx['nyeri'],
-                'lochea' => $simpanx['lochea'],
-                'proteinurin' => $simpanx['proteinurin'],
-                'disability' => $simpanx['rs20'],
-            ];
-            return new JsonResponse([
-                'message' => 'BERHASIL DISIMPAN',
-                'result' => $result
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return new JsonResponse([
-                'message' => 'GAGAL DISIMPAN...!!!'
-            ], 500);
-        }
+                $result = [
+                    'id' => $simpan['id'],
+                    'noreg' => $simpan['rs1'],
+                    'rs1' => $simpan['rs1'],
+                    'suhu' => $simpan['rs8'],
+                    'pernapasanx' => $simpan['rs10'],
+                    'nadi' => $simpan['rs11'],
+                    'bb' => $simpan['rs13'],
+                    'tb' => $simpan['rs21'],
+                    'sistole' => $simpan['sistole'],
+                    'diastole' => $simpan['diastole'],
+                    'kesadaran' => $simpan['kesadarans'],
+                    'spo2' => $simpan['spo2'],
+                    'doa' => $simpan['doa'],
+                    'jalannafas' => $simpanx['rs7'],
+                    'pernapasan' => $simpanx['rs9'],
+                    'scoresistole' => $simpan['scoresistole'],
+                    'scorediastole' => $simpan['scorediastole'],
+                    'scorekesadaran' => $simpan['scorekesadaran'],
+                    'scorelochea' => $simpan['scorelochea'],
+                    'scorenadi' => $simpan['scorenadi'],
+                    'scorenyeri' => $simpan['scorenyeri'],
+                    'scorepernapasanx' => $simpan['scorepernapasanx'],
+                    'scoreproteinurin' => $simpan['scoreproteinurin'],
+                    'scorespo2' => $simpan['scorespo2'],
+                    'scoresuhu' => $simpan['scoresuhu'],
+                    'totalscore' => $simpan['totalscore'],
+                    'kategoritriage' => $simpan['rs16'],
+                    'hasilprimarusurve' => $simpan['hasilprimarusurve'],
+                    'hasilsecondsurve' => $simpan['hasilsecondsurve'],
+
+                    'gangguanperilaku' => $simpan['gangguanperilaku'],
+                    'falsetriage' => $simpan['falsetriage'],
+
+                    'eye' => $simpanx['rs14'],
+                    'verbal' => $simpanx['rs15'],
+                    'motorik' => $simpanx['rs16'],
+                    'sirkulasi' => $simpanx['rs19'],
+                    'flaghamil' => $simpanx['flaghamil'],
+                    'haid' => $simpanx['haidterakir'],
+                    'gravida' => $simpanx['gravida'],
+                    'partus' => $simpanx['partus'],
+                    'abortus' => $simpanx['abortus'],
+                    'nyeri' => $simpanx['nyeri'],
+                    'lochea' => $simpanx['lochea'],
+                    'proteinurin' => $simpanx['proteinurin'],
+                    'disability' => $simpanx['rs20'],
+                ];
+                return new JsonResponse([
+                    'message' => 'BERHASIL DISIMPAN',
+                    'result' => $result
+                ], 200);
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                return new JsonResponse([
+                    'message' => 'GAGAL DISIMPAN...!!! '
+                ], 500);
+            }
+        // }
     }
 
     public function hapustriage(Request $request)

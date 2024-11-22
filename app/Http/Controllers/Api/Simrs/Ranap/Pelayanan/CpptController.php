@@ -8,6 +8,9 @@ use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Anamnesis\KeluhanNyeri;
 use App\Models\Simrs\Ranap\Pelayanan\Cppt;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanKebidanan;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanNeonatal;
+use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanPediatrik;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanSambung;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
@@ -200,44 +203,82 @@ class CpptController extends Controller
       DB::beginTransaction();
       try {
         
-        $data = Anamnesis::find($request->id);
+        $data = null;
+        if ($request->id !== null) {
+          $data = Anamnesis::find($request->id);
+        } else {
+          $data = new Anamnesis();
+        }
 
+        $data->rs1 = $request->noreg;
+        $data->rs2 = $request->norm;
+        $data->rs3 = date('Y-m-d H:i:s');
         $data->rs4 = $request->form['keluhanUtama'] ?? '';
+        $data->kdruang  = $request->kdruang;
         $data->user  = $kdpegsimrs;
         $data->save();
 
         $skorNyeri = 0;
         $ketNyeri = null;
+        $formNyeri = null;
         if ($request->formKebidanan ===null && $request->formNeoNatal=== null && $request->formPediatrik=== null) {
           $skorNyeri = $request->form['keluhannyeri']['skorNyeri'] ?? 0;
           $ketNyeri = $request->form['keluhannyeri']['ket'] ?? null;
-          
+          $formNyeri = $request->form['keluhannyeri'];
         }
         else if ($request->formKebidanan !==null) {
           $skorNyeri = $request->formKebidanan['keluhannyeri']['skorNyeri'] ?? 0;
           $ketNyeri = $request->formKebidanan['keluhannyeri']['ket'] ?? null;
+          $formNyeri = null;
         }
         else if ($request->formNeoNatal !==null) {
           $skorNyeri = $request->formNeoNatal['keluhannyeri']['skorNyeri'] ?? 0;
           $ketNyeri = $request->formNeoNatal['keluhannyeri']['ket'] ?? null;
+          $formNyeri = null;
         }
         else if ($request->formPediatrik !==null) {
           $skorNyeri = $request->formPediatrik['keluhannyeri']['skorNyeri'] ?? 0;
           $ketNyeri = $request->formPediatrik['keluhannyeri']['ket'] ?? null;
+          $formNyeri = null;
         }
 
-        KeluhanNyeri::where('rs209_id', $data->id)->update(
-          [
-            'dewasa'=> $request->form['keluhannyeri'] ?? null, // array
-            'kebidanan'=> $request->formKebidanan['keluhannyeri'] ?? null, // array
-            'neonatal'=> $request->formNeoNatal['keluhannyeri'] ?? null, // array
-            'pediatrik'=> $request->formPediatrik['keluhannyeri'] ?? null, // array
-            'skor'=> $skorNyeri,
-            'keluhan'=> $ketNyeri,
-            'user_input'=> $kdpegsimrs,
-            'group_nakes' => $user->kdgroupnakes
-          ]
-        );
+        $klNyeri = KeluhanNyeri::where('rs209_id', $data->id)->first();
+        if (!$klNyeri) {
+          $klNyeri = new KeluhanNyeri();
+        }
+
+        $klNyeri->rs209_id = $data->id;
+        $klNyeri->noreg = $data->rs1;
+        $klNyeri->norm = $data->rs2;
+        $klNyeri->dewasa= $formNyeri; // array
+        $klNyeri->kebidanan= $request->formKebidanan['keluhannyeri'] ?? null; // array
+        $klNyeri->neonatal= $request->formNeoNatal['keluhannyeri'] ?? null; // array
+        $klNyeri->pediatrik= $request->formPediatrik['keluhannyeri'] ?? null; // array
+        $klNyeri->skor= $skorNyeri;
+        $klNyeri->keluhan= $ketNyeri;
+        $klNyeri->user_input= $kdpegsimrs;
+        $klNyeri->group_nakes = $user->kdgroupnakes;
+        $klNyeri->save();
+
+
+        // KeluhanNyeri::where('rs209_id', $data->id)->update(
+        //   [
+        //     'dewasa'=> $request->form['keluhannyeri'] ?? null, // array
+        //     'kebidanan'=> $request->formKebidanan['keluhannyeri'] ?? null, // array
+        //     'neonatal'=> $request->formNeoNatal['keluhannyeri'] ?? null, // array
+        //     'pediatrik'=> $request->formPediatrik['keluhannyeri'] ?? null, // array
+        //     'skor'=> $skorNyeri,
+        //     'keluhan'=> $ketNyeri,
+        //     'user_input'=> $kdpegsimrs,
+        //     'group_nakes' => $user->kdgroupnakes
+        //   ]
+        // );
+
+        if ($request->id === null) {
+          Cppt::find($request->id_cppt)->update([
+            'rs209_id' => $data->id
+          ]);
+        }
 
         DB::commit();
         return new JsonResponse([
@@ -252,6 +293,7 @@ class CpptController extends Controller
           'message' => 'GAGAL DISIMPAN',
           'result' => $th->getMessage(),
         ];
+        return new JsonResponse($data, 500);
       }
     }
 
@@ -266,17 +308,29 @@ class CpptController extends Controller
       DB::beginTransaction();
       try {
         
-        $data = PemeriksaanUmum::find($request->id);
+        $data = null;
+        if ($request->id !== null) {
+          $data = PemeriksaanUmum::find($request->id);
+        } else {
+          $data = new PemeriksaanUmum();
+        }
 
+        $data->rs1 = $request->noreg;
+        $data->rs2 = $request->norm;
+        $data->rs3 = date('Y-m-d H:i:s');
         $data->pernapasan = $request->form['pernapasan'] ?? '';
         $data->nadi  = $request->form['nadi'] ?? '';
         $data->tensi  = $request->form['sistole']. '/' . $request->form['diastole'];
         $data->beratbadan  = $request->form['bb'];
         $data->tinggibadan  = $request->form['tb'];
+        $data->kdruang  = $request->kdruang;
         $data->save();
 
-        PemeriksaanSambung::where('rs253_id', $data->id)->update(
+        PemeriksaanSambung::updateOrCreate(
+          ['rs253_id' => $data->id],
           [
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
             'keadaanUmum' => $request->form['keadaanUmum'] ?? '',
             'bb' => $request->form['bb'],
             'tb' => $request->form['tb'],
@@ -302,6 +356,154 @@ class CpptController extends Controller
           ]
         );
 
+        // save kebidanan
+        if ($request->formKebidanan !==null) {
+          PemeriksaanKebidanan::updateOrCreate(
+            ['rs253_id'=> $data->id],
+            [
+              'noreg'=> $request->noreg,
+              'norm'=> $request->norm,
+              'nyeri'  => $request->formKebidanan['nyeri'],
+              'lochea'  => $request->formKebidanan['lochea'],
+              'proteinUrin'  => $request->formKebidanan['proteinUrin'],
+              'mata'  => $request->formKebidanan['mata'],
+              'leher'  => $request->formKebidanan['leher'],
+              'dada'  => $request->formKebidanan['dada'],
+              'putingMenonjol'  => $request->formKebidanan['putingMenonjol'],
+              'hiperpigmentasi'  => $request->formKebidanan['hiperpigmentasi'],
+              'kolostrum'  => $request->formKebidanan['kolostrum'],
+              'konsistensiPayudara'  => $request->formKebidanan['konsistensiPayudara'],
+              'nyeriTekan'  => $request->formKebidanan['nyeriTekan'],
+              'benjolan'  => $request->formKebidanan['benjolan'],
+              'abdomen'  => $request->formKebidanan['abdomen'],
+              'anoGenital'  => $request->formKebidanan['anoGenital'],
+              'ekstremitasTungkai'  => $request->formKebidanan['ekstremitasTungkai'],
+              'hmlInspeksi'  => $request->formKebidanan['hmlInspeksi'],
+              'hmlTfuPuka'  => $request->formKebidanan['hmlTfuPuka'],
+              'hmlTfuPuki'  => $request->formKebidanan['hmlTfuPuki'],
+              'hmlTfuPresentasi'  => $request->formKebidanan['hmlTfuPresentasi'],
+              'hmlNyeri'  => $request->formKebidanan['hmlNyeri'],
+              'hmlOsborn'  => $request->formKebidanan['hmlOsborn'],
+              'hmlCekung'  => $request->formKebidanan['hmlCekung'],
+              'hmlAusDenyut'  => $request->formKebidanan['hmlAusDenyut'],
+              'hmlAusTeratur'  => $request->formKebidanan['hmlAusTeratur'],
+              'hmlHisFrekuensi'  => $request->formKebidanan['hmlHisFrekuensi'],
+              'hmlHisIntensitas'  => $request->formKebidanan['hmlHisIntensitas'],
+              'hmlVgnBentuk'  => $request->formKebidanan['hmlVgnBentuk'],
+              'hmlVgnJml'  => $request->formKebidanan['hmlVgnJml'],
+              'hmlVgnKtuban'  => $request->formKebidanan['hmlVgnKtuban'],
+              'hmlVgnToucher'  => $request->formKebidanan['hmlVgnToucher'],
+              'nfsTfu'  => $request->formKebidanan['nfsTfu'],
+              'nfsUterus'  => $request->formKebidanan['nfsUterus'],
+              'nfsVgnBentuk'  => $request->formKebidanan['nfsVgnBentuk'],
+              'nfsVgnJml'  => $request->formKebidanan['nfsVgnJml'],
+              'nfsVgnLochea'  => $request->formKebidanan['nfsVgnLochea'],
+              'nfsVgnLuka'  => $request->formKebidanan['nfsVgnLuka'],
+              'nfsVgnDrjLuka'  => $request->formKebidanan['nfsVgnDrjLuka'],
+              'nfsVgnLukaPost'  => $request->formKebidanan['nfsVgnLukaPost'],
+              'gynecologiPalpasi'  => $request->formKebidanan['gynecologiPalpasi'],
+              'gynecologiInsVgn'  => $request->formKebidanan['gynecologiInsVgn'],
+              'gynecologiInsPortio'  => $request->formKebidanan['gynecologiInsPortio'],
+              'gynecologiInsVgnToucher'  => $request->formKebidanan['gynecologiInsVgnToucher'],
+              'user_input'=> $kdpegsimrs,
+              'group_nakes' => $user->kdgroupnakes
+    
+            ]
+          );
+        } else {
+          PemeriksaanKebidanan::where('rs253_id', $data->id)->delete();
+        }
+
+        // save neonatal
+        if ($request->formNeonatal !==null) {
+          PemeriksaanNeonatal::updateOrCreate(
+            ['rs253_id'=> $data->id],
+            [
+              'noreg'=> $request->noreg,
+              'norm'=> $request->norm,
+              
+              'lila'  => $request->formNeonatal['lila'],
+              'lida'  => $request->formNeonatal['lida'],
+              'lirut'  => $request->formNeonatal['lirut'],
+              'grkBayi'  => $request->formNeonatal['grkBayi'],
+              'uub'  => $request->formNeonatal['uub'],
+              'kejang'  => $request->formNeonatal['kejang'],
+              'refleks'  => $request->formNeonatal['refleks'],
+              'tngsBayi'  => $request->formNeonatal['tngsBayi'],
+              'pssMata'  => $request->formNeonatal['pssMata'],
+              'bsrPupil'  => $request->formNeonatal['bsrPupil'],
+              'klpkMata'  => $request->formNeonatal['klpkMata'],
+              'konjungtiva'  => $request->formNeonatal['konjungtiva'],
+              'sklera'  => $request->formNeonatal['sklera'],
+              'pendengaran'  => $request->formNeonatal['pendengaran'],
+              'penciuman'  => $request->formNeonatal['penciuman'],
+              'warnaKlt'  => $request->formNeonatal['warnaKlt'],
+              'denyutNadi'  => $request->formNeonatal['denyutNadi'],
+              'sirkulasi'  => $request->formNeonatal['sirkulasi'],
+              'pulsasi'  => $request->formNeonatal['pulsasi'],
+              'polaNafas'  => $request->formNeonatal['polaNafas'],
+              'jnsPernafasan'  => $request->formNeonatal['jnsPernafasan'],
+              'irmNapas'  => $request->formNeonatal['irmNapas'],
+              'retraksi'  => $request->formNeonatal['retraksi'],
+              'airEntri'  => $request->formNeonatal['airEntri'],
+              'merintih'  => $request->formNeonatal['merintih'],
+              'suaraNapas'  => $request->formNeonatal['suaraNapas'],
+              'mulut'  => $request->formNeonatal['mulut'],
+              'lidah'  => $request->formNeonatal['lidah'],
+              'oesofagus'  => $request->formNeonatal['oesofagus'],
+              'abdomen'  => $request->formNeonatal['abdomen'],
+              'bab'  => $request->formNeonatal['bab'],
+              'warnaBab'  => $request->formNeonatal['warnaBab'],
+              'warnaUrine'  => $request->formNeonatal['warnaUrine'],
+              'bak'  => $request->formNeonatal['bak'],
+              'laki'  => $request->formNeonatal['laki'],
+              'perempuan'  => $request->formNeonatal['perempuan'],
+              'vernicKasesosa'  => $request->formNeonatal['vernicKasesosa'],
+              'lanugo'  => $request->formNeonatal['lanugo'],
+              'warnaIntegument'  => $request->formNeonatal['warnaIntegument'],
+              'turgor'  => $request->formNeonatal['turgor'],
+              'kulit'  => $request->formNeonatal['kulit'],
+              'lengan'  => $request->formNeonatal['lengan'],
+              'tungkai'  => $request->formNeonatal['tungkai'],
+              'rekoilTelinga'  => $request->formNeonatal['rekoilTelinga'],
+              'grsTlpkKaki'  => $request->formNeonatal['grsTlpkKaki'],
+              'apgarScores'  => $request->formNeonatal['apgarScores'],
+              'apgarScore'  => $request->formNeonatal['apgarScore'],
+              'apgarKet'  => $request->formNeonatal['apgarKet'],
+
+              'user_input'=> $kdpegsimrs,
+              'group_nakes' => $user->kdgroupnakes
+    
+            ]
+          );
+        } else {
+          PemeriksaanNeonatal::where('rs253_id', $data->id)->delete();
+        }
+
+        // save pediatri
+        if ($request->formPediatrik !==null) {
+          PemeriksaanPediatrik::updateOrCreate(
+            ['rs253_id'=> $data->id],
+            [
+              'noreg'=> $request->noreg,
+              'norm'=> $request->norm,
+              
+              'lila'  => $request->formPediatrik['lila'],
+              'lida'  => $request->formPediatrik['lida'],
+              'lirut'  => $request->formPediatrik['lirut'],
+              'lilengtas'  => $request->formPediatrik['lilengtas'],
+              'glasgow'  => $request->formPediatrik['glasgow'],
+              'glasgowSkor'  => $request->formPediatrik['glasgowSkor'],
+              'glasgowKet'  => $request->formPediatrik['glasgowKet'],
+              
+              'user_input'=> $kdpegsimrs,
+              'group_nakes' => $user->kdgroupnakes
+            ]
+          );
+        }else {
+          PemeriksaanPediatrik::where('rs253_id', $data->id)->delete();
+        }
+
 
         //penilaian
 
@@ -317,7 +519,13 @@ class CpptController extends Controller
             'user'  => $kdpegsimrs,
             'group_nakes'  => $user->kdgroupnakes,
           ]
-      );
+        );
+
+        if ($request->id === null) {
+          Cppt::find($request->id_cppt)->update([
+            'rs253_id' => $data->id
+          ]);
+        }
 
         DB::commit();
         return new JsonResponse([
@@ -332,6 +540,7 @@ class CpptController extends Controller
           'message' => 'GAGAL DISIMPAN',
           'result' => $th->getMessage(),
         ];
+        return new JsonResponse($data, 500);
       }
 
     }

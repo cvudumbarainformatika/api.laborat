@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Tampung_pendapatan;
+use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -240,6 +241,142 @@ class LRAjurnalController extends Controller
         ->groupBy('silpa.koderek50')
         ->get();
 
+
+
+
+        $psappagubarjas = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3',
+        DB::raw('ifnull(sum(t_tampung.pagu), 0) as pagu'),
+        // DB::raw('sum(jurnal_postingotom.debit-jurnal_postingotom.kredit) as realisasi')
+        )->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 6) as kode'),
+                    )
+                    ->with('kode1',function($gg){
+                        $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                        })
+                        ->with('kode2',function($gg){
+                            $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                            })
+                            ->with('kode3',function($gg){
+                                $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                                })
+        // ->crossJoin('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        ->leftJoin('t_tampung', function($join) use ($thn) {
+            $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+            ->where('t_tampung.tgl', $thn);
+          })
+        // ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
+        //     $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+        //     ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        //     ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%');
+        //     })
+        ->where('akun50_2024.kodeall3', 'LIKE', '5.1.' . '%')
+        ->groupBy('kode3')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $psaprealisasibarjas = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3',
+        // DB::raw('sum(t_tampung.pagu) as pagu'),
+        DB::raw('ifnull(sum(jurnal_postingotom.debit-jurnal_postingotom.kredit),0) as realisasi')
+        )->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 6) as kode'),
+                    )
+                    ->with('kode1',function($gg){
+                        $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                        })
+                        ->with('kode2',function($gg){
+                            $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                            })
+                            ->with('kode3',function($gg){
+                                $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                                })
+        // ->crossJoin('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        // ->leftJoin('t_tampung', function($join) use ($thn) {
+        //     $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        //     ->where('t_tampung.tgl', $thn);
+        //   })
+        ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
+            $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+            ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
+            ;
+            })
+        ->where('akun50_2024.kodeall3', 'LIKE', '5.1.' . '%')
+        ->groupBy('kode3')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $psappagumodal = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3',
+        DB::raw('ifnull(sum(t_tampung.pagu), 0) as pagu'),
+        // DB::raw('sum(jurnal_postingotom.debit-jurnal_postingotom.kredit) as realisasi')
+        )->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 6) as kode'))
+                    ->with('kode1',function($gg){
+                        $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                        })
+                        ->with('kode2',function($gg){
+                            $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                            })
+                            ->with('kode3',function($gg){
+                                $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                                })
+        // ->crossJoin('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        ->leftJoin('t_tampung', function($join) use ($thn) {
+            $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+            ->where('t_tampung.tgl', $thn);
+          })
+        // ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
+        //     $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+        //     ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        //     ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%');
+        //     })
+        ->where('akun50_2024.kodeall3', 'LIKE', '5.2.' . '%')
+        ->groupBy('kode3')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $psaprealisasimodal = Akun50_2024::select('akun50_2024.kodeall2',
+        'akun50_2024.uraian', 'akun50_2024.kodeall3',
+        // DB::raw('sum(t_tampung.pagu) as pagu'),
+        DB::raw('ifnull(sum(jurnal_postingotom.debit-jurnal_postingotom.kredit), 0) as realisasi')
+        )->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 2) as kode2'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 3) as kode3'),
+                    DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 6) as kode'),
+                    )
+                    ->with('kode1',function($gg){
+                        $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                        })
+                        ->with('kode2',function($gg){
+                            $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                            })
+                            ->with('kode3',function($gg){
+                                $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
+                                })
+        // ->crossJoin('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        // ->leftJoin('t_tampung', function($join) use ($thn) {
+        //     $join->on('t_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        //     ->where('t_tampung.tgl', $thn);
+        //   })
+        ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
+            $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+            ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
+            ;
+            })
+        ->where('akun50_2024.kodeall3', 'LIKE', '5.2.' . '%')
+        ->groupBy('kode3')
+        ->orderBy('kode', 'asc')
+        ->get();
+
     $data = [
         'pagu' => $pagu,
         'pagupendapatan' => $pagupendapatan,
@@ -249,7 +386,12 @@ class LRAjurnalController extends Controller
         'belanjasblm' => $belanjasblm,
         'pagusilpa' => $silpapagu,
         'silpasblm' => $silpasblm,
-        'silpaskg' => $silpaskg
+        'silpaskg' => $silpaskg,
+
+        'psappagubarjas' => $psappagubarjas,
+        'psaprealisasibarjas' => $psaprealisasibarjas,
+        'psappagumodal' => $psappagumodal,
+        'psaprealisasimodal' => $psaprealisasimodal,
     ];
     return new JsonResponse ($data);
     }
