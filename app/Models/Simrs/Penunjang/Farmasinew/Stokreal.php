@@ -79,4 +79,30 @@ class Stokreal extends Model
     {
         return $this->hasMany(PenyesuaianStok::class);
     }
+    public function oneobatkel()
+    {
+        return $this->hasOne(Resepkeluarrinci::class, 'kdobat', 'kdobat');
+    }
+
+    public function oneobatkelracikan()
+    {
+        return $this->hasOne(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+    }
+
+    public function onepermintaandeporinci()
+    {
+        return $this->hasOne(Permintaandeporinci::class, 'kdobat', 'kdobat');
+    }
+
+    public function onepermintaan()
+    {
+        // return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kdobat'); //diganti ke permintaan
+        return $this->hasOne(Permintaanresep::class, 'kdobat', 'kdobat');
+    }
+
+    public function oneperracikan()
+    {
+        // return $this->hasMany(Resepkeluarrinciracikan::class, 'kdobat', 'kdobat');
+        return $this->hasOne(Permintaanresepracikan::class, 'kdobat', 'kdobat');
+    }
 }
