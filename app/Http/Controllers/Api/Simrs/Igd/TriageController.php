@@ -55,7 +55,7 @@ class TriageController extends Controller
                         'rs11' => $request->nadi,
 
                         'rs13' => $request->bb,
-
+                        'nyeri_hilang' => $request->nyerihilang,
                         'rs16' => $request->kategoritriage,
                         'rs17' => $kdpegsimrs,
                         'rs20' => $kdpegsimrs,
