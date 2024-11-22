@@ -28,14 +28,15 @@ class TriageController extends Controller
             $user = Pegawai::find(auth()->user()->pegawai_id);
             $kdpegsimrs = $user->kdpegsimrs;
             try {
-                $caritanggal = TriageA::where('rs1', $request->noreg)->get();
-                if($caritanggal[0]['rs3'] === '' || $caritanggal[0]['rs3'] === null)
+                $caritanggal = TriageA::where('rs1', $request->noreg)->first();
+
+                if(!$caritanggal)
                 {
                     $rs3 = date('Y-m-d H:i:s');
                     $rs6 = date('Y-m-d H:i:s');
                 }else{
-                    $rs3 =  $caritanggal[0]['rs3'] ;
-                    $rs6 =  $caritanggal[0]['rs6'] ;
+                    $rs3 =  $caritanggal->rs3;
+                    $rs6 =  $caritanggal->rs6 ;
                 }
                 $simpan = TriageA::updateOrCreate(
                     [
@@ -83,12 +84,12 @@ class TriageController extends Controller
                     ]
                 );
 
-                $caritanggal = TriageB::where('rs1', $request->noreg)->get();
-                if($caritanggal[0]['rs3'] === '' || $caritanggal[0]['rs3'] === null)
+                $caritanggal = TriageB::where('rs1', $request->noreg)->first();
+                if(!$caritanggal)
                 {
                     $rs3 = date('Y-m-d');
                 }else{
-                    $rs3 =  $caritanggal[0]['rs3'] ;
+                    $rs3 =  $caritanggal->rs3 ;
                 }
                 $simpanx = TriageB::updateOrCreate(
                     [
@@ -174,7 +175,9 @@ class TriageController extends Controller
             } catch (\Exception $e) {
                 DB::rollback();
                 return new JsonResponse([
-                    'message' => 'GAGAL DISIMPAN...!!! '
+                    'message' => 'GAGAL DISIMPAN...!!! '. $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
                 ], 500);
             }
         // }
