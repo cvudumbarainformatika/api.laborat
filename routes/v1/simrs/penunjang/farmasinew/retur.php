@@ -10,7 +10,8 @@ Route::group([
     'prefix' => 'simrs/penunjang/farmasinew/retur'
 ], function () {
     Route::get('/perusahaan', [ReturkepbfController::class, 'cariPerusahaan']);
-    Route::get('/obat', [ReturkepbfController::class, 'cariObat']);
+    // Route::get('/obat', [ReturkepbfController::class, 'cariObat']);
+    Route::get('/obat', [ReturkepbfController::class, 'newCariObat']);
     Route::get('/ambil-data', [ReturkepbfController::class, 'ambilData']);
     Route::get('/list-retur', [ReturkepbfController::class, 'listRetur']);
 

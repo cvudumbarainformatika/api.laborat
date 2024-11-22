@@ -12,6 +12,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,25 @@ class ReturkepbfController extends Controller
             ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
             ->where('penerimaan_h.kdpbf', '=', request('kdpbf'))
             ->whereNotIn('penerimaan_h.jenis_penerimaan', ['APBD', 'APBN'])
+            ->groupBy('new_masterobat.kd_obat')
+            ->get();
+        return new JsonResponse($data);
+    }
+    public function newCariObat()
+    {
+
+
+        $data = Mobatnew::select(
+            'new_masterobat.kd_obat',
+            'new_masterobat.nama_obat',
+            'new_masterobat.satuan_k',
+        )
+            // ->with([
+            //     'penerimaanrinci:kdobat,nopenerimaan',
+            //     'penerimaanrinci.header:nopenerimaan,kdpbf',
+            //     'penerimaanrinci.header.pihakketiga',
+            // ])
+            // ->whereNotIn('penerimaan_h.jenis_penerimaan', ['APBD', 'APBN'])
             ->groupBy('new_masterobat.kd_obat')
             ->get();
         return new JsonResponse($data);
@@ -105,9 +125,14 @@ class ReturkepbfController extends Controller
             ->whereNull('tgl_retur')
             ->whereNull('tgl_pemusnahan')
             ->get();
+        $stok = Stokreal::where('kdobat', '=', request('kd_obat'))
+            ->where('kdruang', '=', request('kd_ruang'))
+            ->where('jumlah', '>', 0)
+            ->get();
         return new JsonResponse([
             'penerimaan' => $data,
-            'rusak' => $rusak
+            'rusak' => $rusak,
+            'stok' => $stok,
         ]);
     }
     public function listRetur()
