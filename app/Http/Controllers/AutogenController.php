@@ -12,6 +12,7 @@ use App\Models\LaboratLuar;
 use App\Models\TransaksiLaborat;
 
 use App\Models\Simrs\Master\Mkamar;
+use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Counter;
@@ -349,8 +350,14 @@ class AutogenController extends Controller
         //     'eee' => $eee,
         //     'f' => $f
         // ];
-        $sql_groups_titipan=DB::table('rs24')->select('groups')->distinct()->where('rs1', 'ME1')->first();
-        return $sql_groups_titipan;
+        
+
+        $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+          ->orWhere('rs3', 'V3#')
+          ->where('rs4', 'like', '%|BG|%')
+          ->where('rs5', 'like', '%|3|%')
+          ->first();
+        return $rsx;
     }
 
     public function translate($q, $sl, $tl)
