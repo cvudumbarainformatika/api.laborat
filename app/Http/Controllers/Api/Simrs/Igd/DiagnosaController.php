@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa;
+namespace App\Http\Controllers\Api\Simrs\Igd;
 
-use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Diagnosa_m;
@@ -10,14 +9,14 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class DiagnosatransController extends Controller
+class DiagnosaController extends Controller
 {
     public function listdiagnosa()
     {
         $listdiagnosa = Diagnosa_m::select('rs1 as kode', 'rs2 as dtd', 'rs4 as keterangan')
             ->where('rs1', 'Like', '%' . request('diagnosa') . '%')
             // ->orWhere('rs4', 'Like', '%' . request('diagnosa') . '%')
-            ->where('disable_status','=','')
+            ->where('disable_status','!=','1')
             ->get();
         return new JsonResponse($listdiagnosa);
     }
@@ -40,6 +39,7 @@ class DiagnosatransController extends Controller
                     'rs8'  => $kdpegsimrs,
                     'rs9' => $request->dtd ?? '',
                     'rs10' => $request->kodedokter,
+                    'rs11' => $request->jeniskasus,
                     'rs12' => date('Y-m-d'),
                     'rs13' => $request->ruangan
                 ]
@@ -56,6 +56,7 @@ class DiagnosatransController extends Controller
                     'rs8'  => $kdpegsimrs,
                     'rs9' => $request->dtd ?? '',
                     'rs10' => $request->kodedokter,
+                    'rs11' => $request->jeniskasus,
                     'rs12' => date('Y-m-d'),
                     'rs13' => $request->ruangan
                 ]
@@ -87,8 +88,14 @@ class DiagnosatransController extends Controller
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
         }
+
+        $data = Diagnosa::where('rs1', $request->noreg)->with('masterdiagnosa')->get();
         // $inacbg = EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
-        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+        return new JsonResponse(
+            [
+                'message' => 'berhasil dihapus',
+                'result' => $data
+            ], 200);
     }
 
     public function getDiagnosaByNoreg()
