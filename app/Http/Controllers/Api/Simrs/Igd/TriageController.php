@@ -151,7 +151,7 @@ class TriageController extends Controller
                     'hasilsecondsurve' => $simpan['hasilsecondsurve'],
 
                     'gangguanperilaku' => $simpan['gangguanperilaku'],
-                    'falsetriage' => $simpan['falsetriage'],
+                    'falsetriage' => $simpan['falsetriage'] === false ? '0' : '1',
 
                     'eye' => $simpanx['rs14'],
                     'verbal' => $simpanx['rs15'],

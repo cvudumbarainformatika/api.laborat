@@ -10,4 +10,5 @@ Route::group([
 ], function () {
     Route::get('/listdiagnosa', [DiagnosaController::class, 'listdiagnosa']);
     Route::get('/diagnosa-autocomplete', [DiagnosaController::class, 'diagnosa_autocomplete']);
+    Route::get('/listtipekhasus', [DiagnosaController::class, 'listtipekhasus']);
 });
