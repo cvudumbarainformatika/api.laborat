@@ -70,7 +70,9 @@ class LaboratController extends Controller
         $simpanpermintaanlaborat = LaboratMeta::create(
             [
 
-                'nota' => $request->nota ?? $notapermintaanlab, 'noreg' => $request->noreg, 'norm' => $request->norm,
+                'nota' => $request->nota ?? $notapermintaanlab,
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
                 'jenis_laborat' => $request->jenis_laborat,
                 'tgl_order' => date('Y-m-d H:i:s'),
                 'puasa_pasien' => $request->puasa_pasien,
@@ -144,7 +146,7 @@ class LaboratController extends Controller
     public function simpanpermintaanlaboratbaru(Request $request)
     {
         // return $request->form;
-        $cek = Laboratpemeriksaan::where('rs2', $request->nota)->where('rs18','=','1')->count();
+        $cek = Laboratpemeriksaan::where('rs2', $request->nota)->where('rs18', '=', '1')->count();
         if ($cek > 0) {
             return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa Tambah!'], 500);
         }
@@ -164,12 +166,10 @@ class LaboratController extends Controller
             DB::select('call nota_permintaanlab(@nomor)');
             $x = DB::table('rs1')->select('rs28')->get();
             $wew = $x[0]->rs28;
-            if($ruangan === 'POL014')
-            {
+            if ($ruangan === 'POL014') {
                 $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
-            }else{
-                if($request->isRanap === true)
-                {
+            } else {
+                if ($request->isRanap === true) {
                     $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'I-LAB');
                 } else {
 
@@ -226,29 +226,60 @@ class LaboratController extends Controller
 
 
             $data = $request->details;
-            $rs51 = [];
-            foreach ($data as $row => $val) {
-                $param = [
-                    'rs2' => $simpanpermintaanlaborat->nota,
-                    'rs1' => $request->noreg,
-                    'rs4' => $val['kode'],
-                    'rs3' => date('Y-m-d H:i:s'),
-                    'rs5' => $request->jumlah ?? '',
-                    'rs6' => $val['biaya_sarana'] ?? '',
-                    'rs7' => $val['biaya_sarana'] ?? '',
-                    'rs8' => $request->kodedokter ?? '',
-                    'rs9' => $user,
-                    'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
-                    'rs13' => $val['biaya_layanan'] ?? '',
-                    'rs14' => $val['biaya_layanan'] ?? '',
-                    'rs23'  => $ruangan,
-                    'rs24'  => $request->kdsistembayar ?? ''
-                ];
-                // Laboratpemeriksaan::create($param);
-                $rs51[] = $param;
-            };
-            Laboratpemeriksaan::insert($rs51);
+            // $rs51 = [];
+            // foreach ($data as $row => $val) {
+            //     $param = [
+            //         'rs2' => $simpanpermintaanlaborat->nota,
+            //         'rs1' => $request->noreg,
+            //         'rs4' => $val['kode'],
+            //         'rs3' => date('Y-m-d H:i:s'),
+            //         'rs5' => $request->jumlah ?? '',
+            //         'rs6' => $val['biaya_sarana'] ?? '',
+            //         'rs7' => $val['biaya_sarana'] ?? '',
+            //         'rs8' => $request->kodedokter ?? '',
+            //         'rs9' => $user,
+            //         'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
+            //         'rs13' => $val['biaya_layanan'] ?? '',
+            //         'rs14' => $val['biaya_layanan'] ?? '',
+            //         'rs23'  => $ruangan,
+            //         'rs24'  => $request->kdsistembayar ?? ''
+            //     ];
+            //     // Laboratpemeriksaan::create($param);
+            //     $rs51[] = $param;
+            // };
+            // Laboratpemeriksaan::insert($rs51);
             // } // END FOREACH
+            /**
+             * simpan rincian baru
+             */
+            foreach ($data as $row => $val) {
+                Laboratpemeriksaan::firstOrCreate(
+                    [
+                        'rs2' => $simpanpermintaanlaborat->nota,
+                        'rs1' => $request->noreg,
+                        'rs4' => $val['kode'],
+                    ],
+                    [
+                        'rs3' => date('Y-m-d H:i:s'),
+                        'rs5' => $request->jumlah ?? '',
+                        'rs6' => $val['biaya_sarana'] ?? '',
+                        'rs7' => $val['biaya_sarana'] ?? '',
+                        'rs8' => $request->kodedokter ?? '',
+                        'rs9' => $user,
+                        'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
+                        'rs13' => $val['biaya_layanan'] ?? '',
+                        'rs14' => $val['biaya_layanan'] ?? '',
+                        'rs23'  => $ruangan,
+                        'rs24'  => $request->kdsistembayar ?? ''
+                    ]
+                );
+                // Laboratpemeriksaan::create($param);
+
+            };
+            /**
+             * simpan rincian baru end
+             */
+
 
             DB::commit();
 
@@ -295,7 +326,7 @@ class LaboratController extends Controller
     public function getdata()
     {
         $data = LaboratMeta::select('*')->where('noreg', request('noreg'))
-        ->with('details.pemeriksaanlab')->orderBy('id', 'DESC')->get();
+            ->with('details.pemeriksaanlab')->orderBy('id', 'DESC')->get();
         return new JsonResponse($data);
     }
 
@@ -316,7 +347,7 @@ class LaboratController extends Controller
     }
     public function hapuspermintaanlaboratbaru(Request $request)
     {
-        $cek = Laboratpemeriksaan::whereIn('id', $request->id)->where('rs18','=','1')->count();
+        $cek = Laboratpemeriksaan::whereIn('id', $request->id)->where('rs18', '=', '1')->count();
         if ($cek > 0) {
             return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa dihapus!'], 500);
         }
