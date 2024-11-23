@@ -17,6 +17,7 @@ Route::group([
 
     Route::post('/simpan', [ReturkepbfController::class, 'simpanretur']);
     Route::post('/simpan-edit_faktur', [ReturkepbfController::class, 'simpanEditFaktur']);
+    Route::post('/simpan-edit-rinci', [ReturkepbfController::class, 'simpanEditRinci']);
     Route::post('/kunci', [ReturkepbfController::class, 'kunciRetur']);
     Route::post('/delete-header', [ReturkepbfController::class, 'deleteHeader']);
     Route::post('/delete-rinci', [ReturkepbfController::class, 'deleteRinci']);

@@ -146,6 +146,29 @@ class ReturkepbfController extends Controller
         $result['meta'] = $raw->except('data');
         return new JsonResponse($result);
     }
+    public function simpanEditRinci(Request $request)
+    {
+        $data = Returpbfrinci::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan',
+                'req' => $request->all()
+            ], 410);
+        }
+        $data->update([
+            'no_batch' => $request->nobatch ?? '',
+            'nopenerimaan' => $request->nopenerimaan,
+            'tgl_exp' => $request->tglexp,
+            'subtotal' => $request->subtotal ?? 0,
+            'harga_net' => $request->harga ?? 0,
+        ]);
+
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'data' => $data ?? null,
+            'req' => $request->all(),
+        ]);
+    }
     public function simpanEditFaktur(Request $request)
     {
         $data = Returpbfheder::find($request->id);
