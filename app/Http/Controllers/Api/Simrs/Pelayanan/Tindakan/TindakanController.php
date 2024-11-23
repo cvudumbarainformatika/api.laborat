@@ -319,9 +319,10 @@ class TindakanController extends Controller
         $tindakan->rs13 = $request->hargapelayanan ?? '';
         $tindakan->rs14 = $request->hargapelayanan ?? '';
         $tindakan->rs20 = $request->keterangan ?? '';
-        $tindakan->rs22 = $request->kdpoli  ?? '';
+        $tindakan->rs22 = $request->kdgroup_ruangan  ?? '';
         $tindakan->rs23 = $request->pelaksanaDua ?? '';
         $tindakan->rs24 = $request->kdsistembayar ?? '';
+        $tindakan->rs25 = $request->kdpoli  ?? '';
         $tindakan->save();
 
         if (!$tindakan) {
