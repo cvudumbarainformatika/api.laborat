@@ -146,6 +146,25 @@ class ReturkepbfController extends Controller
         $result['meta'] = $raw->except('data');
         return new JsonResponse($result);
     }
+    public function simpanEditFaktur(Request $request)
+    {
+        $data = Returpbfheder::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan',
+                'req' => $request->all()
+            ], 410);
+        }
+        $data->update([
+            'no_faktur_retur_pbf' => $request->nomor ?? '',
+            'tgl_faktur_retur_pbf' => $request->tanggal
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'data' => $data,
+            'req' => $request->all(),
+        ]);
+    }
     public function simpanretur(Request $request)
     {
         // $data = [
@@ -236,7 +255,9 @@ class ReturkepbfController extends Controller
                     'kondisi_barang' => $request->kondisi_barang,
                     'tgl_rusak' => $request->tgl_rusak,
                     'harga_net' => $request->harga_neto,
+                    'harga_net_default' => $request->harga_neto,
                     'subtotal' => $request->subtotal,
+                    'subtotal_default' => $request->subtotal,
                     'tgl_exp' => $request->tgl_exp ?? null,
                     'tgl_exp_default' => $request->tgl_exp ?? null,
                     'flag_tbl_rusak' => $request->flag_tbl_rusak ?? '',
