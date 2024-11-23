@@ -226,4 +226,43 @@ class BarangRusakController extends Controller
             'message' => 'Data Sudah Dikunci, dan Stok Sudah Berkurang'
         ]);
     }
+    public function pemusnahan(Request $request)
+    {
+        $data = BarangRusak::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+        $user = FormatingHelper::session_user();
+        $data->update([
+            'jumlah_dimusnahkan' => $request->jumlah,
+            'tgl_pemusnahan' => $request->tanggal . date(' H:i:s'),
+            'user_pemusnahan' => $user['kodesimrs'],
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'request' => $request->all(),
+            'data' => $data
+        ]);
+    }
+    public function penghapusan(Request $request)
+    {
+        $data = BarangRusak::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+        $user = FormatingHelper::session_user();
+        $data->update([
+            'tgl_penghapusan' => $request->tanggal . date(' H:i:s'),
+            'user_penghapusan' => $user['kodesimrs'],
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'request' => $request->all(),
+            'data' => $data
+        ]);
+    }
 }

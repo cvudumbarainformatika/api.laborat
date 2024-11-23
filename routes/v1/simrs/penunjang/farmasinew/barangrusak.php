@@ -18,4 +18,6 @@ Route::group([
     Route::post('/simpan', [BarangRusakController::class, 'simpan']);
     Route::post('/hapus', [BarangRusakController::class, 'hapusData']);
     Route::post('/kunci', [BarangRusakController::class, 'kunci']);
+    Route::post('/pemusnahan', [BarangRusakController::class, 'pemusnahan']);
+    Route::post('/penghapusan', [BarangRusakController::class, 'penghapusan']);
 });
