@@ -60,6 +60,10 @@ class RanapController extends Controller
             'rs23.rs19 as kdsistembayar',
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
+            'rs23.rs24 as prognosis', // PROGNOSIS
+            'rs23.rs25 as sebabkematian', // Diagnosa Penyebab Meninggal
+            'rs23.rs26 as diagakhir', // Diagnosa Utama
+            'rs23.rs27 as tindaklanjut', // Diagnosa Utama
             'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
@@ -370,10 +374,10 @@ class RanapController extends Controller
                     $q->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes')
                     ->orderBy('id', 'DESC');
                 },
-                'operasi_ird'=> function ($q) {
-                    $q->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes')
-                    ->orderBy('id', 'DESC');
-                },
+                // 'operasi_ird'=> function ($q) {
+                //     $q->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes')
+                //     ->orderBy('id', 'DESC');
+                // },
                 'bankdarah'=> function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
@@ -386,9 +390,9 @@ class RanapController extends Controller
                 'permintaanambulan'=> function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'oksigen'=> function ($q) {
-                    $q->orderBy('id', 'DESC');
-                },
+                // 'oksigen'=> function ($q) {
+                //     $q->orderBy('id', 'DESC');
+                // },
                 'penunjanglain'=> function ($q) {
                     $q->with('masterpenunjang')
                     ->orderBy('id', 'DESC');
@@ -516,6 +520,8 @@ class RanapController extends Controller
                     ->orderBy('id', 'DESC');
                 },
                 'dischargeplanning',
+                'procedure',
+                'keterangantindakan:noreg,keterangan',
                 'statuscovid' => function ($q) {
                     $q->where('stat', '=', 'MASUK')
                     ->where('ruang', '!=', 'POL014');
