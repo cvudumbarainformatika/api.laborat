@@ -506,9 +506,9 @@ class KartustokController extends Controller
                         'kd_obat',
                         'jumlah',
                         'status',
-                        'tgl_rusak',
+                        'tgl_kunci as tgl_rusak',
                         'created_at',
-                    )->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    )->whereBetween('tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kunci', '1');
                 },
                 // retur gudang (masuk gudang)
