@@ -98,6 +98,8 @@ class BarangRusakController extends Controller
                     'kunci' => '',
                 ],
                 [
+                    'nopenerimaan_default' => $request->nopenerimaan,
+                    'nobatch_default' => $request->no_batch,
                     'tgl_rusak' => date('Y-m-d'),
                     'tgl_entry' => date('Y-m-d H:i:s'),
                     'satuan_bsr' => $request->satuan_bsr,
@@ -265,8 +267,32 @@ class BarangRusakController extends Controller
             'data' => $data
         ]);
     }
+    public function penerimaan(Request $request)
+    {
+        $data = BarangRusak::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+        $data->update([
+            'nopenerimaan' => $request->nopenerimaan,
+            'nobatch' => $request->nobatch,
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'request' => $request->all(),
+            'data' => $data
+        ]);
+    }
     public function kartuStok(Request $request)
     {
+        $obats = BarangRusak::select('kd_obat')
+            ->where('kunci', '1')
+            ->whereNull('tgl_retur')
+            ->whereNull('tgl_penghapusan')
+            ->distinct()
+            ->pluck('kd_obat');
 
         $data = request()->all();
         return new JsonResponse([
