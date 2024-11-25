@@ -196,7 +196,7 @@ class RanapController extends Controller
             //         ->orWhere('rs227.rs8', 'LIKE', '%' . request('q') . '%')
             //         ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             // })
-            ->orderby('rs23.rs3', 'ASC')
+            ->orderby('rs23.rs3', 'DESC')
             ->groupBy('rs23.rs1')
             ->paginate(50);
 
