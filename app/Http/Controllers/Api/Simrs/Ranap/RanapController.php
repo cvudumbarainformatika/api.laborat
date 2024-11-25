@@ -40,8 +40,11 @@ class RanapController extends Controller
 
         // return $tanggalx;
 
+        $hr_ini = date('Y-m-d'). ' 00:00:00';
+        $hr_180 = Carbon::now()->subDays(30)->format('Y-m-d'). ' 23:59:59';
+
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
-        $ruangan = request('koderuangan') ?? 'xxxx';
+        $ruangan = request('koderuangan');
         $data = Kunjunganranap::select(
             'rs23.rs1',
             'rs23.rs1 as noreg',
@@ -109,6 +112,8 @@ class RanapController extends Controller
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
+
+
             ->where(function ($query) use ($ruangan) {
                 // $query->where(function ($query) use ($ruangan) {
                 //     // for ($i = 0; $i < count($ruangan); $i++) {
@@ -120,7 +125,9 @@ class RanapController extends Controller
                     // ->orWhere('rs23.titipan', '=',  $ruangan);
                     $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
                     ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
-                } 
+                } else {
+                    $query->where('rs23.rs5', '<>',  '');
+                }
                 
             })
             
@@ -132,25 +139,25 @@ class RanapController extends Controller
             // ->where(function ($x) {
             //     $x->orWhereNull('dokterdpjp');
             // })
-            ->where(function($query) use ($tanggal, $tanggalx) {
+            ->where(function($query) use ($hr_ini, $hr_180) {
                 if (request('status') === 'Pulang') {
-                    $query->whereBetween('rs23.rs3', [$tanggal, $tanggalx])
-                        ->where('rs23.rs1', '!=', '')
-                    ;
+                    $query->whereBetween('rs23.rs3', [$hr_180, $hr_ini])
+                        ->whereIn('rs23.rs22',['2','3']);
                 } else {
-                    $query->where('rs23.rs1', '!=', '');
+                    $query->where('rs23.rs22', '')
+                    ->where('rs23.rs1', '!=', '');
                 }
                 
             })
 
-            ->where(function ($q) use ($status) {
-                // if ($status === 'Belum Pulang') {
-                //     $q->where('rs23.rs22', '');
-                // } else {
-                //     $q->where('rs23.rs22', '!=', '');
-                // }
-                $q->whereIn('rs23.rs22', $status);
-            })
+            // ->where(function ($q) use ($status) {
+            //     // if ($status === 'Belum Pulang') {
+            //     //     $q->where('rs23.rs22', '');
+            //     // } else {
+            //     //     $q->where('rs23.rs22', '!=', '');
+            //     // }
+            //     $q->whereIn('rs23.rs22', $status);
+            // })
 
             
             ->where(function ($query) {
@@ -198,7 +205,7 @@ class RanapController extends Controller
             // })
             ->orderby('rs23.rs3', 'DESC')
             ->groupBy('rs23.rs1')
-            ->paginate(50);
+            ->paginate(25);
 
         return new JsonResponse($data);
     }

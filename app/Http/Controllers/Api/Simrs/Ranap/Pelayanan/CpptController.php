@@ -182,6 +182,9 @@ class CpptController extends Controller
         'kdruang' => $request->kdruang,
         'user' => $kdpegsimrs,
         'nakes'=> $nakes,
+        // tambahan baru
+        's_sambung' => $request->form['s_sambung'],
+        'o_sambung' => $request->form['o_sambung'],
 
        ]);
 
@@ -666,7 +669,7 @@ class CpptController extends Controller
 
         if ($request->id === null) {
           Cppt::find($request->id_cppt)->update([
-            'rs253_id' => $data->id
+            'rs253_id' => $data->id,
           ]);
         }
 
@@ -701,6 +704,24 @@ class CpptController extends Controller
         'instruksi'=> $request->instruksi,
         'user' => $kdpegsimrs,
         'nakes'=> $user->kdgroupnakes,
+      ]);
+      
+
+      return new JsonResponse([
+        'success' => true,
+        'message' => 'success',
+        'result' => $cppt
+      ]);
+
+    }
+    public function updateosambung(Request $request)
+    {
+      // $user = Pegawai::find(auth()->user()->pegawai_id);
+      // $kdpegsimrs = $user->kdpegsimrs;
+
+      $cppt = Cppt::find($request->id)->update([
+        
+        'o_sambung'=> $request->o_sambung,
       ]);
       
 
