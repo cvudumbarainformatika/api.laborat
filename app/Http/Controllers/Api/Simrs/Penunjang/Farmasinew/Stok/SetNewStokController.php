@@ -532,7 +532,7 @@ class SetNewStokController extends Controller
                     'nopenerimaan',
                     DB::raw('sum(jumlah) as jumlah')
                 )
-                    ->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    ->whereBetween('tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                     ->where('kd_obat', $kdobat)
                     ->where('kunci', '1')
                     ->groupBy('kd_obat', 'nopenerimaan')
@@ -3043,7 +3043,7 @@ class SetNewStokController extends Controller
                     'nopenerimaan',
                     DB::raw('sum(jumlah) as jumlah')
                 )
-                    ->where('tgl_rusak', 'LIKE', '%' . $x . '%')
+                    ->where('tgl_kunci', 'LIKE', '%' . $x . '%')
                     ->where('kd_obat', $kdobat)
                     ->where('kunci', '1')
                     ->groupBy('kd_obat', 'nopenerimaan')

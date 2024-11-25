@@ -100,6 +100,8 @@ class BarangRusakController extends Controller
                 [
                     'nopenerimaan_default' => $request->nopenerimaan,
                     'nobatch_default' => $request->no_batch,
+                    'tglexp' => $request->tglexp,
+                    'tglexp_default' => $request->tglexp,
                     'tgl_rusak' => date('Y-m-d'),
                     'tgl_entry' => date('Y-m-d H:i:s'),
                     'satuan_bsr' => $request->satuan_bsr,
@@ -216,6 +218,7 @@ class BarangRusakController extends Controller
             ], 410);
         }
         $data->kunci = '1';
+        $data->tgl_kunci = date('Y-m-d H:i:s');
         $data->save();
 
         $stok->jumlah = $sisa;
@@ -278,6 +281,8 @@ class BarangRusakController extends Controller
         $data->update([
             'nopenerimaan' => $request->nopenerimaan,
             'nobatch' => $request->nobatch,
+            'tglexp' => $request->tglexp,
+            'harga_net' => $request->harga,
         ]);
         return new JsonResponse([
             'message' => 'Data Sudah Disimpan',

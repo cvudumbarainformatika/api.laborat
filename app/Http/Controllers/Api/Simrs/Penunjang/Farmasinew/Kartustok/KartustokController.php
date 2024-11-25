@@ -233,7 +233,7 @@ class KartustokController extends Controller
                     $ru->select(
                         'kd_obat',
                         DB::raw('sum(jumlah) as jumlah')
-                    )->whereBetween('tgl_rusak', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    )->whereBetween('tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kunci', '1')
                         ->groupBy('kd_obat');
                 },
