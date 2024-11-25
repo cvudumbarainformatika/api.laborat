@@ -409,15 +409,21 @@ class StokrealController extends Controller
         $datastok = $stokreal->map(function ($xxx) use ($kdruang) {
             $stolreal = $xxx->total;
             $jumlahper = $kdruang === 'Gd-04010103' ? $xxx['persiapanrinci'][0]->jumlah ?? 0 : 0;
-            $jumlahtrans = $x['oneperracikan']->jumlah ?? 0;
-            $jumlahtransx = $x['onepermintaan']->jumlah ?? 0;
-            $keluar = $x['oneobatkel']->jumlah ?? 0;
-            $keluarRa = $x['oneobatkelracikan']->jumlah ?? 0;
-            $permintaanobatrinci = $x['onepermintaandeporinci']->jumlah_minta ?? 0; // mutasi antar depo
+            $jumlahtrans = $xxx['oneperracikan']->jumlah ?? 0;
+            $jumlahtransx = $xxx['onepermintaan']->jumlah ?? 0;
+            $keluar = $xxx['oneobatkel']->jumlah ?? 0;
+            $keluarRa = $xxx['oneobatkelracikan']->jumlah ?? 0;
+            $permintaanobatrinci = $xxx['onepermintaandeporinci']->jumlah_minta ?? 0; // mutasi antar depo
             $stokalokasi = (float) $stolreal - (float) $permintaanobatrinci - (float) $jumlahtrans - (float) $jumlahtransx - (int)$jumlahper + (float)$keluar + (float)$keluarRa;
             $xxx['stokalokasi'] = $stokalokasi;
             $xxx['permintaantotal'] = $permintaanobatrinci;
-            $xxx['lain'] = [];
+            $xxx['lain'] = [
+                'jumlahper' => $jumlahper,
+                'jumlahtrans' => $jumlahtrans,
+                'jumlahtransx' => $jumlahtransx,
+                'keluar' => $keluar,
+                'keluarRa' => $keluarRa,
+            ];
             return $xxx;
         });
         return new JsonResponse([

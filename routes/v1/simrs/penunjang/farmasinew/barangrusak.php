@@ -20,4 +20,7 @@ Route::group([
     Route::post('/kunci', [BarangRusakController::class, 'kunci']);
     Route::post('/pemusnahan', [BarangRusakController::class, 'pemusnahan']);
     Route::post('/penghapusan', [BarangRusakController::class, 'penghapusan']);
+
+    // kartu stok barang rusak
+    Route::get('/kartu-stok', [BarangRusakController::class, 'kartuStok']);
 });

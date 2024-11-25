@@ -265,4 +265,13 @@ class BarangRusakController extends Controller
             'data' => $data
         ]);
     }
+    public function kartuStok(Request $request)
+    {
+
+        $data = request()->all();
+        return new JsonResponse([
+            'req' => $request->all(),
+            'data' => $data
+        ]);
+    }
 }
