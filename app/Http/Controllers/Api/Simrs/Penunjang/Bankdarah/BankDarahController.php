@@ -79,6 +79,7 @@ class BankDarahController extends Controller
               'rs16' => $request->kodepoli,
               'rs17' => $request->kodeperawat,
               'rs18' => $request->perawatpeminta,
+              'ket' => $request->keterangan ?? null,
           ]
       );
 
