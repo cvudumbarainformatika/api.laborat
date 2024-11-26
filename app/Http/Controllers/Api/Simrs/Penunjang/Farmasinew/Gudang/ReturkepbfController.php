@@ -66,12 +66,9 @@ class ReturkepbfController extends Controller
             'new_masterobat.nama_obat',
             'new_masterobat.satuan_k',
         )
-            // ->with([
-            //     'penerimaanrinci:kdobat,nopenerimaan',
-            //     'penerimaanrinci.header:nopenerimaan,kdpbf',
-            //     'penerimaanrinci.header.pihakketiga',
-            // ])
-            // ->whereNotIn('penerimaan_h.jenis_penerimaan', ['APBD', 'APBN'])
+            ->leftJoin('stokreal', 'stokreal.kdobat', '=', 'new_masterobat.kd_obat')
+            ->where('stokreal.jumlah', '>', 0)
+            ->where('stokreal.kdruang', request('kd_ruang'))
             ->groupBy('new_masterobat.kd_obat')
             ->get();
         return new JsonResponse($data);
@@ -127,6 +124,7 @@ class ReturkepbfController extends Controller
             ->get();
         $stok = Stokreal::where('kdobat', '=', request('kd_obat'))
             ->where('kdruang', '=', request('kd_ruang'))
+            ->where('nopenerimaan', 'LIKE', '%awal%')
             ->where('jumlah', '>', 0)
             ->get();
         return new JsonResponse([
@@ -145,6 +143,48 @@ class ReturkepbfController extends Controller
         $result = $raw->only('data');
         $result['meta'] = $raw->except('data');
         return new JsonResponse($result);
+    }
+    public function simpanEditRinci(Request $request)
+    {
+        $data = Returpbfrinci::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan',
+                'req' => $request->all()
+            ], 410);
+        }
+        $data->update([
+            'no_batch' => $request->nobatch ?? '',
+            'nopenerimaan' => $request->nopenerimaan,
+            'tgl_exp' => $request->tglexp,
+            'subtotal' => $request->subtotal ?? 0,
+            'harga_net' => $request->harga ?? 0,
+        ]);
+
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'data' => $data ?? null,
+            'req' => $request->all(),
+        ]);
+    }
+    public function simpanEditFaktur(Request $request)
+    {
+        $data = Returpbfheder::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan',
+                'req' => $request->all()
+            ], 410);
+        }
+        $data->update([
+            'no_faktur_retur_pbf' => $request->nomor ?? '',
+            'tgl_faktur_retur_pbf' => $request->tanggal
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'data' => $data,
+            'req' => $request->all(),
+        ]);
     }
     public function simpanretur(Request $request)
     {
@@ -236,7 +276,9 @@ class ReturkepbfController extends Controller
                     'kondisi_barang' => $request->kondisi_barang,
                     'tgl_rusak' => $request->tgl_rusak,
                     'harga_net' => $request->harga_neto,
+                    'harga_net_default' => $request->harga_neto,
                     'subtotal' => $request->subtotal,
+                    'subtotal_default' => $request->subtotal,
                     'tgl_exp' => $request->tgl_exp ?? null,
                     'tgl_exp_default' => $request->tgl_exp ?? null,
                     'flag_tbl_rusak' => $request->flag_tbl_rusak ?? '',
@@ -304,10 +346,15 @@ class ReturkepbfController extends Controller
             foreach ($rinci as $key) {
                 if ($key['flag_tbl_rusak'] !== '1') {
                     $stok = Stokrel::where('kdobat', $key['kd_obat'])
-                        ->where('nopenerimaan', $key['nopenerimaan'])
-                        ->where('nobatch', $key['no_batch'])
+                        ->where('nopenerimaan', $key['nopenerimaan_default'])
+                        ->where('nobatch', $key['no_batch_default'])
                         ->where('kdruang', $data->gudang)
                         ->first();
+                    if (!$stok) {
+                        return new JsonResponse([
+                            'message' => 'Data Stok Tidak ditemukan, Data tidak terkunci',
+                        ], 410);
+                    }
                     $jumlahStok = (float)$stok->jumlah - (float)$key['jumlah_retur'];
                     $stok->jumlah = $jumlahStok;
                     $stok->save();
@@ -321,7 +368,11 @@ class ReturkepbfController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
+            return response()->json([
+                'message' => 'ada kesalahan : ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 410);
         }
     }
     public function deleteHeader(Request $request)

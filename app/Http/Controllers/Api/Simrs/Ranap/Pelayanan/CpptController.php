@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Simrs\Ranap\Pelayanan;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Anamnesis\KeluhanNyeri;
+use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Ranap\Pelayanan\Cppt;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanKebidanan;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanNeonatal;
@@ -14,6 +16,7 @@ use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanPediatrik;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanSambung;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\PemeriksaanUmum;
 use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
+use App\Models\Simrs\Visite\Visite;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,6 +139,12 @@ class CpptController extends Controller
     public function saveCppt(Request $request)
     {
 
+      $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=','1')->get();
+
+      if (count($cekKasir) > 0) {
+        return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal '.$cekKasir[0]->rs42], 500);
+      }
+
       $user = Pegawai::find(auth()->user()->pegawai_id);
       $kdpegsimrs = $user->kdpegsimrs;
       $nakes = $user->kdgroupnakes;
@@ -160,8 +169,6 @@ class CpptController extends Controller
         $penilaianId = $penilaian['idPenilaian'];
        }
 
-
-
        $cppt = Cppt::create([
         'noreg' => $request->noreg,
         'norm' => $request->norm,
@@ -175,6 +182,9 @@ class CpptController extends Controller
         'kdruang' => $request->kdruang,
         'user' => $kdpegsimrs,
         'nakes'=> $nakes,
+        // tambahan baru
+        's_sambung' => $request->form['s_sambung'],
+        'o_sambung' => $request->form['o_sambung'],
 
        ]);
 
@@ -185,13 +195,149 @@ class CpptController extends Controller
         ]);
        }
 
+       // insert tarif jika akun dokter
+       $dokter = $nakes === '1';
+       if ($dokter) {
+          self::insertTarif($request,$user, $kdpegsimrs);
+       }
+       
 
        $result = self::getdata($request->noreg, null);
+
        return new JsonResponse([
         'success' => true,
         'message' => 'success',
         'result' => $result
        ]);
+    }
+
+    public static function insertTarif($request,$user, $kdpegsimrs)
+    {
+
+
+        $spesialis = strtoupper($user->statusspesialis) === 'SPESIALIS';
+
+        // cek tarif
+        $tarifVisite = self::cekTarip($spesialis, $request);
+        if (!$tarifVisite) {
+          return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
+        }
+
+        // cek apakah sudah ada billing
+        $cekTarif = Visite::select('rs1')
+          ->where('rs1', $request->noreg)
+          ->where('rs3', $kdpegsimrs)
+          ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
+          ->where('rs6', $tarifVisite['flag_biaya'])
+          ->get();
+
+          $hari_ini = date('Y-m-d H:i:s');
+
+          // jika billing belum masuk
+          if (count($cekTarif) === 0) {
+
+            Visite::create([
+              'rs1' => $request->noreg,
+              'rs2' => $hari_ini,
+              'rs3' => $kdpegsimrs,
+              'rs4' => $tarifVisite['sarana'],
+              'rs5' => $tarifVisite['pelayanan'],
+              'rs6' => $tarifVisite['flag_biaya'],
+              'rs8' => $request->kdgroup_ruangan,
+              'rs9' => $request->kodesistembayar
+            ]);
+          }
+    }
+
+
+    public static function cekTarip($spesialis, $request)
+    {
+        
+      $sarana=0;
+      $pelayanan=0;
+      $flag_biaya=null;
+
+        if ($spesialis) {
+          // "select * from rs30tarif where (rs3='V2#' or rs3='V3#'
+          $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+          ->orWhere('rs3', 'V3#')
+          ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+          ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+          ->first();
+
+          if (!$rsx) {
+            return null;
+          }
+          
+          $flag_biaya=$rsx->rs3;
+
+          if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
+          {
+            $sarana=$rsx->rs6;
+						$pelayanan=$rsx->rs7;
+          }else if($request->kelas_ruangan=="2"){
+						$sarana=$rsx->rs8;
+						$pelayanan=$rsx->rs9;
+					}else if($request->kelas_ruangan=="1"){
+						$sarana=$rsx->rs10;
+						$pelayanan=$rsx->rs11;
+					}else if($request->kelas_ruangan=="Utama"){
+						$sarana=$rsx->rs12;
+						$pelayanan=$rsx->rs13;
+					}else if($request->kelas_ruangan=="VIP"){
+						$sarana=$rsx->rs14;
+						$pelayanan=$rsx->rs15;
+					}else if($request->kelas_ruangan=="VVIP"){
+						$sarana=$rsx->rs16;
+						$pelayanan=$rsx->rs17;
+					}	
+        } else {
+
+          //select * from rs30tarif where (rs3='V1#
+
+          $rsx = Rstigapuluhtarif::where('rs3', 'V1#')
+          // ->orWhere('rs3', 'V3#')
+          ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+          ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+          ->first();
+
+          if (!$rsx) {
+            return null;
+          }
+
+          
+          $flag_biaya=$rsx->rs3;
+
+          if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
+          {
+            $sarana=$rsx->rs6;
+						$pelayanan=$rsx->rs7;
+					}else if($request->kelas_ruangan==="2"){
+						$sarana=$rsx->rs8;
+						$pelayanan=$rsx->rs9;
+					}else if($request->kelas_ruangan==="1"){
+						$sarana=$rsx->rs10;
+						$pelayanan=$rsx->rs11;
+					}else if($request->kelas_ruangan==="Utama"){
+						$sarana=$rsx->rs12;
+						$pelayanan=$rsx->rs13;
+					}else if($request->kelas_ruangan==="VIP"){
+						$sarana=$rsx->rs14;
+						$pelayanan=$rsx->rs15;
+					}else if($request->kelas_ruangan==="VVIP"){
+						$sarana=$rsx->rs16;
+						$pelayanan=$rsx->rs17;
+					}	
+        }
+
+        $tarif = (int) $sarana + (int) $pelayanan;
+
+        return [
+          'flag_biaya' => $flag_biaya,
+          'tarif' => $tarif,
+          'sarana' => $sarana,
+          'pelayanan' => $pelayanan
+        ];
     }
 
 
@@ -523,7 +669,7 @@ class CpptController extends Controller
 
         if ($request->id === null) {
           Cppt::find($request->id_cppt)->update([
-            'rs253_id' => $data->id
+            'rs253_id' => $data->id,
           ]);
         }
 
@@ -568,6 +714,44 @@ class CpptController extends Controller
       ]);
 
     }
+    public function updateosambung(Request $request)
+    {
+      // $user = Pegawai::find(auth()->user()->pegawai_id);
+      // $kdpegsimrs = $user->kdpegsimrs;
+
+      $cppt = Cppt::find($request->id)->update([
+        
+        'o_sambung'=> $request->o_sambung,
+      ]);
+      
+
+      return new JsonResponse([
+        'success' => true,
+        'message' => 'success',
+        'result' => $cppt
+      ]);
+
+    }
+
+
+    public function deleteCppt(Request $request)
+    {
+      $cari = Cppt::find($request->id);
+      if (!$cari) {
+          return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+      }
+      $hapus = $cari->delete();
+      if (!$hapus) {
+          return new JsonResponse(['message' => 'gagal dihapus'], 501);
+      }
+      return new JsonResponse(
+          [
+              'message' => 'data berhasil dihapus'
+          ], 
+      200);
+    }
+
+   
 
 
     

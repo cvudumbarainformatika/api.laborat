@@ -12,9 +12,11 @@ Route::group([
 ], function () {
     Route::get('/listcppt', [CpptController::class, 'list']);
     Route::post('/savecppt', [CpptController::class, 'saveCppt']);
+    Route::post('/deletecppt', [CpptController::class, 'deleteCppt']);
 
     Route::post('/editcpptanamnesis', [CpptController::class, 'editCpptAnamnesis']);
     Route::post('/editcpptpemeriksaan', [CpptController::class, 'editCpptPemeriksaan']);
     Route::post('/updateasplaninst', [CpptController::class, 'updateAsPlanInst']);
+    Route::post('/updateosambung', [CpptController::class, 'updateosambung']);
 
 });

@@ -8,6 +8,8 @@ use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Covid\StatusCovid;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
 use App\Models\Simrs\Edukasi\Transedukasi;
+use App\Models\Simrs\Ews\KeteranganTindakan;
+use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\InformConcern\InformConcern;
 use App\Models\Simrs\Kasir\Biayamaterai;
@@ -596,5 +598,13 @@ class Kunjunganranap extends Model
     public function memo()
     {
        return $this->hasOne(Memodiagnosadokter::class, 'noreg', 'rs1');
+    }
+    public function procedure()
+    {
+       return $this->hasMany(ProcedureM::class, 'noreg', 'rs1');
+    }
+    public function keterangantindakan()
+    {
+       return $this->hasMany(KeteranganTindakan::class, 'noreg', 'rs1');
     }
 }

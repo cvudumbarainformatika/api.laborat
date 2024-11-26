@@ -98,6 +98,10 @@ class BarangRusakController extends Controller
                     'kunci' => '',
                 ],
                 [
+                    'nopenerimaan_default' => $request->nopenerimaan,
+                    'nobatch_default' => $request->no_batch,
+                    'tglexp' => $request->tglexp,
+                    'tglexp_default' => $request->tglexp,
                     'tgl_rusak' => date('Y-m-d'),
                     'tgl_entry' => date('Y-m-d H:i:s'),
                     'satuan_bsr' => $request->satuan_bsr,
@@ -214,6 +218,7 @@ class BarangRusakController extends Controller
             ], 410);
         }
         $data->kunci = '1';
+        $data->tgl_kunci = date('Y-m-d H:i:s');
         $data->save();
 
         $stok->jumlah = $sisa;
@@ -224,6 +229,80 @@ class BarangRusakController extends Controller
             'stok' => $stok,
             'data' => $data,
             'message' => 'Data Sudah Dikunci, dan Stok Sudah Berkurang'
+        ]);
+    }
+    public function pemusnahan(Request $request)
+    {
+        $data = BarangRusak::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+        $user = FormatingHelper::session_user();
+        $data->update([
+            'jumlah_dimusnahkan' => $request->jumlah,
+            'tgl_pemusnahan' => $request->tanggal . date(' H:i:s'),
+            'user_pemusnahan' => $user['kodesimrs'],
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'request' => $request->all(),
+            'data' => $data
+        ]);
+    }
+    public function penghapusan(Request $request)
+    {
+        $data = BarangRusak::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+        $user = FormatingHelper::session_user();
+        $data->update([
+            'tgl_penghapusan' => $request->tanggal . date(' H:i:s'),
+            'user_penghapusan' => $user['kodesimrs'],
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'request' => $request->all(),
+            'data' => $data
+        ]);
+    }
+    public function penerimaan(Request $request)
+    {
+        $data = BarangRusak::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 410);
+        }
+        $data->update([
+            'nopenerimaan' => $request->nopenerimaan,
+            'nobatch' => $request->nobatch,
+            'tglexp' => $request->tglexp,
+            'harga_net' => $request->harga,
+        ]);
+        return new JsonResponse([
+            'message' => 'Data Sudah Disimpan',
+            'request' => $request->all(),
+            'data' => $data
+        ]);
+    }
+    public function kartuStok(Request $request)
+    {
+        $obats = BarangRusak::select('kd_obat')
+            ->where('kunci', '1')
+            ->whereNull('tgl_retur')
+            ->whereNull('tgl_penghapusan')
+            ->distinct()
+            ->pluck('kd_obat');
+
+        $data = request()->all();
+        return new JsonResponse([
+            'req' => $request->all(),
+            'data' => $data
         ]);
     }
 }

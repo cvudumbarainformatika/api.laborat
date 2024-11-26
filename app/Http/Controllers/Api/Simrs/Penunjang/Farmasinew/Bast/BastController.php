@@ -193,7 +193,7 @@ class BastController extends Controller
         }
         $result = PenerimaanHeder::where('nobast', '<>', '')
             ->whereNotNull('tgl_bast')
-            ->with(
+            ->with([
                 'faktur',
                 'penerimaanrinci.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
                 'bastr.masterobat:kd_obat,nama_obat,satuan_k', // select + mobat sama tambah list bast juga
@@ -201,7 +201,7 @@ class BastController extends Controller
                 'terima:kdpegsimrs,nama',
                 'bast:kdpegsimrs,nama',
                 'bayar:kdpegsimrs,nama',
-            )
+            ])
             ->whereIn('nobast', $pen)
             ->orderBy('tgl_bast', 'DESC')
             ->orderBy('nobast', 'DESC')
