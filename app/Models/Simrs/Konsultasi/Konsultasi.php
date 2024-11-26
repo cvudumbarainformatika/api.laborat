@@ -8,6 +8,7 @@ use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Rajal\KunjunganPoli as RajalKunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Tindakan\Tindakan;
 use App\Models\Simrs\Visite\Visite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,7 @@ class Konsultasi extends Model
     {
         return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kddokterkonsul');
     }
-    
+
     public function nakesminta()
     {
         return $this->hasOne(Petugas::class,  'kdpegsimrs', 'kdminta');
@@ -50,9 +51,13 @@ class Konsultasi extends Model
     {
         return $this->hasOne(Petugas::class, 'kdpegsimrs', 'user' );
     }
-    
+
+    public function tindakan()
+    {
+        return $this->hasMany(Tindakan::class, 'id', 'rs140_id' );
+    }
 
 
 
-    
+
 }

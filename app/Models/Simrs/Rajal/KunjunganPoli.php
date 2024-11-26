@@ -15,6 +15,7 @@ use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
 use App\Models\Simrs\Kasir\Pembayaran;
+use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -437,5 +438,10 @@ class KunjunganPoli extends Model
     public function pemeriksaanfisikpsikologidll()
     {
         return $this->hasMany(PemeriksaanUmum::class, 'rs1','rs1');
+    }
+
+    public function konsuldokterspesialis()
+    {
+        return $this->hasMany(Konsultasi::class, 'noreg','rs1');
     }
 }

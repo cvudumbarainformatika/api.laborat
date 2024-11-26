@@ -245,6 +245,19 @@ class IgdController extends Controller
                     'permintaanracikan.mobat:kd_obat,nama_obat',
                 ])
                     ->orderBy('id', 'DESC');
+            },
+            'konsuldokterspesialis' => function ($konsuldokterspesialis){
+                $konsuldokterspesialis->with(
+                    [
+                        'tindakan' => function($tindakans){
+                            $tindakans->with(
+                                [
+                                    'mastertindakan'
+                                ]
+                            );
+                        }
+                    ]
+                )->where('kdruang', 'POL014');
             }
         ])
         ->first();
