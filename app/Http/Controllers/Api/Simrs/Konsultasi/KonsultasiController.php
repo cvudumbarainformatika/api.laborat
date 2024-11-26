@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class KonsultasiController extends Controller
 {
-    
+
 
     public function simpandata(Request $request)
     {
@@ -42,14 +42,14 @@ class KonsultasiController extends Controller
 
       $user = FormatingHelper::session_user();
       $tglInput = date('Y-m-d H:i:s');
-        
+
       $data=null;
       if ($request->has('id')) {
         $data = Konsultasi::find($request->id);
       } else {
         $data = new Konsultasi();
       }
-       
+
       $data->noreg = $request->noreg;
       $data->norm = $request->norm;
       $data->kddokterkonsul = $request->kddokterkonsul;
@@ -72,7 +72,7 @@ class KonsultasiController extends Controller
     }
 
 
-    
+
 
     public function hapusdata(Request $request)
     {
@@ -88,13 +88,13 @@ class KonsultasiController extends Controller
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 
-    
+
 
     public function getdatarkd()
     {
       $user = FormatingHelper::session_user();
        $data = Konsultasi::selectRaw('
-        id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user
+        id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user,kdruang
        ')->where('kddokterkonsul', $user['kodesimrs'])
        ->with([
         'dokterkonsul'=>function($q){
@@ -136,9 +136,16 @@ class KonsultasiController extends Controller
         },
         'kunjunganigd'=>function($q){
           $q->select(
-            'rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs19 as statuspulang', 'rs15.rs2 as nama',
+            'rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs19 as statuspulang', 'rs15.rs2 as nama','rs19.rs2 as ruangan'
             )
             ->leftJoin('rs15','rs15.rs1','rs17.rs2')
+            ->leftJoin('rs19','rs19.rs1','rs17.rs8')
+            ->with([
+                'diagnosa'=>function($q){
+                  $q->with('masterdiagnosa')
+                  ->where('rs13', '=', 'POL014');
+                }
+              ])
             ->where('rs17.rs8', '=', 'POL014')
             ;
         },
@@ -216,9 +223,9 @@ class KonsultasiController extends Controller
 
 
 
-       
+
       $data->flag = '2';
-      
+
       $data->jawaban = $request->jawaban;
       $data->kdruang = $request->kdruang;
       $data->save();
@@ -228,7 +235,7 @@ class KonsultasiController extends Controller
 
     public static function cekTarip($spesialis, $request)
     {
-        // select * from rs30tarif where (rs3='K5#' or rs3='K6#') 
+        // select * from rs30tarif where (rs3='K5#' or rs3='K6#')
 				// and rs4 like '%|".$_GET['kd_ruang']."|%'  and rs5 like '%|".$_GET['kelas']."|%'"
         $rsx = Rstigapuluhtarif::where('rs3', 'K5#')
         ->orWhere('rs3', 'K6#')
@@ -264,7 +271,7 @@ class KonsultasiController extends Controller
 					}else if($request->kelas_ruangan=="VVIP"){
 						$sarana=$rsx->rs16;
 						$pelayanan=$rsx->rs17;
-					}	
+					}
         } else {
           if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
           {
@@ -285,7 +292,7 @@ class KonsultasiController extends Controller
 					}else if($request->kelas_ruangan==="VVIP"){
 						$sarana=$rsx->rs16;
 						$pelayanan=$rsx->rs17;
-					}	
+					}
         }
 
         $tarif = (int) $sarana + (int) $pelayanan;
