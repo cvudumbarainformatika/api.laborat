@@ -198,15 +198,9 @@ class BastController extends Controller
                 'penerimaanrinci.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
                 'bastr.masterobat:kd_obat,nama_obat,satuan_k', // select + mobat sama tambah list bast juga
                 'pihakketiga',
-                'terima' => function ($q) {
-                    $q->select('kdpegsimrs', 'nama')->where('user', '<>', '');
-                },
-                'bast' => function ($q) {
-                    $q->select('kdpegsimrs', 'nama')->where('user_bast', '<>', '');
-                },
-                'bayar' => function ($q) {
-                    $q->select('kdpegsimrs', 'nama')->where('user_bayar', '<>', '');
-                },
+                'terima:kdpegsimrs,nama',
+                'bast:kdpegsimrs,nama',
+                'bayar:kdpegsimrs,nama',
             ])
             ->whereIn('nobast', $pen)
             ->orderBy('tgl_bast', 'DESC')
