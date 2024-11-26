@@ -183,8 +183,8 @@ class CpptController extends Controller
         'user' => $kdpegsimrs,
         'nakes'=> $nakes,
         // tambahan baru
-        's_sambung' => $request->form['s_sambung'],
-        'o_sambung' => $request->form['o_sambung'],
+        's_sambung' => $request->form['s_sambung'] ?? null,
+        'o_sambung' => $request->form['o_sambung'] ?? null,
 
        ]);
 
