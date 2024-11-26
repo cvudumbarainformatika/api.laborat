@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Ranap\Pelayanan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simpeg\Petugas;
-use App\Models\Simrs\Planing\Plannindokter;
+use App\Models\Simrs\Planing\Planningdokter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,12 +19,13 @@ class TargetController extends Controller
 
         $data = null;
         if ($request->id === null) {
-          $data = new Plannindokter();
+          $data = new Planningdokter();
         } else {
-          $data = Plannindokter::find($request->id);
+          $data = Planningdokter::find($request->id);
         }
 
         $data->noreg = $request->noreg;
+        $data->norm = $request->norm;
         $data->target = $request->target;
         $data->terapi = $request->terapi;
         $data->monitor = $request->monitor;

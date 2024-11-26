@@ -5,7 +5,7 @@ namespace App\Models\Simrs\Planing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Plannindokter extends Model
+class Planningdokter extends Model
 {
     use HasFactory;
     protected $table = 'planningdokter';
