@@ -169,7 +169,7 @@ class TindakanController extends Controller
     public function notatindakanranap()
     {
         $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
-            ->where('rs22', request('kodepoli'))
+            ->where('rs25', request('kodepoli'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }

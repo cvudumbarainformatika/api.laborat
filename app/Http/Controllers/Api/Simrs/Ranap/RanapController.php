@@ -141,7 +141,7 @@ class RanapController extends Controller
             // })
             ->where(function($query) use ($hr_ini, $hr_180) {
                 if (request('status') === 'Pulang') {
-                    $query->whereBetween('rs23.rs3', [$hr_180, $hr_ini])
+                    $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
                         ->whereIn('rs23.rs22',['2','3']);
                 } else {
                     $query->where('rs23.rs22', '')
@@ -505,7 +505,7 @@ class RanapController extends Controller
                       ->orderBy('tgl', 'DESC');
                 },
                 'konsultasi'=> function ($q) {
-                    $q->orderBy('id', 'DESC');
+                    $q->where('kdruang','!=','POL014')->orderBy('id', 'DESC'); // ini updatean baru
                 },
                 'edukasi'=> function ($q) {
                     $q->orderBy('id', 'DESC');
