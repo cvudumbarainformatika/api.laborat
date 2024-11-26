@@ -109,7 +109,7 @@ class IgdController extends Controller
 
     public function terimapasien(Request $request)
     {
-        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
+        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9','rs14', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
         ->with([
             'anamnesis' => function($anamnesis){
                 $anamnesis->with(['anamnesetambahan','anamnesebps','anamnesenips'])->where('kdruang', 'POL014');
@@ -156,6 +156,7 @@ class IgdController extends Controller
             'historykehamilan',
             'anamnesekebidanan',
             'bankdarah',
+            'msistembayar',
             'planheder' => function($planheder){
                 $planheder->with([
                     'planranap' => function($planranap){
@@ -197,7 +198,7 @@ class IgdController extends Controller
                     ->orderBy('id', 'DESC');
             },
             'diagnosa' => function ($d) {
-                $d->with('masterdiagnosa');
+                $d->with('masterdiagnosa')->where('rs13','POL014');
             },
             'pemeriksaanfisik' => function ($a) {
                 $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])

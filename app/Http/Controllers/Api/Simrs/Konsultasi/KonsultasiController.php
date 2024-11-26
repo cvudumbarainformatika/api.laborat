@@ -204,19 +204,21 @@ class KonsultasiController extends Controller
         ->where('rs6', $tarifKonsul['flag_biaya'])
         ->get();
 
+        if($request->kdruang !== 'POL014'){
         // jika billing belum masuk
-        if (count($cekTarif) === 0) {
+            if (count($cekTarif) === 0) {
 
-          Visite::create([
-            'rs1' => $request->noreg,
-            'rs2' => $hari_ini,
-            'rs3' => $dokter->kdpegsimrs,
-            'rs4' => $tarifKonsul['sarana'],
-            'rs5' => $tarifKonsul['pelayanan'],
-            'rs6' => $tarifKonsul['flag_biaya'],
-            'rs8' => $request->kdgroup_ruangan,
-            'rs9' => $request->kodesistembayar
-          ]);
+            Visite::create([
+                'rs1' => $request->noreg,
+                'rs2' => $hari_ini,
+                'rs3' => $dokter->kdpegsimrs,
+                'rs4' => $tarifKonsul['sarana'],
+                'rs5' => $tarifKonsul['pelayanan'],
+                'rs6' => $tarifKonsul['flag_biaya'],
+                'rs8' => $request->kdgroup_ruangan,
+                'rs9' => $request->kodesistembayar
+            ]);
+            }
         }
 
       }
