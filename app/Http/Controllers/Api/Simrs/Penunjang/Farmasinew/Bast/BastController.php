@@ -193,15 +193,21 @@ class BastController extends Controller
         }
         $result = PenerimaanHeder::where('nobast', '<>', '')
             ->whereNotNull('tgl_bast')
-            ->with(
+            ->with([
                 'faktur',
                 'penerimaanrinci.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
                 'bastr.masterobat:kd_obat,nama_obat,satuan_k', // select + mobat sama tambah list bast juga
                 'pihakketiga',
-                'terima:kdpegsimrs,nama',
-                'bast:kdpegsimrs,nama',
-                'bayar:kdpegsimrs,nama',
-            )
+                'terima' => function ($q) {
+                    $q->select('kdpegsimrs', 'nama')->where('user', '<>', '');
+                },
+                'bast' => function ($q) {
+                    $q->select('kdpegsimrs', 'nama')->where('user_bast', '<>', '');
+                },
+                'bayar' => function ($q) {
+                    $q->select('kdpegsimrs', 'nama')->where('user_bayar', '<>', '');
+                },
+            ])
             ->whereIn('nobast', $pen)
             ->orderBy('tgl_bast', 'DESC')
             ->orderBy('nobast', 'DESC')
