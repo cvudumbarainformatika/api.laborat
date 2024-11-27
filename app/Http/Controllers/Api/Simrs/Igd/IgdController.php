@@ -296,4 +296,16 @@ class IgdController extends Controller
             return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
     }
+
+    public function updatesistembayar(Request $request)
+    {
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs8','POL014')->first();
+        $updatekunjungan->rs14 = $request->kodesistembayar;
+        $updatekunjungan->save();
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $request->namasistembayar
+        ], 200);
+    }
 }

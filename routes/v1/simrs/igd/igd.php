@@ -17,5 +17,7 @@ Route::group([
     Route::post('/hapustriage', [TriageController::class, 'hapustriage']);
 
     Route::get('/getDataTriage', [TriageController::class, 'getDataTriage']);
+
+    Route::post('/updatesistembayar', [IgdController::class, 'updatesistembayar']);
 });
 
