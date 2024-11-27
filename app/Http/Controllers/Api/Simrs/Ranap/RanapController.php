@@ -528,6 +528,7 @@ class RanapController extends Controller
                 },
                 'dischargeplanning',
                 'procedure',
+                'planningdokter',
                 'keterangantindakan:noreg,keterangan',
                 'statuscovid' => function ($q) {
                     $q->where('stat', '=', 'MASUK')

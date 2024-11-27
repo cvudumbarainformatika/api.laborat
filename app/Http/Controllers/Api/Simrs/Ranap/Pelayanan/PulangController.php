@@ -66,16 +66,18 @@ class PulangController extends Controller
         ]);
       } 
 
-      $kunjunganRanap = Kunjunganranap::where('rs1', $request->noreg)->first();
-      $updateKunjunganRanap = $kunjunganRanap->update([
-        'rs22' => '3',
-        'rs4' => date('Y-m-d H:i:s'),
-        'rs23' => $request->caraKeluar ?? '',
-        'rs24' => $request->prognosis ?? '',
-        'rs26' => $request->diagnosaAkhir ?? '',
-        'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
-        'rs27' => $request->tindakLanjut ?? ''
-      ]);
+      if ($kunjungan === 0) {
+        $kunjunganRanap = Kunjunganranap::where('rs1', $request->noreg)->first();
+        $updateKunjunganRanap = $kunjunganRanap->update([
+          'rs22' => '3',
+          'rs4' => date('Y-m-d H:i:s'),
+          'rs23' => $request->caraKeluar ?? '',
+          'rs24' => $request->prognosis ?? '',
+          'rs26' => $request->diagnosaAkhir ?? '',
+          'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
+          'rs27' => $request->tindakLanjut ?? ''
+        ]);
+      }
 
        if (!$updateKunjunganRanap) {
         return new JsonResponse([

@@ -63,6 +63,8 @@ use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Planing\Plannindokter;
+use App\Models\Simrs\Planing\Planningdokter;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Ranap\Pelayanan\Cppt;
@@ -606,5 +608,9 @@ class Kunjunganranap extends Model
     public function keterangantindakan()
     {
        return $this->hasMany(KeteranganTindakan::class, 'noreg', 'rs1');
+    }
+    public function planningdokter()
+    {
+       return $this->hasOne(Planningdokter::class, 'noreg', 'rs1');
     }
 }
