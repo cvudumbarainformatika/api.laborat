@@ -22,6 +22,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosagizi;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
@@ -419,6 +420,10 @@ class Kunjunganranap extends Model
     public function diagnosakebidanan()
     {
        return $this->hasMany(Diagnosakebidanan::class, 'noreg', 'rs1');
+    }
+    public function diagnosagizi()
+    {
+       return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
     }
     public function konsultasi()
     {

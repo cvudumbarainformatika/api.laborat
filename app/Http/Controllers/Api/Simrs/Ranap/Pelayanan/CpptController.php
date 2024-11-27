@@ -750,6 +750,22 @@ class CpptController extends Controller
       ]);
 
     }
+    public function updatessambung(Request $request)
+    {
+
+      $cppt = Cppt::find($request->id)->update([
+        
+        's_sambung'=> $request->s_sambung,
+      ]);
+      
+
+      return new JsonResponse([
+        'success' => true,
+        'message' => 'success',
+        'result' => $cppt
+      ]);
+
+    }
 
 
     public function deleteCppt(Request $request)

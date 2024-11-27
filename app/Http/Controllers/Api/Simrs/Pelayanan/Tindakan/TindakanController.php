@@ -388,7 +388,7 @@ class TindakanController extends Controller
         )
         ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
         ->where('rs1', $noreg)
-        ->where('rs22', '!=', $ruangan)
+        ->where('rs22', '!=', 'POL014')
         ->get();
 
         return $data;

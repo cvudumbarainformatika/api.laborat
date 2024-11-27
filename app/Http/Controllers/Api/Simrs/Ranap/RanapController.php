@@ -227,6 +227,7 @@ class RanapController extends Controller
                         'permintaanracikan.mobat:kd_obat,nama_obat',
                         'sistembayar'
                     ])
+                        ->where('ruangan', '!=', 'POL014')
                         ->orderBy('id', 'DESC');
                 },
                 'diagnosa', // ini berhubungan dengan resep
@@ -329,16 +330,26 @@ class RanapController extends Controller
                         'rs2 as norm','rs3 as tgl',
                         'barthel','norton','humpty_dumpty','morse_fall','ontario','user','kdruang','awal','group_nakes'
                        ])
+                        ->where('kdruang', '!=', 'POL014')
                        ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
                 },
                 'diagnosamedis'=> function ($q) {
                     $q->with('masterdiagnosa');
                 },
                 'diagnosakeperawatan'=> function ($q) {
-                    $q->with('intervensi', 'intervensi.masterintervensi');
+                    $q->with('intervensi', 'intervensi.masterintervensi')
+                    ->where('kdruang', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
                 },
                 'diagnosakebidanan'=> function ($q) {
-                    $q->with('intervensi', 'intervensi.masterintervensi');
+                    $q->with('intervensi', 'intervensi.masterintervensi')
+                    ->where('kdruang', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
+                },
+                'diagnosagizi'=> function ($q) {
+                    $q->with('intervensi', 'intervensi.masterintervensi')
+                    ->where('kdruang', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
                 },
                 'tindakan'=> function ($q) {
                     $q->select(
@@ -365,10 +376,13 @@ class RanapController extends Controller
                     ->orderBy('id', 'DESC');
                 },
                 'laborats' => function ($q) {
-                    $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC');
+
+                    $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
+                    ->where('unit_pengirim', '!=', 'POL014');
                 },
                 'radiologi'=> function ($q) {
-                    $q->orderBy('id', 'DESC');
+                    $q->orderBy('id', 'DESC')
+                    ->where('rs10', '!=', 'POL014');
                 },
                 'hasilradiologi'=> function ($q) {
                     $q->orderBy('id', 'DESC');
@@ -386,7 +400,8 @@ class RanapController extends Controller
                 //     ->orderBy('id', 'DESC');
                 // },
                 'bankdarah'=> function ($q) {
-                    $q->orderBy('id', 'DESC');
+                    $q->orderBy('id', 'DESC')
+                    ->where('rs11', '!=', 'POL014');
                 },
                 'apheresis'=> function ($q) {
                     $q->orderBy('id', 'DESC');
@@ -402,6 +417,7 @@ class RanapController extends Controller
                 // },
                 'penunjanglain'=> function ($q) {
                     $q->with('masterpenunjang')
+                    ->where('rs10', '!=', 'POL014')
                     ->orderBy('id', 'DESC');
                 },
                 'perawatanjenazah'=> function ($q) {
