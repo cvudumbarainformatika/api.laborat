@@ -259,14 +259,25 @@ class CpptController extends Controller
 
         if ($spesialis) {
           // "select * from rs30tarif where (rs3='V2#' or rs3='V3#'
-          $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
-          ->orWhere('rs3', 'V3#')
-          ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-          ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-          ->first();
-
+          $rsx=null;
+          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+            $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          } else {
+            $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          }
+         
+        
+        //   return $rsx;
           if (!$rsx) {
-            return null;
+            $sarana=0;
+            $pelayanan=0;
+            $flag_biaya=null;
           }
           
           $flag_biaya=$rsx->rs3;
@@ -295,11 +306,18 @@ class CpptController extends Controller
 
           //select * from rs30tarif where (rs3='V1#
 
-          $rsx = Rstigapuluhtarif::where('rs3', 'V1#')
-          // ->orWhere('rs3', 'V3#')
-          ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-          ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-          ->first();
+          $rsx=null;
+          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+            $rsx = Rstigapuluhtarif::where('rs3', 'V5#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          } else {
+            $rsx = Rstigapuluhtarif::where('rs3', 'V1#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          }
 
           if (!$rsx) {
             return null;

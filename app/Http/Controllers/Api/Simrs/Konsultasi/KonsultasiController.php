@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class KonsultasiController extends Controller
 {
@@ -204,11 +205,13 @@ class KonsultasiController extends Controller
         ->where('rs6', $tarifKonsul['flag_biaya'])
         ->get();
 
+        
+
         if($request->kdruang !== 'POL014'){
         // jika billing belum masuk
             if (count($cekTarif) === 0) {
 
-            Visite::create([
+            $masukTarif = Visite::create([
                 'rs1' => $request->noreg,
                 'rs2' => $hari_ini,
                 'rs3' => $dokter->kdpegsimrs,
@@ -218,7 +221,10 @@ class KonsultasiController extends Controller
                 'rs8' => $request->kdgroup_ruangan,
                 'rs9' => $request->kodesistembayar
             ]);
-            }
+
+            // ini baru
+            $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
+          }
         }
 
       }
@@ -237,13 +243,24 @@ class KonsultasiController extends Controller
 
     public static function cekTarip($spesialis, $request)
     {
-        // select * from rs30tarif where (rs3='K5#' or rs3='K6#')
-				// and rs4 like '%|".$_GET['kd_ruang']."|%'  and rs5 like '%|".$_GET['kelas']."|%'"
-        $rsx = Rstigapuluhtarif::where('rs3', 'K5#')
-        ->orWhere('rs3', 'K6#')
-        ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-        ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-        ->first();
+        $rs = null;
+
+        if ($spesialis === 'SPESIALIS') {
+          $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
+                ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+                ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+                ->get();
+        } else {
+            $rs = Rstigapuluhtarif::where('rs3', 'K4#')->orWhere('rs3', 'K8#')
+                ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+                ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+                ->get();
+        }
+        
+        // return $rs;
+        $rsx = collect($rs)->filter(function ($q) use ($request) {
+            return Str::contains($q['rs5'], $request->kelas_ruangan) && Str::contains($q['rs4'], $request->kdgroup_ruangan);
+        })->first();
 
         if (!$rsx) {
           return null;
