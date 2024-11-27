@@ -65,7 +65,7 @@ class PemeriksaanFisikController extends Controller
                     [
                         'pemerisaanpsikologidll'
                     ]
-                )->where('rs1', $request->noreg)
+                )->where('rs1', $request->noreg)->where('kdruang','POL014')
                 ->orderBy('id','Desc')
                 ->get();
 
@@ -95,8 +95,7 @@ class PemeriksaanFisikController extends Controller
                 [
                     'pemerisaanpsikologidll'
                 ]
-            )->where('rs1', $request->noreg)
-            ->limit(1)
+            )->where('rs1', $request->noreg)->where('kdruang','POL014')
             ->orderBy('id','Desc')
             ->get();
 

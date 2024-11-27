@@ -19,4 +19,11 @@ Route::group([
     Route::post('/hapuspermintaanlaboratbaru', [LaboratController::class, 'hapuspermintaanlaboratbaru']);
 
     Route::get('/listmasterpemeriksaanradiologi', [RadiologimetaController::class, 'listmasterpemeriksaanradiologi']);
+
+
+    Route::post('/simpanpermintaanlaboratbaruIgd', [LaboratController::class, 'simpanpermintaanlaboratbaruIgd']);
+    Route::post('/hapuspermintaanlaboratbaruIgd', [LaboratController::class, 'hapuspermintaanlaboratbaruIgd']);
+    Route::get('/getnotaIgd', [LaboratController::class, 'getnotaIgd']);
+    Route::get('/getnotaoldIgd', [LaboratController::class, 'getnotaoldIgd']);
+    Route::get('/getdataIgd', [LaboratController::class, 'getdataIgd']);
 });

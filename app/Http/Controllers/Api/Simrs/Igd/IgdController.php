@@ -150,7 +150,7 @@ class IgdController extends Controller
                     'rs2 as norm','rs3 as tgl',
                     'barthel','norton','humpty_dumpty','morse_fall','ontario','user','kdruang','awal','group_nakes'
                    ])
-                   ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
+                   ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes'])->where('kdruang','POL014');
             },
             'historyperkawinan',
             'historykehamilan',
@@ -180,12 +180,12 @@ class IgdController extends Controller
                 );
             },
             'laborats' => function ($t) {
-                $t->with('details.pemeriksaanlab')
+                $t->with('details.pemeriksaanlab')->where('unit_pengirim', 'POL014')
                     ->orderBy('id', 'DESC');
             },
             'laboratold'=> function ($t) {
                 $t->with('pemeriksaanlab')
-                    ->orderBy('id', 'DESC');
+                    ->orderBy('id', 'DESC')->where('rs23','POL014');
             },
             'radiologi' => function ($t) {
                 $t->orderBy('id', 'DESC');
@@ -194,8 +194,9 @@ class IgdController extends Controller
                 $t->with('masterpenunjang')->orderBy('id', 'DESC');
             },
             'tindakan' => function ($t) {
-                $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
-                    ->orderBy('id', 'DESC');
+                $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url','mpoli:rs1,rs2')
+                    ->where('rs4','<>','T00075')
+                    ->orderBy('id', 'DESC')->where('rs22','POL014');
             },
             'diagnosa' => function ($d) {
                 $d->with('masterdiagnosa')->where('rs13','POL014');
@@ -214,7 +215,7 @@ class IgdController extends Controller
                     $diag->with('intervensi.masterintervensi');
             },
             'pemeriksaanfisikpsikologidll' => function($pemeriksaanfisikpsikologidll){
-                $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll');
+                $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll')->where('kdruang','POL014');
             },
             // 'taskid' => function ($q) {
             //     $q->orderBy('taskid', 'DESC');

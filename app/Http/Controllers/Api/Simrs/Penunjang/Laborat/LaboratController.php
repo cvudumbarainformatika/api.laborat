@@ -316,12 +316,34 @@ class LaboratController extends Controller
         return new JsonResponse($nota);
     }
 
+    public function getnotaIgd()
+    {
+        $nota = LaboratMeta::select('nota')->where('noreg', request('noreg'))->where('unit_pengirim', 'POL014')
+            ->groupBy('nota')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
+
+    public function getnotaoldIgd()
+    {
+        $nota = Laboratpemeriksaan::select('rs2')->where('rs1', request('noreg'))->where('rs23','POL014')
+            ->groupBy('rs2')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($nota);
+    }
+
     public function getnotaold()
     {
         $nota = Laboratpemeriksaan::select('rs2')->where('rs1', request('noreg'))
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
+
+    public function getdataIgd()
+    {
+        $data = LaboratMeta::select('*')->where('noreg', request('noreg'))->where('unit_pengirim', 'POL014')
+            ->with('details.pemeriksaanlab')->orderBy('id', 'DESC')->get();
+        return new JsonResponse($data);
+    }
+
 
     public function getdata()
     {
@@ -366,4 +388,167 @@ class LaboratController extends Controller
             'nota' => $nota,
         ], 200);
     }
+
+    public function hapuspermintaanlaboratbaruIgd(Request $request)
+    {
+        $cek = Laboratpemeriksaan::whereIn('id', $request->id)->where('rs18', '=', '1')->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa dihapus!'], 500);
+        }
+
+        $hapus = Laboratpemeriksaan::whereIn('id', $request->id)->delete();
+        $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->where('unit_pengirim','POL014')->get();
+
+        $collection = collect($data);
+        $nota = $collection->pluck('nota');
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 500);
+        }
+        return new JsonResponse([
+            'message' => 'berhasil dihapus',
+            'result' => $data,
+            'nota' => $nota,
+        ], 200);
+    }
+
+    public function simpanpermintaanlaboratbaruIgd(Request $request)
+    {
+        // return $request->form;
+        $cek = Laboratpemeriksaan::where('rs2', $request->nota)->where('rs18', '=', '1')->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'Permintaan Sudah dikunci Oleh Laborat, Tidak bisa Tambah!'], 500);
+        }
+
+        $auth = Pegawai::find(auth()->user()->pegawai_id);
+        $user = $auth->kdpegsimrs ?? '';
+        $ruangan = $request->unit_pengirim;
+
+        try {
+            // begin transaction
+
+
+
+            DB::beginTransaction();
+
+            // write your dependent quires here
+            DB::select('call nota_permintaanlab(@nomor)');
+            $x = DB::table('rs1')->select('rs28')->get();
+            $wew = $x[0]->rs28;
+            if ($ruangan === 'POL014') {
+                $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
+            } else {
+                if ($request->isRanap === true) {
+                    $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'I-LAB');
+                } else {
+
+                    $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
+                }
+            }
+
+            // $thumb = [];
+            // foreach ($request->form as $key => $value) {
+            $where = [
+                'nota' => $notapermintaanlab,
+                'noreg' => $request->noreg,
+                'norm' => $request->norm,
+            ];
+            $form = [
+                'jenis_laborat' => $request->jenis_laborat ?? '',
+                'tgl_order' => date('Y-m-d H:i:s'),
+                'puasa_pasien' => $request->puasa_pasien ?? '',
+                'tgl_permintaan' => date('Y-m-d H:i:s'),
+                'dokter_pengirim' => $request->kodedokter ?? '',
+                'faskes_pengirim' => $request->faskes_pengirim ?? '',
+                'unit_pengirim' => $ruangan,
+                'prioritas_pemeriksaan' => $request->prioritas_pemeriksaan ?? '',
+                'diagnosa_masalah' => $request->diagnosa_masalah ?? '',
+                'catatan_permintaan' => $request->catatan_permintaan ?? '',
+                'metode_pengiriman_hasil' => $request->metode_pengiriman_hasil ?? '',
+                'asal_sumber_spesimen' => $request->asal_sumber_spesimen,
+                'jumlah_spesimen' => $request->jumlah_spesimen ?? '',
+                'volume_spesimen_klinis' => $request->volume_spesimen_klinis ?? '',
+                'cara_pengambilan_spesimen' => $request->cara_pengambilan_spesimen ?? '',
+                'waktu_pengambilan_spesimen' => date('Y-m-d H:i:s'),
+                'kondisi_spesimen_waktu_diambil' => $request->kondisi_spesimen_waktu_diambil ?? '',
+                'waktu_fiksasi_spesimen' => date('Y-m-d H:i:s'),
+                'cairan_fiksasi' => $request->cairan_fiksasi ?? '',
+                'volume_cairan_fiksasi' => $request->volume_cairan_fiksasi ?? '',
+                'petugas_pengambil_spesimen' => '',
+                'petugas_penerima_spesimen' => '',
+                'petugas_penganalisa' => '',
+            ];
+
+
+
+            $simpanpermintaanlaborat = LaboratMeta::firstOrCreate($where, $form);
+
+            // array_push($thumb, $simpanpermintaanlaborat->nota);
+
+            // if (!$simpanpermintaanlaborat) {
+            //     throw new Exept('Custom exception!');
+            // }
+
+            if (!$simpanpermintaanlaborat) {
+                return new JsonResponse(['message' => 'Header Data Gagal Disimpan'], 500);
+            }
+
+
+            $data = $request->details;
+            foreach ($data as $row => $val) {
+                Laboratpemeriksaan::firstOrCreate(
+                    [
+                        'rs2' => $simpanpermintaanlaborat->nota,
+                        'rs1' => $request->noreg,
+                        'rs4' => $val['kode'],
+                    ],
+                    [
+                        'rs3' => date('Y-m-d H:i:s'),
+                        'rs5' => $request->jumlah ?? '',
+                        'rs6' => $val['biaya_sarana'] ?? '',
+                        'rs7' => $val['biaya_sarana'] ?? '',
+                        'rs8' => $request->kodedokter ?? '',
+                        'rs9' => $user,
+                        'rs12' => $request->prioritas_pemeriksaan === 'Iya' ? '1' : '',
+                        'rs13' => $val['biaya_layanan'] ?? '',
+                        'rs14' => $val['biaya_layanan'] ?? '',
+                        'rs23'  => $ruangan,
+                        'rs24'  => $request->kdsistembayar ?? ''
+                    ]
+                );
+                // Laboratpemeriksaan::create($param);
+
+            };
+            /**
+             * simpan rincian baru end
+             */
+
+
+            DB::commit();
+
+            $success = LaboratMeta::where('nota', $notapermintaanlab)->where('unit_pengirim','POL014')->with(['details.pemeriksaanlab'])->get();
+            $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)->where('unit_pengirim','POL014')
+                ->groupBy('nota')->orderBy('id', 'DESC')->get();
+
+            return new JsonResponse(
+                [
+                    'message' => 'Berhasil Order Ke Laborat',
+                    'result' => $success,
+                    'nota' => $nota
+                ],
+                200
+            );
+
+            // return $thumb;
+        } catch (\Exception $e) {
+            // May day,  rollback!!! rollback!!!
+            DB::rollback();
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e->getMessage()], 500);
+        }
+
+
+
+
+        // return $thumb;
+    }
+
 }
