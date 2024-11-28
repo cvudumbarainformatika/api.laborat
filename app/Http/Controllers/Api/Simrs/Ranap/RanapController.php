@@ -40,8 +40,8 @@ class RanapController extends Controller
 
         // return $tanggalx;
 
-        $hr_ini = date('Y-m-d'). ' 00:00:00';
-        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 23:59:59';
+        $hr_ini = date('Y-m-d'). ' 23:59:59';
+        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 00:00:00';
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request('koderuangan');
@@ -125,9 +125,10 @@ class RanapController extends Controller
                     // ->orWhere('rs23.titipan', '=',  $ruangan);
                     $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
                     ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
-                } else {
-                    $query->where('rs23.rs5', '<>',  '');
-                }
+                } 
+                // else {
+                //     $query->where('rs23.rs5', '!=',  '');
+                // }
                 
             })
             
@@ -144,7 +145,7 @@ class RanapController extends Controller
                     $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
                         ->whereIn('rs23.rs22',['2','3']);
                 } else {
-                    $query->where('rs23.rs22', '')
+                    $query->where('rs23.rs22','=','')
                     ->where('rs23.rs1', '!=', '');
                 }
                 
