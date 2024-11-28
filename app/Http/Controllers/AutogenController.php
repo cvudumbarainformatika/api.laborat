@@ -351,13 +351,123 @@ class AutogenController extends Controller
         //     'f' => $f
         // ];
         
+        $request = new Request();
+        $request->replace([
+            'kdgroup_ruangan' => 'ICC',
+            'kelas_ruangan' => 'ICC',
+        ]);
 
-        $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
-          ->orWhere('rs3', 'V3#')
-          ->where('rs4', 'like', '%|BG|%')
-          ->where('rs5', 'like', '%|3|%')
-          ->first();
-        return $rsx;
+        $spesialis = true;
+        
+        return self::cekTarip($spesialis, $request);
+    }
+
+    public static function cekTarip($spesialis, $request)
+    {
+        
+      $sarana=0;
+      $pelayanan=0;
+      $flag_biaya=null;
+
+        if ($spesialis) {
+          // "select * from rs30tarif where (rs3='V2#' or rs3='V3#'
+          $rsx=null;
+          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+            $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          } else {
+            $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          }
+         
+        
+        //   return $rsx;
+          if (!$rsx) {
+            $sarana=0;
+            $pelayanan=0;
+            $flag_biaya=null;
+          }
+          
+          $flag_biaya=$rsx->rs3;
+
+          if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
+          {
+            $sarana=$rsx->rs6;
+						$pelayanan=$rsx->rs7;
+          }else if($request->kelas_ruangan=="2"){
+						$sarana=$rsx->rs8;
+						$pelayanan=$rsx->rs9;
+					}else if($request->kelas_ruangan=="1"){
+						$sarana=$rsx->rs10;
+						$pelayanan=$rsx->rs11;
+					}else if($request->kelas_ruangan=="Utama"){
+						$sarana=$rsx->rs12;
+						$pelayanan=$rsx->rs13;
+					}else if($request->kelas_ruangan=="VIP"){
+						$sarana=$rsx->rs14;
+						$pelayanan=$rsx->rs15;
+					}else if($request->kelas_ruangan=="VVIP"){
+						$sarana=$rsx->rs16;
+						$pelayanan=$rsx->rs17;
+					}	
+        } else {
+
+          //select * from rs30tarif where (rs3='V1#
+
+          $rsx=null;
+          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+            $rsx = Rstigapuluhtarif::where('rs3', 'V5#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          } else {
+            $rsx = Rstigapuluhtarif::where('rs3', 'V1#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          }
+
+          if (!$rsx) {
+            return null;
+          }
+
+          
+          $flag_biaya=$rsx->rs3;
+
+          if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
+          {
+            $sarana=$rsx->rs6;
+						$pelayanan=$rsx->rs7;
+					}else if($request->kelas_ruangan==="2"){
+						$sarana=$rsx->rs8;
+						$pelayanan=$rsx->rs9;
+					}else if($request->kelas_ruangan==="1"){
+						$sarana=$rsx->rs10;
+						$pelayanan=$rsx->rs11;
+					}else if($request->kelas_ruangan==="Utama"){
+						$sarana=$rsx->rs12;
+						$pelayanan=$rsx->rs13;
+					}else if($request->kelas_ruangan==="VIP"){
+						$sarana=$rsx->rs14;
+						$pelayanan=$rsx->rs15;
+					}else if($request->kelas_ruangan==="VVIP"){
+						$sarana=$rsx->rs16;
+						$pelayanan=$rsx->rs17;
+					}	
+        }
+
+        $tarif = (int) $sarana + (int) $pelayanan;
+
+        return [
+          'flag_biaya' => $flag_biaya,
+          'tarif' => $tarif,
+          'sarana' => $sarana,
+          'pelayanan' => $pelayanan
+        ];
     }
 
     public function translate($q, $sl, $tl)

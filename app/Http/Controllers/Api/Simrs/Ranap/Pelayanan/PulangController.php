@@ -38,9 +38,16 @@ class PulangController extends Controller
       $kunjungan = count($sql_cek_kunjungan);
 
       if ($kunjungan > 0) {
-        return new JsonResponse([
-          'message' => 'Maaf, Pasien telah pulang'
-        ], 500);
+        $kunjunganRanapx = Kunjunganranap::where('rs1', $request->noreg)->first();
+        $updateKunjunganRanap = $kunjunganRanapx->update([
+          // 'rs22' => '3',
+          // 'rs4' => date('Y-m-d H:i:s'),
+          'rs23' => $request->caraKeluar ?? '',
+          'rs24' => $request->prognosis ?? '',
+          'rs26' => $request->diagnosaAkhir ?? '',
+          'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
+          'rs27' => $request->tindakLanjut ?? ''
+        ]);
       }
 
       if($rencana === 0 && $cppt === 0){
@@ -59,16 +66,18 @@ class PulangController extends Controller
         ]);
       } 
 
-      $kunjunganRanap = Kunjunganranap::where('rs1', $request->noreg)->first();
-      $updateKunjunganRanap = $kunjunganRanap->update([
-        'rs22' => '3',
-        'rs4' => date('Y-m-d H:i:s'),
-        'rs23' => $request->caraKeluar ?? '',
-        'rs24' => $request->prognosis ?? '',
-        'rs26' => $request->diagnosaAkhir ?? '',
-        'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
-        'rs27' => $request->tindakLanjut ?? ''
-      ]);
+      if ($kunjungan === 0) {
+        $kunjunganRanap = Kunjunganranap::where('rs1', $request->noreg)->first();
+        $updateKunjunganRanap = $kunjunganRanap->update([
+          'rs22' => '3',
+          'rs4' => date('Y-m-d H:i:s'),
+          'rs23' => $request->caraKeluar ?? '',
+          'rs24' => $request->prognosis ?? '',
+          'rs26' => $request->diagnosaAkhir ?? '',
+          'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
+          'rs27' => $request->tindakLanjut ?? ''
+        ]);
+      }
 
        if (!$updateKunjunganRanap) {
         return new JsonResponse([

@@ -22,6 +22,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mruangan;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosagizi;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
@@ -63,6 +64,8 @@ use App\Models\Simrs\Penunjang\PenunjangKeluar\PenunjangKeluar;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Planing\Plannindokter;
+use App\Models\Simrs\Planing\Planningdokter;
 use App\Models\Simrs\Psikologitrans\Psikologitrans;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Ranap\Pelayanan\Cppt;
@@ -418,6 +421,10 @@ class Kunjunganranap extends Model
     {
        return $this->hasMany(Diagnosakebidanan::class, 'noreg', 'rs1');
     }
+    public function diagnosagizi()
+    {
+       return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
+    }
     public function konsultasi()
     {
        return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
@@ -606,5 +613,9 @@ class Kunjunganranap extends Model
     public function keterangantindakan()
     {
        return $this->hasMany(KeteranganTindakan::class, 'noreg', 'rs1');
+    }
+    public function planningdokter()
+    {
+       return $this->hasOne(Planningdokter::class, 'noreg', 'rs1');
     }
 }

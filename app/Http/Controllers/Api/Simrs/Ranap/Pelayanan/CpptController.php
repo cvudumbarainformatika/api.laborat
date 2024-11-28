@@ -183,8 +183,8 @@ class CpptController extends Controller
         'user' => $kdpegsimrs,
         'nakes'=> $nakes,
         // tambahan baru
-        's_sambung' => $request->form['s_sambung'],
-        'o_sambung' => $request->form['o_sambung'],
+        's_sambung' => $request->form['s_sambung'] ?? null,
+        'o_sambung' => $request->form['o_sambung'] ?? null,
 
        ]);
 
@@ -259,14 +259,25 @@ class CpptController extends Controller
 
         if ($spesialis) {
           // "select * from rs30tarif where (rs3='V2#' or rs3='V3#'
-          $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
-          ->orWhere('rs3', 'V3#')
-          ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-          ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-          ->first();
-
+          $rsx=null;
+          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+            $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          } else {
+            $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          }
+         
+        
+        //   return $rsx;
           if (!$rsx) {
-            return null;
+            $sarana=0;
+            $pelayanan=0;
+            $flag_biaya=null;
           }
           
           $flag_biaya=$rsx->rs3;
@@ -295,11 +306,18 @@ class CpptController extends Controller
 
           //select * from rs30tarif where (rs3='V1#
 
-          $rsx = Rstigapuluhtarif::where('rs3', 'V1#')
-          // ->orWhere('rs3', 'V3#')
-          ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-          ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-          ->first();
+          $rsx=null;
+          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+            $rsx = Rstigapuluhtarif::where('rs3', 'V5#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          } else {
+            $rsx = Rstigapuluhtarif::where('rs3', 'V1#')
+            ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+            ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+            ->first();
+          }
 
           if (!$rsx) {
             return null;
@@ -722,6 +740,22 @@ class CpptController extends Controller
       $cppt = Cppt::find($request->id)->update([
         
         'o_sambung'=> $request->o_sambung,
+      ]);
+      
+
+      return new JsonResponse([
+        'success' => true,
+        'message' => 'success',
+        'result' => $cppt
+      ]);
+
+    }
+    public function updatessambung(Request $request)
+    {
+
+      $cppt = Cppt::find($request->id)->update([
+        
+        's_sambung'=> $request->s_sambung,
       ]);
       
 

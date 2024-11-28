@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Api\Simrs\Bridgingeklaim\ProcedureController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Anamnesis\AnamnesisController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaGiziController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKebidananController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
@@ -47,12 +48,20 @@ Route::group([
     Route::post('/simpandiagnosakebidanan', [DiagnosaKebidananController::class, 'simpandiagnosakebidanan']);
     Route::post('/deletediagnosakebidanan', [DiagnosaKebidananController::class, 'deletediagnosakebidanan']);
 
+    Route::get('/diagnosagizi', [DiagnosaGiziController::class, 'diagnosagizi']);
+    Route::post('/simpandiagnosagizi', [DiagnosaGiziController::class, 'simpandiagnosagizi']);
+    Route::post('/deletediagnosagizi', [DiagnosaGiziController::class, 'deletediagnosagizi']);
+
     Route::get('/dialogtindakanpoli', [TindakanController::class, 'dialogtindakanpoli']);
+    Route::get('/dialogtindakanIgd', [TindakanController::class, 'dialogtindakanIgd']);
     Route::get('/dialogoperasi', [TindakanController::class, 'dialogoperasi']);
     Route::get('/notatindakan', [TindakanController::class, 'notatindakan']);
+    Route::get('/notatindakanIgd', [TindakanController::class, 'notatindakanIgd']);
     Route::get('/notatindakanranap', [TindakanController::class, 'notatindakanranap']);
     Route::post('/simpantindakanpoli', [TindakanController::class, 'simpantindakanpoli']);
+    Route::post('/simpantindakanIgd', [TindakanController::class, 'simpantindakanIgd']);
     Route::post('/hapustindakanpoli', [TindakanController::class, 'hapustindakanpoli']);
+    Route::post('/hapustindakanIgd', [TindakanController::class, 'hapustindakanIgd']);
     Route::post('/simpandokumentindakanpoli', [TindakanController::class, 'simpandokumentindakanpoli']);
     Route::post('/hapusdokumentindakan', [TindakanController::class, 'hapusdokumentindakan']);
 

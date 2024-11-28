@@ -109,7 +109,7 @@ class IgdController extends Controller
 
     public function terimapasien(Request $request)
     {
-        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
+        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9','rs14', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
         ->with([
             'anamnesis' => function($anamnesis){
                 $anamnesis->with(['anamnesetambahan','anamnesebps','anamnesenips'])->where('kdruang', 'POL014');
@@ -150,12 +150,13 @@ class IgdController extends Controller
                     'rs2 as norm','rs3 as tgl',
                     'barthel','norton','humpty_dumpty','morse_fall','ontario','user','kdruang','awal','group_nakes'
                    ])
-                   ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
+                   ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes'])->where('kdruang','POL014');
             },
             'historyperkawinan',
             'historykehamilan',
             'anamnesekebidanan',
             'bankdarah',
+            'msistembayar',
             'planheder' => function($planheder){
                 $planheder->with([
                     'planranap' => function($planranap){
@@ -179,12 +180,12 @@ class IgdController extends Controller
                 );
             },
             'laborats' => function ($t) {
-                $t->with('details.pemeriksaanlab')
+                $t->with('details.pemeriksaanlab')->where('unit_pengirim', 'POL014')
                     ->orderBy('id', 'DESC');
             },
             'laboratold'=> function ($t) {
                 $t->with('pemeriksaanlab')
-                    ->orderBy('id', 'DESC');
+                    ->orderBy('id', 'DESC')->where('rs23','POL014');
             },
             'radiologi' => function ($t) {
                 $t->orderBy('id', 'DESC');
@@ -193,11 +194,12 @@ class IgdController extends Controller
                 $t->with('masterpenunjang')->orderBy('id', 'DESC');
             },
             'tindakan' => function ($t) {
-                $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
-                    ->orderBy('id', 'DESC');
+                $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url','mpoli:rs1,rs2')
+                    ->where('rs4','<>','T00075')
+                    ->orderBy('id', 'DESC')->where('rs22','POL014');
             },
             'diagnosa' => function ($d) {
-                $d->with('masterdiagnosa');
+                $d->with('masterdiagnosa')->where('rs13','POL014');
             },
             'pemeriksaanfisik' => function ($a) {
                 $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
@@ -213,7 +215,7 @@ class IgdController extends Controller
                     $diag->with('intervensi.masterintervensi');
             },
             'pemeriksaanfisikpsikologidll' => function($pemeriksaanfisikpsikologidll){
-                $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll');
+                $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll')->where('kdruang','POL014');
             },
             // 'taskid' => function ($q) {
             //     $q->orderBy('taskid', 'DESC');
@@ -245,6 +247,19 @@ class IgdController extends Controller
                     'permintaanracikan.mobat:kd_obat,nama_obat',
                 ])
                     ->orderBy('id', 'DESC');
+            },
+            'konsuldokterspesialis' => function ($konsuldokterspesialis){
+                $konsuldokterspesialis->with(
+                    [
+                        'tindakan' => function($tindakans){
+                            $tindakans->with(
+                                [
+                                    'mastertindakan'
+                                ]
+                            );
+                        }
+                    ]
+                )->where('kdruang', 'POL014');
             }
         ])
         ->first();
@@ -281,5 +296,17 @@ class IgdController extends Controller
         } else {
             return new JsonResponse(['message' => 'MAAF FITUR INI HANYA UNTUK DOKTER...!!!'], 500);
         }
+    }
+
+    public function updatesistembayar(Request $request)
+    {
+        $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs8','POL014')->first();
+        $updatekunjungan->rs14 = $request->kodesistembayar;
+        $updatekunjungan->save();
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $request->namasistembayar
+        ], 200);
     }
 }

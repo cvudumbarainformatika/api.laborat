@@ -18,5 +18,6 @@ Route::group([
     Route::post('/editcpptpemeriksaan', [CpptController::class, 'editCpptPemeriksaan']);
     Route::post('/updateasplaninst', [CpptController::class, 'updateAsPlanInst']);
     Route::post('/updateosambung', [CpptController::class, 'updateosambung']);
+    Route::post('/updatessambung', [CpptController::class, 'updatessambung']);
 
 });

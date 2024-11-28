@@ -14,10 +14,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class KonsultasiController extends Controller
 {
-    
+
 
     public function simpandata(Request $request)
     {
@@ -42,14 +43,14 @@ class KonsultasiController extends Controller
 
       $user = FormatingHelper::session_user();
       $tglInput = date('Y-m-d H:i:s');
-        
+
       $data=null;
       if ($request->has('id')) {
         $data = Konsultasi::find($request->id);
       } else {
         $data = new Konsultasi();
       }
-       
+
       $data->noreg = $request->noreg;
       $data->norm = $request->norm;
       $data->kddokterkonsul = $request->kddokterkonsul;
@@ -59,6 +60,7 @@ class KonsultasiController extends Controller
       $data->tgl_permintaan = $tglInput;
       $data->kdminta = $user['kodesimrs'] ?? '';
       $data->user = $user['kodesimrs'] ?? '';
+      $data->kdruang = $request->kdruang ?? null;
       $data->save();
 
       // simpan tarif konsultasi select * from rs140 where rs1='".trim($_GET['noreg'])."' and rs3='".trim($_GET['kodedokter'])."' and date(rs2)='".trim($_GET['tglx'])."' and rs6='".trim($_GET['flag_biaya'])."'"
@@ -72,7 +74,7 @@ class KonsultasiController extends Controller
     }
 
 
-    
+
 
     public function hapusdata(Request $request)
     {
@@ -88,13 +90,13 @@ class KonsultasiController extends Controller
         return new JsonResponse(['message' => 'berhasil dihapus'], 200);
     }
 
-    
+
 
     public function getdatarkd()
     {
       $user = FormatingHelper::session_user();
        $data = Konsultasi::selectRaw('
-        id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user
+        id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user,kdruang
        ')->where('kddokterkonsul', $user['kodesimrs'])
        ->with([
         'dokterkonsul'=>function($q){
@@ -136,9 +138,16 @@ class KonsultasiController extends Controller
         },
         'kunjunganigd'=>function($q){
           $q->select(
-            'rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs19 as statuspulang', 'rs15.rs2 as nama',
+            'rs17.rs1','rs17.rs2','rs17.rs3','rs17.rs8','rs17.rs19 as statuspulang', 'rs15.rs2 as nama','rs19.rs2 as ruangan'
             )
             ->leftJoin('rs15','rs15.rs1','rs17.rs2')
+            ->leftJoin('rs19','rs19.rs1','rs17.rs8')
+            ->with([
+                'diagnosa'=>function($q){
+                  $q->with('masterdiagnosa')
+                  ->where('rs13', '=', 'POL014');
+                }
+              ])
             ->where('rs17.rs8', '=', 'POL014')
             ;
         },
@@ -197,28 +206,35 @@ class KonsultasiController extends Controller
         ->where('rs6', $tarifKonsul['flag_biaya'])
         ->get();
 
-        // jika billing belum masuk
-        if (count($cekTarif) === 0) {
+        
 
-          Visite::create([
-            'rs1' => $request->noreg,
-            'rs2' => $hari_ini,
-            'rs3' => $dokter->kdpegsimrs,
-            'rs4' => $tarifKonsul['sarana'],
-            'rs5' => $tarifKonsul['pelayanan'],
-            'rs6' => $tarifKonsul['flag_biaya'],
-            'rs8' => $request->kdgroup_ruangan,
-            'rs9' => $request->kodesistembayar
-          ]);
+        if($request->kdruang !== 'POL014'){
+        // jika billing belum masuk
+            if (count($cekTarif) === 0) {
+
+            $masukTarif = Visite::create([
+                'rs1' => $request->noreg,
+                'rs2' => $hari_ini,
+                'rs3' => $dokter->kdpegsimrs,
+                'rs4' => $tarifKonsul['sarana'],
+                'rs5' => $tarifKonsul['pelayanan'],
+                'rs6' => $tarifKonsul['flag_biaya'],
+                'rs8' => $request->kdgroup_ruangan,
+                'rs9' => $request->kodesistembayar
+            ]);
+
+            // ini baru
+            $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
+          }
         }
 
       }
 
 
 
-       
+
       $data->flag = '2';
-      
+
       $data->jawaban = $request->jawaban;
       $data->kdruang = $request->kdruang;
       $data->save();
@@ -228,13 +244,24 @@ class KonsultasiController extends Controller
 
     public static function cekTarip($spesialis, $request)
     {
-        // select * from rs30tarif where (rs3='K5#' or rs3='K6#') 
-				// and rs4 like '%|".$_GET['kd_ruang']."|%'  and rs5 like '%|".$_GET['kelas']."|%'"
-        $rsx = Rstigapuluhtarif::where('rs3', 'K5#')
-        ->orWhere('rs3', 'K6#')
-        ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-        ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-        ->first();
+        $rs = null;
+
+        if ($spesialis === 'SPESIALIS') {
+          $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
+                ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+                ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+                ->get();
+        } else {
+            $rs = Rstigapuluhtarif::where('rs3', 'K4#')->orWhere('rs3', 'K8#')
+                ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+                ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+                ->get();
+        }
+        
+        // return $rs;
+        $rsx = collect($rs)->filter(function ($q) use ($request) {
+            return Str::contains($q['rs5'], $request->kelas_ruangan) && Str::contains($q['rs4'], $request->kdgroup_ruangan);
+        })->first();
 
         if (!$rsx) {
           return null;
@@ -264,7 +291,7 @@ class KonsultasiController extends Controller
 					}else if($request->kelas_ruangan=="VVIP"){
 						$sarana=$rsx->rs16;
 						$pelayanan=$rsx->rs17;
-					}	
+					}
         } else {
           if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
           {
@@ -285,7 +312,7 @@ class KonsultasiController extends Controller
 					}else if($request->kelas_ruangan==="VVIP"){
 						$sarana=$rsx->rs16;
 						$pelayanan=$rsx->rs17;
-					}	
+					}
         }
 
         $tarif = (int) $sarana + (int) $pelayanan;
