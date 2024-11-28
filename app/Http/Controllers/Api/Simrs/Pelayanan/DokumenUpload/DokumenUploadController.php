@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Facades\Image;
 
 class DokumenUploadController extends Controller
@@ -28,17 +28,27 @@ class DokumenUploadController extends Controller
       // return response()->json($request->all());
         if ($request->hasFile('dokumen')) {
             
-            $files = $request->file('dokumen');
+            try {
+              $files = $request->file('dokumen');
 
-            $user = auth()->user()->pegawai_id;
+              // $validator = Validator::make($request->all(), [
+              //     'dokumen' => 'max:1024',
+              // ]);
 
-            if (!empty($files)) {
+              // return new JsonResponse($files);
+              $user = auth()->user()->pegawai_id;
+
+              if (!empty($files)) {
 
                 for ($i = 0; $i < count($files); $i++) {
                     $file = $files[$i];
                     
                     $originalname = $file->getClientOriginalName();
                     $penamaan = date('YmdHis') . '-' . $i . '-' . $request->norm . '.' . $file->getClientOriginalExtension();
+
+                    $extension = $file->getClientOriginalExtension();
+
+                    // return new JsonResponse($extension);
                     $data = DokumenUpload::where([
                       ['noreg',$request->noreg],
                       ['original', $originalname]
@@ -56,6 +66,8 @@ class DokumenUploadController extends Controller
 
                     $folder = $request->isRanap ? 'dokumen_luar_ranap' : 'dokumen_luar_poli';
 
+
+
                     if (!is_dir(storage_path("app/public/$folder"))) {
                       mkdir(storage_path("app/public/$folder"), 0775, true);
                     }
@@ -63,14 +75,20 @@ class DokumenUploadController extends Controller
                     // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
                     // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
 
+                    if ($extension !== 'pdf') {
 
-                    $img=Image::make($file)->resize(600, null, function ($constraint) {
+                      
+                      $img=Image::make($file)->resize(600, null, function ($constraint) {
                         $constraint->aspectRatio();
-                    });
+                      });
 
-                    // $img = Image::make($file);
-
-                    $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                    }else{
+                      // $file->move(\public_path("storage/$folder/"), $penamaan);
+                    // $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
+                      $path = $file->storeAs('public/'.$folder, $penamaan);
+                    }
+                    
                     
 
 
@@ -88,6 +106,9 @@ class DokumenUploadController extends Controller
 
                 $kirim = DokumenUpload::where([['noreg', '=',$request->noreg]])->get();
                 return new JsonResponse(['message' => 'success','result'=> $kirim->load('pegawai:id,nama')], 200);
+              }
+            } catch (\Exception $th) {
+              return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
             }
         }
         return new JsonResponse(['message' => 'invalid dokumen'], 500);
