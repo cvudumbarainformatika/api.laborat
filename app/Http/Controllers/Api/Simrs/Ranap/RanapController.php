@@ -41,7 +41,7 @@ class RanapController extends Controller
         // return $tanggalx;
 
         $hr_ini = date('Y-m-d'). ' 00:00:00';
-        $hr_180 = Carbon::now()->subDays(30)->format('Y-m-d'). ' 23:59:59';
+        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 23:59:59';
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request('koderuangan');
@@ -141,7 +141,7 @@ class RanapController extends Controller
             // })
             ->where(function($query) use ($hr_ini, $hr_180) {
                 if (request('status') === 'Pulang') {
-                    $query->whereBetween('rs23.rs3', [$hr_180, $hr_ini])
+                    $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
                         ->whereIn('rs23.rs22',['2','3']);
                 } else {
                     $query->where('rs23.rs22', '')
