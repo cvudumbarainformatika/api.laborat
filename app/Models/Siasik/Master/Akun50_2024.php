@@ -2,6 +2,7 @@
 
 namespace App\Models\Siasik\Master;
 
+use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Rinci;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
@@ -36,6 +37,11 @@ class Akun50_2024 extends Model
     public function silpaanggaran(){
         return $this->hasMany(SisaAnggaran::class,'koderek50', 'kodeall3');
     }
+    public function penyesuaian()
+    {
+        return $this->belongsTo(JurnalUmum_Rinci::class, 'kodepsap13', 'kodeall3');
+    }
+
 
     // untuk anggaran dan belanja
     public function kode1(){

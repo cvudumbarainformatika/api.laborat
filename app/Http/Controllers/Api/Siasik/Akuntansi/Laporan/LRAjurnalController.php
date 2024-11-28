@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Siasik\Akuntansi\Laporan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
+use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Header;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Anggaran\Tampung_pendapatan;
 use App\Models\Siasik\Master\Akun50_2024;
@@ -61,7 +62,7 @@ class LRAjurnalController extends Controller
 
         ->get();
         $pagupendapatan = Tampung_pendapatan::where('tahun', $thn)
-        ->select('t_tampung_pendapatan.pagu as pagupendapatan')
+        ->select(DB::raw('sum(t_tampung_pendapatan.pagu) as pagupendapatan'))
         ->get();
         $pendapatan = Create_JurnalPosting::select(
             'jurnal_postingotom.tanggal',
@@ -242,6 +243,36 @@ class LRAjurnalController extends Controller
         ->get();
 
 
+        $psappagupendapatan = Tampung_pendapatan::where('tahun', $thn)
+        ->select('t_tampung_pendapatan.koderekeningblud as kode',
+        't_tampung_pendapatan.pagu')
+        ->where('t_tampung_pendapatan.koderekeningblud', 'LIKE', '4.1.04.16' . '%')
+        ->get();
+
+        $psaprealisasipendapatan = Create_JurnalPosting::select(
+            'jurnal_postingotom.tanggal', 'jurnal_postingotom.kode',
+            DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as realisasi')
+        )
+        ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->where('jurnal_postingotom.kode', 'LIKE', '4.1.04.16' . '%')
+        ->get();
+
+        $psaprealisasipendapatanx = JurnalUmum_Header::select(
+            'jurnalumum_heder.nobukti',
+            'jurnalumum_heder.tanggal',
+            'jurnalumum_heder.keterangan',
+            'jurnalumum_rinci.kodepsap13 as kode',
+            'jurnalumum_rinci.uraianpsap13 as uraian',
+            'jurnalumum_rinci.kredit as realisasix',
+        )
+        ->where('jurnalumum_heder.keterangan', 'LIKE', 'Reklas Pendapatan' . '%')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->leftJoin('jurnalumum_rinci', function($join)  {
+            $join->on('jurnalumum_rinci.nobukti', '=', 'jurnalumum_heder.nobukti')
+            ->where('jurnalumum_rinci.kodepsap13', '!=', '4.1.04.16.02.0001')
+            ;
+          })
+        ->get();
 
 
         $psappagubarjas = Akun50_2024::select('akun50_2024.kodeall2',
@@ -388,6 +419,9 @@ class LRAjurnalController extends Controller
         'silpasblm' => $silpasblm,
         'silpaskg' => $silpaskg,
 
+        'psappagupendapatan' => $psappagupendapatan,
+        'psaprealisasipendapatan' => $psaprealisasipendapatan,
+        'psaprealisasipendapatanx' => $psaprealisasipendapatanx,
         'psappagubarjas' => $psappagubarjas,
         'psaprealisasibarjas' => $psaprealisasibarjas,
         'psappagumodal' => $psappagumodal,
