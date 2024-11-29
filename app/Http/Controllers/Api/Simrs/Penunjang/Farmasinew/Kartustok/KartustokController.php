@@ -417,6 +417,13 @@ class KartustokController extends Controller
 
                 'resepkeluar' => function ($q) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $q->join('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
+                        ->when($koderuangan === 'Gd-04010103', function ($kd) {
+                            $kd->leftJoin('persiapan_operasi_rincis', function ($q) {
+                                $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
+                                    ->on('persiapan_operasi_rincis.kd_obat', '=', 'resep_keluar_r.kdobat');
+                            })
+                                ->whereNull('persiapan_operasi_rincis.noresep');
+                        })
                         ->whereBetween('resep_keluar_h.tgl_selesai', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('resep_keluar_h.depo', $koderuangan)
                         ->where('resep_keluar_r.jumlah', '>', 0)

@@ -12,6 +12,6 @@ Route::group(
     function () {
         // Route::get('/get-obat', [PenyesuaianController::class, 'getObat
         Route::get('/get-obat', [KartustokController::class, 'index']);
-        Route::get('/transaksi', [PenyesuaianController::class, 'getTransaksi']);
+        Route::get('/rincian-transaksi', [PenyesuaianController::class, 'getTransaksi']);
     }
 );

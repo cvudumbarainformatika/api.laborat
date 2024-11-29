@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -211,7 +215,10 @@ class PenyesuaianController extends Controller
                 }
 
             ])
-            ->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+            ->where(function ($q) {
+                $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
+            })
             ->where('flag', '')
             ->limit(10)
             ->get();
@@ -219,7 +226,85 @@ class PenyesuaianController extends Controller
     }
     public function getTransaksi()
     {
-        $data = request()->all();
+        $gudangs = ['Gd-05010100', 'Gd-03010100'];
+        $now = date('Y-m');
+        $koderuangan = request('kdruang');
+        $kdobat = request('kdobat');
+        $penerimaan = null;
+        if (in_array($koderuangan, $gudangs)) {
+
+            $noperRinci = PenerimaanRinci::select(
+                'penerimaan_r.nopenerimaan'
+            )
+                ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
+                ->where('penerimaan_h.tglpenerimaan', 'LIKE', '%' . $now . '%')
+                ->where('penerimaan_h.gudang', $koderuangan)
+                ->where('penerimaan_h.kunci', '1')
+                ->where('penerimaan_r.kdobat', $kdobat)
+                ->distinct('penerimaan_r.nopenerimaan')
+                ->pluck('penerimaan_r.nopenerimaan');
+
+            $penerimaan = PenerimaanHeder::whereIn('nopenerimaan', $noperRinci)->with(['penerimaanrinci'])->get();
+        }
+        $data['penerimaan'] = $penerimaan;
+        $noPerMutasiMasuk = Mutasigudangkedepo::select(
+            'mutasi_gudangdepo.no_permintaan'
+        )
+            ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+            ->where('permintaan_h.tgl_terima_depo',  'LIKE', '%' . $now . '%')
+            ->where('permintaan_h.dari', $koderuangan)
+            ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+            ->distinct('no_permintaan')
+            ->pluck('no_permintaan');
+
+        $noPerMutasiKeluar = Mutasigudangkedepo::select(
+            'mutasi_gudangdepo.no_permintaan'
+        )
+            ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+            ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $now . '%')
+            ->where('permintaan_h.tujuan', $koderuangan)
+            ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+            ->distinct('no_permintaan')
+            ->pluck('no_permintaan');
+
+        $data['noperMa'] = $noPerMutasiMasuk;
+        $data['noperKe'] = $noPerMutasiKeluar;
+        $data['mutasiMasuk'] = Permintaandepoheder::with([
+            'permintaanrinci' => function ($q) use ($kdobat) {
+                $q->with([
+                    'mutasi' => function ($mu) use ($kdobat) {
+                        $mu->where('kd_obat', $kdobat);
+                    }
+                ])
+                    ->where('kdobat', $kdobat);
+            },
+            'asal:nama,kode',
+            'menuju:nama,kode'
+        ])
+            ->where('dari', $koderuangan)
+            ->whereIn('no_permintaan', $noPerMutasiMasuk)
+            ->where('tgl_terima_depo', 'LIKE', '%' . $now  . '%')
+            ->get();
+        $data['mutasiKeluar'] = Permintaandepoheder::with([
+            'permintaanrinci' => function ($q) use ($kdobat) {
+                $q->with([
+                    'mutasi' => function ($mu) use ($kdobat) {
+                        $mu->where('kd_obat', $kdobat);
+                    }
+                ])
+                    ->where('kdobat', $kdobat);
+            },
+            'asal:nama,kode',
+            'menuju:nama,kode'
+        ])
+            ->where('tujuan', $koderuangan)
+            ->whereIn('no_permintaan', $noPerMutasiKeluar)
+            ->where('tgl_kirim_depo', 'LIKE', '%' . $now  . '%')
+            ->get();
+        // end
+
+
+        $data['req'] = request()->all();
         return new JsonResponse($data);
     }
 }
