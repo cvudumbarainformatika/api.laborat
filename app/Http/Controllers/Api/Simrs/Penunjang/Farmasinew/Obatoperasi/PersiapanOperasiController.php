@@ -1173,9 +1173,14 @@ class PersiapanOperasiController extends Controller
                 ->orderBy('id', 'ASC')
                 ->get();
             $index = 0;
+            $maxindex = sizeof($dist) - 1;
             $masuk = (float) $key['jumlah_resep'];
 
             while ($masuk > 0) {
+                if ($index > $maxindex) {
+                    $obat = Mobatnew::select('nama_obat')->where('kd_obat', $key['kd_obat'])->first();
+                    throw new \Exception('Distribusi Persiapan obat ' . $obat->nama_obat . ' untuk operasi tidak ditemukan');
+                }
                 $ada = (float)$dist[$index]->jumlah;
                 $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])
                     ->where('nopenerimaan', $dist[$index]->nopenerimaan)
