@@ -1278,7 +1278,7 @@ class PersiapanOperasiController extends Controller
                         if ($kembali > 0) {
                             $dataRinci = PersiapanOperasiRinci::find($key['id']);
                             if (!$dataRinci) {
-                                return new JsonResponse(['message' => 'Data Rinci tidak ditemukan']);
+                                return new JsonResponse(['message' => 'Data Rinci tidak ditemukan'], 410);
                             }
                             $dataRinci->jumlah_kembali = $key['jumlah_kembali'];
                             $dataRinci->save();
