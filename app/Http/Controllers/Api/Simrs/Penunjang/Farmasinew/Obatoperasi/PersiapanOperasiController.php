@@ -1380,7 +1380,7 @@ class PersiapanOperasiController extends Controller
 
 
                             while ($kurang > 0) {
-                                if ($getDataDistribusi[$ind]->tgl_retur !== null) {
+                                if (!is_Null($getDataDistribusi[$ind]->tgl_retur)) {
                                     $adasikit = (float)$getDataDistribusi[$ind]->jumlah - $getDataDistribusi[$ind]->jumlah_retur;
                                     $retur = (float)$getDataDistribusi[$ind]->jumlah_retur;
 
