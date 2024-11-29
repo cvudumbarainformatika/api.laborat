@@ -337,4 +337,5 @@ class AnamnesisController extends Controller
             return new JsonResponse(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
     }
+
 }
