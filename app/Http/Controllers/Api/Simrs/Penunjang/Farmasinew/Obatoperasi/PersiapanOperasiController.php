@@ -1557,7 +1557,9 @@ class PersiapanOperasiController extends Controller
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
-                'message' => 'Data Gagal Disimpan ',
+                'message' => 'Data Gagal Disimpan ' . $e->getMessage(),
+                'file' =>  $e->getFile(),
+                'line' =>  $e->getLine(),
                 'result' => '' . $e,
                 'rinci' => $rinci ?? '',
                 'head' => $head ?? '',
