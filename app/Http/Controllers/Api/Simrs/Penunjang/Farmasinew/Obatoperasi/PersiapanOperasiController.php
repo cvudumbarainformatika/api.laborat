@@ -775,7 +775,7 @@ class PersiapanOperasiController extends Controller
                     // [
                     'jumlah_minta' => 0,
                     'jumlah_distribusi' => (float)$request->jumlah_distribusi,
-                    'susulan' => $request->susulan ?? '',
+                    'susulan' => $request->susulan ?? null,
                     'status_konsinyasi' => $request->status_konsinyasi ?? '',
                 ]
             );
