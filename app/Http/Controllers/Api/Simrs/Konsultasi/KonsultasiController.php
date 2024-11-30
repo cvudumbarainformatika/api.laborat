@@ -172,9 +172,9 @@ class KonsultasiController extends Controller
 
       $dokter = Petugas::where('kdpegsimrs', $user['kodesimrs'])->where('aktif', 'AKTIF')->first();
 
-      if (!$dokter) {
-        return new JsonResponse(['message' => 'Maaf Dokter Tidak Terdaftar di simrs'], 500);
-      }
+      // if (!$dokter) {
+      //   return new JsonResponse(['message' => 'Maaf Dokter Tidak Terdaftar di simrs'], 500);
+      // }
 
       $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
 
@@ -207,25 +207,27 @@ class KonsultasiController extends Controller
         ->get();
 
         
-
+        // jika bukan dari IGD
         if($request->kdruang !== 'POL014'){
-        // jika billing belum masuk
+          // jika yg minta dokter
+          if($request->kdgroupnakesminta === '1'){
+            // jika billing belum masuk
             if (count($cekTarif) === 0) {
-
-            $masukTarif = Visite::create([
-                'rs1' => $request->noreg,
-                'rs2' => $hari_ini,
-                'rs3' => $dokter->kdpegsimrs,
-                'rs4' => $tarifKonsul['sarana'],
-                'rs5' => $tarifKonsul['pelayanan'],
-                'rs6' => $tarifKonsul['flag_biaya'],
-                'rs8' => $request->kdgroup_ruangan,
-                'rs9' => $request->kodesistembayar
-            ]);
-
-            // ini baru
-            $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
+              $masukTarif = Visite::create([
+                  'rs1' => $request->noreg,
+                  'rs2' => $hari_ini,
+                  'rs3' => $dokter->kdpegsimrs,
+                  'rs4' => $tarifKonsul['sarana'],
+                  'rs5' => $tarifKonsul['pelayanan'],
+                  'rs6' => $tarifKonsul['flag_biaya'],
+                  'rs8' => $request->kdgroup_ruangan,
+                  'rs9' => $request->kodesistembayar
+              ]);
+              // ini baru
+              $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
+            }
           }
+          
         }
 
       }

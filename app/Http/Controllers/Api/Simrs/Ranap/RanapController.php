@@ -522,7 +522,12 @@ class RanapController extends Controller
                       ->orderBy('tgl', 'DESC');
                 },
                 'konsultasi'=> function ($q) {
-                    $q->where('kdruang','!=','POL014')->orderBy('id', 'DESC'); // ini updatean baru
+                    $q->where('kdruang','!=','POL014')
+                        ->with([
+                            'tarif:rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
+                            'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                        ])
+                    ->orderBy('id', 'DESC'); // ini updatean baru
                 },
                 'edukasi'=> function ($q) {
                     $q->orderBy('id', 'DESC');
