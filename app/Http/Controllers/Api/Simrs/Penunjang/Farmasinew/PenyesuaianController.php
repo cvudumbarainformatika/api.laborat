@@ -244,7 +244,11 @@ class PenyesuaianController extends Controller
                 ->distinct('penerimaan_r.nopenerimaan')
                 ->pluck('penerimaan_r.nopenerimaan');
 
-            $penerimaan = PenerimaanHeder::whereIn('nopenerimaan', $noperRinci)->with(['penerimaanrinci'])->get();
+            $penerimaan = PenerimaanHeder::whereIn('nopenerimaan', $noperRinci)->with([
+                'penerimaanrinci',
+                'pihakketiga:kode,nama',
+                'faktur'
+            ])->get();
         }
         $data['penerimaan'] = $penerimaan;
         $noPerMutasiMasuk = Mutasigudangkedepo::select(
