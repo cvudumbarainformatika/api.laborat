@@ -30,13 +30,15 @@ class PulangController extends Controller
       //  return $anamnesis;
       $sqlz = DB::table('cppts')->select('*')->where('noreg', $request->noreg)->get();
       $sqla = DB::table('rs242')->select('*')->where('rs1', $request->noreg)->get();
-      $inStatus = ['2'.'3'];
+      $inStatus = ['2','3'];
       $sql_cek_kunjungan = DB::table('rs23')->select('*')->where('rs1', $request->noreg)->whereIn('rs22', $inStatus)->get();
 
       $rencana = count($sqla);
       $cppt = count($sqlz);
       $kunjungan = count($sql_cek_kunjungan);
 
+
+      // jika pasien sduah dipulangkan
       if ($kunjungan > 0) {
         $kunjunganRanapx = Kunjunganranap::where('rs1', $request->noreg)->first();
         $updateKunjunganRanap = $kunjunganRanapx->update([
@@ -48,7 +50,26 @@ class PulangController extends Controller
           'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
           'rs27' => $request->tindakLanjut ?? ''
         ]);
+
+        if ($request->noSuratMeninggal !== null || $request->noLp !== null) {
+            SuratPasien::updateOrCreate(
+              ['noreg' => $request->noreg],
+              [
+                'nosuratmeninggal' => $request->noSuratMeninggal,
+                'nolp' => $request->noLp
+              ]
+            );
+        }
+
+        return new JsonResponse([
+          'success' => true,
+          'message' => 'success',
+          'result' => $sql_cek_kunjungan
+        ]);
       }
+
+
+      // jika pasien belum dipulangkan
 
       if($rencana === 0 && $cppt === 0){
         return new JsonResponse([
@@ -102,34 +123,34 @@ class PulangController extends Controller
         $nobed=$kunjunganRanap->rs7;
 
        if($titipan!=""){
-        // $sql_groups_titipan=$conn->query("select distinct groups from rs24 where rs1='".$titipan."'");
-        $rs_groups_titipan=DB::table('rs24')->select('groups')->distinct()->where('rs1', $titipan)->first();
-        // $rs_groups_titipan=$sql_groups_titipan->fetch_object();
-        // $conn->query("update rs25 set rs3='A',rs4='V' where rs5='".$titipan."' and rs1='".$kamar."' and rs2='".$nobed."'");
-        DB::table('rs25')->where('rs5', $titipan)->where('rs1', $kamar)->where('rs2', $nobed)->update([
-          'rs3' => 'A',
-          'rs4' => 'V'  
-        ]);
-        // $conn->query("update rs25 set rs3='A',rs4='V' where rs6='".$rs_groups_titipan->groups."' and rs1='".$kamar."' and rs2='".$nobed."' and rs5='-'");
-        DB::table('rs25')->where('rs6', $rs_groups_titipan->groups)->where('rs1', $kamar)->where('rs2', $nobed)->where('rs5', '-')->update([
-          'rs3' => 'A',
-          'rs4' => 'V'
-        ]);
-      }else{
-        // $sql_groups=$conn->query("select distinct groups from rs24 where rs1='".$kelas."'");
-        $rs_groups=DB::table('rs24')->select('groups')->distinct()->where('rs1', $kelas)->first();
-        // $rs_groups=$sql_groups->fetch_object();
-        // $conn->query("update rs25 set rs3='A',rs4='V' where rs5='".$kelas."' and rs1='".$kamar."' and rs2='".$nobed."'");
-        DB::table('rs25')->where('rs5', $kelas)->where('rs1', $kamar)->where('rs2', $nobed)->update([
-          'rs3' => 'A',
-          'rs4' => 'V'
-        ]);
-        // $conn->query("update rs25 set rs3='A',rs4='V' where rs6='".$rs_groups->groups."' and rs1='".$kamar."' and rs2='".$nobed."' and rs5='-'");
-        DB::table('rs25')->where('rs6', $rs_groups->groups)->where('rs1', $kamar)->where('rs2', $nobed)->where('rs5', '-')->update([
-          'rs3' => 'A',
-          'rs4' => 'V'
-        ]);
-      }
+          // $sql_groups_titipan=$conn->query("select distinct groups from rs24 where rs1='".$titipan."'");
+          $rs_groups_titipan=DB::table('rs24')->select('groups')->distinct()->where('rs1', $titipan)->first();
+          // $rs_groups_titipan=$sql_groups_titipan->fetch_object();
+          // $conn->query("update rs25 set rs3='A',rs4='V' where rs5='".$titipan."' and rs1='".$kamar."' and rs2='".$nobed."'");
+          DB::table('rs25')->where('rs5', $titipan)->where('rs1', $kamar)->where('rs2', $nobed)->update([
+            'rs3' => 'A',
+            'rs4' => 'V'  
+          ]);
+          // $conn->query("update rs25 set rs3='A',rs4='V' where rs6='".$rs_groups_titipan->groups."' and rs1='".$kamar."' and rs2='".$nobed."' and rs5='-'");
+          DB::table('rs25')->where('rs6', $rs_groups_titipan->groups)->where('rs1', $kamar)->where('rs2', $nobed)->where('rs5', '-')->update([
+            'rs3' => 'A',
+            'rs4' => 'V'
+          ]);
+        }else{
+          // $sql_groups=$conn->query("select distinct groups from rs24 where rs1='".$kelas."'");
+          $rs_groups=DB::table('rs24')->select('groups')->distinct()->where('rs1', $kelas)->first();
+          // $rs_groups=$sql_groups->fetch_object();
+          // $conn->query("update rs25 set rs3='A',rs4='V' where rs5='".$kelas."' and rs1='".$kamar."' and rs2='".$nobed."'");
+          DB::table('rs25')->where('rs5', $kelas)->where('rs1', $kamar)->where('rs2', $nobed)->update([
+            'rs3' => 'A',
+            'rs4' => 'V'
+          ]);
+          // $conn->query("update rs25 set rs3='A',rs4='V' where rs6='".$rs_groups->groups."' and rs1='".$kamar."' and rs2='".$nobed."' and rs5='-'");
+          DB::table('rs25')->where('rs6', $rs_groups->groups)->where('rs1', $kamar)->where('rs2', $nobed)->where('rs5', '-')->update([
+            'rs3' => 'A',
+            'rs4' => 'V'
+          ]);
+        }
 
        return new JsonResponse([
         'success' => true,
