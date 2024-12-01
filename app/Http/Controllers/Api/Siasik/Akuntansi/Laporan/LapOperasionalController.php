@@ -184,7 +184,7 @@ class LapOperasionalController extends Controller
         ->where('akun50_2024.kodeall3', 'LIKE', '8.1.02' . '%')
         ->orWhere('akun50_2024.kodeall3', 'LIKE', '8.1.07' . '%')
         ->orWhere('akun50_2024.kodeall3', 'LIKE', '8.1.08' . '%')
-        ->where('akun50_2024.kodeall3', '!=', '8.1.01')
+        ->where('akun50_2024.kodeall3', 'NOT LIKE', '8.1.01')
         ->groupBy('kode4')
         ->orderBy('kode', 'asc')
         ->get();
