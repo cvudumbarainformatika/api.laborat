@@ -118,7 +118,12 @@ class BarangRusakController extends Controller
             return new JsonResponse(['data' => $data, 'message' => 'Data Sudah Tersimpan']);
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 410);
+            return response()->json([
+                'message' => 'ada kesalahan ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'error' => $e
+            ], 410);
         }
     }
     public function getListBelumKunci()
