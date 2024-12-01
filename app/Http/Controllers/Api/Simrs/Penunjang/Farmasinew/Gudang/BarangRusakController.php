@@ -61,7 +61,7 @@ class BarangRusakController extends Controller
         if (!in_array(request('kd_ruang'), $gudang)) {
             return new JsonResponse(['message' => 'Kode Gudang Salah, Apakah Anda Tidak Memeiliki Akses Gudang?'], 410);
         }
-        $data = Stokrel::selectRaw('*, sum(jumlah) as total')
+        $data = Stokrel::selectRaw('*,harga as hargastok, sum(jumlah) as total')
             // ->whereIn('stokreal.kdruang', $gudang)
             ->where('stokreal.kdruang', request('kd_ruang'))
             ->when(request('noper'), function ($q) {
