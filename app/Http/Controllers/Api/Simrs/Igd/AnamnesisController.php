@@ -25,7 +25,7 @@ class AnamnesisController extends Controller
                 [
                     'rs1' => $request->noreg,
                     'rs2' => $request->norm,
-                    'rs3' => date('Y-m-d H:i:s'),
+                    // 'rs3' => date('Y-m-d H:i:s'),
                     'rs4' => $request->keluhanutama,
                     'riwayatpenyakit' => $request->riwayatpenyakit ?? '',
                     'riwayatalergi' => $request->riwayatalergi ?? '',
@@ -84,7 +84,7 @@ class AnamnesisController extends Controller
 
             if($request->metode === 'bps')
             {
-                $updatebps = AnamnesisBps::where('id_heder', $request->id)->update(
+                $updatebps = AnamnesisBps::create(
                     [
                         'noreg' => $request->noreg,
                         'norm' => $request->norm,
@@ -99,22 +99,21 @@ class AnamnesisController extends Controller
 
                     ]
                 );
-
                 $carimips = AnamnesisNips::where('id_heder',$request->id);
                 $hapusnips = $carimips->delete();
 
                 $updatescorenyeri = Anamnesis::where('id', $request->id)->update(
                     [
 
-                        'scorenyeri' => $request->skornyeri ?? 0,
-                        'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
+                        'scorenyeri' => '',
+                        'keteranganscorenyeri' => '',
 
                     ]
                 );
 
             }else if($request->metode === 'nips')
             {
-                $updatenips = AnamnesisNips::where('id_heder', $request->id)->update(
+                $updatenips = AnamnesisNips::create(
                     [
                         'noreg' => $request->noreg,
                         'norm' => $request->norm,
@@ -138,11 +137,12 @@ class AnamnesisController extends Controller
                 $updatescorenyeri = Anamnesis::where('id', $request->id)->update(
                     [
 
-                        'scorenyeri' => $request->skornyeri ?? 0,
-                        'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
+                        'scorenyeri' => '',
+                        'keteranganscorenyeri' =>'',
 
                     ]
                 );
+
             }else{
                 $updatescorenyeri = Anamnesis::where('id', $request->id)->update(
                     [
@@ -254,6 +254,7 @@ class AnamnesisController extends Controller
 
                         ]
                     );
+
                 }
 
                 if($request->metode === 'nips')
@@ -322,7 +323,6 @@ class AnamnesisController extends Controller
                 ]
             )->where('rs1', $request->noreg)
             ->where('kdruang', 'POL014')
-            ->limit(1)
             ->orderBy('id','Desc')
             ->get();
 
@@ -336,6 +336,21 @@ class AnamnesisController extends Controller
             DB::rollBack();
             return new JsonResponse(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
+    }
+
+    public function listanamnesebynoreg()
+    {
+        $hasil = Anamnesis::with(
+            [
+                'anamnesetambahan','anamnesebps','anamnesenips'
+            ]
+        )->where('rs1', request('noreg'))
+        ->where('kdruang', 'POL014')
+        ->limit(1)
+        ->orderBy('id','Desc')
+        ->get();
+
+        return new JsonResponse($hasil);
     }
 
 }

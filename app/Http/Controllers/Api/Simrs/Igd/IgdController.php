@@ -248,6 +248,12 @@ class IgdController extends Controller
                 ])
                     ->orderBy('id', 'DESC');
             },
+            'tinjauanulang' => function($tinjauanulang){
+                $tinjauanulang->with([
+                    'tinjauanulangnips',
+                    'tinjauanulangbps'
+                ]);
+            },
             'konsuldokterspesialis' => function ($konsuldokterspesialis){
                 $konsuldokterspesialis->with(
                     [
