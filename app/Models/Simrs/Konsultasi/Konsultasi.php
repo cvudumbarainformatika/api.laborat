@@ -22,7 +22,7 @@ class Konsultasi extends Model
 
     public function tarif()
     {
-        return $this->hasOne(Visite::class, 'rs1', 'noreg');
+        return $this->hasOne(Visite::class, 'id', 'rs140_id');
     }
 
     public function kunjunganranap()

@@ -93,7 +93,7 @@ class LRAjurnalController extends Controller
         }])
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
-        // ->where('jurnal_postingotom.verif', '=', '1')
+        ->where('jurnal_postingotom.verif', '=', '1')
         // ->whereDate('tanggal', '>=', $awal)
         // ->whereDate('tanggal', '<=', $akhir)
         ->with('penyesuaian',  function($sel) use ($awal,$akhir){
@@ -101,9 +101,11 @@ class LRAjurnalController extends Controller
             ->select('jurnalumum_rinci.kodepsap13',
                     'jurnalumum_heder.tanggal',
                     DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian'))
-            // ->where('jurnalumum_heder.verif', '=', '1')
+            ->where('jurnalumum_heder.verif', '=', '1')
             ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+
             ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
+            ->where('jurnalumum_heder.keterangan', 'NOT LIKE','Reklas Pendapatan' . '%')
             ->groupBy( 'kodepsap13');
         })
         ->groupBy( 'kode6')
@@ -117,13 +119,13 @@ class LRAjurnalController extends Controller
             DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as pendpsebelumnya')
             )
         ->where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
-        // ->where('jurnal_postingotom.verif', '=', '1')
+        ->where('jurnal_postingotom.verif', '=', '1')
         ->whereDate('tanggal', '<', $awal)
         ->with('penyesuaian',  function($sel) use ($awal,$akhir){
             $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
             ->select('jurnalumum_heder.tanggal',
                     DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian'))
-            // ->where('jurnalumum_heder.verif', '=', '1')
+            ->where('jurnalumum_heder.verif', '=', '1')
             ->whereDate('jurnalumum_heder.tanggal', '<', $awal)
             ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
             ->groupBy( 'kodepsap13');
@@ -156,7 +158,7 @@ class LRAjurnalController extends Controller
             },'lvl5' => function($sel){
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
-        // ->where('jurnal_postingotom.verif', '=', '1')
+        ->where('jurnal_postingotom.verif', '=', '1')
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
         // ->where('jurnal_postingotom.tanggal', '>=', $awal)
@@ -188,7 +190,7 @@ class LRAjurnalController extends Controller
             },'lvl5' => function($sel){
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
-        // ->where('jurnal_postingotom.verif', '=', '1')
+        ->where('jurnal_postingotom.verif', '=', '1')
         ->whereDate('jurnal_postingotom.tanggal', '<', $awal)
         ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
         // ->where('jurnal_postingotom.tanggal', '>=', $awal)

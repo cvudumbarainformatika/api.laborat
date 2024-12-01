@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Konsultasi;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simpeg\Petugas;
@@ -70,7 +71,10 @@ class KonsultasiController extends Controller
       // ->where('rs6', $request->flag_biaya)
       // ->get();
 
-      return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data], 200);
+      return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data->load([
+        'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
+        'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis'
+      ])], 200);
     }
 
 
@@ -168,28 +172,16 @@ class KonsultasiController extends Controller
     public function updateJawaban(Request $request)
     {
 
-      $user = FormatingHelper::session_user();
+      // $user = FormatingHelper::session_user();
 
-      $dokter = Petugas::where('kdpegsimrs', $user['kodesimrs'])->where('aktif', 'AKTIF')->first();
-
-      if (!$dokter) {
-        return new JsonResponse(['message' => 'Maaf Dokter Tidak Terdaftar di simrs'], 500);
-      }
-
-      $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
-
-      // cek tarif
-      $tarifKonsul = self::cekTarip($spesialis, $request);
-      if (!$tarifKonsul) {
-        return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
-      }
+      $dokter = Petugas::find(auth()->user()->pegawai_id);
 
       $data = Konsultasi::find($request->id);
       if (!$data) {
         return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
       }
 
-      $tglJawab = $data->tgl_jawaban;
+      $tglJawab = $data->tgl_jawaban ?? null;
 
       if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
 
@@ -198,35 +190,49 @@ class KonsultasiController extends Controller
 
         // cari tarif dokter dan masukkan ke tarif jika dlm 1 hari belum ada data masuk
 
-        //cek data tarif harini untuk dokter
-        $cekTarif = Visite::select('*')
-        ->where('rs1', $request->noreg)
-        ->where('rs3', $dokter->kdpegsimrs)
-        ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
-        ->where('rs6', $tarifKonsul['flag_biaya'])
-        ->get();
+        // cek tarif
+        $tarifKonsul = null;
+        if($dokter->kdgroupnakes === '1'){
 
-        
-
-        if($request->kdruang !== 'POL014'){
-        // jika billing belum masuk
-            if (count($cekTarif) === 0) {
-
-            $masukTarif = Visite::create([
-                'rs1' => $request->noreg,
-                'rs2' => $hari_ini,
-                'rs3' => $dokter->kdpegsimrs,
-                'rs4' => $tarifKonsul['sarana'],
-                'rs5' => $tarifKonsul['pelayanan'],
-                'rs6' => $tarifKonsul['flag_biaya'],
-                'rs8' => $request->kdgroup_ruangan,
-                'rs9' => $request->kodesistembayar
-            ]);
-
-            // ini baru
-            $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
+          $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
+          $tarifKonsul = self::cekTarip($spesialis, $request);
+          if (!$tarifKonsul) {
+            return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
           }
-        }
+
+          //cek data tarif harini untuk dokter
+          $cekTarif = Visite::select('*')
+          ->where('rs1', $request->noreg)
+          ->where('rs3', $dokter->kdpegsimrs)
+          ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
+          ->where('rs6', $tarifKonsul['flag_biaya'])
+          ->get();
+
+          
+          // jika bukan dari IGD
+          if($request->kdruang !== 'POL014'){
+            // jika yg minta dokter
+            if($request->kdgroupnakesminta === '1'){
+              // jika billing belum masuk
+              if (count($cekTarif) === 0) {
+                $masukTarif = Visite::create([
+                    'rs1' => $request->noreg,
+                    'rs2' => $hari_ini,
+                    'rs3' => $dokter->kdpegsimrs ?? '',
+                    'rs4' => $tarifKonsul['sarana'],
+                    'rs5' => $tarifKonsul['pelayanan'],
+                    'rs6' => $tarifKonsul['flag_biaya'],
+                    'rs8' => $request->kdgroup_ruangan ?? '',
+                    'rs9' => $request->kodesistembayar ?? ''
+                ]);
+                // ini baru
+                $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
+              }
+            }
+            
+          }
+
+        } 
 
       }
 
@@ -236,17 +242,33 @@ class KonsultasiController extends Controller
       $data->flag = '2';
 
       $data->jawaban = $request->jawaban;
-      $data->kdruang = $request->kdruang;
+      // $data->kdruang = $request->kdruang;
+      $data->user_jawab = $dokter->kdpegsimrs ?? null;
       $data->save();
 
-      return new JsonResponse(['message' => 'Jawaban tersimpan', 'result' => $data], 200);
+      // $lazy = Konsultasi::find($data->id)->with([
+      //   'tarif:rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
+      //   'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+      // ]);
+      // $lazy=$data;
+      $lazy = $data->load([
+        'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
+        'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+      ]);
+
+      // $msg = [
+      //   'data' => $lazy
+      // ];
+      // event(new NotifMessageEvent($msg, "konsultasi", auth()->user()));
+
+      return new JsonResponse(['message' => 'Jawaban tersimpan', 'result' => $lazy], 200);
     }
 
     public static function cekTarip($spesialis, $request)
     {
         $rs = null;
 
-        if ($spesialis === 'SPESIALIS') {
+        if ($spesialis) {
           $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
                 ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
                 ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')

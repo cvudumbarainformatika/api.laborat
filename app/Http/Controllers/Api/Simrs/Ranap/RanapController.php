@@ -66,7 +66,8 @@ class RanapController extends Controller
             'rs23.rs24 as prognosis', // PROGNOSIS
             'rs23.rs25 as sebabkematian', // Diagnosa Penyebab Meninggal
             'rs23.rs26 as diagakhir', // Diagnosa Utama
-            'rs23.rs27 as tindaklanjut', // Diagnosa Utama
+            'rs23.rs27 as tindaklanjut', // tindaklanjut
+            'rs23.rs23 as carakeluar', // cara keluar
             'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
             DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
@@ -522,7 +523,12 @@ class RanapController extends Controller
                       ->orderBy('tgl', 'DESC');
                 },
                 'konsultasi'=> function ($q) {
-                    $q->where('kdruang','!=','POL014')->orderBy('id', 'DESC'); // ini updatean baru
+                    $q->where('kdruang','!=','POL014')
+                        ->with([
+                            'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
+                            'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                        ])
+                    ->orderBy('id', 'DESC'); // ini updatean baru
                 },
                 'edukasi'=> function ($q) {
                     $q->orderBy('id', 'DESC');
