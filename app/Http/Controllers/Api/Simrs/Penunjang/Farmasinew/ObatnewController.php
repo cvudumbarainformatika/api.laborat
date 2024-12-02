@@ -37,6 +37,7 @@ class ObatnewController extends Controller
         $request['kelompok_psikotropika'] = $request->kelompok_psikotropika ?? '';
         $request['kekuatan_dosis'] = $request->kekuatan_dosis ?? '';
         $request['obat_program'] = $request->obat_program ?? '';
+        $request['obat_donasi'] = $request->obat_donasi ?? '';
 
         $simpan = Mobatnew::updateOrCreate(
             ['kd_obat' => $kodeobat],
