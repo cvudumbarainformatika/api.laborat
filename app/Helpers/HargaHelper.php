@@ -11,7 +11,11 @@ class HargaHelper
     public static function getHarga($kdobat, $sistembayar)
     {
         // cek obat program
-        $obatProgram = Mobatnew::where('kd_obat', $kdobat)->where('obat_program', '1')->first();
+        $obatProgram = Mobatnew::where('kd_obat', $kdobat)
+            ->where(function ($query) {
+                $query->where('obat_program', '1')->orWhere('obat_donasi', '1');
+            })
+            ->first();
         if ($obatProgram) {
             return [
                 'res' => false,
@@ -28,7 +32,7 @@ class HargaHelper
         if (!$harga) {
             return [
                 'res' => true,
-                'message' => 'Tidak ada harga untuk obat ini, dan ini bukan obat program',
+                'message' => 'Tidak ada harga untuk obat ini, dan ini bukan obat Program atau Donasi',
                 'data' => $data,
                 'kdobat' => $kdobat,
                 'sistembayar' => $sistembayar,
