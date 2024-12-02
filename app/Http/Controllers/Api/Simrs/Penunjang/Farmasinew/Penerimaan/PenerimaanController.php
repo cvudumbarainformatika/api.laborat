@@ -426,7 +426,8 @@ class PenerimaanController extends Controller
                         $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
                         $tHarga['created_at'] = date('Y-m-d H:i:s');
                         $tHarga['updated_at'] = date('Y-m-d H:i:s');
-                        if ((int)$key['harga_netto_kecil'] > 0) $harga[] = $tHarga;
+                        // if ((int)$key['harga_netto_kecil'] > 0) $harga[] = $tHarga;
+                        $harga[] = $tHarga;
                     }
 
                     if (count($harga) > 0) {
