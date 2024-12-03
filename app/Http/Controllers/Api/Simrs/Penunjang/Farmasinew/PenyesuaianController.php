@@ -567,7 +567,8 @@ class PenyesuaianController extends Controller
                 $q->with([
                     'mutasi' => function ($mu) use ($kdobat) {
                         $mu->where('kd_obat', $kdobat);
-                    }
+                    },
+                    'masterobat:kd_obat,nama_obat,satuan_k'
                 ])
                     ->where('kdobat', $kdobat);
             },
