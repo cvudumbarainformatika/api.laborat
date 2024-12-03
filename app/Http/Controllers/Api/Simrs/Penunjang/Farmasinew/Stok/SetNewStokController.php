@@ -3052,6 +3052,7 @@ class SetNewStokController extends Controller
                     ->where('tgl_kunci', 'LIKE', '%' . $x . '%')
                     ->where('kd_obat', $kdobat)
                     ->where('kunci', '1')
+                    ->where('gudang', $koderuangan)
                     ->groupBy('kd_obat', 'nopenerimaan')
                     ->get();
                 $rusak = collect($rusakRinci)->sum('jumlah');
