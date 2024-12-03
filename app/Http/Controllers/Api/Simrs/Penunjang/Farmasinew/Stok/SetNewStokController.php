@@ -1711,6 +1711,12 @@ class SetNewStokController extends Controller
             ->when($limit, function ($q) use ($limit, $offset) {
                 $q->limit($limit)->offset($offset);
             })
+            ->when(request('q'), function ($q) {
+                $q->where(function ($query) {
+                    $query->where('kd_obat', 'like', '%' . request('q') . '%')
+                        ->orWhere('nama_obat', 'like', '%' . request('q') . '%');
+                });
+            })
             ->get();
         $anu = [];
         $mbuh = [];
