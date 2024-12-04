@@ -514,6 +514,10 @@ class RanapController extends Controller
                     $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
                     ->where('unit_pengirim', '!=', 'POL014');
                 },
+                'laboratold'=> function ($t) {
+                    $t->with('pemeriksaanlab')
+                        ->orderBy('id', 'DESC')->where('rs23','!=','POL014');
+                },
                 'radiologi'=> function ($q) {
                     $q->orderBy('id', 'DESC')
                     ->where('rs10', '!=', 'POL014');
