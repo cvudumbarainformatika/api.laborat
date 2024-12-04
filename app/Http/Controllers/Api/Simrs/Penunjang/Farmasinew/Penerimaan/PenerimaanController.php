@@ -426,6 +426,7 @@ class PenerimaanController extends Controller
                         $tHarga['tgl_mulai_berlaku'] = date('Y-m-d H:i:s');
                         $tHarga['created_at'] = date('Y-m-d H:i:s');
                         $tHarga['updated_at'] = date('Y-m-d H:i:s');
+                        // if ((int)$key['harga_netto_kecil'] > 0) $harga[] = $tHarga;
                         $harga[] = $tHarga;
                     }
 
@@ -442,102 +443,114 @@ class PenerimaanController extends Controller
 
     public function simpanpenerimaanlangsung(Request $request)
     {
-        $gudang = ['Gd-05010100', 'Gd-03010100'];
-        if (!in_array($request->gudang, $gudang)) {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+
+            $gudang = ['Gd-05010100', 'Gd-03010100'];
+            if (!in_array($request->gudang, $gudang)) {
+                return new JsonResponse([
+                    'message' => 'Anda tidak menggunakan user gudang, pastikan anda memiliki user gudang untuk melakukan penerimaan'
+                ], 410);
+            }
+            if ($request->gudang === 'Gd-05010100') {
+                $procedure = 'penerimaan_obat_ko(@nomor)';
+                $colom = 'penerimaanko';
+                $lebel = 'G-KO';
+            } else {
+                $procedure = 'penerimaan_obat_fs(@nomor)';
+                $colom = 'penerimaanfs';
+                $lebel = 'G-FS';
+            }
+            if ($request->nopenerimaan === '' || $request->nopenerimaan === null) {
+                DB::connection('farmasi')->select('call ' . $procedure);
+                $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
+                $wew = $x[0]->$colom;
+                $nopenerimaan = FormatingHelper::penerimaanobat($wew, $lebel);
+            } else {
+                $nopenerimaan = $request->nopenerimaan;
+            }
+            $user = FormatingHelper::session_user();
+            $simpanheder = PenerimaanHeder::updateorcreate(
+                [
+                    'nopenerimaan' => $nopenerimaan,
+                    'kdpbf' => $request->kdpbf,
+                    'gudang' => $request->gudang,
+                ],
+                [
+                    //'nopemesanan' => $request->nopemesanan,
+                    'tglpenerimaan' => $request->tglpenerimaan,
+                    'pengirim' => $request->pengirim,
+                    'tglsurat' => $request->tglsurat,
+                    //'batasbayar' => $request->batasbayar,
+                    'jenissurat' => $request->jenissurat,
+                    'jenis_penerimaan' => $request->jenispenerimaan,
+                    'nomorsurat' => $request->nomorsurat,
+                    'user' => $user['kodesimrs'],
+                    'total_faktur_pbf' => $request->total_faktur_pbf,
+                ]
+            );
+            if (!$simpanheder) {
+                return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 410);
+            }
+            $simpanrinci = PenerimaanRinci::updateorcreate(
+                [
+                    'nopenerimaan' => $request->nopenerimaan ?? $nopenerimaan,
+                    'kdobat' => $request->kdobat,
+                    'no_batch' => $request->no_batch,
+                ],
+                [
+                    'jml_terima_b' => $request->jml_terima_b,
+                    'jml_terima_k' => $request->jml_terima_k,
+                    'harga' => $request->harga,
+                    'harga_kcl' => $request->harga_kcl,
+                    'no_retur_rs' => $request->no_retur_rs ?? '',
+                    'tgl_exp' => $request->tgl_exp,
+                    'satuan' => $request->satuan_bsr,
+                    'satuan_kcl' => $request->satuan_kcl,
+                    'isi' => $request->isi,
+                    'diskon' => $request->diskon ?? 0,
+                    'diskon_rp' => $request->diskon_rp ?? 0,
+                    'diskon_rp_kecil' => $request->diskon_rp_kecil ?? 0,
+                    'ppn' => $request->ppn ?? 0,
+                    'ppn_rp' => $request->ppn_rp ?? 0,
+                    'ppn_rp_kecil' => $request->ppn_rp_kecil ?? 0,
+                    'harga_netto' => $request->harga_netto,
+                    'harga_netto_kecil' => $request->harga_netto_kecil,
+                    'jml_pesan' => $request->jml_pesan,
+                    'jml_terima_lalu' => $request->jml_terima_lalu,
+                    'jml_all_penerimaan' => $request->jml_all_penerimaan,
+                    'subtotal' => $request->subtotal,
+                    'user' => $user['kodesimrs']
+                ]
+            );
+            if (!$simpanrinci) {
+                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 410);
+            }
+            $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
+            if ($stokrealsimpan !== 200) {
+                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 410);
+            }
+
+            DB::connection('farmasi')->commit();
+            $simpanrinci->load('masterobat:kd_obat,nama_obat,satuan_b');
             return new JsonResponse([
-                'message' => 'Anda tidak menggunakan user gudang, pastikan anda memiliki user gudang untuk melakukan penerimaan'
+                'message' => 'ok',
+                'nopenerimaan' => $nopenerimaan,
+                'heder' => $simpanheder,
+                'rinci' => $simpanrinci
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => '' . $e
             ], 410);
         }
-        if ($request->gudang === 'Gd-05010100') {
-            $procedure = 'penerimaan_obat_ko(@nomor)';
-            $colom = 'penerimaanko';
-            $lebel = 'G-KO';
-        } else {
-            $procedure = 'penerimaan_obat_fs(@nomor)';
-            $colom = 'penerimaanfs';
-            $lebel = 'G-FS';
-        }
-        if ($request->nopenerimaan === '' || $request->nopenerimaan === null) {
-            DB::connection('farmasi')->select('call ' . $procedure);
-            $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
-            $wew = $x[0]->$colom;
-            $nopenerimaan = FormatingHelper::penerimaanobat($wew, $lebel);
-        } else {
-            $nopenerimaan = $request->nopenerimaan;
-        }
-        $user = FormatingHelper::session_user();
-        $simpanheder = PenerimaanHeder::updateorcreate(
-            [
-                'nopenerimaan' => $nopenerimaan,
-                'kdpbf' => $request->kdpbf,
-                'gudang' => $request->gudang,
-            ],
-            [
-                //'nopemesanan' => $request->nopemesanan,
-                'tglpenerimaan' => $request->tglpenerimaan,
-                'pengirim' => $request->pengirim,
-                'tglsurat' => $request->tglsurat,
-                //'batasbayar' => $request->batasbayar,
-                'jenissurat' => $request->jenissurat,
-                'jenis_penerimaan' => $request->jenispenerimaan,
-                'nomorsurat' => $request->nomorsurat,
-                'user' => $user['kodesimrs'],
-                'total_faktur_pbf' => $request->total_faktur_pbf,
-            ]
-        );
-        if (!$simpanheder) {
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        }
-        $simpanrinci = PenerimaanRinci::updateorcreate(
-            [
-                'nopenerimaan' => $request->nopenerimaan ?? $nopenerimaan,
-                'kdobat' => $request->kdobat,
-                'no_batch' => $request->no_batch,
-            ],
-            [
-                'jml_terima_b' => $request->jml_terima_b,
-                'jml_terima_k' => $request->jml_terima_k,
-                'harga' => $request->harga,
-                'harga_kcl' => $request->harga_kcl,
-                'no_retur_rs' => $request->no_retur_rs ?? '',
-                'tgl_exp' => $request->tgl_exp,
-                'satuan' => $request->satuan_bsr,
-                'satuan_kcl' => $request->satuan_kcl,
-                'isi' => $request->isi,
-                'diskon' => $request->diskon ?? 0,
-                'diskon_rp' => $request->diskon_rp ?? 0,
-                'diskon_rp_kecil' => $request->diskon_rp_kecil ?? 0,
-                'ppn' => $request->ppn ?? 0,
-                'ppn_rp' => $request->ppn_rp ?? 0,
-                'ppn_rp_kecil' => $request->ppn_rp_kecil ?? 0,
-                'harga_netto' => $request->harga_netto,
-                'harga_netto_kecil' => $request->harga_netto_kecil,
-                'jml_pesan' => $request->jml_pesan,
-                'jml_terima_lalu' => $request->jml_terima_lalu,
-                'jml_all_penerimaan' => $request->jml_all_penerimaan,
-                'subtotal' => $request->subtotal,
-                'user' => $user['kodesimrs']
-            ]
-        );
-        if (!$simpanrinci) {
-            PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-        }
-        $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
-        if ($stokrealsimpan !== 200) {
-            PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
-            PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
-            return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
-        }
-
-
-        $simpanrinci->load('masterobat:kd_obat,nama_obat,satuan_b');
-        return new JsonResponse([
-            'message' => 'ok',
-            'nopenerimaan' => $nopenerimaan,
-            'heder' => $simpanheder,
-            'rinci' => $simpanrinci
-        ]);
     }
     public function batalHeader(Request $request)
     {

@@ -229,12 +229,13 @@ class KartustokController extends Controller
 
                         ->groupBy('persiapan_operasi_distribusis.kd_obat');
                 },
-                'barangrusak' => function ($ru) use ($tglAwal, $tglAkhir) {
+                'barangrusak' => function ($ru) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $ru->select(
                         'kd_obat',
                         DB::raw('sum(jumlah) as jumlah')
                     )->whereBetween('tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('kunci', '1')
+                        ->where('gudang', $koderuangan)
                         ->groupBy('kd_obat');
                 },
                 // retur gudang (masuk gudang)
@@ -509,14 +510,16 @@ class KartustokController extends Controller
 
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
                 },
-                'barangrusak' => function ($ru) use ($tglAwal, $tglAkhir) {
+                'barangrusak' => function ($ru) use ($tglAwal, $tglAkhir, $koderuangan) {
                     $ru->select(
                         'kd_obat',
                         'jumlah',
                         'status',
                         'tgl_kunci as tgl_rusak',
                         'created_at',
-                    )->whereBetween('tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                    )
+                        ->whereBetween('tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('gudang', $koderuangan)
                         ->where('kunci', '1');
                 },
                 // retur gudang (masuk gudang)

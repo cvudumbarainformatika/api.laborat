@@ -1711,6 +1711,12 @@ class SetNewStokController extends Controller
             ->when($limit, function ($q) use ($limit, $offset) {
                 $q->limit($limit)->offset($offset);
             })
+            ->when(request('q'), function ($q) {
+                $q->where(function ($query) {
+                    $query->where('kd_obat', 'like', '%' . request('q') . '%')
+                        ->orWhere('nama_obat', 'like', '%' . request('q') . '%');
+                });
+            })
             ->get();
         $anu = [];
         $mbuh = [];
@@ -3046,6 +3052,7 @@ class SetNewStokController extends Controller
                     ->where('tgl_kunci', 'LIKE', '%' . $x . '%')
                     ->where('kd_obat', $kdobat)
                     ->where('kunci', '1')
+                    ->where('gudang', $koderuangan)
                     ->groupBy('kd_obat', 'nopenerimaan')
                     ->get();
                 $rusak = collect($rusakRinci)->sum('jumlah');

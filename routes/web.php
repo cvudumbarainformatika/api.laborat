@@ -12,6 +12,7 @@ use App\Http\Controllers\AutogenController;
 use App\Http\Controllers\DvlpController;
 use App\Http\Controllers\NotifRefreshController;
 use App\Http\Controllers\PengesahanQrController;
+use App\Http\Controllers\PercobaanController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ResetterPasswordController;
 use App\Websockets\SocketHandler\UpdatePostSocketHandler;
@@ -82,6 +83,9 @@ Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
 
 Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller']);
+
+
+Route::get('/harry', [PercobaanController::class, 'index'])->name('harry');
 
 
 
