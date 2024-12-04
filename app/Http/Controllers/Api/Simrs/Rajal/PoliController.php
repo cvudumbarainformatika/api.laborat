@@ -729,11 +729,11 @@ class PoliController extends Controller
 
     public function icare()
     {
-        $wew = FormatingHelper::session_user();
-        $x = $wew['kdgroupnakes'];
-        $kddpjp = $wew['kddpjp'];
-
-        if ($x === '1') {
+        // $wew = FormatingHelper::session_user();
+        // $x = $wew['kdgroupnakes'];
+        // $kddpjp = $wew['kddpjp'];
+        $kddpjp = request('dpjp');
+        // if ($x === '1') {
             if ($kddpjp === '') {
                 return new JsonResponse(['message' => 'Maaf Akun Anda Belum Termaping dengan Aplikasi Hafis...!!! '], 500);
             }
@@ -754,9 +754,9 @@ class PoliController extends Controller
                 $data
             );
             return $icare;
-        } else {
-            return new JsonResponse(['message' => 'Maaf Fitur ini Hanya Untuk Dokter...!!!'], 500);
-        }
+        // } else {
+        //     return new JsonResponse(['message' => 'Maaf Fitur ini Hanya Untuk Dokter...!!!'], 500);
+        // }
     }
 
     public function konsulpoli(Request $request)
