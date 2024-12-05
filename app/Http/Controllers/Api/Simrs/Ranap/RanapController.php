@@ -516,7 +516,7 @@ class RanapController extends Controller
                 },
                 'laboratold'=> function ($t) {
                     $t->with('pemeriksaanlab')
-                        ->orderBy('id', 'DESC')->where('rs23','!=','POL014');
+                        ->orderBy('id', 'DESC');
                 },
                 'radiologi'=> function ($q) {
                     $q->orderBy('id', 'DESC')
