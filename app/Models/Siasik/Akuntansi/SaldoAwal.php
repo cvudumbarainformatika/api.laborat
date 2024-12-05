@@ -2,6 +2,8 @@
 
 namespace App\Models\Siasik\Akuntansi;
 
+use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
+use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Rinci;
 use App\Models\Siasik\Master\Akun50_2024;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,5 +29,11 @@ class SaldoAwal extends Model
     }
     public function lvl5(){
         return $this->belongsTo(Akun50_2024::class,'kode5', 'kodeall3');
+    }
+    public function jurnalotom(){
+        return $this->hasMany(Create_JurnalPosting::class,'kode', 'kode');
+    }
+    public function penyesuaian(){
+        return $this->hasMany(JurnalUmum_Rinci::class,'kodepsap13', 'kode');
     }
 }

@@ -175,6 +175,11 @@ class Kunjunganranap extends Model
         return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
     }
 
+    public function laboratold()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'rs1');
+    }
+
     public function transradiologi()
     {
         return $this->hasMany(Transradiologi::class, 'rs1', 'rs1');

@@ -81,10 +81,8 @@ class BukubesarController extends Controller
             },'lvl5' => function($sel){
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
-        // ->where('jurnal_postingotom.verif', '=', '1')
-        // ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-        ->whereDate('jurnal_postingotom.tanggal', '>=', $awal)
-        ->whereDate('jurnal_postingotom.tanggal', '<', $akhir)
+        ->where('jurnal_postingotom.verif', '=', '1')
+        ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->where(function($query){
             $query->when(request('q'), function($q){
                 $q->where('notrans', 'like', '%'.request('q').'%')
@@ -95,6 +93,7 @@ class BukubesarController extends Controller
                 ->orWhere('kredit', 'like', '%'.request('q').'%');
             });
         })
+        // ->groupBy('kode6')
         ->get();
 
 
@@ -193,7 +192,8 @@ class BukubesarController extends Controller
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
         ->where('jurnal_postingotom.verif', '=', '1')
-        ->where('jurnal_postingotom.tanggal', '<', $awal)
+        ->whereDate('jurnal_postingotom.tanggal', '<', $awal)
+        // ->whereBetween('jurnal_postingotom.tanggal', [$thn.'-01-01', $awal])
         ->groupBy('tanggal', 'kode6')
         ->orderBy('kode6', 'ASC')
         ->get();
@@ -227,7 +227,8 @@ class BukubesarController extends Controller
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
             }])
         ->where('jurnalumum_heder.verif', '=', '1')
-        ->where('jurnalumum_heder.tanggal', '<', $awal)
+        // ->whereBetween('jurnalumum_heder.tanggal', [$thn.'-01-01', $awal])
+        ->whereDate('jurnalumum_heder.tanggal', '<', $awal)
         ->orderBy('kode6', 'ASC')
         ->get();
 
@@ -257,7 +258,8 @@ class BukubesarController extends Controller
         },'lvl5' => function($sel){
             $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
-        ->where('saldoawal.tglentry', '<', $awal)
+        // ->whereBetween('saldoawal.tglentry', [$thn.'-01-01'. ' 00:00:00', $awal. ' 23:59:59'])
+        ->whereDate('saldoawal.tglentry', '<', $awal)
         ->get();
 
         $data = [

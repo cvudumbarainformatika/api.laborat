@@ -311,7 +311,14 @@ class LaboratController extends Controller
 
     public function getnota()
     {
-        $nota = LaboratMeta::select('nota')->where('noreg', request('noreg'))
+        $nota = LaboratMeta::select('nota')
+            
+            ->where('noreg', request('noreg'))
+            ->where(function ($query) {
+                if (request('isRanap') === true || request('isRanap') === 'true') {
+                    $query->where('unit_pengirim', '!=', 'POL014');
+                }
+            })
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
@@ -347,8 +354,16 @@ class LaboratController extends Controller
 
     public function getdata()
     {
-        $data = LaboratMeta::select('*')->where('noreg', request('noreg'))
-            ->with('details.pemeriksaanlab')->orderBy('id', 'DESC')->get();
+        $data = LaboratMeta::select('*')
+            
+            ->where('noreg', request('noreg'))
+            ->where(function ($query) {
+                if (request('isRanap') === true || request('isRanap') === 'true') {
+                    $query->where('unit_pengirim', '!=', 'POL014');
+                }
+            })
+            ->with('details.pemeriksaanlab')
+            ->orderBy('id', 'DESC')->get();
         return new JsonResponse($data);
     }
 
