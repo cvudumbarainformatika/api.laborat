@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -566,7 +571,8 @@ class PenyesuaianController extends Controller
             'permintaanrinci' => function ($q) use ($kdobat) {
                 $q->with([
                     'mutasi' => function ($mu) use ($kdobat) {
-                        $mu->where('kd_obat', $kdobat);
+                        $mu->where('kd_obat', $kdobat)
+                            ->with('obat:kd_obat,nama_obat,satuan_k');
                     },
                     'masterobat:kd_obat,nama_obat,satuan_k'
                 ])
@@ -583,8 +589,10 @@ class PenyesuaianController extends Controller
             'permintaanrinci' => function ($q) use ($kdobat) {
                 $q->with([
                     'mutasi' => function ($mu) use ($kdobat) {
-                        $mu->where('kd_obat', $kdobat);
-                    }
+                        $mu->where('kd_obat', $kdobat)
+                            ->with('obat:kd_obat,nama_obat,satuan_k');
+                    },
+                    'masterobat:kd_obat,nama_obat,satuan_k'
                 ])
                     ->where('kdobat', $kdobat);
             },
@@ -594,6 +602,67 @@ class PenyesuaianController extends Controller
             ->where('tujuan', $koderuangan)
             ->whereIn('no_permintaan', $noPerMutasiKeluar)
             ->where('tgl_kirim_depo', 'LIKE', '%' . $now  . '%')
+            ->get();
+
+        $norePer = Permintaanresep::select('resep_permintaan_keluar.noresep')
+            ->join('resep_keluar_h',  'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar.noresep')
+            ->where('resep_permintaan_keluar.kdobat', $kdobat)
+            ->whereIn('resep_keluar_h.flag', ['3', '4'])
+            ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $now  . '%')
+            ->where('resep_keluar_h.depo', $koderuangan)
+            ->distinct('resep_permintaan_keluar.noresep')
+            ->pluck('resep_permintaan_keluar.noresep');
+        $norePerRac = Permintaanresepracikan::select('resep_permintaan_keluar_racikan.noresep')
+            ->join('resep_keluar_h',  'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+            ->where('resep_permintaan_keluar_racikan.kdobat', $kdobat)
+            ->whereIn('resep_keluar_h.flag', ['3', '4'])
+            ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $now  . '%')
+            ->where('resep_keluar_h.depo', $koderuangan)
+            ->distinct('resep_permintaan_keluar_racikan.noresep')
+            ->pluck('resep_permintaan_keluar_racikan.noresep');
+        $noreKel = Resepkeluarrinci::select('resep_keluar_r.noresep')
+            ->join('resep_keluar_h',  'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+            ->where('resep_keluar_r.kdobat', $kdobat)
+            ->whereIn('resep_keluar_h.flag', ['3', '4'])
+            ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $now  . '%')
+            ->where('resep_keluar_h.depo', $koderuangan)
+            ->distinct('resep_keluar_r.noresep')
+            ->pluck('resep_keluar_r.noresep');
+        $noreKelRac = Resepkeluarrinciracikan::select('resep_keluar_racikan_r.noresep')
+            ->join('resep_keluar_h',  'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
+            ->where('resep_keluar_racikan_r.kdobat', $kdobat)
+            ->whereIn('resep_keluar_h.flag', ['3', '4'])
+            ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $now  . '%')
+            ->where('resep_keluar_h.depo', $koderuangan)
+            ->distinct('resep_keluar_racikan_r.noresep')
+            ->pluck('resep_keluar_racikan_r.noresep');
+        $noresep = array_unique(array_merge($norePer->toArray(), $norePerRac->toArray(), $noreKel->toArray(), $noreKelRac->toArray()));
+
+        $data['resep'] = Resepkeluarheder::with([
+            'permintaanresep' => function ($q) use ($kdobat) {
+                $q->where('kdobat', $kdobat)
+                    ->with('mobat:kd_obat,nama_obat,satuan_k');
+            },
+            'permintaanracikan' => function ($q) use ($kdobat) {
+                $q->where('kdobat', $kdobat)
+                    ->with('mobat:kd_obat,nama_obat,satuan_k');
+            },
+            'rincian' => function ($q) use ($kdobat) {
+                $q->where('kdobat', $kdobat)
+                    ->with('mobat:kd_obat,nama_obat,satuan_k');
+            },
+            'rincianracik' => function ($q) use ($kdobat) {
+                $q->where('kdobat', $kdobat)
+                    ->with('mobat:kd_obat,nama_obat,satuan_k');
+            },
+            'datapasien:rs1,rs2',
+            'poli:rs1,rs2',
+            'ruanganranap:rs1,rs2',
+        ])
+            ->whereIn('noresep', $noresep)
+            ->whereIn('flag', ['3', '4'])
+            ->where('tgl_selesai', 'LIKE', '%' . $now  . '%')
+            ->where('depo', $koderuangan)
             ->get();
         // end
 

@@ -32,6 +32,7 @@ class Resepkeluarheder extends Model
     {
         return $this->hasMany(Resepkeluarrinci::class, 'noresep', 'noresep');
     }
+
     public function rincianwret()
     {
         return $this->hasMany(Resepkeluarrinci::class, 'noresep', 'noresep');
