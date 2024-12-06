@@ -63,6 +63,7 @@ class PraAnastesiController extends Controller
         
       $data->catatanPersiapanPraAnastesi = $request->catatanPersiapanPraAnastesi;
       $data->kolomTindakLanjut = $request->kolomTindakLanjut;
+      $data->kdruang = $request->kodepoli ?? null;
 
       
       $saved = $data->save();

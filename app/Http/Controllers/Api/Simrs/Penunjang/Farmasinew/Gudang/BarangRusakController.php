@@ -96,6 +96,7 @@ class BarangRusakController extends Controller
                     'nobatch' => $request->no_batch,
                     'kdpbf' => $request->kdpbf ?? '',
                     'kunci' => '',
+                    'gudang' => $request->kd_ruang,
                 ],
                 [
                     'nopenerimaan_default' => $request->nopenerimaan,
@@ -173,12 +174,7 @@ class BarangRusakController extends Controller
     public function hapusData(Request $request)
     {
         $pbf = $request->kdpbf ?? '';
-        $data = BarangRusak::where('kd_obat', $request->kd_obat)
-            ->where('nopenerimaan', $request->nopenerimaan)
-            ->where('nobatch', $request->nobatch)
-            ->where('kdpbf', $pbf)
-            ->where('kunci', '')
-            ->first();
+        $data = BarangRusak::find($request->id);
         if (!$data) {
             return new JsonResponse([
                 'message' => 'Gagal Hapus, Data Tidak Ditemukan'
