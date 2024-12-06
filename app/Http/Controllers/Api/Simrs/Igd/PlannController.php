@@ -8,6 +8,7 @@ use App\Models\Simrs\Planing\Planing_Igd_Lama;
 use App\Models\Simrs\Planing\Planing_Igd_Pulang;
 use App\Models\Simrs\Planing\Planing_Igd_ranap;
 use App\Models\Simrs\Planing\Planing_Igd_Rujukan;
+use App\Models\Simrs\Planing\SkalaTransferIgd;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,13 @@ class PlannController extends Controller
         $cek = Planing_Igd_Lama::where('rs1', $request->noreg)->count();
        if($cek > 0){
         return new JsonResponse(['message' => 'Pasien Ini Sudah Dilakukan Planing'],500);
+       }
+
+       if($request->panel === 'Rawat Inap' || $request->panel === 'Rujuk Ke Rumah Sakit Lain'){
+            $cari = SkalaTransferIgd::where('noreg',$request->noreg)->count();
+                if($cari === 0){
+                    return new JsonResponse(['Maaf SKala Transfer Harus Diisi Terlebih Dahulu...!!'],500);
+                }
        }
 
        DB::beginTransaction();

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Igd\PlannController;
+use App\Http\Controllers\Api\Simrs\Igd\SkalaTransferIgd;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -9,5 +10,8 @@ Route::group([
     'prefix' => 'simrs/planing/igd'
 ],function () {
     Route::post('/simpanranap', [PlannController::class, 'simpanranap']);
+    Route::post('/simpanskalatransfer', [SkalaTransferIgd::class, 'simpan']);
+
+    Route::post('/hapusskalatransfer', [SkalaTransferIgd::class, 'hapusskalatransfer']);
 });
 

@@ -60,6 +60,7 @@ use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Planing\Planing_Igd_Lama;
+use App\Models\Simrs\Planing\SkalaTransferIgd;
 use App\Models\Simrs\Rajal\Igd\Tinjauan_ulang;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -449,5 +450,10 @@ class KunjunganPoli extends Model
     public function tinjauanulang()
     {
         return $this->hasMany(Tinjauan_ulang::class, 'noreg','rs1');
+    }
+
+    public function skalatransfer()
+    {
+        return $this->hasMany(SkalaTransferIgd::class, 'noreg', 'rs1');
     }
 }

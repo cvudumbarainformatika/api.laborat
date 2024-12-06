@@ -217,30 +217,6 @@ class IgdController extends Controller
             'pemeriksaanfisikpsikologidll' => function($pemeriksaanfisikpsikologidll){
                 $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll')->where('kdruang','POL014');
             },
-            // 'taskid' => function ($q) {
-            //     $q->orderBy('taskid', 'DESC');
-            // },
-            // 'planning' => function ($p) {
-            //     $p->with(
-            //         'masterpoli',
-            //         'rekomdpjp',
-            //         'transrujukan',
-            //         'listkonsul',
-            //         'spri',
-            //         'ranap',
-            //         'kontrol',
-            //         'operasi',
-            //     )->orderBy('id', 'DESC');
-            // },
-            // 'edukasi' => function ($x) {
-            //     $x->orderBy('id', 'DESC');
-            // },
-            // 'diet' => function ($diet) {
-            //     $diet->orderBy('id', 'DESC');
-            // },
-            // 'sharing' => function ($sharing) {
-            //     $sharing->orderBy('id', 'DESC');
-            // },
             'newapotekrajal' => function ($newapotekrajal) {
                 $newapotekrajal->with([
                     'permintaanresep.mobat:kd_obat,nama_obat',
@@ -266,7 +242,8 @@ class IgdController extends Controller
                         }
                     ]
                 )->where('kdruang', 'POL014');
-            }
+            },
+            'skalatransfer'
         ])
         ->first();
 
