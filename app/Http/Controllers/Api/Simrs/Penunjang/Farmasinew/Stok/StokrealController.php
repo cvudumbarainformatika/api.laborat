@@ -282,7 +282,10 @@ class StokrealController extends Controller
 
         ])
             ->where('flag', '')
-            ->where('nama_obat', 'like', '%' . request('q') . '%')
+            ->where(function ($x) {
+                $x->where('nama_obat', 'like', '%' . request('q') . '%')
+                    ->orWhere('kd_obat', 'like', '%' . request('q') . '%');
+            })
             ->orderBy('nama_obat', 'ASC')
             ->paginate(request('per_page'));
         // }
@@ -693,6 +696,11 @@ class StokrealController extends Controller
 
     public function simpanFisik(Request $request)
     {
+
+        $request->validate([
+            'kd_obat' => 'required',
+            'kdruang' => 'required',
+        ]);
 
         $data = StokOpnameFisik::updateOrCreate(
             [
