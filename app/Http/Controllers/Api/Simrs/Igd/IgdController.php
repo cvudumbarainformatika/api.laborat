@@ -59,7 +59,9 @@ class IgdController extends Controller
             'rs222.rs8 as sep',
             'gencons.norm as generalconsent',
             'gencons.ttdpasien as ttdpasien',
-            'rs17.rs19 as statpasien'
+            'rs17.rs19 as statpasien',
+            'rs250.rs16 as kategoritriage','rs250.doa as doa'
+
             // 'bpjs_respon_time.taskid as taskid',
             // TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15 . rs16, now()), rs15 . rs16), now(), " Hari ")
         )
@@ -70,6 +72,7 @@ class IgdController extends Controller
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->leftjoin('gencons', 'gencons.norm', '=', 'rs17.rs2')
+            ->leftjoin('rs250', 'rs250.rs1', '=', 'rs17.rs1')
             // ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs17.rs8', 'POL014')
@@ -99,7 +102,20 @@ class IgdController extends Controller
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
             ->with(
-                ['generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien'])
+                ['generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien',
+                'planheder' => function($planheder){
+                $planheder->with([
+                    'planranap' => function($planranap){
+                        $planranap->with(
+                            [
+                                'ruangranap'
+                            ]
+                        );
+                    },
+                    'planrujukan',
+                    'planpulang'
+                ]);
+            },])
             ->groupBy('rs17.rs1')
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
