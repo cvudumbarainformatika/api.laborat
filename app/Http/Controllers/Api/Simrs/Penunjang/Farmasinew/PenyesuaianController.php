@@ -11,6 +11,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use Carbon\Carbon;
@@ -664,6 +666,26 @@ class PenyesuaianController extends Controller
             ->where('tgl_selesai', 'LIKE', '%' . $now  . '%')
             ->where('depo', $koderuangan)
             ->get();
+        $data['operasi'] = [];
+        if ($koderuangan == 'Gd-04010103') {
+            $noperOp = PersiapanOperasiDistribusi::select('persiapan_operasi_distribusis.nopermintaan')
+                ->join('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                ->where('persiapan_operasis.tgl_distribusi', 'Like', '%' . $now . '%')
+                ->distinct('persiapan_operasi_distribusis.nopermintaan')
+                ->pluck('persiapan_operasi_distribusis.nopermintaan');
+            $data['operasi'] = PersiapanOperasi::with([
+                'rinci' => function ($q) use ($kdobat) {
+                    $q->where('kd_obat', $kdobat);
+                },
+                'distribusi' => function ($q) use ($kdobat) {
+                    $q->where('kd_obat', $kdobat);
+                },
+            ])
+                ->whereIn('nopermintaan', $noperOp)
+                ->whereIn('flag', ['3', '4'])
+                ->get();
+        }
         // end
 
 
