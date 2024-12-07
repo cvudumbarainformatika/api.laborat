@@ -474,10 +474,17 @@ class CpptController extends Controller
         
         $data = null;
         if ($request->id !== null) {
-          $data = PemeriksaanUmum::find($request->id);
+          $cek = PemeriksaanUmum::find($request->id);
+          if (!$cek) {
+            $data = new PemeriksaanUmum();
+          } else{
+            $data = $cek;
+          }
         } else {
           $data = new PemeriksaanUmum();
         }
+
+        // return $cek = PemeriksaanUmum::find($request->id);
 
         $data->rs1 = $request->noreg;
         $data->rs2 = $request->norm;
@@ -685,7 +692,7 @@ class CpptController extends Controller
           ]
         );
 
-        if ($request->id === null) {
+        if ($data->id) {
           Cppt::find($request->id_cppt)->update([
             'rs253_id' => $data->id,
           ]);
