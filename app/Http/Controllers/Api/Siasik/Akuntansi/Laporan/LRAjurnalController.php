@@ -21,7 +21,7 @@ class LRAjurnalController extends Controller
         $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $awal=request('tgl', 'Y-m-d');
         $akhir=request('tglx', 'Y-m-d');
-        $sebelum = date( 'Y-m-d', strtotime( $awal . ' -1 day' ) );
+        $sebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay();
         $thnakhir=Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
         if($thn !== $thnakhir){
          return response()->json(['message' => 'Tahun Tidak Sama'], 500);
@@ -94,8 +94,6 @@ class LRAjurnalController extends Controller
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
         ->where('jurnal_postingotom.verif', '=', '1')
-        // ->whereDate('tanggal', '>=', $awal)
-        // ->whereDate('tanggal', '<=', $akhir)
         ->with('penyesuaian',  function($sel) use ($awal,$akhir){
             $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
             ->select('jurnalumum_rinci.kodepsap13',
@@ -120,13 +118,13 @@ class LRAjurnalController extends Controller
             )
         ->where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
         ->where('jurnal_postingotom.verif', '=', '1')
-        ->whereDate('tanggal', '<', $awal)
-        ->with('penyesuaian',  function($sel) use ($awal,$akhir){
+        ->whereBetween('tanggal', [$thn.'-01-01', $sebelum])
+        ->with('penyesuaian',  function($sel) use ($thn, $sebelum){
             $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
             ->select('jurnalumum_heder.tanggal',
                     DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian'))
             ->where('jurnalumum_heder.verif', '=', '1')
-            ->whereDate('jurnalumum_heder.tanggal', '<', $awal)
+            ->whereBetween('jurnalumum_heder.tanggal', [$thn.'-01-01', $sebelum])
             ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
             ->groupBy( 'kodepsap13');
         })
@@ -191,10 +189,8 @@ class LRAjurnalController extends Controller
                 $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }])
         ->where('jurnal_postingotom.verif', '=', '1')
-        ->whereDate('jurnal_postingotom.tanggal', '<', $awal)
+        ->whereBetween('jurnal_postingotom.tanggal', [$thn.'-01-01', $sebelum])
         ->where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
-        // ->where('jurnal_postingotom.tanggal', '>=', $awal)
-        // ->where('jurnal_postingotom.tanggal', '<', $akhir)
         ->groupBy( 'kode6')
         ->orderBy('kode6', 'asc')
         ->get();
@@ -231,7 +227,7 @@ class LRAjurnalController extends Controller
                 'silpa.uraian50 as uraian',
                 'silpa.tanggal',
                 DB::raw('sum(silpa.nominal) as nilaisblm'))
-        ->whereDate('tanggal', '<', $awal)
+        ->whereBetween('tanggal', [$thn.'-01-01', $sebelum])
         ->groupBy('silpa.koderek50')
         ->get();
 
