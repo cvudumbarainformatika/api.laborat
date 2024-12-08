@@ -16,6 +16,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\TutupOpname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Ranap\Mruangranap;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -238,7 +239,10 @@ class StokrealController extends Controller
     {
         if (!request('from')) return [];
 
-
+        $now = Carbon::create(request('from'))->format('Y-m');
+        $kdop = Stokopname::select('kdobat')->where('tglopname', 'LIKE', '%' . $now . '%')->distinct('kdobat')->pluck('kdobat');
+        $fis = StokOpnameFisik::select('kdobat')->where('tglopname', 'LIKE', '%' . $now . '%')->distinct('kdobat')->pluck('kdobat');
+        $sm = array_unique(array_merge($kdop->toArray(), $fis->toArray()));
         $stokreal = Mobatnew::select(
             'kd_obat',
             'nama_obat',
@@ -286,6 +290,9 @@ class StokrealController extends Controller
                 $x->where('nama_obat', 'like', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'like', '%' . request('q') . '%');
             })
+            ->when(count($sm) > 0, function ($q) use ($sm) {
+                $q->whereIn('kd_obat', $sm);
+            })
             ->orderBy('nama_obat', 'ASC')
             ->paginate(request('per_page'));
         // }
@@ -293,6 +300,7 @@ class StokrealController extends Controller
         $data['data'] = $raw['data'];
         $data['meta'] = $raw->except('data');
         $data['now'] = date('Y-m-d H:i:s');
+        $data['nowx'] = $now;
         // $data['stokreal'] = $stokreal;
 
         return new JsonResponse($data);
@@ -710,12 +718,36 @@ class StokrealController extends Controller
             ],
             [
                 'jumlah' => $request->fisik,
+                'keterangan' => $request->keterangan,
 
             ]
         );
 
         return new JsonResponse([
             'message' => 'Stok Fisik sudah disimpan',
+            'data' => $data,
+            'req' => $request->all()
+        ]);
+    }
+    public function simpanKeterangan(Request $request)
+    {
+        // return $request->all();
+        $request->validate([
+            'idfisik' => 'required',
+        ]);
+
+        $data = StokOpnameFisik::find($request->idfisik);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Stok Fisik tidak ditemukan',
+            ]);
+        }
+        $data->update([
+            'keterangan' => $request->keterangan
+        ]);
+
+        return new JsonResponse([
+            'message' => 'Keterangan sudah disimpan',
             'data' => $data,
             'req' => $request->all()
         ]);
