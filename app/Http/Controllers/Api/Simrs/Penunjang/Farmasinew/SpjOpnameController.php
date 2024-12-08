@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Jabatan;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Stok\SpjOpname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokopname;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFisik;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -124,10 +126,47 @@ class SpjOpnameController extends Controller
     }
     public function simpanPernyataan(Request $request)
     {
-        return new JsonResponse($request->all());
+        $request->validate([
+            'tglopname' => 'required',
+            'no_sp' => 'required',
+        ]);
+        $data = SpjOpname::where('tglopname', '=', $request->tglopname)->first();
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan'
+            ], 410);
+        }
+        $data->update([
+            'no_sp' => $request->no_sp,
+            'tgl_mulai' => $request->tgl_mulai,
+            'tgl_selesai' => $request->tgl_selesai,
+        ]);
+        return new JsonResponse([
+            'message' => 'Data berhasil disimpan',
+            'data' => $data,
+            'req' => $request->all(),
+        ]);
     }
     public function simpanBa(Request $request)
     {
-        return new JsonResponse($request->all());
+        $request->validate([
+            'tglopname' => 'required',
+            'no_ba' => 'required',
+            'peg_id_pj_so' => 'required',
+        ]);
+        $data = SpjOpname::updateOrCreate([
+            'tglopname' => $request->tglopname,
+        ], $request->all());
+        return new JsonResponse([
+            'message' => 'Data berhasil disimpan',
+            'data' => $data,
+            'req' => $request->all()
+        ]);
+    }
+    public function getSpj()
+    {
+        $now = Carbon::create(request('tglopname'))->format('Y-m-d');
+        $data = SpjOpname::where('tglopname', '=', $now)->first();
+        return new JsonResponse($data);
     }
 }
