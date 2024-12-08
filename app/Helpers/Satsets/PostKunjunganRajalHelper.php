@@ -539,7 +539,7 @@ class PostKunjunganRajalHelper
 
     public static function kirimKunjungan($data)
     {
-        // return $data;
+        return $data;
       $pasien_uuid = $data->pasien_uuid;
       $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
     //   $apoteker_uuid = $data->apotek ? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
@@ -557,10 +557,10 @@ class PostKunjunganRajalHelper
 
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
-      if ($send['message'] === 'success') {
-        $token = AuthSatsetHelper::accessToken();
-        $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-      }
+    //   if ($send['message'] === 'success') {
+    //     $token = AuthSatsetHelper::accessToken();
+    //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+    //   }
       return $send;
     }
 
@@ -7473,7 +7473,7 @@ class PostKunjunganRajalHelper
                     "request" => ["method" => "POST", "url" => "MedicationRequest"],
                 ],
 
-
+                // QuestionnaireResponse
                 [
                     "fullUrl" => "urn:uuid:68ddb082-2775-4545-a0f3-705b463fcd97",
                     "resource" => [
