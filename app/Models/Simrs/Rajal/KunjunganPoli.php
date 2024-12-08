@@ -49,6 +49,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
@@ -455,5 +456,10 @@ class KunjunganPoli extends Model
     public function skalatransfer()
     {
         return $this->hasMany(SkalaTransferIgd::class, 'noreg', 'rs1');
+    }
+
+    public function telaahresep()
+    {
+       return $this->hasOne(TelaahResep::class, 'noreg', 'rs1');
     }
 }

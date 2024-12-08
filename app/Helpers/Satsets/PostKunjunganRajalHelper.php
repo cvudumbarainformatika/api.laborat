@@ -12,6 +12,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Allergy;
 use App\Models\Simrs\Master\MkuSnomed;
 use App\Models\Simrs\Master\Msnomed;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -254,7 +255,9 @@ class PostKunjunganRajalHelper
             'neonatuskeperawatan',
             'pediatri',
             'diet',
-
+            'telaahresep'=>function($t){
+                $t->with('petugas:id,nama,satset_uuid');
+            },
             'laborats' => function ($t) {
                 $t->with([
                     'details' => function ($d) {
@@ -498,6 +501,9 @@ class PostKunjunganRajalHelper
             'neonatuskeperawatan',
             'pediatri',
             'diet',
+            'telaahresep'=>function($t){
+                $t->with('petugas:id,nama,satset_uuid');
+            },
             'laborats' => function ($t) {
                 $t->with([
                     'details' => function ($d) {
@@ -539,10 +545,10 @@ class PostKunjunganRajalHelper
 
     public static function kirimKunjungan($data)
     {
-        return $data;
+        // return $data;
       $pasien_uuid = $data->pasien_uuid;
       $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
-    //   $apoteker_uuid = $data->apotek ? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
+        //   $apoteker_uuid = $data->apotek ? ($data->apotek['petugas'] ? $data->apotek['petugas']['satset_uuid'] : null): null;
 
       if (!$pasien_uuid) {
         $getPasienFromSatset = self::getPasienByNikSatset($data);
@@ -557,10 +563,10 @@ class PostKunjunganRajalHelper
 
 
       $send = self::form($data, $pasien_uuid, $practitioner_uuid);
-    //   if ($send['message'] === 'success') {
-    //     $token = AuthSatsetHelper::accessToken();
-    //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-    //   }
+      if ($send['message'] === 'success') {
+        $token = AuthSatsetHelper::accessToken();
+        $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+      }
       return $send;
     }
 
@@ -734,8 +740,10 @@ class PostKunjunganRajalHelper
         $diet = self::diet($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id);
         $laborats = self::laborats($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid, $organization_id, $specimenSnomeds);
         $anamnesis = self::anamnesis($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $telaah = self::telaah($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
+        $riwayatPengobatan = self::riwayatPengobatan($request, $encounter, $tgl_kunjungan, $practitioner, $pasien_uuid);
 
-        // return $anamnesis;
+        // return $riwayatPengobatan;
 
         $body =
         [
@@ -968,8 +976,17 @@ class PostKunjunganRajalHelper
         // PUSH PROGNOSIS
         if ($plann['prognosis'] !== null) array_push($body['entry'], $plann['prognosis']);
 
-        // return $body;
+        // PUSH QUESTIONER_RESPONSE
+        if ($telaah !== null) array_push($body['entry'], $telaah);
 
+
+        // PUSH MEDICATION STATEMENT
+        if ($riwayatPengobatan !== null){
+            for ($i=0; $i < count($riwayatPengobatan) ; $i++) { 
+                array_push($body['entry'], $riwayatPengobatan[$i]);
+            }
+        }
+        
 
         $send['message'] = 'success';
         $send['data'] = $body;
@@ -1675,7 +1692,7 @@ class PostKunjunganRajalHelper
                             ],
                             "subject" => [
                                 "reference" => "Patient/$pasien_uuid",
-                                "display" => "",
+                                "display" => $request->nama,
                             ],
                             "encounter" => [
                                 "reference" => "urn:uuid:$encounter",
@@ -3848,6 +3865,447 @@ class PostKunjunganRajalHelper
         return $data;
         
         
+    }
+
+    static function telaah($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        $telaah = $request->telaahresep;
+        // return $telaah['petugas']['satset_uuid'];
+        $data = null;
+        if ($telaah) {
+            if (!$telaah['petugas']) {
+                $data=null;
+            }
+
+            $items=[];
+
+            foreach ($telaah['administrasi'] as $key => $value) {
+                $det=
+                    [
+                        "linkId" => $value['kode'],
+                        "text" => $value['question'],
+                        "answer" => [
+                            [
+                                "valueCoding" => [
+                                    "system" =>
+                                        "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                                    "code" => "OV000052",
+                                    "display" => $value['value'],
+                                ],
+                            ],
+                        ],
+                    ];
+                array_push($items,$det);
+            }
+
+            $data =
+            [
+                "fullUrl" => "urn:uuid:".self::generateUuid(),
+                "resource" => [
+                    "resourceType" => "QuestionnaireResponse",
+                    "questionnaire" =>
+                        "https://fhir.kemkes.go.id/Questionnaire/Q0007",
+                    "status" => "completed",
+                    "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                    "encounter" => ["reference" => "urn:uuid:".$encounter],
+                    "authored" => Carbon::parse($telaah['created_at'])->toIso8601String(),
+                    "author" => [
+                        "reference" => "Practitioner/".$telaah['petugas']['satset_uuid'],
+                        "display" => $telaah['petugas']['nama'],
+                    ],
+                    "source" => ["reference" => "Patient/".$pasien_uuid],
+                    "item" => [
+                        [
+                            "linkId" => "1",
+                            "text" => "Persyaratan Administrasi",
+                            'item'=> $items,
+
+                            // "item" => 
+                            // [
+                            //     [
+                            //         "linkId" => "1.1",
+                            //         "text" =>
+                            //             "Apakah nama, umur, jenis kelamin, berat badan dan tinggi badan pasien sudah sesuai?",
+                            //         "answer" => [
+                            //             [
+                            //                 "valueCoding" => [
+                            //                     "system" =>
+                            //                         "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                     "code" => "OV000052",
+                            //                     "display" => "Sesuai",
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //     ],
+                            //     [
+                            //         "linkId" => "1.2",
+                            //         "text" =>
+                            //             "Apakah nama, nomor ijin, alamat dan paraf dokter sudah sesuai?",
+                            //         "answer" => [
+                            //             [
+                            //                 "valueCoding" => [
+                            //                     "system" =>
+                            //                         "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                     "code" => "OV000052",
+                            //                     "display" => "Sesuai",
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //     ],
+                            //     [
+                            //         "linkId" => "1.3",
+                            //         "text" => "Apakah tanggal resep sudah sesuai?",
+                            //         "answer" => [
+                            //             [
+                            //                 "valueCoding" => [
+                            //                     "system" =>
+                            //                         "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                     "code" => "OV000052",
+                            //                     "display" => "Sesuai",
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //     ],
+                            //     [
+                            //         "linkId" => "1.4",
+                            //         "text" =>
+                            //             "Apakah ruangan/unit asal resep sudah sesuai?",
+                            //         "answer" => [
+                            //             [
+                            //                 "valueCoding" => [
+                            //                     "system" =>
+                            //                         "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                     "code" => "OV000052",
+                            //                     "display" => "Sesuai",
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //     ],
+                            //     [
+                            //         "linkId" => "2",
+                            //         "text" => "Persyaratan Farmasetik",
+                            //         "item" => [
+                            //             [
+                            //                 "linkId" => "2.1",
+                            //                 "text" =>
+                            //                     "Apakah nama obat, bentuk dan kekuatan sediaan sudah sesuai?",
+                            //                 "answer" => [
+                            //                     [
+                            //                         "valueCoding" => [
+                            //                             "system" =>
+                            //                                 "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                             "code" => "OV000052",
+                            //                             "display" => "Sesuai",
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "2.2",
+                            //                 "text" =>
+                            //                     "Apakah dosis dan jumlah obat sudah sesuai?",
+                            //                 "answer" => [
+                            //                     [
+                            //                         "valueCoding" => [
+                            //                             "system" =>
+                            //                                 "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                             "code" => "OV000052",
+                            //                             "display" => "Sesuai",
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "2.3",
+                            //                 "text" =>
+                            //                     "Apakah stabilitas obat sudah sesuai?",
+                            //                 "answer" => [
+                            //                     [
+                            //                         "valueCoding" => [
+                            //                             "system" =>
+                            //                                 "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                             "code" => "OV000052",
+                            //                             "display" => "Sesuai",
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "2.4",
+                            //                 "text" =>
+                            //                     "Apakah aturan dan cara penggunaan obat sudah sesuai?",
+                            //                 "answer" => [
+                            //                     [
+                            //                         "valueCoding" => [
+                            //                             "system" =>
+                            //                                 "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                             "code" => "OV000052",
+                            //                             "display" => "Sesuai",
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //         ],
+                            //     ],
+                            //     [
+                            //         "linkId" => "3",
+                            //         "text" => "Persyaratan Klinis",
+                            //         "item" => [
+                            //             [
+                            //                 "linkId" => "3.1",
+                            //                 "text" =>
+                            //                     "Apakah ketepatan indikasi, dosis, dan waktu penggunaan obat sudah sesuai?",
+                            //                 "answer" => [
+                            //                     [
+                            //                         "valueCoding" => [
+                            //                             "system" =>
+                            //                                 "http://terminology.kemkes.go.id/CodeSystem/clinical-term",
+                            //                             "code" => "OV000052",
+                            //                             "display" => "Sesuai",
+                            //                         ],
+                            //                     ],
+                            //                 ],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "3.2",
+                            //                 "text" =>
+                            //                     "Apakah terdapat duplikasi pengobatan?",
+                            //                 "answer" => [["valueBoolean" => false]],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "3.3",
+                            //                 "text" =>
+                            //                     "Apakah terdapat alergi dan reaksi obat yang tidak dikehendaki (ROTD)?",
+                            //                 "answer" => [["valueBoolean" => false]],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "3.4",
+                            //                 "text" =>
+                            //                     "Apakah terdapat kontraindikasi pengobatan?",
+                            //                 "answer" => [["valueBoolean" => false]],
+                            //             ],
+                            //             [
+                            //                 "linkId" => "3.5",
+                            //                 "text" =>
+                            //                     "Apakah terdapat dampak interaksi obat?",
+                            //                 "answer" => [["valueBoolean" => false]],
+                            //             ],
+                            //         ],
+                            //     ],
+                            // ],
+                        ],
+                    ],
+                ],
+                "request" => ["method" => "POST", "url" => "QuestionnaireResponse"],
+            ];
+
+
+
+
+        }
+
+        return $data;
+    }
+    static function riwayatPengobatan($request, $encounter, $tgl_kunjungan, $practitioner_uuid, $pasien_uuid)
+    {
+        $pasien = $request->norm;
+
+        // $resepKeluar = Resepkeluarheder::select('norm','noresep','created_at')
+        //     ->where('noreg', '!=', $request->noreg)->where('norm', $pasien)
+        //     ->whereIn('flag', ['3', '4'])
+        //     ->with([
+        //         'rincian' => function ($ri) {
+        //                 $ri->select(
+        //                     'resep_keluar_r.kdobat',
+        //                     'resep_keluar_r.noresep',
+        //                     'resep_keluar_r.jumlah',
+        //                     'resep_keluar_r.aturan', // signa
+        //                     'resep_keluar_r.konsumsi', // signa
+        //                     'resep_keluar_r.keterangan', // signa
+        //                     'retur_penjualan_r.jumlah_retur',
+        //                     'signa.jumlah as konsumsi_perhari',
+        //                     DB::raw('
+        //                     CASE
+        //                     WHEN retur_penjualan_r.jumlah_retur IS NOT NULL THEN resep_keluar_r.jumlah - retur_penjualan_r.jumlah_retur
+        //                     ELSE resep_keluar_r.jumlah
+        //                     END as qty
+        //                     ') // iki jumlah obat sing non racikan mas..
+        //                 )
+        //                     ->leftJoin('retur_penjualan_r', function ($jo) {
+        //                         $jo->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat')
+        //                             ->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep');
+        //                     })
+        //                     ->leftJoin('signa', 'signa.signa', '=', 'resep_keluar_r.aturan')
+        //                     ->with([
+        //                         'mobat.kfa' // sing nang kfa iki jupuk kolom dosage_form karo active_ingredients
+        //                         // 'mobat:kelompok_psikotropika' // flag obat narkotika, 1 = obat narkotika
+        //                         // 'mobat:bentuk_sediaan' // bisa dijadikan patoka apakah obat minum, injeksi atau yang lain, cuma perlu di bicarakan dengan farmasi untuk detailnya
+        //                     ]);
+        //             }
+        //     ])
+        //     ->orderBy('created_at', 'desc')
+        //     ->get();
+
+        // return $resepKeluar;
+
+
+        $token = AuthSatsetHelper::accessToken();
+      
+        $params = '/MedicationDispense?subject='.$pasien_uuid; 
+
+        $send = BridgingSatsetHelper::get_data_nosave($token, $params);
+        
+
+
+
+        $data = null;
+        if ($send['total'] > 0) {
+            // if (!$telaah['petugas']) {
+            //     $data=null;
+            // }
+
+            // $items=[];
+
+            // return $send['entry'];
+
+            $data=[];
+
+            foreach ($send['entry'] as $key => $value) {
+                // return $value['resource'];
+                $xx =
+                [
+                    "fullUrl" => "urn:uuid:".self::generateUuid(),
+                    "resource" => [
+                        "resourceType" => "MedicationStatement",
+                        // "contained" => [
+                        //     [
+                        //         "code" => [
+                        //             "coding" => [
+                        //                 [
+                        //                     "code" => "93002313",
+                        //                     "display" => "Paracetamol 500 mg Tablet (PAMOL)",
+                        //                     "system" => "http://sys-ids.kemkes.go.id/kfa",
+                        //                 ],
+                        //             ],
+                        //         ],
+                        //         "extension" => [
+                        //             [
+                        //                 "url" =>
+                        //                     "https://fhir.kemkes.go.id/r4/StructureDefinition/MedicationType",
+                        //                 "valueCodeableConcept" => [
+                        //                     "coding" => [
+                        //                         [
+                        //                             "code" => "NC",
+                        //                             "display" => "Non-compound",
+                        //                             "system" =>
+                        //                                 "http://terminology.kemkes.go.id/CodeSystem/medication-type",
+                        //                         ],
+                        //                     ],
+                        //                 ],
+                        //             ],
+                        //         ],
+                        //         "form" => [
+                        //             "coding" => [
+                        //                 [
+                        //                     "code" => "BS066",
+                        //                     "display" => "Tablet",
+                        //                     "system" =>
+                        //                         "http://terminology.kemkes.go.id/CodeSystem/medication-form",
+                        //                 ],
+                        //             ],
+                        //         ],
+                        //         "id" => "2024070141486-med001",
+                        //         "identifier" => [
+                        //             [
+                        //                 "system" =>
+                        //                     "http://sys-ids.kemkes.go.id/medication/{{Org_id}}",
+                        //                 "use" => "official",
+                        //                 "value" => "2024070141486-med001",
+                        //             ],
+                        //         ],
+                        //         "ingredient" => [
+                        //             [
+                        //                 "isActive" => true,
+                        //                 "itemCodeableConcept" => [
+                        //                     "coding" => [
+                        //                         [
+                        //                             "code" => "91000101",
+                        //                             "display" => "Paracetamol",
+                        //                             "system" => "http://sys-ids.kemkes.go.id/kfa",
+                        //                         ],
+                        //                     ],
+                        //                 ],
+                        //                 "strength" => [
+                        //                     "denominator" => [
+                        //                         "code" => "TAB",
+                        //                         "system" =>
+                        //                             "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                        //                         "unit" => "Tablet",
+                        //                         "value" => 1,
+                        //                     ],
+                        //                     "numerator" => [
+                        //                         "code" => "mg",
+                        //                         "system" => "http://unitsofmeasure.org",
+                        //                         "value" => 500,
+                        //                     ],
+                        //                 ],
+                        //             ],
+                        //         ],
+                        //         "batch" => [
+                        //             "lotNumber" => "1625042A",
+                        //             "expirationDate" => "2025-07-28",
+                        //         ],
+                        //         "meta" => [
+                        //             "profile" => [
+                        //                 "https://fhir.kemkes.go.id/r4/StructureDefinition/Medication",
+                        //             ],
+                        //         ],
+                        //         "resourceType" => "Medication",
+                        //         "status" => "active",
+                        //     ],
+                        // ],
+                        "status" => "completed",
+                        "category" => [
+                            "coding" => [
+                                [
+                                    "system" =>
+                                        "http://terminology.hl7.org/CodeSystem/medication-statement-category",
+                                    "code" => "community",
+                                    "display" => "Community",
+                                ],
+                            ],
+                        ],
+                        "medicationReference" => [
+                            "reference" => $value['resource']['medicationReference']['reference'],
+                            "display" => $value['resource']['medicationReference']['display'],
+                        ],
+                        "subject" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                        // "dosage" => [
+                        //     [
+                        //         "text" => "Parasetamol 500 mg diminum 3x sehari",
+                        //         "timing" => [
+                        //             "repeat" => [
+                        //                 "frequency" => 3,
+                        //                 "period" => 1,
+                        //                 "periodUnit" => "d",
+                        //             ],
+                        //         ],
+                        //     ],
+                        // ],
+                        // "effectiveDateTime" => "2023-01-23T18:00:00+00:00",
+                        // "dateAsserted" => "2023-06-04T05:40:00+00:00",
+                        "informationSource" => ["reference" => "Patient/".$pasien_uuid, "display" => $request->nama],
+                        "context" => ["reference" => "Encounter/".$encounter],
+                    ],
+                    "request" => ["method" => "POST", "url" => "MedicationStatement"],
+                ];
+
+                array_push($data, $xx);
+            }
+
+        }
+
+        return $data;
     }
 
    
