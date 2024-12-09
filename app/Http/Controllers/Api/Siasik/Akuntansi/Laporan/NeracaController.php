@@ -350,6 +350,124 @@ class NeracaController extends Controller
         ->orderBy('akun50_2024.kodeall3', 'asc')
         ->get();
 
+        $utang = Akun50_2024::select(
+            'akun50_2024.kodeall3',
+            'akun50_2024.uraian',
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kodex'),
+        )
+        ->with(['kode3' => function($sel){
+            $sel->select('akun50_2024.kodeall2','akun50_2024.uraian');
+        },'saldoawal'=>function($sa) use ($awal,$akhir){
+            $sa->select(
+                'saldoawal.tglentry as tanggal',
+                'saldoawal.kodepsap13',
+                DB::raw('ifnull(sum(saldoawal.kredit-saldoawal.debit),0) as saldo')
+            ) ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+            ->groupBy( 'saldoawal.kodepsap13');
+        },'jurnalotom' => function($x) use ($awal,$akhir){
+            $x->select(
+                'jurnal_postingotom.kode',
+                DB::raw('ifnull(sum(jurnal_postingotom.kredit-jurnal_postingotom.debit),0) as totaljurnal'),
+            )->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+            ->where('jurnal_postingotom.verif', '=', '1')
+            ->groupBy( 'jurnal_postingotom.kode');
+        },
+        'penyesuaianx' =>  function($sel) use ($awal,$akhir){
+            $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
+            ->select('jurnalumum_rinci.kodepsap13',
+                    'jurnalumum_heder.tanggal',
+                    DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian')
+                    )
+            ->where('jurnalumum_heder.verif', '=', '1')
+            ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+            ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+            ->groupBy( 'jurnalumum_rinci.kodepsap13');
+        }])
+        ->where('akun50_2024.kodeall3', 'LIKE', '2.1.06' . '%')
+        ->orWhere('akun50_2024.kodeall3', 'LIKE', '2.1.07' . '%')
+        ->orWhere('akun50_2024.kodeall3', 'LIKE', '2.1.05' . '%')
+        ->orderBy('akun50_2024.kodeall3', 'asc')
+        ->get();
+
+
+        $utangjkpanjang = Akun50_2024::select(
+            'akun50_2024.kodeall3',
+            'akun50_2024.uraian',
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kodex'),
+        )
+        ->with(['kode3' => function($sel){
+            $sel->select('akun50_2024.kodeall2','akun50_2024.uraian');
+        },'saldoawal'=>function($sa) use ($awal,$akhir){
+            $sa->select(
+                'saldoawal.tglentry as tanggal',
+                'saldoawal.kodepsap13',
+                DB::raw('ifnull(sum(saldoawal.kredit-saldoawal.debit),0) as saldo')
+            ) ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+            ->groupBy( 'saldoawal.kodepsap13');
+        },'jurnalotom' => function($x) use ($awal,$akhir){
+            $x->select(
+                'jurnal_postingotom.kode',
+                DB::raw('ifnull(sum(jurnal_postingotom.kredit-jurnal_postingotom.debit),0) as totaljurnal'),
+            )->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+            ->where('jurnal_postingotom.verif', '=', '1')
+            ->groupBy( 'jurnal_postingotom.kode');
+        },
+        'penyesuaianx' =>  function($sel) use ($awal,$akhir){
+            $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
+            ->select('jurnalumum_rinci.kodepsap13',
+                    'jurnalumum_heder.tanggal',
+                    DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian')
+                    )
+            ->where('jurnalumum_heder.verif', '=', '1')
+            ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+            ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+            ->groupBy( 'jurnalumum_rinci.kodepsap13');
+        }])
+        ->where('akun50_2024.kodeall3', 'LIKE', '2.2.' . '%')
+        ->orderBy('akun50_2024.kodeall3', 'asc')
+        ->get();
+
+        $ekuitas = Akun50_2024::select(
+            'akun50_2024.kodeall3',
+            'akun50_2024.uraian',
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kodex'),
+        )
+        ->with(['kode3' => function($sel){
+            $sel->select('akun50_2024.kodeall2','akun50_2024.uraian');
+        },'saldoawal'=>function($sa) use ($awal,$akhir){
+            $sa->select(
+                'saldoawal.tglentry as tanggal',
+                'saldoawal.kodepsap13',
+                DB::raw('ifnull(sum(saldoawal.kredit-saldoawal.debit),0) as saldo')
+            ) ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+            ->groupBy( 'saldoawal.kodepsap13');
+        },'jurnalotom' => function($x) use ($awal,$akhir){
+            $x->select(
+                'jurnal_postingotom.kode',
+                DB::raw('ifnull(sum(jurnal_postingotom.kredit-jurnal_postingotom.debit),0) as totaljurnal'),
+            )->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+            ->where('jurnal_postingotom.verif', '=', '1')
+            ->groupBy( 'jurnal_postingotom.kode');
+        },
+        'penyesuaianx' =>  function($sel) use ($awal,$akhir){
+            $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
+            ->select('jurnalumum_rinci.kodepsap13',
+                    'jurnalumum_heder.tanggal',
+                    DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian')
+                    )
+            ->where('jurnalumum_heder.verif', '=', '1')
+            ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+            ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+            ->groupBy( 'jurnalumum_rinci.kodepsap13');
+        }])
+        ->where('akun50_2024.kodeall3', 'LIKE', '3.1.' . '%')
+        // ->orWhere('akun50_2024.kodeall3', 'LIKE', '3.1.03' . '%')
+        ->orderBy('akun50_2024.kodeall3', 'asc')
+        ->get();
         $data = [
             'setarakas' => $setarakas,
             'retribusi' => $retribusi,
@@ -359,7 +477,10 @@ class NeracaController extends Controller
             'persediaan' => $persediaan,
             'investasi' => $investasi,
             'asettetap' => $asettetap,
-            'asetlainnya' => $asetlainnya
+            'asetlainnya' => $asetlainnya,
+            'utang' => $utang,
+            'utangjkpanjang' => $utangjkpanjang,
+            'ekuitas' => $ekuitas
         ];
         return new JsonResponse ($data);
     }
