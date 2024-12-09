@@ -3,20 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Pelayanan\Cppt;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class PercobaanController extends Controller
 {
-  public function index()
-  {
-    $data = self::kunjunganpasien();
-    dd($data);
-    // return $data;
-  }
+    public function index()
+    {
+        $data = self::kunjunganpasien();
+        dd($data);
+        // return $data;
+    }
 
-  public static function kunjunganpasien()
+    public static function kunjunganpasien()
     {
         // return request()->page;
         // coba lagi
@@ -149,5 +150,12 @@ class PercobaanController extends Controller
             // ->paginate(25);
 
         return $data->toSql();
+    }
+
+    public function updateTable()
+    {
+       $cppt = Cppt::where('user','D907')->update([
+            'user' => 'D899']);
+        echo $cppt;
     }
 }
