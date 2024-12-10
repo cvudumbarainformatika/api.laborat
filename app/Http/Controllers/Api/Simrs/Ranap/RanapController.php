@@ -53,6 +53,7 @@ class RanapController extends Controller
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
             'rs23.rs24 as prognosis', // PROGNOSIS
+            'rs27.rs2 as prognosa', // PROGNOSIS
             'rs23.rs25 as sebabkematian', // Diagnosa Penyebab Meninggal
             'rs23.rs26 as diagakhir', // Diagnosa Utama
             'rs23.rs27 as tindaklanjut', // tindaklanjut
@@ -102,6 +103,7 @@ class RanapController extends Controller
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
+            ->leftjoin('rs27', 'rs27.rs1', 'rs23.rs24') // master prognosis
 
 
             ->where(function ($query) use ($ruangan) {
