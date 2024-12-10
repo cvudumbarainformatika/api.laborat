@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Hutang\HutangKonsinyasiController;
 use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Hutang\HutangObatPesan;
 use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Hutang\MutasiHutangObat;
+use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Penerimaan\PenerimaanObatController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -17,4 +18,6 @@ Route::group([
 
 
     Route::get('/reportMutasiHutangObat', [MutasiHutangObat::class, 'reportMutasiHutangObat']);
+    Route::get('/caripenerimaanobat', [PenerimaanObatController::class, 'caripenerimaanobat']);
+
 });
