@@ -375,6 +375,7 @@ class EresepController extends Controller
             'kodeobat' => 'required',
             // 'jumlah' => 'required',
             'kdruangan' => 'required',
+            'aturan' => 'required',
         ]);
         $sudahAda = Resepkeluarheder::where('noresep', $request->noresep)->first();
         if ($sudahAda) {
