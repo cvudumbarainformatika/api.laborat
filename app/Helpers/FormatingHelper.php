@@ -216,6 +216,15 @@ class FormatingHelper
         }
         return $has . $n . "-" . date("d") . "" . date("m") . "" . date("Y") . "-" . $kode;
     }
+    public static function pengembalian($n)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 5 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $has . $n . "/" . date("d") . "" . date("m") . "" . date("Y") . "/PP";
+    }
 
     public static function antrian($n, $kode)
     {

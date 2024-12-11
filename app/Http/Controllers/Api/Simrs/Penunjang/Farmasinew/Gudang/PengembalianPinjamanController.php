@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Gudang;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Pengembalian;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PengembalianRinci;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PengembalianPinjamanController extends Controller
 {
@@ -33,8 +38,9 @@ class PengembalianPinjamanController extends Controller
             ->where('jenis_penerimaan', 'Pinjaman')
             ->where('kdpbf', request('kdpbf'))
             ->with(
-                'penerimaanrinci:nopenerimaan,harga_netto_kecil,kdobat,jml_terima_k',
-                'penerimaanrinci.masterobat:kd_obat,nama_obat,satuan_k'
+                'penerimaanrinci:id as id_rincipenerimaan,nopenerimaan,harga_netto_kecil as harga,no_batch,kdobat,jml_terima_k',
+                'penerimaanrinci.masterobat:kd_obat,nama_obat,satuan_k',
+                'penerimaanrinci.pengembalian_rinci',
             )
             ->where('kunci', '1')
             ->get();
@@ -42,5 +48,84 @@ class PengembalianPinjamanController extends Controller
             'data' => $data,
             'req' => request()->all(),
         ]);
+    }
+    public function simpan(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            if (!$request->nopengembalian) {
+                DB::connection('farmasi')->select('call pengembalian(@nomor)');
+                $x = DB::connection('farmasi')->table('conter')->select('pengembalian')->first();
+                $wew = $x->pengembalian;
+
+                $nopengembalian = FormatingHelper::pengembalian($wew);
+            } else {
+                $nopengembalian = $request->nopengembalian;
+            }
+            $header = Pengembalian::updateOrCreate(
+                [
+                    'nopengembalian' => $nopengembalian,
+                    'nopenerimaan' => $request->nopenerimaan,
+                ],
+                [
+                    'kdpbf' => $request->kdpbf,
+                    'tgl_pengembalian' => $request->tgl_pengembalian,
+                ]
+            );
+            if (!$header) {
+                DB::connection('farmasi')->rollBack();
+                return new JsonResponse([
+                    'message' => 'Data Gagal Disimpan',
+                    'req' => $request->all(),
+                ]);
+            }
+            $detail = PengembalianRinci::updateOrCreate(
+                [
+                    'nopengembalian' => $nopengembalian,
+                    'nopenerimaan' => $request->nopenerimaan,
+                    'kdobat' => $request->kdobat,
+                ],
+                [
+                    'id_rincipenerimaan' => $request->id_rincipenerimaan,
+                    'no_batch' => $request->no_batch,
+                    'jml_dikembalikan' => $request->jml_dikembalikan,
+                    'harga' => $request->harga,
+                ]
+            );
+            if (!$detail) {
+                DB::connection('farmasi')->rollBack();
+                return new JsonResponse([
+                    'message' => 'Data Gagal Disimpan',
+                    'req' => $request->all(),
+                ]);
+            }
+            $penerimaanRinci = PenerimaanRinci::select(
+                'id as id_rincipenerimaan',
+                'nopenerimaan',
+                'harga_netto_kecil as harga',
+                'no_batch',
+                'kdobat',
+                'jml_terima_k'
+            )
+                ->with('pengembalian_rinci', 'masterobat:kd_obat,nama_obat,satuan_k')
+                ->find($request->id_rincipenerimaan);
+
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Data Berahasil Disimpan',
+                'nopengembalian' => $nopengembalian,
+                'penerimaanrinci' => $penerimaanRinci,
+                'detail' => $detail,
+                'req' => $request->all(),
+            ]);
+        } catch (\Throwable $th) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan ' . $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' => $th->getLine(),
+                'req' => $request->all(),
+            ]);
+        }
     }
 }

@@ -10,4 +10,5 @@ Route::group([
 ], function () {
     Route::get('/get-pbf', [PengembalianPinjamanController::class, 'getPbfPeminjam']);
     Route::get('/get-noper', [PengembalianPinjamanController::class, 'getNopenerimaan']);
+    Route::post('/simpan', [PengembalianPinjamanController::class, 'simpan']);
 });
