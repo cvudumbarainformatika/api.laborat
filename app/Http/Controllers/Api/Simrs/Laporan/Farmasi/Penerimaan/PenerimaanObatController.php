@@ -17,10 +17,16 @@ class PenerimaanObatController extends Controller
 
         $cari = PenerimaanHeder::with(
             [
-                'gudang',
-                'pihakketiga'
+                'pihakketiga',
+                'gudang'
             ]
-        )
+        )->when(request('gudang') !== 'all', function ($q) {
+            $q->where('gudang', request('gudang'));
+        })->when(request('jenispenerimaan') !== 'all', function ($q) {
+            $q->where('jenis_penerimaan', request('jenispenerimaan'));
+        })->when(request('pihakketiga') !== 'all', function ($q) {
+            $q->where('kdpbf', request('pihakketiga'));
+        })
         ->whereBetween('tglpenerimaan', [$dari, $sampai])
         ->get();
 
