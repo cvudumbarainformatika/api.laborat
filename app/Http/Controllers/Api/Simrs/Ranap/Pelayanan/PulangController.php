@@ -19,7 +19,7 @@ class PulangController extends Controller
     
     public function getmastercarakeluar()
     {
-        $data = DB::table('rs26')->select('rs1','rs2')->get();
+        $data = DB::table('rs26')->select('rs1','rs2')->where('flag', '1')->get();
         return new JsonResponse($data);
     }
     public function simpandata(Request $request)
@@ -29,11 +29,11 @@ class PulangController extends Controller
       $kdpegsimrs = $user->kdpegsimrs;
       //  return $anamnesis;
       $sqlz = DB::table('cppts')->select('*')->where('noreg', $request->noreg)->get();
-      $sqla = DB::table('rs242')->select('*')->where('rs1', $request->noreg)->get();
+      // $sqla = DB::table('rs242')->select('*')->where('rs1', $request->noreg)->get();
       $inStatus = ['2','3'];
       $sql_cek_kunjungan = DB::table('rs23')->select('*')->where('rs1', $request->noreg)->whereIn('rs22', $inStatus)->get();
 
-      $rencana = count($sqla);
+      // $rencana = count($sqla);
       $cppt = count($sqlz);
       $kunjungan = count($sql_cek_kunjungan);
 
@@ -71,11 +71,11 @@ class PulangController extends Controller
 
       // jika pasien belum dipulangkan
 
-      if($rencana === 0 && $cppt === 0){
-        return new JsonResponse([
-          'message' => 'Maaf, Rencana Tindak Lanjut Pasien dan Perkembangan Pasien harus di isi.'
-        ], 500);
-      }
+      // if($rencana === 0 && $cppt === 0){
+      //   return new JsonResponse([
+      //     'message' => 'Maaf, Rencana Tindak Lanjut Pasien dan Perkembangan Pasien harus di isi.'
+      //   ], 500);
+      // }
 
       $meninggal = $request->caraKeluar === 'C003';
       $plgPaksa = $request->caraKeluar === 'C010';
