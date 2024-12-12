@@ -3930,16 +3930,18 @@ class SetNewStokController extends Controller
                 ->where('tglopname', 'LIKE', '%2024-05%')
                 ->orderBy('nopenerimaan', 'DESC')
                 ->first();
-            array_push($penerimaan, [
-                'harga_netto_kecil' => $opnameAwal->harga,
-                'jml_terima_k' => $penyesuaianDepoRinci->jumlah,
-                'kd_obat' => $opnameAwal->kdobat,
-                'no_batch' => $opnameAwal->nobatch,
-                'nopenerimaan' => $opnameAwal->nopenerimaan,
-                'tglpenerimaan' => $opnameAwal->tglpenerimaan,
-                'tgl_exp' => $opnameAwal->tglexp,
-                'koreksi' => true,
-            ]);
+            if ($opnameAwal) {
+                array_push($penerimaan, [
+                    'harga_netto_kecil' => $opnameAwal->harga,
+                    'jml_terima_k' => $penyesuaianDepoRinci->jumlah,
+                    'kd_obat' => $opnameAwal->kdobat,
+                    'no_batch' => $opnameAwal->nobatch,
+                    'nopenerimaan' => $opnameAwal->nopenerimaan,
+                    'tglpenerimaan' => $opnameAwal->tglpenerimaan,
+                    'tgl_exp' => $opnameAwal->tglexp,
+                    'koreksi' => true,
+                ]);
+            }
         }
         // pertanyaan 1 : apakah jumlah stok opname sesuai?
         // jawab :

@@ -147,12 +147,12 @@ class PengembalianPinjamanController extends Controller
                     ->orWhere('nopenerimaan_asal', 'like', '%' . request('q') . '%');
                 // ->orWhere('nopengembalian', 'like', '%' . request('q') . '%');
             })
+            ->whereBetween('tgl_pengembalian', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->paginate(request('per_page'));
         $data['data'] = collect($raw)['data'];
         $data['meta'] = collect($raw)->except('data');
-        return new JsonResponse([
-            'data' => $data,
-            'req' => request()->all()
-        ]);
+        $data['req'] = request()->all();
+
+        return new JsonResponse($data);
     }
 }
