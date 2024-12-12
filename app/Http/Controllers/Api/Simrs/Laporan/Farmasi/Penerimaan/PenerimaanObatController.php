@@ -32,4 +32,29 @@ class PenerimaanObatController extends Controller
 
         return new JsonResponse($cari);
     }
+
+    public function caripenerimaanobatrinci()
+    {
+        $dari = request('tgldari') ;
+        $sampai = request('tglsampai') ;
+
+        $cari = PenerimaanHeder::leftjoin('penerimaan_r','penerimaan_r.nopenerimaan','penerimaan_h.nopenerimaan')
+        ->leftjoin('new_masterobat','penerimaan_r.kdobat','new_masterobat.kd_obat')
+        ->with(
+            [
+                'pihakketiga',
+                'gudang'
+            ]
+        )->when(request('gudang') !== 'all', function ($q) {
+            $q->where('gudang', request('gudang'));
+        })->when(request('pihakketiga') !== 'all', function ($q) {
+            $q->where('kdpbf', request('pihakketiga'));
+        })->when(request('rekeningbelanja') !== 'all', function($q){
+            $q->where('new_masterobat.kode108',request('rekeningbelanja'));
+        })
+        ->whereBetween('tglpenerimaan', [$dari, $sampai])
+        ->get();
+
+        return new JsonResponse($cari);
+    }
 }

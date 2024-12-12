@@ -19,5 +19,6 @@ Route::group([
 
     Route::get('/reportMutasiHutangObat', [MutasiHutangObat::class, 'reportMutasiHutangObat']);
     Route::get('/caripenerimaanobat', [PenerimaanObatController::class, 'caripenerimaanobat']);
+    Route::get('/caripenerimaanobatrinci', [PenerimaanObatController::class, 'caripenerimaanobatrinci']);
 
 });

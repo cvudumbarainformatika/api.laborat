@@ -712,11 +712,15 @@ class PoliController extends Controller
             200
         );
     }
+
+
     public function gantimemo(Request $request)
     {
+        $userid = FormatingHelper::session_user();
         $data = Memodiagnosadokter::updateOrCreate(
             ['noreg' => $request->noreg],
             ['diagnosa' => $request->memo],
+            ['user' => $userid['kodesimrs']],
         );
         return new JsonResponse(
             [
