@@ -25,6 +25,10 @@ class PenerimaanRinci extends Model
     {
         return $this->belongsTo(PenerimaanHeder::class, 'nopenerimaan', 'nopenerimaan');
     }
+    public function pengembalian_rinci()
+    {
+        return $this->hasMany(PengembalianRinci::class, 'id_rincipenerimaan', 'id_rincipenerimaan');
+    }
     public function pbf()
     {
         return $this->hasOne(Mpihakketiga::class, 'kode', 'kdpbf');

@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Covid\StatusCovid;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
+use App\Models\Simrs\DischargePlanning\SkriningPulang;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\KeteranganTindakan;
 use App\Models\Simrs\Ews\ProcedureM;
@@ -573,6 +574,10 @@ class Kunjunganranap extends Model
     public function dischargeplanning()
     {
         return $this->hasMany(DischargePlanning::class, 'rs1', 'rs1');
+    }
+    public function skriningdischargeplannings()
+    {
+        return $this->hasMany(SkriningPulang::class, 'rs1', 'rs1');
     }
     public function datasimpeg()
     {

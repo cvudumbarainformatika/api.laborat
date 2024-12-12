@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
+use App\Models\Simrs\DischargePlanning\SkriningPulang;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,11 +62,71 @@ class DischargePlanningController extends Controller
         'result' => $data
        ]);
     }
+    public function simpandataskrining(Request $request)
+    {
+
+      $user = Pegawai::find(auth()->user()->pegawai_id);
+      $kdpegsimrs = $user->kdpegsimrs;
+
+       $data = SkriningPulang::create([
+        'rs1' => $request->rs1,
+        'rs2' => $request->rs2,
+        'rs3' => date('Y-m-d H:i:s'),
+        'rs4' => $request->rs4,
+        'rs5' => $request->rs5,
+        'rs5Ket' => $request->rs5Ket,
+        'rs6' => $request->rs6,
+        'rs7'=> $request->rs7,
+        'rs8'=> $request->rs8,
+        'rs9'=> $request->rs9,
+        'rs10'=> $request->rs10,
+        'rs11'=> $request->rs11,
+        'rs12'=> $request->rs12,
+        'rs13'=> $request->rs13,
+        'rs14'=> $request->rs14,
+        'rs15'=> $request->rs15,
+        'rs16'=> $request->rs16,
+        'rs16Ket'=> $request->rs16Ket,
+        'rs17'=> $request->rs17,
+        'rs18'=> $request->rs18,
+        'rs18Ket'=> $request->rs18Ket,
+        'rs19'=> $request->rs19,
+        'rs20'=> $request->rs20,
+        'rs21'=> $request->rs21,
+        'rs22'=> $request->rs22,
+        'kdruang'=> $request->kdruang,
+        'tglRencanaPulang'=> $request->tglRencanaPlg,
+        'user_input' => $kdpegsimrs
+
+       ]);
+
+       if (!$data) {
+        return new JsonResponse([
+          'success' => false,
+          'message' => 'Gagal menyimpan data'
+        ]);
+       }
+
+       return new JsonResponse([
+        'success' => true,
+        'message' => 'success',
+        'result' => $data
+       ]);
+    }
 
 
    public function hapusdata(Request $request)
    {
        $cari = DischargePlanning::find($request->id);
+       if (!$cari) {
+         return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
+       }
+       $cari->delete();
+       return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+   }
+   public function hapusdataskrining(Request $request)
+   {
+       $cari = SkriningPulang::find($request->id);
        if (!$cari) {
          return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
        }
