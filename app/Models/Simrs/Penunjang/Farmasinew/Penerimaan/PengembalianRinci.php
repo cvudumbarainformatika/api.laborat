@@ -16,6 +16,10 @@ class PengembalianRinci extends Model
     {
         return $this->belongsTo(Pengembalian::class, 'nopengembalian', 'nopengembalian');
     }
+    public function rincian_fifo()
+    {
+        return $this->hasMany(PengembalianRinciFifo::class, 'nopengembalian', 'nopengembalian');
+    }
     public function rinci_penerimaan()
     {
         return $this->belongsTo(PenerimaanRinci::class, 'id_rincipenerimaan');

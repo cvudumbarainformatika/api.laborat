@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\DB;
 
 class PengembalianPinjamanController extends Controller
 {
-    //
+    /**
+     * Form Sections
+     */
     public function getPbfPeminjam()
     {
         // ini nanti di moodif cari yang pinjaman nya belum di kembalikan
@@ -38,7 +40,7 @@ class PengembalianPinjamanController extends Controller
             ->where('jenis_penerimaan', 'Pinjaman')
             ->where('kdpbf', request('kdpbf'))
             ->with(
-                'penerimaanrinci:id as id_rincipenerimaan,nopenerimaan,harga_netto_kecil as harga,no_batch,kdobat,jml_terima_k',
+                'penerimaanrinci:id as id_rincipenerimaan,nopenerimaan,nopenerimaan as nopenerimaan_asal,harga_netto_kecil as harga,no_batch,kdobat,jml_terima_k',
                 'penerimaanrinci.masterobat:kd_obat,nama_obat,satuan_k',
                 'penerimaanrinci.pengembalian_rinci',
             )
@@ -65,7 +67,7 @@ class PengembalianPinjamanController extends Controller
             $header = Pengembalian::updateOrCreate(
                 [
                     'nopengembalian' => $nopengembalian,
-                    'nopenerimaan' => $request->nopenerimaan,
+                    'nopenerimaan_asal' => $request->nopenerimaan_asal,
                 ],
                 [
                     'kdpbf' => $request->kdpbf,
@@ -77,12 +79,12 @@ class PengembalianPinjamanController extends Controller
                 return new JsonResponse([
                     'message' => 'Data Gagal Disimpan',
                     'req' => $request->all(),
-                ]);
+                ], 410);
             }
             $detail = PengembalianRinci::updateOrCreate(
                 [
                     'nopengembalian' => $nopengembalian,
-                    'nopenerimaan' => $request->nopenerimaan,
+                    'nopenerimaan_asal' => $request->nopenerimaan_asal,
                     'kdobat' => $request->kdobat,
                 ],
                 [
@@ -97,10 +99,11 @@ class PengembalianPinjamanController extends Controller
                 return new JsonResponse([
                     'message' => 'Data Gagal Disimpan',
                     'req' => $request->all(),
-                ]);
+                ], 410);
             }
             $penerimaanRinci = PenerimaanRinci::select(
                 'id as id_rincipenerimaan',
+                'nopenerimaan as nopenerimaan_asal',
                 'nopenerimaan',
                 'harga_netto_kecil as harga',
                 'no_batch',
@@ -125,7 +128,31 @@ class PengembalianPinjamanController extends Controller
                 'file' => $th->getFile(),
                 'line' => $th->getLine(),
                 'req' => $request->all(),
-            ]);
+            ], 410);
         }
+    }
+
+    /**
+     * List Sections
+     */
+    public function getList()
+    {
+        $raw = Pengembalian::with(
+            'rincian',
+            'rincian_fifo',
+            'pihakketiga:kode,nama',
+        )
+            ->where(function ($query) {
+                $query->where('nopengembalian', 'like', '%' . request('q') . '%')
+                    ->orWhere('nopenerimaan_asal', 'like', '%' . request('q') . '%');
+                // ->orWhere('nopengembalian', 'like', '%' . request('q') . '%');
+            })
+            ->paginate(request('per_page'));
+        $data['data'] = collect($raw)['data'];
+        $data['meta'] = collect($raw)->except('data');
+        return new JsonResponse([
+            'data' => $data,
+            'req' => request()->all()
+        ]);
     }
 }
