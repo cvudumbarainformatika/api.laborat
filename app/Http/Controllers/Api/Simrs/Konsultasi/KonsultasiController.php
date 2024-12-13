@@ -195,23 +195,24 @@ class KonsultasiController extends Controller
         $tarifKonsul = null;
         if($dokter->kdgroupnakes === '1'){
 
-          $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
-          $tarifKonsul = self::cekTarip($spesialis, $request);
-          if (!$tarifKonsul) {
-            return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
-          }
-
-          //cek data tarif harini untuk dokter
-          $cekTarif = Visite::select('*')
-          ->where('rs1', $request->noreg)
-          ->where('rs3', $dokter->kdpegsimrs)
-          ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
-          ->where('rs6', $tarifKonsul['flag_biaya'])
-          ->get();
-
-          
           // jika bukan dari IGD
           if($request->kdruang !== 'POL014'){
+
+            $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
+            $tarifKonsul = self::cekTarip($spesialis, $request);
+            if (!$tarifKonsul) {
+              return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
+            }
+
+            //cek data tarif harini untuk dokter
+            $cekTarif = Visite::select('*')
+            ->where('rs1', $request->noreg)
+            ->where('rs3', $dokter->kdpegsimrs)
+            ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
+            ->where('rs6', $tarifKonsul['flag_biaya'])
+            ->get();
+
+
             // jika yg minta dokter
             if($request->kdgroupnakesminta === '1'){
               // jika billing belum masuk

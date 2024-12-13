@@ -689,6 +689,7 @@ class RanapController extends Controller
                 },
                 'dischargeplanning',
                 'skriningdischargeplannings',
+                'summarydischargeplannings',
                 'procedure',
                 'planningdokter',
                 'keterangantindakan:noreg,keterangan',
