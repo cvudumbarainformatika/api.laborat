@@ -113,7 +113,6 @@ class BKUController extends Controller
                 });
             })
         ->whereBetween('tglpindahbuku', [$awal, $akhir])
-        ->selectRaw('sum(npdls_rinci.nominalpembayaran) as total')
         ->get();
 
         // $npklsa = NpkLS_heder::whereBetween('tglnpk', [$awal, $akhir])->pluck('nonpk');

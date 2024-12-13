@@ -62,6 +62,7 @@ class KonsultasiController extends Controller
       $data->kdminta = $user['kodesimrs'] ?? '';
       $data->user = $user['kodesimrs'] ?? '';
       $data->kdruang = $request->kdruang ?? null;
+      $data->user_jawab = null;
       $data->save();
 
       // simpan tarif konsultasi select * from rs140 where rs1='".trim($_GET['noreg'])."' and rs3='".trim($_GET['kodedokter'])."' and date(rs2)='".trim($_GET['tglx'])."' and rs6='".trim($_GET['flag_biaya'])."'"
