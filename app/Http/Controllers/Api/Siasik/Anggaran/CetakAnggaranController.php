@@ -14,7 +14,7 @@ class CetakAnggaranController extends Controller
     public function bidangbidangkegiatan(){
         $thn= request('tahun', 'Y');
         $bidangkegiatan=Mapping_Bidang_Ptk_Kegiatan::where('tahun', $thn)
-        // ->where('alias', '!=', '')
+        ->where('alias', '!=', '')
         ->when(request('bidang'),function($keg) {
             $keg->where('kodebidang', request('bidang'));
         })
