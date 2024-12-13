@@ -15,4 +15,8 @@ Route::group([
 
     // list
     Route::get('/get-list', [PengembalianPinjamanController::class, 'getList']);
+
+    Route::post('/hapus-rinci', [PengembalianPinjamanController::class, 'hapusRinci']);
+    Route::post('/hapus-header', [PengembalianPinjamanController::class, 'hapusHeader']);
+    Route::post('/kunci', [PengembalianPinjamanController::class, 'kunci']);
 });

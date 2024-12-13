@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +27,10 @@ class PengembalianRinci extends Model
     }
     public function masterobat()
     {
-        return $this->belongsTo(Mobatnew::class, 'kd_obat', 'kdobat');
+        return $this->belongsTo(Mobatnew::class, 'kdobat', 'kd_obat');
+    }
+    public function stok()
+    {
+        return $this->hasMany(Stokreal::class, 'kdobat', 'kdobat');
     }
 }

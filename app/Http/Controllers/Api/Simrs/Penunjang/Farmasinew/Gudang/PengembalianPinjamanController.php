@@ -39,11 +39,11 @@ class PengembalianPinjamanController extends Controller
         $data = PenerimaanHeder::select('nopenerimaan')
             ->where('jenis_penerimaan', 'Pinjaman')
             ->where('kdpbf', request('kdpbf'))
-            ->with(
+            ->with([
                 'penerimaanrinci:id as id_rincipenerimaan,nopenerimaan,nopenerimaan as nopenerimaan_asal,harga_netto_kecil as harga,no_batch,kdobat,jml_terima_k',
                 'penerimaanrinci.masterobat:kd_obat,nama_obat,satuan_k',
                 'penerimaanrinci.pengembalian_rinci',
-            )
+            ])
             ->where('kunci', '1')
             ->get();
         return new JsonResponse([
@@ -71,6 +71,7 @@ class PengembalianPinjamanController extends Controller
                 ],
                 [
                     'kdpbf' => $request->kdpbf,
+                    'kdruang' => $request->kdruang,
                     'tgl_pengembalian' => $request->tgl_pengembalian,
                 ]
             );
@@ -137,22 +138,82 @@ class PengembalianPinjamanController extends Controller
      */
     public function getList()
     {
-        $raw = Pengembalian::with(
-            'rincian',
+        $raw = Pengembalian::with([
+            'rincian' => function ($query) {
+                $query->with([
+                    'masterobat:kd_obat,nama_obat,satuan_k',
+                    'stok' => function ($q) {
+                        $q->where('kdruang', request('kdruang'))
+                            ->where('jumlah', '>', 0);
+                    }
+                ]);
+            },
             'rincian_fifo',
             'pihakketiga:kode,nama',
-        )
+        ])
             ->where(function ($query) {
                 $query->where('nopengembalian', 'like', '%' . request('q') . '%')
                     ->orWhere('nopenerimaan_asal', 'like', '%' . request('q') . '%');
                 // ->orWhere('nopengembalian', 'like', '%' . request('q') . '%');
             })
             ->whereBetween('tgl_pengembalian', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where('kdruang', request('kdruang'))
             ->paginate(request('per_page'));
         $data['data'] = collect($raw)['data'];
         $data['meta'] = collect($raw)->except('data');
         $data['req'] = request()->all();
 
         return new JsonResponse($data);
+    }
+
+    public function kunci(Request $request)
+    {
+        // sebelum kunci cek stok alokasi dulu. kalo bisa ya lanjut kunci
+        return new JsonResponse([
+            'message' => 'Data Sudah di Kunci',
+            'req' => $request->all(),
+        ]);
+    }
+    public function hapusHeader(Request $request)
+    {
+        $header = Pengembalian::find($request->id);
+        if (!$header) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan, gagal hapus'], 410);
+        }
+        $rincis = PengembalianRinci::where('nopengembalian', $header->nopengembalian)->get();
+        if (count($rincis) > 0) {
+            foreach ($rincis as $rinci) {
+                $rinci->delete();
+            }
+        }
+        $header->delete();
+        return new JsonResponse([
+            'message' => 'Data Header Berahasil dihapus',
+            'req' => $request->all(),
+        ]);
+    }
+    public function hapusRinci(Request $request)
+    {
+        $rinci = PengembalianRinci::find($request->id);
+        if (!$rinci) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan, gagal hapus'], 410);
+        }
+        $header = Pengembalian::where('nopengembalian', $rinci->nopengembalian)->first();
+        if (!$header) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan, gagal hapus'], 410);
+        }
+        $hapusHead = 'tidak';
+        $rinci->delete();
+        $rincis = PengembalianRinci::where('nopengembalian', $rinci->nopengembalian)->get();
+        if (count($rincis) === 0) {
+            $header->delete();
+            $hapusHead = 'ya';
+        }
+
+        return new JsonResponse([
+            'message' => 'Data Rinci Berahasil dihapus',
+            'hapusHead' => $hapusHead,
+            'req' => $request->all(),
+        ]);
     }
 }
