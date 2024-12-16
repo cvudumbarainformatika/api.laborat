@@ -3890,6 +3890,7 @@ class SetNewStokController extends Controller
             'jmlSesuai' => $jmlSesuai,
             'noperTidak' => $noperTidak,
             'noperSesuai' => $noperSesuai,
+            'stokid' => $stokid,
         ];
     }
     public static function opnemeDepo($head)
