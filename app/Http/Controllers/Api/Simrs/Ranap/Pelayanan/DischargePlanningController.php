@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class DischargePlanningController extends Controller
 {
@@ -133,8 +134,8 @@ class DischargePlanningController extends Controller
         'rs9'=> $request->rs9,
         'rs10'=> $request->rs10,
         'kdruang'=> $request->kdruang,
-        'ttdPasien'=> $request->ttdPasien,
-        'user_input' => $kdpegsimrs
+        'ttdPasien'=> null,
+        'user_input' => $kdpegsimrs 
 
        ]);
 
@@ -145,11 +146,42 @@ class DischargePlanningController extends Controller
         ]);
        }
 
+       $ttdPasien = $this->saveImage($request, $request->ttdPasien, $data->id);
+       $cek = SummaryPulang::find($data->id);
+
+       $cek->update([
+        'ttdPasien' => $ttdPasien
+       ]);
+
        return new JsonResponse([
         'success' => true,
         'message' => 'success',
-        'result' => $data
+        'result' => $cek
        ]);
+    }
+
+    static function saveImage($request, $image, $id)
+    {
+
+      $file=null;
+
+      if ($image && $id) {
+          $name = $id;
+          $noreg = str_replace('/', '-', $request->noreg);
+          $folderPath = "summary/" . $noreg .'_'.$request->jenis. '/';
+
+          $image_parts = explode(";base64,", $image);
+          $image_type_aux = explode("image/", $image_parts[0]);
+          $image_type = $image_type_aux[1];
+          $image_base64 = base64_decode($image_parts[1], true);
+          $file = $folderPath . $name . '.' . $image_type;
+
+          $imageName = $name . '.' . $image_type;
+          Storage::delete('public/' . $folderPath . $imageName);
+          Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+      }
+
+      return $file;
     }
 
 
