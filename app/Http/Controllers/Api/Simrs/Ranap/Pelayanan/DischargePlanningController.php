@@ -167,8 +167,8 @@ class DischargePlanningController extends Controller
 
       if ($image && $id) {
           $name = $id;
-          $noreg = str_replace('/', '-', $request->noreg);
-          $folderPath = "summary/" . $noreg .'_'.$request->jenis. '/';
+          $noreg = str_replace('/', '-', $request->rs1);
+          $folderPath = "summary/" . $noreg . '/';
 
           $image_parts = explode(";base64,", $image);
           $image_type_aux = explode("image/", $image_parts[0]);
