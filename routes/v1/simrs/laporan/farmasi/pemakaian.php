@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Pemakaian\PemakaianObatController;
+use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Persediaan\PersediaanFiFoController;
 use Illuminate\Support\Facades\Route;
+
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
@@ -10,4 +12,9 @@ Route::group([
     Route::get('/get-pemakaian', [PemakaianObatController::class, 'getPemakaianObat']);
     Route::get('/get-all-pemakaian', [PemakaianObatController::class, 'getAllPemakaianObat']);
     Route::get('/get-sistembayar', [PemakaianObatController::class, 'getSistemBayar']);
+
+    // url lama sebelum update fron end
+
+    Route::get('/get-persediaan', [PersediaanFiFoController::class, 'getPersediaan']);
+    Route::get('/get-mutasi', [PersediaanFiFoController::class, 'getMutasi']);
 });
