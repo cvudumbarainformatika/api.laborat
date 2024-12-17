@@ -161,6 +161,7 @@ class PersediaanFiFoController extends Controller
 
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
+                        ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100'])
                         ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
                 },
                 'penerimaanrinci' => function ($trm) {
