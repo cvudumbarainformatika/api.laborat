@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Ranap;
 
+use App\Models\KunjunganPoli;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Anamnesis\Anamnesis;
@@ -92,6 +93,10 @@ class Kunjunganranap extends Model
     public function statuscovid()
     {
         return $this->hasMany(StatusCovid::class, 'noreg', 'noreg');
+    }
+    public function dataigd()
+    {
+        return $this->hasOne(KunjunganPoli::class, 'rs1', 'rs1');
     }
     public function relmasterruangranap()
     {
