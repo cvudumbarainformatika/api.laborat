@@ -62,6 +62,7 @@ class PemeriksaanPenilaianController extends Controller
                   'humpty_dumpty' => $request->humpty_dumpty,
                   'morse_fall' => $request->morse_fall,
                   'ontario' => $request->ontario,
+                  'downscore' => $request->downscore,
 
                   'kdruang'=> $request->kdruang,
                   'awal'=> $request->awal ?? null,
@@ -86,6 +87,7 @@ class PemeriksaanPenilaianController extends Controller
                 'humpty_dumpty' => $request->humpty_dumpty,
                 'morse_fall' => $request->morse_fall,
                 'ontario' => $request->ontario,
+                'downscore' => $request->downscore,
 
                 'kdruang'=> $request->kdruang,
                 'awal'=> $request->awal ?? null,
