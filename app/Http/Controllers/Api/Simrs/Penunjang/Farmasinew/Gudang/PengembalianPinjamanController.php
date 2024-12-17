@@ -168,7 +168,7 @@ class PengembalianPinjamanController extends Controller
 
     public function kunci(Request $request)
     {
-        // sebelum kunci cek stok alokasi dulu. kalo bisa ya lanjut kunci
+        // sebelum kunci cek stok alokasi dulu. kalo ada alokasi bisa ya lanjut kunci
         return new JsonResponse([
             'message' => 'Data Sudah di Kunci',
             'req' => $request->all(),
