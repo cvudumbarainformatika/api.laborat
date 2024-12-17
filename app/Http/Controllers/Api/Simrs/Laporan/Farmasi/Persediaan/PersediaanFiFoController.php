@@ -161,7 +161,7 @@ class PersediaanFiFoController extends Controller
 
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
-                        ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100'])
+                        ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'])
                         ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
                 },
                 'penerimaanrinci' => function ($trm) {
@@ -248,25 +248,47 @@ class PersediaanFiFoController extends Controller
                         )
                         ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
                 },
-                'pemakaian' => function ($pak) {
-                    $pak->select(
-                        'pemakaian_r.kd_obat as kdobat',
-                        'pemakaian_r.kd_obat',
-                        'pemakaian_r.nopenerimaan',
-                        'pemakaian_h.tgl as tgl',
-                        'pemakaian_h.kdruang',
-                        DB::raw('sum(pemakaian_r.jumlah) as jumlah'),
+                // 'pemakaian' => function ($pak) {
+                //     $pak->select(
+                //         'pemakaian_r.kd_obat as kdobat',
+                //         'pemakaian_r.kd_obat',
+                //         'pemakaian_r.nopenerimaan',
+                //         'pemakaian_h.tgl as tgl',
+                //         'pemakaian_h.kdruang',
+                //         DB::raw('sum(pemakaian_r.jumlah) as jumlah'),
 
+                //     )
+                //         ->join('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
+                //         ->havingRaw('jumlah > 0')
+                //         ->where('pemakaian_h.tgl', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                //         ->with([
+                //             'ruangan:kode,uraian',
+                //             'rincipenerimaan:kdobat,nopenerimaan,harga_netto_kecil as harga',
+                //             'opname:kdobat,nopenerimaan,harga',
+                //         ])
+                //         ->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan', 'pemakaian_r.nopemakaian');
+                // },
+                'mutasikeluar' => function ($mut) {
+                    $mut->select(
+                        'mutasi_gudangdepo.no_permintaan',
+                        'mutasi_gudangdepo.kd_obat',
+                        'mutasi_gudangdepo.kd_obat as kdobat',
+                        'mutasi_gudangdepo.nopenerimaan',
+                        'mutasi_gudangdepo.harga',
+                        DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'),
+                        DB::raw('sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga) as sub'),
+                        'permintaan_h.dari',
+                        'permintaan_h.dari as kdruang',
+                        'permintaan_h.tgl_kirim_depo as tgl',
                     )
-                        ->join('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
+                        ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->havingRaw('jumlah > 0')
-                        ->where('pemakaian_h.tgl', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->where('permintaan_h.dari', 'LIKE', 'R-%')
+                        ->where('permintaan_h.tgl_kirim_depo', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                         ->with([
                             'ruangan:kode,uraian',
-                            'rincipenerimaan:kdobat,nopenerimaan,harga_netto_kecil as harga',
-                            'opname:kdobat,nopenerimaan,harga',
                         ])
-                        ->groupBy('pemakaian_r.kd_obat', 'pemakaian_r.nopenerimaan', 'pemakaian_r.nopemakaian');
+                        ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
                 },
                 'penyesuaian' => function ($pak) {
                     $pak->select(
