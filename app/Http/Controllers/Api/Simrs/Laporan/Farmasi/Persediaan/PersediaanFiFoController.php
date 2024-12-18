@@ -188,13 +188,71 @@ class PersediaanFiFoController extends Controller
                     )
                         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
                         ->havingRaw('jumlah > 0')
-                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                        // ->whereIn('resep_keluar_h.depo', ['Gd-04010102', 'Gd-05010101', 'Gd-02010104']) // yang bukan OK
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
                         )
                         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
                 },
+                //// tambahan OK /////
+                // 'resepkeluarok' => function ($kel) {
+                //     $kel->select(
+                //         'resep_keluar_r.noresep',
+                //         'resep_keluar_r.kdobat',
+                //         'resep_keluar_h.tgl_selesai as tgl',
+                //         'resep_keluar_r.nopenerimaan',
+                //         'resep_keluar_r.harga_beli as harga',
+                //         DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
+                //         DB::raw('sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli) as sub')
+
+                //     )
+                //         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                //         ->leftJoin('persiapan_operasi_rincis', function ($q) {
+                //             $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
+                //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'resep_keluar_r.kdobat');
+                //         })
+                //         ->whereNull('persiapan_operasi_rincis.noresep')
+                //         ->havingRaw('jumlah > 0')
+                //         ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                //         ->whereIn('resep_keluar_h.depo', ['Gd-04010103'])
+                //         ->with(
+                //             'header:noresep,norm',
+                //             'header.datapasien:rs1,rs2',
+                //         )
+                //         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
+                // },
+                // 'distribusipersiapan' => function ($dist) {
+                //     $dist->select(
+                //         'persiapan_operasi_distribusis.kd_obat',
+                //         'persiapan_operasis.nopermintaan',
+                //         'persiapan_operasis.norm',
+                //         'persiapan_operasis.tgl_retur',
+                //         'persiapan_operasi_distribusis.tgl_retur',
+                //         'persiapan_operasi_rincis.noresep',
+                //         'persiapan_operasi_rincis.created_at',
+                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah-persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
+
+                //     )
+                //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                //         ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                //             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                //         })
+                //         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                //         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                //         ->where('persiapan_operasi_rincis.jumlah_resep', '>', 0)
+                //         ->with([
+                //             'pasien:rs1,rs2',
+                //         ])
+                //         ->groupBy('persiapan_operasi_distribusis.kd_obat');
+                // },
+
+                ////// tambahan Ok selesai ////
+
                 'resepkeluarracikan' => function ($kel) {
                     $kel->select(
                         'resep_keluar_racikan_r.noresep',
@@ -377,12 +435,68 @@ class PersediaanFiFoController extends Controller
                         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
                         ->havingRaw('jumlah > 0')
                         ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        // ->whereIn('resep_keluar_h.depo', ['Gd-04010102', 'Gd-05010101', 'Gd-02010104']) // ambil yang selain OK
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
                         )
                         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
                 },
+                ////// tambahan Ok
+                // 'resepkeluarok' => function ($kel) {
+                //     $kel->select(
+                //         'resep_keluar_r.noresep',
+                //         'resep_keluar_r.kdobat',
+                //         'resep_keluar_h.tgl_selesai as tgl',
+                //         'resep_keluar_r.nopenerimaan',
+                //         'resep_keluar_r.harga_beli as harga',
+                //         DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
+                //         DB::raw('sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli) as sub')
+
+                //     )
+                //         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
+                //         ->leftJoin('persiapan_operasi_rincis', function ($q) {
+                //             $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
+                //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'resep_keluar_r.kdobat');
+                //         })
+                //         ->whereNull('persiapan_operasi_rincis.noresep')
+                //         ->havingRaw('jumlah > 0')
+                //         ->where('resep_keluar_h.tgl_selesai', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                //         ->whereIn('resep_keluar_h.depo', ['Gd-04010103'])
+                //         ->with(
+                //             'header:noresep,norm',
+                //             'header.datapasien:rs1,rs2',
+                //         )
+                //         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
+                // },
+                // 'distribusipersiapan' => function ($dist) {
+                //     $dist->select(
+                //         'persiapan_operasi_distribusis.kd_obat',
+                //         'persiapan_operasis.nopermintaan',
+                //         'persiapan_operasis.norm',
+                //         'persiapan_operasis.tgl_retur',
+                //         'persiapan_operasi_distribusis.tgl_retur',
+                //         'persiapan_operasi_rincis.noresep',
+                //         'persiapan_operasi_rincis.created_at',
+                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah-persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
+
+                //     )
+                //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                //         ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                //             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                //         })
+                //         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                //         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                //         ->where('persiapan_operasi_rincis.jumlah_resep', '>', 0)
+                //         ->with([
+                //             'pasien:rs1,rs2',
+                //         ])
+                //         ->groupBy('persiapan_operasi_distribusis.kd_obat');
+                // },
+                ////// akhir OK ////
                 'resepkeluarracikan' => function ($kel) {
                     $kel->select(
                         'resep_keluar_racikan_r.noresep',

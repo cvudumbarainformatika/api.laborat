@@ -210,6 +210,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
     }
+    public function resepkeluarok()
+    {
+        return $this->hasMany(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
+    }
     public function oneobatkel()
     {
         return $this->hasOne(Resepkeluarrinci::class, 'kdobat', 'kd_obat');
