@@ -236,8 +236,7 @@ class PersediaanFiFoController extends Controller
                         'persiapan_operasi_rincis.noresep',
                         'daftar_hargas.harga',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                        DB::raw('sum(
-                        persiapan_operasi_distribusis.jumlah *  daftar_hargas.harga as sub'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
                     )
@@ -269,7 +268,7 @@ class PersediaanFiFoController extends Controller
                         'daftar_hargas.harga',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga as sub'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
 
                     )
                         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -582,8 +581,7 @@ class PersediaanFiFoController extends Controller
                         'persiapan_operasi_rincis.noresep',
                         'daftar_hargas.harga',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                        DB::raw('sum(
-                        persiapan_operasi_distribusis.jumlah *  daftar_hargas.harga as sub'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
                     )
@@ -615,7 +613,7 @@ class PersediaanFiFoController extends Controller
                         'daftar_hargas.harga',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga as sub'),
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
 
                     )
                         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
