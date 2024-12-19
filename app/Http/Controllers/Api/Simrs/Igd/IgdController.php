@@ -172,6 +172,16 @@ class IgdController extends Controller
             'historykehamilan',
             'anamnesekebidanan',
             'bankdarah',
+            // 'peresepanobat' => function($peresepanobat){
+            //     $peresepanobat->with(
+            //         [
+            //             'rincian' => function($rincian){
+            //                 $rincian->with('mobat');
+            //             },
+            //         ]
+            //     )->whereIn('flag', ['3','4'])
+            //     ->where('ruangan','POL014');
+            // },
             'msistembayar',
             'planheder' => function($planheder){
                 $planheder->with([
@@ -259,7 +269,14 @@ class IgdController extends Controller
                     ]
                 )->where('kdruang', 'POL014');
             },
-            'skalatransfer'
+            'skalatransfer',
+            'pemberianobat' => function ($pemberianobat){
+                $pemberianobat->with(
+                    [
+                        'mobat',
+                        'datasimpeg'
+                    ]);
+            }
         ])
         ->first();
 
