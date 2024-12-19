@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Models\Simrs\Pelayanan;
+
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,4 +21,13 @@ class PraAnastesi extends Model
       'teknikKhusus' => 'array',
       'pascaAnastesi' => 'array',
   ];
+
+  public function pemeriksaanfisik()
+    {
+        return $this->hasMany(Pemeriksaanfisik::class, 'rs1', 'noreg');
+    }
+    public function diagnosa()
+    {
+        return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
+    }
 }

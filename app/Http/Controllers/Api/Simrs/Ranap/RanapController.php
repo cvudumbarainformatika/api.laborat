@@ -39,7 +39,7 @@ class RanapController extends Controller
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23.rs3 as tglmasuk',
-            'rs17.rs3 as tglmasuk_igd',
+            // 'rs17.rs3 as tglmasuk_igd',
             'rs23.rs4 as tglkeluar',
             'rs23.rs5 as kdruangan',
             'rs23.rs5 as kodepoli', // ini khusus resep jangan diganti .... memang namanya aneh kok ranap ada kodepoli? ya? jangan dihapus yaaa.....
@@ -48,7 +48,8 @@ class RanapController extends Controller
             'rs23.rs10 as kddokter',
             'rs23.rs10 as kodedokter',
             // 'rs23.titipan',
-            'rs21.rs2 as dokter',
+            // 'rs21.rs2 as dokter',
+            'kepegx.pegawai.nama as dokter',
             'rs23.rs19 as kdsistembayar',
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
@@ -76,7 +77,8 @@ class RanapController extends Controller
             'rs15.rs55 as nohp',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-            'rs21.rs2 as namanakes',
+            // 'rs21.rs2 as namanakes',
+            'kepegx.pegawai.nama as namanakes',
             'rs227.rs8 as sep',
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
@@ -90,14 +92,15 @@ class RanapController extends Controller
             // 'tflag_covid.flagcovid as flagcovid',
             )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
-            ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
+            // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
             // ->leftjoin('tflag_covid', function ($q) { 
             //     $q->on('tflag_covid.noreg', 'rs23.rs1')
             //       ->where('tflag_covid.stat', 'MASUK')
             //       ->where('tflag_covid.ruang', 'POL014');
             //  }) // IGD
             ->leftjoin('rs9', 'rs9.rs1', 'rs23.rs19')
-            ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
+            // ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs23.rs10')
             ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
@@ -122,6 +125,7 @@ class RanapController extends Controller
                 if (request('status') === 'Pulang') {
                     // $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
                     $query->where('rs23.rs4', 'like',  '%' . request('from'). '%')
+                    // $query->where('rs23.rs4', '=',  request('from'))
                         ->whereIn('rs23.rs22',['2','3']);
                 } else {
                     $query->where('rs23.rs22','=','')
@@ -181,7 +185,7 @@ class RanapController extends Controller
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23.rs3 as tglmasuk',
-            'rs17.rs3 as tglmasuk_igd',
+            // 'rs17.rs3 as tglmasuk_igd',
             'rs23.rs4 as tglkeluar',
             'rs23.rs5 as kdruangan',
             'rs23.rs5 as kodepoli', // ini khusus resep jangan diganti .... memang namanya aneh kok ranap ada kodepoli? ya? jangan dihapus yaaa.....
@@ -190,7 +194,7 @@ class RanapController extends Controller
             'rs23.rs10 as kddokter',
             'rs23.rs10 as kodedokter',
             // 'rs23.titipan',
-            'rs21.rs2 as dokter',
+            'kepegx.pegawai.nama as dokter',
             'rs23.rs19 as kdsistembayar',
             'rs23.rs19 as kodesistembayar', // ini untuk farmasi
             'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
@@ -217,7 +221,8 @@ class RanapController extends Controller
             'rs15.rs55 as nohp',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-            'rs21.rs2 as namanakes',
+            // 'rs21.rs2 as namanakes',
+            'kepegx.pegawai.nama as namanakes',
             'rs227.rs8 as sep',
             'rs227.kodedokterdpjp as kodedokterdpjp',
             'rs227.dokterdpjp as dokterdpjp',
@@ -231,7 +236,7 @@ class RanapController extends Controller
             // 'tflag_covid.flagcovid as flagcovid',
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
-            ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
+            // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
             // ->leftjoin('tflag_covid', function ($q) { 
             //     $q->on('tflag_covid.noreg', 'rs23.rs1')
             //       ->where('tflag_covid.stat', 'MASUK')
@@ -355,7 +360,7 @@ class RanapController extends Controller
             'rs2 as norm')
             ->where('rs1', '=', $request->noreg)
             ->with([
-                
+                'dataigd:rs1,rs3 as tglmasuk_igd',
                 'newapotekrajal' => function ($q) {
                     $q->with([
                         'dokter:nama,kdpegsimrs',

@@ -12,4 +12,8 @@ Route::group([
     Route::post('/savedata', [PraAnastesiController::class, 'savedata']);
     Route::post('/deletedata', [PraAnastesiController::class, 'deletedata']);
     Route::get('/getPraAnastesiKunjunganPoli', [PraAnastesiController::class, 'getPraAnastesiKunjunganPoli']);
+
+
+    Route::get('/getKunjunganRajalLatest', [PraAnastesiController::class, 'getKunjunganRajalLatest']);
+    
 });

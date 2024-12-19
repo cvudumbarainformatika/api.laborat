@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\Simrs\Pelayanan\Praanastesi;
 
 use App\Http\Controllers\Controller;
+use App\Models\KunjunganPoli;
 use App\Models\Simrs\Master\MpraAnastesi;
 use App\Models\Simrs\Pelayanan\PraAnastesi;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PraAnastesiController extends Controller
 {
@@ -95,5 +97,32 @@ class PraAnastesiController extends Controller
       }
 
       return new JsonResponse($data);
+  }
+
+  public function getKunjunganRajalLatest()
+  {
+     $norm = request('norm');
+
+     $cekRajal = DB::table('rs17')->select('rs1','rs1 as noreg')
+      ->where('rs2', $norm)
+      ->where('rs8', 'POL001')
+      ->where('rs19', '=', '1')
+      ->orderBy('rs3', 'desc')
+      ->first();
+
+      $data = [];
+
+      if ($cekRajal) {
+        $data = PraAnastesi::where('norm', $norm)->where('noreg', $cekRajal->rs1)
+        ->with(['pemeriksaanfisik', 
+        'diagnosa' => function ($d) {
+                    $d->with('masterdiagnosa');
+                },
+        ])
+        ->orderBy('created_at', 'desc')->limit(1)->get();
+      }
+
+      return new JsonResponse($data);
+
   }
 }
