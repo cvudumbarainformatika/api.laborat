@@ -224,20 +224,20 @@ class PersediaanFiFoController extends Controller
                         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
                 },
 
-
                 'distribusipersiapan' => function ($dist) {
                     $dist->select(
                         'persiapan_operasi_distribusis.kd_obat as kdobat',
                         'persiapan_operasi_distribusis.kd_obat',
-                        'persiapan_operasis.nopermintaan',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        // 'persiapan_operasis.nopermintaan',
                         'persiapan_operasis.tgl_distribusi as tgl',
                         'persiapan_operasis.norm',
-                        'persiapan_operasi_distribusis.tgl_retur',
+                        // 'persiapan_operasi_distribusis.tgl_retur',
                         'persiapan_operasi_rincis.noresep',
-                        'daftar_hargas.harga',
+                        // 'daftar_hargas.harga',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
                     )
                         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -245,12 +245,12 @@ class PersediaanFiFoController extends Controller
                             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         })
-                        ->leftJoin('daftar_hargas', function ($join) {
-                            $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                        })
+                        // ->leftJoin('daftar_hargas', function ($join) {
+                        //     $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                        //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        // })
                         ->where('persiapan_operasis.tgl_distribusi', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->whereIn('persiapan_operasis.flag', ['4'])
                         ->with([
                             'pasien:rs1,rs2',
                         ])
@@ -260,15 +260,16 @@ class PersediaanFiFoController extends Controller
                     $dist->select(
                         'persiapan_operasi_distribusis.kd_obat as kdobat',
                         'persiapan_operasi_distribusis.kd_obat',
-                        'persiapan_operasis.nopermintaan',
-                        'persiapan_operasis.tgl_distribusi',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        // 'persiapan_operasis.nopermintaan',
+                        // 'persiapan_operasis.tgl_distribusi',
                         'persiapan_operasi_distribusis.tgl_retur as tgl',
-                        'persiapan_operasi_rincis.noresep',
+                        // 'persiapan_operasi_rincis.noresep',
                         'persiapan_operasis.norm',
-                        'daftar_hargas.harga',
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                        // 'daftar_hargas.harga',
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
 
                     )
                         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -276,45 +277,18 @@ class PersediaanFiFoController extends Controller
                             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         })
-                        ->leftJoin('daftar_hargas', function ($join) {
-                            $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                        })
+                        // ->leftJoin('daftar_hargas', function ($join) {
+                        //     $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                        //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        // })
                         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->whereIn('persiapan_operasis.flag', ['4'])
                         ->havingRaw('sum(persiapan_operasi_distribusis.jumlah_retur) > 0')
                         ->with([
                             'pasien:rs1,rs2',
                         ])
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                 },
-                // 'distribusipersiapan' => function ($dist) {
-                //     $dist->select(
-                //         'persiapan_operasi_distribusis.kd_obat',
-                //         'persiapan_operasis.nopermintaan',
-                //         'persiapan_operasis.norm',
-                //         'persiapan_operasis.tgl_retur',
-                //         'persiapan_operasi_distribusis.tgl_retur',
-                //         'persiapan_operasi_rincis.noresep',
-                //         'persiapan_operasi_rincis.created_at',
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah-persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-
-                //     )
-                //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
-                //         ->leftJoin('persiapan_operasi_rincis', function ($join) {
-                //             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
-                //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                //         })
-                //         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                //         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
-                //         ->where('persiapan_operasi_rincis.jumlah_resep', '>', 0)
-                //         ->with([
-                //             'pasien:rs1,rs2',
-                //         ])
-                //         ->groupBy('persiapan_operasi_distribusis.kd_obat');
-                // },
 
                 ////// tambahan Ok selesai ////
 
@@ -392,6 +366,7 @@ class PersediaanFiFoController extends Controller
                         ->whereIn('gudang', ['Gd-05010100'])
                         ->groupBy('kdobat', 'nopenerimaan_default');
                 },
+                'daftarharga:kd_obat,nopenerimaan,harga',
 
 
             ]);
@@ -575,15 +550,16 @@ class PersediaanFiFoController extends Controller
                     $dist->select(
                         'persiapan_operasi_distribusis.kd_obat as kdobat',
                         'persiapan_operasi_distribusis.kd_obat',
-                        'persiapan_operasis.nopermintaan',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        // 'persiapan_operasis.nopermintaan',
                         'persiapan_operasis.tgl_distribusi as tgl',
                         'persiapan_operasis.norm',
-                        'persiapan_operasi_distribusis.tgl_retur',
+                        // 'persiapan_operasi_distribusis.tgl_retur',
                         'persiapan_operasi_rincis.noresep',
-                        'daftar_hargas.harga',
+                        // 'daftar_hargas.harga',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
                     )
                         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -591,12 +567,12 @@ class PersediaanFiFoController extends Controller
                             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         })
-                        ->leftJoin('daftar_hargas', function ($join) {
-                            $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                        })
+                        // ->leftJoin('daftar_hargas', function ($join) {
+                        //     $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                        //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        // })
                         ->where('persiapan_operasis.tgl_distribusi', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->whereIn('persiapan_operasis.flag', ['4'])
                         ->with([
                             'pasien:rs1,rs2',
                         ])
@@ -606,15 +582,16 @@ class PersediaanFiFoController extends Controller
                     $dist->select(
                         'persiapan_operasi_distribusis.kd_obat as kdobat',
                         'persiapan_operasi_distribusis.kd_obat',
-                        'persiapan_operasis.nopermintaan',
-                        'persiapan_operasis.tgl_distribusi',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        // 'persiapan_operasis.nopermintaan',
+                        // 'persiapan_operasis.tgl_distribusi',
                         'persiapan_operasi_distribusis.tgl_retur as tgl',
-                        'persiapan_operasi_rincis.noresep',
+                        // 'persiapan_operasi_rincis.noresep',
                         'persiapan_operasis.norm',
-                        'daftar_hargas.harga',
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
+                        // 'daftar_hargas.harga',
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
+                        // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
 
                     )
                         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -622,52 +599,18 @@ class PersediaanFiFoController extends Controller
                             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         })
-                        ->leftJoin('daftar_hargas', function ($join) {
-                            $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
-                                ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                        })
+                        // ->leftJoin('daftar_hargas', function ($join) {
+                        //     $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                        //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        // })
                         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->whereIn('persiapan_operasis.flag', ['4'])
+                        ->havingRaw('sum(persiapan_operasi_distribusis.jumlah_retur) > 0')
                         ->with([
                             'pasien:rs1,rs2',
                         ])
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                 },
-                // 'distribusipersiapan' => function ($dist) {
-                //     $dist->select(
-                //         'persiapan_operasi_distribusis.kd_obat',
-                //         'persiapan_operasis.nopermintaan',
-                //         'persiapan_operasis.norm',
-                //         'resep_keluar_h.tgl_selesai as tgl',
-                //         'persiapan_operasi_distribusis.tgl_retur',
-                //         'resep_keluar_r.nopenerimaan',
-                //         'resep_keluar_r.harga_beli as harga',
-                //         'persiapan_operasi_rincis.noresep',
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah-persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                //         DB::raw('sum((persiapan_operasi_distribusis.jumlah-persiapan_operasi_distribusis.jumlah_retur) * resep_keluar_r.harga_beli) as sub'),
-
-                //     )
-                //         ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
-                //         ->leftJoin('persiapan_operasi_rincis', function ($join) {
-                //             $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
-                //                 ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                //         })
-                //         ->leftJoin('resep_keluar_r', function ($join) {
-                //             $join->on('resep_keluar_r.noresep', '=', 'persiapan_operasi_rincis.noresep')
-                //                 ->on('resep_keluar_r.kdobat', '=', 'persiapan_operasi_rincis.kd_obat');
-                //         })
-                //         ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                //         ->whereNotNull('resep_keluar_r.noresep')
-                //         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                //         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
-                //         ->where('persiapan_operasi_rincis.jumlah_resep', '>', 0)
-                //         ->with([
-                //             'pasien:rs1,rs2',
-                //         ])
-                //         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan');
-                // },
                 //// akhir OK ////
                 'resepkeluarracikan' => function ($kel) {
                     $kel->select(
@@ -764,6 +707,7 @@ class PersediaanFiFoController extends Controller
                         ->whereIn('gudang', ['Gd-05010100', 'Gd-03010100'])
                         ->groupBy('kdobat', 'nopenerimaan_default');
                 },
+                'daftarharga:kd_obat,nopenerimaan,harga',
 
             ]);
         }
