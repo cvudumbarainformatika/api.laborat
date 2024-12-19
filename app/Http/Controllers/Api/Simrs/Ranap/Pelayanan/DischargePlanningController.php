@@ -133,6 +133,8 @@ class DischargePlanningController extends Controller
         'rs8'=> $request->rs8,
         'rs9'=> $request->rs9,
         'rs10'=> $request->rs10,
+        'operasi'=> $request->operasi,
+        'tglOperasi'=> $request->tglOperasi,
         'kdruang'=> $request->kdruang,
         'ttdPasien'=> null,
         'user_input' => $kdpegsimrs 
