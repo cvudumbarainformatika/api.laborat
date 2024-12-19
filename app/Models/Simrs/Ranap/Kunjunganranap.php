@@ -29,6 +29,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosagizi;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
+use App\Models\Simrs\Pelayanan\PraAnastesi;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Penjaminan\GroupingRanap;
@@ -637,5 +638,9 @@ class Kunjunganranap extends Model
     public function planningdokter()
     {
        return $this->hasOne(Planningdokter::class, 'noreg', 'rs1');
+    }
+    public function praanastesi()
+    {
+        return $this->hasMany(PraAnastesi::class, 'noreg', 'rs1');
     }
 }

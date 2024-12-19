@@ -29,6 +29,7 @@ use App\Models\Simrs\Pelayanan\LaporanTindakan;
 use App\Models\Simrs\Pelayanan\NeonatusKeperawatan;
 use App\Models\Simrs\Pelayanan\NeonatusMedis;
 use App\Models\Simrs\Pelayanan\Pediatri;
+use App\Models\Simrs\Pelayanan\PraAnastesi;
 use App\Models\Simrs\Pelayanan\PsikiatriPoli;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisik;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
@@ -95,10 +96,10 @@ class KunjunganPoli extends Model
         return $this->hasmany(TriageA::class, 'rs1', 'rs1');
     }
 
-    // public function relrekomdpjp()
-    // {
-    //     return $this->hasMany(Rekomdpjp::class, 'rs1', 'noreg');
-    // }
+    public function praanastesi()
+    {
+        return $this->hasMany(PraAnastesi::class, 'noreg', 'rs1');
+    }
 
     public function relmpoli()
     {

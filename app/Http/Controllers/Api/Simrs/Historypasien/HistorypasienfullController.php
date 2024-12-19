@@ -16,6 +16,7 @@ class HistorypasienfullController extends Controller
         $norm = request('norm');
         $historyx = KunjunganPoli::select(
             'rs17.rs1',
+            'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs17.rs3 as tanggal',
             'rs19.rs2 as ruangan',
@@ -27,6 +28,7 @@ class HistorypasienfullController extends Controller
             ->where('rs17.rs2', $norm);
         $history = Kunjunganranap::select(
             'rs23.rs1',
+            'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23.rs3 as tanggal',
             'rs24.rs2 as ruangan',
@@ -84,7 +86,8 @@ class HistorypasienfullController extends Controller
                     },
                     'kamaroperasi' => function ($kamaroperasi) {
                         $kamaroperasi->with(['mastertindakanoperasi']);
-                    }
+                    },
+                    'praanastesi'
                 ]
             )
             ->orderby('tanggal', 'DESC')
