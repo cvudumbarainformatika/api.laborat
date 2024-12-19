@@ -106,6 +106,7 @@ class LapOperasionalController extends Controller
             DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as realisasi')
         )
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->where('jurnal_postingotom.verif', '=', '1')
         ->where('jurnal_postingotom.kode', 'LIKE', '4.1.04.16' . '%')
         ->get();
 
@@ -118,10 +119,25 @@ class LapOperasionalController extends Controller
             'jurnalumum_rinci.kredit as realisasix',
         )
         ->where('jurnalumum_heder.keterangan', 'LIKE', 'Reklas Pendapatan' . '%')
+        ->where('jurnalumum_heder.verif', '=', '1')
         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
         ->leftJoin('jurnalumum_rinci', function($join)  {
             $join->on('jurnalumum_rinci.nobukti', '=', 'jurnalumum_heder.nobukti')
             ->where('jurnalumum_rinci.kodepsap13', '!=', '4.1.04.16.02.0001')
+            ;
+          })
+        ->get();
+
+        $psappenyesuaianpendp = JurnalUmum_Header::select(
+            'jurnalumum_rinci.uraianpsap13 as uraian',
+            'jurnalumum_rinci.debet as nilaix',
+        )
+        ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+        ->where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->leftJoin('jurnalumum_rinci', function($join)  {
+            $join->on('jurnalumum_rinci.nobukti', '=', 'jurnalumum_heder.nobukti')
+            ->where('jurnalumum_rinci.kodepsap13', '=', '4.1.04.16.02.0001')
             ;
           })
         ->get();
@@ -147,6 +163,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '8.1.01' . '%')
             ;
@@ -177,6 +194,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '8.1' . '%')
             ;
@@ -210,6 +228,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '7.4' . '%');
             })
@@ -240,6 +259,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '8.3' . '%');
             })
@@ -270,6 +290,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '7.5' . '%');
             })
@@ -303,6 +324,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '7.5' . '%');
             })
@@ -332,6 +354,7 @@ class LapOperasionalController extends Controller
                                 })
         ->leftJoin('jurnal_postingotom', function($join) use ($awal, $akhir) {
             $join->on('jurnal_postingotom.kode', '=', 'akun50_2024.kodeall3')
+            ->where('jurnal_postingotom.verif', '=', '1')
             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.kode', 'LIKE', '8.4' . '%');
             })
@@ -346,6 +369,7 @@ class LapOperasionalController extends Controller
             'pendapatan' => $pendapatan,
             'psaprealisasipendapatan' => $psaprealisasipendapatan,
             'psaprealisasipendapatanx' => $psaprealisasipendapatanx,
+            'psappenyesuaianpendp' => $psappenyesuaianpendp,
             'psapbebanpegawai' => $psapbebanpegawai,
             'psapbebanlain' => $psapbebanlain,
             'psappenjualanaset' => $psappenjualanaset,
