@@ -476,8 +476,12 @@ class PersediaanFiFoController extends Controller
 
                         ->where('stokopname.jumlah', '!=', 0)
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
-                        ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'])
-                        ->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
+                        ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
+                    if (request('jenis') == 'rekap') {
+                        $st->groupBy('stokopname.kdobat');
+                    } else {
+                        $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
+                    }
                 },
                 'penerimaanrinci' => function ($trm) {
                     $trm->select(
@@ -494,8 +498,12 @@ class PersediaanFiFoController extends Controller
                     )
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->with('pbf:kode,nama')
-                        ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
+                        ->where('penerimaan_h.tglpenerimaan', 'LIKE', request('tahun') . '-' . request('bulan') . '%');
+                    if (request('jenis') == 'rekap') {
+                        $trm->groupBy('penerimaan_r.kdobat');
+                    } else {
+                        $trm->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
+                    }
                 },
                 'resepkeluar' => function ($kel) {
                     $kel->select(
@@ -515,8 +523,12 @@ class PersediaanFiFoController extends Controller
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
-                        )
-                        ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
+                        );
+                    if (request('jenis') === 'rekap') {
+                        $kel->groupBy('resep_keluar_r.kdobat');
+                    } else {
+                        $kel->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
+                    }
                 },
                 //// tambahan Ok
                 'resepkeluarok' => function ($kel) {
@@ -542,8 +554,13 @@ class PersediaanFiFoController extends Controller
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
-                        )
-                        ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
+                        );
+                    if (request('jenis') === 'rekap') {
+                        $kel->groupBy('resep_keluar_r.kdobat');
+                    } else {
+                        $kel->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
+                    }
+                    // ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan', 'resep_keluar_r.noresep');
                 },
 
                 'distribusipersiapan' => function ($dist) {
@@ -575,8 +592,13 @@ class PersediaanFiFoController extends Controller
                         ->whereIn('persiapan_operasis.flag', ['4'])
                         ->with([
                             'pasien:rs1,rs2',
-                        ])
-                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
+                        ]);
+                    if (request('jenis') === 'rekap') {
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan');
+                    } else {
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
+                    }
+                    // ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                 },
                 'persiapanretur' => function ($dist) {
                     $dist->select(
@@ -608,8 +630,13 @@ class PersediaanFiFoController extends Controller
                         ->havingRaw('sum(persiapan_operasi_distribusis.jumlah_retur) > 0')
                         ->with([
                             'pasien:rs1,rs2',
-                        ])
-                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
+                        ]);
+                    if (request('jenis') === 'rekap') {
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan');
+                    } else {
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
+                    }
+                    // ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                 },
                 //// akhir OK ////
                 'resepkeluarracikan' => function ($kel) {
@@ -630,8 +657,13 @@ class PersediaanFiFoController extends Controller
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
-                        )
-                        ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'resep_keluar_racikan_r.noresep');
+                        );
+                    if (request('jenis') === 'rekap') {
+                        $kel->groupBy('resep_keluar_racikan_r.kdobat');
+                    } else {
+                        $kel->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'resep_keluar_racikan_r.noresep');
+                    }
+                    // ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan', 'resep_keluar_racikan_r.noresep');
                 },
                 'returpenjualan' => function ($kel) {
                     $kel->select(
@@ -650,8 +682,13 @@ class PersediaanFiFoController extends Controller
                         ->with(
                             'header:noresep,norm',
                             'header.datapasien:rs1,rs2',
-                        )
-                        ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
+                        );
+                    if (request('jenis') === 'rekap') {
+                        $kel->groupBy('retur_penjualan_r.kdobat');
+                    } else {
+                        $kel->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
+                    }
+                    // ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
                 },
                 'mutasikeluar' => function ($mut) {
                     $mut->select(
@@ -672,8 +709,13 @@ class PersediaanFiFoController extends Controller
                         ->where('permintaan_h.tgl_kirim_depo', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                         ->with([
                             'ruangan:kode,uraian',
-                        ])
-                        ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
+                        ]);
+                    if (request('jenis') === 'rekap') {
+                        $mut->groupBy('mutasi_gudangdepo.kd_obat');
+                    } else {
+                        $mut->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.no_permintaan');
+                    }
+                    // ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
                 },
                 'penyesuaian' => function ($pak) {
                     $pak->select(
