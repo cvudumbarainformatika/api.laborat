@@ -451,6 +451,7 @@ class NeracaController extends Controller
                 DB::raw('ifnull(sum(jurnal_postingotom.kredit-jurnal_postingotom.debit),0) as totaljurnal'),
             )->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.verif', '=', '1')
+            ->where('jurnal_postingotom.uraian', 'LIKE', 'Ekuitas' . '%')
             ->groupBy( 'jurnal_postingotom.kode');
         },
         'penyesuaianx' =>  function($sel) use ($awal,$akhir){
@@ -462,9 +463,11 @@ class NeracaController extends Controller
             ->where('jurnalumum_heder.verif', '=', '1')
             ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
             ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+            ->where('jurnalumum_rinci.uraianpsap13', 'LIKE', 'Ekuitas' . '%')
             ->groupBy( 'jurnalumum_rinci.kodepsap13');
         }])
-        ->where('akun50_2024.kodeall3', 'LIKE', '3.1.' . '%')
+        ->where('akun50_2024.kodeall3', 'LIKE', '3.1.01' . '%')
+        // ->orWhere('akun50_2024.kodeall3', 'LIKE', 'Ekuitas' . '%')
         // ->orWhere('akun50_2024.kodeall3', 'LIKE', '3.1.03' . '%')
         ->orderBy('akun50_2024.kodeall3', 'asc')
         ->get();

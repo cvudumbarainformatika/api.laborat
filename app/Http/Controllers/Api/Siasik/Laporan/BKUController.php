@@ -27,6 +27,7 @@ use App\Models\Siasik\TransaksiPjr\SPM_GU;
 use App\Models\Siasik\TransaksiPjr\SpmUP;
 use App\Models\Siasik\TransaksiSaldo\SaldoAwal_PPK;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,29 +44,33 @@ class BKUController extends Controller
     public function bkuppk()
     {
         $thnsekarang=date('Y');
+        $thn=Carbon::createFromFormat('Y-m-d', request('tahun').'-'. request('bulan').'-01')->format('Y');
         // $date = date('Y-m-d');
         $awal=request('tahun').'-'. request('bulan').'-01';
         $akhir=request('tahun').'-'. request('bulan').'-31';
-        $getdate=date('Y-m-d', strtotime($awal));
+        $akhirsebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay()->format('Y-m-d');
+        $awalsebelum= Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->format('Y-m-d');
+        // $thnakhir=Carbon::createFromFormat('Y-m-d', $akhir)->format('Y');
+        if($thn !== $thnsekarang){
+         return response()->json(['message' => 'Tahun Tidak Sama'], 500);
+        }
         // $kurangdariawal=  $getdate < $awal;
         // return $kurangdariawal;
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
+
         $setor=TranskePPK::select('idtrans', 'tgltrans', 'nilai', 'ket')
         ->orderBy('tgltrans', 'asc')
-        ->groupBy('tgltrans')
         ->whereBetween('tgltrans', [$awal, $akhir])
-        ->selectRaw('sum(nilai) as total')
         ->get();
+
         $kaskecil=PengeluaranKas::where('kd_kas', 'K0002')
         ->select('pengeluarankhaskecil.nominal',
                 'pengeluarankhaskecil.tanggalpengeluaran',
                 'pengeluarankhaskecil.kd_kas',
                 'pengeluarankhaskecil.nomorpengeluaran')
-        ->groupBy('tanggalpengeluaran')
         ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
-        ->selectRaw('sum(nominal) as total')
         ->get();
         // $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
         //     $rinci -> with('plainlain',function($tgl){
@@ -106,8 +111,7 @@ class BKUController extends Controller
                         'npdls_rinci.nominalpembayaran',
                         'npdls_rinci.koderek50',
                         'npdls_rinci.rincianbelanja',
-                        'npdls_rinci.tglentry')
-                        ->groupBy('tglentry');
+                        'npdls_rinci.tglentry');
 
                     });
                 });
@@ -129,8 +133,6 @@ class BKUController extends Controller
             'pengembalianup.nopengembalian',
             'pengembalianup.tgltrans',
             'pengembalianup.jmlpengembalianreal')
-        ->groupBy('tgltrans')
-        ->selectRaw('sum(jmlpengembalianreal) as total')
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
 
@@ -139,8 +141,6 @@ class BKUController extends Controller
         'transSpm.noSpm',
         'transSpm.uraian',
         'transSpm.jumlahspp')
-        ->groupBy('tglSpm')
-        ->selectRaw('sum(jumlahspp) as total')
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
 
@@ -148,8 +148,6 @@ class BKUController extends Controller
         'transSpmgu.noSpm',
         'transSpmgu.uraian',
         'transSpmgu.jumlahspp')
-        ->groupBy('tglSpm')
-        ->selectRaw('sum(jumlahspp) as total')
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
 
@@ -164,23 +162,110 @@ class BKUController extends Controller
         'silpa.tahun',
         'silpa.nominal')
         ->where('tahun', $thnsekarang)
-        ->groupBy('tanggal')
-        ->selectRaw('sum(nominal) as total')
+        ->where('tanggal', '!=', $thn.'-01'.'-01' )
         ->orderBy('tanggal', 'asc')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
 
+
+
+
+        $saldosebelum = SaldoAwal_PPK::where('rekening', '=', '0121161061')
+        ->select('nilaisaldo as nilai')
+        // ->where('tanggal', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tanggal', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        ->whereBetween('tanggal', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $setorsebelum=TranskePPK::select('idtrans','tgltrans', 'ket', 'nilai')
+        // ->where('tgltrans', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tgltrans', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        // ->orderBy('tgltrans', 'asc')
+        // ->groupBy('tgltrans')
+        ->whereBetween('tgltrans', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+
+        $kaskecilsebelum=PengeluaranKas::where('kd_kas', 'K0002')
+        ->select(
+            'pengeluarankhaskecil.nominal',
+                'pengeluarankhaskecil.tanggalpengeluaran',
+                'pengeluarankhaskecil.kd_kas',
+                'pengeluarankhaskecil.nomorpengeluaran',
+                'nominal as nilai')
+        ->whereBetween('tanggalpengeluaran', [$awalsebelum. ' 00:00:00', $akhirsebelum. ' 23:59:59'])
+        // ->groupBy('nomorpengeluaran')
+        // ->where('tanggalpengeluaran', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tanggalpengeluaran', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        ->get();
+
+        $npklssebelum = NpkLS_heder::select(
+                'npkls_heder.tglpindahbuku',
+                'npkls_heder.nonpk',
+                // 'total as nilai',
+                DB::raw('sum(total) as nilai'))
+        ->join('npkls_rinci', 'npkls_rinci.nonpk', 'npkls_heder.nonpk')
+        // ->join('npdls_heder', 'npdls_heder.nonpdls', 'npkls_rinci.nonpdls')
+        // ->join('npdls_rinci', 'npdls_rinci.nonpdls', 'npdls_heder.nonpdls')
+        // ->groupBy('npkls_rinci.nonpk')
+        ->whereBetween('npkls_heder.tglpindahbuku', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $nihilsebelum = Nihil::select(DB::raw('sum(jmlpengembalianreal) as nilai'), 'tgltrans')
+        // ->where('tgltrans', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tgltrans', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        ->whereBetween('tgltrans', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+
+        $spmsebelum = SpmUP::select(DB::raw('sum(jumlahspp) as nilai'))
+        // ->where('tglSpm', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tglSpm', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        ->whereBetween('tglSpm', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $spmgusebelum = SPM_GU::select(DB::raw('sum(jumlahspp) as nilai'), 'tglspm')
+        // ->where('tglSpm', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tglSpm', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        ->whereBetween('tglSpm', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+
+        $silpasebelum=SisaAnggaran::select(
+            'silpa.notrans',
+                    'silpa.tanggal',
+                    'silpa.tahun',
+                    'silpa.nominal as nilai')
+        ->where('tahun', $thnsekarang)
+        ->where('tanggal', '!=', $thn.'-01'.'-01' )
+        // ->where('tanggal', '>=', Carbon::parse($awalsebelum)->startOfMonth())
+        // ->where('tanggal', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+        ->whereBetween('tanggal', [$awalsebelum, $akhirsebelum])
+        ->get();
         $ppk = [
             'saldo' => $saldo,
             'silpa' => $silpa,
             'setor' => $setor,
             'kaskecil' => $kaskecil,
-            // 'pendapatan' => $pendapatan,
             'spm' => $spm,
             'spmgu' => $spmgu,
             'nihil' => $nihil,
             'npkls' => $npkls,
-            'pegawai' => $pegawai
+            'pegawai' => $pegawai,
+
+            'saldosebelum' => $saldosebelum,
+            'silpasebelum' => $silpasebelum,
+            'setorsebelum' => $setorsebelum,
+            'kaskecilsebelum' => $kaskecilsebelum,
+            'spmsebelum' => $spmsebelum,
+            'spmgusebelum' => $spmgusebelum,
+            'nihilsebelum' => $nihilsebelum,
+            'npklssebelum' => $npklssebelum,
+
+            'awalx'=> $awalsebelum,
+            'akhirx'=> $akhirsebelum,
+            'thn'=> $thn,
+            // 'thnakhir'=> $thnakhir,
         ];
 
         return new JsonResponse($ppk);
