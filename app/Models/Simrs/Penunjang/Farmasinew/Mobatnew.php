@@ -18,6 +18,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PemakaianR;
@@ -310,5 +311,9 @@ class Mobatnew extends Model
     public function jurnal()
     {
         return $this->hasOne(Akun_mapjurnal::class, 'kodeall', 'kode50');
+    }
+    public function returpbf()
+    {
+        return $this->hasMany(Returpbfrinci::class, 'kd_obat', 'kd_obat');
     }
 }

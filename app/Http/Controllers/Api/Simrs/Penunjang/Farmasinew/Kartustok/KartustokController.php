@@ -263,6 +263,19 @@ class KartustokController extends Controller
                         ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('retur_gudangs.kunci', '1')
                         ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo');
+                },
+                // retur ke PBF
+                'returpbf' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'retur_penyedia_r.kd_obat',
+                        'retur_penyedia_h.tgl_kunci as tgl_retur',
+                        DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah_retur')
+                    )
+                        ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
+                        ->where('retur_penyedia_h.gudang', request('koderuangan'))
+                        ->whereBetween('retur_penyedia_h.tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('retur_penyedia_h.kunci', '1')
+                        ->groupBy('retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang');
                 }
 
             ])
@@ -549,7 +562,21 @@ class KartustokController extends Controller
                         ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('retur_gudangs.kunci', '1')
                         ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo', 'retur_gudangs.no_retur');
-                }
+                },
+                // retur ke PBF
+                'returpbf' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'retur_penyedia_r.kd_obat',
+                        'retur_penyedia_h.tgl_kunci as tgl_retur',
+                        'retur_penyedia_h.no_retur',
+                        DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah_retur')
+                    )
+                        ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
+                        ->where('retur_penyedia_h.gudang', request('koderuangan'))
+                        ->whereBetween('retur_penyedia_h.tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('retur_penyedia_h.kunci', '1')
+                        ->groupBy('retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang', 'retur_penyedia_h.no_retur');
+                },
 
 
             ])
