@@ -767,7 +767,7 @@ class PersediaanFiFoController extends Controller
             });
             $kirim = $obat;
         } else {
-            $obat = $rwobat->paginate(50);
+            $obat = $rwobat->paginate(30);
             $anu = collect($obat)['data'];
             $meta = collect($obat)->except('data');
             foreach ($anu as $it) {
