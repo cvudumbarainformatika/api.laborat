@@ -537,7 +537,10 @@ class PenjualanBebasController extends Controller
         // });
 
         // return $adaAlokasiRacikan;
-
+        $request->validate([
+            'kode_identitas' => 'required',
+            'nama' => 'required',
+        ]);
 
         try {
             DB::connection('farmasi')->beginTransaction();

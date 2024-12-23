@@ -355,12 +355,19 @@ class ReturkepbfController extends Controller
                             'message' => 'Data Stok Tidak ditemukan, Data tidak terkunci',
                         ], 410);
                     }
+                    $adaStok = (float)$stok->jumlah;
+                    if ($adaStok < $key['jumlah_retur']) {
+                        return new JsonResponse([
+                            'message' => 'Data Stok Tidak mencukupi, Data tidak terkunci',
+                        ], 410);
+                    }
                     $jumlahStok = (float)$stok->jumlah - (float)$key['jumlah_retur'];
                     $stok->jumlah = $jumlahStok;
                     $stok->save();
                 }
             }
             $data->kunci = '1';
+            $data->tgl_kunci = date('Y-m-d H:i:s');
             $data->save();
             DB::connection('farmasi')->commit();
             return new JsonResponse([
