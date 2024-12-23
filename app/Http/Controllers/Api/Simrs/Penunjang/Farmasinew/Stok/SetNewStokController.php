@@ -3308,9 +3308,6 @@ class SetNewStokController extends Controller
                     'mutasi_gudangdepo.harga',
                     DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
                 )
-                    // ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                    // ->where('permintaan_h.tgl_terima_depo', 'LIKE', '%' . $x . '%')
-                    // ->where('permintaan_h.dari', $koderuangan)
                     ->whereIn('no_permintaan', $headMutasiMas)
                     ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                     ->groupBy(
@@ -3333,9 +3330,7 @@ class SetNewStokController extends Controller
                     // 'permintaan_h.tgl_kirim_depo',
                     DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
                 )
-                    // ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                    // ->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' . $x . '%')
-                    // ->where('permintaan_h.tujuan', $koderuangan)
+
                     ->whereIn('no_permintaan', $headMutasiKel)
                     ->where('mutasi_gudangdepo.kd_obat', $kdobat)
                     ->groupBy(
@@ -3345,22 +3340,6 @@ class SetNewStokController extends Controller
                     ->get();
                 $mutasiKeluar = collect($mutasiKeluarDepoRinci)->sum('jumlah');
 
-                $headerResep = Resepkeluarheder::select('noresep')->where('tgl_selesai', 'LIKE', '%' . $x . '%')
-                    ->where('depo', $koderuangan)->distinct()->pluck('noresep');
-                $resepKeluarRinci = Resepkeluarrinci::select(
-                    'resep_keluar_r.kdobat',
-                    'resep_keluar_r.nopenerimaan',
-                    DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
-                )
-                    // ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                    // ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $x . '%')
-                    // ->where('resep_keluar_h.depo', $koderuangan)
-                    ->whereIn('noresep', $headerResep)
-                    ->where('resep_keluar_r.kdobat', $kdobat)
-                    ->where('resep_keluar_r.jumlah', '>', 0)
-                    ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
-                    ->get();
-                $resepKeluar = collect($resepKeluarRinci)->sum('jumlah');
                 $returRinci = Returpenjualan_r::select(
                     'retur_penjualan_r.kdobat',
                     'retur_penjualan_r.nopenerimaan',
@@ -3376,91 +3355,77 @@ class SetNewStokController extends Controller
                     ->get();
                 $retur = collect($returRinci)->sum('jumlah');
 
+
+                $headerResep = Resepkeluarheder::select('noresep')->where('tgl_selesai', 'LIKE', '%' . $x . '%')
+                    ->where('depo', $koderuangan)
+                    ->when($koderuangan == 'Gd-04010103', function ($q) use ($x, $kdobat) {
+                        // ambil noresep rinci di persiapan operasi rinci
+                        $perRin = PersiapanOperasiRinci::select('noresep')
+                            ->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                            ->where('tgl_distribusi', 'LIKE', '%' . $x . '%')
+                            ->where('kd_obat', $kdobat)
+                            ->groupBy('kd_obat')
+                            ->pluck('noresep');
+                        $q->whereNotIn('noresep', $perRin);
+                    })
+                    ->distinct()->pluck('noresep');
                 $resepKeluarRacikanRinci = Resepkeluarrinciracikan::select(
                     'resep_keluar_racikan_r.kdobat',
                     'resep_keluar_racikan_r.nopenerimaan',
                     DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
                 )
-                    // ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
-                    // ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . $x . '%')
-                    // ->where('resep_keluar_h.depo', $koderuangan)
                     ->whereIn('noresep', $headerResep)
                     ->where('resep_keluar_racikan_r.kdobat', $kdobat)
                     ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan')
                     ->get();
                 $resepKeluarRacikan = collect($resepKeluarRacikanRinci)->sum('jumlah');
-                // } else {
-                //     $noresep = PersiapanOperasiRinci::select(
-                //         'persiapan_operasi_rincis.noresep',
-                //     )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                //         ->where('persiapan_operasis.tgl_permintaan', 'LIKE', '%' . $x . '%')
-                //         ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
-                //         ->groupBy('persiapan_operasi_rincis.noresep')
-                //         ->pluck('persiapan_operasi_rincis.noresep');
 
-                //     $resepKeluarRinci = Resepkeluarrinci::select(
-                //         'resep_keluar_r.kdobat',
-                //         'resep_keluar_r.nopenerimaan',
-                //         DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
-                //     )
-                //         ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                //         ->where('resep_keluar_h.tgl_permintaan', 'LIKE', '%' . $x . '%')
-                //         ->where('resep_keluar_h.depo', $koderuangan)
-                //         ->where('resep_keluar_r.kdobat', $kdobat)
-                //         ->whereNotIn('resep_keluar_h.noresep', $noresep)
-                //         ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
-                //         ->get();
-                //     $resepKeluar = collect($resepKeluarRinci)->sum('jumlah');
+                $resepKeluarRinci = Resepkeluarrinci::select(
+                    'resep_keluar_r.kdobat',
+                    'resep_keluar_r.nopenerimaan',
+                    DB::raw('sum(resep_keluar_r.jumlah) as jumlah')
+                )
+                    ->when($koderuangan == 'Gd-04010103', function ($anu) use ($x, $kdobat) {
+                        $anu->leftJoin('persiapan_operasi_rincis', function ($q) {
+                            $q->on('persiapan_operasi_rincis.noresep', '=', 'resep_keluar_r.noresep')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'resep_keluar_r.kdobat');
+                        })
+                            ->whereNull('persiapan_operasi_rincis.noresep');
+                    })
+                    ->whereIn('resep_keluar_r.noresep', $headerResep)
+                    ->where('resep_keluar_r.kdobat', $kdobat)
+                    ->where('resep_keluar_r.jumlah', '>', 0)
+                    ->groupBy('resep_keluar_r.kdobat', 'resep_keluar_r.nopenerimaan')
+                    ->get();
 
+                $resepKeluar = collect($resepKeluarRinci)->sum('jumlah');
+                $persiapanOperasiDistribusiRinci = [];
+                $persiapanOperasiDistribusiRetur = [];
+                if ($koderuangan == 'Gd-04010103') {
+                    $persiapanOperasiDistribusiRinci = PersiapanOperasiDistribusi::select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
+                    )
+                        ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' . $x . '%')
+                        ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        ->get();
+                    $persiapanOperasiDistribusiRetur = PersiapanOperasiDistribusi::select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
+                    )
+                        ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->where('persiapan_operasis.tgl_retur', 'LIKE', '%' . $x . '%')
+                        ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        ->get();
+                }
 
-                //     $returRinci = Returpenjualan_r::select(
-                //         'retur_penjualan_r.kdobat',
-                //         'retur_penjualan_r.nopenerimaan',
-                //         DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah')
-                //     )
-                //         ->join('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
-                //         ->join('resep_keluar_h', 'retur_penjualan_r.noresep', '=', 'resep_keluar_h.noresep')
-                //         ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $x . '%')
-                //         ->where('resep_keluar_h.depo', $koderuangan)
-
-                //         ->where('retur_penjualan_r.kdobat', $kdobat)
-                //         ->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan')
-                //         ->get();
-                //     $retur = collect($returRinci)->sum('jumlah');
-
-                //     $resepKeluarRacikanRinci = Resepkeluarrinciracikan::select(
-                //         'resep_keluar_racikan_r.kdobat',
-                //         'resep_keluar_racikan_r.nopenerimaan',
-                //         DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah')
-                //     )
-                //         ->join('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
-                //         ->where('resep_keluar_h.tgl_permintaan', 'LIKE', '%' . $x . '%')
-                //         ->where('resep_keluar_h.depo', $koderuangan)
-                //         ->where('resep_keluar_racikan_r.kdobat', $kdobat)
-                //         ->whereNotIn('resep_keluar_h.noresep', $noresep)
-                //         ->groupBy('resep_keluar_racikan_r.kdobat', 'resep_keluar_racikan_r.nopenerimaan')
-                //         ->get();
-                //     $resepKeluarRacikan = collect($resepKeluarRacikanRinci)->sum('jumlah');
-
-                //     $persiapanOperasiDistribusiRinci = PersiapanOperasiDistribusi::select(
-                //         'persiapan_operasi_distribusis.kd_obat',
-                //         'persiapan_operasi_distribusis.nopenerimaan',
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as distribusi'),
-                //         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as kembali'),
-                //     )
-                //         ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                //         ->where('persiapan_operasis.tgl_permintaan', 'LIKE', '%' . $x . '%')
-                //         ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
-                //         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
-                //         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
-                //         ->get();
-                //     $distribusiOk = collect($persiapanOperasiDistribusiRinci)->sum('distribusi');
-                //     $kembaliOk = collect($persiapanOperasiDistribusiRinci)->sum('kembali');
-
-                //     foreach ($persiapanOperasiDistribusiRinci as $key) {
-                //         $rawNoper[] = $key->nopenerimaan;
-                //     }
-                // }
 
                 // retur gudang
 
@@ -3496,6 +3461,12 @@ class SetNewStokController extends Controller
                 foreach ($resepKeluarRacikanRinci as $key) {
                     $rawNoper[] = $key->nopenerimaan;
                 }
+                foreach ($persiapanOperasiDistribusiRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($persiapanOperasiDistribusiRetur as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
                 // sudut pandang foreach
                 $noper = array_unique($rawNoper);
 
@@ -3508,92 +3479,6 @@ class SetNewStokController extends Controller
                 $anuaad = 0;
                 $anumas = 0;
                 $anukel = 0;
-                // if ($koderuangan === 'Gd-04010103') {
-
-                //     // pembetulan nomor penerimaan
-                //     foreach ($noper as $key) {
-                //         $kemOk =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->kembali ?? 0;
-                //         $salAwal =  collect($saldoAwalDepoRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
-                //         $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                //         $peny =  collect($penyesuaianDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                //         $retPenj =  collect($returRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                //         // keluar
-                //         $distOk =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->distribusi ?? 0;
-                //         $mutKel =  collect($mutasiKeluarDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                //         $resepNRac =  collect($resepKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                //         $resepRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                //         $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-
-                //         $maSuk = (float) $salAwal + (float)$peny + (float) $mutMas +  (float) $retPenj + (float)$kemOk;
-                //         $keLuar = (float)$mutKel + (float)$distOk  + (float)$resepNRac + (float)$resepRac + (float)$retGud;
-                //         $sisanya = $maSuk - $keLuar;
-                //         if ($sisanya == 0) {
-                //             $penPas[] = [
-                //                 'noper' => $key,
-                //                 'sisanya' => $sisanya,
-                //                 'maSuk' => $maSuk,
-                //                 'keLuar' => $keLuar,
-                //                 'masuknya' => [
-                //                     'kemOk' => $kemOk,
-                //                     'salAwal' => $salAwal,
-                //                     'mutMas' => $mutMas,
-                //                     'peny' => $peny,
-                //                     'retPenj' => $retPenj,
-                //                 ],
-                //                 'keluarnya' => [
-                //                     'distOk' => $distOk,
-                //                     'mutKel' => $mutKel,
-                //                     'resepNRac' => $resepNRac,
-                //                     'resepRac' => $resepRac,
-                //                     'retGud' => $retGud,
-                //                 ],
-                //             ];
-                //         } else if ($sisanya < 0) {
-                //             $penKur[] = [
-                //                 'noper' => $key,
-                //                 'sisanya' => $sisanya,
-                //                 'maSuk' => $maSuk,
-                //                 'keLuar' => $keLuar,
-                //                 'masuknya' => [
-                //                     'kemOk' => $kemOk,
-                //                     'salAwal' => $salAwal,
-                //                     'mutMas' => $mutMas,
-                //                     'peny' => $peny,
-                //                     'retPenj' => $retPenj,
-                //                 ],
-                //                 'keluarnya' => [
-                //                     'distOk' => $distOk,
-                //                     'mutKel' => $mutKel,
-                //                     'resepNRac' => $resepNRac,
-                //                     'resepRac' => $resepRac,
-                //                     'retGud' => $retGud,
-                //                 ],
-                //             ];
-                //         } else {
-                //             $penLeb[] = [
-                //                 'noper' => $key,
-                //                 'sisanya' => $sisanya,
-                //                 'maSuk' => $maSuk,
-                //                 'keLuar' => $keLuar,
-                //                 'masuknya' => [
-                //                     'kemOk' => $kemOk,
-                //                     'salAwal' => $salAwal,
-                //                     'mutMas' => $mutMas,
-                //                     'peny' => $peny,
-                //                     'retPenj' => $retPenj,
-                //                 ],
-                //                 'keluarnya' => [
-                //                     'distOk' => $distOk,
-                //                     'mutKel' => $mutKel,
-                //                     'resepNRac' => $resepNRac,
-                //                     'resepRac' => $resepRac,
-                //                     'retGud' => $retGud,
-                //                 ],
-                //             ];
-                //         }
-                //     }
-                //     // }
-                // } else {
                 $stOPAll = StokStokopname::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)->where('tglopname', 'LIKE', $x . '%')->first();
                 $tts = round($stOPAll->jumlah, 2) ?? 0;
@@ -3613,14 +3498,16 @@ class SetNewStokController extends Controller
                     $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $peny =  collect($penyesuaianDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $retPenj =  collect($returRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retPersi =  collect($persiapanOperasiDistribusiRetur)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     // keluar
                     $mutKel =  collect($mutasiKeluarDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $resepNRac =  collect($resepKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $resepRac =  collect($resepKeluarRacikanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $retGud =  collect($returGudangRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $distOp =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
 
-                    $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) +  (float)round($retPenj, 2) + (float)round($peny, 2)), 2);
-                    $keLuar = round(((float)round($mutKel, 2) + (float)round($retGud, 2) + (float)round($resepNRac, 2) + (float)round($resepRac, 2)), 2);
+                    $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) +  (float)round($retPenj, 2) +  (float)round($retPersi, 2) + (float)round($peny, 2)), 2);
+                    $keLuar = round(((float)round($mutKel, 2) + (float)round($retGud, 2) + (float)round($resepNRac, 2) + (float)round($resepRac, 2) + (float)round($distOp, 2)), 2);
                     $sisanya = round(($maSuk - $keLuar), 2);
                     $stOpnya = round($stOP->jumlah, 2) ?? 0;
                     $sts = round(($sisanya - $stOpnya), 2);
@@ -3755,10 +3642,11 @@ class SetNewStokController extends Controller
                     'saldoAwalRinci' => $saldoAwalDepoRinci,
                     // 'mutasiMasukDepoRinci' => $mutasiMasukDepoRinci,
                     // 'mutasiKeluarDepoRinci' => $mutasiKeluarDepoRinci,
-                    // 'resepKeluarRinci' => $resepKeluarRinci,
+                    'resepKeluarRinci' => $resepKeluarRinci,
                     // 'returRinci' => $returRinci,
                     // 'resepKeluarRacikanRinci' => $resepKeluarRacikanRinci,
-                    // 'persiapanOperasiDistribusiRinci' => $persiapanOperasiDistribusiRinci ?? [],
+                    'persiapanOperasiDistribusiRinci' => $persiapanOperasiDistribusiRinci ?? [],
+                    'persiapanOperasiDistribusiRetur' => $persiapanOperasiDistribusiRetur ?? [],
                     // 'returGudangRinci' => $returGudangRinci,
                     // 'mutasiMasuk' => $mutasiMasuk,
                     // 'mutasiKeluar' => $mutasiKeluar,
