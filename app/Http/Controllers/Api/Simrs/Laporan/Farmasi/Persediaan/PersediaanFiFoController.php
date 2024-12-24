@@ -749,6 +749,31 @@ class PersediaanFiFoController extends Controller
                         ->whereIn('gudang', ['Gd-05010100', 'Gd-03010100'])
                         ->groupBy('kdobat', 'nopenerimaan_default');
                 },
+                'returpbf' => function ($kel) {
+                    $kel->select(
+                        'retur_penyedia_r.no_retur',
+                        'retur_penyedia_r.kd_obat',
+                        'retur_penyedia_r.kd_obat as kdobat',
+                        'retur_penyedia_h.tgl_kunci as tgl',
+                        'retur_penyedia_r.nopenerimaan_default as nopenerimaan',
+                        'retur_penyedia_r.harga_net_default as harga',
+                        DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah'),
+                        DB::raw('sum(retur_penyedia_r.jumlah_retur * retur_penyedia_r.harga_net_default) as sub'),
+
+                    )
+                        ->join('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
+                        ->havingRaw('jumlah > 0')
+                        ->where('retur_penyedia_h.tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
+                        ->with(
+                            'header.penyedia:kode,nama',
+                        );
+                    if (request('jenis') === 'rekap') {
+                        $kel->groupBy('retur_penyedia_r.kd_obat');
+                    } else {
+                        $kel->groupBy('retur_penyedia_r.kd_obat', 'retur_penyedia_r.nopenerimaan_default', 'retur_penyedia_r.no_retur');
+                    }
+                    // ->groupBy('retur_penyedia_r.kdobat', 'retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.noresep');
+                },
                 'daftarharga:kd_obat,nopenerimaan,harga',
 
             ]);
