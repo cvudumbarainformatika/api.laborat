@@ -139,7 +139,9 @@ class DischargePlanningController extends Controller
 
       if ($ttdPasien !== null || $ttdPasien !== "") {
         $ttdPasienx = $this->saveImage($request, $request->ttdPasien, $data->id);
-        $data->ttdPasien = $ttdPasienx;
+        if ($ttdPasienx) {
+          $data->ttdPasien = $ttdPasienx;
+        }
       }
 
       $data->rs1 = $request->rs1;
