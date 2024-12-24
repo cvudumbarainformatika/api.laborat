@@ -138,7 +138,8 @@ class DischargePlanningController extends Controller
 
 
       if ($ttdPasien !== null || $ttdPasien !== "") {
-        $data->ttdPasien = $ttdPasien;
+        $ttdPasienx = $this->saveImage($request, $request->ttdPasien, $data->id);
+        $data->ttdPasien = $ttdPasienx;
       }
 
       $data->rs1 = $request->rs1;
@@ -183,12 +184,12 @@ class DischargePlanningController extends Controller
         ]);
        }
 
-       $ttdPasien = $this->saveImage($request, $request->ttdPasien, $data->id);
+       
        $cek = SummaryPulang::find($data->id);
 
-       $cek->update([
-        'ttdPasien' => $ttdPasien
-       ]);
+      //  $cek->update([
+      //   'ttdPasien' => $ttdPasien
+      //  ]);
 
        return new JsonResponse([
         'success' => true,
