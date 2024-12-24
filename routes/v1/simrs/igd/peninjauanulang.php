@@ -9,4 +9,5 @@ Route::group([
     'prefix' => 'simrs/igd/peninjauanulang'
 ],function () {
     Route::post('/simpanpeninjauanulang', [PeninjauanUlangController::class, 'simpanpeninjauanulang']);
+    Route::post('/hapuspeninjauanulang', [PeninjauanUlangController::class, 'hapuspeninjauanulang']);
 });
