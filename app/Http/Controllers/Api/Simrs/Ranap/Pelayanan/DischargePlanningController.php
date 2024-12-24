@@ -133,16 +133,11 @@ class DischargePlanningController extends Controller
           ]);
         }
       } else {
-        $data = new SummaryPulang;
+        $data = new SummaryPulang();
       }
 
 
-      if ($ttdPasien !== null || $ttdPasien !== "") {
-        $ttdPasienx = $this->saveImage($request, $request->ttdPasien, $data->id);
-        if ($ttdPasienx) {
-          $data->ttdPasien = $ttdPasienx;
-        }
-      }
+      
 
       $data->rs1 = $request->rs1;
       $data->rs2 = $request->rs2;
@@ -189,9 +184,17 @@ class DischargePlanningController extends Controller
        
        $cek = SummaryPulang::find($data->id);
 
-      //  $cek->update([
-      //   'ttdPasien' => $ttdPasien
-      //  ]);
+     
+
+      if ($ttdPasien !== null || $ttdPasien !== "") {
+        $isBase64 = self::is_base64_image($ttdPasien);
+        if ($isBase64) {
+          $ttdPasienx = $this->saveImage($request, $request->ttdPasien, $data->id);
+          $cek->update([
+            'ttdPasien' => $ttdPasienx
+          ]);
+        }
+      }
 
        return new JsonResponse([
         'success' => true,
@@ -199,6 +202,8 @@ class DischargePlanningController extends Controller
         'result' => $cek
        ]);
     }
+
+    
 
     static function saveImage($request, $image, $id)
     {
@@ -222,6 +227,11 @@ class DischargePlanningController extends Controller
       }
 
       return $file;
+    }
+
+    public static function is_base64_image($image) {
+      $pattern = '/^data:image\/(jpeg|jpg|png|gif|bmp);base64,/';
+      return preg_match($pattern, $image) === 1;
     }
 
 

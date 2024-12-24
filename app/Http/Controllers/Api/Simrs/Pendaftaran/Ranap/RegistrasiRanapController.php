@@ -292,7 +292,9 @@ class RegistrasiRanapController extends Controller
         [
           'norm' => $request->norm,
           'kd_jeniskasus' => $request->kategoriKasus,
-          'indikator_naik_kelas'=> $request->indikatorPerubahanKelas,
+          'indikator_naik_kelas'=> $request->indikatorPerubahanKelas ?? null,
+          'notelp_penanggungjawab'=> $request->notelp_penanggungjawab ?? null,
+          'hub_keluarga' => $request->hub_keluarga ?? null,
           'user_input'=> auth()->user()->pegawai_id,
 
         ]);
