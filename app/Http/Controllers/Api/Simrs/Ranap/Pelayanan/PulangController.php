@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Api\Simrs\Ranap\Pelayanan;
 
+use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\DateHelper;
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\SuratPasien\SuratPasien;
 use Carbon\Carbon;
@@ -87,6 +92,13 @@ class PulangController extends Controller
         ]);
       } 
 
+      $noSuratMeninggal = null;
+
+      if($meninggal){
+        $noSuratMeninggal = $request->noSuratMeninggal; // per tgl 1 ubah yg di bawah
+        // $noSuratMeninggal = self::buatSuratMeninggal();
+      }
+
       if ($kunjungan === 0) {
         $kunjunganRanap = Kunjunganranap::where('rs1', $request->noreg)->first();
         $updateKunjunganRanap = $kunjunganRanap->update([
@@ -111,7 +123,7 @@ class PulangController extends Controller
           SuratPasien::updateOrCreate(
             ['noreg' => $request->noreg],
             [
-              'nosuratmeninggal' => $request->noSuratMeninggal,
+              'nosuratmeninggal' => $noSuratMeninggal,
               'nolp' => $request->noLp
             ]
           );
@@ -152,11 +164,134 @@ class PulangController extends Controller
           ]);
         }
 
+        if ($request->noSep !== null || $request->noSep !== '') {
+          self::update_pulang_bpjs_ranap($request, $user);
+        }
+
        return new JsonResponse([
         'success' => true,
         'message' => 'success',
         'result' => $sql_cek_kunjungan
        ]);
+    }
+
+
+    public function buatSuratMeninggal()
+    {
+        $oto = 0;
+        DB::select('call no_surat_kematian(@nomor)');
+        $x = DB::table('rs1')->select('kematian')->get();
+        $oto = $x[0]->rs28;
+        $has = null;
+        $lbr = strlen($oto);
+        for ($i = 1; $i <= 5 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        $bulan = (int) date('m');
+        $blnRomawi = self::intToRoman($bulan);
+
+        $no = "472.12/$has/425.1102.8/KEM/$blnRomawi/" . date('Y');
+        return $no;
+    }
+
+    public static function intToRoman($num) {
+      $romanNumerals = [
+          1000 => 'M',
+          900 => 'CM',
+          500 => 'D',
+          400 => 'CD',
+          100 => 'C',
+          90 => 'XC',
+          50 => 'L',
+          40 => 'XL',
+          10 => 'X',
+          9 => 'IX',
+          5 => 'V',
+          4 => 'IV',
+          1 => 'I'
+      ];
+  
+      $result = '';
+      foreach ($romanNumerals as $value => $numeral) {
+          while ($num >= $value) {
+              $result .= $numeral;
+              $num -= $value;
+          }
+      }
+      return $result;
+  }
+
+    public static function update_pulang_bpjs_ranap($request, $user)
+    {
+        
+        $request->validate([
+            'noSep' => 'required',
+        ]);
+
+        // return $request->all();
+        $status = 5;
+        switch ($request->caraKeluar) {
+          case 'C001':
+              $status = 1;
+              break;
+          case 'C002':
+              $status = 3;
+              break;
+          case 'C003':
+              $status = 4;
+              break;
+          default:
+              $status = 5;
+              break;
+        }
+
+        $noSuratMeninggal = $request->noSuratMeninggal;
+        
+        $data = [
+          "request" => [
+              "t_sep" => [
+                  "noSep" => $request->noSep,
+                  "statusPulang" =>$status,
+                  "noSuratMeninggal" => $status == 4 ? $noSuratMeninggal ?? "" : "",
+                  "tglMeninggal" => date('Y-m-d'),
+                  "tglPulang" => date('Y-m-d'),
+                  "noLPManual" => $request->noLp ?? "",
+                  "user" => $user->nama ?? "-"
+              ],
+          ],
+      ];
+
+        // return $data;
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $updateSep = BridgingbpjsHelper::put_url(
+            'vclaim',
+            'SEP/2.0/updtglplg',
+            $data
+        );
+
+        Bpjs_http_respon::create(
+            [
+                'method' => 'PUT',
+                'noreg' => $request->noreg === null ? '' : $request->noreg,
+                'request' => $data,
+                'respon' => $updateSep,
+                'url' => '/SEP/2.0/updtglplg',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+
+        // update ke rs227
+        $bpjs = $updateSep['metadata']['code'];
+        if ($bpjs === 200 || $bpjs === '200') {
+            Sepranap::where('rs1', $request->noreg)->update(
+                [
+                  'rs19' => '2',
+                  'users' => auth()->user()->pegawai_id,
+                ]
+            );
+        }
+        return $updateSep;
+        
     }
 
 
