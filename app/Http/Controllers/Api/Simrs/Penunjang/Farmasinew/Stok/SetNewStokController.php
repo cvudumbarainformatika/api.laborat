@@ -3123,8 +3123,9 @@ class SetNewStokController extends Controller
                 $mutkel = round($mutasiKeluar, 2) ?? 0;
                 $rus = round($rusak, 2) ?? 0;
                 $retG = round($returGudang, 2) ?? 0;
+                $retPbf = round($returPbf, 2) ?? 0;
                 $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
-                $keluar = (float)$mutkel + (float)$rus;
+                $keluar = (float)$mutkel + (float)$rus + (float)$retPbf;
                 $sisa = (float)$masuk - (float)$keluar;
 
                 $nopeSt = [];
