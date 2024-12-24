@@ -23,7 +23,7 @@ use PhpParser\Node\Expr\AssignOp\Concat;
 class LRAController extends Controller
 {
     public function bidang(){
-        $thn= request('tahun', 'Y');
+        $thn= Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $bidang=Mapping_Bidang_Ptk_Kegiatan::where('tahun', $thn)
         ->where('alias', '!=', '')
         ->when(request('bidang'),function($keg) {
@@ -32,6 +32,12 @@ class LRAController extends Controller
         ->select('kodebidang', 'bidang', 'kodekegiatan', 'kegiatan', 'kodepptk', 'namapptk')
         ->groupBy('kodekegiatan')
         ->get();
+
+        // $bidangx = [
+        //     'belanja' => $thn,
+        //     'pendapatan' => $bidang,
+
+        // ];
 
         return new JsonResponse($bidang);
 

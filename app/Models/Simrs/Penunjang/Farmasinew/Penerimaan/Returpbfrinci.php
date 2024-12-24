@@ -17,4 +17,8 @@ class Returpbfrinci extends Model
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kd_obat');
     }
+    public function header()
+    {
+        return $this->belongsTo(Returpbfheder::class, 'no_retur', 'no_retur');
+    }
 }

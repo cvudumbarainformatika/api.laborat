@@ -24,10 +24,10 @@ class PraAnastesi extends Model
 
   public function pemeriksaanfisik()
     {
-        return $this->hasMany(Pemeriksaanfisik::class, 'rs1', 'noreg');
+      return $this->hasMany(Pemeriksaanfisik::class, 'rs1', 'noreg');
     }
     public function diagnosa()
     {
-        return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
+      return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
     }
 }
