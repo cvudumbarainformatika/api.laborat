@@ -266,7 +266,8 @@ class IgdController extends Controller
                                     'mastertindakan'
                                 ]
                             );
-                        }
+                        },
+                        'nakesminta'
                     ]
                 )->where('kdruang', 'POL014');
             },
