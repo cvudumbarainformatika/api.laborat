@@ -119,7 +119,7 @@ class PulangController extends Controller
         ]);
        }
 
-       if ($request->noSuratMeninggal !== null || $request->noLp !== null) {
+       if ($noSuratMeninggal !== null || $request->noLp !== null) {
           SuratPasien::updateOrCreate(
             ['noreg' => $request->noreg],
             [
