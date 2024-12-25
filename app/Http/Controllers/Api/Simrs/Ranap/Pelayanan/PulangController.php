@@ -182,15 +182,19 @@ class PulangController extends Controller
         DB::select('call no_surat_kematian(@nomor)');
         $x = DB::table('rs1')->select('kematian')->get();
         $oto = $x[0]->rs28;
+
+
         $has = null;
         $lbr = strlen($oto);
         for ($i = 1; $i <= 5 - $lbr; $i++) {
             $has = $has . "0";
         }
+
+
         $bulan = (int) date('m');
         $blnRomawi = self::intToRoman($bulan);
 
-        $no = "472.12/$has/425.1102.8/KEM/$blnRomawi/" . date('Y');
+        $no = "472.12/$has/425.102.8/KEM/$blnRomawi/" . date('Y');
         return $no;
     }
 
