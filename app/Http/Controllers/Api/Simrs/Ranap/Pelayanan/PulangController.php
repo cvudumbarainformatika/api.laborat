@@ -257,7 +257,7 @@ class PulangController extends Controller
                   "noSep" => $request->noSep,
                   "statusPulang" =>$status,
                   "noSuratMeninggal" => $status == 4 ? $noSuratMeninggal ?? "" : "",
-                  "tglMeninggal" => date('Y-m-d'),
+                  "tglMeninggal" => $status == 4 ? date('Y-m-d') : "",
                   "tglPulang" => date('Y-m-d'),
                   "noLPManual" => $request->noLp ?? "",
                   "user" => $user->nama ?? "-"
