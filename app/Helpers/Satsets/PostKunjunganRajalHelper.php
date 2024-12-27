@@ -38,7 +38,7 @@ class PostKunjunganRajalHelper
       // }
       // return ['yg terkirim'=>$ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
 
-      $tgl = Carbon::now()->subDay()->toDateString();
+      $tgl = Carbon::now()->subDays(5)->toDateString();
       return self::rajal($tgl);
     }
 
