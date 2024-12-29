@@ -29,12 +29,10 @@ class BukubesarController extends Controller
 
         $akun=Akun50_2024::select('uraian','kodeall3')
         ->where('akun', '!=', '')
-        ->where('uraian', 'LIKE', '%'.request('q').'%')
-        ->orWhere('kodeall3', 'LIKE', '%'.request('q').'%')
-            // ->when(request('q'), function($q){
-            //     $q->where('uraian', 'LIKE', '%'.request('q').'%')
-            //     ->where('kodeall3', 'LIKE', '%'.request('q').'%');
-            // })
+        ->when(request('q') !== '' || request('q') !== null, function($x){
+            $x->where('uraian', 'like', '%' . request('q') . '%')
+                ->orWhere('kodeall3', 'like', '%'. request('q') . '%');
+        })
         ->get();
 
         return new JsonResponse($akun);
