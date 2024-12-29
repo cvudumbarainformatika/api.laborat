@@ -88,7 +88,8 @@ class KonsulDokterController extends Controller
                             'mastertindakan'
                         ]
                     );
-                }
+                },
+                'nakesminta'
             ]
         )->where('kdruang', 'POL014')->where('noreg', $request->noreg)->orderBy('id','DESC')->get();
 
@@ -116,7 +117,8 @@ class KonsulDokterController extends Controller
                             'mastertindakan'
                         ]
                     );
-                }
+                },
+                'nakesminta'
             ]
         )->where('kdruang', 'POL014')->where('noreg', $request->noreg)->orderBy('id','DESC')->get();
 

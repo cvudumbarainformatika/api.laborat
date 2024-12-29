@@ -20,6 +20,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudang;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
@@ -553,6 +555,20 @@ class SetNewStokController extends Controller
                     ->get();
                 $returGudang = collect($returGudangRinci)->sum('jumlah');
 
+                $returPbfRinci = Returpbfrinci::select(
+                    'retur_penyedia_r.kd_obat',
+                    'retur_penyedia_r.nopenerimaan_default as nopenerimaan',
+                    DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah')
+                )
+                    ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
+                    ->where('retur_penyedia_h.gudang', $koderuangan)
+                    ->where('retur_penyedia_h.tgl_kunci', 'LIKE', '%' . $x . '%')
+                    ->where('retur_penyedia_r.kd_obat', $kdobat)
+                    ->where('retur_penyedia_h.kunci', '1')
+                    ->groupBy('retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang')
+                    ->get();
+                $returPbf = collect($returPbfRinci)->sum('jumlah');
+
                 $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)->first();
                 $tts = $totalStok->jumlah ?? 0;
@@ -563,8 +579,9 @@ class SetNewStokController extends Controller
                 $mutkel = $mutasiKeluar ?? 0;
                 $rus = $rusak ?? 0;
                 $retG = $returGudang ?? 0;
+                $retPbf = $returPbf ?? 0;
                 $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
-                $keluar = (float)$mutkel + (float)$rus;
+                $keluar = (float)$mutkel + (float)$rus + (float)$retPbf;
                 $sisa = (float)$masuk - (float)$keluar;
 
                 // cek rincian
@@ -594,6 +611,9 @@ class SetNewStokController extends Controller
                     $nopeSt[] = $key->nopenerimaan;
                 }
                 foreach ($penerimaanRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($returPbfRinci as $key) {
                     $nopeSt[] = $key->nopenerimaan;
                 }
                 $uniNopeSt = array_unique($nopeSt);
@@ -630,9 +650,10 @@ class SetNewStokController extends Controller
                             // keluar
                             $mutKel =  collect($mutasiKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                             $rus =  collect($rusakRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                            $retPbf =  collect($returPbfRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
 
                             $maSuk = (float) $salAwal + (float) $mutMas + (float) $peny + (float) $retGu + (float)$trm;
-                            $keLuar = (float)$mutKel + (float)$rus;
+                            $keLuar = (float)$mutKel + (float)$rus + (float)$retPbf;
                             $sisanya = $maSuk - $keLuar;
 
                             if ($sisanya > 0) {
@@ -791,6 +812,7 @@ class SetNewStokController extends Controller
                     'mutasiMasukRinci' => $mutasiMasukRinci,
                     'saldoAwalRinci' => $saldoAwalRinci,
                     'returGudangRinci' => $returGudangRinci,
+                    'returPbfRinci' => $returPbfRinci,
 
                     'tts' => $tts,
                     'sisa' => $sisa,
@@ -3070,6 +3092,22 @@ class SetNewStokController extends Controller
                     ->groupBy('retur_gudang_details.nopenerimaan', 'retur_gudang_details.kd_obat', 'retur_gudangs.gudang')
                     ->get();
                 $returGudang = collect($returGudangRinci)->sum('jumlah');
+
+                $returPbfRinci = Returpbfrinci::select(
+                    'retur_penyedia_r.kd_obat',
+                    'retur_penyedia_r.nopenerimaan_default as nopenerimaan',
+                    DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah')
+                )
+                    ->leftJoin('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
+                    ->where('retur_penyedia_h.gudang', $koderuangan)
+                    ->where('retur_penyedia_h.tgl_kunci', 'LIKE', '%' . $x . '%')
+                    ->where('retur_penyedia_r.kd_obat', $kdobat)
+                    ->where('retur_penyedia_h.kunci', '1')
+                    ->groupBy('retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang')
+                    ->get();
+                $returPbf = collect($returPbfRinci)->sum('jumlah');
+
+
                 if ($x == $sekarang) {
                     $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                         ->where('kdruang', $koderuangan)->first();
@@ -3085,8 +3123,9 @@ class SetNewStokController extends Controller
                 $mutkel = round($mutasiKeluar, 2) ?? 0;
                 $rus = round($rusak, 2) ?? 0;
                 $retG = round($returGudang, 2) ?? 0;
+                $retPbf = round($returPbf, 2) ?? 0;
                 $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
-                $keluar = (float)$mutkel + (float)$rus;
+                $keluar = (float)$mutkel + (float)$rus + (float)$retPbf;
                 $sisa = (float)$masuk - (float)$keluar;
 
                 $nopeSt = [];
@@ -3109,6 +3148,9 @@ class SetNewStokController extends Controller
                     $nopeSt[] = $key->nopenerimaan;
                 }
                 foreach ($penerimaanRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($returPbfRinci as $key) {
                     $nopeSt[] = $key->nopenerimaan;
                 }
                 $uniNopeSt = array_unique($nopeSt);
@@ -3140,8 +3182,9 @@ class SetNewStokController extends Controller
                     // keluar
                     $mutKel =  collect($mutasiKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $rus =  collect($rusakRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                    $retPbf =  collect($returPbfRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                     $maSuk = round(((float)round($salAwal, 2) + (float)round($mutMas, 2) + (float)round($trm, 2) + (float)round($retGu, 2) + (float)round($peny, 2)), 2);
-                    $keLuar = round(((float)round($mutKel, 2) + (float)round($rus, 2)), 2);
+                    $keLuar = round(((float)round($mutKel, 2) + (float)round($rus, 2) + (float)round($retPbf, 2)), 2);
                     $sisanya = round(($maSuk - $keLuar), 2);
                     $sts = round(($sisanya - $stOpnya), 2);
 
@@ -3255,6 +3298,7 @@ class SetNewStokController extends Controller
                     'mutkel' => $mutkel,
                     'rus' => $rus,
                     'retG' => $retG,
+                    'retPbf' => $retPbf,
                     'ada' => $ada,
                     // 'stok' => $stok ?? [],
                     'message' => $message

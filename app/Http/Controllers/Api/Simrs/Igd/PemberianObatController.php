@@ -32,11 +32,6 @@ class PemberianObatController extends Controller
     public function simpanpemberianobat(Request $request)
     {
         $tgl= $request->tglpemberianobat.' '.$request->jampemberianobat;
-        if($request->pump === true){
-            $tglpump= $request->tglpump.' '.$request->jampump;
-        }else{
-            $tglpump = null;
-        }
 
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
@@ -50,7 +45,8 @@ class PemberianObatController extends Controller
                 'dosis' => $request->dosis,
                 'satuan' => $request->satuan,
                 'pump' => $request->pump,
-                'waktupump' => $tglpump,
+                'lamajam' => $request->jampump,
+                'lamamenit' => $request->menitpump,
                 'routepemberianobat' => $request->routepemberianobat,
                 'ruangan' => 'POL014',
                 'userinput' => $kdpegsimrs

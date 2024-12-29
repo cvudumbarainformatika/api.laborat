@@ -122,24 +122,57 @@ class DischargePlanningController extends Controller
       $user = Pegawai::find(auth()->user()->pegawai_id);
       $kdpegsimrs = $user->kdpegsimrs;
 
-       $data = SummaryPulang::create([
-        'rs1' => $request->rs1,
-        'rs2' => $request->rs2,
-        'rs3' => date('Y-m-d H:i:s'),
-        'rs4' => $request->rs4,
-        'rs5' => $request->rs5,
-        'rs6' => $request->rs6,
-        'rs7'=> $request->rs7,
-        'rs8'=> $request->rs8,
-        'rs9'=> $request->rs9,
-        'rs10'=> $request->rs10,
-        'operasi'=> $request->operasi,
-        'tglOperasi'=> $request->tglOperasi,
-        'kdruang'=> $request->kdruang,
-        'ttdPasien'=> null,
-        'user_input' => $kdpegsimrs 
+      $data = null;
+      $ttdPasien = $request->ttdPasien;
+      if ($request->has('id')) {
+        $data = SummaryPulang::find($request->id);
+        if (!$data) {
+          return new JsonResponse([
+            'success' => false,
+            'message' => 'Data tidak ditemukan'
+          ]);
+        }
+      } else {
+        $data = new SummaryPulang();
+      }
 
-       ]);
+
+      
+
+      $data->rs1 = $request->rs1;
+      $data->rs2 = $request->rs2;
+      $data->rs3 = date('Y-m-d H:i:s');
+      $data->rs4 = $request->rs4;
+      $data->rs5 = $request->rs5;
+      $data->rs6 = $request->rs6;
+      $data->rs7 = $request->rs7;
+      $data->rs8 = $request->rs8;
+      $data->rs9 = $request->rs9;
+      $data->rs10 = $request->rs10;
+      $data->operasi = $request->operasi;
+      $data->tglOperasi = $request->tglOperasi;
+      $data->kdruang = $request->kdruang;
+      $data->user_input = $kdpegsimrs;
+      $data->save();
+
+      //  $data = SummaryPulang::create([
+      //   'rs1' => $request->rs1,
+      //   'rs2' => $request->rs2,
+      //   'rs3' => date('Y-m-d H:i:s'),
+      //   'rs4' => $request->rs4,
+      //   'rs5' => $request->rs5,
+      //   'rs6' => $request->rs6,
+      //   'rs7'=> $request->rs7,
+      //   'rs8'=> $request->rs8,
+      //   'rs9'=> $request->rs9,
+      //   'rs10'=> $request->rs10,
+      //   'operasi'=> $request->operasi,
+      //   'tglOperasi'=> $request->tglOperasi,
+      //   'kdruang'=> $request->kdruang,
+      //   'ttdPasien'=> null,
+      //   'user_input' => $kdpegsimrs 
+
+      //  ]);
 
        if (!$data) {
         return new JsonResponse([
@@ -148,12 +181,20 @@ class DischargePlanningController extends Controller
         ]);
        }
 
-       $ttdPasien = $this->saveImage($request, $request->ttdPasien, $data->id);
+       
        $cek = SummaryPulang::find($data->id);
 
-       $cek->update([
-        'ttdPasien' => $ttdPasien
-       ]);
+     
+
+      if ($ttdPasien !== null || $ttdPasien !== "") {
+        $isBase64 = self::is_base64_image($ttdPasien);
+        if ($isBase64) {
+          $ttdPasienx = $this->saveImage($request, $request->ttdPasien, $data->id);
+          $cek->update([
+            'ttdPasien' => $ttdPasienx
+          ]);
+        }
+      }
 
        return new JsonResponse([
         'success' => true,
@@ -161,6 +202,8 @@ class DischargePlanningController extends Controller
         'result' => $cek
        ]);
     }
+
+    
 
     static function saveImage($request, $image, $id)
     {
@@ -184,6 +227,11 @@ class DischargePlanningController extends Controller
       }
 
       return $file;
+    }
+
+    public static function is_base64_image($image) {
+      $pattern = '/^data:image\/(jpeg|jpg|png|gif|bmp);base64,/';
+      return preg_match($pattern, $image) === 1;
     }
 
 

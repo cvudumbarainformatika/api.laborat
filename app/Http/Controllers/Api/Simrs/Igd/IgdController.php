@@ -28,6 +28,7 @@ class IgdController extends Controller
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs17.rs3 as tgl_kunjungan',
+            'rs17.rs26 as tglpulang',
             'rs17.rs8 as kodepoli',
             'rs19.rs2 as poli',
             'rs17.rs9 as kodedokter',
@@ -125,7 +126,7 @@ class IgdController extends Controller
 
     public function terimapasien(Request $request)
     {
-        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9','rs14', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
+        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9','rs14', 'rs19','rs26 as tglpulang')->where('rs1', $request->noreg)->where('rs8','POL014')
         ->with([
             'anamnesis' => function($anamnesis){
                 $anamnesis->with(['anamnesetambahan','anamnesebps','anamnesenips'])->where('kdruang', 'POL014');
@@ -265,7 +266,8 @@ class IgdController extends Controller
                                     'mastertindakan'
                                 ]
                             );
-                        }
+                        },
+                        'nakesminta'
                     ]
                 )->where('kdruang', 'POL014');
             },

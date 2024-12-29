@@ -116,8 +116,12 @@ class PraAnastesiController extends Controller
         $data = PraAnastesi::where('norm', $norm)->where('noreg', $cekRajal->rs1)
         ->with(['pemeriksaanfisik', 
         'diagnosa' => function ($d) {
-                    $d->with('masterdiagnosa');
-                },
+            $d->with('masterdiagnosa');
+        },
+        'kunjunganpoli' => function ($k) {
+            $k->select('rs17.rs1', 'rs17.rs9 as kodedokter', 'rs21.rs2 as dokter')
+            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9'); //dokter
+          }
         ])
         ->orderBy('created_at', 'desc')->limit(1)->get();
       }

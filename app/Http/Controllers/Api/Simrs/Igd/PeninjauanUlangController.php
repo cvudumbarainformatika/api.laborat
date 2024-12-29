@@ -103,4 +103,19 @@ class PeninjauanUlangController extends Controller
             return new JsonResponse(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
     }
+
+    public function hapuspeninjauanulang(Request $request)
+    {
+
+        $data = Tinjauan_ulang::find($request->id);
+        $datax = Tinjauan_ulang_nips::where('id_heder',$request->id);
+        $dataxx = Tinjauan_ulang_bps::where('id_heder',$request->id);
+
+        $hapus = $data->delete();
+        $hapusx = $datax->delete();
+        $hapusxx = $dataxx->delete();
+        return new JsonResponse([
+            'message' => 'BERHASIL DIHAPUS...!!!'
+        ], 200);
+    }
 }
