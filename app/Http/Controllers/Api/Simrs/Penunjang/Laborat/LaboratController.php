@@ -317,9 +317,10 @@ class LaboratController extends Controller
             ->where(function ($query) {
                 if (request('isRanap') === true || request('isRanap') === 'true') {
                     $query->where('unit_pengirim', '!=', 'POL014');
-                }else{
-                    $query->where('unit_pengirim', '=', 'POL014');
                 }
+                // else{
+                //     $query->where('unit_pengirim', '=', 'POL014');
+                // }
             })
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
