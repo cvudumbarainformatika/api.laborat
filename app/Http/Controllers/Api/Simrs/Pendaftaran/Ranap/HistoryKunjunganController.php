@@ -106,6 +106,9 @@ class HistoryKunjunganController extends Controller
             // ->with(['sepranap' => function($q) {
             //     $q->select('rs1', 'rs8 as noSep', 'rs3 as ruang', 'rs5 as noRujukan', 'rs7 as diagnosa', 'rs10 as ppkRujukan', 'rs11 as jenisPeserta');
             // }])
+            ->addSelect(DB::raw(
+                '(SELECT rs4 FROM rs23 WHERE rs23.rs2 = rs15.rs1 AND rs23.rs4 != "0000-00-00 00:00:00" ORDER BY rs4 DESC LIMIT 1) 
+                 as last_visit'))
 
             ->with(['diagnosa' => function($q) {
                 $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status')

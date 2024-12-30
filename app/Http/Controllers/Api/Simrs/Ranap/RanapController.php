@@ -91,6 +91,7 @@ class RanapController extends Controller
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
             )
+
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
             // ->leftjoin('tflag_covid', function ($q) { 
@@ -108,6 +109,20 @@ class RanapController extends Controller
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
 
+ 
+            
+            ->addSelect(DB::raw(
+                '(SELECT rs4 FROM rs23 WHERE rs23.rs2 = rs15.rs1 AND rs23.rs4 != "0000-00-00 00:00:00" ORDER BY rs4 DESC LIMIT 1) 
+                 as last_visit'))
+            // ->addSelect(DB::raw(
+            //     '(SELECT SUBSTRING_INDEX(GROUP_CONCAT(rs4 from rs23 where rs23.rs2 = rs15.rs1 order by rs4 desc, ','), ',', 2)
+            //     as last_visit'))
+            // ->addSelect([
+            //     'last_visit' => Kunjunganranap::query()
+            //             ->selectRaw("SUBSTRING_INDEX(GROUP_CONCAT(rs23.rs4 order by rs4 desc, ','), ',', 2)")
+            //             ->whereColumn('rs23.rs2','=', 'rs15.rs1')
+            //             ->limit(2)
+            //     ])
 
             ->where(function ($query) use ($ruangan) {
                 // $query->where(function ($query) use ($ruangan) {
