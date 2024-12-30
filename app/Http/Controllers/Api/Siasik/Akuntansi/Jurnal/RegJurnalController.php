@@ -272,6 +272,7 @@ class RegJurnalController extends Controller
         ->join('spjpanjar_rinci', 'spjpanjar_rinci.nospjpanjar', '=','spjpanjar_heder.nospjpanjar')
         ->join('akun_mapjurnal', 'akun_mapjurnal.kodeall', '=','spjpanjar_rinci.koderek50')
         ->whereBetween('spjpanjar_heder.tglspjpanjar', [$awal, $akhir])
+        ->groupBy('spjpanjar_rinci.id')
         ->get();
 
         $nihil = Nihil::select(
@@ -322,6 +323,9 @@ class RegJurnalController extends Controller
                     'uraian'=>$post['uraian'],
                     'debit'=>$post['debit'],
                     'kredit'=>$post['kredit'],
+                    'nilai'=>$post['nilai'],
+
+                    // 'verif'=>$post['verif'],
                 ];
                 $detail = [
 
@@ -339,6 +343,8 @@ class RegJurnalController extends Controller
                     'uraian'=>$post['uraian'],
                     'debit'=>$post['debit'],
                     'kredit'=>$post['kredit'],
+                    'nilai'=>$post['nilai'],
+                    // 'verif'=>$post['verif'],
                     // 'd_pjk'=>$post['d_pjk'],
                     // 'k_pjk'=>$post['k_pjk'],
                     // 'd_pjk1'=>$post['d_pjk1'],
@@ -377,14 +383,18 @@ class RegJurnalController extends Controller
         $data = Create_JurnalPosting::select(
             'jurnal_postingotom.notrans',
                     'jurnal_postingotom.tanggal',
+                    'jurnal_postingotom.id',
                     'jurnal_postingotom.kegiatan',
                     'jurnal_postingotom.keterangan',
                     'jurnal_postingotom.kode',
                     'jurnal_postingotom.uraian',
                     'jurnal_postingotom.debit',
                     'jurnal_postingotom.kredit',
+                    'jurnal_postingotom.nilai',
                     'jurnal_postingotom.verif')
         // ->where('jurnal_postingotom.verif', '=', null)
+        // ->addSelect(DB::raw('sum(jurnal_postingotom.debit) as nilai'))
+        // ->groupBy('jurnal_postingotom.notrans', 'jurnal_postingotom.kode', 'jurnal_postingotom.id')
         ->where('jurnal_postingotom.verif', request('jenis'))
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->where(function($query){
@@ -402,6 +412,7 @@ class RegJurnalController extends Controller
     }
     public function verifjurnal(Request $request){
         $time = date('Y-m-d H:i:s');
+        // $data = Create_JurnalPosting::where('notrans', $request->notrans);
         $data = Create_JurnalPosting::where('notrans', $request->notrans);
         // return $data;
         $data->update([
@@ -410,5 +421,16 @@ class RegJurnalController extends Controller
 
     ]);
         return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', 'notrans' => $request->notrans], 200);
+    }
+    public function cancelverif(Request $request){
+        $time = date('Y-m-d H:i:s');
+        $data = Create_JurnalPosting::where('notrans', $request->notrans);
+        // return $data;
+        $data->update([
+            'verif' => '',
+            'tglverif' => $time
+
+    ]);
+        return new JsonResponse (['message' => 'Verifikasi Dibatalkan', 'notrans' => $request->notrans], 200);
     }
 }
