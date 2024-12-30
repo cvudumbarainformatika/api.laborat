@@ -33,6 +33,9 @@ class RanapController extends Controller
         $hr_ini = date('Y-m-d'). ' 23:59:59';
         $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 00:00:00';
 
+        $from = request('to'). ' 00:00:00';
+        $to = request('from'). ' 23:59:59';
+
         $ruangan = request('koderuangan');
         $data = DB::table('rs23')->select(
             'rs23.rs1',
@@ -136,11 +139,11 @@ class RanapController extends Controller
                 } 
                 
             })
-            ->where(function($query) use ($hr_ini, $hr_180) {
+            ->where(function($query) use ($from, $to) {
                 if (request('status') === 'Pulang') {
-                    // $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
-                    $query->where('rs23.rs4', 'like',  '%' . request('from'). '%')
+                    // $query->where('rs23.rs4', 'like',  '%' . request('from'). '%')
                     // $query->where('rs23.rs4', '=',  request('from'))
+                    $query->whereBetween('rs23.rs4', [$from, $to])
                         ->whereIn('rs23.rs22',['2','3']);
                 } else {
                     $query->where('rs23.rs22','=','')
