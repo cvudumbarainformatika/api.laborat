@@ -3132,6 +3132,9 @@ class SetNewStokController extends Controller
                 foreach ($saldoAwalRinci as $key) {
                     $nopeSt[] = $key->nopenerimaan;
                 }
+                foreach ($penyesuaianRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
                 foreach ($penerimaanRinci as $key) {
                     $nopeSt[] = $key->nopenerimaan;
                 }
@@ -3488,6 +3491,9 @@ class SetNewStokController extends Controller
                 $returGudang = collect($returGudangRinci)->sum('jumlah');
                 $rawNoper = [];
                 foreach ($saldoAwalDepoRinci as $key) {
+                    $rawNoper[] = $key->nopenerimaan;
+                }
+                foreach ($penyesuaianDepoRinci as $key) {
                     $rawNoper[] = $key->nopenerimaan;
                 }
                 foreach ($mutasiMasukDepoRinci as $key) {
