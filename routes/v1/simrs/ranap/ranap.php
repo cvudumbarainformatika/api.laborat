@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Simrs\Master\Icd9Controller;
 use App\Http\Controllers\Api\Simrs\Ranap\HistoryController;
 use App\Http\Controllers\Api\Simrs\Ranap\RanapController;
 use App\Http\Controllers\Api\Simrs\Ranap\RuanganController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -25,5 +26,17 @@ Route::group([
     Route::post('/gantijeniskasus', [RanapController::class, 'gantijeniskasus']);
 
     Route::get('/data-igd', [HistoryController::class, 'layananigd']);
+
+
+
+    Route::get('/no-surat', function () {
+       $data = DB::table('rs23_nosurat')
+       ->select(
+        'noreg','norm','nosrtmeninggal','jamMeninggal','nokll'
+       )->where('noreg', '=', request('noreg'))->first();
+
+
+        return response()->json($data);
+    });
 
 });

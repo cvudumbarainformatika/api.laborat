@@ -14,4 +14,7 @@ Route::group([
   Route::get('/getmastercarakeluar', [PulangController::class, 'getmastercarakeluar']);
   Route::post('/simpandata', [PulangController::class, 'simpandata']);
 
+
+  
+
 });

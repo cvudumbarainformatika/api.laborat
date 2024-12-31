@@ -37,7 +37,7 @@ class PulangController extends Controller
       // $sqla = DB::table('rs242')->select('*')->where('rs1', $request->noreg)->get();
       $inStatus = ['2','3'];
       $sql_cek_kunjungan = DB::table('rs23')->select('*')->where('rs1', $request->noreg)->whereIn('rs22', $inStatus)->get();
-
+      
       // $rencana = count($sqla);
       $cppt = count($sqlz);
       $kunjungan = count($sql_cek_kunjungan);
@@ -56,12 +56,12 @@ class PulangController extends Controller
           'rs27' => $request->tindakLanjut ?? ''
         ]);
 
-        if ($request->noSuratMeninggal !== null || $request->noLp !== null) {
+        if ($request->noLp !== null) {
             SuratPasien::updateOrCreate(
               ['noreg' => $request->noreg],
               [
-                'nosuratmeninggal' => $request->noSuratMeninggal,
-                'nolp' => $request->noLp
+                // 'nosuratmeninggal' => $request->noSuratMeninggal,
+                'nokll' => $request->noLp
               ]
             );
         }
@@ -95,8 +95,8 @@ class PulangController extends Controller
       $noSuratMeninggal = null;
 
       if($meninggal){
-        $noSuratMeninggal = $request->noSuratMeninggal; // per tgl 1 ubah yg di bawah
-        // $noSuratMeninggal = self::buatSuratMeninggal();
+        // $noSuratMeninggal = $request->noSuratMeninggal; // per tgl 1 ubah yg di bawah
+        $noSuratMeninggal = self::buatSuratMeninggal();
       }
 
       if ($kunjungan === 0) {
@@ -123,8 +123,9 @@ class PulangController extends Controller
           SuratPasien::updateOrCreate(
             ['noreg' => $request->noreg],
             [
-              'nosuratmeninggal' => $noSuratMeninggal,
-              'nolp' => $request->noLp
+              'nosrtmeninggal' => $noSuratMeninggal ?? null,
+              'jamMeninggal' => $request->jamMeninggal ?? null,
+              'nokll' => $request->noLp ?? null,
             ]
           );
        }
@@ -164,37 +165,37 @@ class PulangController extends Controller
           ]);
         }
 
+        $surat = DB::table('rs23_nosurat')->select('*')->where('noreg', $request->noreg)->get();
+
         if ($request->noSep !== null || $request->noSep !== '') {
-          self::update_pulang_bpjs_ranap($request, $user);
+          self::update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal);
         }
 
+        
        return new JsonResponse([
         'success' => true,
         'message' => 'success',
-        'result' => $sql_cek_kunjungan
+        'result' => $sql_cek_kunjungan,
+        'surat'=> $surat
        ]);
     }
 
 
     public function buatSuratMeninggal()
     {
-        $oto = 0;
-        DB::select('call no_surat_kematian(@nomor)');
-        $x = DB::table('rs1')->select('kematian')->get();
-        $oto = $x[0]->rs28;
+      $oto = 0;
+      DB::select('call no_surat_kematian(@nomor)');
+      $x = DB::table('rs1')->select('kematian')->get();
+      $oto = $x[0]->kematian;
+      // return $oto;
+
+      $has = str_pad($oto, 4, '0', STR_PAD_LEFT);
 
 
-        $has = null;
-        $lbr = strlen($oto);
-        for ($i = 1; $i <= 5 - $lbr; $i++) {
-            $has = $has . "0";
-        }
+      $bulan = (int) date('m');
+      $blnRomawi = self::intToRoman($bulan);
 
-
-        $bulan = (int) date('m');
-        $blnRomawi = self::intToRoman($bulan);
-
-        $no = "472.12/$has/425.102.8/KEM/$blnRomawi/" . date('Y');
+      $no = "472.12/$has/425.102.8/KEM/$blnRomawi/" . date('Y');
         return $no;
     }
 
@@ -225,7 +226,7 @@ class PulangController extends Controller
       return $result;
   }
 
-    public static function update_pulang_bpjs_ranap($request, $user)
+    public static function update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal)
     {
         
         $request->validate([
@@ -249,7 +250,7 @@ class PulangController extends Controller
               break;
         }
 
-        $noSuratMeninggal = $request->noSuratMeninggal;
+        // $noSuratMeninggal = $request->noSuratMeninggal;
         
         $data = [
           "request" => [

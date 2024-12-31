@@ -91,6 +91,8 @@ class RanapController extends Controller
             'rs24.rs4 as kdgroup_ruangan',
             'rs24_titipan.rs2 as dititipkanke',
             'rs23_meta.kd_jeniskasus',
+            'rs23_nosurat.nosrtmeninggal',
+            'rs23_nosurat.jamMeninggal',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
             )
@@ -111,6 +113,7 @@ class RanapController extends Controller
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
+            ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
 
  
             

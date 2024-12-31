@@ -12,9 +12,54 @@ class PercobaanController extends Controller
 {
     public function index()
     {
-        $data = self::kunjunganpasien();
-        dd($data);
-        // return $data;
+        $noSuratMeninggal = self::buatSuratMeninggal();
+        return $noSuratMeninggal;
+    }
+
+
+    public function buatSuratMeninggal()
+    {
+        $oto = 0;
+        DB::select('call no_surat_kematian(@nomor)');
+        $x = DB::table('rs1')->select('kematian')->get();
+        $oto = $x[0]->kematian;
+        // return $oto;
+
+        $has = str_pad($oto, 4, '0', STR_PAD_LEFT);
+
+
+        $bulan = (int) date('m');
+        $blnRomawi = self::intToRoman($bulan);
+
+        $no = "472.12 / $has / 425.102.8 / KEM / $blnRomawi / " . date('Y');
+        return $no;
+    }
+
+    public static function intToRoman($num) {
+      $romanNumerals = [
+          1000 => 'M',
+          900 => 'CM',
+          500 => 'D',
+          400 => 'CD',
+          100 => 'C',
+          90 => 'XC',
+          50 => 'L',
+          40 => 'XL',
+          10 => 'X',
+          9 => 'IX',
+          5 => 'V',
+          4 => 'IV',
+          1 => 'I'
+      ];
+  
+      $result = '';
+      foreach ($romanNumerals as $value => $numeral) {
+          while ($num >= $value) {
+              $result .= $numeral;
+              $num -= $value;
+          }
+      }
+      return $result;
     }
 
     public static function kunjunganpasien()
