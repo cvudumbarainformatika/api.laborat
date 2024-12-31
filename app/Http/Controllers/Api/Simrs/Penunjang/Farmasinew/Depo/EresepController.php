@@ -868,7 +868,7 @@ class EresepController extends Controller
                 'iter_expired' => $iter_expired ?? 0,
                 'iter_jml' => $iter_jml ?? 0,
                 'error' => $e,
-                'message' => 'rolled back ada kesalahan'
+                'message' => 'ada kesalahan ' . $e->getMessage()
             ], 410);
         }
     }
