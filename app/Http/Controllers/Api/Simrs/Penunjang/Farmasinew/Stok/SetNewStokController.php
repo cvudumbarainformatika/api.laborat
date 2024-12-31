@@ -1886,6 +1886,22 @@ class SetNewStokController extends Controller
             )
             ->where('kdobat', $request->kdobat)
             ->get();
+
+        $headPersiapan = PersiapanOperasi::select('nopermintaan')
+            ->where('tgl_distribusi', 'LIKE', '%' . $request->tahun . '-' . $request->bulan . '%')
+            ->pluck('nopermintaan');
+        $data['persiapanop'] = PersiapanOperasiDistribusi::selectRaw('*,kd_obat as kdobat')->whereIn('nopermintaan', $headPersiapan)
+            ->with(
+                'persiapan',
+                'persiapan.list:rs1,rs4,rs5',
+                'persiapan.list.kunjunganranap:rs1,rs5',
+                'persiapan.list.kunjunganranap.relmasterruangranap:rs1,rs2',
+                'persiapan.list.kunjunganrajal:rs1,rs2,rs8',
+                'persiapan.list.kunjunganrajal.relmpoli:rs1,rs2',
+
+            )
+            ->where('kd_obat', $request->kdobat)
+            ->get();
         return new JsonResponse([
             'data' => $data,
             'req' => $request->all(),
@@ -3585,6 +3601,7 @@ class SetNewStokController extends Controller
                                 'resepNRac' => $resepNRac,
                                 'resepRac' => $resepRac,
                                 'retGud' => $retGud,
+                                'distOp' => $distOp,
                             ],
                         ];
                     } else if ($sisanya < 0) {
@@ -3606,6 +3623,7 @@ class SetNewStokController extends Controller
                                 'resepNRac' => $resepNRac,
                                 'resepRac' => $resepRac,
                                 'retGud' => $retGud,
+                                'distOp' => $distOp,
                             ],
                         ];
                     } else if ($sisanya < $stOpnya) {
@@ -3628,6 +3646,7 @@ class SetNewStokController extends Controller
                                 'resepNRac' => $resepNRac,
                                 'resepRac' => $resepRac,
                                 'retGud' => $retGud,
+                                'distOp' => $distOp,
                             ],
                         ];
                     } else {
@@ -3649,6 +3668,7 @@ class SetNewStokController extends Controller
                                 'resepNRac' => $resepNRac,
                                 'resepRac' => $resepRac,
                                 'retGud' => $retGud,
+                                'distOp' => $distOp,
                             ],
                         ];
                     }
@@ -4113,8 +4133,23 @@ class SetNewStokController extends Controller
                 ->orderBy('resep_keluar_h.flag', 'ASC')
                 ->orderBy('resep_keluar_r.jumlah', 'DESC')
                 ->get();
+            if ($head['koderuangan'] == 'Gd-04010103') {
+                $persiapanOperasiDistribusi = PersiapanOperasiDistribusi::select(
+                    'persiapan_operasi_distribusis.id',
+                    'persiapan_operasi_distribusis.kd_obat',
+                    'persiapan_operasi_distribusis.nopenerimaan',
+                    'persiapan_operasi_distribusis.jumlah as jumlah',
+                    DB::raw('persiapan_operasi_distribusis.jumlah - persiapan_operasi_distribusis.jumlah_retur as sisa'),
+                )
+                    ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                    ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' . $head['now'] . '%')
+                    ->where('persiapan_operasi_distribusis.kd_obat', $head['kdobat'])
+                    ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                    ->havingRaw('sisa > 0')
+                    ->get();
+            }
 
-            $mutasi = $head['koderuangan'] == 'Gd-03010101' ? collect($mutasiKeluarRinci) : collect($resepKeluarRinci);
+            $mutasi = $head['koderuangan'] == 'Gd-03010101' ? collect($mutasiKeluarRinci) : ($head['koderuangan'] == 'Gd-04010103' ? collect($persiapanOperasiDistribusi) : collect($resepKeluarRinci));
         }
         if ($head['tipe'] === 'racikan') {
             // racikan

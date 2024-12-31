@@ -23,6 +23,7 @@ class PermintaanOperasi extends Model
         return $this->hasOne(Kunjunganranap::class, 'rs1', 'rs1');
     }
 
+
     public function kunjunganrajal()
     {
         return $this->hasOne(KunjunganPoli::class, 'rs1', 'rs1');

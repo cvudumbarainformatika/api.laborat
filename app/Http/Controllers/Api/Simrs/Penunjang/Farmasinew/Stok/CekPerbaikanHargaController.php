@@ -9,6 +9,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
+use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
@@ -148,6 +149,27 @@ class CekPerbaikanHargaController extends Controller
                     }
                 }
             }
+            if ($request->tipe == 'persiapan') {
+                foreach ($request->data as $key) {
+                    // if ($key['satuan_racik'] == null) $key['satuan_racik'] = '';
+                    if ($key['id']) {
+                        $temp = PersiapanOperasiDistribusi::find($key['id']);
+                        if (!$temp) return new JsonResponse([
+                            'message' => 'Data Racikan Tidak Ditemukan',
+                            'req' => $request->all(),
+                        ], 410);
+                        $temp->update([
+                            'jumlah' => $key['jumlah']
+                        ]);
+                        $data[] = $temp;
+                    } else {
+                        unset($key['id']);
+                        if ($key['nodistribusi'] == null) $key['nodistribusi'] = '';
+                        $temp = PersiapanOperasiDistribusi::create($key);
+                        $data[] = $temp;
+                    }
+                }
+            }
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'Data Mutasi sudah diganti',
@@ -214,7 +236,17 @@ class CekPerbaikanHargaController extends Controller
                 if ($data->nobatch != $penerimaan->nobatch) $data->update(['nobatch' => $penerimaan->nobatch]);
                 if ($data->tglexp != $penerimaan->tglexp) $data->update(['tglexp' => $penerimaan->tglexp]);
                 if ($data->tglpenerimaan != $penerimaan->tglpenerimaan) $data->update(['tglpenerimaan' => $penerimaan->tglpenerimaan]);
+            } else if ($request->tipe == 'persiapan') {
+                $data = PersiapanOperasiDistribusi::find($request->id);
+                if (!$data) return new JsonResponse([
+                    'message' => 'Data Distribusi Persiapan Tidak Ditemukan',
+                    'req' => $request->all(),
+                ], 410);
+                $data->update([
+                    'nopenerimaan' => $penerimaan->nopenerimaan,
+                ]);
             }
+
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'Data Mutasi sudah diganti',
