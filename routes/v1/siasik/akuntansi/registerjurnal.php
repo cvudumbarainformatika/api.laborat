@@ -12,6 +12,7 @@ Route::group([
     Route::post('/postingjurnal', [RegJurnalController::class, 'savejurnal']);
     Route::get('/getjurnalpost', [RegJurnalController::class, 'getjurnalpost']);
     Route::post('/verifjurnal', [RegJurnalController::class, 'verifjurnal']);
+    Route::post('/verifjurnal/all', [RegJurnalController::class, 'verifAll']);
     Route::post('/cancelverif', [RegJurnalController::class, 'cancelverif']);
 
 });

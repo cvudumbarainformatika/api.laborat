@@ -412,15 +412,21 @@ class RegJurnalController extends Controller
     }
     public function verifjurnal(Request $request){
         $time = date('Y-m-d H:i:s');
-        // $data = Create_JurnalPosting::where('notrans', $request->notrans);
         $data = Create_JurnalPosting::where('notrans', $request->notrans);
         // return $data;
         $data->update([
             'verif' => '1',
             'tglverif' => $time
+        ]);
+    return new JsonResponse (['message' => 'Verifikasi Dibatalkan', 'notrans' => $request->notrans], 200);
+    }
+    public function verifAll(Request $request){
+    // INI UNTUK VERIF ALL //
+        $time = date('Y-m-d H:i:s');
+        $data = Create_JurnalPosting::where('verif', '=', NULL)->update(['verif' => 1]);
+        $datatime = Create_JurnalPosting::where('tglverif', '=', NULL)->update(['tglverif' => $time]);
+        return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', $data, $datatime], 200);
 
-    ]);
-        return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', 'notrans' => $request->notrans], 200);
     }
     public function cancelverif(Request $request){
         $time = date('Y-m-d H:i:s');

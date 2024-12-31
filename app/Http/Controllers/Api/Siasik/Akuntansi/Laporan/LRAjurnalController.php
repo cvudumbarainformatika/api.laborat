@@ -121,12 +121,13 @@ class LRAjurnalController extends Controller
         ->whereBetween('tanggal', [$thn.'-01-01', $sebelum])
         ->with('penyesuaian',  function($sel) use ($thn, $sebelum){
             $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
-            ->select('jurnalumum_heder.tanggal',
+            ->select('jurnalumum_rinci.kodepsap13','jurnalumum_heder.tanggal',
                     DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian'))
             ->where('jurnalumum_heder.verif', '=', '1')
             ->whereBetween('jurnalumum_heder.tanggal', [$thn.'-01-01', $sebelum])
             ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
-            ->groupBy( 'kodepsap13');
+            ->where('jurnalumum_heder.keterangan', 'NOT LIKE','Reklas Pendapatan' . '%')
+            ->groupBy('kodepsap13');
         })
         ->groupBy( 'kode6')
         ->orderBy('kode6', 'asc')
