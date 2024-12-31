@@ -397,7 +397,6 @@ class NeracaController extends Controller
         ->orWhere('akun50_2024.kodeall3', 'LIKE', '2.1.07' . '%')
         ->orWhere('akun50_2024.kodeall3', 'LIKE', '2.1.05' . '%')
         ->orWhere('akun50_2024.kodeall3', 'LIKE', '3.1.01' . '%')
-        ->orWhere('akun50_2024.kodeall3', 'LIKE', '3.1.03' . '%')
         ->orderBy('akun50_2024.kodeall3', 'asc')
         ->get();
 
