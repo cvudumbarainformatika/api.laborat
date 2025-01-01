@@ -61,7 +61,8 @@ class PulangController extends Controller
               ['noreg' => $request->noreg],
               [
                 // 'nosuratmeninggal' => $request->noSuratMeninggal,
-                'nokll' => $request->noLp
+                'nokll' => $request->noLp,
+                'kddrygmenyatakan' => $request->kddrygmenyatakan
               ]
             );
         }
@@ -126,6 +127,8 @@ class PulangController extends Controller
               'nosrtmeninggal' => $noSuratMeninggal ?? null,
               'jamMeninggal' => $request->jamMeninggal ?? null,
               'nokll' => $request->noLp ?? null,
+              'norm' => $request->norm ?? null,
+              'kddrygmenyatakan' => $request->kddrygmenyatakan ?? null
             ]
           );
        }
@@ -171,7 +174,7 @@ class PulangController extends Controller
           self::update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal);
         }
 
-        
+
        return new JsonResponse([
         'success' => true,
         'message' => 'success',

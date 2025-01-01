@@ -93,6 +93,7 @@ class RanapController extends Controller
             'rs23_meta.kd_jeniskasus',
             'rs23_nosurat.nosrtmeninggal',
             'rs23_nosurat.jamMeninggal',
+            'rs23_nosurat.kddrygmenyatakan',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
             )

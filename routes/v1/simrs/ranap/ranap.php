@@ -32,7 +32,7 @@ Route::group([
     Route::get('/no-surat', function () {
        $data = DB::table('rs23_nosurat')
        ->select(
-        'noreg','norm','nosrtmeninggal','jamMeninggal','nokll'
+        'noreg','norm','nosrtmeninggal','jamMeninggal','nokll','kddrygmenyatakan'
        )->where('noreg', '=', request('noreg'))->first();
 
 
