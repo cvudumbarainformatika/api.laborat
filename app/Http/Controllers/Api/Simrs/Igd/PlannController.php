@@ -9,6 +9,7 @@ use App\Models\Simrs\Planing\Planing_Igd_Pulang;
 use App\Models\Simrs\Planing\Planing_Igd_ranap;
 use App\Models\Simrs\Planing\Planing_Igd_Rujukan;
 use App\Models\Simrs\Planing\SkalaTransferIgd;
+use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,17 +103,32 @@ class PlannController extends Controller
 
             }else if($request->panel === 'Pulang')
             {
-                $simpansambung = Planing_Igd_Pulang::create(
-                    [
-                    'noreg' => $request->noreg,
-                    'norm' => $request->norm,
-                    'id_heder' => $simpan['id'] ?? '',
-                    'atas_dasar' => $request->atasdasarpulang,
-                    'tgl_meninggal' => $request->tglmeninggal,
-                    'jam_meninggal' => $request->jammeninggal,
-                    'alasan_meninggal' => $request->alasanmeninggal,
-                    ]
-                );
+                if($request->atasdasarpulang === 'Meninggal')
+                {
+                    $noSuratMeninggal = null;
+                    $noSuratMeninggal = self::buatSuratMeninggal();
+                    $simpansambung = Planing_Igd_Pulang::create(
+                        [
+                        'noreg' => $request->noreg,
+                        'norm' => $request->norm,
+                        'id_heder' => $simpan['id'] ?? '',
+                        'atas_dasar' => $request->atasdasarpulang,
+                        'tgl_meninggal' => $request->tglmeninggal,
+                        'jam_meninggal' => $request->jammeninggal,
+                        'alasan_meninggal' => $request->alasanmeninggal,
+                        'nosurat' => $noSuratMeninggal
+                        ]
+                    );
+                }else{
+                    $simpansambung = Planing_Igd_Pulang::create(
+                        [
+                        'noreg' => $request->noreg,
+                        'norm' => $request->norm,
+                        'id_heder' => $simpan['id'] ?? '',
+                        'atas_dasar' => $request->atasdasarpulang,
+                        ]
+                    );
+                }
             }
 
 
@@ -144,5 +160,84 @@ class PlannController extends Controller
                 'result' => 'err' . $e
             ], 410);
         }
+    }
+
+    public function buatSuratMeninggal()
+    {
+      $oto = 0;
+      DB::select('call no_surat_kematian(@nomor)');
+      $x = DB::table('rs1')->select('kematian')->get();
+      $oto = $x[0]->kematian;
+      // return $oto;
+
+      $has = str_pad($oto, 4, '0', STR_PAD_LEFT);
+
+
+      $bulan = (int) date('m');
+      $blnRomawi = self::intToRoman($bulan);
+
+      $no = "472.12/$has/425.102.8/KEM/$blnRomawi/" . date('Y');
+        return $no;
+    }
+
+    public static function intToRoman($num) {
+        $romanNumerals = [
+            1000 => 'M',
+            900 => 'CM',
+            500 => 'D',
+            400 => 'CD',
+            100 => 'C',
+            90 => 'XC',
+            50 => 'L',
+            40 => 'XL',
+            10 => 'X',
+            9 => 'IX',
+            5 => 'V',
+            4 => 'IV',
+            1 => 'I'
+        ];
+
+        $result = '';
+        foreach ($romanNumerals as $value => $numeral) {
+            while ($num >= $value) {
+                $result .= $numeral;
+                $num -= $value;
+            }
+        }
+        return $result;
+    }
+
+    public function suratkematian()
+    {
+        $data = KunjunganPoli::with(
+            [
+                'datasimpeg' => function ($datasimpeg){
+                    $datasimpeg->select('pegawai.kdpegsimrs', 'pegawai.nama',
+                    'pegawai.nip','pegawai.nik','pegawai.jabatan','pegawai.golruang',
+                    'm_jabatan.jabatan as ket_jabatan','m_golruang.golruang as golongan',
+                    'm_golruang.keterangan as ket_golongan'
+                    )
+                    ->leftJoin('m_jabatan', 'pegawai.jabatan', '=', 'm_jabatan.kode_jabatan')
+                    ->leftJoin('m_golruang', 'pegawai.golruang', '=', 'm_golruang.kode_gol')
+                    ->where('pegawai.aktif', '=', 'AKTIF')
+                    ->first();
+                },
+                'planheder' => function($planheder){
+                    $planheder->with([
+                        'planranap' => function($planranap){
+                            $planranap->with(
+                                [
+                                    'ruangranap'
+                                ]
+                            );
+                        },
+                        'planrujukan',
+                        'planpulang'
+                    ]);
+                },
+            ]
+        )->where('rs1', request('noreg'))->get();
+
+        return new JsonResponse(['data' => $data] ,200);
     }
 }
