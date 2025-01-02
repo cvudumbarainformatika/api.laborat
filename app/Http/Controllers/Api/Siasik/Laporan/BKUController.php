@@ -37,8 +37,14 @@ class BKUController extends Controller
 {
     public function ptk()
     {
-        $thn= date('Y');
-        $ptk = PejabatTeknis::where('tahun', $thn)->get();
+        $thn= Carbon::createFromFormat('Y-m-d', request('tahun').'-'. request('bulan').'-01')->format('Y');
+        // $thn=date('Y');
+        $ptk = PejabatTeknis::where('flag', '!=', '1')
+        // ->when(request('tahun'), function($x) use ($thn){
+        //     $x
+        // })
+        ->where('tahun', $thn)
+        ->get();
         return new JsonResponse($ptk);
     }
     public function bkuppk()
@@ -51,9 +57,9 @@ class BKUController extends Controller
         $akhirsebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay()->format('Y-m-d');
         $awalsebelum= Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->format('Y-m-d');
         // $thnakhir=Carbon::createFromFormat('Y-m-d', $akhir)->format('Y');
-        if($thn !== $thnsekarang){
-         return response()->json(['message' => 'Tahun Tidak Sama'], 500);
-        }
+        // if($thn !== $awalsebelum){
+        //  return response()->json(['message' => 'Tahun Tidak Sama'], 500);
+        // }
         // $kurangdariawal=  $getdate < $awal;
         // return $kurangdariawal;
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
