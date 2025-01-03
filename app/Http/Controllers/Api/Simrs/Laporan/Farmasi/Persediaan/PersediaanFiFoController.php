@@ -250,7 +250,7 @@ class PersediaanFiFoController extends Controller
                         //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         // })
                         ->where('persiapan_operasis.tgl_distribusi', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->whereIn('persiapan_operasis.flag', ['4'])
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                         ->with([
                             'pasien:rs1,rs2',
                         ])
@@ -282,7 +282,7 @@ class PersediaanFiFoController extends Controller
                         //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                         // })
                         ->where('persiapan_operasis.tgl_retur', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
-                        ->whereIn('persiapan_operasis.flag', ['4'])
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                         ->havingRaw('sum(persiapan_operasi_distribusis.jumlah_retur) > 0')
                         ->with([
                             'pasien:rs1,rs2',
