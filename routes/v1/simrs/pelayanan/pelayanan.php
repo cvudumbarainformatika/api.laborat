@@ -86,6 +86,7 @@ Route::group([
     Route::get('/mkebutuhanedukasi', [EdukasiController::class, 'mkebutuhanedukasi']);
 
     Route::post('/simpanimplementasi-edukasi', [ImplementasiEdukasiController::class, 'saveData']);
+    Route::post('/hapusimplementasi-edukasi', [ImplementasiEdukasiController::class, 'hapusData']);
     Route::get('/simpanimplementasi-edukasi/list', [ImplementasiEdukasiController::class, 'list']);
 
     Route::get('/listdokter', [PoliController::class, 'listdokter']);
