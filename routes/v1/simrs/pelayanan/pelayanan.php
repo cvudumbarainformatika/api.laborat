@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKebidananControlle
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi\EdukasiController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\Edukasi\ImplementasiEdukasiController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Eresep\EresepController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Pemeriksaanfisik\PemeriksaanfisikController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\PemeriksaanRMKhusus\PemeriksaankhususMataController;
@@ -83,6 +84,9 @@ Route::group([
     Route::post('/hapusedukasi', [EdukasiController::class, 'hapusedukasi']);
     Route::get('/mpenerimaedukasi', [EdukasiController::class, 'mpenerimaedukasi']);
     Route::get('/mkebutuhanedukasi', [EdukasiController::class, 'mkebutuhanedukasi']);
+
+    Route::post('/simpanimplementasi-edukasi', [ImplementasiEdukasiController::class, 'saveData']);
+    Route::get('/simpanimplementasi-edukasi/list', [ImplementasiEdukasiController::class, 'list']);
 
     Route::get('/listdokter', [PoliController::class, 'listdokter']);
     Route::post('/gantidpjp', [PoliController::class, 'gantidpjp']);
