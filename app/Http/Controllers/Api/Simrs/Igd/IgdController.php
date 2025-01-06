@@ -144,7 +144,7 @@ class IgdController extends Controller
                 'rs250.rs13 as bb',
                 'rs250.rs21 as tb',
                 'rs250.rs10 as pernapasanx',
-                'rs250.sistole',
+                'rs250.sistole', 'rs250.meninggaldiluarrs',
                 'rs250.diastole',
                 'rs250.kesadarans as kesadaran','rs250.scorediastole','rs250.scoresistole','rs250.scorekesadaran','rs250.scorelochea','rs250.scorenadi','rs250.scorenyeri',
                 'rs250.scorepernapasanx','rs250.scoreproteinurin','rs250.scorespo2','rs250.scoresuhu','rs250.totalscore','rs250.rs16 as kategoritriage','rs250.hasilprimarusurve',
