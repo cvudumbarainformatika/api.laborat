@@ -53,7 +53,7 @@ class PlannController extends Controller
        if($request->panel === 'Rawat Inap' || $request->panel === 'Rujuk Ke Rumah Sakit Lain'){
             $cari = SkalaTransferIgd::where('noreg',$request->noreg)->count();
                 if($cari === 0){
-                    return new JsonResponse(['Maaf SKala Transfer Harus Diisi Terlebih Dahulu...!!'],500);
+                    return new JsonResponse(['message' => 'Maaf SKala Transfer Harus Diisi Terlebih Dahulu...!!'],500);
                 }
        }
 
