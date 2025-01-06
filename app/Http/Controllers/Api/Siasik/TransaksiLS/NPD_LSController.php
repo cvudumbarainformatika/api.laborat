@@ -28,13 +28,33 @@ use PhpOffice\PhpSpreadsheet\Calculation\TextData\Format;
 
 class NPD_LSController extends Controller
 {
+     public function bidang(){
+        $thn= Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        $bidang=Mapping_Bidang_Ptk_Kegiatan::where('tahun', $thn)
+        ->where('alias', '!=', '')
+        ->when(request('bidang'),function($keg) {
+            $keg->where('kodebidang', request('bidang'));
+        })
+        ->select('kodebidang', 'bidang', 'kodekegiatan', 'kegiatan', 'kodepptk', 'namapptk')
+        ->groupBy('kodekegiatan')
+        ->get();
+
+        // $bidangx = [
+        //     'belanja' => $thn,
+        //     'pendapatan' => $bidang,
+
+        // ];
+
+        return new JsonResponse($bidang);
+
+    }
     public function listnpdls()
     {
         // $user = auth()->user()->pegawai_id;
         // $pg= Pegawai::find($user);
         // $pegawai= $pg->kdpegsimrs;
-        $tahunawal=date('Y');
-        $tahun=date('Y');
+        $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $npdls = NpdLS_heder::select(
             'npdls_heder.nonpdls',
                     'npdls_heder.nonpk',
@@ -148,18 +168,18 @@ class NPD_LSController extends Controller
 
         return new JsonResponse($phk);
     }
-    public function ptk()
-    {
-        $tahun = date('Y');
-        // cari ptk kegiatan
-        $cari = Mapping_Bidang_Ptk_Kegiatan::where('tahun', $tahun)->get();
+    // public function ptk()
+    // {
+    //     $tahun = Carbon::createFromFormat('Y-m-d', request('tahun'))->format('Y');
+    //     // cari ptk kegiatan
+    //     $cari = Mapping_Bidang_Ptk_Kegiatan::where('tahun', $tahun)->get();
 
-        return new JsonResponse($cari);
-    }
+    //     return new JsonResponse($cari);
+    // }
 
     // BELUM DIPAKE
     public function anggaran(){
-        $tahun = date('Y');
+        $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $anggaran = PergeseranPaguRinci::where('tgl', $tahun)
         // ->select('mappingpptkkegiatan.kegiatan','mappingpptkkegiatan.kodekegiatan')
         ->where('kodekegiatanblud', request('kodekegiatan'))
@@ -210,6 +230,7 @@ class NPD_LSController extends Controller
         return new JsonResponse($anggaran);
     }
     public function bastfarmasi(){
+        // $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $tahun = date('Y');
         $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
                                             'penerimaan_h.tgl_bast',
@@ -257,7 +278,8 @@ class NPD_LSController extends Controller
                                         'new_masterobat.kode108',
                                         'new_masterobat.uraian108')
                             ->with(['jurnal','pagu'=> function ($pagu) use ($tahun) {
-                            $pagu->where('tgl', $tahun)
+                            $pagu
+                            // ->where('tgl', $tahun)
                                 ->where('kodekegiatanblud', request('kodekegiatan'))
                                 ->where('pagu', '!=', '0')
                                 ->select('t_tampung.kodekegiatanblud',
@@ -330,7 +352,8 @@ class NPD_LSController extends Controller
                                         'new_masterobat.kode108',
                                         'new_masterobat.uraian108')
                             ->with(['jurnal','pagu' => function ($pagu) use ($tahun) {
-                            $pagu->where('tgl', $tahun)
+                            $pagu
+                            // ->where('tgl', $tahun)
                                 ->where('kodekegiatanblud', request('kodekegiatan'))
                                 ->where('pagu', '!=', '0')
                                 ->select('t_tampung.kodekegiatanblud',
