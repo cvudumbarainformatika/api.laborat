@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siasik\Akuntansi\SaldoAwal;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Sigarang\Pegawai;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,7 @@ class SaldoawalController extends Controller
     }
 
     public function index(){
-        $year=date('Y');
+        $year=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $saldo=SaldoAwal::where('tahun', $year)
         ->select('kodepsap13',
                         'uraianpsap13',
@@ -40,7 +41,7 @@ class SaldoawalController extends Controller
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->kdpegsimrs;
-        $year=date('Y');
+        $year=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $time = date('Y-m-d H:i:s');
 
         if (!$request->has('id')){
