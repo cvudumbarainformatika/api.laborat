@@ -37,22 +37,29 @@ class PlannController extends Controller
     //             'result' => $data
     //         ],
     //     200);
+        $wew = FormatingHelper::session_user();
+        $kdpegsimrs = $wew['kodesimrs'];
+        $kdgroupnakes = $wew['kdgroupnakes'];
+        if($kdgroupnakes !== 1 || $kdgroupnakes !== '1')
+        {
+            return new JsonResponse(['message' => 'Maaf, Menu Ini Harus Di isi Dokter...!!!'],500);
+        }
+
         $cek = Planing_Igd_Lama::where('rs1', $request->noreg)->count();
-       if($cek > 0){
-        return new JsonResponse(['message' => 'Pasien Ini Sudah Dilakukan Planing'],500);
-       }
+        if($cek > 0){
+            return new JsonResponse(['message' => 'Pasien Ini Sudah Dilakukan Planing'],500);
+        }
 
        if($request->panel === 'Rawat Inap' || $request->panel === 'Rujuk Ke Rumah Sakit Lain'){
             $cari = SkalaTransferIgd::where('noreg',$request->noreg)->count();
                 if($cari === 0){
-                    return new JsonResponse(['Maaf SKala Transfer Harus Diisi Terlebih Dahulu...!!'],500);
+                    return new JsonResponse(['message' => 'Maaf SKala Transfer Harus Diisi Terlebih Dahulu...!!'],500);
                 }
        }
 
        DB::beginTransaction();
        try {
-        $wew = FormatingHelper::session_user();
-        $kdpegsimrs = $wew['kodesimrs'];
+
         $simpan = Planing_Igd_Lama::create(
                 [
                     'rs1' => $request->noreg,
@@ -116,6 +123,7 @@ class PlannController extends Controller
                         'tgl_meninggal' => $request->tglmeninggal,
                         'jam_meninggal' => $request->jammeninggal,
                         'alasan_meninggal' => $request->alasanmeninggal,
+                        'user_dokter' => $kdpegsimrs,
                         'nosurat' => $noSuratMeninggal
                         ]
                     );
@@ -209,10 +217,10 @@ class PlannController extends Controller
 
     public function suratkematian()
     {
-        $data = KunjunganPoli::with(
+        $data = Planing_Igd_Pulang::with(
             [
-                'datasimpeg' => function ($datasimpeg){
-                    $datasimpeg->select('pegawai.kdpegsimrs', 'pegawai.nama',
+                'dokterpenangungjawabpulang' => function($x){
+                    $x->select('pegawai.kdpegsimrs', 'pegawai.nama',
                     'pegawai.nip','pegawai.nik','pegawai.jabatan','pegawai.golruang',
                     'm_jabatan.jabatan as ket_jabatan','m_golruang.golruang as golongan',
                     'm_golruang.keterangan as ket_golongan'
@@ -221,22 +229,9 @@ class PlannController extends Controller
                     ->leftJoin('m_golruang', 'pegawai.golruang', '=', 'm_golruang.kode_gol')
                     ->where('pegawai.aktif', '=', 'AKTIF')
                     ->first();
-                },
-                'planheder' => function($planheder){
-                    $planheder->with([
-                        'planranap' => function($planranap){
-                            $planranap->with(
-                                [
-                                    'ruangranap'
-                                ]
-                            );
-                        },
-                        'planrujukan',
-                        'planpulang'
-                    ]);
-                },
+                }
             ]
-        )->where('rs1', request('noreg'))->get();
+        )->where('noreg', request('noreg'))->get();
 
         return new JsonResponse(['data' => $data] ,200);
     }
