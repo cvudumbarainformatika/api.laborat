@@ -498,7 +498,7 @@ class NPD_LSController extends Controller
                 }
                 // update penerimaan atas nomer BAST FARMASI
                 PenerimaanHeder::whereIn('nobast', $penerimaans)->update(['no_npd' => $save->nonpdls]);
-                BastKonsinyasi::whereIn('nobast', $penerimaans)->update(['no_npd' => $save->nonpdls]);
+                BastKonsinyasi::whereIn('notranskonsi', $penerimaans)->update(['no_npd' => $save->nonpdls]);
             //     $data = PenerimaanHeder::where('nobast',['nopenerimaan'])->get();
             //     if ($data) {
             //         $data->update([

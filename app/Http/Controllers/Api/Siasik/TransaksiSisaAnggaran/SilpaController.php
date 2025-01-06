@@ -14,9 +14,9 @@ class SilpaController extends Controller
 {
     public function getSilpa(){
 
-        $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
-        $awal = $thn.'-01-01';
-        $akhir=request('tglx', 'Y-m-d');
+        $thn=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        // $awal = $thn.'-01-01';
+        // $akhir=request('tglx', 'Y-m-d');
         // $thnakhir =Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
         // if($thn !== $thnakhir){
         //  return response()->json(['message' => 'Tahun Tidak Sama'], 500);
@@ -27,7 +27,7 @@ class SilpaController extends Controller
                 'silpa.koderek50',
                 'silpa.uraian50',
                 'silpa.nominal')
-        ->whereBetween('tanggal', [$awal, $akhir])
+        // ->whereBetween('tanggal', [$awal, $akhir])
         ->when(request('q'),function ($query) {
             $query->where('notrans', 'LIKE', '%' . request('q') . '%')
                 ->orWhere('tanggal', 'LIKE', '%' . request('q') . '%')
