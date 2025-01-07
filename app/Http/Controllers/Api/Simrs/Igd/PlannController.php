@@ -40,7 +40,9 @@ class PlannController extends Controller
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
         $kdgroupnakes = $wew['kdgroupnakes'];
-        if($kdgroupnakes !== 1 || $kdgroupnakes !== '1')
+
+
+        if( $kdgroupnakes !== '1')
         {
             return new JsonResponse(['message' => 'Maaf, Menu Ini Harus Di isi Dokter...!!!'],500);
         }
