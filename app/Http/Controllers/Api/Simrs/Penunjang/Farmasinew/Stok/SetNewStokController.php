@@ -1902,6 +1902,9 @@ class SetNewStokController extends Controller
             )
             ->where('kd_obat', $request->kdobat)
             ->get();
+        $data['persiapanrinci'] = PersiapanOperasiRinci::selectRaw('*,kd_obat as kdobat')->whereIn('nopermintaan', $headPersiapan)
+            ->where('kd_obat', $request->kdobat)
+            ->get();
         return new JsonResponse([
             'data' => $data,
             'req' => $request->all(),

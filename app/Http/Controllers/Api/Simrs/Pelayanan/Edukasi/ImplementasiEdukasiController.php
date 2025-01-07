@@ -16,8 +16,12 @@ class ImplementasiEdukasiController extends Controller
 {
     public function list()
     {
-       $data = ImplementasiEdukasi::where('noreg', request('noreg'))
-        ->where('kdruangan', '!=', 'POL014')
+       $data = ImplementasiEdukasi::select('id','noreg','norm','tgl','metode','materi','materiLain','media','evaluasi',
+       'penerima','namaPenerima','ttdPenerima','nakes','estimasi','user','kdruang')
+       ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes'])
+       ->where('noreg', request('noreg'))
+        ->where('kdruang', '!=', 'POL014')
+        ->orderBy('tgl', 'desc')
        ->get();
 
        return new JsonResponse($data);
@@ -44,7 +48,7 @@ class ImplementasiEdukasiController extends Controller
 
 
       $data->noreg = $request->noreg;
-      $data->noreg = $request->noreg;
+      $data->norm = $request->norm;
       $data->tgl = date('Y-m-d H:i:s');
       $data->metode = $request->metode;
       $data->materi = $request->materi;
@@ -53,8 +57,9 @@ class ImplementasiEdukasiController extends Controller
       $data->evaluasi = $request->evaluasi;
       $data->penerima = $request->penerima;
       $data->namaPenerima = $request->namaPenerima;
-      $data->ttdPenerima = $request->ttdPenerima;
+      // $data->ttdPenerima = $request->ttdPenerima;
       $data->kdruang = $request->kdruang;
+      $data->estimasi = $request->estimasi;
       $data->nakes = $request->nakes;
       $data->user = $kdpegsimrs;
       $data->save();
@@ -84,7 +89,7 @@ class ImplementasiEdukasiController extends Controller
        return new JsonResponse([
         'success' => true,
         'message' => 'success',
-        'result' => $cek
+        'result' => $cek->load('petugas')
        ]);
     }
 
@@ -115,5 +120,22 @@ class ImplementasiEdukasiController extends Controller
     public static function is_base64_image($image) {
       $pattern = '/^data:image\/(jpeg|jpg|png|gif|bmp);base64,/';
       return preg_match($pattern, $image) === 1;
+    }
+
+    public function hapusData(Request $request)
+    {
+        $hapus = ImplementasiEdukasi::where('id', $request->id)->delete();
+
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'Data Gagal Dihapus...!!!'], 500);
+        }
+        // $listedukasi = Transedukasi::where('noreg', $request->noreg);
+        return new JsonResponse(
+            [
+                'message' => 'Data Berhasil Dihapus...!!!',
+                // 'result' => $listedukasi
+            ],
+            200
+        );
     }
 }
