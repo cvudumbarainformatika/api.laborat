@@ -230,8 +230,8 @@ class NPD_LSController extends Controller
         return new JsonResponse($anggaran);
     }
     public function bastfarmasi(){
-        // $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
-        $tahun = date('Y');
+        $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        // $tahun = date('Y');
         $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
                                             'penerimaan_h.tgl_bast',
                                             'penerimaan_h.nopenerimaan',
@@ -279,7 +279,7 @@ class NPD_LSController extends Controller
                                         'new_masterobat.uraian108')
                             ->with(['jurnal','pagu'=> function ($pagu) use ($tahun) {
                             $pagu
-                            // ->where('tgl', $tahun)
+                            ->where('tgl', $tahun)
                                 ->where('kodekegiatanblud', request('kodekegiatan'))
                                 ->where('pagu', '!=', '0')
                                 ->select('t_tampung.kodekegiatanblud',
@@ -410,7 +410,7 @@ class NPD_LSController extends Controller
     public function simpannpd(Request $request)
     {
         $this->validate($request,[
-            'nonpdls' => 'unique:siasik.npdls_heder,nonpdls',
+            // 'nonpdls' => 'unique:siasik.npdls_heder,nonpdls',
             'keterangan' => 'required|min:3',
             'pptk' => 'required',
             'tglnpdls' => 'required',
@@ -522,6 +522,14 @@ class NPD_LSController extends Controller
             ], 500);
         }
     }
+
+    public function getlistformnpd()
+    {
+        $data = NpdLS_heder::all();
+
+        return new JsonResponse($data);
+    }
+
     public function deleterinci(Request $request)
     {
         $header = NpdLS_heder::
