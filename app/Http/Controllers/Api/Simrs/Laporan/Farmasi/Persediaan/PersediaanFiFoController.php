@@ -594,7 +594,7 @@ class PersediaanFiFoController extends Controller
                             'pasien:rs1,rs2',
                         ]);
                     if (request('jenis') === 'rekap') {
-                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat');
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan');
                     } else {
                         $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                     }
@@ -632,7 +632,7 @@ class PersediaanFiFoController extends Controller
                             'pasien:rs1,rs2',
                         ]);
                     if (request('jenis') === 'rekap') {
-                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat');
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan');
                     } else {
                         $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                     }
