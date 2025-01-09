@@ -468,9 +468,10 @@ class PersediaanFiFoController extends Controller
                     $st->select(
                         'stokopname.kdobat',
                         'stokopname.nopenerimaan',
+                        'stokopname.harga',
                         DB::raw('sum(stokopname.jumlah) as jumlah'),
                         DB::raw('sum(stokopname.jumlah * stokopname.harga) as sub'),
-                        DB::raw('stokopname.harga as harga'),
+                        // DB::raw('stokopname.harga as harga'),
                         // 'daftar_hargas.harga as dftHar',
                     )
 
@@ -478,7 +479,7 @@ class PersediaanFiFoController extends Controller
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
                         ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
                     if (request('jenis') == 'rekap') {
-                        $st->groupBy('stokopname.kdobat');
+                        $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan');
                     } else {
                         $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
                     }
@@ -594,7 +595,7 @@ class PersediaanFiFoController extends Controller
                             'pasien:rs1,rs2',
                         ]);
                     if (request('jenis') === 'rekap') {
-                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat');
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan');
                     } else {
                         $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                     }
@@ -632,7 +633,7 @@ class PersediaanFiFoController extends Controller
                             'pasien:rs1,rs2',
                         ]);
                     if (request('jenis') === 'rekap') {
-                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat');
+                        $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan');
                     } else {
                         $dist->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasis.nopermintaan', 'persiapan_operasi_distribusis.nopenerimaan');
                     }
