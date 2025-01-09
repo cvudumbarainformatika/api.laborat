@@ -410,14 +410,13 @@ class NPD_LSController extends Controller
     public function simpannpd(Request $request)
     {
         $this->validate($request,[
-            // 'nonpdls' => 'unique:siasik.npdls_heder,nonpdls',
-            'keterangan' => 'required|min:3',
-            'pptk' => 'required',
-            'tglnpdls' => 'required',
-            // 'rincianbelanja' => 'required',
-            // 'itembelanja' => 'required'
-        ]);
-
+                // 'nonpdls' => 'unique:siasik.npdls_heder,nonpdls',
+                'keterangan' => 'required|min:3',
+                'pptk' => 'required',
+                'tglnpdls' => 'required',
+                // 'rincianbelanja' => 'required',
+                // 'itembelanja' => 'required'
+                ]);
         $time = date('Y-m-d H:i:s');
         // $user = auth()->user()->pegawai_id;
         // $pg= Pegawai::find($user);
@@ -454,7 +453,7 @@ class NPD_LSController extends Controller
                     'tglentry'=>$time ?? '',
                     'userentry'=>$pegawai ?? '',
                     'noserahterima'=>$request->noserahterima ?? '',
-                    'kunci'=>'1'
+                    // 'kunci'=>'1'
                 ]);
                 $penerimaans = [];
             foreach ($request->rincians as $rinci){
@@ -482,22 +481,23 @@ class NPD_LSController extends Controller
                         'hargals'=>$rinci['hargals'] ?? '',
                         'totalls'=>$rinci['totalls'] ?? '',
                         'nominalpembayaran'=>$rinci['nominalpembayaran'] ?? '',
-                        'kode_lo'=>$rinci['kode_lo'] ?? '',
-                        'uraian_lo'=>$rinci['uraian_lo'] ?? '',
-                        'kode_neraca1'=>$rinci['kode_neraca1'] ?? '',
-                        'uraian_neraca1'=>$rinci['uraian_neraca1'] ?? '',
-                        'kode_neraca2'=>$rinci['kode_neraca2'] ?? '',
-                        'uraian_neraca2'=>$rinci['uraian_neraca2'] ?? '',
-                        'kode_lpsal'=>$rinci['kode_lpsal'] ?? '',
-                        'uraian_lpsal'=>$rinci['uraian_lpsal'] ?? '',
-                        'kode_lak'=>$rinci['kode_lak'] ?? '',
-                        'uraian_lak'=>$rinci['uraian_lak'] ?? '',
+                        'bast_r_id'=>$rinci['bast_r_id'] ?? '',
+                        // 'kode_lo'=>$rinci['kode_lo'] ?? '',
+                        // 'uraian_lo'=>$rinci['uraian_lo'] ?? '',
+                        // 'kode_neraca1'=>$rinci['kode_neraca1'] ?? '',
+                        // 'uraian_neraca1'=>$rinci['uraian_neraca1'] ?? '',
+                        // 'kode_neraca2'=>$rinci['kode_neraca2'] ?? '',
+                        // 'uraian_neraca2'=>$rinci['uraian_neraca2'] ?? '',
+                        // 'kode_lpsal'=>$rinci['kode_lpsal'] ?? '',
+                        // 'uraian_lpsal'=>$rinci['uraian_lpsal'] ?? '',
+                        // 'kode_lak'=>$rinci['kode_lak'] ?? '',
+                        // 'uraian_lak'=>$rinci['uraian_lak'] ?? '',
                     ]);
                     //request nomer BAST
                     $penerimaans[]=$rinci['nopenerimaan'];
                 }
                 // update penerimaan atas nomer BAST FARMASI
-                PenerimaanHeder::whereIn('nobast', $penerimaans)->update(['no_npd' => $save->nonpdls]);
+                PenerimaanHeder::whereIn('nopenerimaan', $penerimaans)->update(['no_npd' => $save->nonpdls]);
                 BastKonsinyasi::whereIn('notranskonsi', $penerimaans)->update(['no_npd' => $save->nonpdls]);
             //     $data = PenerimaanHeder::where('nobast',['nopenerimaan'])->get();
             //     if ($data) {
@@ -525,7 +525,25 @@ class NPD_LSController extends Controller
 
     public function getlistformnpd()
     {
-        $data = NpdLS_heder::all();
+        $data = NpdLS_heder::where('npdls_heder.nonpdls', request('nonpdls'))
+        ->select('npdls_heder.nonpdls',
+                        'npdls_heder.tglnpdls',
+                        'npdls_rinci.id',
+                        'npdls_rinci.koderek50',
+                        'npdls_rinci.rincianbelanja',
+                        'npdls_rinci.koderek108',
+                        'npdls_rinci.uraian108',
+                        'npdls_rinci.itembelanja',
+                        'npdls_rinci.nopenerimaan',
+                        'npdls_rinci.volumels',
+                        'npdls_rinci.satuan',
+                        'npdls_rinci.hargals',
+                        'npdls_rinci.totalls',
+                        'npdls_rinci.nominalpembayaran',
+                        'npdls_rinci.bast_r_id',
+        )
+        ->join('npdls_rinci', 'npdls_rinci.nonpdls', 'npdls_heder.nonpdls')
+        ->get();
 
         return new JsonResponse($data);
     }
@@ -539,66 +557,90 @@ class NPD_LSController extends Controller
         if(count($header) > 0){
             return new JsonResponse(['message' => 'NPD Masih Dikunci'], 500);
         }
-        $findrinci = NpdLS_rinci::where( 'nopenerimaan',$request->nopenerimaan)->first();
-        if (!$findrinci){
-            return new JsonResponse( $findrinci, 200);
+
+
+        if ($request->id) {
+            $findrinci = NpdLS_rinci::where('id', $request->id)->first();
+        } else {
+             $findrinci = NpdLS_rinci::where('nopenerimaan', $request->nopenerimaan)->first();
         }
-            $findrinci->delete();
+
+        if (!$findrinci) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        $findrinci->delete();
+        // return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
 
         $rinciAll = NpdLS_rinci::where('nonpdls', $request->nonpdls)->get();
         if(count($rinciAll) === 0){
             $header = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
-            $header->delete();
+
+             if ($header) {
+                $header->delete();
+                PenerimaanHeder::whereIn('no_npd', [$request->nonpdls])->update(['no_npd' => '']);
+                BastKonsinyasi::whereIn('no_npd', [$request->nonpdls])->update(['no_npd' => '']);
+                return new JsonResponse([
+                    'message' => 'Data Berhasil dihapus',
+                    'data' => []
+                ], 200);
+            } else {
+                return new JsonResponse([
+                    'message' => 'Data header tidak ditemukan',
+                ], 404);
+            }
+
+
+
+            // $header->delete();
+            // PenerimaanHeder::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
+            // BastKonsinyasi::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
         }
         return new JsonResponse([
-            'message' => 'Data Berhasil dihapus'
+            'message' => 'Data Berhasil dihapus',
+             'data' => $rinciAll
         ]);
-        // $rinci = NpdLS_rinci::where('nonpdls', $request->nonpdls)->get();
-        // $header = NpdLS_heder::where('nonpdls', $request->nonpdls)
-        // ->where('kunci', '')
-        // ->get();
-        // if(count($header) <= 0){
+
+
+        // $rinciAll = NpdLS_rinci::where('nonpdls', $request->nonpdls)->get();
+
+        // if ($rinciAll->isEmpty()) {
+        //     $header = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
+
+        //     if ($header) {
+        //         $header->delete();
+        //         PenerimaanHeder::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
+        //         return new JsonResponse([
+        //             'message' => 'Data Berhasil dihapus',
+        //             'data' => []
+        //         ], 200);
+        //     } else {
+        //         return new JsonResponse([
+        //             'message' => 'Data header tidak ditemukan',
+        //         ], 404);
+        //     }
+        // } else {
         //     return new JsonResponse([
-        //         'message' => 'Gagal dihapus, Npd Masih Terkunci'
-        //     ], 410);
+        //         'message' => 'Data masih memiliki rinci',
+        //     ], 400);
         // }
-        // if (count($header) > 0){
-        //     $header->delete();
-        // }
-        // if (count($rinci) > 0){
-        //     $rinci->delete();
-        // }
-        // $data = [
-        //     'message' => 'Data sudah dihapus',
-        //     'rinci' => $rinci,
-        //     'header' => $header,
-        //     'req' => $request->all(),
-        // ];
-        // $delete = $data->delete();
-        // if(!$delete){
-        //     return new JsonResponse(['message' => 'Data Gagal Dihapus'], 410);
-        // }
-        // if (count($rinci) === 1){
-        //     $header = NpdLS_heder::find($data->nonpdls);
-        //     $header->delete();
-        //     return new JsonResponse(['message'=>'Data Header dan detail telah dihapus'], 200);
-        // }
-        // return new JsonResponse($data, 200);
+
     }
     public static function buatnomor(){
-        $user = auth()->user()->pegawai_id;
-        $pg= Pegawai::find($user);
-        $pegawai= $pg->kdpegsimrs;
-        if($pegawai === ''){
-            $pegawai = "RSUD";
-        }else{
-            $pegawai= $pg->kdpegsimrs;
-        }
+        // $user = auth()->user()->pegawai_id;
+        // $pg= Pegawai::find($user);
+        // $pegawai= $pg->kdpegsimrs;
+        // if($pegawai === ''){
+        //     $pegawai = "RSUD";
+        // }else{
+        //     $pegawai= $pg->kdpegsimrs;
+        // }
         // $x= $pg->bagian;
         // $bag=Bagian::select('kodebagian')->where('kodebagian', $x)->get();
         // $pegawai=$bag->kodebagian;
 
         $bidang = Mapping_Bidang_Ptk_Kegiatan::select('alias')->where('kodekegiatan', request('kodekegiatan'))->get();
+        $instansi = ('RSUD');
         $huruf = ('NPD-LS');
         // $no = ('4.02.0.00.0.00.01.0000');
         date_default_timezone_set('Asia/Jakarta');
@@ -610,7 +652,7 @@ class NPD_LSController extends Controller
         $cek = NpdLS_heder::count();
         if ($cek == null){
             $urut = "000001";
-            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($pegawai).'/'.strtoupper($huruf).'/'.$thn;
+            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($huruf).'/'.strtoupper($instansi).'/'.$thn;
         }
         else{
             $ambil=NpdLS_heder::all()->last();
@@ -635,7 +677,7 @@ class NPD_LSController extends Controller
             else {
                 $urut = (int)$urut;
             }
-            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($pegawai).'/'.strtoupper($huruf).'/'.$thn;
+            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($huruf).'/'.strtoupper($instansi).'/'.$thn;
         }
 
         return $sambung;
