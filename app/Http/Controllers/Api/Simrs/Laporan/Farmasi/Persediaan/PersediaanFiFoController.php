@@ -500,11 +500,11 @@ class PersediaanFiFoController extends Controller
                         ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                         ->with('pbf:kode,nama')
                         ->where('penerimaan_h.tglpenerimaan', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%');
-                    if (request('jenis') == 'rekap') {
-                        $trm->groupBy('penerimaan_r.kdobat');
-                    } else {
-                        $trm->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan');
-                    }
+                    // if (request('jenis') == 'rekap') {
+                    //     $trm->groupBy('penerimaan_r.kdobat');
+                    // } else {
+                    $trm->groupBy('penerimaan_r.kdobat', 'penerimaan_r.nopenerimaan', 'penerimaan_r.no_batch');
+                    // }
                 },
                 'resepkeluar' => function ($kel) {
                     $kel->select(
