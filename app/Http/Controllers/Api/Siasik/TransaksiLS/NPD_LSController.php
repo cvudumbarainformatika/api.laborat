@@ -526,6 +526,7 @@ class NPD_LSController extends Controller
     public function getlistformnpd()
     {
         $data = NpdLS_heder::where('npdls_heder.nonpdls', request('nonpdls'))
+        ->orWhere( 'npdls_rinci.nopenerimaan', request('nopenerimaan'))
         ->select('npdls_heder.nonpdls',
                         'npdls_heder.tglnpdls',
                         'npdls_rinci.id',
