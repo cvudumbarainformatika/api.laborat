@@ -479,9 +479,9 @@ class PersediaanFiFoController extends Controller
                         ->where('stokopname.tglopname', 'LIKE', $blnLalu . '%')
                         ->whereIn('stokopname.kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
                     if (request('jenis') == 'rekap') {
-                        $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan');
+                        $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.nobatch');
                     } else {
-                        $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname');
+                        $st->groupBy('stokopname.kdobat', 'stokopname.nopenerimaan', 'stokopname.tglopname', 'stokopname.nobatch');
                     }
                 },
                 'penerimaanrinci' => function ($trm) {
