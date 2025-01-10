@@ -310,15 +310,16 @@ class TindakanController extends Controller
                     $file = $files[$i];
                     $originalname = $file->getClientOriginalName();
                     $penamaan = date('YmdHis') . '-' . $i . '-' . $request->rs73_id . '.' . $file->getClientOriginalExtension();
-                    $data = Gbrdokumentindakan::where('original', $originalname)->first();
-                    Storage::delete('public/dokumentindakan/' . $originalname);
+                    // $data = Gbrdokumentindakan::where('original', $originalname)->first();
+                    // Storage::delete('public/dokumentindakan/' . $originalname);
 
-                    $gallery = null;
-                    if ($data) {
-                        $gallery = $data;
-                    } else {
-                        $gallery = new Gbrdokumentindakan();
-                    }
+                    // $gallery = null;
+                    // if ($data) {
+                    //     $gallery = $data;
+                    // } else {
+                    //     $gallery = new Gbrdokumentindakan();
+                    // }
+                    $gallery = new Gbrdokumentindakan();
                     $path = $file->storeAs('public/dokumentindakan', $penamaan);
                     // $target = storage_path() . "/app/public/dokumentindakan/" . $penamaan;
                     // $type = pathinfo($target, PATHINFO_EXTENSION);
