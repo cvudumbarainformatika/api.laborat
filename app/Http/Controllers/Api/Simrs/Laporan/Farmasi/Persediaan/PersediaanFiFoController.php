@@ -730,6 +730,7 @@ class PersediaanFiFoController extends Controller
                     )
                         ->join('stokreal', 'stokreal.id', '=', 'penyesuaian_stoks.stokreal_id')
                         ->where('penyesuaian_stoks.tgl_penyesuaian', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                        ->where('penyesuaian_stoks.penyesuaian', '!=', 0)
                         ->groupBy('penyesuaian_stoks.kdobat', 'penyesuaian_stoks.nopenerimaan');
                 },
 
