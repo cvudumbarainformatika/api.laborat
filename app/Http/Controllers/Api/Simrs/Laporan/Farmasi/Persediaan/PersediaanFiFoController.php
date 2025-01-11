@@ -685,7 +685,7 @@ class PersediaanFiFoController extends Controller
                             'header.datapasien:rs1,rs2',
                         );
                     if (request('jenis') === 'rekap') {
-                        $kel->groupBy('retur_penjualan_r.kdobat');
+                        $kel->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan');
                     } else {
                         $kel->groupBy('retur_penjualan_r.kdobat', 'retur_penjualan_r.nopenerimaan', 'retur_penjualan_r.noresep');
                     }
