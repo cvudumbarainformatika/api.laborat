@@ -3032,7 +3032,7 @@ class SetNewStokController extends Controller
                     ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                     ->where('kdruang', $koderuangan)
                     ->where('kdobat', $kdobat)
-                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat', 'harga')
                     ->orderBy('tglpenerimaan', 'DESC')
                     ->get();
                 $saldoAwal = collect($saldoAwalRinci)->sum('total');
@@ -3345,7 +3345,7 @@ class SetNewStokController extends Controller
                     ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                     ->where('kdruang', $koderuangan)
                     ->where('kdobat', $kdobat)
-                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat', 'harga')
                     ->get();
 
                 $saldoAwal = collect($saldoAwalDepoRinci)->sum('total');
