@@ -3032,7 +3032,7 @@ class SetNewStokController extends Controller
                     ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                     ->where('kdruang', $koderuangan)
                     ->where('kdobat', $kdobat)
-                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat', 'harga')
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
                     ->orderBy('tglpenerimaan', 'DESC')
                     ->get();
                 $saldoAwal = collect($saldoAwalRinci)->sum('total');
@@ -3345,7 +3345,7 @@ class SetNewStokController extends Controller
                     ->where('tglopname', 'LIKE', $blnLaluAwal . '%')
                     ->where('kdruang', $koderuangan)
                     ->where('kdobat', $kdobat)
-                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat', 'harga')
+                    ->groupBy('nopenerimaan', 'tglopname', 'kdruang', 'kdobat')
                     ->get();
 
                 $saldoAwal = collect($saldoAwalDepoRinci)->sum('total');
@@ -3379,7 +3379,6 @@ class SetNewStokController extends Controller
                     ->groupBy(
                         'mutasi_gudangdepo.kd_obat',
                         'mutasi_gudangdepo.nopenerimaan',
-                        'mutasi_gudangdepo.harga',
                     )
                     ->orderby('no_permintaan', 'DESC')
                     ->get();
@@ -3403,7 +3402,6 @@ class SetNewStokController extends Controller
                     ->groupBy(
                         'mutasi_gudangdepo.kd_obat',
                         'mutasi_gudangdepo.nopenerimaan',
-                        'mutasi_gudangdepo.harga',
                     )
                     ->get();
                 $mutasiKeluar = collect($mutasiKeluarDepoRinci)->sum('jumlah');
