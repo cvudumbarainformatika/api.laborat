@@ -3379,6 +3379,7 @@ class SetNewStokController extends Controller
                     ->groupBy(
                         'mutasi_gudangdepo.kd_obat',
                         'mutasi_gudangdepo.nopenerimaan',
+                        'mutasi_gudangdepo.harga',
                     )
                     ->orderby('no_permintaan', 'DESC')
                     ->get();
@@ -3402,6 +3403,7 @@ class SetNewStokController extends Controller
                     ->groupBy(
                         'mutasi_gudangdepo.kd_obat',
                         'mutasi_gudangdepo.nopenerimaan',
+                        'mutasi_gudangdepo.harga',
                     )
                     ->get();
                 $mutasiKeluar = collect($mutasiKeluarDepoRinci)->sum('jumlah');
