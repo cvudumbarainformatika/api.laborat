@@ -3471,24 +3471,39 @@ class SetNewStokController extends Controller
                     $persiapanOperasiDistribusiRinci = PersiapanOperasiDistribusi::select(
                         'persiapan_operasi_distribusis.kd_obat',
                         'persiapan_operasi_distribusis.nopenerimaan',
+                        // 'persiapan_operasi_distribusis.nopermintaan',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
                     )
                         ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                            $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        })
                         ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' . $x . '%')
                         ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
                         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        // ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopermintaan')
+                        ->orderBy('persiapan_operasis.tgl_distribusi')
                         ->get();
                     $persiapanOperasiDistribusiRetur = PersiapanOperasiDistribusi::select(
                         'persiapan_operasi_distribusis.kd_obat',
                         'persiapan_operasi_distribusis.nopenerimaan',
+                        // 'persiapan_operasi_distribusis.nopermintaan',
                         DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
                     )
                         ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->leftJoin('persiapan_operasi_rincis', function ($join) {
+                            $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
+                                ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                        })
                         ->where('persiapan_operasis.tgl_retur', 'LIKE', '%' . $x . '%')
                         ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->where('persiapan_operasi_distribusis.jumlah_retur', '>', 0)
                         ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        // ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan', 'persiapan_operasi_distribusis.nopermintaan')
+                        // ->orderBy('persiapan_operasis.tgl_retur')
                         ->get();
                 }
 
