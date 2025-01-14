@@ -457,7 +457,7 @@ class PersediaanFiFoController extends Controller
                     )
                         ->where('tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                         ->where('kunci', '1')
-                        ->whereIn('gudang', ['Gd-05010100', 'Gd-03010100'])
+                        ->whereIn('gudang', ['Gd-03010100'])
                         ->groupBy('kdobat', 'nopenerimaan_default');
                 },
 
