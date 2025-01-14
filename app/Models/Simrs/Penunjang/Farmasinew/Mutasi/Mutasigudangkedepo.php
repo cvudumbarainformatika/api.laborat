@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Mutasi;
 
+use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
@@ -27,5 +28,10 @@ class Mutasigudangkedepo extends Model
     public function ruangan()
     {
         return $this->belongsTo(Ruang::class, 'kdruang', 'kode');
+    }
+    // ini dipake di laporan mutasi ffo
+    public function depo()
+    {
+        return $this->belongsTo(Gudang::class, 'kdruang', 'kode');
     }
 }

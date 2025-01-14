@@ -421,12 +421,21 @@ class PersediaanFiFoController extends Controller
                     )
                         ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->havingRaw('jumlah > 0')
-                        ->where('permintaan_h.dari', 'LIKE', 'R-%')
+                        ->where(function ($query) {
+                            $query->where('permintaan_h.dari', 'LIKE', 'R-%')
+                                ->orWhereIn('permintaan_h.dari', ['Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
+                        })
+                        // ->where('permintaan_h.dari', 'LIKE', 'R-%')
                         ->where('permintaan_h.tgl_kirim_depo', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                         ->with([
                             'ruangan:kode,uraian',
-                        ])
-                        ->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
+                            'depo:kode,nama',
+                        ]);
+                    if (request('jenis') === 'rekap') {
+                        $mut->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
+                    } else {
+                        $mut->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.no_permintaan');
+                    }
                 },
                 'penyesuaian' => function ($pak) {
                     $pak->select(
