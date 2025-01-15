@@ -73,6 +73,7 @@ class NursenoteController extends Controller
         $data->urine = $request->urine;
         $data->water = $request->water;
         $data->zonde = $request->zonde;
+        $data->user = $pegawai->kdpegsimrs;
         $data->save();
 
 
@@ -86,7 +87,7 @@ class NursenoteController extends Controller
          return new JsonResponse([
           'success' => true,
           'message' => 'success',
-          'result' => $data->load('petugas')
+          'result' => $data->load('petugas:kdpegsimrs,nama,nik,kdgroupnakes') 
          ]);
         
         return new JsonResponse($data);
