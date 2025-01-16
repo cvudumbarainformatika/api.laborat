@@ -17,6 +17,7 @@ use App\Models\Simrs\Master\MtindakanX;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
+use App\Models\Simrs\Penjaminan\listcasmixrajal;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
@@ -125,6 +126,7 @@ class PoliController extends Controller
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                 'gambars',
                 'fisio',
+                'datacasmix',
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with('intervensi.masterintervensi');
                 },
@@ -520,6 +522,7 @@ class PoliController extends Controller
                 'fisio',
                 'laporantindakan',
                 'psikiatri',
+                'datacasmix',
                 // 'pediatri'=> function($neo){
                 //     $neo->with(['pegawai:id,nama']);
                 // },
@@ -945,5 +948,23 @@ class PoliController extends Controller
         $updatekunjungan->rs24 = '1';
         $updatekunjungan->save();
         return new JsonResponse(['message' => 'ok'], 200);
+    }
+
+    public function kirimpenjaminan(Request $request)
+    {
+        $simpan = listcasmixrajal::updateOrCreate(
+            [
+                'noreg' => $request->noreg
+            ],
+            [
+                'norm' =>  $request->norm,
+                'noka' =>  $request->noka,
+                'nosep' => $request->nosep,
+                'kodepoli' => $request->kodepoli,
+                'flaging' => $request->flaging,
+            ]
+        );
+
+        return new JsonResponse(['message' => 'Data Pasien Sudah Terkirim Ke Penjaminan'],200);
     }
 }

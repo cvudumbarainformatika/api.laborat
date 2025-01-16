@@ -39,6 +39,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
+use App\Models\Simrs\Penjaminan\listcasmixrajal;
 use App\Models\Simrs\Penunjang\Ambulan\ReqAmbulan;
 use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
 use App\Models\Simrs\Penunjang\DietTrans;
@@ -473,5 +474,10 @@ class KunjunganPoli extends Model
     public function pemberianobat()
     {
         return $this->hasMany(PemberianObatIgd::class,'noreg','rs1');
+    }
+
+    public function datacasmix()
+    {
+       return $this->hasOne(listcasmixrajal::class, 'noreg', 'rs1');
     }
 }

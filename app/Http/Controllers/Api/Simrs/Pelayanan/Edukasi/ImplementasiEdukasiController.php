@@ -32,6 +32,7 @@ class ImplementasiEdukasiController extends Controller
       $user = Pegawai::find(auth()->user()->pegawai_id);
       $kdpegsimrs = $user->kdpegsimrs;
 
+      // return $request->all();
       $data = null;
       $ttdPasien = $request->ttdPenerima;
       if ($request->has('id')) {

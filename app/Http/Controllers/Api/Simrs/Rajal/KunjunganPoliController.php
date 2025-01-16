@@ -117,7 +117,8 @@ class KunjunganPoliController extends Controller
                 'rs222.kdunit as kdunit',
                 'memodiagnosadokter.diagnosa as memodiagnosa',
                 'rs17.rs19 as status',
-                'antrian_ambil.nomor as noantrian'
+                'antrian_ambil.nomor as noantrian',
+                'listkirimcasmixRajal.flaging as kunjungancesmix'
             )
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
                 ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
@@ -127,6 +128,7 @@ class KunjunganPoliController extends Controller
                 ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
                 ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1')
                 ->whereBetween('rs17.rs3', [$tgl, $tglx])
                 ->where('rs19.rs4', '=', 'Poliklinik')
                 ->whereIn('rs17.rs8', $ruangan)
