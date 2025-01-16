@@ -117,4 +117,6 @@ Route::group([
     Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
     Route::post('/copiresep', [EresepController::class, 'copiresep']);
     Route::get('/listresepbynoreg', [EresepController::class, 'listresepbynoreg']);
+
+    Route::post('/kirimpenjaminan', [PoliController::class, 'kirimpenjaminan']);
 });
