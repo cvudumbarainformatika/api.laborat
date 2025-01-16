@@ -56,7 +56,8 @@ class NPD_LSController extends Controller
         $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $npdls = NpdLS_heder::select(
-            'npdls_heder.nonpdls',
+            'npdls_heder.id',
+                    'npdls_heder.nonpdls',
                     'npdls_heder.nonpk',
                     'npdls_heder.nopencairan',
                     'npdls_heder.tglnpdls',
@@ -64,8 +65,11 @@ class NPD_LSController extends Controller
                     'npdls_heder.kodepptk',
                     'npdls_heder.bidang',
                     'npdls_heder.kegiatanblud',
+                    'npdls_heder.kodekegiatanblud',
                     'npdls_heder.penerima',
                     'npdls_heder.kodepenerima',
+                    'npdls_heder.biayatransfer',
+                    'npdls_heder.bast',
                     'npdls_heder.bank',
                     'npdls_heder.rekening',
                     'npdls_heder.npwp',
@@ -89,6 +93,8 @@ class NPD_LSController extends Controller
             })->whereBetween('tglnpdls', [$tahunawal.'-01-01', $tahun.'-12-31'])
             ->with(['npdlsrinci'=> function($rinci){
                 $rinci->select('npdls_rinci.nonpdls',
+                            'npdls_rinci.id',
+                            'npdls_rinci.bast_r_id',
                             'npdls_rinci.nopenerimaan',
                             'npdls_rinci.koderek50',
                             'npdls_rinci.rincianbelanja',
@@ -232,6 +238,7 @@ class NPD_LSController extends Controller
     public function bastfarmasi(){
         $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         // $tahun = date('Y');
+        // $bast =  request('kodebast');
         $penerimaan=PenerimaanHeder::select('penerimaan_h.nobast',
                                             'penerimaan_h.tgl_bast',
                                             'penerimaan_h.nopenerimaan',
@@ -253,7 +260,8 @@ class NPD_LSController extends Controller
             ->orWhere('subtotal_bast', 'LIKE', '%' . request('q') . '%');
         })
         ->with('rincianbast', function($rinci) use ($tahun) {
-            $rinci->where('nobast', request('kodebast'))
+            $rinci
+            // ->whereIn('nobast', [request('kodebast')])
                     ->select('bast_r.nobast',
                             'bast_r.nopenerimaan',
                             'bast_r.id',
@@ -280,7 +288,7 @@ class NPD_LSController extends Controller
                             ->with(['jurnal','pagu'=> function ($pagu) use ($tahun) {
                             $pagu
                             ->where('tgl', $tahun)
-                                ->where('kodekegiatanblud', request('kodekegiatan'))
+                                ->where('kodekegiatanblud', request('kodekegiatanblud'))
                                 ->where('pagu', '!=', '0')
                                 ->select('t_tampung.kodekegiatanblud',
                                         't_tampung.notrans',
@@ -320,9 +328,10 @@ class NPD_LSController extends Controller
                                             'bast_konsinyasis.kdpbf',
                                             'bast_konsinyasis.tgl_bast',
                                             'bast_konsinyasis.jumlah_bastx',)
+
         ->where('kdpbf', request('kodepenerima'), function ($bast){
             $bast->where('nobast', '!=', '')
-            ->where('no_npd', '=', '');
+                ->where('no_npd', '=', '');
         })
         ->whereNotNull('tgl_bast')
         ->when(request('q'),function ($query) {
@@ -331,7 +340,7 @@ class NPD_LSController extends Controller
         })
         ->with('rinci', function($rinci) use ($tahun) {
             $rinci
-            ->where('notranskonsi', request('kodebast'))
+            // ->whereIn('notranskonsi', [request('kodebast')])
                     ->select('detail_bast_konsinyasis.notranskonsi',
                             'detail_bast_konsinyasis.id',
                             'detail_bast_konsinyasis.kdobat',
@@ -353,8 +362,8 @@ class NPD_LSController extends Controller
                                         'new_masterobat.uraian108')
                             ->with(['jurnal','pagu' => function ($pagu) use ($tahun) {
                             $pagu
-                            // ->where('tgl', $tahun)
-                                ->where('kodekegiatanblud', request('kodekegiatan'))
+                            ->where('tgl', $tahun)
+                                ->where('kodekegiatanblud', request('kodekegiatanblud'))
                                 ->where('pagu', '!=', '0')
                                 ->select('t_tampung.kodekegiatanblud',
                                         't_tampung.notrans',
@@ -414,13 +423,14 @@ class NPD_LSController extends Controller
                 'keterangan' => 'required|min:3',
                 'pptk' => 'required',
                 'tglnpdls' => 'required',
-                // 'rincianbelanja' => 'required',
+                // 'nopenerimaan' => 'unique:siasik.npdls_rinci,nopenerimaan',
                 // 'itembelanja' => 'required'
                 ]);
+
         $time = date('Y-m-d H:i:s');
-        // $user = auth()->user()->pegawai_id;
-        // $pg= Pegawai::find($user);
-        // $pegawai= $pg->kdpegsimrs;
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
 
         $nomor = $request->nonpdls ?? self::buatnomor();
 
@@ -453,6 +463,7 @@ class NPD_LSController extends Controller
                     'tglentry'=>$time ?? '',
                     'userentry'=>$pegawai ?? '',
                     'noserahterima'=>$request->noserahterima ?? '',
+                    'bast'=>$request->bast ?? '',
                     // 'kunci'=>'1'
                 ]);
                 $penerimaans = [];
@@ -482,16 +493,7 @@ class NPD_LSController extends Controller
                         'totalls'=>$rinci['totalls'] ?? '',
                         'nominalpembayaran'=>$rinci['nominalpembayaran'] ?? '',
                         'bast_r_id'=>$rinci['bast_r_id'] ?? '',
-                        // 'kode_lo'=>$rinci['kode_lo'] ?? '',
-                        // 'uraian_lo'=>$rinci['uraian_lo'] ?? '',
-                        // 'kode_neraca1'=>$rinci['kode_neraca1'] ?? '',
-                        // 'uraian_neraca1'=>$rinci['uraian_neraca1'] ?? '',
-                        // 'kode_neraca2'=>$rinci['kode_neraca2'] ?? '',
-                        // 'uraian_neraca2'=>$rinci['uraian_neraca2'] ?? '',
-                        // 'kode_lpsal'=>$rinci['kode_lpsal'] ?? '',
-                        // 'uraian_lpsal'=>$rinci['uraian_lpsal'] ?? '',
-                        // 'kode_lak'=>$rinci['kode_lak'] ?? '',
-                        // 'uraian_lak'=>$rinci['uraian_lak'] ?? '',
+
                     ]);
                     //request nomer BAST
                     $penerimaans[]=$rinci['nopenerimaan'];
@@ -499,15 +501,7 @@ class NPD_LSController extends Controller
                 // update penerimaan atas nomer BAST FARMASI
                 PenerimaanHeder::whereIn('nopenerimaan', $penerimaans)->update(['no_npd' => $save->nonpdls]);
                 BastKonsinyasi::whereIn('notranskonsi', $penerimaans)->update(['no_npd' => $save->nonpdls]);
-            //     $data = PenerimaanHeder::where('nobast',['nopenerimaan'])->get();
-            //     if ($data) {
-            //         $data->update([
-            //             'no_npd' => $save->nonpdls,
-            //         ]);
-            //         $ow[] = $data;
-            //     }if (!$data) {
-            //         return new JsonResponse(['message' => 'Gagal, Nomor BAST Tidak ditemukan'], 410);
-            // }
+
             return new JsonResponse(
                 [
                     'message' => 'Data Berhasil disimpan...!!!',
@@ -526,7 +520,7 @@ class NPD_LSController extends Controller
     public function getlistformnpd()
     {
         $data = NpdLS_heder::where('npdls_heder.nonpdls', request('nonpdls'))
-        ->orWhere( 'npdls_rinci.nopenerimaan', request('nopenerimaan'))
+        // ->orWhere( 'npdls_rinci.bast_r_id', request('nopenerimaan'))
         ->select('npdls_heder.nonpdls',
                         'npdls_heder.tglnpdls',
                         'npdls_rinci.id',
@@ -569,10 +563,12 @@ class NPD_LSController extends Controller
         if (!$findrinci) {
             return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
         }
-
+        else {
         $findrinci->delete();
+        PenerimaanHeder::whereIn('nopenerimaan', [$request->nopenerimaan])->update(['no_npd' => '']);
+        BastKonsinyasi::whereIn('notranskonsi', [$request->nopenerimaan])->update(['no_npd' => '']);
         // return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
-
+        }
         $rinciAll = NpdLS_rinci::where('nonpdls', $request->nonpdls)->get();
         if(count($rinciAll) === 0){
             $header = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
