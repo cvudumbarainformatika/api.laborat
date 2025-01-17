@@ -437,6 +437,20 @@ class NPD_LSController extends Controller
 
         $nomor = $request->nonpdls ?? self::buatnomor();
 
+        $tanggal = $request->tglnpdls;
+        $bulan = Carbon::parse($tanggal)->month;
+
+        if ($bulan >= 1 && $bulan <= 3) {
+            $triwulan = 'TRIWULAN 1';
+        } elseif ($bulan >= 4 && $bulan <= 6) {
+            $triwulan = 'TRIWULAN 2';
+        } elseif ($bulan >= 7 && $bulan <= 9) {
+            $triwulan = 'TRIWULAN 3';
+        } else {
+            $triwulan = 'TRIWULAN 4';
+        }
+
+
         try {
             DB::beginTransaction();
             $save = NpdLS_heder::updateOrCreate(
@@ -448,7 +462,7 @@ class NPD_LSController extends Controller
                     'kodepptk'=>$request->kodepptk ?? '',
                     'pptk'=>$request->pptk ?? '',
                     'serahterimapekerjaan'=>$request->serahterimapekerjaan ?? '',
-                    'triwulan'=>$request->triwulan ?? '',
+                    'triwulan'=>$triwulan ?? '',
                     'program'=>'PROGRAM PENUNJANG URUSAN PEMERINTAH DAERAH KABUPATEN/KOTA',
                     'nokontrak'=>$request->nokontrak ?? '',
                     'kegiatan'=>'PELAYANAN DAN PENUNJANG PELAYANAN BLUD',
