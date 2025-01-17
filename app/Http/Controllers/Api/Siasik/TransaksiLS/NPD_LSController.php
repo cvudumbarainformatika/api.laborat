@@ -77,7 +77,8 @@ class NPD_LSController extends Controller
                     'npdls_heder.noserahterima',
                     'npdls_heder.nopencairan',
                     'npdls_heder.userentry',
-                    'npdls_heder.serahterimapekerjaan')
+                    'npdls_heder.serahterimapekerjaan',
+                    'npdls_heder.kunci')
             // ->where('userentry', $pegawai)
             ->when(request('q'),function ($query) {
                 $query
@@ -248,16 +249,17 @@ class NPD_LSController extends Controller
                                             'penerimaan_h.kdpbf',
                                             'penerimaan_h.no_npd',)
 
-        ->where('kdpbf', request('kodepenerima'), function ($bast){
-            $bast->whereIn('jenis_penerimaan', ['Pesanan']);
+        ->where('penerimaan_h.kdpbf', request('kodepenerima'), function ($bast){
+            $bast->whereIn('penerimaan_h.jenis_penerimaan', ['Pesanan']);
         })
-        ->where('nobast', '!=', '')
-        ->where('no_npd', '=', '')
-        ->whereNotNull('tgl_bast')
+        ->where('penerimaan_h.nobast', '!=', '')
+        // ->where('no_npd', '=', '')
+        ->whereNotNull('penerimaan_h.tgl_bast')
         ->when(request('q'),function ($query) {
-            $query->where('nobast', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('subtotal_bast', 'LIKE', '%' . request('q') . '%');
+            $query->where('penerimaan_h.nopenerimaan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaan_h.nobast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaan_h.jumlah_bastx', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaan_h.subtotal_bast', 'LIKE', '%' . request('q') . '%');
         })
         ->with('rincianbast', function($rinci) use ($tahun) {
             $rinci
@@ -329,14 +331,15 @@ class NPD_LSController extends Controller
                                             'bast_konsinyasis.tgl_bast',
                                             'bast_konsinyasis.jumlah_bastx',)
 
-        ->where('kdpbf', request('kodepenerima'), function ($bast){
-            $bast->where('nobast', '!=', '')
-                ->where('no_npd', '=', '');
+        ->where('bast_konsinyasis.kdpbf', request('kodepenerima'), function ($bast){
+            $bast->where('bast_konsinyasis.nobast', '!=', '');
+                // ->where('no_npd', '=', '');
         })
-        ->whereNotNull('tgl_bast')
+        ->whereNotNull('bast_konsinyasis.tgl_bast')
         ->when(request('q'),function ($query) {
-            $query->where('nobast', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('jumlah_bastx', 'LIKE', '%' . request('q') . '%');
+            $query->where('bast_konsinyasis.nobast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('bast_konsinyasis.notranskonsi', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('bast_konsinyasis.jumlah_bastx', 'LIKE', '%' . request('q') . '%');
         })
         ->with('rinci', function($rinci) use ($tahun) {
             $rinci
@@ -542,7 +545,48 @@ class NPD_LSController extends Controller
 
         return new JsonResponse($data);
     }
+    public function kuncinpd (Request $request)
+    {
+        $header = NpdLS_heder::where('nonpdls', $request->nonpdls)
+        ->where('verif', '!=', '')
+        ->get();
+        if(count($header) > 0){
+            return new JsonResponse(['message' => 'Data Sudah Terverifikasi'], 500);
+        }
+        // $kunci = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
+        // $x = $kunci->kunci;
+        // if ($x === '1') {
+        //     return new JsonResponse(['message' => 'Data Terkunci'], 500);
+        // } elseif ($x === ''){
+        //     return new JsonResponse(['message' => 'Data Tidak Dikunci'], 500);
+        // }
 
+        // $kunci = NpdLS_heder::where('nonpdls', [$request->nonpdls])->first();
+        // if (!$kunci) {
+        // return response()->json(['message' => 'NPD tidak ditemukan'], 404);
+        // }
+        // // $kunci->kunci = '1';
+        // // $kunci->save();
+        // if($kunci->kunci === '1'){
+        //      NpdLS_heder::where('nonpdls', $request->nonpdls)->update(['kunci' => '']);
+        //       return response()->json(['message' => 'Data Berhasil Dibuka'], 200);
+        // } elseif ($kunci->kunci === '') {
+        //     NpdLS_heder::where('nonpdls', $request->nonpdls)->update(['kunci' => '1']);
+        //       return response()->json(['message' => 'Data Berhasil Dikunci'], 200);
+        // }
+
+
+        // if ($request->kunci === '1') {
+        //     $kunci->kunci = '';
+        //     $message = 'Data Berhasil Dibuka';
+        // } elseif ($request->kunci === '') {
+        //     $kunci->kunci = '1';
+        //     $message = 'Data Berhasil Dikunci';
+        // }
+        // $kunci->save();
+
+        // return response()->json(['message' => $message], 200);
+    }
     public function deleterinci(Request $request)
     {
         $header = NpdLS_heder::
