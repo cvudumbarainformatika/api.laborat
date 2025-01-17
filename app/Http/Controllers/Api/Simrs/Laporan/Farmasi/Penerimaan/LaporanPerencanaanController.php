@@ -20,10 +20,12 @@ class LaporanPerencanaanController extends Controller
     {
         $no_rencana = RencanabeliH::select('no_rencbeliobat')
             ->whereBetween('tgl', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where('flag', '2')
             ->pluck('no_rencbeliobat');
         $no_terima = PenerimaanHeder::select('nopenerimaan', 'nopemesanan')
             ->whereBetween('tglpenerimaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
-            ->get('nopenerimaan');
+            ->where('kunci', '1')
+            ->get();
         if (request('reference') == 'rencana') {
             $noperencanaan = $no_rencana;
             $nopemesanan = PemesananRinci::select('nopemesanan')->whereIn('noperencanaan', $no_rencana)->pluck('nopemesanan');
@@ -123,6 +125,8 @@ class LaporanPerencanaanController extends Controller
             'data' => $data,
             'meta' => $meta,
             'nopenerimaan' => $nopenerimaan,
+            'nopemesanan' => $nopemesanan,
+            'noperencanaan' => $noperencanaan,
             'req' => request()->all()
         ]);
     }
