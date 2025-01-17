@@ -618,7 +618,7 @@ class PersiapanOperasiController extends Controller
             //simpan ditribusi
             $dist = PersiapanOperasiDistribusi::insert($data); // ini hasilnya kalo berhasil itu true
             if (!$dist) {
-                return new JsonResponse(['message' => 'Data gagal disimpan!'], 410);
+                return new JsonResponse(['message' => 'Data gagal disimpan '], 410);
             }
             // update stok
             $dataDist = PersiapanOperasiDistribusi::where('nopermintaan', $request->nopermintaan)->get();
@@ -629,7 +629,9 @@ class PersiapanOperasiController extends Controller
                     ->where('nodistribusi', $rin['nodistribusi'])
                     ->where('jumlah', '>', 0)
                     ->first();
-
+                if (!$stok) {
+                    return new JsonResponse(['message' => 'Data stok tidak ditemukan'], 410);
+                }
                 if ($stok->jumlah <= 0) {
                     $obat = Mobatnew::where('kd_obat', $rin['kd_obat'])->first();
                     return new JsonResponse(['message' => 'Data stok ' . $obat->nama_obat . ' kurang dari 0'], 410);
@@ -650,7 +652,9 @@ class PersiapanOperasiController extends Controller
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
-                'message' => 'Data Gagal Disimpan...!!!',
+                'message' => 'Data Gagal Disimpan ' . $e->getMessage(),
+                'line' => '' . $e->getLine(),
+                'file' => '' . $e->getFile(),
                 'result' => '' . $e,
             ], 410);
         }
