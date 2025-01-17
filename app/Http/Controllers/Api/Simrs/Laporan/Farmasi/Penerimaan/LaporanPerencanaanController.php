@@ -31,7 +31,7 @@ class LaporanPerencanaanController extends Controller
         } else {
             $nopenerimaan = collect($no_terima)->pluck('nopenerimaan')->toArray();
             $nopemesanan = collect($no_terima)->pluck('nopemesanan')->toArray();
-            $noperencanaan = RencanabeliR::select('noperencanaan')->whereIn('nopemesanan', $nopemesanan)->distinct('noperencanaan')->pluck('noperencanaan')->toArray();
+            $noperencanaan = PemesananRinci::select('noperencanaan')->whereIn('nopemesanan', $nopemesanan)->distinct('noperencanaan')->pluck('noperencanaan')->toArray();
         }
 
         $raw = Mobatnew::query()->select('kd_obat', 'nama_obat', 'satuan_k')
