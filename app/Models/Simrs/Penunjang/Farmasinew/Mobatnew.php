@@ -182,6 +182,10 @@ class Mobatnew extends Model
     {
         return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kd_obat');
     }
+    public function hargapenerimaanrinci()
+    {
+        return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kd_obat');
+    }
     public function mutasi()
     {
         return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');

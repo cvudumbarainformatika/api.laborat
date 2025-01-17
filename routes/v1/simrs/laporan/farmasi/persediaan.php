@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Penerimaan\LaporanPerencanaanController;
 use App\Http\Controllers\Api\Simrs\Laporan\Farmasi\Persediaan\PersediaanFiFoController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,4 +13,5 @@ Route::group([
 ], function () {
     Route::get('/get-persediaan', [PersediaanFiFoController::class, 'getPersediaan']);
     Route::get('/get-mutasi', [PersediaanFiFoController::class, 'getMutasi']);
+    Route::get('/get-perencanaan', [LaporanPerencanaanController::class, 'perencanaanDanPenerimaan']);
 });
