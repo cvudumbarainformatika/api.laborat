@@ -61,8 +61,8 @@ class IgdController extends Controller
             'gencons.norm as generalconsent',
             'gencons.ttdpasien as ttdpasien',
             'rs17.rs19 as statpasien',
-            'rs250.rs16 as kategoritriage','rs250.doa as doa'
-
+            'rs250.rs16 as kategoritriage','rs250.doa as doa',
+             'listkirimcasmixRajal.flaging as kunjungancesmix'
             // 'bpjs_respon_time.taskid as taskid',
             // TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15 . rs16, now()), rs15 . rs16), now(), " Hari ")
         )
@@ -74,6 +74,7 @@ class IgdController extends Controller
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->leftjoin('gencons', 'gencons.norm', '=', 'rs17.rs2')
             ->leftjoin('rs250', 'rs250.rs1', '=', 'rs17.rs1')
+            ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1')
             // ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs17.rs8', 'POL014')

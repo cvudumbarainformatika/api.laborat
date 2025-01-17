@@ -961,6 +961,8 @@ class PoliController extends Controller
                 'noka' =>  $request->noka,
                 'nosep' => $request->nosep,
                 'kodepoli' => $request->kodepoli,
+                'kdsistembayar' => $request->kdsistembayar,
+                'kddpjp' => $request->kddpjp,
                 'flaging' => $request->flaging,
             ]
         );
