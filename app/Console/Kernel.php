@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokOpnameFarmasiController;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Artisan;
 
 class Kernel extends ConsoleKernel
 {
@@ -20,6 +21,17 @@ class Kernel extends ConsoleKernel
         $schedule->command('send:rajal')
                     ->everyMinute()
                     ->between('16:30', '23:50');
+
+
+        $schedule->command('cache:clear')
+                    ->dailyAt('01:00');
+        // $schedule->call(function () {
+        //     Artisan::call('cache:clear'); // you can move this part to Job
+        // })
+        // ->dailyAt('01:00');
+
+
+
 
         // apakah perlu ditambahkan cek stok setiap hari?????????
         
