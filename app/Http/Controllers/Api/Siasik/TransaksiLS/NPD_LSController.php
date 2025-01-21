@@ -115,7 +115,7 @@ class NPD_LSController extends Controller
                 ->with('header', function($header){
                     $header->select('nonpk', 'tglpindahbuku');
                 });
-            }, 'pajak'])
+            }, 'pajak', 'newpajak'])
             ->orderBy('tglnpdls', 'desc')
             ->get();
         return new JsonResponse($npdls);
