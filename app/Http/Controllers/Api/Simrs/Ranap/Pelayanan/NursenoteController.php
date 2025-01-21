@@ -16,7 +16,9 @@ class NursenoteController extends Controller
 
     public function list()
     {
-       $data = NurseNote::where('noreg', request('noreg'))->get();
+       $data = NurseNote::where('noreg', request('noreg'))
+       ->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto')
+       ->get();
        return new JsonResponse($data);
     }
     
@@ -87,10 +89,21 @@ class NursenoteController extends Controller
          return new JsonResponse([
           'success' => true,
           'message' => 'success',
-          'result' => $data->load('petugas:kdpegsimrs,nama,nik,kdgroupnakes') 
+          'result' => $data->load('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto') 
          ]);
         
         return new JsonResponse($data);
+    }
+
+    public function delete(Request $request)
+    {
+       $id = $request->id;
+       $data = NurseNote::find($id);
+       $del = $data->delete();
+       if (!$del) {
+         return new JsonResponse(['message' => 'Error on Delete'], 500);
+       }
+       return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
     }
 
 
