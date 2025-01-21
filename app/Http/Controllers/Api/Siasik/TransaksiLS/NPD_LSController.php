@@ -15,11 +15,14 @@ use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
+use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\Bagian;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
+use App\Models\Siasik\TransaksiLS\NewpajakNpdls;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
+use App\Models\Siasik\TransaksiLS\TransPajak;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -64,6 +67,7 @@ class NPD_LSController extends Controller
                     'npdls_heder.pptk',
                     'npdls_heder.kodepptk',
                     'npdls_heder.bidang',
+                    'npdls_heder.kodebidang',
                     'npdls_heder.kegiatanblud',
                     'npdls_heder.kodekegiatanblud',
                     'npdls_heder.penerima',
@@ -737,61 +741,87 @@ class NPD_LSController extends Controller
 
         return $sambung;
     }
-    // public static function getQuartersBetween($start_ts, $end_ts)
-    // {
-    //     $quarters = [];
-    //     $months_per_year = [];
-    //     $years = self::getYearsBetween($start_ts, $end_ts);
-    //     $months = self::getMonthsBetween($start_ts, $end_ts);
 
-    //     foreach ($years as $year) {
-    //         foreach ($months as $month) {
-    //             if ($year->format('Y') == $month->format('Y')) {
-    //                 $months_per_year[$year->format('Y')][] = $month;
-    //             }
-    //         }
-    //     }
+    public function selectpajak(){
+        $getlist = Akun50_2024::where('akun50_2024.subrincian_objek', '!=', '')
+        ->where(function ($data) {
+            $data->where('akun50_2024.kodeall3', 'LIKE', '2.1.01.05.' . '%')
+                ->orWhere('akun50_2024.kodeall3', 'LIKE', '2.1.01.06' . '%');
+                })
+        ->select('akun50_2024.kodeall2', 'akun50_2024.uraian', 'akun50_2024.kodeall3')
+        ->when(request('q'), function($q){
+            $q->where('akun50_2024.kodeall3','like','%'. request('q') . '%')
+                ->orWhere('akun50_2024.kodeall2','like','%'. request('q') . '%')
+                ->orWhere('akun50_2024.uraian','like','%'. request('q') . '%');
+        })
+        ->orderBy('akun50_2024.kodeall3', 'asc')
+        ->get();
+         return new JsonResponse ($getlist);
+    }
 
-    //     foreach ($months_per_year as $year => $months) {
-    //         $january = new Date('01-01-' . $year);
-    //         $march = new Date('01-03-' . $year);
-    //         $april = new Date('01-04-' . $year);
-    //         $june = new Date('01-06-' . $year);
-    //         $july = new Date('01-07-' . $year);
-    //         $september = new Date('01-09-' . $year);
-    //         $october = new Date('01-10-' . $year);
-    //         $december = new Date('01-12-' . $year);
+    public function savepajakls(Request $request){
+        $tgl = date('Y-m-d H:i:s');
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
 
-    //         if (in_array($january, $months) && in_array($march, $months)) {
-    //             $quarter_per_year['label'] = 'T1 / ' . $year;
-    //             $quarter_per_year['start_day'] = $january->startOfMonth();
-    //             $quarter_per_year['end_day'] = $march->endOfMonth()->endOfDay();
-    //             array_push($quarters, $quarter_per_year);
-    //         }
 
-    //         if (in_array($april, $months) && in_array($june, $months)) {
-    //             $quarter_per_year['label'] = 'T2 / ' . $year;
-    //             $quarter_per_year['start_day'] = $april->startOfMonth();
-    //             $quarter_per_year['end_day'] = $june->endOfMonth()->endOfDay();
-    //             array_push($quarters, $quarter_per_year);
-    //         }
 
-    //         if (in_array($july, $months) && in_array($september, $months)) {
-    //             $quarter_per_year['label'] = 'T3 / ' . $year;
-    //             $quarter_per_year['start_day'] = $july->startOfMonth();
-    //             $quarter_per_year['end_day'] = $september->endOfMonth()->endOfDay();
-    //             array_push($quarters, $quarter_per_year);
-    //         }
+        try {
+            $nonpdls = $request->nonpdls;
+        if ($nonpdls === '' || $nonpdls === null) {
+            return new JsonResponse(['message' => 'Silahkan Input Data NPD!'], 500);
+        } else {
+            DB::beginTransaction();
+            $save = NewpajakNpdls::updateOrCreate(
+                [
+                    'nonpdls' => $nonpdls,
+                    'koderekening' => $request->koderekening,
+                ],
+                [
+                    'uraian' => $request->uraian ?? '',
+                    'nilai' => $request->nilai ?? '',
+                    'userentry' => $pegawai,
+                    'tglentry' => $tgl
 
-    //         if (in_array($october, $months) && in_array($december, $months)) {
-    //             $quarter_per_year['label'] = 'T4 / ' . $year;
-    //             $quarter_per_year['start_day'] = $october->startOfMonth();
-    //             $quarter_per_year['end_day'] = $december->endOfMonth()->endOfDay();
-    //             array_push($quarters, $quarter_per_year);
-    //         }
-    //     }
+                ]);
+               return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil disimpan...!!!',
+                    'result' => $save
+                ], 200);
+        }
 
-    //     return $quarters;
-    // }
+    } catch (\Exception $er) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Ada Kesalahan',
+                'error' => $er
+            ], 500);
+        }
 
+    }
+    public function listpajak(){
+        $data = NewpajakNpdls::where('nonpdls', request('nonpdls'))
+        ->select('id', 'nonpdls', 'koderekening', 'uraian', 'nilai')
+        ->orderBy('id', 'desc')
+        ->get();
+        return new JsonResponse ($data);
+    }
+
+    public function deletepajak(Request $request){
+        $data = NewpajakNpdls::where('id', $request->id)->first();
+
+        if (!$data) {
+           return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
+        } else {
+            $data->delete();
+        }
+
+        // $user->log("Menghapus Data Jabatan {$data->nama}");
+        return new JsonResponse([
+            'message' => 'Data Berhasil Dihapus',
+            'data' => $data
+        ]);
+    }
 }
