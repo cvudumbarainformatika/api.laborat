@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->command('cache:clear')
-                    ->dailyAt('01:00');
+                    ->dailyAt('00:30');
         // $schedule->call(function () {
         //     Artisan::call('cache:clear'); // you can move this part to Job
         // })
