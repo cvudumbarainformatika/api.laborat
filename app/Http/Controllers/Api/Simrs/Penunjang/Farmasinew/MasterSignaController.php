@@ -24,6 +24,18 @@ class MasterSignaController extends Controller
     }
     public function simpan(Request $request)
     {
+        $jumlah = (float) $request->jumlah;
+        if (!$jumlah) {
+            return new JsonResponse([
+                'message' => 'jumlah konsumsi / hari harus diisi besar dari 0',
+
+            ], 410);
+        }
+        if ($jumlah <= 0) {
+            return new JsonResponse([
+                'message' => 'jumlah konsumsi / hari tidak boleh minus',
+            ], 410);
+        }
         $data = Msigna::updateOrCreate(
             ['id' => $request->id],
             $request->all()
