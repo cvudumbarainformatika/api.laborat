@@ -219,7 +219,7 @@ class DisplayController extends Controller
             $resep = Resepkeluarheder::select(
                 'noreg',
                 'ruangan',
-                DB::raw('WHEN flag = 1 THEN "" WHEN flag = 2 THEN "2" WHEN flag = 3 THEN "3" WHEN flag = 4 THEN "3" ELSE "" END as status'),
+                DB::raw(' CASE WHEN flag = 1 THEN "" WHEN flag = 2 THEN "" WHEN flag = 3 THEN "1" WHEN flag = 4 THEN "1" ELSE "" END as status'),
             )
                 ->where('tgl_kirim', 'like', '%' . $hr_ini . '%')
                 ->where('depo', 'Gd-05010101')
