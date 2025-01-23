@@ -216,9 +216,14 @@ class DisplayController extends Controller
             return response()->json(['message' => 'Maaf display belum ada'], 500);
         }
         if (request('kode') === "B") {
-            $resep = Resepkeluarheder::select('noreg', 'ruangan')
+            $resep = Resepkeluarheder::select(
+                'noreg',
+                'ruangan',
+                DB::raw('WHEN flag = 1 THEN "" WHEN flag = 2 THEN "2" WHEN flag = 3 THEN "3" WHEN flag = 4 THEN "3" ELSE "" END as status'),
+            )
                 ->where('tgl_kirim', 'like', '%' . $hr_ini . '%')
                 ->where('depo', 'Gd-05010101')
+                ->whereIn('flag', ['1', '2', '3', '4'])
                 ->get();
             // $data->poli[0]->jumlahkunjunganpoli = $resep;
             // return response()->json($resep);
