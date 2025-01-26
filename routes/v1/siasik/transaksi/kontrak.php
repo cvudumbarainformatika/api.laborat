@@ -9,4 +9,5 @@ Route::group([
 
     Route::get('/listkontrak', [KontrakController::class, 'listkontrak']);
     Route::post('/simpankontrak', [KontrakController::class, 'simpankontrak']);
+    Route::post('/deletekontrak', [KontrakController::class, 'deletedata']);
 });
