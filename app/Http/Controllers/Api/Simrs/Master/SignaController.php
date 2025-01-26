@@ -19,15 +19,27 @@ class SignaController extends Controller
     public function getAutocompleteSigna()
     {
         $q = Msigna::query();
-        $data = $q->select('signa','jumlah')
-        ->when(request('q'), function ($query) {
-            $query->where('signa', 'like', '%' . request('q') . '%');
-        })->limit(10)->get();
+        $data = $q->select('signa', 'jumlah')
+            ->when(request('q'), function ($query) {
+                $query->where('signa', 'like', '%' . request('q') . '%');
+            })->limit(10)->get();
         return new JsonResponse($data);
     }
 
     public function store(Request $request)
     {
+        $jumlah = (float) $request->jumlah;
+        if (!$jumlah) {
+            return new JsonResponse([
+                'message' => 'jumlah konsumsi / hari harus diisi',
+
+            ], 410);
+        }
+        if ($jumlah <= 0) {
+            return new JsonResponse([
+                'message' => 'jumlah konsumsi / hari tidak boleh minus',
+            ], 410);
+        }
         $data = Msigna::updateOrCreate(
             ['signa' => $request->signa],
             $request->all()

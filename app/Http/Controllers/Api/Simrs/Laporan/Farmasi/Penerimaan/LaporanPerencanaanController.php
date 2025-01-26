@@ -36,7 +36,7 @@ class LaporanPerencanaanController extends Controller
             $noperencanaan = PemesananRinci::select('noperencanaan')->whereIn('nopemesanan', $nopemesanan)->distinct('noperencanaan')->pluck('noperencanaan')->toArray();
         }
 
-        $raw = Mobatnew::query()->select('kd_obat', 'nama_obat', 'satuan_k')
+        $raw = Mobatnew::query()->select('kd_obat', 'nama_obat', 'satuan_k', 'uraian50')
             ->with([
                 'penerimaanrinci' => function ($rinci) use ($nopenerimaan) {
                     $rinci->select(

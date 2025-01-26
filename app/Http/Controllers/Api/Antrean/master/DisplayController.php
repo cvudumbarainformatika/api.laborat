@@ -13,6 +13,7 @@ use App\Models\Antrean\PoliBpjs;
 use App\Models\Antrean\Unit;
 // use App\Models\Antrean\Unit;
 use App\Models\Poli;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -147,25 +148,44 @@ class DisplayController extends Controller
         $data = Display::where('kode', request('kode'))
             ->when(request('kode') === "B", function ($q) use ($hr_ini) {
                 $q->with([
-                    'poli.jumlahkunjunganpoli' => function ($q) use ($hr_ini) {
-                        $q->select(
-                            'rs17.rs1',
-                            'rs17.rs1 as noreg',
-                            'rs17.rs2',
-                            'rs17.rs3',
-                            'rs17.rs8',
-                            'rs17.rs19 as status',
-                            'antrian_ambil.nomor as noantrian'
-                        )
-                            ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
-                            ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
-                            ->where('antrian_ambil.nomor', 'LIKE', '%FJ%')
-                            ->orderby('antrian_ambil.nomor', 'ASC');
-                    },
+                    // 'poli.jumlahkunjunganpoli' => function ($q) use ($hr_ini) {
+                    //     $q->select(
+                    //         'rs17.rs1',
+                    //         'rs17.rs1 as noreg',
+                    //         'rs17.rs2',
+                    //         'rs17.rs3',
+                    //         'rs17.rs8',
+                    //         'rs17.rs19 as status',
+                    //         'antrian_ambil.nomor as noantrian'
+                    //     )
+                    //         ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+                    //         ->whereBetween('rs3', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                    //         ->where('antrian_ambil.nomor', 'LIKE', '%FJ%')
+                    //         ->orderby('antrian_ambil.nomor', 'ASC');
+                    // },
                     'poli.panggilan' => function ($q) use ($hr_ini) {
                         $q->whereBetween('tglkunjungan', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
                             ->orderby('updated_at', 'DESC');
-                    }
+                    },
+                    // 'poli.jumlahkunjunganfarmasi' => function ($q) use ($hr_ini) {
+                    //     $q->select(
+                    //         'farmasi.resep_keluar_h.noreg as rs1',
+                    //         'farmasi.resep_keluar_h.noreg',
+                    //         'farmasi.resep_keluar_h.norm as rs2',
+                    //         'farmasi.resep_keluar_h.tgl_kirim as rs3',
+                    //         'farmasi.resep_keluar_h.ruangan as rs8',
+                    //         'farmasi.resep_keluar_h.flag as status',
+                    //         'rs.antrian_ambil.nomor as noantrian'
+                    //     )
+                    //         ->leftjoin('rs.antrian_ambil', 'rs.antrian_ambil.noreg', 'farmasi.resep_keluar_h.noreg')
+                    //         // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), function ($q) {
+                    //         //     $q->on('antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
+                    //         //         ->where('antrian_ambil.pelayanan_id', '=', 'AP0001');
+                    //         // })
+                    //         ->whereBetween('farmasi.resep_keluar_h.tgl_kirim', [$hr_ini . ' 00:00:00', $hr_ini . ' 23:59:59'])
+                    //         ->where('rs.antrian_ambil.nomor', 'LIKE', '%FJ%')
+                    //         ->orderby('rs.antrian_ambil.nomor', 'ASC');
+                    // },
                 ]);
             })
             ->when(request('kode') !== "B", function ($q) use ($hr_ini) {
@@ -195,7 +215,23 @@ class DisplayController extends Controller
         if (!$data) {
             return response()->json(['message' => 'Maaf display belum ada'], 500);
         }
+        if (request('kode') === "B") {
+            $resep = Resepkeluarheder::select(
+                'noreg',
+                'ruangan',
+                DB::raw(' CASE WHEN flag = 1 THEN "" WHEN flag = 2 THEN "" WHEN flag = 3 THEN "1" WHEN flag = 4 THEN "1" ELSE "" END as status'),
+            )
+                ->where('tgl_kirim', 'like', '%' . $hr_ini . '%')
+                ->where('depo', 'Gd-05010101')
+                ->whereIn('flag', ['1', '2', '3', '4'])
+                ->get();
+            // $data->poli[0]->jumlahkunjunganpoli = $resep;
+            // return response()->json($resep);
+            foreach ($data->poli as $poli) {
 
+                $poli->jumlahkunjunganpoli = $resep;
+            }
+        }
         return response()->json($data);
     }
 
