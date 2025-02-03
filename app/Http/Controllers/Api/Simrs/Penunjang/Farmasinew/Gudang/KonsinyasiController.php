@@ -460,6 +460,20 @@ class KonsinyasiController extends Controller
                     }
                 );
             })
+            ->when(request('from') && request('to'), function ($q) {
+                $q->whereBetween('tgl_trans', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+            })
+            ->when(request('bast') === 'sudah', function ($q) {
+                $q->whereNotNull('tgl_bast');
+            }, function ($q) {
+                $q->whereNull('tgl_bast');
+            })
+            ->when(request('bayar') === 'sudah', function ($q) {
+                $q->whereNotNull('tgl_pembayaran');
+            }, function ($q) {
+                $q->whereNull('tgl_pembayaran');
+            })
+
             ->orderBy('notranskonsi', 'DESC')
             ->paginate(request('per_page'));
 
