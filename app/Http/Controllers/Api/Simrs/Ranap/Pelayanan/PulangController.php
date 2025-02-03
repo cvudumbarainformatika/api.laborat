@@ -13,6 +13,7 @@ use App\Models\Simrs\DischargePlanning\DischargePlanning;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Rs23Sambung;
 use App\Models\Simrs\SuratPasien\SuratPasien;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -55,6 +56,15 @@ class PulangController extends Controller
           'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
           'rs27' => $request->tindakLanjut ?? ''
         ]);
+
+        Rs23Sambung::updateOrCreate(
+          ['noreg' => $request->noreg],
+          [
+            'ket' => $request->tindakLanjut
+          ]
+          );
+
+
 
         if ($request->noLp !== null) {
             SuratPasien::updateOrCreate(
@@ -169,7 +179,7 @@ class PulangController extends Controller
         }
 
         $surat = DB::table('rs23_nosurat')->select('*')->where('noreg', $request->noreg)->get();
-
+        $sambungan = DB::table('rs23_sambung')->select('*')->where('noreg', $request->noreg)->get();
         if ($request->noSep !== null || $request->noSep !== '') {
           self::update_pulang_bpjs_ranap($request, $user, $noSuratMeninggal);
         }
@@ -179,7 +189,8 @@ class PulangController extends Controller
         'success' => true,
         'message' => 'success',
         'result' => $sql_cek_kunjungan,
-        'surat'=> $surat
+        'surat'=> $surat,
+        'sambungan'=> $sambungan,
        ]);
     }
 
