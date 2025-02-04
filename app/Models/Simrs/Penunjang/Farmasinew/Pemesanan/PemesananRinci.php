@@ -16,6 +16,11 @@ class PemesananRinci extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    /**
+     * catatan flag
+     * flag 1 itu barang sudah datang semua
+     * flag 2 pemesanan di tolak agar bisa di pesankan lagi
+     */
     public function masterobat()
     {
         return $this->hasOne(Mobatnew::class, 'kd_obat', 'kdobat');

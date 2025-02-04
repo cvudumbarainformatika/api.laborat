@@ -41,6 +41,7 @@ class LaporanPerencanaanController extends Controller
                 'penerimaanrinci' => function ($rinci) use ($nopenerimaan) {
                     $rinci->select(
                         'penerimaan_h.tglpenerimaan as tanggal',
+                        'penerimaan_h.nopemesanan',
                         'penerimaan_r.nopenerimaan',
                         'penerimaan_r.kdobat',
                         'penerimaan_r.jml_terima_k as jumlah',
@@ -85,6 +86,7 @@ class LaporanPerencanaanController extends Controller
                         'pemesanan_r.jumlahdpesan as jumlah'
                     )
                         ->join('pemesanan_h', 'pemesanan_r.nopemesanan', '=', 'pemesanan_h.nopemesanan')
+                        ->where('pemesanan_r.flag', '!=', '2') // ini
                         ->whereIn('pemesanan_r.nopemesanan', $nopemesanan);
                 },
             ])
