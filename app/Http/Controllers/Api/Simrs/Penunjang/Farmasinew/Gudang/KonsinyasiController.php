@@ -447,18 +447,26 @@ class KonsinyasiController extends Controller
         ])
             ->when(request('q'), function ($q) {
                 $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
-                $q->when(
-                    count($pihak) > 0,
-                    function ($x) use ($pihak) {
-                        $x->whereIn('kdpbf', $pihak)
-                            ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                    },
-                    function ($r) {
-                        $r->where('nobast', 'LIKE', '%' . request('q') . '%')
-                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                    }
-                );
+                if (count($pihak) > 0) {
+                    $q->whereIn('kdpbf', $pihak)
+                        ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                } else {
+                    $q->where('nobast', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                }
+                // $q->when(
+                //     count($pihak) > 0,
+                //     function ($x) use ($pihak) {
+                //         $x->whereIn('kdpbf', $pihak)
+                //             ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
+                //             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                //     },
+                //     function ($r) {
+                //         $r->where('nobast', 'LIKE', '%' . request('q') . '%')
+                //             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                //     }
+                // );
             })
             ->when(request('from') && request('to'), function ($q) {
                 $q->whereBetween('tgl_trans', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
