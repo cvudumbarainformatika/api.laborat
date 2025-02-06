@@ -61,6 +61,7 @@ class RanapController extends Controller
             'rs23.rs25 as sebabkematian', // Diagnosa Penyebab Meninggal
             'rs23.rs26 as diagakhir', // Diagnosa Utama
             'rs23.rs27 as tindaklanjut', // tindaklanjut
+            'rs23_sambung.ket as tindaklanjut_sambung', // tindaklanjut
             'rs23.rs23 as carakeluar', // cara keluar
             'rs15.rs2 as nama_panggil',
             DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
@@ -115,6 +116,7 @@ class RanapController extends Controller
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
             ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
+            ->leftjoin('rs23_sambung', 'rs23_sambung.noreg', 'rs23.rs1') // sambungan rs23
 
  
             

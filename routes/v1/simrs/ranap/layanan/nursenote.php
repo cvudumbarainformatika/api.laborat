@@ -13,8 +13,5 @@ Route::group([
 
   Route::get('/list', [NursenoteController::class, 'list']);
   Route::post('/simpan', [NursenoteController::class, 'simpan']);
-
-
-  
-
+  Route::post('/hapus', [NursenoteController::class, 'delete']);
 });

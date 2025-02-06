@@ -18,6 +18,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
+use App\Models\Simrs\Rajal\WaktupulangPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -755,5 +756,34 @@ class DaftarrajalController extends Controller
         if (!$simpankunjunganpoli) {
             return new JsonResponse(['message' => 'kunjungan tidak tersimpan'], 500);
         }
+    }
+
+    // ini untuk mencari rujukan keluar rs di bpjs_http_respon
+    public function caruRujukanKeluarRs(Request $request)
+    {
+
+        $data = WaktupulangPoli::where('rs2', $request->norm)
+            ->with([
+                'masterpoli',
+                'rekomdpjp.poli'
+            ])
+            ->orderby('tgl', 'DESC')
+            ->first();
+        if ($data) {
+            if ($data->rs4 == 'Rumah Sakit Lain') {
+                $data->load([
+                    'bpjsresponse' => function ($q) {
+                        $q->where('url', '/Rujukan/2.0/insert')
+                            ->orWhere('url', '/Rujukan/2.0/update')
+                            ->orderBy('tgl', 'DESC');
+                    }
+                ]);
+            }
+        }
+
+        return new JsonResponse([
+            'data' => $data,
+            'req' => $request->all(),
+        ]);
     }
 }

@@ -447,19 +447,45 @@ class KonsinyasiController extends Controller
         ])
             ->when(request('q'), function ($q) {
                 $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
-                $q->when(
-                    count($pihak) > 0,
-                    function ($x) use ($pihak) {
+                if (count($pihak) > 0) {
+                    $q->where(function ($x) use ($pihak) {
                         $x->whereIn('kdpbf', $pihak)
                             ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
                             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                    },
-                    function ($r) {
-                        $r->where('nobast', 'LIKE', '%' . request('q') . '%')
+                    });
+                } else {
+                    $q->where(function ($x) {
+                        $x->where('nobast', 'LIKE', '%' . request('q') . '%')
                             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
-                    }
-                );
+                    });
+                }
+                // $q->when(
+                //     count($pihak) > 0,
+                //     function ($x) use ($pihak) {
+                //         $x->whereIn('kdpbf', $pihak)
+                //             ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
+                //             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                //     },
+                //     function ($r) {
+                //         $r->where('nobast', 'LIKE', '%' . request('q') . '%')
+                //             ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                //     }
+                // );
             })
+            ->when(request('from') && request('to'), function ($q) {
+                $q->whereBetween('tgl_trans', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+            })
+            ->when(request('bast') === 'sudah', function ($q) {
+                $q->whereNotNull('tgl_bast');
+            }, function ($q) {
+                $q->whereNull('tgl_bast');
+            })
+            ->when(request('bayar') === 'sudah', function ($q) {
+                $q->whereNotNull('tgl_pembayaran');
+            }, function ($q) {
+                $q->whereNull('tgl_pembayaran');
+            })
+
             ->orderBy('notranskonsi', 'DESC')
             ->paginate(request('per_page'));
 

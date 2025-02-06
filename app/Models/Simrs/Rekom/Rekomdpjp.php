@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Rekom;
 
 use App\Models\KunjunganRawatInap;
+use App\Models\Poli;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Mruanganranap;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -47,12 +48,19 @@ class Rekomdpjp extends Model
 
     public function relkunjunganranap()
     {
-        return $this->belongsTo(KunjunganRawatInap::class,'noreg','rs1'
+        return $this->belongsTo(
+            KunjunganRawatInap::class,
+            'noreg',
+            'rs1'
         );
     }
 
     public function relmpoli()
     {
         return $this->belongsTo(Mpoli::class, 'rs8', 'rs1');
+    }
+    public function poli()
+    {
+        return $this->belongsTo(Poli::class, 'unit', 'rs1');
     }
 }

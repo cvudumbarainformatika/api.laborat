@@ -28,4 +28,9 @@ Route::group([
     Route::get('/umum/kunjunganpasienumum', [DaftarrajalController::class, 'daftarkunjunganpasienumum']);
 
     Route::post('/hapuspasien', [DaftarrajalController::class, 'hapuspasien']);
+
+
+
+    // cari rujukan keluar rs
+    Route::post('/cari-rujukan-keluar', [DaftarrajalController::class, 'caruRujukanKeluarRs']);
 });

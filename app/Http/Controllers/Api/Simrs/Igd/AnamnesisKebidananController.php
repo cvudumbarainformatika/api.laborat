@@ -154,4 +154,18 @@ class AnamnesisKebidananController extends Controller
         );
         return new JsonResponse(['message' => 'Data Sudah Tersimpan...!!!','result' => $simpan], 200);
     }
+
+    public function hapusanamnesiskebidanan(Request $request)
+    {
+        $cari = AnamnesisKebidanan::find($request->id);
+        if (!$cari) {
+            return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+        }
+        $hapus = $cari->delete();
+        if (!$hapus) {
+            return new JsonResponse(['message' => 'gagal dihapus'], 501);
+        }
+        return new JsonResponse(['message' => 'berhasil dihapus'], 200);
+        // return new JsonResponse($cari, 200);
+    }
 }

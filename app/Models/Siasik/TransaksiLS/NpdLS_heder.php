@@ -38,6 +38,10 @@ class NpdLS_heder extends Model
     {
         return $this->belongsTo(TransPajak::class, 'nonpdls', 'nonpdls');
     }
+    public function newpajak()
+    {
+        return $this->hasMany(NewpajakNpdls::class, 'nonpdls', 'nonpdls');
+    }
 
 
 }

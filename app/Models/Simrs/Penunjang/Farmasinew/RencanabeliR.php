@@ -18,6 +18,10 @@ class RencanabeliR extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
+    /**
+     * catatan flag
+     * flag 1 itu rencanan selesai atau di anggap selesai sehingga tidak muncul di pemesanan
+     */
     public function rincian()
     {
         return $this->hasOne(RencanabeliH::class, 'no_rencbeliobat', 'no_rencbeliobat');

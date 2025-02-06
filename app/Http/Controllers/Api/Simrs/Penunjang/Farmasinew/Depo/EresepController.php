@@ -1118,21 +1118,30 @@ class EresepController extends Controller
             // 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
             'rincian' => function ($ri) {
                 $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
-                    ->with('mobat:kd_obat,nama_obat,satuan_k,status_kronis')
+                    ->with(
+                        'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                        'mobat.indikasi'
+                    )
                     ->groupBy('kdobat', 'noresep', 'noreg');
             },
             'rincianracik' => function ($ri) {
                 $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
-                    ->with('mobat:kd_obat,nama_obat,satuan_k,status_kronis')
+                    ->with(
+                        'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                        'mobat.indikasi'
+                    )
                     ->groupBy('kdobat', 'noresep', 'noreg', 'namaracikan');
             },
             'kunjunganrajal' => function ($kunjunganrajal) {
                 $kunjunganrajal->select('rs1', 'rs9')->with('doktersimpeg:kdpegsimrs,nama');
             },
             'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'permintaanresep.mobat.indikasi',
             'permintaanresep.aturansigna:signa,jumlah',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+            'permintaanracikan.mobat.indikasi',
             'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'asalpermintaanresep.mobat.indikasi',
             'asalpermintaanresep.aturansigna:signa,jumlah',
             'poli',
             'info',
@@ -1309,10 +1318,14 @@ class EresepController extends Controller
                 //     );
                 // }
                 'rincian.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincian.mobat.indikasi',
                 'rincianracik.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincianracik.mobat.indikasi',
                 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanresep.mobat.indikasi',
                 'permintaanresep.aturansigna:signa,jumlah',
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+                'permintaanracikan.mobat.indikasi',
                 'poli',
                 'info',
                 'antrian' => function ($q) {

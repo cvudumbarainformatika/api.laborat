@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Rajal;
 
 use App\Models\Poli;
 use App\Models\Simrs\Master\Mpasien;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Penunjang\Kamaroperasi\JadwaloperasiController;
 use App\Models\Simrs\Planing\Simpanspri;
 use App\Models\Simrs\Planing\Simpansuratkontrol;
@@ -55,5 +56,10 @@ class WaktupulangPoli extends Model
     public function operasi()
     {
         return $this->hasOne(JadwaloperasiController::class, 'noreg', 'rs1');
+    }
+    public function bpjsresponse()
+    {
+        // return $this->hasMany(Bpjs_http_respon::class, 'noreg', 'rs1');
+        return $this->hasOne(Bpjs_http_respon::class, 'noreg', 'rs1');
     }
 }

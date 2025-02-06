@@ -48,7 +48,7 @@ class TransaksiLaboratController extends Controller
     public function query_table($val)
     {
         $y = Carbon::now()->subYears(1);
-        $m = Carbon::now()->subMonth(2);
+        $m = Carbon::now()->subMonth(6);
         $from = now();
         $to = $m;
         $query = TransaksiLaborat::query();

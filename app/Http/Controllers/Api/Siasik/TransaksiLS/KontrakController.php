@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\KontrakPengerjaan;
+use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
 use DateTime;
 
@@ -15,33 +16,33 @@ class KontrakController extends Controller
 {
     public function listkontrak()
     {
-        $data = KontrakPengerjaan::select(
-            'nokontrak',
-            'tgltrans',
-            'namaperusahaan',
-            'namapptk',
-            'kegiatanblud',
-            'nilaikontrak',
-            'nokontrakx'
-        )
-        ->when(request('q'),function ($query) {
+        $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $data = KontrakPengerjaan::when(request('q'),function ($query) {
             $query->where('nokontrak', 'LIKE', '%' . request('q') . '%')
             ->orWhere('namaperusahaan', 'LIKE', '%' . request('q') . '%')
             ->orWhere('nilaikontrak', 'LIKE', '%' . request('q') . '%')
             ->orWhere('nokontrakx', 'LIKE', '%' . request('q') . '%')
             ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
         })
-        ->whereYear('tgltrans', date('Y'))
+        // ->whereYear('tgltrans', date('Y'))
+        ->whereBetween('tgltrans', [$tahunawal.'-01-01', $tahun.'-12-31'])
         ->orderBy('tglentry', 'desc')
-        ->paginate(request('per_page'));
+        ->get();
+        // ->paginate(request('per_page'));
 
         return new JsonResponse($data);
     }
     public function simpankontrak(Request $request)
     {
         $time = date('Y-m-d H:i:s');
-        $nomor = $request->notrans ?? self::buatnomor();
-        $simpan = KontrakPengerjaan::updateOrCreate(
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->kdpegsimrs;
+        $nomor = $request->nokontrak ?? self::buatnomor();
+        try {
+            DB::beginTransaction();
+             $simpan = KontrakPengerjaan::updateOrCreate(
             [
                 'nokontrak'=> $nomor,
             ],
@@ -63,17 +64,38 @@ class KontrakController extends Controller
                 'nilaikontrak' => $request->nilaikontrak ?? '',
                 'kodeBagian' => $request->kodeBagian ?? '',
                 'nokontrakx' => $request->nokontrakx ?? '',
-                'termin' => $request->termin ?? ''
-                // 'userentry'=>$user['kodesimrs']
+                'termin' => $request->termin ?? '',
+                'userentry'=>$pegawai ?? '',
+                'kunci'=> '1'
             ]
         );
-        if (!$simpan){
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+        return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil disimpan...!!!',
+                    'result' => $simpan,
+                ], 200);
+        } catch (\Exception $er) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Ada Kesalahan',
+                'error' => $er
+            ], 500);
         }
-        // else {
-        //     return new JsonResponse(['message' => 'Berhasil di Simpan'], 200);
-        // }
+
     }
+    public function deletedata(Request $request){
+        $data = KontrakPengerjaan::where('nokontrak', $request->nokontrak)->first();
+        if(!$data){
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
+        } else {
+            $data->delete();
+        }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus',
+             'data' => $data
+        ]);
+    }
+
     public static function buatnomor(){
         $huruf = ('KP');
         // $no = ('4.02.0.00.0.00.01.0000');

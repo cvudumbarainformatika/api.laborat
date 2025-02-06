@@ -155,7 +155,7 @@ class TindakanController extends Controller
 
         EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
-        $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
+        $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs','sambungan:rs73_id,ket');
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
