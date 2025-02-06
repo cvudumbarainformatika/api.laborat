@@ -448,12 +448,16 @@ class KonsinyasiController extends Controller
             ->when(request('q'), function ($q) {
                 $pihak = Mpihakketiga::select('kode')->where('nama', 'LIKE', '%' . request('q') . '%')->pluck('kode');
                 if (count($pihak) > 0) {
-                    $q->whereIn('kdpbf', $pihak)
-                        ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
-                        ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    $q->where(function ($x) use ($pihak) {
+                        $x->whereIn('kdpbf', $pihak)
+                            ->orWhere('nobast', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    });
                 } else {
-                    $q->where('nobast', 'LIKE', '%' . request('q') . '%')
-                        ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    $q->where(function ($x) {
+                        $x->where('nobast', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('notranskonsi', 'LIKE', '%' . request('q') . '%');
+                    });
                 }
                 // $q->when(
                 //     count($pihak) > 0,
