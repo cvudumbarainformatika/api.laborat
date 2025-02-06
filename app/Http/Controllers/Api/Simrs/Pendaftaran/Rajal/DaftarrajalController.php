@@ -763,13 +763,23 @@ class DaftarrajalController extends Controller
     {
 
         $data = WaktupulangPoli::where('rs2', $request->norm)
-            ->with(['bpjsresponse' => function ($q) {
-                $q->where('url', '/Rujukan/2.0/insert')
-                    ->orWhere('url', '/Rujukan/2.0/update')
-                    ->orderBy('tgl', 'DESC');
-            }])
+            ->with([
+                'masterpoli',
+                'rekomdpjp.poli'
+            ])
             ->orderby('tgl', 'DESC')
             ->first();
+        if ($data) {
+            if ($data->rs4 == 'Rumah Sakit Lain') {
+                $data->load([
+                    'bpjsresponse' => function ($q) {
+                        $q->where('url', '/Rujukan/2.0/insert')
+                            ->orWhere('url', '/Rujukan/2.0/update')
+                            ->orderBy('tgl', 'DESC');
+                    }
+                ]);
+            }
+        }
 
         return new JsonResponse([
             'data' => $data,
