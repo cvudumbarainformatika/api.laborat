@@ -16,4 +16,9 @@ class Planing_Igd_ranap extends Model
     {
         return $this->hasOne(Mruangranap::class, 'rs1', 'ruangtujuan');
     }
+
+    public function dokumentransfer()
+    {
+        return $this->hasOne(Plann_Igd_Ranap_Ruang::class, 'id_heder', 'id');
+    }
 }

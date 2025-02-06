@@ -8,6 +8,7 @@ use App\Models\Simrs\Planing\Planing_Igd_Lama;
 use App\Models\Simrs\Planing\Planing_Igd_Pulang;
 use App\Models\Simrs\Planing\Planing_Igd_ranap;
 use App\Models\Simrs\Planing\Planing_Igd_Rujukan;
+use App\Models\Simrs\Planing\Plann_Igd_Ranap_Ruang;
 use App\Models\Simrs\Planing\SkalaTransferIgd;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +38,7 @@ class PlannController extends Controller
     //             'result' => $data
     //         ],
     //     200);
+
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
         $kdgroupnakes = $wew['kdgroupnakes'];
@@ -86,6 +88,17 @@ class PlannController extends Controller
                     'tgloperasi' => $request->tgloperasi,
                     'ruangtujuan' => $request->ruangtujuan,
                     'keterangan' => $request->keterangan
+                    ]
+                );
+                $isi = json_encode($request->isi);
+
+                $simpansampungranap = Plann_Igd_Ranap_Ruang::create(
+                    [
+                        'noreg' => $request->noreg,
+                        'norm' => $request->norm,
+                        'id_heder' => $simpansambung['id'] ?? '',
+                        'isi' => $isi,
+                        'kelas' => $request->kelas
                     ]
                 );
             }else if($request->panel === 'Rujuk Ke Rumah Sakit Lain')
@@ -148,7 +161,8 @@ class PlannController extends Controller
                     'planranap' => function($planranap){
                         $planranap->with(
                             [
-                                'ruangranap'
+                                'ruangranap',
+                                'dokumentransfer'
                             ]
                         );
                     },
