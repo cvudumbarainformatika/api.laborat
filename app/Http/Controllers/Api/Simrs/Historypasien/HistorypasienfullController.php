@@ -20,11 +20,13 @@ class HistorypasienfullController extends Controller
             'rs17.rs2 as norm',
             'rs17.rs3 as tanggal',
             'rs19.rs2 as ruangan',
-            'rs21.rs2 as dpjp'
+            'rs21.rs2 as dpjp',
+            'memodiagnosadokter.diagnosa as memo'
 
         )
             ->join('rs19', 'rs19.rs1', '=', 'rs17.rs8')
             ->join('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
             ->where('rs17.rs2', $norm);
         $history = Kunjunganranap::select(
             'rs23.rs1',
@@ -32,10 +34,12 @@ class HistorypasienfullController extends Controller
             'rs23.rs2 as norm',
             'rs23.rs3 as tanggal',
             'rs24.rs2 as ruangan',
-            'rs21.rs2 as dpjp'
+            'rs21.rs2 as dpjp',
+            'memodiagnosadokter.diagnosa as memo'
         )
             ->join('rs24', 'rs24.rs1', '=', 'rs23.rs5')
             ->join('rs21', 'rs21.rs1', '=', 'rs23.rs10')
+            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs23.rs1')
             ->where('rs23.rs2', $norm)
             ->union($historyx)
             ->with(
