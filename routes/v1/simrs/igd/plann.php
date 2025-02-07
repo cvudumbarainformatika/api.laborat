@@ -15,6 +15,8 @@ Route::group([
     Route::post('/hapusskalatransfer', [SkalaTransferIgd::class, 'hapusskalatransfer']);
 
     Route::get('/suratkematian', [PlannController::class, 'suratkematian']);
+
+    Route::get('/indikasimasuknicuinter', [PlannController::class, 'indikasimasuknicuinter']);
 });
 
 

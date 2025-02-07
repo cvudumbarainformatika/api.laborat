@@ -251,4 +251,10 @@ class PlannController extends Controller
 
         return new JsonResponse(['data' => $data] ,200);
     }
+
+    public function indikasimasuknicuinter()
+    {
+        $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->get();
+        return new JsonResponse(['data' => $data] ,200);
+    }
 }

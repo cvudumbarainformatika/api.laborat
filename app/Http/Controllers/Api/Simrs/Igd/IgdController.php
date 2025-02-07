@@ -190,7 +190,8 @@ class IgdController extends Controller
                     'planranap' => function($planranap){
                         $planranap->with(
                             [
-                                'ruangranap'
+                                'ruangranap',
+                                'dokumentransfer'
                             ]
                         );
                     },
