@@ -594,8 +594,8 @@ class PoliController extends Controller
                 },
                 'newapotekrajal' => function ($newapotekrajal) {
                     $newapotekrajal->whereIn('flag', ['', '1', '2', '3', '4'])->with([
-                        'permintaanresep.mobat:kd_obat,nama_obat',
-                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                        'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
                     ])
                         ->orderBy('id', 'DESC');
                 },
@@ -741,26 +741,26 @@ class PoliController extends Controller
         // $kddpjp = $wew['kddpjp'];
         $kddpjp = request('dpjp');
         // if ($x === '1') {
-            if ($kddpjp === '') {
-                return new JsonResponse(['message' => 'Maaf Akun Anda Belum Termaping dengan Aplikasi Hafis...!!! '], 500);
-            }
-            $noka = request('noka');
-            $data = [
-                "param" => $noka,
-                "kodedokter" => (int) $kddpjp
-            ];
+        if ($kddpjp === '') {
+            return new JsonResponse(['message' => 'Maaf Akun Anda Belum Termaping dengan Aplikasi Hafis...!!! '], 500);
+        }
+        $noka = request('noka');
+        $data = [
+            "param" => $noka,
+            "kodedokter" => (int) $kddpjp
+        ];
 
-            // $data = [
-            //     "param" => '0001538822259',
-            //     "kodedokter" => 256319
-            // ];
+        // $data = [
+        //     "param" => '0001538822259',
+        //     "kodedokter" => 256319
+        // ];
 
-            $icare = BridgingbpjsHelper::post_url(
-                'icare',
-                'api/rs/validate',
-                $data
-            );
-            return $icare;
+        $icare = BridgingbpjsHelper::post_url(
+            'icare',
+            'api/rs/validate',
+            $data
+        );
+        return $icare;
         // } else {
         //     return new JsonResponse(['message' => 'Maaf Fitur ini Hanya Untuk Dokter...!!!'], 500);
         // }
@@ -967,6 +967,6 @@ class PoliController extends Controller
             ]
         );
 
-        return new JsonResponse(['message' => 'Data Pasien Sudah Terkirim Ke Penjaminan'],200);
+        return new JsonResponse(['message' => 'Data Pasien Sudah Terkirim Ke Penjaminan'], 200);
     }
 }

@@ -13,5 +13,6 @@ Route::group([
     Route::get('/pasienGetNoRM', [PasienController::class, 'index']);
     Route::post('/simpan-pasien', [PasienController::class, 'simpanMaster']);
     Route::get('/cari-pasien', [PasienController::class, 'cariPasien']);
+    Route::get('/pasien-by-norm', [PasienController::class, 'caripasienbyrm']);
     // Route::get('/pasienx',[PasienController::class, 'coba']);
 });

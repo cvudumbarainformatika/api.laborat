@@ -79,6 +79,7 @@ Route::group([
 
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
     Route::get('/polibpjs', [BridbpjsplanController::class, 'polibpjs']);
+    Route::get('/diag-prb', [BridbpjsplanController::class, 'diagPrb']);
 
     Route::post('/simpanedukasi', [EdukasiController::class, 'simpanedukasi']);
     Route::post('/hapusedukasi', [EdukasiController::class, 'hapusedukasi']);

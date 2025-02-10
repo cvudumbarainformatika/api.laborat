@@ -835,8 +835,8 @@ class EresepController extends Controller
             //     'permintaanracikan.mobat:kd_obat,nama_obat'
             // );
             $endas = Resepkeluarheder::where('noreg', $request->noreg)->with(
-                'permintaanresep.mobat:kd_obat,nama_obat',
-                'permintaanracikan.mobat:kd_obat,nama_obat'
+                'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
+                'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs'
             )->get();
             DB::connection('farmasi')->commit();
             return new JsonResponse([

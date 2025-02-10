@@ -226,6 +226,11 @@ class BridbpjsplanController extends Controller
         $faskes = BridgingbpjsHelper::get_url('vclaim', '/referensi/faskes/' . $namafaskes . '/' . $jnsfaskes);
         return $faskes;
     }
+    public function diagPrb()
+    {
+        $data = BridgingbpjsHelper::get_url('vclaim', '/referensi/diagnosaprb');
+        return $data;
+    }
 
     public function polibpjs()
     {
