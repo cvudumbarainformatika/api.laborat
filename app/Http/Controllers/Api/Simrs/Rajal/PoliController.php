@@ -574,7 +574,9 @@ class PoliController extends Controller
                 'planning' => function ($p) {
                     $p->with([
                         'masterpoli',
-                        'rekomdpjp',
+                        'rekomdpjp' => function ($q) {
+                            $q->orderBy('id', 'DESC');
+                        },
                         'transrujukan',
                         'listkonsul',
                         'spri',
