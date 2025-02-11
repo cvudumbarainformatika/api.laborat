@@ -13,7 +13,8 @@ class LapcarakeluarpasienIgdController extends Controller
         $from=request('tgldari');
         $to=request('tglsampai');
         $data = KunjunganPoli::select('rs141.rs1 as noreg','rs141.rs2 as norm','rs17.rs3 as tglmasuk','rs141.rs4 as flaging',
-        'plann_igd_pulang.atas_dasar as flagingx','rs15.rs2 as nama')->whereBetween('rs17.rs3', [$from, $to])
+        'plann_igd_pulang.atas_dasar as flagingx','rs15.rs2 as nama','rs15.rs46 as noka',
+        'rs15.rs49 as ktp')->whereBetween('rs17.rs3', [$from, $to])
         ->where('rs17.rs8','POL014')
         ->leftjoin('rs141', 'rs141.rs1','rs17.rs1')
         ->leftjoin('rs15','rs15.rs1','rs17.rs2')
