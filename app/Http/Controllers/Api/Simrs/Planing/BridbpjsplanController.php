@@ -231,6 +231,79 @@ class BridbpjsplanController extends Controller
         $data = BridgingbpjsHelper::get_url('vclaim', '/referensi/diagnosaprb');
         return $data;
     }
+    public static function createPrb($request)
+    {
+        $user = auth()->user()->pegawai_id;
+        $len = strlen($user);
+        $use = $len === 1 ? '000' . $user : ($len === 2 ? '00' . $user : ($len === 3 ? '0' . $user : $user));
+        // $data = BridgingbpjsHelper::get_url('vclaim', '/referensi/diagnosaprb');
+        $data = [
+            'request' =>
+            [
+                't_prb' => [
+                    'noSep' => $request->nosep,
+                    'noKartu' => $request->noka,
+                    'alamat' => $request->alamat,
+                    'email' => $request->email,
+                    'programPRB' => $request->diagnosa,
+                    'kodeDPJP' => $request->kodedokterdpjp,
+                    'keterangan' => $request->keterangan,
+                    'saran' => $request->saran,
+                    'obat' => $request->obat,
+                    'user' => $use
+                ]
+            ]
+        ];
+
+        // $tgltobpjshttpres = DateHelper::getDateTime();
+        // $sendToBpjs = BridgingbpjsHelper::post_url(
+        //     'vclaim',
+        //     '/PRB/insert',
+        //     $data
+        // );
+
+        // Bpjs_http_respon::create(
+        //     [
+        //         'method' => 'POST',
+        //         'noreg' => $request->noreg,
+        //         'request' => $data,
+        //         'respon' => $sendToBpjs,
+        //         'url' => '/PRB/insert',
+        //         'tgl' => $tgltobpjshttpres
+        //     ]
+        // );
+        // $code = $sendToBpjs['metadata']['code'];
+        // if ($code == 200 || $code == '200') {
+        //     $response = $sendToBpjs['response'];
+        //     $request->nosrb = ($response['noSRB'] ?? $response->noSRB) ?? null;
+        // $request->bpjs_response = $sendToBpjs??null;
+        // } else {
+        //     return [
+        //         'code' => 500,
+        //         'sendToBpjs' => $sendToBpjs,
+        //         'form' => $data
+        //     ];
+        // }
+
+        $request->form = $data;
+        $simpanLocal = PlaningController::simpanprb($request);
+        if ($simpanLocal == 500) {
+            return [
+                'code' => 410,
+                'sendToBpjs' => $sendToBpjs ?? null,
+                'form' => $data,
+                'simpanLocal' => $simpanLocal,
+
+
+            ];
+        }
+        return [
+            'code' => 200,
+            'sendToBpjs' => $sendToBpjs ?? null,
+            'form' => $data,
+            'simpanLocal' => $simpanLocal,
+        ];
+    }
 
     public function polibpjs()
     {

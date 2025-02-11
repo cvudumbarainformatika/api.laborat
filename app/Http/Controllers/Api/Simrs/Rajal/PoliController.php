@@ -572,7 +572,7 @@ class PoliController extends Controller
                     $q->orderBy('taskid', 'DESC');
                 },
                 'planning' => function ($p) {
-                    $p->with(
+                    $p->with([
                         'masterpoli',
                         'rekomdpjp',
                         'transrujukan',
@@ -581,7 +581,7 @@ class PoliController extends Controller
                         'ranap',
                         'kontrol',
                         'operasi',
-                    )->orderBy('id', 'DESC');
+                    ])->orderBy('id', 'DESC');
                 },
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
