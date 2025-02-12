@@ -16,6 +16,7 @@ class LapcarakeluarpasienIgdController extends Controller
         'plann_igd_pulang.atas_dasar as flagingx','rs15.rs2 as nama','rs15.rs46 as noka',
         'rs15.rs49 as ktp')->whereBetween('rs17.rs3', [$from, $to])
         ->where('rs17.rs8','POL014')
+        ->where('rs17.rs19','1')
         ->leftjoin('rs141', 'rs141.rs1','rs17.rs1')
         ->leftjoin('rs15','rs15.rs1','rs17.rs2')
         ->leftjoin('plann_igd_pulang', 'plann_igd_pulang.noreg','rs17.rs1')
