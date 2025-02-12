@@ -1194,7 +1194,8 @@ class EresepController extends Controller
                 })
                     ->orWhere('resep_keluar_h.noresep', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('resep_keluar_h.norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%');
+                    ->orWhere('resep_keluar_h.noreg', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('antrian_ambil.nomor', 'LIKE', '%' . request('q') . '%');
             })
             ->where('resep_keluar_h.tiperesep', '!=', 'penjualan')
             ->where('resep_keluar_h.depo', request('kddepo'))
@@ -1281,8 +1282,8 @@ class EresepController extends Controller
         $query
             ->groupBy('resep_keluar_h.noresep')
             ->orderBy('resep_keluar_h.flag', 'ASC')
-            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC')
             ->orderBy('resep_keluar_h.tgl_kirim', 'ASC')
+            ->orderBy('resep_keluar_h.tgl_permintaan', 'ASC')
             ->orderBy('antrian_ambil.nomor', 'ASC');
 
         // Get paginated results
