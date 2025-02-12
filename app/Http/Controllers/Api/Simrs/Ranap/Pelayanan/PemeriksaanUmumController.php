@@ -345,6 +345,12 @@ class PemeriksaanUmumController extends Controller
               'glasgow'  => $request->formPediatrik['glasgow'],
               'glasgowSkor'  => $request->formPediatrik['glasgowSkor'],
               'glasgowKet'  => $request->formPediatrik['glasgowKet'],
+
+              // ini baru saya lupa
+              'bbi' => $request->formPediatrik['bbi'] ?? null,
+              'bmi' => $request->formPediatrik['bmi'] ?? null,
+              'statusGizi' => $request->formPediatrik['statusGizi'] ?? null,
+              'kesimpulan' => $request->formPediatrik['kesimpulan'] ?? null,
               
               'user_input'=> $kdpegsimrs,
               'group_nakes' => $user->kdgroupnakes
