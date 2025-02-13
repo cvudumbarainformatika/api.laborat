@@ -15,6 +15,7 @@ use App\Models\Simrs\Planing\RujukBalikPrb;
 use App\Models\Simrs\Planing\Simpanspri;
 use App\Models\Simrs\Planing\Simpansuratkontrol;
 use App\Models\Simrs\Planing\Transrujukan;
+use App\Models\Simrs\Rajal\JawabanKonsulPoli;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
@@ -117,6 +118,10 @@ class PlaningController extends Controller
             $simpanakhir = self::simpanakhir($request);
             if ($simpanakhir['code'] == 500) {
                 return new JsonResponse(['message' => 'Maaf, Data Pasien Ini Masih Ada Dalam List Konsulan TPPRJ...!!!'], 500);
+            }
+            $simpanJawaban = self::createJawabanKonsul($request, null, $simpanakhir);
+            if (!$simpanJawaban) {
+                return new JsonResponse(['message' => 'Maaf, Gagal Menyimpan pengantar konsulan'], 410);
             }
             $simpanrekomdpjp = self::simpan_rekom_dpjp($request, $simpanakhir);
             // return new JsonResponse(['message' => $simpanrekomdpjp], 500);
@@ -380,7 +385,31 @@ class PlaningController extends Controller
         // }
         return 200;
     }
+    public static function createJawabanKonsul($request, $noreg, $akhir)
+    {
+        $simpan = JawabanKonsulPoli::create([
+            'norm' => $request->norm,
+            'noreg_lama' => $request->noreg_lama,
+            'pertanyaan' => $request->pertanyaan,
+            'tgl_kunjungan' => $request->tgl_kunjungan,
+            'tgl_rencana_konsul' => $request->tgl_rencana_konsul,
+            'poli_asal' => $request->kdpoli_asal,
+            'poli_tujuan' => $request->kdpoli_tujuan,
 
+            'noreg_baru' => $noreg ?? null,
+            'rs141_id' => $akhir['data']->id ?? null,
+        ]);
+
+        return $simpan ?? false;
+    }
+    public static function updateNoregJawabanKonsul($head)
+    {
+        $simpan = JawabanKonsulPoli::where('rs141_id', $head['rs141_id'])
+            ->update([
+                'noreg_baru' => $head['noreg']
+            ]);
+        return $simpan ?? false;
+    }
     public static function simpanakhir($request)
     {
         if ($request->planing == 'Konsultasi' || $request->planing == 'Kontrol') {
@@ -481,7 +510,7 @@ class PlaningController extends Controller
                     if ($sepkonsul) {
                         $sepkonsul->delete();
                     }
-                    // $konsul->delete();
+                    $konsul->delete();
                 }
             }
 
@@ -490,6 +519,8 @@ class PlaningController extends Controller
             // rekom depjp belum dihapus
             $rekom = Rekomdpjp::where('rs141_id', $cari->id)->orderBy('id', 'ASC')->first();
             if ($rekom) $rekom->delete();
+            $jawaban = JawabanKonsulPoli::where('rs141_id', $cari->id)->orderBy('id', 'ASC')->first();
+            if ($jawaban) $jawaban->delete();
             // return new JsonResponse([
             //     'message' => $message,
             //     'cari' => $cari,
@@ -518,6 +549,7 @@ class PlaningController extends Controller
         return new JsonResponse([
             'message' => $message,
             'cari' => $cari,
+            'konsul' => $konsul ?? null,
         ], 200);
     }
 

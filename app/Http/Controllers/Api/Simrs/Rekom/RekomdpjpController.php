@@ -16,8 +16,10 @@ class RekomdpjpController extends Controller
             'relkunjunganpoli.relmpoli',
             'relkunjunganranap.ruangan'
         ])
-        ->where('norm','=', request(['norm']))->where('kdSaran','=','6')->whereNull('tglBatal')
-        ->limit(50)->get();
+            ->where('norm', '=', request(['norm']))->whereIn('kdSaran', ['6', '9'])->whereNull('tglBatal')
+            ->limit(50)
+            ->orderBy('id', 'DESC')
+            ->get();
         return new JsonResponse($query);
     }
 }

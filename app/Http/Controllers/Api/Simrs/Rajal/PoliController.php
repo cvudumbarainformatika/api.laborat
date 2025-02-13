@@ -770,23 +770,9 @@ class PoliController extends Controller
 
     public function konsulpoli(Request $request)
     {
+        // return new JsonResponse($request->all());
 
-        // $cek = WaktupulangPoli::where('rs1', $request->noreg)->get();
-        // if (count($cek) > 0) {
-        //     $before = $cek[0]['rs4'] === 'Kontrol' || $cek[0]['rs4'] === 'Konsultasi';
-        //     $req = $request->planing == 'Konsultasi' || $request->planing == 'Kontrol';
-        //     // return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!', $before, $req], 500);
-        //     if ($before && $req) {
-        //         $col = collect($cek);
-        //         $renc = $col->where('rs4', $request->planing);
-        //         if (count($renc) >= 1) {
-        //             $mesage = (count($renc) > 1 ? 'Sudah ada Plannig ' . $request->planing : 'Sudah Ada Planning Kontrol dan Konsultasi');
-        //             return new JsonResponse(['message' => $mesage, 'data' => $renc], 500);
-        //         }
-        //     } else {
-        //         return new JsonResponse(['message' => 'Maaf, data kunjungan pasien ini sudah di rencanakan...!!!'], 500);
-        //     }
-        // }
+
 
         $konsulan = KunjunganPoli::where('rs4', $request->noreg)->count();
         if ($konsulan > 0) {
@@ -868,8 +854,9 @@ class PoliController extends Controller
 
         $plann = new PlaningController;
         $cetakantrian = AntrianController::ambilnoantrian($request, $input);
-        PlaningController::simpanakhir($request);
+        $akhir = PlaningController::simpanakhir($request);
         PlaningController::simpankonsulantarpoli($request);
+        PlaningController::createJawabanKonsul($request, $noreg, $akhir);
         $data = $plann->getAllRespPlanning($request->noreg);
         $sep = Seprajal::where('rs1', $request->noreg)->first();
         if (isset($sep)) {
