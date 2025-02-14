@@ -23,6 +23,8 @@ use App\Models\Simrs\Rekom\Rekomdpjp;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use function PHPUnit\Framework\returnSelf;
+
 class PlaningController extends Controller
 {
     public function mpoli()
@@ -409,6 +411,57 @@ class PlaningController extends Controller
                 'noreg_baru' => $head['noreg']
             ]);
         return $simpan ?? false;
+    }
+    public static function updateDibaca(Request $request)
+    {
+        $simpan = JawabanKonsulPoli::where('id', $request->id)->first();
+        if (!$simpan) {
+            return new JsonResponse([
+                'message' => 'dibaca tidak di update'
+            ], 410);
+        }
+        $simpan->update([
+            'dibaca_poli_asal' => '1'
+        ]);
+
+        $simpan->load([
+            'poliAsal:rs1,rs2',
+            'poliTujuan:rs1,rs2',
+        ]);
+        return new JsonResponse([
+            'message' => 'Data berhasil disimpan',
+            'data' => $simpan
+        ], 200);
+    }
+    public static function updatePengantarAtauJawabanKonsul(Request $request)
+    {
+        $simpan = JawabanKonsulPoli::where('id', $request->id)->first();
+        if (!$simpan) {
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan'
+            ], 410);
+        }
+        if ($request->has('edit')) {
+            $simpan->update([
+                'jawaban' => $request->jawaban,
+            ]);
+        }
+        if ($request->has('editPertanyaan')) {
+            $simpan->update([
+                'pertanyaan' => $request->pertanyaan,
+
+            ]);
+        }
+
+        $simpan->load([
+            'poliAsal:rs1,rs2',
+            'poliTujuan:rs1,rs2',
+        ]);
+
+        return new JsonResponse([
+            'message' => 'Data berhasil disimpan',
+            'data' => $simpan
+        ], 200);
     }
     public static function simpanakhir($request)
     {

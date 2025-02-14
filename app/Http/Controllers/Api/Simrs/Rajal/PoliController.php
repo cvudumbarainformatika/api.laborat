@@ -588,6 +588,13 @@ class PoliController extends Controller
                 'edukasi' => function ($x) {
                     $x->orderBy('id', 'DESC');
                 },
+                'jawabankonsul' => function ($x) {
+                    $x->with([
+                        'poliAsal:rs1,rs2',
+                        'poliTujuan:rs1,rs2',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
                 'diet' => function ($diet) {
                     $diet->orderBy('id', 'DESC');
                 },

@@ -73,9 +73,14 @@ Route::group([
     Route::get('/cari-sep', [PlaningController::class, 'cariSep']);
     Route::get('/mpalningrajal', [PlaningController::class, 'mpalningrajal']);
     Route::get('/mpoli', [PlaningController::class, 'mpoli']);
+
     Route::post('/simpanplaningpasien', [PlaningController::class, 'simpanplaningpasien']);
     Route::post('/update-planning-pasien', [PlaningController::class, 'updatePlanningPasien']);
     Route::post('/hapusplaningpasien', [PlaningController::class, 'hapusplaningpasien']);
+
+    // jawaban konsul
+    Route::post('/update-jawaban-konsul', [PlaningController::class, 'updatePengantarAtauJawabanKonsul']);
+    Route::post('/update-dibaca', [PlaningController::class, 'updateDibaca']);
 
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
     Route::get('/polibpjs', [BridbpjsplanController::class, 'polibpjs']);

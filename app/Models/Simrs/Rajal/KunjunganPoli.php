@@ -423,12 +423,12 @@ class KunjunganPoli extends Model
 
     public function ambulan()
     {
-        return $this->hasMany(ReqAmbulan::class, 'rs1','rs1');
+        return $this->hasMany(ReqAmbulan::class, 'rs1', 'rs1');
     }
 
     public function bankdarah()
     {
-        return $this->hasMany(PermintaanBankdarah::class, 'rs1','rs1');
+        return $this->hasMany(PermintaanBankdarah::class, 'rs1', 'rs1');
     }
 
     public function planheder()
@@ -443,17 +443,17 @@ class KunjunganPoli extends Model
 
     public function pemeriksaanfisikpsikologidll()
     {
-        return $this->hasMany(PemeriksaanUmum::class, 'rs1','rs1');
+        return $this->hasMany(PemeriksaanUmum::class, 'rs1', 'rs1');
     }
 
     public function konsuldokterspesialis()
     {
-        return $this->hasMany(Konsultasi::class, 'noreg','rs1');
+        return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
     }
 
     public function tinjauanulang()
     {
-        return $this->hasMany(Tinjauan_ulang::class, 'noreg','rs1');
+        return $this->hasMany(Tinjauan_ulang::class, 'noreg', 'rs1');
     }
 
     public function skalatransfer()
@@ -463,21 +463,26 @@ class KunjunganPoli extends Model
 
     public function telaahresep()
     {
-       return $this->hasOne(TelaahResep::class, 'noreg', 'rs1');
+        return $this->hasOne(TelaahResep::class, 'noreg', 'rs1');
     }
 
     public function peresepanobat()
     {
-        return $this->hasMany(Resepkeluarheder::class,'noreg','rs1');
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
 
     public function pemberianobat()
     {
-        return $this->hasMany(PemberianObatIgd::class,'noreg','rs1');
+        return $this->hasMany(PemberianObatIgd::class, 'noreg', 'rs1');
     }
 
     public function datacasmix()
     {
-       return $this->hasOne(listcasmixrajal::class, 'noreg', 'rs1');
+        return $this->hasOne(listcasmixrajal::class, 'noreg', 'rs1');
+    }
+
+    public function jawabankonsul()
+    {
+        return $this->hasMany(JawabanKonsulPoli::class,  'norm', 'rs2');
     }
 }
