@@ -108,8 +108,12 @@ class AuthController extends Controller
                 $cari = Konsultasi::select(DB::raw('count(kddokterkonsul) as notif'), 'kddokterkonsul')
                 ->where('kddokterkonsul','=', $pegawai->kdpegsimrs)
                 ->where(function ($q) {
-                    $q->where('flag', '=', '')
-                    ->orWhereNull('flag');
+                    // $q->where('flag', '=', '')
+                    // ->orWhereNull('flag');
+                    $q->whereNull('flag');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('jawaban');
                 })
                 ->groupBy('kddokterkonsul')
                 ->orderBy('kddokterkonsul')
