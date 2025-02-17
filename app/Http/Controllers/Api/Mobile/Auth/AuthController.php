@@ -54,7 +54,11 @@ class AuthController extends Controller
 
         // $allAccess = array('sa@app.com', 'coba@app.com', '3574041305820002@app.com');
 
-        if ($request->email === 'sa@app.com' || $request->email === '3574041305820002@app.com' || $request->device === 'ios') {
+        if ($request->email === 'sa@app.com' || 
+            $request->email === '3574041305820002@app.com' || 
+            $request->email === '3574011504680001@app.com' || 
+            $request->device === 'ios'
+            ) {
             JWTAuth::factory()->setTTL(43200);
             $data = $request->only('email', 'password');
             $token = JWTAuth::attempt($data);

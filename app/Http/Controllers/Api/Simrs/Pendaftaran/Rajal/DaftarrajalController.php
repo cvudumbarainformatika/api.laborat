@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
+use App\Http\Controllers\Api\Simrs\Igd\PlannController;
+use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -256,7 +258,14 @@ class DaftarrajalController extends Controller
             return new JsonResponse(['message' => 'karcis gagal disimpan'], 500);
         }
 
-
+        // simpan jika ada jawaban konsul Poli jika Ada
+        if ($request->has('rs141_id')) {
+            $head = [
+                'rs141_id' => $request->rs141_id,
+                'noreg' => $input->noreg
+            ];
+            $updatejawabanKonsul = PlaningController::updateNoregJawabanKonsul($head);
+        }
         //------------LOG ANTRIAN----------------//
         // $updatelogantrian = self::updatelogantrian($request,$input);
         $tgl = Carbon::now()->format('Y-m-d');
@@ -765,7 +774,10 @@ class DaftarrajalController extends Controller
         $data = WaktupulangPoli::where('rs2', $request->norm)
             ->with([
                 'masterpoli',
-                'rekomdpjp.poli'
+                'rekomdpjp' => function ($q) {
+                    $q->with('poli')
+                        ->orderBy('id', 'DESC');
+                }
             ])
             ->orderby('tgl', 'DESC')
             ->first();
