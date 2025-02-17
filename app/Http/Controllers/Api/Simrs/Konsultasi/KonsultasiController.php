@@ -199,9 +199,9 @@ class KonsultasiController extends Controller
           if($request->kdruang !== 'POL014'){
 
             $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
-            $tarifKonsul = self::cekTarip($spesialis, $request);
+            $tarifKonsul = self::cekTarip($spesialis, $request, $dokter);
             if (!$tarifKonsul) {
-              return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
+              return new JsonResponse(['message' => 'Maaf ... Ada Kesalahan Pada Tarif Konsul'], 500);
             }
 
             //cek data tarif harini untuk dokter
@@ -266,7 +266,7 @@ class KonsultasiController extends Controller
       return new JsonResponse(['message' => 'Jawaban tersimpan', 'result' => $lazy], 200);
     }
 
-    public static function cekTarip($spesialis, $request)
+    public static function cekTarip($spesialis, $request, $pegawai)
     {
         $rs = null;
 
@@ -295,49 +295,62 @@ class KonsultasiController extends Controller
 				$pelayanan=0;
         $flag_biaya=$rsx->rs3;
 
-        if ($spesialis) {
-          if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
-          {
-            $sarana=$rsx->rs6;
-						$pelayanan=$rsx->rs7;
-          }else if($request->kelas_ruangan=="2"){
-						$sarana=$rsx->rs8;
-						$pelayanan=$rsx->rs9;
-					}else if($request->kelas_ruangan=="1"){
-						$sarana=$rsx->rs10;
-						$pelayanan=$rsx->rs11;
-					}else if($request->kelas_ruangan=="Utama"){
-						$sarana=$rsx->rs12;
-						$pelayanan=$rsx->rs13;
-					}else if($request->kelas_ruangan=="VIP"){
-						$sarana=$rsx->rs14;
-						$pelayanan=$rsx->rs15;
-					}else if($request->kelas_ruangan=="VVIP"){
-						$sarana=$rsx->rs16;
-						$pelayanan=$rsx->rs17;
-					}
+        $dokterRadiologi = $pegawai->jabatan === 'J00113';
+        $dokterPA = $pegawai->jabatan === 'J00111';
+
+        if ($dokterRadiologi || $dokterPA) {
+          $sarana=0;
+          $pelayanan=0;
+          
         } else {
-          if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
-          {
-            $sarana=$rsx->rs6;
-						$pelayanan=$rsx->rs7;
-					}else if($request->kelas_ruangan==="2"){
-						$sarana=$rsx->rs8;
-						$pelayanan=$rsx->rs9;
-					}else if($request->kelas_ruangan==="1"){
-						$sarana=$rsx->rs10;
-						$pelayanan=$rsx->rs11;
-					}else if($request->kelas_ruangan==="Utama"){
-						$sarana=$rsx->rs12;
-						$pelayanan=$rsx->rs13;
-					}else if($request->kelas_ruangan==="VIP"){
-						$sarana=$rsx->rs14;
-						$pelayanan=$rsx->rs15;
-					}else if($request->kelas_ruangan==="VVIP"){
-						$sarana=$rsx->rs16;
-						$pelayanan=$rsx->rs17;
-					}
+
+          if ($spesialis) {
+
+            if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
+            {
+              $sarana=$rsx->rs6;
+              $pelayanan=$rsx->rs7;
+            }else if($request->kelas_ruangan=="2"){
+              $sarana=$rsx->rs8;
+              $pelayanan=$rsx->rs9;
+            }else if($request->kelas_ruangan=="1"){
+              $sarana=$rsx->rs10;
+              $pelayanan=$rsx->rs11;
+            }else if($request->kelas_ruangan=="Utama"){
+              $sarana=$rsx->rs12;
+              $pelayanan=$rsx->rs13;
+            }else if($request->kelas_ruangan=="VIP"){
+              $sarana=$rsx->rs14;
+              $pelayanan=$rsx->rs15;
+            }else if($request->kelas_ruangan=="VVIP"){
+              $sarana=$rsx->rs16;
+              $pelayanan=$rsx->rs17;
+            }
+          } else {
+            if($request->kelas_ruangan==="3" || $request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" || $request->kelas_ruangan==="IN")
+            {
+              $sarana=$rsx->rs6;
+              $pelayanan=$rsx->rs7;
+            }else if($request->kelas_ruangan==="2"){
+              $sarana=$rsx->rs8;
+              $pelayanan=$rsx->rs9;
+            }else if($request->kelas_ruangan==="1"){
+              $sarana=$rsx->rs10;
+              $pelayanan=$rsx->rs11;
+            }else if($request->kelas_ruangan==="Utama"){
+              $sarana=$rsx->rs12;
+              $pelayanan=$rsx->rs13;
+            }else if($request->kelas_ruangan==="VIP"){
+              $sarana=$rsx->rs14;
+              $pelayanan=$rsx->rs15;
+            }else if($request->kelas_ruangan==="VVIP"){
+              $sarana=$rsx->rs16;
+              $pelayanan=$rsx->rs17;
+            }
+          }
+          
         }
+
 
         $tarif = (int) $sarana + (int) $pelayanan;
 
