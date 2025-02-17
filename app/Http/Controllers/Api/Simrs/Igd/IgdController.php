@@ -254,10 +254,10 @@ class IgdController extends Controller
                     ->orderBy('id', 'DESC');
             },
             'tinjauanulang' => function($tinjauanulang){
-                $tinjauanulang->with([
+                $tinjauanulang->select('peninjauan_ulang_igd.*','kepegx.pegawai.nama')->with([
                     'tinjauanulangnips',
                     'tinjauanulangbps'
-                ]);
+                ])->leftjoin('kepegx.pegawai','kepegx.pegawai.kdpegsimrs','peninjauan_ulang_igd.user');
             },
             'konsuldokterspesialis' => function ($konsuldokterspesialis){
                 $konsuldokterspesialis->with(
