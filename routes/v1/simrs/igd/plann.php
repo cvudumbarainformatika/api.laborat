@@ -13,6 +13,7 @@ Route::group([
     Route::post('/simpanskalatransfer', [SkalaTransferIgd::class, 'simpan']);
 
     Route::post('/hapusskalatransfer', [SkalaTransferIgd::class, 'hapusskalatransfer']);
+    Route::post('/hapusplann', [PlannController::class, 'hapusplann']);
 
     Route::get('/suratkematian', [PlannController::class, 'suratkematian']);
 

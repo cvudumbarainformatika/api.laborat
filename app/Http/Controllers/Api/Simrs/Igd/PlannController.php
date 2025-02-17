@@ -257,4 +257,28 @@ class PlannController extends Controller
         $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->get();
         return new JsonResponse(['data' => $data] ,200);
     }
+
+    public function hapusplann(Request $request)
+    {
+        try{
+            DB::beginTransaction();
+            $id = $request->id;
+            $rs141 = Planing_Igd_Lama::find($id);
+            $plannranap= Planing_Igd_ranap::where('id_heder', $id);
+            $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $id);
+
+            $hapusrs141 = $rs141->delete();
+            $hapusrsplanranap = $plannranap->delete();
+            $hapusrsplanranapx = $Plann_Igd_Ranap_Ruang->delete();
+
+            DB::commit();
+
+            return new JsonResponse([
+                'message' => 'BERHASIL DIHAPUS'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['message' => 'ada kesalahan', 'error' => $e], 500);
+        }
+    }
 }
