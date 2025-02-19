@@ -9,5 +9,6 @@ Route::group([
     'prefix' => 'simrs/konsuldokter/igd'
 ],function () {
     Route::post('/simpandata', [KonsulDokterController::class, 'simpandata']);
+    Route::post('/hapusdata', [KonsulDokterController::class, 'hapusdata']);
 });
 
