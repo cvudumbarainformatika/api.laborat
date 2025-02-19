@@ -27,10 +27,10 @@ class NursenoteController extends Controller
         $pegawai = Petugas::find(auth()->user()->pegawai_id);
 
         $data = null;
-        if ($request->id === null) {
-          $data = new NurseNote();
-        } else {
+        if ($request->has('id')) {
           $data = NurseNote::find($request->id);
+        } else {
+          $data = new NurseNote();
         }
 
         $data->noreg = $request->noreg;
@@ -64,6 +64,7 @@ class NursenoteController extends Controller
         $data->produksigc = $request->produksigc;
         $data->pump = $request->pump;
         $data->ratio = $request->ratio;
+        $data->reseps = $request->reseps;
         $data->rr = $request->rr;
         $data->sis = $request->sis;
         $data->skor = $request->skor;
@@ -76,6 +77,19 @@ class NursenoteController extends Controller
         $data->water = $request->water;
         $data->zonde = $request->zonde;
         $data->user = $pegawai->kdpegsimrs;
+
+        $intake = (int)$request->infus + (int)$request->pump + (int)$request->obat + (int)$request->albumin + (int)$request->mamin + (int)$request->mamin + (int)$request->zonde + (int)$request->water ;
+        $output = (int)$request->urine + (int)$request->draine + (int)$request->muntah + (int)$request->feces + (int)$request->iwl + (int)$request->pendarahan + (int)$request->ufg + (int)$request->produksigc;
+        $balance = 'Balance';
+        if ((int)$intake > (int)$output) {
+          $balance = 'Excess';
+        } elseif ((int)$intake < (int)$output) {
+          $balance = 'Defisit';
+        } else {
+          $balance = 'Balance';
+        }
+        $data->balance = $balance;
+        $data->flag_balance = $request->flag_balance ?? null;
         $data->save();
 
 

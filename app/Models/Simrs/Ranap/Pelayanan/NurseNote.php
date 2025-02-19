@@ -16,13 +16,9 @@ class NurseNote extends Model
     protected $connection = 'mysql';
     protected $table = 'nurse_notes';
     protected $guarded = ['id'];
-    // protected $casts = [
-    //     'barthel' => 'array',
-    //     'norton' => 'array',
-    //     'humpty_dumpty' => 'array',
-    //     'morse_fall' => 'array',
-    //     'ontario' => 'array',
-    //   ];
+    protected $casts = [
+        'tindakan' => 'array',
+      ];
 
     public function petugas()
     {

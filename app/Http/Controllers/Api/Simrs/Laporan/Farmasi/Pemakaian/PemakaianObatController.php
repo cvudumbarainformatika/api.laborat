@@ -201,8 +201,8 @@ class PemakaianObatController extends Controller
                     $kel->select(
                         'retur_penjualan_r.kdobat',
                         'resep_keluar_h.sistembayar',
-                        DB::raw('sum(retur_penjualan_r.jumlah_keluar) as jumlah'),
-                        DB::raw('sum(retur_penjualan_r.jumlah_keluar * retur_penjualan_r.harga_jual) as subtotal'),
+                        DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah'),
+                        DB::raw('sum(retur_penjualan_r.jumlah_retur * retur_penjualan_r.harga_jual) as subtotal'),
                     )
                         ->leftJoin('retur_penjualan_h', 'retur_penjualan_h.noretur', '=', 'retur_penjualan_r.noretur')
                         ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'retur_penjualan_h.noresep')

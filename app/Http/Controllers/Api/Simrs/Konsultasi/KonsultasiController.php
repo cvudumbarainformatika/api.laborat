@@ -295,8 +295,8 @@ class KonsultasiController extends Controller
 				$pelayanan=0;
         $flag_biaya=$rsx->rs3;
 
-        $dokterRadiologi = $pegawai->jabatan === 'J00113';
-        $dokterPA = $pegawai->jabatan === 'J00111';
+        $dokterRadiologi = $pegawai->profesi === 'J00113';
+        $dokterPA = $pegawai->profesi === 'J00111';
 
         if ($dokterRadiologi || $dokterPA) {
           $sarana=0;
