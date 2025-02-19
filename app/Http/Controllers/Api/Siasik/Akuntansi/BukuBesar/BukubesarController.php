@@ -42,7 +42,7 @@ class BukubesarController extends Controller
         // $awal=request('tgl', 'Y'.'-'.'01-01');
         $awal=request('tgl', 'Y-m-d');
         $akhir=request('tglx', 'Y-m-d');
-        $sebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay();
+        $sebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay()->format('Y-m-d');
         $thnakhir=Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
         if($thn !== $thnakhir){
          return response()->json(['message' => 'Tahun Tidak Sama'], 500);
@@ -191,7 +191,7 @@ class BukubesarController extends Controller
         }])
         ->where('jurnal_postingotom.verif', '=', '1')
         ->whereBetween('jurnal_postingotom.tanggal', [$thn.'-01-01', $sebelum])
-        ->groupBy('tanggal', 'kode6')
+        // ->groupBy('tanggal', 'kode6')
         ->orderBy('kode6', 'ASC')
         ->get();
 
