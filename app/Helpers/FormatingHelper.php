@@ -245,4 +245,15 @@ class FormatingHelper
         }
         return date("y") . date("m") . date("d") . "/" . $has . $n . $kode;
     }
+
+    public static function nostp($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        $rom = array('','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII');
+        for ($i = 1; $i <= 6 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $has . $n  . '/' . $kode . '/' . $rom[date('n')] . '/' . date('Y');
+    }
 }

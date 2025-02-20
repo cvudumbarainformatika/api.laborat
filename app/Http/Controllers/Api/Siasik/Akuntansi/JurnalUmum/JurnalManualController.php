@@ -33,6 +33,7 @@ class JurnalManualController extends Controller
             ]
         )
         ->whereYear('tanggal', request('tahuncari'))
+        ->orderBy('tanggal','asc')
         ->get();
         return new JsonResponse($jurnal);
     }
