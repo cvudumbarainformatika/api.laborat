@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Igd;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -305,6 +306,11 @@ class IgdController extends Controller
         $input = new Request([
             'noreg' => $request->noreg
         ]);
+
+        $cekidentitas = Mpasien::where('rs1', $request->norm)->first();
+        if($cekidentitas->rs49 === '' || $cekidentitas->rs49 === null){
+            return new JsonResponse(['message' => 'Maaf Identitas Pasien Belum Lengkap, Hubungi Pendaftaran Pasien Untuk Melengkapi Identias Pasien...!!!'], 500);
+        }
 
         $user = Pegawai::find(auth()->user()->pegawai_id);
         if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
