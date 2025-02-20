@@ -824,4 +824,15 @@ class NPD_LSController extends Controller
             'data' => $data
         ]);
     }
+
+    public function updateuser(Request $request){
+    // INI UNTUK VERIF ALL //
+        // $time = date('Y-m-d H:i:s');
+        $data = BastKonsinyasi::where('flag_bayar', '=', '1')
+        ->update(['user_bayar' => '1619']);
+        // ->get();
+        // $datatime = Create_JurnalPosting::where('tglverif', '=', NULL)->update(['tglverif' => $time]);
+        return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', $data], 200);
+
+    }
 }
