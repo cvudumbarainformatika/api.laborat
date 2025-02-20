@@ -11,6 +11,10 @@ class JawabanKonsulPoli extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+    // protected $casts = [
+    //     'pertanyaan' => 'array',
+    //     'jawaban' => 'array',
+    // ];
     public function poliAsal()
     {
         return $this->belongsTo(Mpoli::class, 'poli_asal', 'rs1');
