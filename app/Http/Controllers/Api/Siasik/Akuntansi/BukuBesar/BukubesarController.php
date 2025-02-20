@@ -58,27 +58,41 @@ class BukubesarController extends Controller
             'jurnal_postingotom.uraian',
             'jurnal_postingotom.debit',
             'jurnal_postingotom.kredit',
-            'akun50_2024.uraian'
-            )->addSelect(
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
-                DB::raw('(jurnal_postingotom.debit-jurnal_postingotom.kredit) as subtotalx')
+            'akun50_2024.uraian',
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5) as kode5'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 1) LIMIT 1) as uraian1'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 2) LIMIT 1) as uraian2'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian3'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 4) LIMIT 1) as uraian4'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5) LIMIT 1) as uraian5'),
+
             )
+        ->when(request('rekenings'), function ($query) {
+            $query->where(function ($q)  {
+                $q->where(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 1)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 2)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 4)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5)'), '=', request('rekenings'))
+                ->orWhere('jurnal_postingotom.kode', '=', request('rekenings')); // Untuk kode6
+            });
+        })
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
-        ->with(['lvl1' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            }, 'lvl2' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl3' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl4' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl5' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        }])
+        // ->with(['lvl1' => function($sel){
+        //         $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //     }, 'lvl2' => function($sel){
+        //         $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //     },'lvl3' => function($sel){
+        //         $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //     },'lvl4' => function($sel){
+        //         $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        //     },'lvl5' => function($sel){
+        //         $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
+        // }])
         ->where('jurnal_postingotom.verif', '=', '1')
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->where(function($query){
@@ -104,26 +118,29 @@ class BukubesarController extends Controller
             'jurnalumum_rinci.debet as debit',
             'jurnalumum_rinci.kredit',
             'jurnalumum_rinci.jumlah',
-            'akun50_2024.uraian')
+            'akun50_2024.uraian',
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
+        ->when(request('rekenings'), function ($query) {
+            $query->where(function ($q)  {
+                $q->where(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5)'), '=', request('rekenings'))
+                ->orWhere('jurnalumum_rinci.kodepsap13', '=', request('rekenings')); // Untuk kode6
+            });
+        })
         ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
-        ->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
-        ->with(['lvl1' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            }, 'lvl2' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl3' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl4' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl5' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            }])
-
         ->where('jurnalumum_heder.verif', '=', '1')
         // ->where('jurnalumum_rinci.kodepsap13', request('level'))
 
@@ -136,28 +153,14 @@ class BukubesarController extends Controller
             'saldoawal.uraianpsap13 as uraian',
             'saldoawal.debit',
             'saldoawal.kredit',
-        )->addSelect(
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
-        ->join('akun50_2024', 'akun50_2024.kodeall3', 'saldoawal.kodepsap13')
-        ->with(['lvl1' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        }, 'lvl2' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        },'lvl3' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        },'lvl4' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        },'lvl5' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        }])
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 5) as kode5'))
         ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->orderBy('kode6', 'ASC')
         ->get();
-
 
 
         $sajurnalotom = Create_JurnalPosting::select(
@@ -166,32 +169,27 @@ class BukubesarController extends Controller
             'jurnal_postingotom.kegiatan',
             'jurnal_postingotom.keterangan',
             'jurnal_postingotom.kode as kode6',
-            'jurnal_postingotom.uraian',
+            'akun50_2024.uraian',
             'jurnal_postingotom.debit',
             'jurnal_postingotom.kredit',
-            'akun50_2024.uraian'
-            )->addSelect(
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5')
-            )
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5) as kode5'))
+        ->when(request('rekenings'), function ($query) {
+                $query->where(function ($q)  {
+                    $q->where(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 1)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 2)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 4)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5)'), '=', request('rekenings'))
+                    ->orWhere('jurnal_postingotom.kode', '=', request('rekenings')); // Untuk kode6
+                });
+            })
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
-        ->with(['lvl1' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            }, 'lvl2' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl3' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl4' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl5' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        }])
         ->where('jurnal_postingotom.verif', '=', '1')
         ->whereBetween('jurnal_postingotom.tanggal', [$thn.'-01-01', $sebelum])
-        // ->groupBy('tanggal', 'kode6')
         ->orderBy('kode6', 'ASC')
         ->get();
 
@@ -204,25 +202,25 @@ class BukubesarController extends Controller
             'jurnalumum_rinci.debet as debit',
             'jurnalumum_rinci.kredit',
             'jurnalumum_rinci.jumlah',
-            'akun50_2024.uraian')
+            'akun50_2024.uraian',
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'))
+        ->when(request('rekenings'), function ($query) {
+            $query->where(function ($q)  {
+                $q->where(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4)'), '=', request('rekenings'))
+                ->orWhere(DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5)'), '=', request('rekenings'))
+                ->orWhere('jurnalumum_rinci.kodepsap13', '=', request('rekenings')); // Untuk kode6
+            });
+        })
         ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
-        ->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
-        ->with(['lvl1' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            }, 'lvl2' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl3' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl4' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            },'lvl5' => function($sel){
-                $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-            }])
+
         ->where('jurnalumum_heder.verif', '=', '1')
         ->whereBetween('jurnalumum_heder.tanggal', [$thn.'-01-01', $sebelum])
         ->orderBy('kode6', 'ASC')
@@ -236,24 +234,23 @@ class BukubesarController extends Controller
             'saldoawal.uraianpsap13 as uraian',
             'saldoawal.debit',
             'saldoawal.kredit',
-        )->addSelect(
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-            DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'))
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 1) as kode1'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 2) as kode2'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 3) as kode3'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 4) as kode4'),
+            DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 5) as kode5'),
+        )
+        ->when(request('rekenings'), function ($query) {
+                $query->where(function ($q)  {
+                    $q->where(DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 1)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 2)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 3)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 4)'), '=', request('rekenings'))
+                    ->orWhere(DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 5)'), '=', request('rekenings'))
+                    ->orWhere('saldoawal.kodepsap13', '=', request('rekenings')); // Untuk kode6
+                });
+            })
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'saldoawal.kodepsap13')
-        ->with(['lvl1' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        }, 'lvl2' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        },'lvl3' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        },'lvl4' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        },'lvl5' => function($sel){
-            $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
-        }])
         ->whereBetween('saldoawal.tglentry', [$thn.'-01-01'. ' 00:00:00', $sebelum. ' 23:59:59'])
         ->get();
 
