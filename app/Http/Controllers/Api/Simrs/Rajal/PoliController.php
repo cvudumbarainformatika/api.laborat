@@ -577,7 +577,7 @@ class PoliController extends Controller
                         'rekomdpjp' => function ($q) {
                             $q->orderBy('id', 'DESC');
                         },
-                        'transrujukan',
+                        'transrujukan.diagnosa:rs1,rs4',
                         'listkonsul',
                         'spri',
                         'ranap',

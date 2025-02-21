@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Planing;
 
+use App\Models\Simrs\Master\Diagnosa_m;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Rajal\WaktupulangPoli;
@@ -33,5 +34,9 @@ class Transrujukan extends Model
     public function rs141()
     {
         return $this->hasOne(WaktupulangPoli::class, 'rs1', 'rs1');
+    }
+    public function diagnosa()
+    {
+        return $this->hasOne(Diagnosa_m::class, 'rs1', 'rs10');
     }
 }
