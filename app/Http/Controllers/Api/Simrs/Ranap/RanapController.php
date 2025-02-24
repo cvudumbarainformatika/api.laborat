@@ -388,8 +388,8 @@ class RanapController extends Controller
                 'newapotekrajal' => function ($q) {
                     $q->with([
                         'dokter:nama,kdpegsimrs',
-                        'permintaanresep.mobat:kd_obat,nama_obat',
-                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                        'permintaanresep.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
                         'sistembayar'
                     ])
                         ->where('ruangan', '!=', 'POL014')

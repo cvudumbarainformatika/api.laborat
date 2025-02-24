@@ -3274,6 +3274,12 @@ class AutogenController extends Controller
         return $data;
     }
 
+
+    public function cari_dokter()
+    {
+        return BridgingbpjsHelper::get_url('antrean', 'jadwaldokter/kodepoli/' . request('kodepoli') . "/tanggal/" . request('tanggal'));
+    }
+
     public function bpjsCoba()
     {
         $rujukan = '1327R0010125B000006';
