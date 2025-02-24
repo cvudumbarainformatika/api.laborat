@@ -364,6 +364,7 @@ class PlaningController extends Controller
                 'kdpoli_asal' => $request->kdpoli_asal,
                 'kdpoli_tujuan' => $request->kdpoli_tujuan,
                 'kddokter_asal' => $request->kddokter_asal,
+                'keterangan' => $request->ket ?? '',
                 'flag' => '1',
             ]
         );
