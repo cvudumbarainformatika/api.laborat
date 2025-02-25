@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\IndikasiObat;
@@ -10,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 use function PHPUnit\Framework\isEmpty;
 
@@ -101,14 +103,18 @@ class ObatnewController extends Controller
 
     public function list()
     {
-
+        // return new JsonResponse(request()->all());
         $list = Mobatnew::with('mkelasterapi', 'indikasi')
             ->where(function ($list) {
                 $list->where('nama_obat', 'Like', '%' . request('q') . '%')
                     ->orWhere('merk', 'Like', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'Like', '%' . request('q') . '%')
                     ->orWhere('kandungan', 'Like', '%' . request('q') . '%');
-            })->orderBy('id', 'desc')
+            })
+            ->when(request('status_prb') == 'true', function ($q) {
+                $q->where('status_prb', '1');
+            })
+            ->orderBy('id', 'desc')
             ->where('flag', '')
             ->paginate(request('per_page'));
 
@@ -176,5 +182,44 @@ class ObatnewController extends Controller
         }
         $data->delete();
         return new JsonResponse(['message' => 'Indikasi dihapus'], 200);
+    }
+
+    public function mapingBpjs()
+    {
+
+        $raw = BridgingbpjsHelper::get_url('vclaim', 'referensi/obatprb/' . request('q'));
+        $data = [];
+        if ($raw['metadata']['code'] == '200') {
+            $data = $raw['result']->list;
+        }
+
+        // return new JsonResponse($data);
+        return new JsonResponse([
+            'raw' => $raw,
+            'data' => $data,
+        ]);
+    }
+    public function insertMapingBpjs(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'kode_bpjs' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            // return new JsonResponse(['status' => false, 'message' => $validator->errors()], 422);
+            return new JsonResponse($validator->errors(), 422);
+        }
+        $data = Mobatnew::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan',
+                'request' => $request->all(),
+            ], 410);
+        }
+
+        $data->kode_bpjs = $request->kode_bpjs;
+        $data->save();
+        return new JsonResponse($data);
     }
 }
