@@ -38,7 +38,7 @@ class PlannController extends Controller
     //             'result' => $data
     //         ],
     //     200);
-
+        //return $request->kelas;
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
         $kdgroupnakes = $wew['kdgroupnakes'];
@@ -91,16 +91,17 @@ class PlannController extends Controller
                     ]
                 );
                 $isi = json_encode($request->isi);
-
-                $simpansampungranap = Plann_Igd_Ranap_Ruang::create(
-                    [
-                        'noreg' => $request->noreg,
-                        'norm' => $request->norm,
-                        'id_heder' => $simpansambung['id'] ?? '',
-                        'isi' => $isi,
-                        'kelas' => $request->kelas
-                    ]
-                );
+                if($request->kelas !== 'null'){
+                    $simpansampungranap = Plann_Igd_Ranap_Ruang::create(
+                        [
+                            'noreg' => $request->noreg,
+                            'norm' => $request->norm,
+                            'id_heder' => $simpansambung['id'] ?? '',
+                            'isi' => $isi,
+                            'kelas' => $request->kelas
+                        ]
+                    );
+                }
             }else if($request->panel === 'Rujuk Ke Rumah Sakit Lain')
             {
 
@@ -254,7 +255,7 @@ class PlannController extends Controller
 
     public function indikasimasuknicuinter()
     {
-        $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->get();
+        $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->limit(1)->get();
         return new JsonResponse(['data' => $data] ,200);
     }
 
@@ -264,8 +265,8 @@ class PlannController extends Controller
             DB::beginTransaction();
             $id = $request->id;
             $rs141 = Planing_Igd_Lama::find($id);
-            $plannranap= Planing_Igd_ranap::where('id_heder', $id);
-            $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $id);
+            $plannranap= Planing_Igd_ranap::where('id_heder', $id)->first();
+            $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $plannranap['id']);
 
             $hapusrs141 = $rs141->delete();
             $hapusrsplanranap = $plannranap->delete();
