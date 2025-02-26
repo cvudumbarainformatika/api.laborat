@@ -18,6 +18,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PengembalianRinciFifo;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudangDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
@@ -319,5 +320,10 @@ class Mobatnew extends Model
     public function returpbf()
     {
         return $this->hasMany(Returpbfrinci::class, 'kd_obat', 'kd_obat');
+    }
+
+    public function pengembalianrincififo()
+    {
+        return $this->hasMany(PengembalianRinciFifo::class, 'kdobat', 'kd_obat');
     }
 }
