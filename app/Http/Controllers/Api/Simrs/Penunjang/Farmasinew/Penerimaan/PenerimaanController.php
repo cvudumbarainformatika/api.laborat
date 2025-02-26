@@ -470,6 +470,7 @@ class PenerimaanController extends Controller
                 $nopenerimaan = $request->nopenerimaan;
             }
             $user = FormatingHelper::session_user();
+            $tglPenerimaan = date('Y-m-d', strtotime($request->tglpenerimaan)) . ' ' . date('H:i:s');
             $simpanheder = PenerimaanHeder::updateorcreate(
                 [
                     'nopenerimaan' => $nopenerimaan,
@@ -478,7 +479,8 @@ class PenerimaanController extends Controller
                 ],
                 [
                     //'nopemesanan' => $request->nopemesanan,
-                    'tglpenerimaan' => $request->tglpenerimaan,
+                    // 'tglpenerimaan' => $request->tglpenerimaan,
+                    'tglpenerimaan' => $tglPenerimaan,
                     'pengirim' => $request->pengirim,
                     'tglsurat' => $request->tglsurat,
                     //'batasbayar' => $request->batasbayar,

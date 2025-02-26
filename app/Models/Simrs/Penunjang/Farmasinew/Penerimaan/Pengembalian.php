@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengembalian extends Model
 {
+    // ini header pengembalian
     use HasFactory;
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
