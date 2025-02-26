@@ -38,7 +38,7 @@ class PlannController extends Controller
     //             'result' => $data
     //         ],
     //     200);
-
+        //return $request->kelas;
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
         $kdgroupnakes = $wew['kdgroupnakes'];
@@ -91,16 +91,17 @@ class PlannController extends Controller
                     ]
                 );
                 $isi = json_encode($request->isi);
-
-                $simpansampungranap = Plann_Igd_Ranap_Ruang::create(
-                    [
-                        'noreg' => $request->noreg,
-                        'norm' => $request->norm,
-                        'id_heder' => $simpansambung['id'] ?? '',
-                        'isi' => $isi,
-                        'kelas' => $request->kelas
-                    ]
-                );
+                if($request->kelas !== 'null'){
+                    $simpansampungranap = Plann_Igd_Ranap_Ruang::create(
+                        [
+                            'noreg' => $request->noreg,
+                            'norm' => $request->norm,
+                            'id_heder' => $simpansambung['id'] ?? '',
+                            'isi' => $isi,
+                            'kelas' => $request->kelas
+                        ]
+                    );
+                }
             }else if($request->panel === 'Rujuk Ke Rumah Sakit Lain')
             {
 
