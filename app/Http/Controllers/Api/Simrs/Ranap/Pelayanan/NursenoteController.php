@@ -90,6 +90,7 @@ class NursenoteController extends Controller
         }
         $data->balance = $balance;
         $data->flag_balance = $request->flag_balance ?? null;
+        $data->flag = $request->flag ?? null;
         $data->save();
 
 

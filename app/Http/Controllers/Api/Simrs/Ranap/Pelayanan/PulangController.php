@@ -121,6 +121,16 @@ class PulangController extends Controller
           'rs25' => $request->diagnosaPenyebabMeninggal ?? '',
           'rs27' => $request->tindakLanjut ?? ''
         ]);
+
+        Rs23Sambung::updateOrCreate(
+          ['noreg' => $request->noreg],
+          [
+            'ket' => $request->tindakLanjut
+          ]
+          );
+
+
+
       }
 
        if (!$updateKunjunganRanap) {

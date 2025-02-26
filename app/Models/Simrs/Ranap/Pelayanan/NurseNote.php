@@ -18,6 +18,8 @@ class NurseNote extends Model
     protected $guarded = ['id'];
     protected $casts = [
         'tindakan' => 'array',
+        'reseps' => 'array',
+        'flag' => 'array',
       ];
 
     public function petugas()

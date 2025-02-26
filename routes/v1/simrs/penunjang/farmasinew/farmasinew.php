@@ -58,6 +58,10 @@ Route::group([
     Route::post('/hapus-maping-terapi', [ObatnewController::class, 'hapusMapingTerapi']);
     // hapus maping indikasi
     Route::post('/hapus-maping-indikasi', [ObatnewController::class, 'hapusMapingIndikasi']);
+    // maping obat bpjs
+    Route::get('/maping-bpjs', [ObatnewController::class, 'mapingBpjs']);
+    Route::post('/insert-maping-bpjs', [ObatnewController::class, 'insertMapingBpjs']);
+
 
     Route::post('/simpanmerk', [MerkController::class, 'simpan']);
     Route::post('/hapusmerk', [MerkController::class, 'hapus']);

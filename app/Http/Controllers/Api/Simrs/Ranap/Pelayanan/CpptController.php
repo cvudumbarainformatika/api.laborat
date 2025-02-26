@@ -273,7 +273,7 @@ class CpptController extends Controller
           }
          
         
-        //   return $rsx;
+          //   return $rsx;
           if (!$rsx) {
             $sarana=0;
             $pelayanan=0;
@@ -301,7 +301,26 @@ class CpptController extends Controller
 					}else if($request->kelas_ruangan=="VVIP"){
 						$sarana=$rsx->rs16;
 						$pelayanan=$rsx->rs17;
-					}	
+					}	else if ($request->kelas_ruangan == "HCU") {
+
+
+            $hakKelas = $request->hak_kelas;
+            if ($hakKelas === '1') {
+                $sarana = $rsx->rs10;
+                $pelayanan = $rsx->rs11;
+            } else if($hakKelas === '2'){
+                $sarana = $rsx->rs8;
+                $pelayanan = $rsx->rs9;
+            } else if($hakKelas === '3'){
+                $sarana = $rsx->rs6;
+                $pelayanan = $rsx->rs7;
+            }
+          } else if ($request->kelas_ruangan == "PS") {
+
+              $sarana = $rsx->pss;
+              $pelayanan = $rsx->psp;
+              
+          }
         } else {
 
           //select * from rs30tarif where (rs3='V1#
@@ -345,7 +364,26 @@ class CpptController extends Controller
 					}else if($request->kelas_ruangan==="VVIP"){
 						$sarana=$rsx->rs16;
 						$pelayanan=$rsx->rs17;
-					}	
+					}	else if ($request->kelas_ruangan == "HCU") {
+
+
+            $hakKelas = $request->hak_kelas;
+            if ($hakKelas === '1') {
+                $sarana = $rsx->rs10;
+                $pelayanan = $rsx->rs11;
+            } else if($hakKelas === '2'){
+                $sarana = $rsx->rs8;
+                $pelayanan = $rsx->rs9;
+            } else if($hakKelas === '3'){
+                $sarana = $rsx->rs6;
+                $pelayanan = $rsx->rs7;
+            }
+          } else if ($request->kelas_ruangan == "PS") {
+
+              $sarana = $rsx->pss;
+              $pelayanan = $rsx->psp;
+              
+          }
         }
 
         $tarif = (int) $sarana + (int) $pelayanan;

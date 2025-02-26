@@ -50,6 +50,7 @@ class RanapController extends Controller
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
             'rs23.rs10 as kodedokter',
+            'rs23.rs38 as hak_kelas',
             // 'rs23.titipan',
             // 'rs21.rs2 as dokter',
             'kepegx.pegawai.nama as dokter',
@@ -217,6 +218,7 @@ class RanapController extends Controller
             'rs23.rs7 as nomorbed',
             'rs23.rs10 as kddokter',
             'rs23.rs10 as kodedokter',
+            'rs23.rs38 as hak_kelas',
             // 'rs23.titipan',
             'kepegx.pegawai.nama as dokter',
             'rs23.rs19 as kdsistembayar',
@@ -388,8 +390,8 @@ class RanapController extends Controller
                 'newapotekrajal' => function ($q) {
                     $q->with([
                         'dokter:nama,kdpegsimrs',
-                        'permintaanresep.mobat:kd_obat,nama_obat',
-                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                        'permintaanresep.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
                         'sistembayar'
                     ])
                         ->where('ruangan', '!=', 'POL014')
