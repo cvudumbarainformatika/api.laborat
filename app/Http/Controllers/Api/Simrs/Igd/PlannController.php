@@ -254,7 +254,7 @@ class PlannController extends Controller
 
     public function indikasimasuknicuinter()
     {
-        $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->get();
+        $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->limit(1)->get();
         return new JsonResponse(['data' => $data] ,200);
     }
 
@@ -264,8 +264,8 @@ class PlannController extends Controller
             DB::beginTransaction();
             $id = $request->id;
             $rs141 = Planing_Igd_Lama::find($id);
-            $plannranap= Planing_Igd_ranap::where('id_heder', $id);
-            $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $id);
+            $plannranap= Planing_Igd_ranap::where('id_heder', $id)->first();
+            $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $plannranap['id']);
 
             $hapusrs141 = $rs141->delete();
             $hapusrsplanranap = $plannranap->delete();
