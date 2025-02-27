@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\Simrs\Ranap\Pelayanan\Cppt;
+use App\Models\Simrs\Visite\Visite;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -199,8 +201,12 @@ class PercobaanController extends Controller
 
     public function updateTable()
     {
-       $cppt = Cppt::where('user','D907')->update([
-            'user' => 'D899']);
-        echo $cppt;
+        $data = Visite::where('rs2', 'LIKE', '%2025-02%')
+        ->where('rs4','=', 0)
+        ->where('rs6','=','K5#')
+        ->where('rs8','=','SKR')
+        ->get();
+
+        return response()->json($data);
     }
 }

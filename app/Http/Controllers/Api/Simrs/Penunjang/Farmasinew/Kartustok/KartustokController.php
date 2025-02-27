@@ -276,6 +276,19 @@ class KartustokController extends Controller
                         ->whereBetween('retur_penyedia_h.tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('retur_penyedia_h.kunci', '1')
                         ->groupBy('retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang');
+                },
+                // pengembalian pinjaman
+                'pengembalianrincififo' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'pengembalian_rinci_fifos.kdobat',
+                        'pengembalians.tgl_kunci',
+                        DB::raw('sum(pengembalian_rinci_fifos.jml_dikembalikan) as jumlah')
+                    )
+                        ->leftJoin('pengembalians', 'pengembalians.nopengembalian', '=', 'pengembalian_rinci_fifos.nopengembalian')
+                        ->where('pengembalians.kdruang', request('koderuangan'))
+                        ->whereBetween('pengembalians.tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('pengembalians.flag', '1')
+                        ->groupBy('pengembalian_rinci_fifos.kdobat', 'pengembalians.kdruang');
                 }
 
             ])
@@ -577,6 +590,21 @@ class KartustokController extends Controller
                         ->where('retur_penyedia_h.kunci', '1')
                         ->groupBy('retur_penyedia_r.kd_obat', 'retur_penyedia_h.gudang', 'retur_penyedia_h.no_retur');
                 },
+
+                // pengembalian pinjaman
+                'pengembalianrincififo' => function ($ru) use ($tglAwal, $tglAkhir) {
+                    $ru->select(
+                        'pengembalian_rinci_fifos.kdobat',
+                        'pengembalians.tgl_kunci',
+                        'pengembalians.nopengembalian',
+                        DB::raw('sum(pengembalian_rinci_fifos.jml_dikembalikan) as jumlah')
+                    )
+                        ->leftJoin('pengembalians', 'pengembalians.nopengembalian', '=', 'pengembalian_rinci_fifos.nopengembalian')
+                        ->where('pengembalians.kdruang', request('koderuangan'))
+                        ->whereBetween('pengembalians.tgl_kunci', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('pengembalians.flag', '1')
+                        ->groupBy('pengembalian_rinci_fifos.kdobat', 'pengembalians.kdruang', 'pengembalians.nopengembalian');
+                }
 
 
             ])

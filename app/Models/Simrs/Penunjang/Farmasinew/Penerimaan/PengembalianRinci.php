@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PengembalianRinci extends Model
 {
+    // ini rincian permintaan pengembalian, tujuan nya mencatatkan rinci penerimaan mana yang akan di kembalikan
     use HasFactory;
     protected $guarded = ['id'];
     protected $connection = 'farmasi';

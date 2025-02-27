@@ -25,8 +25,11 @@ class TindakanController extends Controller
             'rs30.rs2 as tindakan',
             'rs30.rs8 as sarana',
             'rs30.rs9 as pelayanan',
+            'rs30.pss as pss',
+            'rs30.psp as psp',
             'rs30.rs51 as flaghari',
             DB::raw('rs30.rs8 + rs30.rs9 as tarif'),
+            DB::raw('rs30.pss + rs30.psp as tarifps'),
             'prosedur_mapping.icd9',
             'rs30.rs4 as kdpoli'
         )

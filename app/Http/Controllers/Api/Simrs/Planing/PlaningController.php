@@ -408,9 +408,14 @@ class PlaningController extends Controller
     public static function updateNoregJawabanKonsul($head)
     {
         $simpan = JawabanKonsulPoli::where('rs141_id', $head['rs141_id'])
-            ->update([
-                'noreg_baru' => $head['noreg']
-            ]);
+            ->first();
+        if (!$simpan) {
+            info('gagal update noreg jawaban konsul');
+        }
+        $simpan->update([
+            'noreg_baru' => $head['noreg']
+        ]);
+        info('sukses update noreg jawaban konsul' . $simpan);
         return $simpan ?? false;
     }
     public static function updateDibaca(Request $request)
