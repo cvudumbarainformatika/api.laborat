@@ -471,7 +471,7 @@ class PersediaanFiFoController extends Controller
                     ->havingRaw('jumlah > 0')
                     ->where('pengembalians.tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
                     ->with(
-                        'header.pihakketiga:kode,nama',
+                        'header.penyedia:kode,nama',
                     );
                 if (request('jenis') === 'rekap') {
                     $kel->groupBy('pengembalian_rinci_fifos.kdobat');
