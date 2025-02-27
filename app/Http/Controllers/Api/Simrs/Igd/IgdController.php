@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Igd;
 
+use App\Http\Controllers\Api\Simrs\Syarat\CekController;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpasien;
@@ -307,11 +308,18 @@ class IgdController extends Controller
             'noreg' => $request->noreg
         ]);
 
-        $cekidentitas = Mpasien::where('rs1', $request->norm)->first();
-        if($cekidentitas->rs49 === '' || $cekidentitas->rs49 === null){
+        // $cekidentitas = Mpasien::where('rs1', $request->norm)->first();
+        // if($cekidentitas->rs49 === '' || $cekidentitas->rs49 === null){
+        //     return new JsonResponse(['message' => 'Maaf Identitas Pasien Belum Lengkap, Hubungi Pendaftaran Pasien Untuk Melengkapi Identias Pasien...!!!'], 500);
+        // }
+        $cekidentitas = CekController::ceknoktp($request->norm);
+        if($cekidentitas === '1'){
             return new JsonResponse(['message' => 'Maaf Identitas Pasien Belum Lengkap, Hubungi Pendaftaran Pasien Untuk Melengkapi Identias Pasien...!!!'], 500);
         }
-
+        $cekplan = CekController::cekplan($request->noreg);
+        if($cekplan === '1'){
+            return new JsonResponse(['message' => 'Maaf Form Planing Belum Diisi...!!!'], 500);
+        }
         $user = Pegawai::find(auth()->user()->pegawai_id);
         if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
             $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs8','POL014')->first();
