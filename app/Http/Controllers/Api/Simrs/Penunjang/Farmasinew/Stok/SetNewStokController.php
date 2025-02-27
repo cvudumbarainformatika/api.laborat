@@ -20,6 +20,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PengembalianRinciFifo;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\ReturGudang;
@@ -569,8 +570,23 @@ class SetNewStokController extends Controller
                     ->get();
                 $returPbf = collect($returPbfRinci)->sum('jumlah');
 
+                $pengembalianPinjamanRinci = PengembalianRinciFifo::select(
+                    'pengembalian_rinci_fifos.kdobat',
+                    'pengembalian_rinci_fifos.nopenerimaan',
+                    DB::raw('sum(pengembalian_rinci_fifos.jml_dikembalikan) as jumlah')
+                )
+                    ->leftJoin('pengembalians', 'pengembalians.nopengembalian', '=', 'pengembalian_rinci_fifos.nopengembalian')
+                    ->where('pengembalians.kdruang', $koderuangan)
+                    ->where('pengembalians.tgl_kunci', 'LIKE', '%' . $x . '%')
+                    ->where('pengembalian_rinci_fifos.kdobat', $kdobat)
+                    ->where('pengembalians.flag', '1')
+                    ->groupBy('pengembalian_rinci_fifos.nopenerimaan', 'pengembalian_rinci_fifos.kdobat', 'pengembalians.kdruang')
+                    ->get();
+                $pengembalianPinj = collect($pengembalianPinjamanRinci)->sum('jumlah');
+
                 $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)->first();
+
                 $tts = $totalStok->jumlah ?? 0;
                 $sal = $saldoAwal ?? 0;
                 $peny = $penyesuaian ?? 0;
@@ -580,15 +596,15 @@ class SetNewStokController extends Controller
                 $rus = $rusak ?? 0;
                 $retG = $returGudang ?? 0;
                 $retPbf = $returPbf ?? 0;
+                $pengPinj = $pengembalianPinj ?? 0;
                 $masuk = (float)$sal + (float)$peny + (float)$trm + (float)$mutma + (float)$retG;
-                $keluar = (float)$mutkel + (float)$rus + (float)$retPbf;
+                $keluar = (float)$mutkel + (float)$rus + (float)$retPbf + (float)$pengPinj;
                 $sisa = (float)$masuk - (float)$keluar;
 
                 // cek rincian
                 $stok = FarmasinewStokreal::lockForUpdate()
                     ->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)
-                    ->orderBy('tglexp', 'DESC')
                     ->orderBy('tglpenerimaan', 'DESC')
                     ->get();
                 $nopeSt = [];
@@ -614,6 +630,9 @@ class SetNewStokController extends Controller
                     $nopeSt[] = $key->nopenerimaan;
                 }
                 foreach ($returPbfRinci as $key) {
+                    $nopeSt[] = $key->nopenerimaan;
+                }
+                foreach ($pengembalianPinjamanRinci as $key) {
                     $nopeSt[] = $key->nopenerimaan;
                 }
                 $uniNopeSt = array_unique($nopeSt);
@@ -650,10 +669,11 @@ class SetNewStokController extends Controller
                             // keluar
                             $mutKel =  collect($mutasiKeluarRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                             $rus =  collect($rusakRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                            $retPbf =  collect($returPbfRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                            $retPbfx =  collect($returPbfRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
+                            $pengPinjx =  collect($pengembalianPinjamanRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
 
                             $maSuk = (float) $salAwal + (float) $mutMas + (float) $peny + (float) $retGu + (float)$trm;
-                            $keLuar = (float)$mutKel + (float)$rus + (float)$retPbf;
+                            $keLuar = (float)$mutKel + (float)$rus + (float)$retPbfx + (float)$pengPinjx;
                             $sisanya = $maSuk - $keLuar;
 
                             if ($sisanya > 0) {
@@ -685,91 +705,8 @@ class SetNewStokController extends Controller
                             // $anumas = $tmpkel;
 
                         }
-                        // masuk
-                        // if (sizeof($penerimaanRinci) > 0) {
-                        //     foreach ($penerimaanRinci as $trm) {
-                        //         $mutKelNya = collect($mutasiKeluarRinci)
-                        //             ->where('kdobat', $trm->kdobat)
-                        //             ->where('nopenerimaan', $trm->nopenerimaan)
-                        //             ->first();
-                        //         // error jumlah of non object
-                        //         $mu =  0;
-                        //         if ($mutKelNya) $mu = (float)$mutKelNya->jumlah;
-                        //         $sisaTrm = (float)$trm->jumlah - $mu;
-                        //         $sisaTrm = (float)$trm->jumlah - $mu;
-                        //         if ($sisaTrm > 0) {
-                        //             $stokNya = collect($stok)
-                        //                 ->where('kdobat', $trm->kdobat)
-                        //                 ->where('nopenerimaan', $trm->nopenerimaan)
-                        //                 ->first();
-                        //             if ((float)$sisaTrm >= (float)$ada) {
-                        //                 $sisaJumlah = 0;
-                        //                 $stokNya->update(['jumlah' => $ada]);
-                        //             } else if ((float)$ada > 0) {
-                        //                 $sisaJumlah = (float)$ada - (float) $sisaTrm;
-                        //                 $stokNya->update(['jumlah' => $sisaTrm]);
-                        //             }
-
-                        //             $ada = $sisaJumlah;
-                        //         }
-                        //         $temp = [
-                        //             'mutKelNya' => $mutKelNya ?? [],
-                        //             'trm' => $trm ?? null,
-                        //             'sisaTrm' => $sisaTrm ?? 0,
-                        //             'stokNya' => $stokNya ?? null,
-                        //             'sisaJumlah' => $sisaJumlah ?? null,
-                        //             'ada' => $ada ?? null,
-                        //             // 'saldoAwalRinci' => $saldoAwalRinci,
-                        //         ];
-                        //         $ret[] = $temp;
-                        //     }
-                        // }
-                        // foreach ($saldoAwalRinci as $awl) {
-                        //     $mutKelNya = collect($mutasiKeluarRinci)
-                        //         ->where('kdobat', $awl->kdobat)
-                        //         ->where('nopenerimaan', $awl->nopenerimaan)
-                        //         ->first();
-                        //     $mu =  0;
-                        //     if ($mutKelNya) $mu = (float)$mutKelNya->jumlah;
-                        //     $sisaTrm = (float)$trm->jumlah - $mu;
-                        //     if ($sisaTrm > 0) {
-                        //         $stokNya = collect($stok)
-                        //             ->where('kdobat', $awl->kdobat)
-                        //             ->where('nopenerimaan', $awl->nopenerimaan)
-                        //             ->first();
-                        //         if ((float)$sisaTrm >= (float)$ada) {
-                        //             $sisaJumlah = 0;
-                        //             $stokNya->update(['jumlah' => $ada]);
-                        //         } else if ((float)$ada > 0) {
-                        //             $sisaJumlah = (float)$ada - (float) $sisaTrm;
-                        //             $stokNya->update(['jumlah' => $sisaTrm]);
-                        //         }
-
-                        //         $ada = $sisaJumlah;
-                        //     }
-                        //     $temp = [
-                        //         'mutKelNya' => $mutKelNya ?? [],
-                        //         'awl' => $awl ?? null,
-                        //         'sisaTrm' => $sisaTrm ?? 0,
-                        //         'stokNya' => $stokNya ?? null,
-                        //         'sisaJumlah' => $sisaJumlah ?? null,
-                        //         'ada' => $ada ?? null,
-                        //         // 'saldoAwalRinci' => $saldoAwalRinci,
-                        //     ];
-                        //     $ret[] = $temp;
-                        // }
                         $message = 'Cek Stok Gudang selesai, Stok sudah di update';
                     }
-
-                    // $temp = [
-                    //     'mutKelNya' => $mutKelNya ?? [],
-                    //     'trm' => $trm ?? null,
-                    //     'sisaTrm' => $sisaTrm ?? 0,
-                    //     'stokNya' => $stokNya ?? null,
-                    //     'sisaJumlah' => $sisaJumlah ?? null,
-                    //     'saldoAwalRinci' => $saldoAwalRinci,
-                    // ];
-                    // $ret[] = $temp;
 
 
                     if ($sisa == 0) {
