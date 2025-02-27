@@ -8,6 +8,6 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/ranap/layanan/tindakan'
 ], function () {
-    Route::post('/simpantindakanranap', [TindakanController::class, 'simpantindakanranap']);
+    Route::post('/simpantindakanranap', [TindakanController::class, 'simpantindakanranap']); 
     Route::get('/listtindakanranap', [TindakanController::class, 'getTindakanRanap']); // fixed
 });
