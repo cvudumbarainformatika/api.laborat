@@ -255,7 +255,16 @@ class PlannController extends Controller
 
     public function indikasimasuknicuinter()
     {
-        $data = plann_igd_ranap_ruang::where('noreg', request('noreg'))->limit(1)->get();
+        $data = Planing_Igd_Lama::with(
+            [
+                'planranap' => function($plannranap){
+                    $plannranap->with([
+                        'dokumentransfer'
+                    ]);
+                }
+            ]
+        )
+        ->where('rs1', request('noreg'))->get();
         return new JsonResponse(['data' => $data] ,200);
     }
 
