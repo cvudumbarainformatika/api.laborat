@@ -781,6 +781,7 @@ class PoliController extends Controller
 
 
 
+        // $konsulan = KunjunganPoli::where('rs4', $request->noreg)->where('rs14','!=', 'UMUM')->count();
         $konsulan = KunjunganPoli::where('rs4', $request->noreg)->count();
         if ($konsulan > 0) {
             return new JsonResponse(['message' => 'Pasien sudah pernah di konsulkan oleh poli ini hari ini'], 500);

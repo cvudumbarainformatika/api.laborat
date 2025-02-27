@@ -1715,6 +1715,7 @@ class SetNewStokController extends Controller
             'req' => $request->all(),
         ]);
     }
+
     public function frontPerbaikanDataOpname(Request $request)
     {
         $data = [];
