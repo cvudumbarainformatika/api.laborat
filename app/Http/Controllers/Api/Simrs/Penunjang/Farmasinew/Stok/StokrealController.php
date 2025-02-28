@@ -290,7 +290,7 @@ class StokrealController extends Controller
                 $x->where('nama_obat', 'like', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'like', '%' . request('q') . '%');
             })
-            ->when(count($sm) > 0, function ($q) use ($sm) {
+            ->when(count($sm) > 0 && $now != date('Y-m', strtotime(request('from'))), function ($q) use ($sm) {
                 $q->whereIn('kd_obat', $sm);
             })
             ->orderBy('nama_obat', 'ASC')
@@ -301,6 +301,8 @@ class StokrealController extends Controller
         $data['meta'] = $raw->except('data');
         $data['now'] = date('Y-m-d H:i:s');
         $data['nowx'] = $now;
+        $data['sm'] = $sm;
+        $data['cond'] = $now != date('Y-m', strtotime(request('from')));
         // $data['stokreal'] = $stokreal;
 
         return new JsonResponse($data);
