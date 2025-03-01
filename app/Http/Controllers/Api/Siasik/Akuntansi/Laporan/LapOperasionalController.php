@@ -110,6 +110,23 @@ class LapOperasionalController extends Controller
         ->where('jurnal_postingotom.kode', 'LIKE', '4.1.04.16' . '%')
         ->get();
 
+        $psappendpatanhibah = JurnalUmum_Header::select(
+            'jurnalumum_rinci.uraianpsap13 as uraian',
+            'jurnalumum_rinci.kredit as realisasix',
+            'jurnalumum_heder.keterangan',
+            'jurnalumum_rinci.kodepsap13 as kode',
+        )
+        // ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+        // ->whereNotIn('jurnalumum_heder.keterangan', ['Reklas Pendapatan'])
+        ->whereNotNull('jurnalumum_rinci.kredit')
+        ->where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->leftJoin('jurnalumum_rinci', function($join)  {
+            $join->on('jurnalumum_rinci.nobukti', '=', 'jurnalumum_heder.nobukti')
+            ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.3.01' . '%');
+          })
+        ->get();
+
         $psaprealisasipendapatanx = JurnalUmum_Header::select(
             'jurnalumum_heder.nobukti',
             'jurnalumum_heder.tanggal',
@@ -131,16 +148,21 @@ class LapOperasionalController extends Controller
         $psappenyesuaianpendp = JurnalUmum_Header::select(
             'jurnalumum_rinci.uraianpsap13 as uraian',
             'jurnalumum_rinci.debet as nilaix',
+            'jurnalumum_heder.keterangan',
+            'jurnalumum_rinci.kodepsap13',
         )
         ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan' . '%')
+        // ->whereNotIn('jurnalumum_heder.keterangan', ['Reklas Pendapatan'])
+        ->whereNotNull('jurnalumum_rinci.debet')
         ->where('jurnalumum_heder.verif', '=', '1')
         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
         ->leftJoin('jurnalumum_rinci', function($join)  {
             $join->on('jurnalumum_rinci.nobukti', '=', 'jurnalumum_heder.nobukti')
-            ->where('jurnalumum_rinci.kodepsap13', '=', '4.1.04.16.02.0001')
-            ;
+            ->where('jurnalumum_rinci.kodepsap13', '=', '4.1.04.16.02.0001');
           })
         ->get();
+
+
 
         $psapbebanpegawai = Akun50_2024::select('akun50_2024.kodeall2',
         'akun50_2024.uraian', 'akun50_2024.kodeall3',
@@ -369,6 +391,7 @@ class LapOperasionalController extends Controller
             'pendapatan' => $pendapatan,
             'psaprealisasipendapatan' => $psaprealisasipendapatan,
             'psaprealisasipendapatanx' => $psaprealisasipendapatanx,
+            'psappendpatanhibah' => $psappendpatanhibah,
             'psappenyesuaianpendp' => $psappenyesuaianpendp,
             'psapbebanpegawai' => $psapbebanpegawai,
             'psapbebanlain' => $psapbebanlain,

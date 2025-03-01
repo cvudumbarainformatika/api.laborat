@@ -7,6 +7,7 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -73,5 +74,17 @@ class PenerimaanHeder extends Model
     public function pemeseanan_heder()
     {
         return $this->hasOne(PemesananHeder::class,'nopemesanan', 'nopemesanan');
+    }
+
+    public function newMasterobat()
+    {
+        return $this->hasManyThrough(
+            Mobatnew::class, // Model tujuan
+            BastrinciM::class,        // Model perantara
+            'nobast',            // Foreign key di BastR
+            'kd_obat',           // Foreign key di NewMasterobat
+            'nobast',            // Local key di PenerimaanHeder
+            'kdobat'             // Local key di BastR
+        );
     }
 }

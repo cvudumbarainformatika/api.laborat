@@ -24,8 +24,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-use function PHPUnit\Framework\returnValue;
-
 class RegJurnalController extends Controller
 {
     public function listjurnal()
@@ -100,17 +98,20 @@ class RegJurnalController extends Controller
 
 
         $bastfarmasi=PenerimaanHeder::select('penerimaan_h.nobast',
-                                            'penerimaan_h.tgl_bast',
-                                            'penerimaan_h.jenis_penerimaan',
-                                            'penerimaan_h.kdpbf',
-                                            'penerimaan_h.no_npd',)
+                    'penerimaan_h.tgl_bast',
+                    'penerimaan_h.jenis_penerimaan',
+                    'penerimaan_h.kdpbf',
+                    'penerimaan_h.no_npd',
+                    )
 
-        ->where('nobast', '!=', '')
-        // ->where('no_npd', '=', '')
-        // ->whereNotNull('tgl_bast')
-        ->whereIn('jenis_penerimaan', ['Pesanan'])
+        ->where('penerimaan_h.nobast', '!=', '')
+
+        // ->join('bast_r', 'bast_r.nobast', 'penerimaan_h.nobast')
+        // ->join('new_masterobat', 'new_masterobat.kd_obat', 'bast_r.kdobat')
+        // // ->join('siasik.akun_mapjurnal as akun_mapjurnal', 'akun_mapjurnal.kodeall', '=', 'new_masterobat.kode50')
+        // ->with('newMasterobat.jurnal')
         ->when(request('q'),function ($query) {
-            $query->where('nobast', 'LIKE', '%' . request('q') . '%');
+            $query->where('penerimaan_h.nobast', 'LIKE', '%' . request('q') . '%');
         })
         ->with('rincianbast', function($rinci) use ($tahun) {
             $rinci->select('bast_r.nobast',
@@ -118,23 +119,94 @@ class RegJurnalController extends Controller
                             'bast_r.kdobat',
                             'bast_r.harga_net',
                             'bast_r.jumlah',
-                            'bast_r.subtotal'
+                            'bast_r.subtotal',
+                            'new_masterobat.kd_obat',
+                            'new_masterobat.kode50',
+                            'new_masterobat.uraian50',
+                            'new_masterobat.kode108',
+                            'new_masterobat.uraian108'
                             // DB::raw('(harga_net * jumlah) as totalobat')
                             )
+                    ->join('new_masterobat', 'new_masterobat.kd_obat', 'bast_r.kdobat')
+                    // ->with('jurnal');
                     ->with('masterobat',function ($rekening) use ($tahun){
-                        $rekening->select('new_masterobat.kd_obat',
-                                        'new_masterobat.kode50',
-                                        'new_masterobat.uraian50',
-                                        'new_masterobat.kode108',
-                                        'new_masterobat.uraian108')
-                            ->with('jurnal');
+                        $rekening
+                        ->select('new_masterobat.kode50','new_masterobat.kd_obat')
+                        ->with('jurnal', function($jurnal){
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                            'akun_mapjurnal.kode50',
+                            'akun_mapjurnal.kode_bast',
+                            'akun_mapjurnal.kode_bastx',
+                            'akun_mapjurnal.uraian50',
+                            'akun_mapjurnal.uraian_bast',
+                            'akun_mapjurnal.uraian_bastx');
+                        });
                     });
         })
         // ->orderBy('tgl_bast', 'DESC')
-        ->whereBetween('tgl_bast', [$awal, $akhir])
-        ->orderBy('nobast', 'asc')
+
         ->groupBy('nobast')
+        ->whereIn('penerimaan_h.jenis_penerimaan', ['Pesanan'])
+        ->whereBetween('penerimaan_h.tgl_bast', [$awal, $akhir])
+        ->orderBy('penerimaan_h.nobast', 'asc')
         ->get();
+
+        // $mapHasilbastfarmasi = $bastfarmasi->groupBy('nobast')->map(function ($group)  {
+
+        // $item = $group->first();
+
+        // $subtotalDebit = $group->groupBy('kode50')->map(function ($kodeGroup) {
+
+        //     // $newMasterobat = $kodeGroup->first()->newMasterobat->first();
+        //     // $jurnals = $newMasterobat ? $newMasterobat->jurnal : collect();
+
+        //     // Ambil jurnal pertama untuk debit (contoh: jj1234)
+        //     // $jurnalDebit = $jurnals->first();
+        //     return [
+        //         'notrans' => $kodeGroup->first()->nobast,
+        //         // 'kode' => $jurnalDebit ? $jurnalDebit->kode_bast : $kodeGroup->first()->kode_bast,
+        //         // 'uraian' => $jurnalDebit ? $jurnalDebit->uraian_bast : $kodeGroup->first()->uraian_bast,
+        //         'debit' => $kodeGroup->sum('subtotal'),
+        //         'kredit' => 0,
+        //         'nilai' => $kodeGroup->sum('subtotal'),
+        //     ];
+        // })->values();
+        // $subtotalKredit = $group->groupBy('kode50')->map(function ($kodeGroup) {
+        //     // $newMasterobat = $kodeGroup->first()->newMasterobat->first();
+        //     // $jurnal = $newMasterobat ? $newMasterobat->jurnal : null;
+        //     return [
+        //         'notrans' => $kodeGroup->first()->nobast,
+        //         // 'kode' => $jurnal ? $jurnal->kode_bast : $kodeGroup->first()->kode_bast,
+        //         // 'uraian' => $jurnal ? $jurnal->uraian_bast : $kodeGroup->first()->uraian_bast,
+        //         'debit' => 0,
+        //         'kredit' => $kodeGroup->sum('subtotal'),
+        //         'nilai' => $kodeGroup->sum('subtotal'),
+        //     ];
+        // })->values();
+        // $totalSubtotal = $group->sum('subtotal');
+
+        // // $jurnal = $group->flatMap(function ($item) {
+        // //     return $item->newMasterobat->map(function ($newMasterobat) {
+        // //         return $newMasterobat->jurnal;
+        // //     });
+        // // })->filter()->values();
+
+        //     return [
+        //         'notrans' => $item->nobast,
+        //         'tanggal' => $item->tgl_bast,
+        //         'jenis_penerimaan' => $item->jenis_penerimaan,
+        //         'keterangan' => 'Serahterima Pekerjaan',
+        //         'kegiatan' => 'Pelayanan Farmasi',
+        //         'kdpbf' => $item->kdpbf,
+        //         'no_npd' => $item->no_npd,
+        //         'koderek50' => $item->kode50,
+        //         'uraian50' => $item->uraian50,
+        //         'debit' => $subtotalDebit,
+        //         'kredit' => $subtotalKredit,
+        //         'nilai' => $totalSubtotal,
+        //         // 'jurnal' => $jurnal
+        //     ];
+        // })->values();
 
         // PENCAIRAN STP //
         $cairstp=NpkLS_heder::select('npdls_heder.nonpk',
