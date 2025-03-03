@@ -484,7 +484,9 @@ class StokrealController extends Controller
             ->when(in_array($kdruang, $depos), function ($q) {
                 $q->whereNotNull('stokreal.jumlah')
                     ->whereNotNull('min_max_ruang.min')
-                    ->where('min_max_ruang.min', '>', 0);
+                    ->where('min_max_ruang.min', '>', 1)
+                    // ->where('min_max_ruang.min', '>', 'stokreal.jumlah');
+                    ->havingRaw('sum(stokreal.jumlah) < min_max_ruang.min');
             })
             // ->where(function ($x) {
             //     $x->orWhereNull('stokreal.jumlah')
