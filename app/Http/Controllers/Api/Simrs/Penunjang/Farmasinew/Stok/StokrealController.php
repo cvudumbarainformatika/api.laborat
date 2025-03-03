@@ -290,7 +290,7 @@ class StokrealController extends Controller
                 $x->where('nama_obat', 'like', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'like', '%' . request('q') . '%');
             })
-            ->when(count($sm) > 0, function ($q) use ($sm) {
+            ->when(count($sm) > 0 && $now != date('Y-m', strtotime(request('from'))), function ($q) use ($sm) {
                 $q->whereIn('kd_obat', $sm);
             })
             ->orderBy('nama_obat', 'ASC')
@@ -301,6 +301,8 @@ class StokrealController extends Controller
         $data['meta'] = $raw->except('data');
         $data['now'] = date('Y-m-d H:i:s');
         $data['nowx'] = $now;
+        $data['sm'] = $sm;
+        $data['cond'] = $now != date('Y-m', strtotime(request('from')));
         // $data['stokreal'] = $stokreal;
 
         return new JsonResponse($data);
@@ -446,6 +448,81 @@ class StokrealController extends Controller
     {
         $kdruang = request('kdruang');
         $depos = ['Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104'];
+        // $stokreal = Mobatnew::select(
+        //     'stokreal.id as idx',
+        //     'stokreal.kdruang',
+        //     'stokreal.jumlah',
+        //     'stokreal.tglexp',
+        //     'stokreal.kdobat',
+        //     'new_masterobat.kd_obat',
+        //     'new_masterobat.nama_obat',
+        //     'new_masterobat.satuan_k',
+        //     'new_masterobat.status_fornas',
+        //     'new_masterobat.status_forkid',
+        //     'new_masterobat.status_generik',
+        //     'new_masterobat.gudang',
+        //     'min_max_ruang.min as minvalue',
+        //     DB::raw('sum(COALESCE(stokreal.jumlah,0)) as total'),
+        //     DB::raw('((min_max_ruang.min - sum(COALESCE(stokreal.jumlah,0))) / min_max_ruang.min * 100) as persen')
+
+        // )
+        //     ->leftjoin('stokreal', function ($x) use ($kdruang) {
+        //         $x->on('new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+        //             ->where('stokreal.flag', '=', '')
+        //             // ->where('stokreal.kdruang', '=', $kdruang)
+        //             ->where(function ($query) use ($kdruang) {
+        //                 $query->where('stokreal.kdruang', '=', $kdruang)
+        //                     ->orWhereNull('stokreal.kdruang'); // Pastikan stokreal tetap diikutkan meskipun NULL
+        //             })
+        //         ;
+        //     })
+        //     ->leftjoin('min_max_ruang', function ($anu) use ($kdruang) {
+        //         $anu->on('min_max_ruang.kd_obat', '=', 'new_masterobat.kd_obat')
+        //             ->where('min_max_ruang.kd_ruang', '=', $kdruang);
+        //     })
+
+        //     ->where(function ($x) {
+        //         $x->orwhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
+        //             ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+        //     })
+        //     ->when(in_array($kdruang, $depos), function ($q) {
+        //         $q->whereNotNull('stokreal.jumlah')
+        //             ->whereNotNull('min_max_ruang.min')
+        //             ->where('min_max_ruang.max', '>', 1) // permintaan depo rajal
+        //             ->havingRaw('sum(stokreal.jumlah) < min_max_ruang.min');
+        //     }, function ($q) {
+        //         $q->whereNotNull('min_max_ruang.min')
+        //             ->havingRaw('sum(COALESCE(stokreal.jumlah, 0)) < min_max_ruang.min');
+        //     })
+
+        //     ->with([
+        //         'permintaanobatrinci' => function ($pr) use ($kdruang) {
+        //             $pr->select(
+        //                 'permintaan_r.kdobat',
+        //                 'permintaan_r.jumlah_minta',
+        //                 'permintaan_h.dari',
+        //                 'permintaan_h.flag',
+        //                 'permintaan_h.no_permintaan',
+        //                 'mutasi_gudangdepo.jml',
+        //             )
+        //                 ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', 'permintaan_r.no_permintaan')
+        //                 ->leftJoin('mutasi_gudangdepo', function ($anu) {
+        //                     $anu->on('permintaan_r.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+        //                         ->on('permintaan_r.kdobat', '=', 'mutasi_gudangdepo.kd_obat');
+        //                 })
+        //                 ->where('permintaan_h.dari', $kdruang)
+        //                 ->whereIn('permintaan_h.flag', ['', '1', '2', '3']);
+        //         }
+        //     ])
+        //     ->groupBy(DB::raw('IFNULL(stokreal.kdobat, "00")'))
+        //     ->groupBy(DB::raw('IFNULL(stokreal.kdruang, "' . addslashes($kdruang) . '")'))
+
+        //     ->orderBy(DB::raw('(min_max_ruang.min - sum(COALESCE(stokreal.jumlah,0))) / min_max_ruang.min * 100'), 'DESC')
+        //     ->orderBy(DB::raw('min_max_ruang.min'), 'DESC')
+        //     ->paginate(request('per_page'));
+
+
+
         $stokreal = Mobatnew::select(
             'stokreal.id as idx',
             'stokreal.kdruang',
@@ -460,38 +537,37 @@ class StokrealController extends Controller
             'new_masterobat.status_generik',
             'new_masterobat.gudang',
             'min_max_ruang.min as minvalue',
-            DB::raw('sum(stokreal.jumlah) as total'),
-            DB::raw('((min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100) as persen')
-
+            DB::raw('SUM(COALESCE(stokreal.jumlah, 0)) as total'),
+            DB::raw('((min_max_ruang.min - SUM(COALESCE(stokreal.jumlah, 0))) / min_max_ruang.min * 100) as persen')
         )
-            ->leftjoin('stokreal', function ($x) use ($kdruang) {
+            ->leftJoin('stokreal', function ($x) use ($kdruang) {
                 $x->on('new_masterobat.kd_obat', '=', 'stokreal.kdobat')
                     ->where('stokreal.flag', '=', '')
-                    ->where('stokreal.kdruang', '=', $kdruang)
-                ;
+                    ->where(function ($query) use ($kdruang) {
+                        $query->where('stokreal.kdruang', '=', $kdruang)
+                            ->orWhereNull('stokreal.kdruang'); // Memastikan stokreal tetap masuk walau NULL
+                    });
             })
-            ->leftjoin('min_max_ruang', function ($anu) use ($kdruang) {
+            ->leftJoin('min_max_ruang', function ($anu) use ($kdruang) {
                 $anu->on('min_max_ruang.kd_obat', '=', 'new_masterobat.kd_obat')
                     ->where('min_max_ruang.kd_ruang', '=', $kdruang);
             })
-
             ->where(function ($x) {
-                $x->orwhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
-                    ->orwhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
+                $x->orWhere('new_masterobat.kd_obat', 'like', '%' . request('q') . '%')
+                    ->orWhere('new_masterobat.nama_obat', 'like', '%' . request('q') . '%');
             })
             ->when(in_array($kdruang, $depos), function ($q) {
                 $q->whereNotNull('stokreal.jumlah')
                     ->whereNotNull('min_max_ruang.min')
-                    ->where('min_max_ruang.min', '>', 0);
-            })
-            // ->where(function ($x) {
-            //     $x->orWhereNull('stokreal.jumlah')
-            //         ->orWhereNotNull('stokreal.jumlah')
-            //         ->orWhereNull('min_max_ruang.min')
-            //         ->orWhereNotNull('min_max_ruang.min')
-            //         ;
-            //     })
+                    ->where('min_max_ruang.max', '>', 1)
+                    ->havingRaw('SUM(COALESCE(stokreal.jumlah, 0)) < min_max_ruang.min');
+            }, function ($q) use ($kdruang) {
 
+                $q->whereRaw('(SELECT COALESCE(SUM(sr.jumlah), 0)
+                FROM stokreal sr
+                WHERE sr.kdobat = new_masterobat.kd_obat
+                AND sr.kdruang = ?) < min_max_ruang.min', [$kdruang]);
+            })
             ->with([
                 'permintaanobatrinci' => function ($pr) use ($kdruang) {
                     $pr->select(
@@ -500,7 +576,7 @@ class StokrealController extends Controller
                         'permintaan_h.dari',
                         'permintaan_h.flag',
                         'permintaan_h.no_permintaan',
-                        'mutasi_gudangdepo.jml',
+                        'mutasi_gudangdepo.jml'
                     )
                         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', 'permintaan_r.no_permintaan')
                         ->leftJoin('mutasi_gudangdepo', function ($anu) {
@@ -511,11 +587,14 @@ class StokrealController extends Controller
                         ->whereIn('permintaan_h.flag', ['', '1', '2', '3']);
                 }
             ])
-            ->groupBy('stokreal.kdobat', 'stokreal.kdruang')
-            ->orderBy(DB::raw('(min_max_ruang.min - sum(stokreal.jumlah)) / min_max_ruang.min * 100'), 'DESC')
+            ->groupBy(DB::raw('COALESCE(stokreal.kdobat, new_masterobat.kd_obat)'))
+            ->groupBy(DB::raw('COALESCE(stokreal.kdruang, "' . addslashes($kdruang) . '")'))
+            ->orderBy(DB::raw('(min_max_ruang.min - SUM(COALESCE(stokreal.jumlah, 0))) / min_max_ruang.min * 100'), 'DESC')
             ->orderBy(DB::raw('min_max_ruang.min'), 'DESC')
-            // ->simplePaginate(request('per_page'));
             ->paginate(request('per_page'));
+
+
+
         $stokreal->append('harga');
 
         $nu = collect($stokreal);

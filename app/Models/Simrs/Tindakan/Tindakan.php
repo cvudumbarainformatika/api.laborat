@@ -26,8 +26,8 @@ class Tindakan extends Model
         $harga2 = (int)  $this->rs13 ? $this->rs13 : 0;
         $jumlah = (int) $this->rs5 ? $this->rs5 : 1;
 
-        $hargatotal = $harga1 + $harga2;
-        $subtotal = $hargatotal * $jumlah;
+        $hargatotal = (int)$harga1 + (int)$harga2;
+        $subtotal = (int)$hargatotal * (int)$jumlah;
         //$subtotal = ($harga1+$harga2)*$jumlah;
         return ($subtotal);
     }

@@ -24,4 +24,8 @@ class Pengembalian extends Model
     {
         return $this->hasOne(Mpihakketiga::class, 'kode', 'kdpbf');
     }
+    public function penyedia()
+    {
+        return $this->hasOne(Mpihakketiga::class, 'kode', 'kdpbf');
+    }
 }
