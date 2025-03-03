@@ -274,12 +274,20 @@ class PlannController extends Controller
             DB::beginTransaction();
             $id = $request->id;
             $rs141 = Planing_Igd_Lama::find($id);
-            $plannranap= Planing_Igd_ranap::where('id_heder', $id)->first();
-            $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $plannranap['id']);
-
             $hapusrs141 = $rs141->delete();
-            $hapusrsplanranap = $plannranap->delete();
-            $hapusrsplanranapx = $Plann_Igd_Ranap_Ruang->delete();
+            if($request->jenis === 'Pulang')
+            {
+                $planigdpulang = Planing_Igd_Pulang::where('id_heder', $rs141['id']);
+                $hapusigdpulang = $planigdpulang->delete();
+            }else if($request->jenis === 'Rawat Inap'){
+                $plannranap= Planing_Igd_ranap::where('id_heder', $id)->first();
+                $Plann_Igd_Ranap_Ruang = Plann_Igd_Ranap_Ruang::where('id_heder', $plannranap['id']);
+
+                $hapusrsplanranap = $plannranap->delete();
+                $hapusrsplanranapx = $Plann_Igd_Ranap_Ruang->delete();
+
+            }
+
 
             DB::commit();
 

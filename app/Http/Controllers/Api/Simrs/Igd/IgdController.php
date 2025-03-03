@@ -198,7 +198,17 @@ class IgdController extends Controller
                         );
                     },
                     'planrujukan',
-                    'planpulang'
+                    'planpulang' => function($planpulang){
+                        $planpulang->with(
+                            [
+                                'dokterpenangungjawabpulang' => function($dokterpenangungjawabpulang){
+                                    $dokterpenangungjawabpulang->select('*')
+                                    ->leftjoin('m_golruang', 'm_golruang.kode_gol','pegawai.golruang')
+                                    ->leftjoin('m_jabatan','m_jabatan.kode_jabatan','pegawai.jabatan');
+                                }
+                            ]
+                        );
+                    }
                 ]);
             },
             'ambulan' => function($ambulan) {
