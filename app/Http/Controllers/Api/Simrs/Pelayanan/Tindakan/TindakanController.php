@@ -228,7 +228,7 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)->where('rs22', 'POL014')
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
-        EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+       // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
         $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'mpoli:rs1,rs2');
         return new JsonResponse(
