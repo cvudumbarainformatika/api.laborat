@@ -18,6 +18,7 @@ class NursenoteController extends Controller
     {
        $data = NurseNote::where('noreg', request('noreg'))
        ->with('petugas:kdpegsimrs,nik,nip,nama,kdgroupnakes,foto')
+       ->orderBy('created_at', 'DESC')
        ->get();
        return new JsonResponse($data);
     }

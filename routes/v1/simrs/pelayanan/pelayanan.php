@@ -81,6 +81,7 @@ Route::group([
     // jawaban konsul
     Route::post('/update-jawaban-konsul', [PlaningController::class, 'updatePengantarAtauJawabanKonsul']);
     Route::post('/update-dibaca', [PlaningController::class, 'updateDibaca']);
+    Route::post('/update-noreg', [PlaningController::class, 'updateNoreg']);
 
     Route::get('/faskes', [BridbpjsplanController::class, 'faskes']);
     Route::get('/polibpjs', [BridbpjsplanController::class, 'polibpjs']);
