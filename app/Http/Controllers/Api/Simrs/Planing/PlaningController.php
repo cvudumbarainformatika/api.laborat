@@ -418,6 +418,26 @@ class PlaningController extends Controller
         info('sukses update noreg jawaban konsul' . $simpan);
         return $simpan ?? false;
     }
+    public static function updateNoreg(Request $request)
+    {
+        $simpan = JawabanKonsulPoli::where('id', $request->id)->first();
+        if (!$simpan) {
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan'
+            ], 410);
+        }
+        $simpan->update([
+            'noreg_baru' => $request->noreg
+        ]);
+        $simpan->load([
+            'poliAsal:rs1,rs2',
+            'poliTujuan:rs1,rs2',
+        ]);
+        return new JsonResponse([
+            'message' => 'Data berhasil disimpan',
+            'data' => $simpan
+        ], 200);
+    }
     public static function updateDibaca(Request $request)
     {
         $simpan = JawabanKonsulPoli::where('id', $request->id)->first();
