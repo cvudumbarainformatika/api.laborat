@@ -156,7 +156,7 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
-        EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+        // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
         $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs','sambungan:rs73_id,ket');
         return new JsonResponse(
@@ -256,7 +256,7 @@ class TindakanController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         TindakanSambung::where('rs73_id', $request->id)->delete();
-        EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+        // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
 
@@ -275,7 +275,7 @@ class TindakanController extends Controller
             return new JsonResponse(['message' => 'gagal dihapus'], 500);
         }
         TindakanSambung::where('rs73_id', $request->id)->delete();
-        EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+        // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
         return new JsonResponse(['message' => 'berhasil dihapus', 'nota' => $nota], 200);
     }
 

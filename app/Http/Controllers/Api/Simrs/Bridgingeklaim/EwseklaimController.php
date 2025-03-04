@@ -377,7 +377,8 @@ class EwseklaimController extends Controller
     public function carisimulasi()
     {
         $noreg = request('noreg');
-        return self::ewseklaimrajal_newclaim($noreg);
+        //return self::ewseklaimrajal_newclaim($noreg);
+        return 'ahihihi....';
     }
 
     public static function deleteklaim($noreg)
