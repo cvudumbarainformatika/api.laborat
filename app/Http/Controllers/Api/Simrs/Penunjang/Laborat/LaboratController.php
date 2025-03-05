@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Laborat;
 
+use App\Events\NotifMessageEvent;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
@@ -11,6 +12,7 @@ use App\Models\Simrs\Penunjang\Laborat\MasterLaborat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LaboratController extends Controller
 {
@@ -131,6 +133,8 @@ class LaboratController extends Controller
         $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
 
+        
+
         return new JsonResponse(
             [
                 'message' => 'Berhasil Order Ke Laborat',
@@ -166,13 +170,16 @@ class LaboratController extends Controller
             DB::select('call nota_permintaanlab(@nomor)');
             $x = DB::table('rs1')->select('rs28')->get();
             $wew = $x[0]->rs28;
+            $dari = null;
             if ($ruangan === 'POL014') {
+                $dari = 'IGD';
                 $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
             } else {
                 if ($request->isRanap === true) {
+                    $dari = 'RANAP';
                     $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'I-LAB');
                 } else {
-
+                    $dari = 'RAJAL';
                     $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
                 }
             }
@@ -286,6 +293,22 @@ class LaboratController extends Controller
             $success = LaboratMeta::where('nota', $notapermintaanlab)->with(['details.pemeriksaanlab'])->get();
             $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
                 ->groupBy('nota')->orderBy('id', 'DESC')->get();
+
+            // kirim ke notif
+            $msg = [
+                'data' => [
+                    'title' => 'Permintaan Baru',
+                    'dari' => $dari,
+                    'cito' => $request->prioritas_pemeriksaan,
+                    'read' => false
+                ]
+            ];
+
+            try {
+                event(new NotifMessageEvent($msg, 'permintaan-laborat', auth()->user()));
+            } catch (\Exception $e) {
+                Log::error("Event permintaan-laborat gagal dijalankan: " . $e->getMessage());
+            }
 
             return new JsonResponse(
                 [
@@ -452,13 +475,16 @@ class LaboratController extends Controller
             DB::select('call nota_permintaanlab(@nomor)');
             $x = DB::table('rs1')->select('rs28')->get();
             $wew = $x[0]->rs28;
+            $dari = null;
             if ($ruangan === 'POL014') {
+                $dari = 'IGD';
                 $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
             } else {
                 if ($request->isRanap === true) {
+                    $dari = 'RANAP';
                     $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'I-LAB');
                 } else {
-
+                    $dari = 'RAJAL';
                     $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'J-LAB');
                 }
             }
@@ -533,7 +559,7 @@ class LaboratController extends Controller
                         'rs24'  => $request->kdsistembayar ?? ''
                     ]
                 );
-                // Laboratpemeriksaan::create($param);
+                // Laboratpemeriksaan::create($param); 
 
             };
             /**
@@ -546,6 +572,22 @@ class LaboratController extends Controller
             $success = LaboratMeta::where('nota', $notapermintaanlab)->where('unit_pengirim','POL014')->with(['details.pemeriksaanlab'])->get();
             $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)->where('unit_pengirim','POL014')
                 ->groupBy('nota')->orderBy('id', 'DESC')->get();
+
+            // kirim ke notif
+            $msg = [
+                'data' => [
+                    'title' => 'Permintaan Baru',
+                    'dari' => $dari,
+                    'cito' => $request->prioritas_pemeriksaan,
+                    'read' => false
+                ]
+            ];
+
+            try {
+                event(new NotifMessageEvent($msg, 'permintaan-laborat', auth()->user()));
+            } catch (\Exception $e) {
+                Log::error("Event permintaan-laborat gagal dijalankan: " . $e->getMessage());
+            }
 
             return new JsonResponse(
                 [
