@@ -297,6 +297,7 @@ class LaboratController extends Controller
             // kirim ke notif
             $msg = [
                 'data' => [
+                    'menu' => 'permintaan-laborat',
                     'title' => 'Permintaan Baru',
                     'dari' => $dari,
                     'cito' => $request->prioritas_pemeriksaan,
@@ -576,6 +577,7 @@ class LaboratController extends Controller
             // kirim ke notif
             $msg = [
                 'data' => [
+                    'menu' => 'permintaan-laborat',
                     'title' => 'Permintaan Baru',
                     'dari' => $dari,
                     'cito' => $request->prioritas_pemeriksaan,
@@ -609,6 +611,29 @@ class LaboratController extends Controller
 
 
         // return $thumb;
+    }
+
+
+    public function coba_notif()
+    { 
+
+        $msg = [
+            'data' => [
+                'menu' => 'permintaan-laborat',
+                'title' => 'Permintaan Baru',
+                'dari' => 'RANAP',
+                'cito' => 'Iya',
+                'read' => false
+            ]
+        ];
+        try {
+            event(new NotifMessageEvent($msg, 'permintaan-laborat', auth()->user()));
+        } catch (\Exception $e) {
+            Log::error("Event permintaan-laborat gagal dijalankan: " . $e->getMessage());
+        }
+
+        return new JsonResponse(['message' => 'berhasil dikirim'], 200);
+       
     }
 
 }
