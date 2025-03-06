@@ -622,7 +622,7 @@ class LaboratController extends Controller
                 'menu' => 'permintaan-laborat',
                 'title' => 'Permintaan Baru',
                 'dari' => 'RANAP',
-                'cito' => 'Iya',
+                'cito' => 'Tidak',
                 'read' => false
             ]
         ];
