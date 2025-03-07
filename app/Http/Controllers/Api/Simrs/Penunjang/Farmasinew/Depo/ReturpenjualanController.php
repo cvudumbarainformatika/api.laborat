@@ -125,6 +125,21 @@ class ReturpenjualanController extends Controller
             ->when(count($noresep) > 0, function ($q) use ($noresep) {
                 $q->whereIn('noresep', $noresep);
             })
+            ->when(
+                request('kddepo') == 'Gd-04010102',
+                function ($q) {
+                    // rs 23 flagnya nya di rs 22 yang kosong atau null
+                    $q->leftJoin('rs.rs23', 'rs.rs23.rs1', '=', 'farmasi.resep_keluar_h.noreg')
+                        ->whereNotIn('rs.rs23.rs22', ['3', '2']);
+                },
+                // rs 17 itu rs 19
+                // function ($q) {
+                //     if (request('kddepo') == 'Gd-02010104') {
+                //         $q->leftJoin('rs.rs17', 'rs.rs17.rs1', '=', 'farmasi.resep_keluar_h.noreg')
+                //             ->where('rs.rs17.rs19', '!=', '1');
+                //     }
+                // }
+            )
 
 
             ->orderBy('tgl_permintaan', 'ASC')
