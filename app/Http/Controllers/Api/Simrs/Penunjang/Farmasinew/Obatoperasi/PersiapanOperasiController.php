@@ -976,7 +976,7 @@ class PersiapanOperasiController extends Controller
                     'kode50' => $masterObat->kode50,
                     'uraian50' => $masterObat->uraian50,
                     'stokalokasi' => $request->stokalokasi ?? 0,
-                    'r' => 300,
+                    'r' => $request->groupsistembayar == '1'  ? 300 : 0,
                     'jumlah' => $key['jumlah_resep'],
                     'hpp' => $harga ?? 0,
                     'hargajual' => $hargajualx,
