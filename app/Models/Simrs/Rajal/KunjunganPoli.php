@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Rajal;
 
+use App\Http\Controllers\Api\Simrs\Igd\RencanaTerapiDokterController;
 use App\Models\Pasien;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Satset\Satset;
@@ -65,6 +66,7 @@ use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Planing\Planing_Igd_Lama;
 use App\Models\Simrs\Planing\SkalaTransferIgd;
 use App\Models\Simrs\Rajal\Igd\PemberianObatIgd;
+use App\Models\Simrs\Rajal\Igd\RencanaTerapiDokter;
 use App\Models\Simrs\Rajal\Igd\Tinjauan_ulang;
 use App\Models\Simrs\Rajal\Igd\TriageA;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -484,5 +486,10 @@ class KunjunganPoli extends Model
     public function jawabankonsul()
     {
         return $this->hasMany(JawabanKonsulPoli::class,  'norm', 'rs2');
+    }
+
+    public function rencanaterapidokter()
+    {
+        return $this->hasMany(RencanaTerapiDokter::class,  'noreg', 'rs1');
     }
 }

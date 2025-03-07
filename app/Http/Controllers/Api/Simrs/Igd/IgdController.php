@@ -292,7 +292,8 @@ class IgdController extends Controller
                         'mobat',
                         'datasimpeg'
                     ]);
-            }
+            },
+            'rencanaterapidokter'
         ])
         ->first();
 
