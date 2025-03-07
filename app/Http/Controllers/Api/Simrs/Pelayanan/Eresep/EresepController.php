@@ -88,6 +88,26 @@ class EresepController extends Controller
         return new JsonResponse($collapsed->all());
     }
 
+    public function editResep(Request $request)
+    {
+        $obat = Permintaanresep::find($request->id);
+        if (!$obat) {
+            return new JsonResponse([
+                'message' => 'Data Resep Tidak ditemukan'
+            ], 410);
+        }
+        $obat->update([
+            'jumlah' => $request->jumlah,
+            'aturan' => $request->aturan,
+            'konsumsi' => $request->konsumsi,
+            'keterangan' => $request->keterangan,
+        ]);
+        $obat->load('mobat:bentuk_sediaan,jenis_perbekalan,kd_obat,nama_obat,satuan_k');
+        return new JsonResponse([
+            'message' => 'Data Pemintaa Obat Berhasil Diubah',
+            'data' => $obat
+        ]);
+    }
     public function newCopiResep(Request $request)
     {
 
