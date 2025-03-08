@@ -33,7 +33,7 @@ class SistemBayarController extends Controller
         $data = Cache::rememberForever('allsistembayar', function () {
             return Msistembayar::query()
             ->selectRaw('rs1 as kode, rs2 as sistembayar, groups, hidden')
-            ->where('hidden', '<>' ,'') // menampilkan yg tidak di hide
+            ->where('rs1', '<>' ,'') // menampilkan yg tidak di hide
             ->get();
         });
         return new JsonResponse($data);
