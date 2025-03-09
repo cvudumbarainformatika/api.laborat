@@ -247,7 +247,7 @@ class Sp3bController extends Controller
             DB::rollBack();
             return new JsonResponse([
                 'message' => 'Ada Kesalahan',
-                'error' => $er->getMessage()
+                'error' => $er
             ], 500);
         }
     }
@@ -275,7 +275,7 @@ class Sp3bController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Gagal menghapus data.',
-                'error' => $er->getMessage(),
+                'error' => $er
             ], 500);
         }
     }
