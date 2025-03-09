@@ -249,11 +249,24 @@ class LRAjurnalController extends Controller
         ->get();
 
         $psaprealisasipendapatan = Create_JurnalPosting::select(
-            'jurnal_postingotom.tanggal', 'jurnal_postingotom.kode',
+            'jurnal_postingotom.tanggal', 'jurnal_postingotom.kode', 'jurnal_postingotom.kode as kode6',
             DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as realisasi')
         )
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->where('jurnal_postingotom.verif', '=', '1')
         ->where('jurnal_postingotom.kode', 'LIKE', '4.1.04.16' . '%')
+        ->with('penyesuaian',  function($sel) use ($awal,$akhir){
+            $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
+            ->select('jurnalumum_rinci.kodepsap13',
+                    'jurnalumum_heder.tanggal',
+                    DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian'))
+            ->where('jurnalumum_heder.verif', '=', '1')
+            ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+
+            ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
+            ->where('jurnalumum_heder.keterangan', 'NOT LIKE','Reklas Pendapatan' . '%')
+            ->groupBy( 'kodepsap13');
+        })
         ->get();
 
         $psaprealisasipendapatanx = JurnalUmum_Header::select(
