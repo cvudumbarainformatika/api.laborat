@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Siasik\Akuntansi\Sp3b;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
 use App\Models\Siasik\Akuntansi\Sp3b\Sp3b;
+use App\Models\Siasik\Akuntansi\Sp3b\Sp3b_rinci;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use App\Models\Sigarang\Pegawai;
@@ -247,6 +248,34 @@ class Sp3bController extends Controller
             return new JsonResponse([
                 'message' => 'Ada Kesalahan',
                 'error' => $er->getMessage()
+            ], 500);
+        }
+    }
+
+    public function delete(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $nosp3b = $request->nosp3b; // Ambil nosp3b dari payload
+
+            // Hapus data di tabel sp3b_rinci yang terkait
+            Sp3b_rinci::where('nosp3b', $nosp3b)->delete();
+
+            // Hapus data di tabel sp3b
+            Sp3b::where('nosp3b', $nosp3b)->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Data SP3B dan rincian berhasil dihapus.',
+            ], 200);
+
+        } catch (\Exception $er) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal menghapus data.',
+                'error' => $er->getMessage(),
             ], 500);
         }
     }

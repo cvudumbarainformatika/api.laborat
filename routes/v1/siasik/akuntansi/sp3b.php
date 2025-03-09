@@ -12,6 +12,7 @@ Route::group([
     Route::get('/getdata', [Sp3bController::class, 'getdata']);
     Route::get('/listdata', [Sp3bController::class, 'listdata']);
     Route::post('/savedata', [Sp3bController::class, 'savedata']);
+    Route::post('/delete', [Sp3bController::class, 'delete']);
     // Route::post('/delete', [SaldoawalController::class, 'destroy']);
 
 });
