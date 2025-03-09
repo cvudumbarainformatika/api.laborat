@@ -15,6 +15,6 @@ class Sp3b extends Model
 
     public function rincians()
     {
-        return $this->hasMany(sp3b_rinci::class, 'nosp3b', 'nosp3b');
+        return $this->hasMany(Sp3b_rinci::class, 'nosp3b', 'nosp3b');
     }
 }
