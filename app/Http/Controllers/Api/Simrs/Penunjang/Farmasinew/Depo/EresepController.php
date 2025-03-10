@@ -1412,9 +1412,16 @@ class EresepController extends Controller
             // cek retur, berapa jumlah nya, jika semua maka dianggap tidak diberikan
             $arrayAda = $obatAdaRetur->toArray();
             $keys = array_column($arrayAda, 'kdobat');
+            $masukIf = [];
             foreach ($obatRetur as $ret) {
                 $index = array_search($ret['kdobat'], $keys);
-                if (!($index !== false)) {
+                $masukIf[] = [
+                    'ret' => $ret['kdobat'],
+                    'index' => $index,
+                    'if' => ($index !== false),
+                    'int' => (int)$index,
+                ];
+                if ((int)$index >= 0) {
                     $keluar = $ret['jumlah_keluar'];
                     $retur = $ret['jumlah_retur'];
                     // yang ada retur, jika di retur semua obatnya berarti dianggap tidak ada
@@ -1500,6 +1507,7 @@ class EresepController extends Controller
                     'arrayNormalRacikan' => $arrayNormalRacikan,
                     'obatnya' => $obatnya,
                     'normalHead' => $normalHead,
+                    'masukIf' => $masukIf,
                     'count' => sizeof($sudahAda),
 
                 ], 410);
