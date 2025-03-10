@@ -256,7 +256,8 @@ class IgdController extends Controller
                     $diag->with('intervensi.masterintervensi');
             },
             'pemeriksaanfisikpsikologidll' => function($pemeriksaanfisikpsikologidll){
-                $pemeriksaanfisikpsikologidll->with('pemerisaanpsikologidll')->where('kdruang','POL014');
+                $pemeriksaanfisikpsikologidll->select('rs253.*','kepegx.pegawai.kdpegsimrs','kepegx.pegawai.nama')->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
+                ->with('pemerisaanpsikologidll')->where('kdruang','POL014');
             },
             'newapotekrajal' => function ($newapotekrajal) {
                 $newapotekrajal->with([

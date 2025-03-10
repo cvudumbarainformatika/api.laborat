@@ -16,6 +16,19 @@ class PemeriksaanFisikController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
+        $cekdokter = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')->where('rs253.user', $kdpegsimrs)
+        ->where('kepegx.pegawai.kdgroupnakes','1')->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
+        $cekperawat = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')->where('rs253.user', $kdpegsimrs)
+        ->where('kepegx.pegawai.kdgroupnakes','2')->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
+
+        if($cekdokter > 0)
+        {
+            return new JsonResponse(['message' => 'maaf entryan dokter sudah ada'],500);
+        }
+        if($cekperawat > 0)
+        {
+            return new JsonResponse(['message' => 'maaf entryan perawat sudah ada'],500);
+        }
         try{
             DB::beginTransaction();
                 $simpan = PemeriksaanUmum::create(
@@ -61,11 +74,13 @@ class PemeriksaanFisikController extends Controller
                     ]
                 );
 
-                $hasil = PemeriksaanUmum::with(
+                $hasil = PemeriksaanUmum::select('rs253.*','kepegx.pegawai.kdpegsimrs','kepegx.pegawai.nama')
+                ->with(
                     [
                         'pemerisaanpsikologidll'
                     ]
-                )->where('rs1', $request->noreg)->where('kdruang','POL014')
+                )->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
+                ->where('rs1', $request->noreg)->where('kdruang','POL014')
                 ->orderBy('id','Desc')
                 ->get();
 
@@ -83,6 +98,12 @@ class PemeriksaanFisikController extends Controller
 
     public function hapuspemeriksaanfisik(Request $request)
     {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $kdpegsimrs = $user->kdpegsimrs;
+        if($kdpegsimrs !== $request->kdpegsimrs)
+        {
+            return new JsonResponse(['message' => 'Anda Tidak Berhak Menghapus, karena Bukan Anda Yang Menginput Data ini...!!!'], 500);
+        }
         try{
             DB::beginTransaction();
             $dataheder = PemeriksaanUmum::where('id', $request->id);
@@ -91,12 +112,14 @@ class PemeriksaanFisikController extends Controller
             $hapusheder = $dataheder->delete();
             $hapusrinci = $datarinci->delete();
 
-            $hasil = PemeriksaanUmum::with(
+            $hasil = PemeriksaanUmum::select('rs253.*','kepegx.pegawai.kdpegsimrs','kepegx.pegawai.nama')
+            ->with(
                 [
                     'pemerisaanpsikologidll'
                 ]
-            )->where('rs1', $request->noreg)->where('kdruang','POL014')
-            ->orderBy('id','Desc')
+            )->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
+            ->where('rs253.rs1', $request->noreg)->where('rs253.kdruang','POL014')
+            ->orderBy('rs253.id','Desc')
             ->get();
 
            DB::commit();
