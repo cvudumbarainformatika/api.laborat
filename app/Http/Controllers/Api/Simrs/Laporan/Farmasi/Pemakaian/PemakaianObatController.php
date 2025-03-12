@@ -42,7 +42,7 @@ class PemakaianObatController extends Controller
                     )
                         ->where('tglopname', 'LIKE', '%' . $blnLaluAkhir . '%')
                         ->whereIn('kdruang', $gudangdepo)
-                        ->groupBy('tglopname', 'kdobat', 'kdruang');
+                        ->groupBy('tglopname', 'kdobat');
                 },
                 'penerimaanrinci' => function ($ter) {
                     $ter->select(
@@ -118,7 +118,7 @@ class PemakaianObatController extends Controller
         return new JsonResponse([
             'data' => $obat,
             'req' => request()->all(),
-            // 'blnLaluAkhir'=>$blnLaluAkhir
+            'blnLaluAkhir' => $blnLaluAkhir
         ]);
     }
     function getPemakaianObat()
@@ -151,7 +151,7 @@ class PemakaianObatController extends Controller
                     )
                         ->where('tglopname', 'LIKE', '%' . $blnLaluAkhir . '%')
                         ->whereIn('kdruang', $gudangdepo)
-                        ->groupBy('tglopname', 'kdobat', 'kdruang');
+                        ->groupBy('tglopname', 'kdobat');
                 },
                 'penerimaanrinci' => function ($ter) {
                     $ter->select(
