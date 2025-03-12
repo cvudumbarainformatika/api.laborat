@@ -162,7 +162,7 @@ class HistoryController extends Controller
                     'tinjauanulangbps'
                 ]);
             },
-            'konsuldokterspesialis' => function ($konsuldokterspesialis){
+            'konsuldokterspesialis' => function ($konsuldokterspesialis){ 
                 $konsuldokterspesialis->with(
                     [
                         'tindakan' => function($tindakans){
@@ -174,7 +174,8 @@ class HistoryController extends Controller
                         }
                     ]
                 )->where('kdruang', 'POL014');
-            }
+            },
+            'rencanaterapidokter'
         ])
         ->first();
 

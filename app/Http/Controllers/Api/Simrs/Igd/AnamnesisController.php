@@ -161,9 +161,10 @@ class AnamnesisController extends Controller
 
             $hasil = Anamnesis::with(
                 [
-                    'anamnesetambahan','anamnesebps','anamnesenips'
+                    'anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'
                 ]
-            )->where('rs1', $request->noreg)
+            )->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
+            ->where('rs1', $request->noreg)
             ->where('kdruang', 'POL014')
             ->limit(1)
             ->orderBy('id','Desc')
@@ -281,7 +282,7 @@ class AnamnesisController extends Controller
 
                 $hasil = Anamnesis::with(
                     [
-                        'anamnesetambahan','anamnesebps','anamnesenips'
+                        'anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'
                     ]
                 )->where('rs1', $request->noreg)
                 ->where('kdruang', 'POL014')
