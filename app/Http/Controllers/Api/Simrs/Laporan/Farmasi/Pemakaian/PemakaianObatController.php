@@ -18,7 +18,7 @@ class PemakaianObatController extends Controller
         $dateAwal = Carbon::parse(request('from'));
         $dateAkhir = Carbon::parse(request('to'));
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
-        $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
+        $blnLaluAkhir = $dateAwal->subMonth()->format('Y-m');
         $gudangdepo = ['Gd-03010100', 'Gd-03010101', 'Gd-05010100', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']; //
         $obat = Mobatnew::select(
             'kd_obat',
