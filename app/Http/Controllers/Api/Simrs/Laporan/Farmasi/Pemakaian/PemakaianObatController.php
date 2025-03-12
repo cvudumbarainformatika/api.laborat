@@ -42,7 +42,7 @@ class PemakaianObatController extends Controller
                     )
                         ->where('tglopname', 'LIKE', '%' . $blnLaluAkhir . '%')
                         ->whereIn('kdruang', $gudangdepo)
-                        ->groupBy('tglopname', 'kdobat');
+                        ->groupBy('tglopname', 'kdobat', 'kdruang');
                 },
                 'penerimaanrinci' => function ($ter) {
                     $ter->select(
@@ -151,7 +151,7 @@ class PemakaianObatController extends Controller
                     )
                         ->where('tglopname', 'LIKE', '%' . $blnLaluAkhir . '%')
                         ->whereIn('kdruang', $gudangdepo)
-                        ->groupBy('kdobat');
+                        ->groupBy('tglopname', 'kdobat', 'kdruang');
                 },
                 'penerimaanrinci' => function ($ter) {
                     $ter->select(
