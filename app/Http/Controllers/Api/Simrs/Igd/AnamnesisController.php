@@ -314,8 +314,8 @@ class AnamnesisController extends Controller
     public function hapusanamnesis(Request $request)
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
-        $kdpegsimrs = $user->user;
-        if($kdpegsimrs !== $request->kdpegsimrs)
+        $kdpegsimrs = $user->kdpegsimrs;
+        if($kdpegsimrs !== $request->user)
         {
             return new JsonResponse(['message' => 'Anda Tidak Berhak Menghapus, karena Bukan Anda Yang Menginput Data ini...!!!'], 500);
         }
