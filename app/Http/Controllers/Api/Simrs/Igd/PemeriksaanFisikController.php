@@ -21,7 +21,6 @@ class PemeriksaanFisikController extends Controller
         $cekperawat = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
         ->where('kepegx.pegawai.kdgroupnakes','2')->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
 
-        return $cekdokter;
         if($cekdokter > 0)
         {
             return new JsonResponse(['message' => 'maaf entryan dokter sudah ada'],500);
