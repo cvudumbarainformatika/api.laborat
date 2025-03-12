@@ -19,6 +19,14 @@ class AnamnesisController extends Controller
         // return ('wew');
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
+        $kdgroupnakes = $user->kdgroupnakes;
+
+        $cek = Anamnesis::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
+        ->where('kepegx.pegawai.kdgroupnakes',$kdgroupnakes)->where('rs209.kdruang','POL014')->where('rs1', $request->noreg)->count();
+        if($cek > 0)
+        {
+            return new JsonResponse(['message' => 'maaf entryan dokter sudah ada'],500);
+        }
 
         if ($request->has('id')) {
             $hasilx = Anamnesis::where('id', $request->id)->update(
@@ -305,6 +313,12 @@ class AnamnesisController extends Controller
 
     public function hapusanamnesis(Request $request)
     {
+        // $user = Pegawai::find(auth()->user()->pegawai_id);
+        // $kdpegsimrs = $user->kdpegsimrs;
+        // if($kdpegsimrs !== $request->kdpegsimrs)
+        // {
+        //     return new JsonResponse(['message' => 'Anda Tidak Berhak Menghapus, karena Bukan Anda Yang Menginput Data ini...!!!'], 500);
+        // }
 
         try{
             DB::beginTransaction();

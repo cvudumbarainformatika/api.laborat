@@ -16,19 +16,20 @@ class PemeriksaanFisikController extends Controller
     {
         $user = Pegawai::find(auth()->user()->pegawai_id);
         $kdpegsimrs = $user->kdpegsimrs;
-        $cekdokter = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
-        ->where('kepegx.pegawai.kdgroupnakes','1')->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
-        $cekperawat = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
-        ->where('kepegx.pegawai.kdgroupnakes','2')->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
+        $kdgroupnakes = $user->kdgroupnakes;
+        $cek = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
+        ->where('kepegx.pegawai.kdgroupnakes',$kdgroupnakes)->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
+        // $cekperawat = PemeriksaanUmum::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
+        // ->where('kepegx.pegawai.kdgroupnakes','2')->where('rs253.kdruang','POL014')->where('rs1', $request->noreg)->count();
 
-        if($cekdokter > 0)
+        if($cek > 0)
         {
             return new JsonResponse(['message' => 'maaf entryan dokter sudah ada'],500);
         }
-        if($cekperawat > 0)
-        {
-            return new JsonResponse(['message' => 'maaf entryan perawat sudah ada'],500);
-        }
+        // if($cekperawat > 0)
+        // {
+        //     return new JsonResponse(['message' => 'maaf entryan perawat sudah ada'],500);
+        // }
         try{
             DB::beginTransaction();
                 $simpan = PemeriksaanUmum::create(
