@@ -19,38 +19,39 @@ class PeninjauanUlangController extends Controller
         $kdpegsimrs = $user->kdpegsimrs;
         if($request->has('id')){
             try{
-                DB::beginTransaction();
+                //DB::beginTransaction();
+               // return $request->id;
                 $simpan = Tinjauan_ulang::where('id', $request->id)->update(
                     [
-                        'keluhan' => $request->keluhan,
-                        'nadi' => $request->nadi,
-                        'pernapasanx' => $request->pernapasanx,
-                        'sistole' => $request->sistole,
-                        'diastole' => $request->diastole,
-                        'suhu' => $request->suhu,
-                        'spo2' => $request->spo2,
-                        'scorenadi' => $request->scorenadi,
-                        'scorepernapasanx' => $request->scorepernapasanx,
-                        'scoresistole' => $request->scoresistole,
-                        'scorediastole' => $request->scorediastole,
-                        'scoresuhu' => $request->scoresuhu,
-                        'scorespo2' => $request->scorespo2,
-                        'kesadaran' => $request->kesadaran,
-                        'eye' => $request->eye,
-                        'verbal' => $request->verbal,
-                        'motorik' => $request->motorik,
-                        'keadaan_pupil' => $request->keadaanpupil,
-                        'reflekcahaya_matakanan' => $request->reflekmatakanankecahaya,
-                        'reflekcahaya_matakiri' => $request->reflekmatakirikecahaya,
-                        'diamter_matakanan' => $request->diamterkanan,
-                        'diamter_matakiri' => $request->diamterkiri,
-                        'output' => $request->output,
-                        'skornyeri' => $request->skornyeri,
-                        'keteranganscorenyeri' => $request->keteranganscorenyeri,
+                        // 'keluhan' => $request->keluhan,
+                        // 'nadi' => $request->nadi,
+                        // 'pernapasanx' => $request->pernapasanx,
+                        // 'sistole' => $request->sistole,
+                        // 'diastole' => $request->diastole,
+                        // 'suhu' => $request->suhu,
+                        // 'spo2' => $request->spo2,
+                        // 'scorenadi' => $request->scorenadi,
+                        // 'scorepernapasanx' => $request->scorepernapasanx,
+                        // 'scoresistole' => $request->scoresistole,
+                        // 'scorediastole' => $request->scorediastole,
+                        // 'scoresuhu' => $request->scoresuhu,
+                        // 'scorespo2' => $request->scorespo2,
+                        // 'kesadaran' => $request->kesadaran,
+                        // 'eye' => $request->eye,
+                        // 'verbal' => $request->verbal,
+                        // 'motorik' => $request->motorik,
+                        // 'keadaan_pupil' => $request->keadaanpupil,
+                        // 'reflekcahaya_matakanan' => $request->reflekmatakanankecahaya,
+                        // 'reflekcahaya_matakiri' => $request->reflekmatakirikecahaya,
+                        // 'diamter_matakanan' => $request->diamterkanan,
+                        // 'diamter_matakiri' => $request->diamterkiri,
+                        // 'output' => $request->output,
+                        // 'skornyeri' => $request->skornyeri,
+                        // 'keteranganscorenyeri' => $request->keteranganscorenyeri,
                         'keterangan' => $request->keterangan,
-                        'kdruang' => 'POL014',
-                        'metodenyeri' => $request->metodenyeri,
-                        'user' => $kdpegsimrs
+                        // 'kdruang' => 'POL014',
+                        // 'metodenyeri' => $request->metodenyeri,
+                        // 'user' => $kdpegsimrs
                     ]
                 );
 
@@ -85,7 +86,7 @@ class PeninjauanUlangController extends Controller
                     'tinjauanulangnips',
                     'tinjauanulangbps'
                 ])->where('noreg', $request->noreg)->orderBy('id','Desc')->limit(1)->get();
-
+                DB::commit();
                 return new JsonResponse([
                     'message' => 'BERHASIL DISIMPAN',
                     'result' => $hasil
