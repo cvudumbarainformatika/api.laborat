@@ -2946,6 +2946,7 @@ class EresepController extends Controller
                     'jenis_kelamin' => $request->jenis_kelamin,
                     'menyusui' => $request->menyusui,
                     'uraian_pertanyaan' => $request->uraian_pertanyaan,
+                    'obat_non_eresep' => $request->obat_non_eresep,
                     'jenis_pertanyaan' => $request->jenis_pertanyaan,
                     'kode' => $request->kode,
                     'jawaban' => $request->jawaban,
