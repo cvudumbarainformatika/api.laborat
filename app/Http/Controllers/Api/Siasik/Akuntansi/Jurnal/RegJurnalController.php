@@ -18,6 +18,7 @@ use App\Models\Siasik\TransaksiPjr\SpjPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\SpjPanjar_Rinci;
 use App\Models\Siasik\TransaksiPjr\SPM_GU;
 use App\Models\Siasik\TransaksiPjr\SpmUP;
+use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastKonsinyasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Illuminate\Http\JsonResponse;
@@ -151,6 +152,44 @@ class RegJurnalController extends Controller
         ->orderBy('penerimaan_h.nobast', 'asc')
         ->get();
 
+        $bastkonsinyasi=BastKonsinyasi::whereNotNull('bast_konsinyasis.nobast')
+        ->select('bast_konsinyasis.nobast',
+        'bast_konsinyasis.tgl_bast',
+        'bast_konsinyasis.notranskonsi',
+        'bast_konsinyasis.jumlah_bastx')
+        ->when(request('q'),function ($query) {
+            $query->where('bast_konsinyasis.nobast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('bast_konsinyasis.notranskonsi', 'LIKE', '%' . request('q') . '%');
+        })->with('rinci', function($rinci){
+            $rinci->select('detail_bast_konsinyasis.notranskonsi',
+                    'detail_bast_konsinyasis.kdobat',
+                    'detail_bast_konsinyasis.subtotal',
+                    'detail_bast_konsinyasis.jumlah',
+                    'detail_bast_konsinyasis.harga_net',
+                    'new_masterobat.kd_obat',
+                    'new_masterobat.kode50',
+                    'new_masterobat.uraian50',
+                    'new_masterobat.kode108',
+                    'new_masterobat.uraian108')
+            ->join('new_masterobat', 'new_masterobat.kd_obat', 'detail_bast_konsinyasis.kdobat')
+            ->with('obat',function ($rekening) {
+                        $rekening
+                        ->select('new_masterobat.kode50','new_masterobat.kd_obat')
+                        ->with('jurnal', function($jurnal){
+                            $jurnal->select('akun_mapjurnal.kodeall',
+                            'akun_mapjurnal.kode50',
+                            'akun_mapjurnal.kode_bast',
+                            'akun_mapjurnal.kode_bastx',
+                            'akun_mapjurnal.uraian50',
+                            'akun_mapjurnal.uraian_bast',
+                            'akun_mapjurnal.uraian_bastx');
+                        });
+                    });
+        })
+        ->groupBy('bast_konsinyasis.nobast')
+        ->whereBetween('bast_konsinyasis.tgl_bast', [$awal, $akhir])
+        ->orderBy('bast_konsinyasis.tgl_bast', 'asc')
+        ->get();
         // $mapHasilbastfarmasi = $bastfarmasi->groupBy('nobast')->map(function ($group)  {
 
         // $item = $group->first();
@@ -366,6 +405,7 @@ class RegJurnalController extends Controller
         $regjurnal = [
             'stp' => $stp,
             'bastfarmasi' => $bastfarmasi,
+            'bastkonsinyasi' => $bastkonsinyasi,
             'cair_stp' => $cairstp,
             'cair_nostp' => $cairnostp,
             'pajakls' => $pajakls,
