@@ -21,7 +21,10 @@ class RencanaTerapiDokterController extends Controller
                 'message' => 'Maaf Akun Anda Bukan Dokter...!!!'
             ], 500);
         }
-        $simpan = RencanaTerapiDokter::create(
+        $simpan = RencanaTerapiDokter::updateOrCreate(
+            [
+                'id' => $request->id
+            ],
             [
                 'noreg' => $request->noreg,
                 'norm' => $request->norm,
