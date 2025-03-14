@@ -21,14 +21,8 @@ class AnamnesisController extends Controller
         $kdpegsimrs = $user->kdpegsimrs;
         $kdgroupnakes = $user->kdgroupnakes;
 
-        $cek = Anamnesis::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
-        ->where('kepegx.pegawai.kdgroupnakes',$kdgroupnakes)->where('rs209.kdruang','POL014')->where('rs1', $request->noreg)->count();
-        if($cek > 0)
-        {
-            return new JsonResponse(['message' => 'maaf entryan dokter sudah ada'],500);
-        }
-
         if ($request->has('id')) {
+
             $hasilx = Anamnesis::where('id', $request->id)->update(
                 [
                     'rs1' => $request->noreg,
@@ -167,15 +161,15 @@ class AnamnesisController extends Controller
                 $hapusbps = $caribps->delete();
             }
 
-            $hasil = Anamnesis::with(
+            $hasil = Anamnesis::select('rs209.*')->with(
                 [
                     'anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'
                 ]
             )->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
-            ->where('rs1', $request->noreg)
+            ->where('rs209.rs1', $request->noreg)
             ->where('kdruang', 'POL014')
             ->limit(1)
-            ->orderBy('id','Desc')
+            ->orderBy('rs209.id','Desc')
             ->get();
 
             return new JsonResponse([
@@ -184,6 +178,14 @@ class AnamnesisController extends Controller
             ], 200);
 
         } else {
+            $cek = Anamnesis::leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
+                ->where('kepegx.pegawai.kdgroupnakes',$kdgroupnakes)->where('rs209.kdruang','POL014')->where('rs1', $request->noreg)->count();
+
+            if($cek > 0)
+            {
+                return new JsonResponse(['message' => 'maaf entryan dokter sudah ada'],500);
+            }
+
             try{
                 DB::beginTransaction();
                 $simpananamnesis = Anamnesis::create(
