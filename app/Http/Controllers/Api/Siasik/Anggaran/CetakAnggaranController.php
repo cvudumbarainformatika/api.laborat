@@ -40,7 +40,6 @@ class CetakAnggaranController extends Controller
             't_tampung.kodekegiatanblud',
             't_tampung.volume',
             't_tampung.harga',
-            't_tampung.harga',
             't_tampung.satuan',
             'akun50_2024.kodeall3 as kode',
             'akun50_2024.uraian as uraian'
