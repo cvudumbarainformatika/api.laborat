@@ -69,7 +69,7 @@ class TemplateObatOperasiController extends Controller
             if (!$detail) {
                 throw new \Exception('ada kesalahan, gagal menyimpan obat');
             }
-            $data->load('rinci.obat:kd_obat,nama_obat');
+            $data->load('rinci.obat:kd_obat,nama_obat', 'pegawai:id,nama');
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'Template Obat Operasi Sudah Disiampan',
