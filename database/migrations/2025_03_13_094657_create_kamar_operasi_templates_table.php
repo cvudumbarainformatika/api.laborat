@@ -16,6 +16,7 @@ class CreateKamarOperasiTemplatesTable extends Migration
         Schema::connection('farmasi')->create('kamar_operasi_templates', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
+            $table->string('sistembayar');
             $table->unsignedBigInteger('pegawai_id');
             $table->enum('user', ['public', 'private'])->default('public');
             $table->timestamps();
