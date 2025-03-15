@@ -12,7 +12,7 @@ class KamarOperasiTemplate extends Model
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 
-    public function details()
+    public function rinci()
     {
         return $this->hasMany(KamarOperasiDetailTemplate::class, 'kamar_operasi_template_id');
     }
