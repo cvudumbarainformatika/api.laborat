@@ -123,6 +123,10 @@ class TemplateObatOperasiController extends Controller
 
     public function kirimOrder(Request $request)
     {
+        // perlu di cek apakah simtem bayar pasien sudah sama dengan yang di template atau belum
+        if ($request->groupsistembayar == '1' && $request->sistembayar != '1') return new JsonResponse([
+            'message' => 'Pasien BPJS tidak boleh menggunkanan Template non-BPJS'
+        ], 410);
         try {
             DB::connection('farmasi')->beginTransaction();
             $message = 'Data sudah dikirim ke depo';
@@ -247,8 +251,8 @@ class TemplateObatOperasiController extends Controller
                 'data' => $data,
                 'status' => $status,
                 'head' => $head ?? null,
-                'nopermintaan' => $nopermintaan,
-                'siapRinci' => $siapRinci,
+                'nopermintaan' => $nopermintaan ?? null,
+                'siapRinci' => $siapRinci ?? null,
                 'req' => $request->all(),
             ]);
         } catch (\Exception $e) {
