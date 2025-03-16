@@ -30,4 +30,5 @@ Route::group([
     Route::get('/cari-template', [TemplateObatOperasiController::class, 'cari']);
     Route::post('/simpan-template', [TemplateObatOperasiController::class, 'simpan']);
     Route::post('/hapus-rinci-template', [TemplateObatOperasiController::class, 'hapusRinci']);
+    Route::post('/kirim-order', [TemplateObatOperasiController::class, 'kirimOrder']);
 });
