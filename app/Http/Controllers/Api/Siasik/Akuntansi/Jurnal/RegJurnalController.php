@@ -545,7 +545,7 @@ class RegJurnalController extends Controller
         $data = Create_JurnalPosting::where('notrans', $request->notrans);
         // return $data;
         $data->update([
-            'verif' => '',
+            'verif' => null,
             'tglverif' => $time
 
     ]);
