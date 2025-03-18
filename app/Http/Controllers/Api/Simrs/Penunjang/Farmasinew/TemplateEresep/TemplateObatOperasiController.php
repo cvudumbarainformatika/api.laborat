@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\KamarOperasiDetailTemplate;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\KamarOperasiTemplate;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -240,6 +241,8 @@ class TemplateObatOperasiController extends Controller
                 $rinci = PersiapanOperasiRinci::insert($siapRinci);
 
                 $head->load('rinci.obat:kd_obat,nama_obat');
+            } else {
+                $status = 442;
             }
 
 
