@@ -132,13 +132,16 @@ class AuthController extends Controller
         
         $git = Github::first();
 
+        // $sementara = User::with(['pegawai', 'pegawai.user', 'pegawai.jadwal'])->find(auth()->user()->id);
+
         $result = [
             'apps' => $apps,
             'akses' => $akses,
             'user' => $user,
             'mSistemBayar' => $masterSistemBayar,
             'notifRkd' => $notifRkd,
-            'git' => $git
+            'git' => $git,
+            // 'sementara' => $sementara
         ];
         return new JsonResponse($result);
     }
