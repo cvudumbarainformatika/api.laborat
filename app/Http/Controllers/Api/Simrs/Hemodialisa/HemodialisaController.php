@@ -338,12 +338,35 @@ class HemodialisaController extends Controller
     public function terima(Request $request)
     {
         $noreg = $request->noreg;
-        $rajal = KunjunganPoli::where('rs1', $noreg)
+        $rajal = KunjunganPoli::select(
+            'rs17.rs1',
+            'rs17.rs1 as noreg',
+            'rs17.rs2 as norm',
+            'rs23_meta.kd_jeniskasus',
+        )->where('rs1', $noreg)
+            ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs17.rs1')
             ->first();
-        $ranap = Kunjunganranap::where('rs1', $noreg)
+        $ranap = Kunjunganranap::select(
+            'rs23.rs1',
+            'rs23.rs1 as noreg',
+            'rs23.rs2 as norm',
+            'rs23_meta.kd_jeniskasus',
+        )->where('rs1', $noreg)
+            ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1')
             ->first();
         $data = $ranap ?? $rajal;
         $data->load([
+            'newapotekrajal' => function ($q) {
+                $q->with([
+                    'dokter:nama,kdpegsimrs',
+                    'permintaanresep.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                    'permintaanracikan.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                    'sistembayar'
+                ])
+                    ->where('ruangan', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
+            },
+            'diagnosa', // ini berhubungan dengan resep
             'anamnesis' => function ($q) {
                 $q->select([
                     'rs209.id',
@@ -376,6 +399,92 @@ class HemodialisaController extends Controller
                     ])
 
                     ->groupBy('rs209.id');
+            },
+            'pemeriksaan' => function ($q) {
+                $q->select([
+                    'rs253.id',
+                    'rs253.rs1',
+                    'rs253.rs1 as noreg',
+                    'rs253.rs2 as norm',
+                    'rs253.rs3 as tgl',
+                    'rs253.rs4 as ruang',
+                    'rs253.pernapasan as pernapasanigd',
+                    'rs253.nadi as nadiigd',
+                    'rs253.tensi as tensiigd',
+                    'rs253.beratbadan',
+                    'rs253.tinggibadan',
+                    'rs253.kdruang',
+                    'rs253.user',
+                    'rs253.awal',
+                    'rs253.rs5',
+                    'rs253.rs6',
+                    'rs253.rs7',
+                    'rs253.rs8',
+                    'rs253.rs9',
+                    'rs253.rs10',
+                    'rs253.rs11',
+                    'rs253.rs12',
+                    'rs253.rs13',
+                    'rs253.sax',
+                    'rs253.srec',
+
+                    'sambung.keadaanUmum',
+                    'sambung.bb',
+                    'sambung.tb',
+                    'sambung.nadi',
+                    'sambung.suhu',
+                    'sambung.sistole',
+                    'sambung.diastole',
+                    'sambung.pernapasan',
+                    'sambung.spo',
+                    'sambung.tkKesadaran',
+                    'sambung.tkKesadaranKet',
+                    'sambung.sosial',
+                    'sambung.spiritual',
+                    'sambung.statusPsikologis',
+                    'sambung.ansuransi',
+                    'sambung.edukasi',
+                    'sambung.ketEdukasi',
+                    'sambung.penyebabSakit',
+                    'sambung.komunikasi',
+                    'sambung.makananPokok',
+                    'sambung.makananPokokLain',
+                    'sambung.pantanganMkanan',
+
+                    'pegawai.nama as petugas',
+                    'pegawai.kdgroupnakes as nakes',
+                ])
+                    ->leftJoin('rs253_sambung as sambung', 'rs253.id', '=', 'sambung.rs253_id')
+                    ->leftJoin('kepegx.pegawai as pegawai', 'rs253.user', '=', 'pegawai.kdpegsimrs')
+                    //    ->where('rs253.rs1','=', $noreg)
+                    ->with([
+                        'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                        'neonatal',
+                        'pediatrik',
+                        'kebidanan',
+                        //  'penilaian'
+                    ])
+                    ->groupBy('rs253.id');
+            },
+            'penilaian' => function ($q) {
+                $q->select([
+                    'id',
+                    'rs1',
+                    'rs1 as noreg',
+                    'rs2 as norm',
+                    'rs3 as tgl',
+                    'barthel',
+                    'norton',
+                    'humpty_dumpty',
+                    'morse_fall',
+                    'ontario',
+                    'user',
+                    'kdruang',
+                    'awal',
+                    'group_nakes'
+                ])
+                    ->where('kdruang', '!=', 'POL014')
+                    ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
             },
         ]);
 

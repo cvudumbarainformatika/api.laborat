@@ -492,4 +492,14 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(RencanaTerapiDokter::class,  'noreg', 'rs1');
     }
+
+    // dipakai hd
+    public function pemeriksaan()
+    {
+        return $this->hasMany(PemeriksaanUmum::class, 'rs1', 'rs1');
+    }
+    public function penilaian()
+    {
+        return $this->hasMany(Penilaian::class, 'rs1', 'rs1');
+    }
 }
