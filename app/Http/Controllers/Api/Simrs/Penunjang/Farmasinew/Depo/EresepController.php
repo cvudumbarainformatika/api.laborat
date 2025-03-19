@@ -381,6 +381,9 @@ class EresepController extends Controller
 
     public function pembuatanresep(Request $request)
     {
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        // ]);
         $request->validate([
             'kodeobat' => 'required',
             // 'jumlah' => 'required',
@@ -689,6 +692,7 @@ class EresepController extends Controller
                     'tiperesep' => $tiperesep,
                     'iter_expired' => $iter_expired,
                     'iter_jml' => $iter_jml,
+                    'flag_krs' => !$request->respkrs ? null : '1',
                     // 'iter_expired' => $request->iter_expired ?? '',
                     'tagihanrs' => $request->tagihanrs ?? 0,
                 ]

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Models\aplikasi\Aplikasi;
+use App\Models\Github;
 use App\Models\Pegawai\Akses\Access;
 use App\Models\Pegawai\Akses\AksesUser;
 use App\Models\Pegawai\Akses\Menu;
@@ -129,14 +130,18 @@ class AuthController extends Controller
         }
         
         
-        
+        $git = Github::first();
+
+        // $sementara = User::with(['pegawai', 'pegawai.user', 'pegawai.jadwal'])->find(auth()->user()->id);
 
         $result = [
             'apps' => $apps,
             'akses' => $akses,
             'user' => $user,
             'mSistemBayar' => $masterSistemBayar,
-            'notifRkd' => $notifRkd
+            'notifRkd' => $notifRkd,
+            'git' => $git,
+            // 'sementara' => $sementara
         ];
         return new JsonResponse($result);
     }

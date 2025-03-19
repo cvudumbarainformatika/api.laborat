@@ -65,6 +65,7 @@ class NursenoteController extends Controller
         $data->produksigc = $request->produksigc;
         $data->pump = $request->pump;
         $data->ratio = $request->ratio;
+        $data->flow = $request->flow;
         $data->reseps = $request->reseps;
         $data->rr = $request->rr;
         $data->sis = $request->sis;
