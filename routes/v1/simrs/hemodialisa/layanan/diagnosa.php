@@ -1,15 +1,15 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Pelayanan\Diagnosa\DiagnosatransController;
+use App\Http\Controllers\Api\Simrs\Hemodialisa\Pelayanan\DiagnosaHemodialisaController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/ranap/layanan/diagnosa'
+    'prefix' => 'simrs/hemodialisa/layanan/diagnosa'
 ], function () {
-    
-  Route::post('/simpandiagnosa', [DiagnosatransController::class, 'simpandiagnosa']);
-  Route::get('/getDiagnosaByNoreg', [DiagnosatransController::class, 'getDiagnosaByNoreg']);
-  Route::post('/hapusdiagnosa', [DiagnosatransController::class, 'hapusdiagnosa']);
+
+    Route::post('/simpandiagnosa', [DiagnosaHemodialisaController::class, 'simpandiagnosa']);
+    Route::get('/getDiagnosaByNoreg', [DiagnosaHemodialisaController::class, 'getDiagnosaByNoreg']);
+    Route::post('/hapusdiagnosa', [DiagnosaHemodialisaController::class, 'hapusdiagnosa']);
 });
