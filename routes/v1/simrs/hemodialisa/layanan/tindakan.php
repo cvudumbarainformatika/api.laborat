@@ -9,5 +9,5 @@ Route::group([
     'prefix' => 'simrs/hemodialisa/layanan/tindakan'
 ], function () {
     Route::post('/simpantindakan-hd', [TindakanHemodialisaController::class, 'getTindakanHd']);
-    Route::get('/listtindakan-hd', [TindakanHemodialisaController::class, 'getTindakanRanap']); // fixed
+    Route::get('/listtindakan-hd', [TindakanHemodialisaController::class, 'getTindakanHd']); // fixed
 });

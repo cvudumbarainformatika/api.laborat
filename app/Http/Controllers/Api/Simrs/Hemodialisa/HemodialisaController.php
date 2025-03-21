@@ -343,16 +343,20 @@ class HemodialisaController extends Controller
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs23_meta.kd_jeniskasus',
+            'memodiagnosadokter.diagnosa as memodiagnosa',
         )->where('rs1', $noreg)
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs17.rs1')
+            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs17.rs1') // memo
             ->first();
         $ranap = Kunjunganranap::select(
             'rs23.rs1',
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23_meta.kd_jeniskasus',
+            'memodiagnosadokter.diagnosa as memodiagnosa',
         )->where('rs1', $noreg)
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1')
+            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
             ->first();
         $data = $ranap ?? $rajal;
         $data->load([
