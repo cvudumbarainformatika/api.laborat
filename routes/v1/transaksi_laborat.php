@@ -19,6 +19,7 @@ Route::middleware('auth:api')
 
      // coba notif permintaan laborat
      Route::post('/coba_notif_permintaan_laborat', [LaboratController::class, 'coba_notif']);
+     
 });
 
 
