@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
+use App\Http\Controllers\Api\Simrs\Hemodialisa\Pelayanan\TindakanHemodialisaController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware' => 'auth:api',
     // 'middleware' => 'jwt.verify',
-    'prefix' => 'simrs/ranap/layanan/tindakan'
+    'prefix' => 'simrs/hemodialisa/layanan/tindakan'
 ], function () {
-    Route::post('/simpantindakanranap', [TindakanController::class, 'simpantindakanranap']); 
-    Route::get('/listtindakanranap', [TindakanController::class, 'getTindakanRanap']); // fixed
+    Route::post('/simpantindakan-hd', [TindakanHemodialisaController::class, 'getTindakanHd']);
+    Route::get('/listtindakan-hd', [TindakanHemodialisaController::class, 'getTindakanRanap']); // fixed
 });
