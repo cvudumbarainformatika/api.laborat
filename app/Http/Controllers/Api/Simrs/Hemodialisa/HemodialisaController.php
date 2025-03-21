@@ -490,6 +490,51 @@ class HemodialisaController extends Controller
                     ->where('kdruang', '!=', 'POL014')
                     ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
             },
+            'diagnosamedis' => function ($q) {
+                $q->with('masterdiagnosa');
+            },
+            'diagnosakeperawatan' => function ($q) {
+                $q->with('intervensi', 'intervensi.masterintervensi')
+                    ->where('kdruang', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
+            },
+            'diagnosakebidanan' => function ($q) {
+                $q->with('intervensi', 'intervensi.masterintervensi')
+                    ->where('kdruang', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
+            },
+            'diagnosagizi' => function ($q) {
+                $q->with('intervensi', 'intervensi.masterintervensi')
+                    ->where('kdruang', '!=', 'POL014')
+                    ->orderBy('id', 'DESC');
+            },
+            'tindakan' => function ($q) {
+                $q->select(
+                    'id',
+                    'rs1',
+                    'rs2',
+                    'rs4',
+                    'rs1 as noreg',
+                    'rs2 as nota',
+                    'rs3',
+
+                    'rs4',
+                    'rs5',
+                    'rs6',
+                    'rs7',
+                    'rs8',
+                    'rs9',
+                    'rs13',
+                    'rs14',
+                    'rs20',
+                    'rs22',
+                    'rs23',
+                    'rs24',
+                )
+                    ->where('rs22', '!=', 'POL014')
+                    ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
+                    ->orderBy('id', 'DESC');
+            },
         ]);
 
         return new JsonResponse($data);

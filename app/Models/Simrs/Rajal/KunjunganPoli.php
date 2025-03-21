@@ -22,6 +22,7 @@ use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosagizi;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakebidanan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\DokumenUpload;
@@ -501,5 +502,13 @@ class KunjunganPoli extends Model
     public function penilaian()
     {
         return $this->hasMany(Penilaian::class, 'rs1', 'rs1');
+    }
+    public function diagnosamedis()
+    {
+        return $this->hasMany(Diagnosa::class, 'rs1', 'rs1');
+    }
+    public function diagnosagizi()
+    {
+        return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
     }
 }
