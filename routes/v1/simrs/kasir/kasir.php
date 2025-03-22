@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Kasir\BillingbynoregController;
+use App\Http\Controllers\Api\Simrs\Kasir\FlagingManualVaController;
 use App\Http\Controllers\Api\Simrs\Kasir\KasirrajalController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,4 +19,7 @@ Route::group([
 
     // kasir igd
     Route::get('/igd/billbynoreg', [BillingbynoregController::class, 'billbynoregigd']);
+
+    Route::get('/va/listva', [FlagingManualVaController::class, 'listva']);
+    Route::post('/va/flagingmanualva', [FlagingManualVaController::class, 'flagingmanual']);
 });
