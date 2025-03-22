@@ -34,4 +34,5 @@ Route::group([
 
     // routing Laporan
     Route::get('/masterlaborat', [LaporanLaboratController::class, 'masterlaborat']);
+    Route::get('/pemeriksaan-by-gender', [LaporanLaboratController::class, 'pemeriksaanByGender']);
 });
