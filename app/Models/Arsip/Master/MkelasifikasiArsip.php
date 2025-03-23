@@ -9,6 +9,6 @@ class MkelasifikasiArsip extends Model
 {
     use HasFactory;
     protected $table = 'master_kode';
-    protected $connection = 'arteri';
+    protected $connection = 'arsip';
     protected $guarded = ['id'];
 }
