@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\TemplateEresep\TemplateObatOperasiController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -24,4 +25,10 @@ Route::group([
     Route::post('/batal-obat-resep', [PersiapanOperasiController::class, 'batalObatResep']);
 
     Route::post('/batal-operasi', [PersiapanOperasiController::class, 'batalOperasi']);
+
+    // template obat operasi
+    Route::get('/cari-template', [TemplateObatOperasiController::class, 'cari']);
+    Route::post('/simpan-template', [TemplateObatOperasiController::class, 'simpan']);
+    Route::post('/hapus-rinci-template', [TemplateObatOperasiController::class, 'hapusRinci']);
+    Route::post('/kirim-order', [TemplateObatOperasiController::class, 'kirimOrder']);
 });

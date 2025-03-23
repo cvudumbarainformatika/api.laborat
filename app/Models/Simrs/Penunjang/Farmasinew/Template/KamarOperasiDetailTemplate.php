@@ -20,4 +20,8 @@ class KamarOperasiDetailTemplate extends Model
     {
         return $this->belongsTo(Mobatnew::class, 'kd_obat', 'kd_obat');
     }
+    public function obat()
+    {
+        return $this->belongsTo(Mobatnew::class, 'kd_obat', 'kd_obat');
+    }
 }

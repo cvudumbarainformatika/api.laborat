@@ -171,7 +171,8 @@ class NPD_LSController extends Controller
     // }
     public function perusahaan()
     {
-        $phk = Mpihakketiga::select('kode','nama','alamat','npwp','norek','bank','kodemapingrs','namasuplier')
+        $phk = Mpihakketiga::select('kode','nama','alamat','npwp','norek','bank','kodemapingrs','namasuplier','hidden')
+        ->where('hidden', '!=', '1')
         ->when(request('q'),function ($query) {
             $query->where('nama', 'LIKE', '%' . request('q') . '%');
         })

@@ -340,8 +340,6 @@ class PersiapanOperasiController extends Controller
 
             $procedure = 'persiapanok(@nomor)';
             $colom = 'persiapanok';
-            // $procedure = 'resepkeluardepook(@nomor)';
-            // $colom = 'depook';
             $lebel = 'OP-KO';
             DB::connection('farmasi')->select('call ' . $procedure);
             $x = DB::connection('farmasi')->table('conter')->select($colom)->get();

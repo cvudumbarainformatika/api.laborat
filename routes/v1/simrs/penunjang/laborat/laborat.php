@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Simrs\Penunjang\Laborat\LaboratController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Laborat\LaporanLaboratController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Radiologi\RadiologimetaController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +27,12 @@ Route::group([
     Route::get('/getnotaIgd', [LaboratController::class, 'getnotaIgd']);
     Route::get('/getnotaoldIgd', [LaboratController::class, 'getnotaoldIgd']);
     Route::get('/getdataIgd', [LaboratController::class, 'getdataIgd']);
+
+
+
+
+
+    // routing Laporan
+    Route::get('/masterlaborat', [LaporanLaboratController::class, 'masterlaborat']);
+    Route::get('/pemeriksaan-by-gender', [LaporanLaboratController::class, 'pemeriksaanByGender']);
 });

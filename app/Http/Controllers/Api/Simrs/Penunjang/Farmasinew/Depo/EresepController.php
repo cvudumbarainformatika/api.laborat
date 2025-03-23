@@ -381,6 +381,9 @@ class EresepController extends Controller
 
     public function pembuatanresep(Request $request)
     {
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        // ]);
         $request->validate([
             'kodeobat' => 'required',
             // 'jumlah' => 'required',
@@ -689,6 +692,7 @@ class EresepController extends Controller
                     'tiperesep' => $tiperesep,
                     'iter_expired' => $iter_expired,
                     'iter_jml' => $iter_jml,
+                    'flag_krs' => !$request->respkrs ? null : '1',
                     // 'iter_expired' => $request->iter_expired ?? '',
                     'tagihanrs' => $request->tagihanrs ?? 0,
                 ]
@@ -2321,13 +2325,21 @@ class EresepController extends Controller
     public function ambilIter(Request $request)
     {
         // $noresep = $request->noresep_asal ?? $request->noresep;
-
+        // 'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+        //     'permintaanresep.mobat.indikasi',
+        //     'permintaanresep.aturansigna:signa,jumlah',
+        //     'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
+        //     'permintaanracikan.mobat.indikasi',
+        //     'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+        //     'asalpermintaanresep.mobat.indikasi',
+        //     'asalpermintaanresep.aturansigna:signa,jumlah',
         $head = Resepkeluarheder::where('noresep', $request->noresep)
             ->when(
                 $request->noresep_asal === null || $request->noresep_asal === '',
                 function ($h) use ($request) {
                     $h->with([
-                        'permintaanresep.mobat',
+                        'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                        'permintaanresep.mobat.indikasi',
                         'permintaanresep.stok' => function ($stok) use ($request) {
                             $stok->selectRaw('kdobat, sum(jumlah) as total')
                                 ->where('kdruang', $request->depo)
@@ -2379,7 +2391,8 @@ class EresepController extends Controller
                                 ])
                                 ->groupBy('kdobat');
                         },
-                        'permintaanracikan.mobat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                        'permintaanracikan.mobat.indikasi',
                         'permintaanracikan.stok' => function ($stok) use ($request) {
                             $stok->selectRaw('kdobat, sum(jumlah) as total')
                                 ->where('kdruang', $request->depo)
@@ -2452,7 +2465,9 @@ class EresepController extends Controller
                                 })
                                 ->whereNotNull('resep_keluar_racikan_r.kdobat');
                         },
-                        'asalpermintaanresep.mobat',
+                        'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                        'asalpermintaanresep.mobat.indikasi',
+                        'asalpermintaanresep.aturansigna:signa,jumlah',
                         'asalpermintaanresep.stok' => function ($stok) use ($request) {
                             $stok->selectRaw('kdobat, sum(jumlah) as total')
                                 ->where('kdruang', $request->depo)
@@ -2504,7 +2519,7 @@ class EresepController extends Controller
                                 ])
                                 ->groupBy('kdobat');
                         },
-                        'asalpermintaanracikan.mobat',
+                        'asalpermintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                         'asalpermintaanracikan.stok' => function ($stok) use ($request) {
                             $stok->selectRaw('kdobat, sum(jumlah) as total')
                                 ->where('kdruang', $request->depo)
