@@ -144,7 +144,7 @@ class RanapController extends Controller
 
                     // if ($ruangan === 'IC' || $ruangan === 'ICC') {
                         $query->where('rs24.groups', '=', $ruangan)
-                        ->orWhere('rs23.titipan', '=',  $ruangan);
+                        ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
                     // } else {
                     //     $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
                     //     ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
