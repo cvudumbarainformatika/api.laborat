@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Api\Arsip\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Arsip\Master\MkelasifikasiArsip;
+use App\Models\Arsip\Master\MmediaArsip;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class MkelasifikasiController extends Controller
+class MmediaController extends Controller
 {
     public function simpan(Request $request)
     {
-        $simpan = MkelasifikasiArsip::updateOrCreate(
+        $simpan = MmediaArsip::updateOrCreate(
             [
                 'id' => $request->id
             ],
             [
-                'kode' => $request->kode,
-                'nama' => $request->kelasifikasi,
-                'retensi' => $request->retensi
+                'nama_media' => $request->media,
             ]
         );
         if(!$simpan)
@@ -26,29 +24,28 @@ class MkelasifikasiController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan'], 500);
         }
 
-        $result = self::listmkelasifikasi();
+        $result = self::listmastermedia();
 
         return new JsonResponse(['message' => 'Data Berhasil Disimpan','result' => $result], 200);
     }
 
-    public static function listmkelasifikasi()
+    public static function listmastermedia()
     {
-        $list = MkelasifikasiArsip::where('hide','')
+        $list = MmediaArsip::whereNull('hide')
         ->where(function ($query) {
-            $query->where('kode', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
+            $query->where('nama_media', 'LIKE', '%' . request('q') . '%');
         })
         ->get();
         return ($list);
     }
 
-    public function hapuskelasifikasi(Request $request)
+    public function hapusmastermedia(Request $request)
     {
-        $update = MkelasifikasiArsip::where('id',$request->id)->first();
+        $update = MmediaArsip::where('id',$request->id)->first();
         $update->hide = '1';
         $update->save();
 
-        $result = self::listmkelasifikasi();
+        $result = self::listmastermedia();
 
         return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!', 'result' => $result], 200);
     }

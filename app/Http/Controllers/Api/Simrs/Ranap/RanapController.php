@@ -141,8 +141,16 @@ class RanapController extends Controller
                 //     // }
                 // });
                 if ($ruangan !== 'SEMUA') {
-                    $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
-                    ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
+
+                    // if ($ruangan === 'IC' || $ruangan === 'ICC') {
+                        $query->where('rs24.groups', '=', $ruangan)
+                        ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
+                    // } else {
+                    //     $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
+                    //     ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
+                    // }
+
+                    
                 } 
                 
             })
