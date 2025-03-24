@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
@@ -40,5 +41,12 @@ class Resepkeluarrinciracikan extends Model
     public function opname()
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kdobat');
+    }
+
+
+    // dipakai di laporan
+    public function dokter()
+    {
+        return $this->hasone(Petugas::class, 'kdpegsimrs', 'dokter');
     }
 }
