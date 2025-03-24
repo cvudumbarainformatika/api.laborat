@@ -9,6 +9,8 @@ Route::group([
     'prefix' => 'arsip/master'
 ],function () {
     Route::post('/simpankelasifikasi', [MkelasifikasiController::class, 'simpan']);
+    Route::post('/deletekelasifikasi', [MkelasifikasiController::class, 'hapuskelasifikasi']);
+    Route::get('/getmasterarsip', [MkelasifikasiController::class, 'listmkelasifikasi']);
 });
 
 

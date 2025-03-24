@@ -26,6 +26,30 @@ class MkelasifikasiController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan'], 500);
         }
 
-        return new JsonResponse(['message' => 'Data Berhasil Disimpan'], 200);
+        $result = self::listmkelasifikasi();
+
+        return new JsonResponse(['message' => 'Data Berhasil Disimpan','result' => $result], 200);
+    }
+
+    public static function listmkelasifikasi()
+    {
+        $list = MkelasifikasiArsip::where('hide','')
+        ->where(function ($query) {
+            $query->where('kode', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('nama', 'LIKE', '%' . request('q') . '%');
+        })
+        ->get();
+        return ($list);
+    }
+
+    public function hapuskelasifikasi(Request $request)
+    {
+        $update = MkelasifikasiArsip::where('id',$request->id)->first();
+        $update->hide = '1';
+        $update->save();
+
+        $result = self::listmkelasifikasi();
+
+        return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!', 'result' => $result], 200);
     }
 }
