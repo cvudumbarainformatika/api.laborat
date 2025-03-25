@@ -55,6 +55,8 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
+use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
+use App\Models\Simrs\Penunjang\Hemodialisa\PengkajianHemodialisa;
 use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
@@ -510,5 +512,14 @@ class KunjunganPoli extends Model
     public function diagnosagizi()
     {
         return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
+    }
+
+    public function intradialitik()
+    {
+        return $this->hasMany(Intradialitik::class, 'rs1', 'noreg');
+    }
+    public function pengkajian()
+    {
+        return $this->hasMany(PengkajianHemodialisa::class, 'rs1', 'noreg');
     }
 }

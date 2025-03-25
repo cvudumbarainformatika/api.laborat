@@ -55,6 +55,8 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekranapracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Gizi\AsuhanGizi;
+use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
+use App\Models\Simrs\Penunjang\Hemodialisa\PengkajianHemodialisa;
 use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasiigd;
@@ -428,19 +430,19 @@ class Kunjunganranap extends Model
 
     public function diagnosakeperawatan()
     {
-       return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'rs1');
+        return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'rs1');
     }
     public function diagnosakebidanan()
     {
-       return $this->hasMany(Diagnosakebidanan::class, 'noreg', 'rs1');
+        return $this->hasMany(Diagnosakebidanan::class, 'noreg', 'rs1');
     }
     public function diagnosagizi()
     {
-       return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
+        return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
     }
     public function konsultasi()
     {
-       return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
+        return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
     }
     public function diagnosa()
     {
@@ -459,7 +461,7 @@ class Kunjunganranap extends Model
 
     public function fisio()
     {
-       return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'rs1');
+        return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'rs1');
     }
 
     public function operasi()
@@ -486,7 +488,7 @@ class Kunjunganranap extends Model
     {
         return $this->hasMany(ReqAmbulan::class, 'rs1', 'rs1');
     }
-    
+
     public function penunjanglain()
     {
         return $this->hasMany(Lain::class, 'rs1', 'rs1');
@@ -508,7 +510,7 @@ class Kunjunganranap extends Model
         return $this->hasMany(Transedukasi::class, 'rs1', 'rs1');
     }
 
-    
+
 
     public function hasilradiologi()
     {
@@ -614,33 +616,43 @@ class Kunjunganranap extends Model
         // return $this->hasOne(Resepkeluarheder::class, 'noreg', 'rs1');
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
-    public function kamarranap(){
+    public function kamarranap()
+    {
         return $this->belongsTo(MkamarRanap::class, 'rs6', 'rs1');
     }
 
     public function sepranap()
     {
-       return $this->hasOne(Sepranap::class, 'rs1', 'rs1');
+        return $this->hasOne(Sepranap::class, 'rs1', 'rs1');
     }
 
     public function memo()
     {
-       return $this->hasOne(Memodiagnosadokter::class, 'noreg', 'rs1');
+        return $this->hasOne(Memodiagnosadokter::class, 'noreg', 'rs1');
     }
     public function procedure()
     {
-       return $this->hasMany(ProcedureM::class, 'noreg', 'rs1');
+        return $this->hasMany(ProcedureM::class, 'noreg', 'rs1');
     }
     public function keterangantindakan()
     {
-       return $this->hasMany(KeteranganTindakan::class, 'noreg', 'rs1');
+        return $this->hasMany(KeteranganTindakan::class, 'noreg', 'rs1');
     }
     public function planningdokter()
     {
-       return $this->hasOne(Planningdokter::class, 'noreg', 'rs1');
+        return $this->hasOne(Planningdokter::class, 'noreg', 'rs1');
     }
     public function praanastesi()
     {
         return $this->hasMany(PraAnastesi::class, 'noreg', 'rs1');
+    }
+    // hd
+    public function intradialitik()
+    {
+        return $this->hasMany(Intradialitik::class, 'rs1', 'noreg');
+    }
+    public function pengkajian()
+    {
+        return $this->hasMany(PengkajianHemodialisa::class, 'rs1', 'noreg');
     }
 }
