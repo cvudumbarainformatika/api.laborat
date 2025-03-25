@@ -791,6 +791,13 @@ class DaftarrajalController extends Controller
                     }
                 ]);
             }
+            if ($data->rs4 == 'Kontrol') {
+                $data->load([
+                    'kontrol' => function ($q) {
+                        $q->orderBy('tglRencanaKontrol', 'DESC');
+                    }
+                ]);
+            }
         }
 
         return new JsonResponse([
