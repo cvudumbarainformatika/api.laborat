@@ -33,7 +33,8 @@ class DataResepController extends Controller
                     )
                         ->with('dokter:nama,kdpegsimrs')
                         ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
-                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                        // ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                        ->whereBetween('resep_keluar_h.tgl_selesai', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
                         ->when(request('tipe') != 'all', function ($q) {
                             $q->where('resep_keluar_h.tiperesep', request('tipe'));
                         })
@@ -48,7 +49,8 @@ class DataResepController extends Controller
                             function ($q) {
                                 $q->groupBy('resep_keluar_r.kdobat');
                             }
-                        );
+                        )
+                        ->orderBy('resep_keluar_h.tgl_selesai', 'asc');
                 },
 
                 'resepkeluarracikan' => function ($kel) {
@@ -63,7 +65,8 @@ class DataResepController extends Controller
                     )
                         ->with('dokter:nama,kdpegsimrs')
                         ->leftJoin('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
-                        ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                        // ->where('resep_keluar_h.tgl_selesai', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+                        ->whereBetween('resep_keluar_h.tgl_selesai', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
                         ->when(request('tipe') != 'all', function ($q) {
                             $q->where('resep_keluar_h.tiperesep', request('tipe'));
                         })
@@ -78,7 +81,8 @@ class DataResepController extends Controller
                             function ($q) {
                                 $q->groupBy('resep_keluar_racikan_r.kdobat');
                             }
-                        );
+                        )
+                        ->orderBy('resep_keluar_h.tgl_selesai', 'asc');
                     // ->groupBy('resep_keluar_h.noresep', 'resep_keluar_racikan_r.kdobat');
                 },
             ])
