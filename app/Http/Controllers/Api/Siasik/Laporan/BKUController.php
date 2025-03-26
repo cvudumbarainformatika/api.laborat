@@ -278,15 +278,20 @@ class BKUController extends Controller
     }
     public function bkupengeluaran()
     {
+        $thnsekarang=date('Y');
+        $thn=Carbon::createFromFormat('Y-m-d', request('tahun').'-'. request('bulan').'-01')->format('Y');
         $awal=request('tahun').'-'. request('bulan').'-01';
         $akhir=request('tahun').'-'. request('bulan').'-31';
+        $akhirsebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay()->format('Y-m-d');
+        $awalsebelum= Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->format('Y-m-d');
+
         $npkls = NpkLS_heder::with(['npklsrinci'=> function($npk)
             {
                 $npk->with(['npdlshead'=> function ($npdrinci){
                     $npdrinci->with(['npdlsrinci']);
                 }]);
             }])
-        ->whereBetween('tglnpk', [$awal, $akhir])
+        ->whereBetween('tglpencairan', [$awal, $akhir])
         ->get();
         $pencairanls = NpkLS_heder::with(['npklsrinci'=> function($npk)
             {
@@ -358,6 +363,67 @@ class BKUController extends Controller
         ->whereBetween('tgltrans', [$awal, $akhir])
         ->get();
 
+
+
+        $sblmnpk = NpkLS_heder::where('kunci', '=', '1')
+        ->join('npkls_rinci', 'npkls_rinci.nonpk', 'npkls_heder.nonpk')
+        ->select(DB::raw('IFNULL(sum(npkls_rinci.total),0) as total'))
+        ->whereBetween('tglpencairan', [$awalsebelum, $akhirsebelum])
+        // ->groupBy('npkls_heder.nonpk')
+        ->get();
+
+        $sblmpencairan = NpkLS_heder::where('npkls_heder.nopencairan', '!=', '')
+        ->join('npkls_rinci', 'npkls_rinci.nonpk', 'npkls_heder.nonpk')
+        ->select(DB::raw('IFNULL(sum(npkls_rinci.total),0) as total'))
+        ->whereBetween('tglpencairan', [$awalsebelum, $akhirsebelum])
+        // ->groupBy('npkls_heder.nonpk')
+        ->get();
+
+        $sblmcp = Contrapost::select(DB::raw('IFNULL(sum(nominalcontrapost),0) as total'))
+        ->whereBetween('tglcontrapost', [$awalsebelum. ' 00:00:00', $akhirsebelum. ' 23:59:59'])
+        ->get();
+
+        $sblmspm = SpmUP::select(DB::raw('IFNULL(sum(jumlahspp),0) as total'))
+        ->whereBetween('tglSpm', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $sblmspmgu = SPM_GU::select(DB::raw('IFNULL(sum(jumlahspp),0) as total'))
+        ->whereBetween('tglSpm', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $sblmnpkpanjar=NpkPanjar_Header::where('npkpanjar_heder.nonpdpanjar', '!=','')
+        ->join('npkpanjar_rinci', 'npkpanjar_rinci.nonpk', 'npkpanjar_heder.nonpk')
+        ->select(DB::raw('IFNULL(sum(npkpanjar_rinci.total),0) as total'))
+        ->whereBetween('tglnpk', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $sblmspjpanjar=SpjPanjar_Header::where('spjpanjar_heder.verif', '=', '1')
+        ->join('spjpanjar_rinci', 'spjpanjar_rinci.nospjpanjar', 'spjpanjar_heder.nospjpanjar')
+        ->select(DB::raw('IFNULL(sum(spjpanjar_rinci.jumlahbelanjapanjar),0) as total'))
+        ->whereBetween('tglspjpanjar', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $sblmpengembalianpjr=CpPanjar_Header::join('pengembalianpanjar_rinci', 'pengembalianpanjar_rinci.nopengembalianpanjar', 'pengembalianpanjar_heder.nopengembalianpanjar')
+        ->select(DB::raw('IFNULL(sum(pengembalianpanjar_rinci.sisapanjar),0) as total'))
+        ->whereBetween('pengembalianpanjar_heder.tglpengembalianpanjar', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $sblmcpsisapjr=CpSisaPanjar_Header::join('pengembaliansisapanjar_rinci', 'pengembaliansisapanjar_rinci.nopengembaliansisapanjar', 'pengembaliansisapanjar_heder.nopengembaliansisapanjar')
+        ->select(DB::raw('IFNULL(sum(pengembaliansisapanjar_rinci.sisapanjar),0) as total'))
+        ->whereBetween('pengembaliansisapanjar_heder.tglpengembaliansisapanjar', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+
+        $sblmpergeserankas = GeserKas_Header::join('pergeseranTrinci', 'pergeseranTrinci.notrans', 'pergeseranTheder.notrans')
+        ->select(DB::raw('IFNULL(sum(pergeseranTrinci.jumlah),0) as total'))
+        ->whereBetween('pergeseranTheder.tgltrans', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+        $sblmnihil = Nihil::select(DB::raw('IFNULL(sum(jmlpengembalianreal),0) as total'))
+        ->whereBetween('tgltrans', [$awalsebelum, $akhirsebelum])
+        ->get();
+
+
         $bkupengeluaran = [
             'npkls' => $npkls,
             'pencairanls' => $pencairanls,
@@ -370,7 +436,20 @@ class BKUController extends Controller
             'cpsisapjr' => $cpsisapjr,
             'pergeserankas' => $pergeserankas,
             'nihil' => $nihil,
-            'pegawai' => $pegawai
+            'pegawai' => $pegawai,
+
+
+            'sblmnpk' => $sblmnpk,
+            'sblmpencairan' => $sblmpencairan,
+            'sblmcp' => $sblmcp,
+            'sblmspm' => $sblmspm,
+            'sblmspmgu' => $sblmspmgu,
+            'sblmnpkpanjar' => $sblmnpkpanjar,
+            'sblmspjpanjar' => $sblmspjpanjar,
+            'sblmpengembalianpjr' => $sblmpengembalianpjr,
+            'sblmcpsisapjr' => $sblmcpsisapjr,
+            'sblmpergeserankas' => $sblmpergeserankas,
+            'sblmnihil' => $sblmnihil
         ];
 
         return new JsonResponse($bkupengeluaran);
