@@ -535,7 +535,7 @@ class HemodialisaController extends Controller
                     ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
                     ->orderBy('id', 'DESC');
             },
-            'intradialitik',
+            'intradialitik.user:nama,kdpegsimrs',
             'pengkajian',
         ]);
 

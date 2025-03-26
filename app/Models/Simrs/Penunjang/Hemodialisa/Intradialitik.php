@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Hemodialisa;
 
+use App\Models\Simpeg\Petugas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,4 +34,9 @@ class Intradialitik extends Model
     protected $table = 'rs264';
     protected $guarded = ['id'];
     public $timestamps = false;
+
+    public function user()
+    {
+        return $this->belongsTo(Petugas::class, 'rs17', 'kdpegsimrs');
+    }
 }
