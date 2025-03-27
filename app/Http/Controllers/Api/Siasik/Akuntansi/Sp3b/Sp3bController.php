@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\Siasik\Akuntansi\Sp3b;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Akuntansi\Jurnal\Create_JurnalPosting;
+use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Header;
 use App\Models\Siasik\Akuntansi\Sp3b\Sp3b;
 use App\Models\Siasik\Akuntansi\Sp3b\Sp3b_rinci;
+use App\Models\Siasik\Anggaran\Tampung_pendapatan;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
 use App\Models\Sigarang\Pegawai;
@@ -17,166 +19,246 @@ use Illuminate\Support\Facades\Validator;
 
 class Sp3bController extends Controller
 {
+    public function getdata() {
+
+        $tahunawal=Carbon::createFromFormat('Y-m-d', request('tahun').'-'.request('bulan').'-01')->format('Y');
+        $awal=request('tahun').'-'.request('bulan').'-01';
+        $akhir=request('tahun').'-'.request('bulan').'-31';
+        $sebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay();
+        $thnakhir=Carbon::createFromFormat('Y-m-d', request('tahun').'-'.request('bulan').'-01')->format('Y');
+        if($tahunawal !== $thnakhir){
+         return response()->json(['message' => 'Tahun Tidak Sama'], 500);
+        }
+
+        $pagupendapatan = Tampung_pendapatan::where('tahun', $tahunawal)
+        ->select('t_tampung_pendapatan.koderekeningblud',
+                'akun50_2024.kodeall3 as kode6',
+                'akun50_2024.uraian as uraian6',
+                DB::raw('SUBSTRING_INDEX(t_tampung_pendapatan.koderekeningblud, ".", 3) as kode'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(t_tampung_pendapatan.koderekeningblud, ".", 3) LIMIT 1) as uraian'),
+                )
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 't_tampung_pendapatan.koderekeningblud')
+        ->groupBy('kode')
+        ->get();
+
+        $sebelumpendapatan = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
+        ->where('jurnal_postingotom.verif', '=', '1')
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        ->select('jurnal_postingotom.tanggal',
+            'jurnal_postingotom.kode as kode6',
+            'jurnal_postingotom.uraian as uraian6',
+            DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as subtotal'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian')
+        )
+        ->whereBetween('jurnal_postingotom.tanggal', [$tahunawal.'-01-01', $sebelum])
+        ->groupBy( 'kode')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $sebelumbelanja = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
+        ->where('jurnal_postingotom.verif', '=', '1')
+        ->select('jurnal_postingotom.tanggal',
+            'jurnal_postingotom.kode as kode6',
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian'),
+            DB::raw('sum(jurnal_postingotom.debit) as subtotal')
+            )
+        ->whereBetween('jurnal_postingotom.tanggal', [$tahunawal.'-01-01', $sebelum])
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        ->groupBy( 'kode')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $sebelumpenyesuaian = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$tahunawal.'-01-01', $sebelum])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'jurnalumum_rinci.kodepsap13 as kode6',
+                'jurnalumum_rinci.uraianpsap13 as uraian6',
+                DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian'))
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
+        ->orWhere('jurnalumum_rinci.kodepsap13', 'LIKE', '5.' . '%')
+        ->groupBy( 'kode')
+        ->get();
+
+        $sebelumpembiayaan = SisaAnggaran::where('tahun', request('tahun'))
+        ->select('silpa.tanggal',
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(silpa.koderek50, ".", 3) LIMIT 1) as uraian'),
+                DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
+                DB::raw('sum(silpa.nominal) as total'))
+        ->whereBetween('silpa.tanggal', [$tahunawal.'-01-01', $sebelum])
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'silpa.koderek50')
+        ->groupBy('kode')
+        ->get();
+
+        $pendapatan = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
+        ->where('jurnal_postingotom.verif', '=', '1')
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        ->select('jurnal_postingotom.tanggal',
+            'jurnal_postingotom.kode as kode6',
+            'jurnal_postingotom.uraian as uraian6',
+            DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as subtotal'),
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian')
+        )
+        ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->groupBy( 'kode')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $penyeseuaian = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'jurnalumum_rinci.kodepsap13 as kode6',
+                'jurnalumum_rinci.uraianpsap13 as uraian6',
+                DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian'))
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
+        ->orWhere('jurnalumum_rinci.kodepsap13', 'LIKE', '5.' . '%')
+        ->groupBy( 'kode')
+        ->get();
+
+        $belanja = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
+        ->where('jurnal_postingotom.verif', '=', '1')
+        ->select('jurnal_postingotom.tanggal',
+            DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
+            DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian'),
+            DB::raw('sum(jurnal_postingotom.debit) as subtotal')
+            )
+        ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
+        ->groupBy( 'kode')
+        ->orderBy('kode', 'asc')
+        ->get();
+
+        $pembiayaan = SisaAnggaran::where('tahun', request('tahun'))
+        ->select('silpa.tanggal',
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(silpa.koderek50, ".", 3) LIMIT 1) as uraian'),
+                DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
+                DB::raw('sum(silpa.nominal) as total'))
+        ->whereBetween('silpa.tanggal', [$awal, $akhir])
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'silpa.koderek50')
+        ->groupBy('kode')
+        ->get();
+
+        $data = [
+            'pagupendapatan' => $pagupendapatan,
+            'pendapatan' => $pendapatan,
+            'belanja' => $belanja,
+            'pembiayaan' => $pembiayaan,
+            'penyesuaian' => $penyeseuaian,
+            'sebelumpendapatan' => $sebelumpendapatan,
+            'sebelumbelanja' => $sebelumbelanja,
+            'sebelumpenyesuaian' => $sebelumpenyesuaian,
+            'sebelumpembiayaan' => $sebelumpembiayaan,
+        ];
+        return new JsonResponse ($data);
+    }
     // public function getdata() {
+    // $tahun = request('tahun');
+    // $bulan = request('bulan');
 
-    //     $tahunawal=Carbon::createFromFormat('Y-m-d', request('tahun').'-'.request('bulan').'-01')->format('Y');
-    //     $awal=request('tahun').'-'.request('bulan').'-01';
-    //     $akhir=request('tahun').'-'.request('bulan').'-31';
-    //     $thnakhir=Carbon::createFromFormat('Y-m-d', request('tahun').'-'.request('bulan').'-01')->format('Y');
-    //     if($tahunawal !== $thnakhir){
-    //      return response()->json(['message' => 'Tahun Tidak Sama'], 500);
-    //     }
+    // // Tanggal awal dan akhir untuk bulan ini
+    // $awal = $tahun . '-' . $bulan . '-01';
+    // $akhir = $tahun . '-' . $bulan . '-31';
 
-    //     $pendapatan = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
-    //     ->where('jurnal_postingotom.verif', '=', '1')
-    //     ->select('jurnal_postingotom.tanggal',
-    //         'jurnal_postingotom.kode as kode6',
-    //         'jurnal_postingotom.uraian',
-    //         DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
-    //     )->selectRaw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as subtotal')
-    //     ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-    //     ->with('penyesuaian',  function($sel) use ($awal,$akhir){
-    //         $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
-    //         ->select('jurnalumum_rinci.kodepsap13',
-    //                 'jurnalumum_heder.tanggal',
-    //                 DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian'))
-    //         ->where('jurnalumum_heder.verif', '=', '1')
-    //         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+    // // Tanggal awal dan akhir untuk data sebelumnya (1 Januari hingga akhir bulan sebelumnya)
+    // $sebelumAwal = $tahun . '-01-01';
+    // $sebelumAkhir = Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->endOfMonth()->format('Y-m-d');
 
-    //         ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '4.' . '%')
-    //         ->where('jurnalumum_heder.keterangan', 'NOT LIKE','Reklas Pendapatan' . '%')
-    //         ->groupBy( 'kodepsap13');
-    //     })
-    //     ->groupBy( 'kode')
-    //     ->orderBy('kode', 'asc')
-    //     ->get();
+    // // Fungsi untuk mengambil data dari periode tertentu
+    // $getData = function($table, $kodePrefix, $awal, $akhir, $isPendapatan = false) {
+    //     return $table::where('jurnal_postingotom.kode', 'LIKE', $kodePrefix . '%')
+    //         ->where('jurnal_postingotom.verif', '=', '1')
+    //         ->select(
+    //             'jurnal_postingotom.tanggal',
+    //             DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
+    //             'jurnal_postingotom.uraian',
+    //             DB::raw($isPendapatan ? 'sum(jurnal_postingotom.kredit - jurnal_postingotom.debit) as subtotal' : 'sum(jurnal_postingotom.debit) as subtotal')
+    //         )
+    //         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+    //         ->groupBy('kode')
+    //         ->orderBy('kode', 'asc')
+    //         ->get();
+    // };
 
-    //     $belanja = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', '5.' . '%')
-    //     ->where('jurnal_postingotom.verif', '=', '1')
-    //     ->select('jurnal_postingotom.tanggal',
-    //         DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode3'),
-    //         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian'),
-    //     )->selectRaw('sum(jurnal_postingotom.debit) as subtotal')
-    //     ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-    //     ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
-    //     ->groupBy( 'kode3')
-    //     ->orderBy('kode3', 'asc')
-    //     ->get();
-
-    //     $pembiayaan = SisaAnggaran::where('tahun', request('tahun'))
-    //     ->select('silpa.tanggal',
-    //             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(silpa.koderek50, ".", 3) LIMIT 1) as uraian'),
-    //             DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
-    //             DB::raw('sum(silpa.nominal) as total'))
+    // // Ambil data bulan ini
+    // $pendapatan = $getData(Create_JurnalPosting::class, '4.', $awal, $akhir, true);
+    // $belanja = $getData(Create_JurnalPosting::class, '5.', $awal, $akhir);
+    // $pembiayaan = SisaAnggaran::where('tahun', $tahun)
+    //     ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3)'))
+    //     ->select(
+    //         'silpa.tanggal',
+    //         DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
+    //         'akun50_2024.uraian',
+    //         DB::raw('sum(silpa.nominal) as total')
+    //     )
     //     ->whereBetween('silpa.tanggal', [$awal, $akhir])
-    //     ->join('akun50_2024', 'akun50_2024.kodeall3', 'silpa.koderek50')
     //     ->groupBy('kode')
     //     ->get();
 
-        // $data = [
-        //     'pendapatan' => $pendapatan,
-        //     'belanja' => $belanja,
-        //     'pembiayaan' => $pembiayaan,
-        //     'sebelumpendapatan' => $sebelumpendapatan,
-        //     'sebelumbelanja' => $sebelumbelanja,
-        //     'sebelumpembiayaan' => $sebelumpembiayaan,
-        // ];
-        // return new JsonResponse ($data);
+    // // Ambil data sebelumnya (1 Januari hingga akhir bulan sebelumnya)
+    // $sebelumpendapatan = $getData(Create_JurnalPosting::class, '4.', $sebelumAwal, $sebelumAkhir, true);
+    // $sebelumbelanja = $getData(Create_JurnalPosting::class, '5.', $sebelumAwal, $sebelumAkhir);
+    // $sebelumpembiayaan = SisaAnggaran::where('tahun', $tahun)
+    //     ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3)'))
+    //     ->select(
+    //         'silpa.tanggal',
+    //         DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
+    //         'akun50_2024.uraian',
+    //         DB::raw('sum(silpa.nominal) as total')
+    //     )
+    //     ->whereBetween('silpa.tanggal', [$sebelumAwal, $sebelumAkhir])
+    //     ->groupBy('kode')
+    //     ->get();
+
+    // // Fungsi untuk menghitung nilai penyesuaian
+    // $hitungPenyesuaian = function($data, $awal, $akhir) {
+    //     $data->each(function ($item) use ($awal, $akhir) {
+    //         $penyesuaian = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', $item->kode . '%')
+    //             ->where('jurnal_postingotom.verif', '=', '1')
+    //             ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+    //             ->join('jurnalumum_rinci', 'jurnalumum_rinci.kodepsap13', '=', 'jurnal_postingotom.kode')
+    //             ->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', '=', 'jurnalumum_rinci.nobukti')
+    //             ->select(DB::raw('sum(jurnalumum_rinci.kredit - jurnalumum_rinci.debet) as totalpenyesuaian'))
+    //             ->where('jurnalumum_heder.verif', '=', '1')
+    //             ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan%')
+    //             ->first();
+
+    //         $item->totalpenyesuaian = $penyesuaian ? $penyesuaian->totalpenyesuaian : 0;
+    //         $item->total = $item->subtotal + $item->totalpenyesuaian;
+    //     });
+    // };
+
+    // // Hitung nilai penyesuaian untuk pendapatan bulan ini
+    // $hitungPenyesuaian($pendapatan, $awal, $akhir);
+
+    // // Hitung nilai penyesuaian untuk pendapatan sebelumnya
+    // $hitungPenyesuaian($sebelumpendapatan, $sebelumAwal, $sebelumAkhir);
+
+    // // Gabungkan data
+    // $data = [
+    //     'pendapatan' => $pendapatan,
+    //     'belanja' => $belanja,
+    //     'pembiayaan' => $pembiayaan,
+    //     'sebelumpendapatan' => $sebelumpendapatan,
+    //     'sebelumbelanja' => $sebelumbelanja,
+    //     'sebelumpembiayaan' => $sebelumpembiayaan,
+    // ];
+
+    //     return new JsonResponse($data);
     // }
-    public function getdata() {
-    $tahun = request('tahun');
-    $bulan = request('bulan');
-
-    // Tanggal awal dan akhir untuk bulan ini
-    $awal = $tahun . '-' . $bulan . '-01';
-    $akhir = $tahun . '-' . $bulan . '-31';
-
-    // Tanggal awal dan akhir untuk data sebelumnya (1 Januari hingga akhir bulan sebelumnya)
-    $sebelumAwal = $tahun . '-01-01';
-    $sebelumAkhir = Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->endOfMonth()->format('Y-m-d');
-
-    // Fungsi untuk mengambil data dari periode tertentu
-    $getData = function($table, $kodePrefix, $awal, $akhir, $isPendapatan = false) {
-        return $table::where('jurnal_postingotom.kode', 'LIKE', $kodePrefix . '%')
-            ->where('jurnal_postingotom.verif', '=', '1')
-            ->select(
-                'jurnal_postingotom.tanggal',
-                DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
-                'jurnal_postingotom.uraian',
-                DB::raw($isPendapatan ? 'sum(jurnal_postingotom.kredit - jurnal_postingotom.debit) as subtotal' : 'sum(jurnal_postingotom.debit) as subtotal')
-            )
-            ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-            ->groupBy('kode')
-            ->orderBy('kode', 'asc')
-            ->get();
-    };
-
-    // Ambil data bulan ini
-    $pendapatan = $getData(Create_JurnalPosting::class, '4.', $awal, $akhir, true);
-    $belanja = $getData(Create_JurnalPosting::class, '5.', $awal, $akhir);
-    $pembiayaan = SisaAnggaran::where('tahun', $tahun)
-        ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3)'))
-        ->select(
-            'silpa.tanggal',
-            DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
-            'akun50_2024.uraian',
-            DB::raw('sum(silpa.nominal) as total')
-        )
-        ->whereBetween('silpa.tanggal', [$awal, $akhir])
-        ->groupBy('kode')
-        ->get();
-
-    // Ambil data sebelumnya (1 Januari hingga akhir bulan sebelumnya)
-    $sebelumpendapatan = $getData(Create_JurnalPosting::class, '4.', $sebelumAwal, $sebelumAkhir, true);
-    $sebelumbelanja = $getData(Create_JurnalPosting::class, '5.', $sebelumAwal, $sebelumAkhir);
-    $sebelumpembiayaan = SisaAnggaran::where('tahun', $tahun)
-        ->join('akun50_2024', 'akun50_2024.kodeall3', '=', DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3)'))
-        ->select(
-            'silpa.tanggal',
-            DB::raw('SUBSTRING_INDEX(silpa.koderek50, ".", 3) as kode'),
-            'akun50_2024.uraian',
-            DB::raw('sum(silpa.nominal) as total')
-        )
-        ->whereBetween('silpa.tanggal', [$sebelumAwal, $sebelumAkhir])
-        ->groupBy('kode')
-        ->get();
-
-    // Fungsi untuk menghitung nilai penyesuaian
-    $hitungPenyesuaian = function($data, $awal, $akhir) {
-        $data->each(function ($item) use ($awal, $akhir) {
-            $penyesuaian = Create_JurnalPosting::where('jurnal_postingotom.kode', 'LIKE', $item->kode . '%')
-                ->where('jurnal_postingotom.verif', '=', '1')
-                ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-                ->join('jurnalumum_rinci', 'jurnalumum_rinci.kodepsap13', '=', 'jurnal_postingotom.kode')
-                ->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', '=', 'jurnalumum_rinci.nobukti')
-                ->select(DB::raw('sum(jurnalumum_rinci.kredit - jurnalumum_rinci.debet) as totalpenyesuaian'))
-                ->where('jurnalumum_heder.verif', '=', '1')
-                ->where('jurnalumum_heder.keterangan', 'NOT LIKE', 'Reklas Pendapatan%')
-                ->first();
-
-            $item->totalpenyesuaian = $penyesuaian ? $penyesuaian->totalpenyesuaian : 0;
-            $item->total = $item->subtotal + $item->totalpenyesuaian;
-        });
-    };
-
-    // Hitung nilai penyesuaian untuk pendapatan bulan ini
-    $hitungPenyesuaian($pendapatan, $awal, $akhir);
-
-    // Hitung nilai penyesuaian untuk pendapatan sebelumnya
-    $hitungPenyesuaian($sebelumpendapatan, $sebelumAwal, $sebelumAkhir);
-
-    // Gabungkan data
-    $data = [
-        'pendapatan' => $pendapatan,
-        'belanja' => $belanja,
-        'pembiayaan' => $pembiayaan,
-        'sebelumpendapatan' => $sebelumpendapatan,
-        'sebelumbelanja' => $sebelumbelanja,
-        'sebelumpembiayaan' => $sebelumpembiayaan,
-    ];
-
-    return new JsonResponse($data);
-}
 
     public function listdata() {
         $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
