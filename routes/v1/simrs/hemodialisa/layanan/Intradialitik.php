@@ -8,6 +8,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/hemodialisa/layanan/intradialitik'
 ], function () {
-    Route::post('/simpan', [IntradialitikController::class, 'simpan']);
     Route::get('/list', [IntradialitikController::class, 'list']);
+    Route::post('/simpan', [IntradialitikController::class, 'simpan']);
+    Route::post('/hapus', [IntradialitikController::class, 'hapus']);
 });

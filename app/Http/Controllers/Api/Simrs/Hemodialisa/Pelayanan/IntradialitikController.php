@@ -69,4 +69,19 @@ class IntradialitikController extends Controller
             'data' => $data,
         ]);
     }
+    public function hapus(Request $request)
+    {
+        $data = Intradialitik::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan',
+            ], 410);
+        }
+        $data->delete();
+
+        return new JsonResponse([
+            'message' => 'Data berhasil dihapus',
+            // 'data' => $data,
+        ]);
+    }
 }
