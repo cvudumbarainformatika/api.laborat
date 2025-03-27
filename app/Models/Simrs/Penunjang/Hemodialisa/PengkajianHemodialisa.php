@@ -30,9 +30,9 @@ class PengkajianHemodialisa extends Model
      * rs11    varchar(255)  YES     (NULL)               suhu
      * rs12    varchar(255)  YES     (NULL)               tb
      * rs13    varchar(255)  YES     (NULL)               bb
-     * rs14    varchar(255)  YES     (NULL)               parameter
-     * rs15    varchar(255)  YES     (NULL)               parameterx
-     * rs16    varchar(255)  YES     (NULL)               parameterxx
+     * rs14    varchar(255)  YES     (NULL)               parameter / nafsu makan
+     * rs15    varchar(255)  YES     (NULL)               parameterx /  diagnosa khusus
+     * rs16    varchar(255)  YES     (NULL)               parameterxx / status fungsional
      * rs17    varchar(255)  YES     (NULL)               fungsional
      * rs18    varchar(255)  YES     (NULL)               lainx
      *
