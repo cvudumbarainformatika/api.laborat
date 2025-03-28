@@ -514,8 +514,6 @@ class KunjunganPoli extends Model
         return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
     }
 
-<<<<<<< HEAD
-=======
     public function intradialitik()
     {
         return $this->hasMany(Intradialitik::class, 'rs1', 'noreg');
@@ -524,5 +522,4 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(PengkajianHemodialisa::class, 'rs1', 'noreg');
     }
->>>>>>> 7fa6df301aba3630e3937ba28d961d390e17d9ef
 }
