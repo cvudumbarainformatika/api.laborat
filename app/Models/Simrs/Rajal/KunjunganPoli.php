@@ -511,4 +511,5 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Diagnosagizi::class, 'noreg', 'rs1');
     }
+
 }

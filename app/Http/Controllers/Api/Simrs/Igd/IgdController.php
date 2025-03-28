@@ -287,6 +287,9 @@ class IgdController extends Controller
                 )->where('kdruang', 'POL014');
             },
             'skalatransfer',
+            'dokumenluar' => function ($neo) {
+                $neo->with(['pegawai:id,nama']);
+            },
             'pemberianobat' => function ($pemberianobat){
                 $pemberianobat->with(
                     [
