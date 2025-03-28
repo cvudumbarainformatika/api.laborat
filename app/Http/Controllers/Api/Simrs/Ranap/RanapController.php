@@ -135,22 +135,10 @@ class RanapController extends Controller
             //     ])
 
             ->where(function ($query) use ($ruangan) {
-                // $query->where(function ($query) use ($ruangan) {
-                //     // for ($i = 0; $i < count($ruangan); $i++) {
-                //     //     $query->orWhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                //     // }
-                // });
                 if ($ruangan !== 'SEMUA') {
-
-                    if ($ruangan === 'IC' || $ruangan === 'ICC') {
-                        $query->where('rs23.rs5', '=', $ruangan)
-                        ->orWhere('rs23.titipan', '=',  $ruangan);
-                    } else {
-                        $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
-                        ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
-                    }
-
-                    
+                    $query->where('rs24.groups', '=', $ruangan)
+                    // ->orWhere('rs23.titipan', '=',  $ruangan);
+                    ->orWhere('rs23.titipan', 'like',  $ruangan . '%');
                 } 
                 
             })
@@ -286,20 +274,11 @@ class RanapController extends Controller
 
 
             ->where(function ($query) use ($ruangan) {
-                // $query->where(function ($query) use ($ruangan) {
-                //     // for ($i = 0; $i < count($ruangan); $i++) {
-                //     //     $query->orWhere('rs23.rs5', 'like',  '%' . $ruangan[$i] . '%');
-                //     // }
-                // });
                 if ($ruangan !== 'SEMUA') {
-                    // $query->where('rs24.groups', '=',  $ruangan)
+                    $query->where('rs24.groups', '=', $ruangan)
                     // ->orWhere('rs23.titipan', '=',  $ruangan);
-                    $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
-                    ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
+                    ->orWhere('rs23.titipan', 'like',  $ruangan . '%');
                 } 
-                // else {
-                //     $query->where('rs23.rs5', '!=',  '');
-                // }
                 
             })
             

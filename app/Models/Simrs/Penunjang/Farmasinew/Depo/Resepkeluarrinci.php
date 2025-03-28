@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanRinci;
@@ -61,5 +62,11 @@ class Resepkeluarrinci extends Model
     public function penerimaanrinci()
     {
         return $this->hasMany(PenerimaanRinci::class, 'nopenerimaan', 'nopenerimaan');
+    }
+
+    // dipakai di laporan
+    public function dokter()
+    {
+        return $this->hasone(Petugas::class, 'kdpegsimrs', 'dokter');
     }
 }

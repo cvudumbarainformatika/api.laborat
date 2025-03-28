@@ -539,9 +539,21 @@ class RegJurnalController extends Controller
         $datatime = Create_JurnalPosting::where('tglverif', '=', NULL)->update(['tglverif' => $time]);
         return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', $data, $datatime], 200);
 
+
+        //update kode
+        // $awal=request('tgl', 'Y-m-d');
+        // $akhir=request('tglx', 'Y-m-d');
+        // $data = Create_JurnalPosting::where('kode', request('kode'))
+        // ->whereBetween('tanggal', [$awal, $akhir])
+        // ->update(['kode' => '7.1.04.16.01.0001',
+        // 'uraian' => 'Pendapatan dari BLUD - LO'
+        // ]);
+        // // ->get();
+        // return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', $data], 200);
     }
     public function cancelverif(Request $request){
         $time = date('Y-m-d H:i:s');
+
         $data = Create_JurnalPosting::where('notrans', $request->notrans);
         // return $data;
         $data->update([
