@@ -190,13 +190,15 @@ class FormatingHelper
         $kdgroupnakes = $user->kdgroupnakes;
         $kddpjp = $user->kddpjp;
         $kode_ruang = $user->kode_ruang;
+        $kode_ruang_arsip = $user->kdarteri;
         return (
             [
                 'kodesimrs' => $kdpegsimrs,
                 'kdruang' => $kdruang,
                 'kdgroupnakes' => $kdgroupnakes,
                 'kddpjp' => $kddpjp,
-                'kode_ruang' => $kode_ruang
+                'kode_ruang' => $kode_ruang,
+                'kode_ruang_arsip' => $kode_ruang_arsip
             ]);
     }
 
@@ -255,5 +257,15 @@ class FormatingHelper
             $has = $has . "0";
         }
         return $has . $n  . '/' . $kode . '/' . $rom[date('n')] . '/' . date('Y');
+    }
+
+    public static function noarsip($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 10 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $has . $n . "/" . date("Y") . "/" . $kode;
     }
 }
