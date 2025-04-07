@@ -72,7 +72,7 @@ class ListDataArsipController extends Controller
             try {
               $files = $request->file('dokumen');
 
-              $user = auth()->user()->pegawai_id;
+            //   $user = auth()->user()->pegawai_id;
 
               if (!empty($files)) {
 
