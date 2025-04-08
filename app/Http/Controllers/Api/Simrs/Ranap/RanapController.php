@@ -23,18 +23,18 @@ class RanapController extends Controller
         $response = (object)[
             'total' => $total,
             'data' => $data
-          ];
-    
+        ];
+
         return response()->json($response);
     }
 
     public static function query_table()
     {
-        $hr_ini = date('Y-m-d'). ' 23:59:59';
-        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 00:00:00';
+        $hr_ini = date('Y-m-d') . ' 23:59:59';
+        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d') . ' 00:00:00';
 
-        $from = request('to'). ' 00:00:00';
-        $to = request('from'). ' 23:59:59';
+        $from = request('to') . ' 00:00:00';
+        $to = request('from') . ' 23:59:59';
 
         $ruangan = request('koderuangan');
         $data = DB::table('rs23')->select(
@@ -98,11 +98,11 @@ class RanapController extends Controller
             'rs23_nosurat.kddrygmenyatakan',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
-            )
+        )
 
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
-            // ->leftjoin('tflag_covid', function ($q) { 
+            // ->leftjoin('tflag_covid', function ($q) {
             //     $q->on('tflag_covid.noreg', 'rs23.rs1')
             //       ->where('tflag_covid.stat', 'MASUK')
             //       ->where('tflag_covid.ruang', 'POL014');
@@ -119,11 +119,12 @@ class RanapController extends Controller
             ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
             ->leftjoin('rs23_sambung', 'rs23_sambung.noreg', 'rs23.rs1') // sambungan rs23
 
- 
-            
+
+
             ->addSelect(DB::raw(
-                '(SELECT rs4 FROM rs23 WHERE rs23.rs2 = rs15.rs1 AND rs23.rs4 != "0000-00-00 00:00:00" ORDER BY rs4 DESC LIMIT 1) 
-                 as last_visit'))
+                '(SELECT rs4 FROM rs23 WHERE rs23.rs2 = rs15.rs1 AND rs23.rs4 != "0000-00-00 00:00:00" ORDER BY rs4 DESC LIMIT 1)
+                 as last_visit'
+            ))
             // ->addSelect(DB::raw(
             //     '(SELECT SUBSTRING_INDEX(GROUP_CONCAT(rs4 from rs23 where rs23.rs2 = rs15.rs1 order by rs4 desc, ','), ',', 2)
             //     as last_visit'))
@@ -137,25 +138,23 @@ class RanapController extends Controller
             ->where(function ($query) use ($ruangan) {
                 if ($ruangan !== 'SEMUA') {
                     $query->where('rs24.groups', '=', $ruangan)
-                    // ->orWhere('rs23.titipan', '=',  $ruangan);
-                    ->orWhere('rs23.titipan', 'like',  $ruangan . '%');
-                } 
-                
+                        // ->orWhere('rs23.titipan', '=',  $ruangan);
+                        ->orWhere('rs23.titipan', 'like',  $ruangan . '%');
+                }
             })
-            ->where(function($query) use ($from, $to) {
+            ->where(function ($query) use ($from, $to) {
                 if (request('status') === 'Pulang') {
                     // $query->where('rs23.rs4', 'like',  '%' . request('from'). '%')
                     // $query->where('rs23.rs4', '=',  request('from'))
                     $query->whereBetween('rs23.rs4', [$from, $to])
-                        ->whereIn('rs23.rs22',['2','3']);
+                        ->whereIn('rs23.rs22', ['2', '3']);
                 } else {
-                    $query->where('rs23.rs22','=','')
-                    ->where('rs23.rs1', '!=', '');
+                    $query->where('rs23.rs22', '=', '')
+                        ->where('rs23.rs1', '!=', '');
                 }
-                
             })
 
-            
+
             ->where(function ($query) {
                 $query->when(request('q'), function ($q) {
                     $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
@@ -167,7 +166,6 @@ class RanapController extends Controller
             ->groupBy('rs23.rs1');
 
         return $data;
-
     }
 
     public function kunjunganpasien()
@@ -179,7 +177,7 @@ class RanapController extends Controller
         if (request('to') === null || request('to') === '') {
             $tgl = Carbon::now()->format('Y-m-d');
         } else {
-            $tgl = request('to') ;
+            $tgl = request('to');
         }
 
         if (request('from') === null || request('from') === '') {
@@ -189,15 +187,15 @@ class RanapController extends Controller
         }
 
         // $tanggal = $tgl. ' 23:59:59';
-        // $tanggalx = $tglx. ' 00:00:00'; 
-        $tanggal = $tgl. ' 00:00:00';
-        $tanggalx = $tglx. ' 23:59:59'; 
-        // $tanggalx = Carbon::now()->subDays(180)->format('Y-m-d'). ' 00:00:00'; 
+        // $tanggalx = $tglx. ' 00:00:00';
+        $tanggal = $tgl . ' 00:00:00';
+        $tanggalx = $tglx . ' 23:59:59';
+        // $tanggalx = Carbon::now()->subDays(180)->format('Y-m-d'). ' 00:00:00';
 
         // return $tanggalx;
 
-        $hr_ini = date('Y-m-d'). ' 23:59:59';
-        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 00:00:00';
+        $hr_ini = date('Y-m-d') . ' 23:59:59';
+        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d') . ' 00:00:00';
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request('koderuangan');
@@ -259,7 +257,7 @@ class RanapController extends Controller
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
-            // ->leftjoin('tflag_covid', function ($q) { 
+            // ->leftjoin('tflag_covid', function ($q) {
             //     $q->on('tflag_covid.noreg', 'rs23.rs1')
             //       ->where('tflag_covid.stat', 'MASUK')
             //       ->where('tflag_covid.ruang', 'POL014');
@@ -276,30 +274,28 @@ class RanapController extends Controller
             ->where(function ($query) use ($ruangan) {
                 if ($ruangan !== 'SEMUA') {
                     $query->where('rs24.groups', '=', $ruangan)
-                    // ->orWhere('rs23.titipan', '=',  $ruangan);
-                    ->orWhere('rs23.titipan', 'like',  $ruangan . '%');
-                } 
-                
+                        // ->orWhere('rs23.titipan', '=',  $ruangan);
+                        ->orWhere('rs23.titipan', 'like',  $ruangan . '%');
+                }
             })
-            
 
-            
+
+
             // ->whereDate('rs23.rs3', '<=', $tgl)
             // ->whereIn('rs23.rs22', $status)
 
             // ->where(function ($x) {
             //     $x->orWhereNull('dokterdpjp');
             // })
-            ->where(function($query) use ($hr_ini, $hr_180) {
+            ->where(function ($query) use ($hr_ini, $hr_180) {
                 if (request('status') === 'Pulang') {
                     // $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
-                    $query->where('rs23.rs4', 'like',  '%' . request('from'). '%')
-                        ->whereIn('rs23.rs22',['2','3']);
+                    $query->where('rs23.rs4', 'like',  '%' . request('from') . '%')
+                        ->whereIn('rs23.rs22', ['2', '3']);
                 } else {
-                    $query->where('rs23.rs22','=','')
-                    ->where('rs23.rs1', '!=', '');
+                    $query->where('rs23.rs22', '=', '')
+                        ->where('rs23.rs1', '!=', '');
                 }
-                
             })
 
             // ->where(function ($q) use ($status) {
@@ -311,7 +307,7 @@ class RanapController extends Controller
             //     $q->whereIn('rs23.rs22', $status);
             // })
 
-            
+
             ->where(function ($query) {
                 $query->when(request('q'), function ($q) {
                     $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
@@ -319,10 +315,10 @@ class RanapController extends Controller
                         ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
                 });
             })
-            
 
 
-            
+
+
             // ->with([
             //     'newapotekrajal' => function ($newapotekrajal) {
             //         $newapotekrajal->with([
@@ -362,15 +358,16 @@ class RanapController extends Controller
         return new JsonResponse($data);
     }
 
-    
+
 
     public function bukalayanan(Request $request)
     {
         $cekx = Kunjunganranap::query()
-        ->select(
-            'rs1',
-            'rs1 as noreg',
-            'rs2 as norm')
+            ->select(
+                'rs1',
+                'rs1 as noreg',
+                'rs2 as norm'
+            )
             ->where('rs1', '=', $request->noreg)
             ->with([
                 'dataigd:rs1,rs3 as tglmasuk_igd',
@@ -385,9 +382,11 @@ class RanapController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'diagnosa', // ini berhubungan dengan resep
-                'anamnesis'=> function ($q) {
+                'anamnesis' => function ($q) {
                     $q->select([
-                        'rs209.id','rs209.rs1','rs209.rs1 as noreg',
+                        'rs209.id',
+                        'rs209.rs1',
+                        'rs209.rs1 as noreg',
                         'rs209.rs2 as norm',
                         'rs209.rs3 as tgl',
                         'rs209.rs4 as keluhanUtama',
@@ -403,21 +402,24 @@ class RanapController extends Controller
                         'rs209.user',
                         'pegawai.nama as petugas',
                         'pegawai.kdgroupnakes as nakes',
-                       ])
-                       ->leftJoin('kepegx.pegawai as pegawai', 'rs209.user', '=', 'pegawai.kdpegsimrs')
-                       ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes',
-                       'keluhannyeri',
-                       'skreeninggizi',
-                       'neonatal',
-                       'pediatrik',
-                       'kebidanan'
-                       ])
-                
-                       ->groupBy('rs209.id');
+                    ])
+                        ->leftJoin('kepegx.pegawai as pegawai', 'rs209.user', '=', 'pegawai.kdpegsimrs')
+                        ->with([
+                            'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                            'keluhannyeri',
+                            'skreeninggizi',
+                            'neonatal',
+                            'pediatrik',
+                            'kebidanan'
+                        ])
+
+                        ->groupBy('rs209.id');
                 },
-                'pemeriksaan'=> function ($q) {
+                'pemeriksaan' => function ($q) {
                     $q->select([
-                        'rs253.id','rs253.rs1','rs253.rs1 as noreg',
+                        'rs253.id',
+                        'rs253.rs1',
+                        'rs253.rs1 as noreg',
                         'rs253.rs2 as norm',
                         'rs253.rs3 as tgl',
                         'rs253.rs4 as ruang',
@@ -440,78 +442,93 @@ class RanapController extends Controller
                         'rs253.rs13',
                         'rs253.sax',
                         'rs253.srec',
-                        
+
                         'sambung.keadaanUmum',
-                        'sambung.bb' ,
-                        'sambung.tb' ,
-                        'sambung.nadi' ,
-                        'sambung.suhu' ,
-                        'sambung.sistole' ,
-                        'sambung.diastole' ,
-                        'sambung.pernapasan' ,
-                        'sambung.spo' ,
-                        'sambung.tkKesadaran' ,
-                        'sambung.tkKesadaranKet' ,
-                        'sambung.sosial' ,
-                        'sambung.spiritual' ,
-                        'sambung.statusPsikologis' ,
-                        'sambung.ansuransi' ,
+                        'sambung.bb',
+                        'sambung.tb',
+                        'sambung.nadi',
+                        'sambung.suhu',
+                        'sambung.sistole',
+                        'sambung.diastole',
+                        'sambung.pernapasan',
+                        'sambung.spo',
+                        'sambung.tkKesadaran',
+                        'sambung.tkKesadaranKet',
+                        'sambung.sosial',
+                        'sambung.spiritual',
+                        'sambung.statusPsikologis',
+                        'sambung.ansuransi',
                         'sambung.edukasi',
                         'sambung.ketEdukasi',
-                        'sambung.penyebabSakit' ,
-                        'sambung.komunikasi' ,
-                        'sambung.makananPokok' ,
-                        'sambung.makananPokokLain' ,
-                        'sambung.pantanganMkanan' ,
-                        
+                        'sambung.penyebabSakit',
+                        'sambung.komunikasi',
+                        'sambung.makananPokok',
+                        'sambung.makananPokokLain',
+                        'sambung.pantanganMkanan',
+
                         'pegawai.nama as petugas',
                         'pegawai.kdgroupnakes as nakes',
-                       ])
-                       ->leftJoin('rs253_sambung as sambung', 'rs253.id', '=', 'sambung.rs253_id')
-                       ->leftJoin('kepegx.pegawai as pegawai', 'rs253.user', '=', 'pegawai.kdpegsimrs')
-                    //    ->where('rs253.rs1','=', $noreg)
-                       ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes',
-                       'neonatal',
-                       'pediatrik',
-                       'kebidanan',
-                      //  'penilaian'
-                       ])
-                      ->groupBy('rs253.id');
+                    ])
+                        ->leftJoin('rs253_sambung as sambung', 'rs253.id', '=', 'sambung.rs253_id')
+                        ->leftJoin('kepegx.pegawai as pegawai', 'rs253.user', '=', 'pegawai.kdpegsimrs')
+                        //    ->where('rs253.rs1','=', $noreg)
+                        ->with([
+                            'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                            'neonatal',
+                            'pediatrik',
+                            'kebidanan',
+                            //  'penilaian'
+                        ])
+                        ->groupBy('rs253.id');
                 },
-                'penilaian'=> function ($q) {   
+                'penilaian' => function ($q) {
                     $q->select([
-                        'id','rs1','rs1 as noreg',
-                        'rs2 as norm','rs3 as tgl',
-                        'barthel','norton','humpty_dumpty','morse_fall','ontario','user','kdruang','awal','group_nakes'
-                       ])
+                        'id',
+                        'rs1',
+                        'rs1 as noreg',
+                        'rs2 as norm',
+                        'rs3 as tgl',
+                        'barthel',
+                        'norton',
+                        'humpty_dumpty',
+                        'morse_fall',
+                        'ontario',
+                        'user',
+                        'kdruang',
+                        'awal',
+                        'group_nakes'
+                    ])
                         ->where('kdruang', '!=', 'POL014')
-                       ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
+                        ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
                 },
-                'diagnosamedis'=> function ($q) {
+                'diagnosamedis' => function ($q) {
                     $q->with('masterdiagnosa');
                 },
-                'diagnosakeperawatan'=> function ($q) {
+                'diagnosakeperawatan' => function ($q) {
                     $q->with('intervensi', 'intervensi.masterintervensi')
-                    ->where('kdruang', '!=', 'POL014')
-                    ->orderBy('id', 'DESC');
+                        ->where('kdruang', '!=', 'POL014')
+                        ->orderBy('id', 'DESC');
                 },
-                'diagnosakebidanan'=> function ($q) {
+                'diagnosakebidanan' => function ($q) {
                     $q->with('intervensi', 'intervensi.masterintervensi')
-                    ->where('kdruang', '!=', 'POL014')
-                    ->orderBy('id', 'DESC');
+                        ->where('kdruang', '!=', 'POL014')
+                        ->orderBy('id', 'DESC');
                 },
-                'diagnosagizi'=> function ($q) {
+                'diagnosagizi' => function ($q) {
                     $q->with('intervensi', 'intervensi.masterintervensi')
-                    ->where('kdruang', '!=', 'POL014')
-                    ->orderBy('id', 'DESC');
+                        ->where('kdruang', '!=', 'POL014')
+                        ->orderBy('id', 'DESC');
                 },
-                'tindakan'=> function ($q) {
+                'tindakan' => function ($q) {
                     $q->select(
-                        'id','rs1','rs2','rs4',
+                        'id',
+                        'rs1',
+                        'rs2',
+                        'rs4',
                         'rs1 as noreg',
                         'rs2 as nota',
                         'rs3',
-             
+
                         'rs4',
                         'rs5',
                         'rs6',
@@ -525,185 +542,239 @@ class RanapController extends Controller
                         'rs23',
                         'rs24',
                     )
-                    ->where('rs22','!=','POL014')
-                    ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
-                    ->orderBy('id', 'DESC');
+                        ->where('rs22', '!=', 'POL014')
+                        ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
+                        ->orderBy('id', 'DESC');
                 },
                 'laborats' => function ($q) {
 
                     $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
-                    ->where('unit_pengirim', '!=', 'POL014');
+                        ->where('unit_pengirim', '!=', 'POL014')
+                        ->where('unit_pengirim', '!=', 'PEN005'); // tambahan HD
                 },
-                'laboratold'=> function ($t) {
+                'laboratold' => function ($t) {
                     $t->with('pemeriksaanlab')
                         ->orderBy('id', 'DESC');
                 },
-                'radiologi'=> function ($q) {
+                'radiologi' => function ($q) {
                     $q->orderBy('id', 'DESC')
-                    ->where('rs10', '!=', 'POL014');
+                        ->where('rs10', '!=', 'POL014')
+                        ->where('rs10', '!=', 'PEN005'); // tambahan HD
                 },
-                'hasilradiologi'=> function ($q) {
+                'hasilradiologi' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'fisio'=> function ($q) {
+                'fisio' => function ($q) {
                     $q->where('rs2', '!=', '')
-                    ->groupBy('rs2')->orderBy('id', 'DESC');
+                        ->groupBy('rs2')->orderBy('id', 'DESC');
                 },
-                'operasi'=> function ($q) {
+                'operasi' => function ($q) {
                     $q->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes')
-                    ->orderBy('id', 'DESC');
+                        ->orderBy('id', 'DESC');
                 },
                 // 'operasi_ird'=> function ($q) {
                 //     $q->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes')
                 //     ->orderBy('id', 'DESC');
                 // },
-                'bankdarah'=> function ($q) {
+                'bankdarah' => function ($q) {
                     $q->orderBy('id', 'DESC')
-                    ->where('rs11', '!=', 'POL014');
+                        ->where('rs11', '!=', 'POL014')
+                        ->where('rs11', '!=', 'PEN005'); // tambahan HD
                 },
-                'apheresis'=> function ($q) {
+                'apheresis' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'cathlab'=> function ($q) {
+                'cathlab' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'permintaanambulan'=> function ($q) {
+                'permintaanambulan' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
                 // 'oksigen'=> function ($q) {
                 //     $q->orderBy('id', 'DESC');
                 // },
-                'penunjanglain'=> function ($q) {
+                'penunjanglain' => function ($q) {
                     $q->with('masterpenunjang')
-                    ->where('rs10', '!=', 'POL014')
-                    ->orderBy('id', 'DESC');
+                        ->where('rs10', '!=', 'POL014')
+                        ->orderBy('id', 'DESC');
                 },
-                'perawatanjenazah'=> function ($q) {
+                'perawatanjenazah' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'hais'=> function ($q) {
+                'hais' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
-                'cppt'=> function ($q) {
+                'cppt' => function ($q) {
                     $q->with([
                         'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
-                        'anamnesis'=> function($query){
-                          $query->select(
-                            'rs209.id','rs209.rs1','rs209.rs1 as noreg',
-                            'rs209.rs2 as norm',
-                            'rs209.rs3 as tgl',
-                            'rs209.rs4 as keluhanUtama',
-                            'rs209.riwayatpenyakit',
-                            'rs209.riwayatalergi',
-                            'rs209.keteranganalergi',
-                            'rs209.riwayatpengobatan',
-                            'rs209.riwayatpenyakitsekarang',
-                            'rs209.riwayatpenyakitkeluarga',
-                            'rs209.riwayat_pekerjaan_yang_berhubungan_dengan_zat_berbahaya',
-                            'rs209.kdruang',
-                            'rs209.awal',
-                            'rs209.user',
-                          )->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes',
-                          'keluhannyeri',
-                          'skreeninggizi',
-                          'neonatal',
-                          'pediatrik',
-                          'kebidanan'
-                          ]);
-                          // ->where('awal','!=', '1');
+                        'anamnesis' => function ($query) {
+                            $query->select(
+                                'rs209.id',
+                                'rs209.rs1',
+                                'rs209.rs1 as noreg',
+                                'rs209.rs2 as norm',
+                                'rs209.rs3 as tgl',
+                                'rs209.rs4 as keluhanUtama',
+                                'rs209.riwayatpenyakit',
+                                'rs209.riwayatalergi',
+                                'rs209.keteranganalergi',
+                                'rs209.riwayatpengobatan',
+                                'rs209.riwayatpenyakitsekarang',
+                                'rs209.riwayatpenyakitkeluarga',
+                                'rs209.riwayat_pekerjaan_yang_berhubungan_dengan_zat_berbahaya',
+                                'rs209.kdruang',
+                                'rs209.awal',
+                                'rs209.user',
+                            )->with([
+                                'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                                'keluhannyeri',
+                                'skreeninggizi',
+                                'neonatal',
+                                'pediatrik',
+                                'kebidanan'
+                            ]);
+                            // ->where('awal','!=', '1');
                         },
-                        'pemeriksaan'=> function($query){
-                          $query->select([
-                            'rs253.id','rs253.rs1','rs253.rs1 as noreg',
-                          'rs253.rs2 as norm',
-                          'rs253.rs3 as tgl',
-                          'rs253.rs4 as ruang',
-                          'rs253.pernapasan as pernapasanigd',
-                          'rs253.nadi as nadiigd',
-                          'rs253.tensi as tensiigd',
-                          'rs253.beratbadan',
-                          'rs253.tinggibadan',
-                          'rs253.kdruang',
-                          'rs253.user',
-                          'rs253.awal',
-                          
-                          'sambung.keadaanUmum',
-                          'sambung.bb' ,
-                          'sambung.tb' ,
-                          'sambung.nadi' ,
-                          'sambung.suhu' ,
-                          'sambung.sistole' ,
-                          'sambung.diastole' ,
-                          'sambung.pernapasan' ,
-                          'sambung.spo' ,
-                          'sambung.tkKesadaran' ,
-                          'sambung.tkKesadaranKet' ,
-                          'sambung.sosial' ,
-                          'sambung.spiritual' ,
-                          'sambung.statusPsikologis' ,
-                          'sambung.ansuransi' ,
-                          'sambung.edukasi',
-                          'sambung.ketEdukasi',
-                          'sambung.penyebabSakit' ,
-                          'sambung.komunikasi' ,
-                          'sambung.makananPokok' ,
-                          'sambung.makananPokokLain' ,
-                          'sambung.pantanganMkanan' ,
-                          
-                          'pegawai.nama as petugas',
-                          'pegawai.kdgroupnakes as nakes',
-                          ])
-                          ->leftJoin('rs253_sambung as sambung', 'rs253.id', '=', 'sambung.rs253_id')
-                          ->leftJoin('kepegx.pegawai as pegawai', 'rs253.user', '=', 'pegawai.kdpegsimrs')
-                          // ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes',
-                          //   'neonatal',
-                          //   'pediatrik',
-                          //   'kebidanan',
-                          //   //  'penilaian'
-                          //   ])
-                            ->groupBy('rs253.id')
-                          ;
-                          // ->where('awal','!=', '1');
+                        'pemeriksaan' => function ($query) {
+                            $query->select([
+                                'rs253.id',
+                                'rs253.rs1',
+                                'rs253.rs1 as noreg',
+                                'rs253.rs2 as norm',
+                                'rs253.rs3 as tgl',
+                                'rs253.rs4 as ruang',
+                                'rs253.pernapasan as pernapasanigd',
+                                'rs253.nadi as nadiigd',
+                                'rs253.tensi as tensiigd',
+                                'rs253.beratbadan',
+                                'rs253.tinggibadan',
+                                'rs253.kdruang',
+                                'rs253.user',
+                                'rs253.awal',
+
+                                'sambung.keadaanUmum',
+                                'sambung.bb',
+                                'sambung.tb',
+                                'sambung.nadi',
+                                'sambung.suhu',
+                                'sambung.sistole',
+                                'sambung.diastole',
+                                'sambung.pernapasan',
+                                'sambung.spo',
+                                'sambung.tkKesadaran',
+                                'sambung.tkKesadaranKet',
+                                'sambung.sosial',
+                                'sambung.spiritual',
+                                'sambung.statusPsikologis',
+                                'sambung.ansuransi',
+                                'sambung.edukasi',
+                                'sambung.ketEdukasi',
+                                'sambung.penyebabSakit',
+                                'sambung.komunikasi',
+                                'sambung.makananPokok',
+                                'sambung.makananPokokLain',
+                                'sambung.pantanganMkanan',
+
+                                'pegawai.nama as petugas',
+                                'pegawai.kdgroupnakes as nakes',
+                            ])
+                                ->leftJoin('rs253_sambung as sambung', 'rs253.id', '=', 'sambung.rs253_id')
+                                ->leftJoin('kepegx.pegawai as pegawai', 'rs253.user', '=', 'pegawai.kdpegsimrs')
+                                // ->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                                //   'neonatal',
+                                //   'pediatrik',
+                                //   'kebidanan',
+                                //   //  'penilaian'
+                                //   ])
+                                ->groupBy('rs253.id')
+                            ;
+                            // ->where('awal','!=', '1');
                         },
-                        'penilaian'=> function($query){
-                          $query->select([
-                            'id','rs1','rs1 as noreg',
-                            'rs2 as norm','rs3 as tgl',
-                            'barthel','norton','humpty_dumpty','morse_fall','ontario','user','kdruang','awal','group_nakes'
-                          ]);
-                          // ->where('awal','!=', '1');
+                        'penilaian' => function ($query) {
+                            $query->select([
+                                'id',
+                                'rs1',
+                                'rs1 as noreg',
+                                'rs2 as norm',
+                                'rs3 as tgl',
+                                'barthel',
+                                'norton',
+                                'humpty_dumpty',
+                                'morse_fall',
+                                'ontario',
+                                'user',
+                                'kdruang',
+                                'awal',
+                                'group_nakes'
+                            ]);
+                            // ->where('awal','!=', '1');
                         },
                         'cpptlama',
-                
-                        ])
-                      ->orderBy('tgl', 'DESC');
+
+                    ])
+                        ->orderBy('tgl', 'DESC');
                 },
-                'konsultasi'=> function ($q) {
-                    $q->where('kdruang','!=','POL014')
+                'konsultasi' => function ($q) {
+                    $q->where('kdruang', '!=', 'POL014')
+                        ->where('kdruang', '!=', 'PEN005') // tambahan HD
                         ->with([
                             'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
                             'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
                         ])
-                    ->orderBy('id', 'DESC'); // ini updatean baru
+                        ->orderBy('id', 'DESC'); // ini updatean baru
                 },
-                'edukasi'=> function ($q) {
+                'edukasi' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
                 'dokumenluar' => function ($neo) {
                     $neo->with(['pegawai:id,nama'])
-                    ->orderBy('id', 'DESC');
+                        ->orderBy('id', 'DESC');
                 },
                 'informconcern' => function ($neo) {
                     // $neo->withAccessor()
                     $neo->select([
-                        'id','noreg','norm','tgl','tanggal','pelaksana','pengedukasi','penerimaEdukasi','diagnosis',
-                        'diagnosis','dasarDiagnosis','tindakanMedis','indikasi','tujuan','tujuanLain','tatacara',
-                        'resiko','resikoLain','komplikasi','prognosis','alternatif','hubunganDgPasien',
-                        'keluarga','nama','lp','tglLahir','noKtp','alamat','telepon',
-                        'ttdPetugas','ttdDokter','ttdSaksiPasien','ttdYgMenyatakan','saksiPasien',
-                        'kdDokter','kdPetugas','setuju','kdRuang','user','jenis'
+                        'id',
+                        'noreg',
+                        'norm',
+                        'tgl',
+                        'tanggal',
+                        'pelaksana',
+                        'pengedukasi',
+                        'penerimaEdukasi',
+                        'diagnosis',
+                        'diagnosis',
+                        'dasarDiagnosis',
+                        'tindakanMedis',
+                        'indikasi',
+                        'tujuan',
+                        'tujuanLain',
+                        'tatacara',
+                        'resiko',
+                        'resikoLain',
+                        'komplikasi',
+                        'prognosis',
+                        'alternatif',
+                        'hubunganDgPasien',
+                        'keluarga',
+                        'nama',
+                        'lp',
+                        'tglLahir',
+                        'noKtp',
+                        'alamat',
+                        'telepon',
+                        'ttdPetugas',
+                        'ttdDokter',
+                        'ttdSaksiPasien',
+                        'ttdYgMenyatakan',
+                        'saksiPasien',
+                        'kdDokter',
+                        'kdPetugas',
+                        'setuju',
+                        'kdRuang',
+                        'user',
+                        'jenis'
                     ])
-                    ->orderBy('id', 'DESC');
+                        ->orderBy('id', 'DESC');
                 },
                 'dischargeplanning',
                 'skriningdischargeplannings',
@@ -713,15 +784,15 @@ class RanapController extends Controller
                 'keterangantindakan:noreg,keterangan',
                 'statuscovid' => function ($q) {
                     $q->where('stat', '=', 'MASUK')
-                    ->where('ruang', '!=', 'POL014');
+                        ->where('ruang', '!=', 'POL014');
                 },
-                
+
             ])->first();
 
         if (!$cekx) {
-           return new JsonResponse([
-               'message' => 'Data tidak ditemukan',
-           ], 500);
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan',
+            ], 500);
         }
 
         return new JsonResponse($cekx);
@@ -730,21 +801,21 @@ class RanapController extends Controller
     public function listjeniskasus()
     {
         //  $list = MjenisKasus::select('kode','uraian','gruping','medis','flag')->where('flag','1')->get();
-       $list = Cache::rememberForever('jeniskasus', function () {
-            return MjenisKasus::select('kode','uraian','gruping','medis','flag')->where('flag','1')->get();
+        $list = Cache::rememberForever('jeniskasus', function () {
+            return MjenisKasus::select('kode', 'uraian', 'gruping', 'medis', 'flag')->where('flag', '1')->get();
         });
         return new JsonResponse($list);
     }
 
     public function gantijeniskasus(Request $request)
     {
-       $request->validate([
-           'noreg' => 'required',
-           'kd_jeniskasus' => 'required',
-       ]);
-       $data = Rs23Meta::where('noreg', $request->noreg)->first();
+        $request->validate([
+            'noreg' => 'required',
+            'kd_jeniskasus' => 'required',
+        ]);
+        $data = Rs23Meta::where('noreg', $request->noreg)->first();
 
-       if (!$data) {
+        if (!$data) {
             $saved = Rs23Meta::create([
                 'noreg' => $request->noreg,
                 'kd_jeniskasus' => $request->kd_jeniskasus,
@@ -752,13 +823,13 @@ class RanapController extends Controller
             ]);
 
             return new JsonResponse($saved);
-       }
+        }
 
-       $data->kd_jeniskasus = $request->kd_jeniskasus;
-       $data->user_input = auth()->user()->pegawai_id;
-       $data->save();
+        $data->kd_jeniskasus = $request->kd_jeniskasus;
+        $data->user_input = auth()->user()->pegawai_id;
+        $data->save();
 
-       return new JsonResponse($data);
+        return new JsonResponse($data);
     }
 
     public function gantidpjp(Request $request)

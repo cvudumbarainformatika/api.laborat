@@ -522,4 +522,8 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(PengkajianHemodialisa::class, 'rs1', 'noreg');
     }
+    public function konsultasi()
+    {
+        return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
+    }
 }

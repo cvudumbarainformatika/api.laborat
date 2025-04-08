@@ -327,14 +327,25 @@ class IgdController extends Controller
         // if($cekidentitas->rs49 === '' || $cekidentitas->rs49 === null){
         //     return new JsonResponse(['message' => 'Maaf Identitas Pasien Belum Lengkap, Hubungi Pendaftaran Pasien Untuk Melengkapi Identias Pasien...!!!'], 500);
         // }
-        $cekidentitas = CekController::ceknoktp($request->norm);
-        if($cekidentitas === '1'){
-            return new JsonResponse(['message' => 'Maaf Identitas Pasien Belum Lengkap, Hubungi Pendaftaran Pasien Untuk Melengkapi Identias Pasien...!!!'], 500);
+
+
+        // jika pasien dengan kondisi khusus tanpa pengecekan nip
+        $kondisikhusus = $request->meninggaldiluarrs === 'Iya' || $request->barulahirmeninggal === 'Iya';
+
+
+        if(!$kondisikhusus){
+            $cekidentitas = CekController::ceknoktp($request->norm);
+
+            if($cekidentitas === '1'){
+                return new JsonResponse(['message' => 'Maaf Identitas Pasien Belum Lengkap, Hubungi Pendaftaran Pasien Untuk Melengkapi Identias Pasien...!!!'], 500);
+            }
+            $cekplan = CekController::cekplan($request->noreg);
+            if($cekplan === '1'){
+                return new JsonResponse(['message' => 'Maaf Form Planing Belum Diisi...!!!'], 500);
+            }
         }
-        $cekplan = CekController::cekplan($request->noreg);
-        if($cekplan === '1'){
-            return new JsonResponse(['message' => 'Maaf Form Planing Belum Diisi...!!!'], 500);
-        }
+
+
         $user = Pegawai::find(auth()->user()->pegawai_id);
         if ($user->kdgroupnakes === 1 || $user->kdgroupnakes === '1') {
             $updatekunjungan = KunjunganPoli::where('rs1', $request->noreg)->where('rs8','POL014')->first();
