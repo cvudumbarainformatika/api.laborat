@@ -133,7 +133,7 @@ class LaboratController extends Controller
         $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)
             ->groupBy('nota')->orderBy('id', 'DESC')->get();
 
-        
+
 
         return new JsonResponse(
             [
@@ -174,6 +174,9 @@ class LaboratController extends Controller
             if ($ruangan === 'POL014') {
                 $dari = 'IGD';
                 $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'G-LAB');
+            } else if ($ruangan === 'PEN005') {
+                $dari = 'HD';
+                $notapermintaanlab = $request->nota ?? FormatingHelper::formatallpermintaan($wew, 'H-LAB');
             } else {
                 if ($request->isRanap === true) {
                     $dari = 'RANAP';
@@ -359,7 +362,7 @@ class LaboratController extends Controller
 
     public function getnotaoldIgd()
     {
-        $nota = Laboratpemeriksaan::select('rs2')->where('rs1', request('noreg'))->where('rs23','POL014')
+        $nota = Laboratpemeriksaan::select('rs2')->where('rs1', request('noreg'))->where('rs23', 'POL014')
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
@@ -439,7 +442,7 @@ class LaboratController extends Controller
         }
 
         $hapus = Laboratpemeriksaan::whereIn('id', $request->id)->delete();
-        $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->where('unit_pengirim','POL014')->get();
+        $data = LaboratMeta::where('noreg', $request->noreg)->with(['details.pemeriksaanlab'])->where('unit_pengirim', 'POL014')->get();
 
         $collection = collect($data);
         $nota = $collection->pluck('nota');
@@ -560,7 +563,7 @@ class LaboratController extends Controller
                         'rs24'  => $request->kdsistembayar ?? ''
                     ]
                 );
-                // Laboratpemeriksaan::create($param); 
+                // Laboratpemeriksaan::create($param);
 
             };
             /**
@@ -570,8 +573,8 @@ class LaboratController extends Controller
 
             DB::commit();
 
-            $success = LaboratMeta::where('nota', $notapermintaanlab)->where('unit_pengirim','POL014')->with(['details.pemeriksaanlab'])->get();
-            $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)->where('unit_pengirim','POL014')
+            $success = LaboratMeta::where('nota', $notapermintaanlab)->where('unit_pengirim', 'POL014')->with(['details.pemeriksaanlab'])->get();
+            $nota = LaboratMeta::select('nota')->where('noreg', $request->noreg)->where('unit_pengirim', 'POL014')
                 ->groupBy('nota')->orderBy('id', 'DESC')->get();
 
             // kirim ke notif
@@ -615,7 +618,7 @@ class LaboratController extends Controller
 
 
     public function coba_notif()
-    { 
+    {
 
         $msg = [
             'data' => [
@@ -633,7 +636,5 @@ class LaboratController extends Controller
         }
 
         return new JsonResponse(['message' => 'berhasil dikirim'], 200);
-       
     }
-
 }

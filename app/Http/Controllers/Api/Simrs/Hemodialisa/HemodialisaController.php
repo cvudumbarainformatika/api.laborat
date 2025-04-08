@@ -69,6 +69,7 @@ class HemodialisaController extends Controller
             'rs17.rs8 as kdruangan',
             'rs17.rs8 as koderuangan',
             'rs17.rs8 as kodepoli',
+            'rs17.rs8 as kdgroup_ruangan',
             'rs17.rs14 as kodesistembayar',
             'rs17.rs19 as status',
             'rs17.rs9 as kodedokter',
@@ -187,6 +188,7 @@ class HemodialisaController extends Controller
             'rs107.rs10 as kdruangan',
             'rs107.rs10 as koderuangan',
             'rs107.rs10 as kodepoli',
+            'rs107.rs10 as kdgroup_ruangan',
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
             // DB::raw('coalesce(rs17.rs19, rs23.rs22) as status'),
             // 'rs107.rs9 as status',
@@ -537,6 +539,27 @@ class HemodialisaController extends Controller
             },
             'intradialitik.user:nama,kdpegsimrs',
             'pengkajian',
+
+            'laborats' => function ($q) {
+
+                $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
+                    ->where('unit_pengirim', '!=', 'POL014');
+            },
+            'laboratold' => function ($t) {
+                $t->with('pemeriksaanlab')
+                    ->orderBy('id', 'DESC');
+            },
+            'radiologi' => function ($q) {
+                $q->orderBy('id', 'DESC')
+                    ->where('rs10', '!=', 'POL014');
+            },
+            'hasilradiologi' => function ($q) {
+                $q->orderBy('id', 'DESC');
+            },
+            'bankdarah' => function ($q) {
+                $q->orderBy('id', 'DESC')
+                    ->where('rs11', '!=', 'POL014');
+            },
         ]);
 
         return new JsonResponse($data);
