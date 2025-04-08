@@ -263,9 +263,9 @@ class FormatingHelper
     {
         $has = null;
         $lbr = strlen($n);
-        for ($i = 1; $i <= 10 - $lbr; $i++) {
+        for ($i = 1; $i <= 7 - $lbr; $i++) {
             $has = $has . "0";
         }
-        return $has . $n . "/" . date("Y") . "/" . $kode;
+        return $has . $n . "-" . date("Y") . "-" . $kode;
     }
 }

@@ -80,7 +80,7 @@ class ListDataArsipController extends Controller
                     $file = $files[$i];
 
                     $originalname = $file->getClientOriginalName();
-                    $penamaan = date('YmdHis') . '-' . $i . '-' . $noarsip . '.' . $file->getClientOriginalExtension();
+                    $penamaan = $i . '-' . $noarsip . '.' . $file->getClientOriginalExtension();
 
                     $extension = $file->getClientOriginalExtension();
 
@@ -101,8 +101,6 @@ class ListDataArsipController extends Controller
                     }
 
                     $folder = 'dokumen_arsip/'.$panggilan;
-                    return $folder;
-
 
                     if (!is_dir(storage_path("app/public/$folder"))) {
                       mkdir(storage_path("app/public/$folder"), 0775, true);
