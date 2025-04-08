@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\Arsip\Master\MkelasifikasiController;
+use App\Http\Controllers\Api\Arsip\Master\MlokasiarsipController;
 use App\Http\Controllers\Api\Arsip\Master\MmediaController;
+use App\Models\Arsip\Master\Mlokasiarsip;
 use App\Models\Arsip\Master\MmediaArsip;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +20,7 @@ Route::group([
     Route::post('/deletemastermedia', [MmediaController::class, 'hapusmastermedia']);
 
     Route::get('/getmastermedia', [MmediaController::class, 'listmastermedia']);
+    Route::get('/getmasterlokasiarsip', [MlokasiarsipController::class, 'index']);
 });
 
 

@@ -101,18 +101,18 @@ class ListDataArsipController extends Controller
                     }
 
                     $folder = 'dokumen_arsip/'.$panggilan;
-
+                    return $folder;
 
 
                     if (!is_dir(storage_path("app/public/$folder"))) {
                       mkdir(storage_path("app/public/$folder"), 0775, true);
                     }
 
+
                     // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
                     // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
 
                     if ($extension !== 'pdf') {
-
 
                       $img=Image::make($file)->resize(600, null, function ($constraint) {
                         $constraint->aspectRatio();
@@ -123,6 +123,8 @@ class ListDataArsipController extends Controller
                       // $file->move(\public_path("storage/$folder/"), $penamaan);
                     // $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
                       $path = $file->storeAs('public/'.$folder, $penamaan);
+
+
                     }
 
                     $gallery->noarsip = $noarsip;
@@ -143,6 +145,7 @@ class ListDataArsipController extends Controller
                     $gallery->path = "public/$folder/$penamaan";
                     $gallery->url = $folder . '/' . $penamaan;
                     $gallery->save();
+
                 }
 
                 $kirim = self::getlistdataarsipbynoarsip($noarsip);
