@@ -543,7 +543,7 @@ class HemodialisaController extends Controller
             'laborats' => function ($q) {
 
                 $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
-                    ->where('unit_pengirim', '!=', 'POL014');
+                    ->where('unit_pengirim', '=', 'PEN005');
             },
             'laboratold' => function ($t) {
                 $t->with('pemeriksaanlab')
@@ -551,14 +551,29 @@ class HemodialisaController extends Controller
             },
             'radiologi' => function ($q) {
                 $q->orderBy('id', 'DESC')
-                    ->where('rs10', '!=', 'POL014');
+                    ->where('rs10', '=', 'PEN005');
             },
             'hasilradiologi' => function ($q) {
                 $q->orderBy('id', 'DESC');
             },
             'bankdarah' => function ($q) {
                 $q->orderBy('id', 'DESC')
-                    ->where('rs11', '!=', 'POL014');
+                    ->where('rs11', '=', 'PEN005');
+            },
+            'konsultasi' => function ($q) {
+                $q->where('kdruang', '=', 'PEN005')
+                    ->with([
+                        'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
+                        'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
+                    ])
+                    ->orderBy('id', 'DESC'); // ini updatean baru
+            },
+            'edukasi' => function ($q) {
+                $q->orderBy('id', 'DESC');
+            },
+            'dokumenluar' => function ($neo) {
+                $neo->with(['pegawai:id,nama'])
+                    ->orderBy('id', 'DESC');
             },
         ]);
 
