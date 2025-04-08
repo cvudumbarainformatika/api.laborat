@@ -41,13 +41,15 @@ class RadiologimetaController extends Controller
         DB::select('call nota_permintaanradio(@nomor)');
         $x = DB::table('rs1')->select('rs41')->get();
         $wew = $x[0]->rs41;
-        if($request->kodepoli === 'POL014')
-        {
+        if ($request->kodepoli === 'POL014') {
             $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'G-RAD');
-        }else{
-            if($request->isRanap === true){
+        }
+        if ($request->kodepoli === 'PEN005') {
+            $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'H-RAD');
+        } else {
+            if ($request->isRanap === true) {
                 $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'I-RAD');
-            }else{
+            } else {
                 $notapermintaanradio = FormatingHelper::formatallpermintaan($wew, 'J-RAD');
             }
         }
@@ -127,11 +129,11 @@ class RadiologimetaController extends Controller
 
     public function hapusradiologi(Request $request)
     {
-        $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=','1')->get();
+        $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=', '1')->get();
         if (count($cekKasir) > 0) {
-            return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal '.$cekKasir[0]->rs42], 500);
+            return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal ' . $cekKasir[0]->rs42], 500);
         }
-           
+
         $cari = Transpermintaanradiologi::find($request->id);
         if (!$cari) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
