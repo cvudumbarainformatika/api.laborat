@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\UnitPelayananArsip;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\MorganisasiAdministrasi;
 use App\Models\Simrs\UnitPengelolahArsip\Dataarsip;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,9 +18,14 @@ class ListDataArsipController extends Controller
     {
         if(request('bidangbagian') === '' || request('bidangbagian') === null)
         {
-            $bidangbagian = request('bidangbagian');
+            $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
+            $raw = collect($organisasi);
+            $only = $raw->map(function ($y) {
+                return $y->kode;
+            });
+            $bidangbagian = $only;
         }else{
-            $bidangbagian = ['1.2.4.1'];
+            $bidangbagian = array(request('bidangbagian'));
         }
         $data = Dataarsip::select('data_arsip.*',
         'master_kode.kode as kodeklasifikasi','master_kode.nama as namakelasifikasi','master_lokasi.nama_lokasi','master_media.nama_media')
