@@ -23,7 +23,7 @@ class Sp3bController extends Controller
 
         $tahunawal=Carbon::createFromFormat('Y-m-d', request('tahun').'-'.request('bulan').'-01')->format('Y');
         $awal=request('tahun').'-'.request('bulan').'-01';
-        $akhir=request('tahun').'-'.request('bulan').'-31';
+        $akhir = Carbon::createFromFormat('Y-m-d', $awal)->endOfMonth()->format('Y-m-d');
         $sebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay();
         $thnakhir=Carbon::createFromFormat('Y-m-d', request('tahun').'-'.request('bulan').'-01')->format('Y');
         if($tahunawal !== $thnakhir){
