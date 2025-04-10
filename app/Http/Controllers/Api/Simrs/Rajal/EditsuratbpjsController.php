@@ -13,6 +13,19 @@ use Illuminate\Http\Request;
 
 class EditsuratbpjsController extends Controller
 {
+    public function suratKOntrolByNoka()
+    {
+        $bulan = request('bulan');
+        $tahun = request('tahun');
+        $noka = request('noka');
+        $filter = request('filter');
+        // $bulan = '04';
+        // $tahun = '2025';
+        // $noka = '0000113144837';
+        // $filter = '2';
+        $suratkontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/ListRencanaKontrol/Bulan/' . $bulan . '/Tahun/' . $tahun . '/Nokartu/' . $noka . '/filter/' . $filter);
+        return new JsonResponse($suratkontrol);
+    }
     public function listsuratkontrol()
     {
         $tglawal = request('tglawal');
@@ -95,14 +108,14 @@ class EditsuratbpjsController extends Controller
             if (count($list) > 0) {
                 $xx = collect($list)->map(function ($x) {
                     return [
-                        'kodedokter'=> $x->kodeDokter,
-                        'namadokter'=> $x->namaDokter,
-                        'kapasitas'=> $x->kapasitas,
-                        'jadwalpraktek'=> $x->jadwalPraktek,
+                        'kodedokter' => $x->kodeDokter,
+                        'namadokter' => $x->namaDokter,
+                        'kapasitas' => $x->kapasitas,
+                        'jadwalpraktek' => $x->jadwalPraktek,
                     ];
                 });
             }
-            $jadwaldokter['result']= $xx;
+            $jadwaldokter['result'] = $xx;
         }
         return ($jadwaldokter);
     }

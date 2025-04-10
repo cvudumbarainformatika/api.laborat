@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang;
 
+use App\Models\Arsip\Master\Munitpengelolah;
 use App\Models\Pegawai\Akses\Role;
 use App\Models\Pegawai\Alpha;
 use App\Models\Pegawai\Jabatan;
@@ -101,6 +102,11 @@ class Pegawai extends Model
     public function npd_heder()
     {
         return $this->hasMany(NpdLS_heder::class, 'nip', 'nip');
+    }
+
+    public function unitpengelolaharsip()
+    {
+        return $this->hasOne(Munitpengelolah::class, 'kode', 'kdarteri');
     }
 
     public function getTtdpegawaiUrlAttribute()

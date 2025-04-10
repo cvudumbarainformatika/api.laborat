@@ -141,4 +141,16 @@ class AksesUserController extends Controller
         // $data['akses pegawai'] = $aksesPegawai;
         return new JsonResponse($data);
     }
+
+    public function storeunitpengolaharsip(Request $request)
+    {
+        $data = Pegawai::find($request->id);
+        $data->kdarteri = $request->kode_ruang;
+        $data->save();
+        $data->load('unitpengelolaharsip');
+        // $data->update([
+        //     'kode_ruang' => $request->kode_ruang
+        // ]);
+        return new JsonResponse($data);
+    }
 }
