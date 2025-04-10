@@ -51,17 +51,11 @@ class BKUController extends Controller
     {
         $thnsekarang=date('Y');
         $thn=Carbon::createFromFormat('Y-m-d', request('tahun').'-'. request('bulan').'-01')->format('Y');
-        // $date = date('Y-m-d');
         $awal=request('tahun').'-'. request('bulan').'-01';
-        $akhir=request('tahun').'-'. request('bulan').'-31';
-        $akhirsebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay()->format('Y-m-d');
-        $awalsebelum= Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->format('Y-m-d');
-        // $thnakhir=Carbon::createFromFormat('Y-m-d', $akhir)->format('Y');
-        // if($thn !== $awalsebelum){
-        //  return response()->json(['message' => 'Tahun Tidak Sama'], 500);
-        // }
-        // $kurangdariawal=  $getdate < $awal;
-        // return $kurangdariawal;
+        $akhir = Carbon::createFromFormat('Y-m-d', $awal)->endOfMonth()->format('Y-m-d');
+        $awalsebelum = Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->startOfMonth()->format('Y-m-d');
+        $akhirsebelum = Carbon::createFromFormat('Y-m-d', $awal)->subMonth()->endOfMonth()->format('Y-m-d');
+
         $saldo = SaldoAwal_PPK::where('rekening', '=', '0121161061')
         ->whereBetween('tanggal', [$awal, $akhir])
         ->get();
@@ -78,26 +72,7 @@ class BKUController extends Controller
                 'pengeluarankhaskecil.nomorpengeluaran')
         ->whereBetween('tanggalpengeluaran', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->get();
-        // $sts = DataSTS::with(['tbp', 'pendpatanlain'=>function($rinci){
-        //     $rinci -> with('plainlain',function($tgl){
-        //         $tgl->orderBy('rs2','desc');
-        //     });
-        //  }])
-        // ->whereBetween('tgl', [[$awal. ' 00:00:00', $akhir. ' 23:59:59']])
-        // ->get();
-        // $pendapatan = PendapatanLainRinci::select('rs260.*')
-        // // ->join('rs258', 'rs258.rs1', '=', 'rs260.rs1', function($null) use ($awal, $akhir){
-        // //     $null->whereNull('rs258.noSetor')
-        // //     ->orderBy('rs258.rs2', 'desc')
-        // //     ->whereBetween('rs258.rs2', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
-        // // })
-        // ->whereHas('pendapatanlain',function($null) use ($awal, $akhir){
-        //     $null->whereNull('noSetor')
-        //         ->orderBy('rs2','desc')
-        //         ->whereBetween('rs2', [$awal. ' 00:00:00', $akhir. ' 23:59:59']);
-        // })
-        // ->with('pendapatanlain')
-        // ->get();
+
 
         $npkls = NpkLS_heder::select('npkls_heder.nonpk',
         'npkls_heder.tglpindahbuku',
@@ -125,16 +100,6 @@ class BKUController extends Controller
         ->whereBetween('tglpindahbuku', [$awal, $akhir])
         ->get();
 
-        // $npklsa = NpkLS_heder::whereBetween('tglnpk', [$awal, $akhir])->pluck('nonpk');
-        // $npkls = [];
-        // if(count($npklsa)>0){
-        //     $npkls = NpkLS_rinci::with(['npdlshead'=> function ($npdrinci){
-        //         $npdrinci->with(['npdlsrinci']);
-        //     },
-        //     'header:nonpk,tglnpk'
-        //     ])
-        //     ->whereIn('nonpk', $npklsa)->get();
-        // }
         $nihil = Nihil::select(
             'pengembalianup.nopengembalian',
             'pengembalianup.tgltrans',
@@ -174,20 +139,13 @@ class BKUController extends Controller
         ->get();
 
 
-
-
         $saldosebelum = SaldoAwal_PPK::where('rekening', '=', '0121161061')
         ->select('nilaisaldo as nilai')
-        // ->where('tanggal', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tanggal', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
         ->whereBetween('tanggal', [$awalsebelum, $akhirsebelum])
         ->get();
 
         $setorsebelum=TranskePPK::select('idtrans','tgltrans', 'ket', 'nilai')
-        // ->where('tgltrans', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tgltrans', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
-        // ->orderBy('tgltrans', 'asc')
-        // ->groupBy('tgltrans')
+
         ->whereBetween('tgltrans', [$awalsebelum, $akhirsebelum])
         ->get();
 
@@ -200,39 +158,28 @@ class BKUController extends Controller
                 'pengeluarankhaskecil.nomorpengeluaran',
                 'nominal as nilai')
         ->whereBetween('tanggalpengeluaran', [$awalsebelum. ' 00:00:00', $akhirsebelum. ' 23:59:59'])
-        // ->groupBy('nomorpengeluaran')
-        // ->where('tanggalpengeluaran', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tanggalpengeluaran', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
+
         ->get();
 
         $npklssebelum = NpkLS_heder::select(
                 'npkls_heder.tglpindahbuku',
                 'npkls_heder.nonpk',
-                // 'total as nilai',
                 DB::raw('sum(total) as nilai'))
         ->join('npkls_rinci', 'npkls_rinci.nonpk', 'npkls_heder.nonpk')
-        // ->join('npdls_heder', 'npdls_heder.nonpdls', 'npkls_rinci.nonpdls')
-        // ->join('npdls_rinci', 'npdls_rinci.nonpdls', 'npdls_heder.nonpdls')
-        // ->groupBy('npkls_rinci.nonpk')
+
         ->whereBetween('npkls_heder.tglpindahbuku', [$awalsebelum, $akhirsebelum])
         ->get();
 
         $nihilsebelum = Nihil::select(DB::raw('sum(jmlpengembalianreal) as nilai'), 'tgltrans')
-        // ->where('tgltrans', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tgltrans', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
         ->whereBetween('tgltrans', [$awalsebelum, $akhirsebelum])
         ->get();
 
 
         $spmsebelum = SpmUP::select(DB::raw('sum(jumlahspp) as nilai'))
-        // ->where('tglSpm', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tglSpm', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
         ->whereBetween('tglSpm', [$awalsebelum, $akhirsebelum])
         ->get();
 
         $spmgusebelum = SPM_GU::select(DB::raw('sum(jumlahspp) as nilai'), 'tglspm')
-        // ->where('tglSpm', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tglSpm', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
         ->whereBetween('tglSpm', [$awalsebelum, $akhirsebelum])
         ->get();
 
@@ -244,10 +191,61 @@ class BKUController extends Controller
                     'silpa.nominal as nilai')
         ->where('tahun', $thnsekarang)
         ->where('tanggal', '!=', $thn.'-01'.'-01' )
-        // ->where('tanggal', '>=', Carbon::parse($awalsebelum)->startOfMonth())
-        // ->where('tanggal', '<=', Carbon::parse($akhirsebelum)->endOfMonth())
         ->whereBetween('tanggal', [$awalsebelum, $akhirsebelum])
         ->get();
+
+
+        $saldoAkhirBulanSebelumnya = 0;
+
+        // Hanya lakukan jika bukan bulan Januari
+        if (request('bulan') != '01') {
+
+            // Ambil data saldo akhir dari database (misalnya tabel SaldoAkhir)
+            // Jika tidak ada tabel saldo akhir, kita harus menghitung dari transaksi bulan sebelumnya
+
+            // Alternatif: Jika saldo akhir tidak disimpan dalam tabel terpisah,
+            // hitung dari transaksi bulan sebelumnya dan simpan ke saldoAkhirBulanSebelumnya
+
+            // Jika tidak ada data sebelumnya, tetap gunakan kalkulasi yang sudah ada
+        if ($saldoAkhirBulanSebelumnya == 0) {
+            // Ambil data transaksi dari bulan sebelumnya
+            $tanggalAkhirBulanSebelumnya = Carbon::createFromFormat('Y-m-d', $awalsebelum)
+                                            ->endOfMonth()->format('Y-m-d');
+
+            // Query untuk mendapatkan transaksi sampai akhir bulan sebelumnya (dari awal tahun)
+            $awalTahun = request('tahun').'-01-01';
+
+            // Menghitung semua penerimaan sampai akhir bulan sebelumnya
+            $totalPenerimaanSampaiSebelumnya =
+                SaldoAwal_PPK::where('rekening', '=', '0121161061')
+                    ->whereBetween('tanggal', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('nilaisaldo') +
+                TranskePPK::whereBetween('tgltrans', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('nilai') +
+                Nihil::whereBetween('tgltrans', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('jmlpengembalianreal') +
+                SisaAnggaran::where('tahun', $thnsekarang)
+                    ->where('tanggal', '!=', $thn.'-01'.'-01')
+                    ->whereBetween('tanggal', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('nominal');
+
+            // Menghitung semua pengeluaran sampai akhir bulan sebelumnya
+            $totalPengeluaranSampaiSebelumnya =
+                SpmUP::whereBetween('tglSpm', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('jumlahspp') +
+                SPM_GU::whereBetween('tglSpm', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('jumlahspp') +
+                NpkLS_heder::join('npkls_rinci', 'npkls_rinci.nonpk', '=', 'npkls_heder.nonpk')
+                    ->whereBetween('tglpindahbuku', [$awalTahun, $tanggalAkhirBulanSebelumnya])
+                    ->sum('npkls_rinci.total') +
+                PengeluaranKas::where('kd_kas', 'K0002')
+                    ->whereBetween('tanggalpengeluaran', [$awalTahun. ' 00:00:00', $tanggalAkhirBulanSebelumnya. ' 23:59:59'])
+                    ->sum('nominal');
+
+            // Hitung saldo akhir bulan sebelumnya
+            $saldoAkhirBulanSebelumnya = $totalPenerimaanSampaiSebelumnya - $totalPengeluaranSampaiSebelumnya;
+            }
+        }
         $ppk = [
             'saldo' => $saldo,
             'silpa' => $silpa,
@@ -268,10 +266,13 @@ class BKUController extends Controller
             'nihilsebelum' => $nihilsebelum,
             'npklssebelum' => $npklssebelum,
 
+
+            'saldoAkhirBulanSebelumnya' => $saldoAkhirBulanSebelumnya,
+
+
             'awalx'=> $awalsebelum,
             'akhirx'=> $akhirsebelum,
             'thn'=> $thn,
-            // 'thnakhir'=> $thnakhir,
         ];
 
         return new JsonResponse($ppk);
@@ -319,13 +320,7 @@ class BKUController extends Controller
         }])
         ->whereBetween('tglnpk', [$awal, $akhir])
         ->get();
-        // $npkpanjar=NpkPanjar_Header::with(['npkrinci'=> function($npd){
-        //     $npd->with(['npdpjr_head'=>function($npdrinci){
-        //         $npdrinci->with(['npdpjr_rinci']);
-        //     }]);
-        // }])
-        // ->whereBetween('tglnpk', [$awal, $akhir])
-        // ->get();
+
 
         $spjpanjar=SpjPanjar_Header::with(['spj_rinci'])
         ->whereBetween('tglspjpanjar', [$awal, $akhir])
@@ -422,7 +417,6 @@ class BKUController extends Controller
         $sblmnihil = Nihil::select(DB::raw('IFNULL(sum(jmlpengembalianreal),0) as total'))
         ->whereBetween('tgltrans', [$awalsebelum, $akhirsebelum])
         ->get();
-
 
         $bkupengeluaran = [
             'npkls' => $npkls,
