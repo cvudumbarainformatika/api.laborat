@@ -40,9 +40,9 @@ class IntradialitikController extends Controller
                     'rs1' => $request->noreg,
                     'rs2' => $request->norm,
                     'rs4' => $request->jamKe,
+                    'rs3' => $request->tgl,
                 ],
                 [
-                    'rs3' => $request->tgl,
                     'rs5' => $request->keluhan,
                     'rs6' => $request->bb,
                     'rs7' => $request->kesadaran,

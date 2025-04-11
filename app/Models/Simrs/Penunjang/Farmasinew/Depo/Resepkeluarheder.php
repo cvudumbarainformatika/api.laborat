@@ -50,6 +50,10 @@ class Resepkeluarheder extends Model
     {
         return $this->hasone(Petugas::class, 'kdpegsimrs', 'dokter');
     }
+    public function ketdokter()
+    {
+        return $this->hasone(Petugas::class, 'kdpegsimrs', 'dokter');
+    }
 
     public function sistembayar()
     {
