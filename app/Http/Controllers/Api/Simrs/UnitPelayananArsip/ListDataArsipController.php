@@ -59,6 +59,7 @@ class ListDataArsipController extends Controller
 
     public function simpanarsip(Request $request)
     {
+
         $user = FormatingHelper::session_user();
         $kdpegsimrs = $user['kodesimrs'];
         $kdruangarsip = $user['kode_ruang_arsip'];
@@ -71,7 +72,9 @@ class ListDataArsipController extends Controller
         $panggilan = $x[0]->panggilan;
         $pencipta = $kdruangarsip;
         $unit_pengolah = $kdruangarsip;
-        $noarsip = FormatingHelper::noarsip($wew, $panggilan);
+        $tanggal = explode('-',$request->tgl);
+        $tahun = $tanggal[0];
+        $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
 
         if ($request->hasFile('dokumen')) {
 
