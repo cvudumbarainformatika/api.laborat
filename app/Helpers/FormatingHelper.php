@@ -259,13 +259,13 @@ class FormatingHelper
         return $has . $n  . '/' . $kode . '/' . $rom[date('n')] . '/' . date('Y');
     }
 
-    public static function noarsip($n, $kode)
+    public static function noarsip($n, $kode, $tahun)
     {
         $has = null;
         $lbr = strlen($n);
         for ($i = 1; $i <= 7 - $lbr; $i++) {
             $has = $has . "0";
         }
-        return $has . $n . "-" . date("Y") . "-" . $kode;
+        return $has . $n . "-" . $tahun . "-" . $kode;
     }
 }
