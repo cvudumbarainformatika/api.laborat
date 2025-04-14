@@ -36,8 +36,8 @@ class LaporanGenerikController extends Controller
 
                 'rincian',
                 'rincianracik',
-                'permintaanresep.mobat:kd_obat,nama_obat,kelompok_penyimpanan,status_generik,status_forkid,status_fornas,obat_program',
-                'permintaanracikan.mobat:kd_obat,nama_obat,kelompok_penyimpanan,status_generik,status_forkid,status_fornas,obat_program',
+                'permintaanresep.mobat:kd_obat,nama_obat,jenis_perbekalan,kelompok_penyimpanan,status_generik,status_forkid,status_fornas,obat_program',
+                'permintaanracikan.mobat:kd_obat,nama_obat,jenis_perbekalan,kelompok_penyimpanan,status_generik,status_forkid,status_fornas,obat_program',
 
                 'sistembayar:rs1,rs2',
                 'ketdokter:kdpegsimrs,nama',
