@@ -148,6 +148,7 @@ class ListDataArsipController extends Controller
 
                     $gallery->path = "public/$folder/$penamaan";
                     $gallery->url = $folder . '/' . $penamaan;
+                    $gallery->keterangan = $originalname;;
                     $gallery->save();
 
                 }

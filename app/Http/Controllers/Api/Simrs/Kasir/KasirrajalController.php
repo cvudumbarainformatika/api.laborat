@@ -35,7 +35,7 @@ class KasirrajalController extends Controller
             'rs17.rs8 as kodepoli',
             'rs19.rs2 as poli',
             'rs17.rs9 as kodedokter',
-            'rs21.rs2 as dokter',
+            'kepegx.pegawai.nama as dokter',
             'rs17.rs14 as kodesistembayar',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groupssistembayar',
@@ -55,56 +55,12 @@ class KasirrajalController extends Controller
             'rs15.rs46 as noka',
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
-            'rs222.rs8 as sep',
             'rs17.rs19 as status'
         )
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
-            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-            ->with(
-                [
-                    'tindakan' => function ($tindakan) {
-                        $tindakan->select('rs73.rs1', 'rs73.rs2 as nota')
-                            ->where('rs73.rs22', '!=', 'OPERASI')
-                            ->groupBy('rs73.rs2');
-                    },
-                    'laborat' => function ($laborat) {
-                        $laborat->select('rs51.rs1', 'rs51.rs2 as nota')
-                            ->groupBy('rs51.rs2');
-                    },
-                    'transradiologi' => function ($transradiologi) {
-                        $transradiologi->select('rs48.rs1', 'rs48.rs2 as nota')
-                            ->groupBy('rs48.rs2');
-                    },
-                    'apotekrajal' => function ($apotekrajal) {
-                        $apotekrajal->select('rs90.rs1', 'rs90.rs2 as nota')
-                            ->groupBy('rs90.rs2');
-                    },
-                    'apotekrajalpolilalu' => function ($apotekrajalpolilalu) {
-                        $apotekrajalpolilalu->select('rs162.rs1', 'rs162.rs2 as nota')
-                            ->groupBy('rs162.rs2');
-                    },
-                    'apotekracikanrajal' => function ($apotekracikanrajal) {
-                        $apotekracikanrajal->select('rs91.rs1', 'rs91.rs2 as nota')
-                            ->groupBy('rs91.rs2');
-                    },
-                    'apotekracikanrajallalu' => function ($apotekracikanrajal) {
-                        $apotekracikanrajal->select('rs163.rs1', 'rs163.rs2 as nota')
-                            ->groupBy('rs163.rs2');
-                    },
-                    'kamaroperasi' => function ($kamaroperasi) {
-                        $kamaroperasi->select('rs54.rs1', 'rs54.rs2 as nota')
-                            ->groupBy('rs54.rs2');
-                    },
-                    'tindakanoperasi' => function ($tindakanoperasi) {
-                        $tindakanoperasi->select('rs73.rs1', 'rs73.rs2 as nota')
-                            ->where('rs73.rs22',  'OPERASI')
-                            ->groupBy('rs73.rs2');
-                    }
-                ]
-            )
-            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->whereDate('rs17.rs3', $tgl)
             //->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')
@@ -115,11 +71,8 @@ class KasirrajalController extends Controller
                     ->orWhere('rs17.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs17.rs1', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs19.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs21.rs2', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
-            ->where('rs17.rs8', 'LIKE', '%' . request('kdpoli') . '%')
             ->orderby('rs17.rs3', 'DESC')
             ->paginate(request('per_page'));
 
