@@ -826,14 +826,99 @@ class NPD_LSController extends Controller
         ]);
     }
 
-    public function updateuser(Request $request){
+    public function updateuser(){
     // INI UNTUK VERIF ALL //
         // $time = date('Y-m-d H:i:s');
-        $data = BastKonsinyasi::where('flag_bayar', '=', '1')
-        ->update(['user_bayar' => '1619']);
+
+        // update user di bast konsinyasi
+        // $data = BastKonsinyasi::where('flag_bayar', '=', '1')
+        // ->update(['user_bayar' => '1619',]);
         // ->get();
+
+        // update tglverifdi jurnal
         // $datatime = Create_JurnalPosting::where('tglverif', '=', NULL)->update(['tglverif' => $time]);
-        return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', $data], 200);
+
+        // return new JsonResponse ([
+        //     // 'message' => 'Data Berhasil di Verifikasi',
+        //     // 'datanpk' => $npk,
+        //     'update' => $data,
+
+        // ], 200);
+
+
+        // Mulai transaksi database untuk memastikan konsistensi data
+        DB::beginTransaction();
+
+        try {
+            // Ambil data dari NpkLS_rinci yang memenuhi kriteria
+            $npkData = NpkLS_rinci::where('nopencairan', '!=', '')
+                ->select('nonpdls', 'total', 'tglentrycair')
+                ->get();
+
+            // Proses update data PenerimaanHeder
+            $updatedCount = 0;
+
+            foreach ($npkData as $npk) {
+                // Konversi format tanggal dari 'Y-m-d H:i:s' ke 'Y-m-d'
+                $tglPencairan = Carbon::parse($npk->tglentrycair)->format('Y-m-d');
+
+                // Update data PenerimaanHeder yang sesuai
+                // $updateResult = PenerimaanHeder::where('no_npd', $npk->nonpdls)
+                // ->whereNull('tgl_pencairan_npk')
+                //     // ->where('flag_bayar', '=', '')
+                //     ->update([
+                //         'tgl_pencairan_npk' => $tglPencairan,
+                //         'nilai_pembayaran' => $npk->total,
+                //         'total_pembayaran' => $npk->total,
+                //         'user_bayar' => '1619',
+                //         'flag_bayar' => '1'
+                //     ]);
+
+                $updateResult = BastKonsinyasi::where('no_npd', $npk->nonpdls)
+                    ->whereNull('tgl_pencairan_npk')
+                    // ->where('flag_bayar', '=', '')
+                    ->update([
+                        'tgl_pencairan_npk' => $tglPencairan,
+                        'tgl_pembayaran' => $tglPencairan,
+                        'nilai_pembayaran' => $npk->total,
+                        'total_pembayaran' => $npk->total,
+                        'user_bayar' => '1619',
+                        'flag_bayar' => '1'
+                    ]);
+
+                if ($updateResult) {
+                    $updatedCount += $updateResult;
+                }
+            }
+
+            // Commit transaksi jika semua berhasil
+            DB::commit();
+
+            // Ambil data terbaru untuk response
+            // $updatedNpkData = NpkLS_rinci::where('nopencairan', '!=', '')
+            //     ->select('nonpdls', 'total', 'tglentrycair')
+            //     ->get();
+
+            // $updatedPenerimaanData = PenerimaanHeder::where('no_npd', '!=', '')
+            //     ->whereNotNull('tgl_pencairan_npk')
+            //     ->select('no_npd', 'tgl_pencairan_npk', 'nilai_pembayaran', 'total_pembayaran', 'user_bayar', 'flag_bayar')
+            //     ->get();
+
+            return new JsonResponse([
+                'message' => 'Update berhasil. Jumlah data diupdate: ' . $updatedCount,
+                // 'datanpk' => $updatedNpkData,
+                // 'updated_data' => $updatedPenerimaanData,
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Rollback transaksi jika terjadi error
+            DB::rollBack();
+
+            return new JsonResponse([
+                'message' => 'Gagal melakukan update: ' . $e->getMessage(),
+                'error' => true
+            ], 500);
+        }
 
     }
 }
