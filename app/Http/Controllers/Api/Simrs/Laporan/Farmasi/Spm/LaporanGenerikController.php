@@ -9,6 +9,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\SistemBayar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LaporanGenerikController extends Controller
 {
@@ -55,8 +56,41 @@ class LaporanGenerikController extends Controller
     }
     public function getLaporanResponseTime()
     {
+        $raw = Resepkeluarheder::select(
+            'noresep',
+            'tgl_permintaan',
+            'tgl_diterima',
+            'tgl_kirim',
+            'tgl_selesai',
+            'dokter',
+            'depo',
+            'sistembayar',
+
+            DB::raw('((TIMESTAMPDIFF(MINUTE,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))) AS rt_menit'),
+        )->where('tgl_permintaan', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+            ->when(request('sistem_bayar'), function ($query) {
+                $query->whereIn('sistembayar', request('sistem_bayar'));
+            })
+            ->when(request('depo'), function ($query) {
+                $query->whereIn('depo', request('depo'));
+            })
+
+            ->with([
+                'rincian:noresep,kdobat,jumlah',
+                'rincianracik:noresep,kdobat,jumlah',
+
+                'sistembayar:rs1,rs2',
+                // 'ketdokter:kdpegsimrs,nama',
+            ])
+            ->whereIn('flag', ['1', '2', '3', '4'])
+            ->limit(100)
+            ->paginate(100);
+        $data = collect($raw)['data'];
+        $meta = collect($raw)->except('data');
         return new JsonResponse([
             'req' => request()->all(),
+            'data' => $data,
+            'meta' => $meta,
 
         ]);
     }
