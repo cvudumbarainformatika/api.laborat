@@ -12,7 +12,8 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     ports:
-      - "6003:6003" # Tambahkan ini untuk WebSocket
+      - "6003:6003" # WebSocket
+      - "8000:8000" # Swoole
     volumes:
       - ./:/var/www
     environment:
@@ -25,7 +26,7 @@ services:
     container_name: laravel-nginx
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "8080:80"
     volumes:
       - ./:/var/www
       - ./docker-compose/nginx/conf.d/:/etc/nginx/conf.d/
