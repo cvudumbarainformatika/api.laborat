@@ -20,3 +20,18 @@ yarn-error.log
 # Ignore Mac DS_Store files
 .DS_Store
 **/.DS_Store
+
+/storage/*.key
+/storage/app/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Kecualikan file .gitignore
+!/storage/app/.gitignore
+!/storage/framework/.gitignore
+!/storage/framework/cache/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/views/.gitignore
+!/storage/logs/.gitignore
