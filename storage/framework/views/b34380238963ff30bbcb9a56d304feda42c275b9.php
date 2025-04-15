@@ -263,4 +263,4 @@
 </script>
 </body>
 </html>
-<?php /**PATH /var/www/vendor/beyondcode/laravel-websockets/resources/views/dashboard.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/vendor/beyondcode/laravel-websockets/src/../resources/views//dashboard.blade.php ENDPATH**/ ?>
