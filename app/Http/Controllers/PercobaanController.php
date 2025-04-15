@@ -14,8 +14,9 @@ class PercobaanController extends Controller
 {
     public function index()
     {
-        $noSuratMeninggal = self::buatSuratMeninggal();
-        return $noSuratMeninggal;
+        // $noSuratMeninggal = self::buatSuratMeninggal();
+        // return $noSuratMeninggal;
+        echo 'ok';
     }
 
 
