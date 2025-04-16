@@ -8141,3 +8141,1033 @@ Connection id 73703896.354725337 sending message {"event":"pusher:pong"}
 simrs: connection id 576015750.718385338 received message: {"event":"pusher:ping","data":{}}.
 Connection id 576015750.718385338 sending message {"event":"pusher:pong"}
 Starting the WebSocket server on port 6003...
+New connection opened for app key simrs_key_harry141312.
+Connection id 662168561.912909723 sending message {"event":"pusher:connection_established","data":"{\"socket_id\":\"662168561.912909723\",\"activity_timeout\":30}"}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:subscribe","data":{"auth":"","channel":"public.playground.1"}}.
+Connection id 662168561.912909723 sending message {"event":"pusher_internal:subscription_succeeded","channel":"public.playground.1"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+simrs: connection id 662168561.912909723 received message: {"event":"pusher:ping","data":{}}.
+Connection id 662168561.912909723 sending message {"event":"pusher:pong"}
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+
+   ErrorException 
+
+  Redis::connect(): SSL: Handshake timed out
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:159
+    155▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    156▕             $parameters[] = $context;
+    157▕         }
+    158▕ 
+  ➜ 159▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    160▕     }
+    161▕ 
+    162▕     /**
+    163▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+Starting the WebSocket server on port 6003...
+New connection opened for app key simrs_key_harry141312.
+Connection id 638593189.916605084 sending message {"event":"pusher:connection_established","data":"{\"socket_id\":\"638593189.916605084\",\"activity_timeout\":30}"}
+simrs: connection id 638593189.916605084 received message: {"event":"pusher:subscribe","data":{"auth":"","channel":"public.playground.1"}}.
+Connection id 638593189.916605084 sending message {"event":"pusher_internal:subscription_succeeded","channel":"public.playground.1"}
+simrs: connection id 638593189.916605084 received message: {"event":"pusher:ping","data":{}}.
+Connection id 638593189.916605084 sending message {"event":"pusher:pong"}
+Connection id 638593189.916605084 closed.
+New connection opened for app key simrs_key_harry141312.
+Connection id 572836392.5147777 sending message {"event":"pusher:connection_established","data":"{\"socket_id\":\"572836392.5147777\",\"activity_timeout\":30}"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:subscribe","data":{"auth":"","channel":"public.playground.1"}}.
+Connection id 572836392.5147777 sending message {"event":"pusher_internal:subscription_succeeded","channel":"public.playground.1"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+New connection opened for app key simrs_key_harry141312.
+Connection id 827626653.410867458 sending message {"event":"pusher:connection_established","data":"{\"socket_id\":\"827626653.410867458\",\"activity_timeout\":30}"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:subscribe","data":{"auth":"","channel":"public.playground.1"}}.
+Connection id 827626653.410867458 sending message {"event":"pusher_internal:subscription_succeeded","channel":"public.playground.1"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:subscribe","data":{"auth":"simrs_key_harry141312:2f5852279ec97ffc814d49d909071c3aae70ad1ea4fd278c9352d2519b150c03","channel":"private-private.notif.permintaan-laborat"}}.
+Connection id 827626653.410867458 sending message {"event":"pusher_internal:subscription_succeeded","channel":"private-private.notif.permintaan-laborat"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+simrs: connection id 827626653.410867458 received message: {"event":"pusher:ping","data":{}}.
+Connection id 827626653.410867458 sending message {"event":"pusher:pong"}
+simrs: connection id 572836392.5147777 received message: {"event":"pusher:ping","data":{}}.
+Connection id 572836392.5147777 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+Starting the WebSocket server on port 6003...
+New connection opened for app key simrs_key_harry141312.
+Connection id 459214657.352817992 sending message {"event":"pusher:connection_established","data":"{\"socket_id\":\"459214657.352817992\",\"activity_timeout\":30}"}
+simrs: connection id 459214657.352817992 received message: {"event":"pusher:subscribe","data":{"auth":"","channel":"public.playground.1"}}.
+Connection id 459214657.352817992 sending message {"event":"pusher_internal:subscription_succeeded","channel":"public.playground.1"}
+New connection opened for app key simrs_key_harry141312.
+Connection id 373568583.573852982 sending message {"event":"pusher:connection_established","data":"{\"socket_id\":\"373568583.573852982\",\"activity_timeout\":30}"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:subscribe","data":{"auth":"","channel":"public.playground.1"}}.
+Connection id 373568583.573852982 sending message {"event":"pusher_internal:subscription_succeeded","channel":"public.playground.1"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:subscribe","data":{"auth":"simrs_key_harry141312:33aaa83be22fbaa150ce914c6e4ac149476ec034a91c01e878f6548ad42dc7c0","channel":"private-private.notif.permintaan-laborat"}}.
+Connection id 373568583.573852982 sending message {"event":"pusher_internal:subscription_succeeded","channel":"private-private.notif.permintaan-laborat"}
+simrs: connection id 459214657.352817992 received message: {"event":"pusher:ping","data":{}}.
+Connection id 459214657.352817992 sending message {"event":"pusher:pong"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:ping","data":{}}.
+Connection id 373568583.573852982 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 459214657.352817992 received message: {"event":"pusher:ping","data":{}}.
+Connection id 459214657.352817992 sending message {"event":"pusher:pong"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:ping","data":{}}.
+Connection id 373568583.573852982 sending message {"event":"pusher:pong"}
+simrs: connection id 459214657.352817992 received message: {"event":"pusher:ping","data":{}}.
+Connection id 459214657.352817992 sending message {"event":"pusher:pong"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:ping","data":{}}.
+Connection id 373568583.573852982 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}
+simrs: connection id 459214657.352817992 received message: {"event":"pusher:ping","data":{}}.
+Connection id 459214657.352817992 sending message {"event":"pusher:pong"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:ping","data":{}}.
+Connection id 373568583.573852982 sending message {"event":"pusher:pong"}
+simrs: connection id 459214657.352817992 received message: {"event":"pusher:ping","data":{}}.
+Connection id 459214657.352817992 sending message {"event":"pusher:pong"}
+simrs: connection id 373568583.573852982 received message: {"event":"pusher:ping","data":{}}.
+Connection id 373568583.573852982 sending message {"event":"pusher:pong"}
+Unhandled promise rejection with TypeError: React\Http\Io\ClientRequestStream::closeError(): Argument #1 ($error) must be of type Exception, Error given, called in /var/www/vendor/react/promise/src/Internal/RejectedPromise.php on line 73 and defined in /var/www/vendor/react/http/src/Io/ClientRequestStream.php:254
+Stack trace:
+#0 /var/www/vendor/react/promise/src/Internal/RejectedPromise.php(73): React\Http\Io\ClientRequestStream->closeError(Object(Error))
+#1 /var/www/vendor/react/promise/src/Promise.php(47): React\Promise\Internal\RejectedPromise->then(Object(Closure), Array)
+#2 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(84): React\Promise\Promise->then(Object(Closure), Array)
+#3 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(131): React\Http\Io\ClientRequestStream->writeHead()
+#4 /var/www/vendor/react/http/src/Io/ClientRequestStream.php(144): React\Http\Io\ClientRequestStream->write('{"app_id":"simr...')
+#5 /var/www/vendor/react/http/src/Io/Sender.php(147): React\Http\Io\ClientRequestStream->end('{"app_id":"simr...')
+#6 /var/www/vendor/react/http/src/Io/Transaction.php(146): React\Http\Io\Sender->send(Object(React\Http\Message\Request))
+#7 /var/www/vendor/react/http/src/Io/Transaction.php(83): React\Http\Io\Transaction->next(Object(React\Http\Message\Request), Object(React\Promise\Deferred), Object(React\Http\Io\ClientRequestState))
+#8 /var/www/vendor/react/http/src/Browser.php(854): React\Http\Io\Transaction->send(Object(React\Http\Message\Request))
+#9 /var/www/vendor/react/http/src/Browser.php(177): React\Http\Browser->requestMayBeStreaming('POST', 'http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#10 /var/www/vendor/beyondcode/laravel-websockets/src/Statistics/Logger/HttpStatisticsLogger.php(81): React\Http\Browser->post('http://localhos...', Array, Object(GuzzleHttp\Psr7\Stream))
+#11 /var/www/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): BeyondCode\LaravelWebSockets\Statistics\Logger\HttpStatisticsLogger->save()
+#12 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(75): Illuminate\Support\Facades\Facade::__callStatic('save', Array)
+#13 /var/www/vendor/react/event-loop/src/Timer/Timers.php(102): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->BeyondCode\LaravelWebSockets\Console\{closure}(Object(React\EventLoop\Timer\Timer))
+#14 /var/www/vendor/react/event-loop/src/StreamSelectLoop.php(185): React\EventLoop\Timer\Timers->tick()
+#15 /var/www/vendor/cboden/ratchet/src/Ratchet/Server/IoServer.php(74): React\EventLoop\StreamSelectLoop->run()
+#16 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(155): Ratchet\Server\IoServer->run()
+#17 /var/www/vendor/beyondcode/laravel-websockets/src/Console/StartWebSocketServer.php(52): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->startWebSocketServer()
+#18 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): BeyondCode\LaravelWebSockets\Console\StartWebSocketServer->handle()
+#19 /var/www/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\Container\BoundMethod::Illuminate\Container\{closure}()
+#20 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\Container\Util::unwrapIfClosure(Object(Closure))
+#21 /var/www/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod(Object(Illuminate\Foundation\Application), Array, Object(Closure))
+#22 /var/www/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\Container\BoundMethod::call(Object(Illuminate\Foundation\Application), Array, Array, NULL)
+#23 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate\Container\Container->call(Array)
+#24 /var/www/vendor/symfony/console/Command/Command.php(326): Illuminate\Console\Command->execute(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#25 /var/www/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony\Component\Console\Command\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Illuminate\Console\OutputStyle))
+#26 /var/www/vendor/symfony/console/Application.php(1096): Illuminate\Console\Command->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#27 /var/www/vendor/symfony/console/Application.php(324): Symfony\Component\Console\Application->doRunCommand(Object(BeyondCode\LaravelWebSockets\Console\StartWebSocketServer), Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#28 /var/www/vendor/symfony/console/Application.php(175): Symfony\Component\Console\Application->doRun(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#31 {main}

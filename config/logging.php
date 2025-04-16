@@ -113,6 +113,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'redis' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/redis.log'),
+            'level' => 'debug',
+            'days' => 14,
+        ],
     ],
 
 ];

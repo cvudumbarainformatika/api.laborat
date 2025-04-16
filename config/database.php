@@ -285,7 +285,11 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_')
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
+            'timeout' => 30,
+            'retry_interval' => 100,
+            'read_timeout' => 60,
+            'ssl' => false,  // Nonaktifkan SSL
         ],
 
         'default' => [
@@ -295,11 +299,8 @@ return [
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
             'read_timeout' => 60,
-            'context' => [
-                'stream' => [
-                    'tcp_nodelay' => true,
-                ],
-            ],
+            'scheme' => 'tcp', // Gunakan TCP biasa
+            'ssl' => false,    // Nonaktifkan SSL
         ],
 
         'cache' => [
@@ -309,11 +310,8 @@ return [
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
             'read_timeout' => 60,
-            'context' => [
-                'stream' => [
-                    'tcp_nodelay' => true,
-                ],
-            ],
+            'scheme' => 'tcp', // Gunakan TCP biasa
+            'ssl' => false,    // Nonaktifkan SSL
         ],
 
     ],
