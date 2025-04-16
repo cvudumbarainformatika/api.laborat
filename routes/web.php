@@ -19,6 +19,7 @@ use App\Websockets\SocketHandler\UpdatePostSocketHandler;
 use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -102,6 +103,11 @@ Route::get('/notif-refresh', function () {
     ];
     event(new PlaygroundEvent($message));
     return null;
+});
+
+Route::get('/test-redis', function () {
+    Cache::put('test_cache', 'Redis is working!', 600);
+    return Cache::get('test_cache');
 });
 
 Route::get('/clear-cache', function () {
