@@ -23,6 +23,11 @@ yarn-error.log
 # Ignore all storage content
 /storage/*
 
+# Ignore specific log files
+/storage/logs/*.log
+/storage/logs/websockets.log
+/storage/logs/laravel.log
+
 # Keep .gitignore files
 !/storage/.gitignore
 !/storage/app/.gitignore

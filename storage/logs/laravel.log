@@ -709,3 +709,4 @@ Kota Probolinggo","rt":"","rw":"","kelurahan":"","kecamatan":"","kota":"","agama
 [2025-04-16 15:33:12] local.INFO: After remember operation {"cache_exists":true,"cache_value_type":"object","direct_put_exists":true} 
 [2025-04-16 15:38:14] local.INFO: Direct cache get result {"key":"account_1","exists":true,"type":"object","sample":"App\\Models\\User"} 
 [2025-04-16 15:38:14] local.INFO: Final user data {"cache_key":"account_1","user_exists":true,"user_type":"object","user_class":"App\\Models\\User","has_relations":false} 
+[2025-04-16 15:56:38] local.INFO: Cache miss - fetching fresh user data  
