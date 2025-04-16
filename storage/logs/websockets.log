@@ -8132,3 +8132,12 @@ Stack trace:
 #29 /var/www/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony\Component\Console\Application->run(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
 #30 /var/www/artisan(35): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
 #31 {main}
+simrs: connection id 73703896.354725337 received message: {"event":"pusher:ping","data":{}}.
+Connection id 73703896.354725337 sending message {"event":"pusher:pong"}
+simrs: connection id 576015750.718385338 received message: {"event":"pusher:ping","data":{}}.
+Connection id 576015750.718385338 sending message {"event":"pusher:pong"}
+simrs: connection id 73703896.354725337 received message: {"event":"pusher:ping","data":{}}.
+Connection id 73703896.354725337 sending message {"event":"pusher:pong"}
+simrs: connection id 576015750.718385338 received message: {"event":"pusher:ping","data":{}}.
+Connection id 576015750.718385338 sending message {"event":"pusher:pong"}
+Starting the WebSocket server on port 6003...

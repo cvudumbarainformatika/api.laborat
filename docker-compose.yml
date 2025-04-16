@@ -20,6 +20,8 @@ services:
       - COMPOSER_ALLOW_SUPERUSER=1
     networks:
       - app-network
+    depends_on:
+      - redis
 
   nginx:
     image: nginx:alpine
@@ -32,6 +34,21 @@ services:
       - ./docker-compose/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - app-network
+
+  redis:
+    image: redis:alpine
+    container_name: laravel-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+volumes:
+  redis-data:
+    driver: local
 
 networks:
   app-network:

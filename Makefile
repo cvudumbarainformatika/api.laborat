@@ -32,3 +32,23 @@ restart:
 
 shell:
     docker compose exec app bash
+
+
+# ... REDIS ...
+
+redis-cli:
+    docker compose exec redis redis-cli
+
+redis-flush:
+    docker compose exec redis redis-cli FLUSHALL
+
+setup:
+    @make build
+    @make permissions
+    @make up
+    docker compose exec app composer install
+    docker compose exec app php artisan key:generate
+    docker compose exec app php artisan config:cache
+    docker compose exec app php artisan route:cache
+    docker compose exec app php artisan view:cache
+    docker compose exec app php artisan storage:link
