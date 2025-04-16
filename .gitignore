@@ -2,7 +2,6 @@
 /public/hot
 /public/storage
 /public/.htaccess
-/storage/*.key
 /vendor
 .env
 .env.backup
@@ -21,15 +20,11 @@ yarn-error.log
 .DS_Store
 **/.DS_Store
 
-/storage/*.key
-/storage/app/*
-/storage/framework/cache/*
-/storage/framework/cache/data/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
+# Ignore all storage content
+/storage/*
 
-# Kecualikan file .gitignore
+# Keep .gitignore files
+!/storage/.gitignore
 !/storage/app/.gitignore
 !/storage/framework/.gitignore
 !/storage/framework/cache/.gitignore
@@ -37,3 +32,13 @@ yarn-error.log
 !/storage/framework/sessions/.gitignore
 !/storage/framework/views/.gitignore
 !/storage/logs/.gitignore
+
+# Keep directory structure
+!/storage/app/
+!/storage/app/public/
+!/storage/framework/
+!/storage/framework/cache/
+!/storage/framework/cache/data/
+!/storage/framework/sessions/
+!/storage/framework/views/
+!/storage/logs/
