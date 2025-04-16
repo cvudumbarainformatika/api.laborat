@@ -32,3 +32,22 @@ shell:
 
 log:
 	docker compose exec app tail -f storage/logs/laravel.log
+
+down:
+	docker compose down
+
+up:
+	docker compose up -d
+
+build:
+	docker compose build --no-cache
+
+setup:
+	@make build
+	@make permissions
+	@make up
+	docker compose exec app composer install
+	docker compose exec app php artisan key:generate
+	docker compose exec app php artisan config:cache
+	docker compose exec app php artisan route:cache
+	docker compose exec app php artisan view:cache
