@@ -278,7 +278,8 @@ class PenerimaanController extends Controller
         ]);
         return new JsonResponse([
             'req' => $request->all(),
-            'data' => $penerimaan
+            'data' => $penerimaan,
+            'message' => 'Nomor Faktur berhasil diubah'
         ]);
     }
     public function listepenerimaan()
