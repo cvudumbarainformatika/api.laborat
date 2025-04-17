@@ -263,7 +263,24 @@ class PenerimaanController extends Controller
             'message' => 'Pesanan sudah ditolak'
         ]);
     }
+    public function simpanEditNomorFaktur(Request $request)
+    {
+        $penerimaan = PenerimaanHeder::find($request->id);
 
+        if (!$penerimaan) {
+            return new JsonResponse([
+                'req' => $request->all(),
+                'message' => 'Penerimaan tidak ditemukan'
+            ], 410);
+        }
+        $penerimaan->update([
+            'nomorsurat' => $request->nomorsurat,
+        ]);
+        return new JsonResponse([
+            'req' => $request->all(),
+            'data' => $penerimaan
+        ]);
+    }
     public function listepenerimaan()
     {
         // $idpegawai = auth()->user()->pegawai_id;
@@ -278,6 +295,7 @@ class PenerimaanController extends Controller
             // });
         }
         $listpenerimaan = PenerimaanHeder::select(
+            'id',
             'nopenerimaan',
             'nopemesanan',
             'tglpenerimaan',
