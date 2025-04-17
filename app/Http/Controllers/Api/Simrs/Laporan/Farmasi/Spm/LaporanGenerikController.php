@@ -97,9 +97,15 @@ class LaporanGenerikController extends Controller
                 'tgl_kirim_depo',
                 'tgl_terima_depo',
                 'dari',
+<<<<<<< HEAD
                 DB::raw('((TIMESTAMPDIFF(MINUTE,permintaan_h.tgl_kirim,permintaan_h.tgl_terima_depo))) AS tt_menit'),
                 DB::raw('((TIMESTAMPDIFF(HOUR,permintaan_h.tgl_kirim,permintaan_h.tgl_terima_depo))%24) AS rt_jam'),
                 DB::raw('((TIMESTAMPDIFF(MINUTE,permintaan_h.tgl_kirim,permintaan_h.tgl_terima_depo))%60) AS rt_menit'),
+=======
+                DB::raw('((TIMESTAMPDIFF(MINUTE,permintaan_h.tgl_permintaan,permintaan_h.tgl_terima_depo))) AS tt_menit'),
+                DB::raw('((TIMESTAMPDIFF(HOUR,permintaan_h.tgl_permintaan,permintaan_h.tgl_terima_depo))%24) AS rt_jam'),
+                DB::raw('((TIMESTAMPDIFF(MINUTE,permintaan_h.tgl_permintaan,permintaan_h.tgl_terima_depo))%60) AS rt_menit'),
+>>>>>>> c7dc48e0 (wip : lap respontime gudang)
 
             )
                 ->with([
