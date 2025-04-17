@@ -22,6 +22,9 @@ redis-stats:
 redis-cli:
 	docker compose exec redis redis-cli
 
+redis-cli-db1:
+	docker compose exec redis redis-cli -n 1
+
 redis-flush:
 	docker compose exec redis redis-cli FLUSHALL
 
@@ -51,3 +54,10 @@ setup:
 	docker compose exec app php artisan config:cache
 	docker compose exec app php artisan route:cache
 	docker compose exec app php artisan view:cache
+
+re-conf:
+	docker compose exec app php artisan config:cache && docker compose exec app php artisan route:cache
+
+# swoole
+swoole:
+	docker compose exec app php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=1 --task-workers=1

@@ -28,8 +28,8 @@ RUN pecl install redis \
     && docker-php-ext-enable redis
 
 # Install Swoole
-RUN pecl install openswoole \
-    && docker-php-ext-enable openswoole
+RUN pecl install swoole \
+    && docker-php-ext-enable swoole
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

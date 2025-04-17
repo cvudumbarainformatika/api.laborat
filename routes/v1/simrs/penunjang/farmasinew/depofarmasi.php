@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\CaripasienControlle
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\DepoController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\EresepController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\LihatStokController;
+use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\PencarianObatController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\ResepkeluarController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo\ReturpenjualanController;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,8 @@ Route::group([
 
     //--------------ERESEP----------------//
     // Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'lihatstokobateresepBydokter']);
-    Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'pencarianObatResep2']);
+    // Route::get('/lihatstokobateresepBydokter', [EresepController::class, 'pencarianObatResep2']);
+    Route::get('/lihatstokobateresepBydokter', [PencarianObatController::class, 'pencarianObatResep']);
     Route::get('/get-single-resep', [EresepController::class, 'getSingleResep']);
 
     Route::get('/ambil-pegawai-farmasi', [EresepController::class, 'getPegawaiFarmasi']);
