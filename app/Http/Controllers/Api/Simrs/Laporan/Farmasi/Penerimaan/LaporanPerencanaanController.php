@@ -50,21 +50,6 @@ class LaporanPerencanaanController extends Controller
                         ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
                         ->whereIn('penerimaan_r.nopenerimaan', $nopenerimaan);
                 },
-                // 'hargapenerimaanrinci' => function ($rinci) {
-                //     $fromBefore = date('Y-m-d', strtotime('-1 month', strtotime(request('from'))));
-                //     $toBefore = date('Y-m-t', strtotime('-1 month', strtotime(request('from'))));
-                //     $rinci->select(
-                //         'penerimaan_h.tglpenerimaan as tanggal',
-                //         'penerimaan_r.nopenerimaan',
-                //         'penerimaan_r.kdobat',
-                //         'penerimaan_r.harga_netto_kecil as harga'
-                //     )
-                //         ->join('penerimaan_h', 'penerimaan_r.nopenerimaan', '=', 'penerimaan_h.nopenerimaan')
-                //         ->whereDate('penerimaan_h.tglpenerimaan', '<', request('from'));
-                //     // ->whereBetween('penerimaan_h.tglpenerimaan', [$fromBefore . ' 00:00:00', $toBefore . ' 23:59:59']);
-                //     // ->orderBy('penerimaan_h.tglpenerimaan', 'DESC')
-                //     // ->limit(5);
-                // },
                 'perencanaanrinci' => function ($rinci) use ($noperencanaan) {
                     $rinci->select(
                         'perencana_pebelian_h.tgl as tanggal',
