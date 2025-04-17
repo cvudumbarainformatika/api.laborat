@@ -35,7 +35,7 @@ class DiagnosaController extends Controller
 
     public function listtipekhasus()
     {
-        $data = Cache::rememberForever('id1', function() {
+        $data = Cache::remember('id1', now()->addDays(7), function() {
             return MtipeKhasusDiagnosa::query()->get();
         });
         return new JsonResponse($data);

@@ -45,6 +45,10 @@ up:
 build:
 	docker compose build --no-cache
 
+permissions:
+	chmod +x fix-permissions.sh
+	./fix-permissions.sh
+
 setup:
 	@make build
 	@make permissions
@@ -56,7 +60,7 @@ setup:
 	docker compose exec app php artisan view:cache
 
 re-conf:
-	docker compose exec app php artisan config:cache && docker compose exec app php artisan route:cache
+	docker compose exec app php artisan config:cache && docker compose exec app php artisan route:cache && docker compose exec app php artisan view:cache
 
 # swoole
 swoole:

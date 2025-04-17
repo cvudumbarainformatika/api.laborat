@@ -13,7 +13,7 @@ class KelaminarrController extends Controller
     public function index()
     {
         // $data = Mkelamin::all();
-        $data = Cache::rememberForever('kelamin', function () {
+        $data = Cache::remember('kelamin', now()->addDays(7), function () {
             return Mkelamin::all();
         });
         return new JsonResponse($data);

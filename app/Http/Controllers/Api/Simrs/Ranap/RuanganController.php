@@ -16,7 +16,7 @@ class RuanganController extends Controller
         //     ->groupby('groups')
         //     ->where('hiddens', '')
         //     ->get();
-        $list = Cache::rememberForever('ruanganranap', function () {
+        $list = Cache::remember('ruanganranap', now()->addDays(7), function () {
             return Mruangranap::select('groups', 'groups_nama')
             ->groupby('groups')
             ->where('hiddens', '')

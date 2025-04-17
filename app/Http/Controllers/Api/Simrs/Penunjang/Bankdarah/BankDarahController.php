@@ -17,7 +17,7 @@ class BankDarahController extends Controller
     public function getmaster()
     {
 
-       $data = Cache::rememberForever('m_bdrs', function () {
+       $data = Cache::remember('m_bdrs', now()->addDays(7), function () {
           $master = Mbdrs::all();
           $master->makeHidden(['created_at','updated_at']);
           return $master;

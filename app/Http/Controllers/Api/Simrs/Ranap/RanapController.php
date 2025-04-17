@@ -801,7 +801,7 @@ class RanapController extends Controller
     public function listjeniskasus()
     {
         //  $list = MjenisKasus::select('kode','uraian','gruping','medis','flag')->where('flag','1')->get();
-        $list = Cache::rememberForever('jeniskasus', function () {
+        $list = Cache::remember('jeniskasus', now()->addDays(7), function () {
             return MjenisKasus::select('kode', 'uraian', 'gruping', 'medis', 'flag')->where('flag', '1')->get();
         });
         return new JsonResponse($list);

@@ -17,7 +17,7 @@ class AgamaControllerar extends Controller
         // ->where('flag','<>','1')
         // ->get();
 
-        $data = Cache::rememberForever('agama', function () {
+        $data = Cache::remember('agama', now()->addDays(7), function () {
             return Magama::query()
             ->selectRaw('rs1 kode,rs2 keterangan,kodemap kodemapping,ketmap keteranganmapping')
             ->where('flag','<>','1')

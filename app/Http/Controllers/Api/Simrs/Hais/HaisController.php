@@ -16,7 +16,7 @@ class HaisController extends Controller
     public function getmaster()
     {
         // $data = Mhais::all();
-        $data = Cache::rememberForever('m_hais', function () {
+        $data = Cache::remember('m_hais', now()->addDays(7), function () {
             return Mhais::all();
         });
         return new JsonResponse($data);

@@ -14,7 +14,7 @@ class PekerjaanController extends Controller
     {
         // $query = Mpekerjaan::all();
 
-        $query = Cache::rememberForever('pekerjaan', function () {
+        $query = Cache::remember('pekerjaan', now()->addDays(7), function () {
             return Mpekerjaan::all();
         });
         return new JsonResponse($query);

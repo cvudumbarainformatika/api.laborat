@@ -24,7 +24,7 @@ class KamarController extends Controller
       // })->distinct('rs1')
       // ->orderBy('rs2', 'DESC')->get();
 
-      $listkamar = Cache::rememberForever('kamar', function () {
+      $listkamar = Cache::remember('kamar', now()->addDays(7), function () {
         return Mkamar::query()
         ->selectRaw('rs1,rs2,rs3,rs4,rs6,groups')
         ->where(function ($q) {

@@ -12,7 +12,7 @@ class PegawaiController extends Controller
 {
     public function listnakes()
     {
-       $data = Cache::rememberForever('list_nakes', function () {
+       $data = Cache::remember('list_nakes', now()->addDays(1), function () {
         $kd=['1','2','3'];
         return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
         ->whereIn('kdgroupnakes', $kd)->where('aktif', 'AKTIF')
@@ -22,7 +22,7 @@ class PegawaiController extends Controller
     }
     public function listNonNakes()
     {
-       $data = Cache::rememberForever('list_non_nakes', function () {
+       $data = Cache::remember('list_non_nakes', now()->addDays(1), function () {
         $kd=['1','2','3'];
         return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
         ->whereNotIn('kdgroupnakes', $kd)->where('aktif', 'AKTIF')
@@ -32,7 +32,7 @@ class PegawaiController extends Controller
     }
     public function listAll()
     {
-       $data = Cache::rememberForever('list_all_pegawai', function () {
+       $data = Cache::remember('list_all_pegawai', now()->addDays(1), function () {
         // $kd=['1','2','3'];
         return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
         ->where('aktif', 'AKTIF')

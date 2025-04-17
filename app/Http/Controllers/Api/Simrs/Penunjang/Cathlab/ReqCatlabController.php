@@ -108,7 +108,7 @@ class ReqCatlabController extends Controller
 
     public function tarifcathlab()
     {
-        $data = Cache::rememberForever('cathlab', function () {
+        $data = Cache::remember('cathlab', now()->addDays(7), function () {
             return Mtarifcathlab::query()
             ->get();
         });

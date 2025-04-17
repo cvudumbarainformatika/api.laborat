@@ -13,7 +13,7 @@ class StatusPernikahanController extends Controller
     public function index()
     {
         // $data = Mstatuspernikahan::all();
-        $data = Cache::rememberForever('statuspernikahan', function () {
+        $data = Cache::remember('statuspernikahan', now()->addDays(7), function () {
             return Mstatuspernikahan::all();
         });
         return new JsonResponse($data);

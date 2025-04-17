@@ -1619,3 +1619,12 @@ Kota Probolinggo","rt":"","rw":"","kelurahan":"","kecamatan":"","kota":"","agama
 #60 /var/www/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #61 {main}
 "} 
+[2025-04-17 07:47:01] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-17 07:47:01] local.INFO: Cache miss - fetching fresh apps data  
+[2025-04-17 07:47:02] local.INFO: Cache miss - fetching fresh sistembayar data  
+[2025-04-17 07:56:49] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-17 08:14:53] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-17 08:17:20] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-17 08:18:05] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-17 08:18:47] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-17 08:19:27] local.INFO: Cache miss - fetching fresh user data  

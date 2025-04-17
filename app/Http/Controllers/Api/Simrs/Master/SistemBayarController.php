@@ -30,7 +30,7 @@ class SistemBayarController extends Controller
         // ->selectRaw('rs1 as kode, rs2 as sistembayar, groups, hidden')
         // ->where('rs1', '<>' ,'') // menampilkan yg tidak di hide
         // ->get();
-        $data = Cache::rememberForever('allsistembayar', function () {
+        $data = Cache::remember('allsistembayar', now()->addDays(7), function () {
             return Msistembayar::query()
             ->selectRaw('rs1 as kode, rs2 as sistembayar, groups, hidden')
             ->where('rs1', '<>' ,'') // menampilkan yg tidak di hide

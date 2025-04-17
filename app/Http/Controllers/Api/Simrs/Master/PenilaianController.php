@@ -15,7 +15,7 @@ class PenilaianController extends Controller
         // $data = Mpenilaian::select('kode','group','skor','label')->get();
         $data = Mpenilaian::select('kode','desc','form','grupings')->get();
 
-        // $data = Cache::rememberForever('pendidikan', function () {
+        // $data = Cache::remember('pendidikan', now()->addDays(7), function () {
         //     return Mpendidikan::query()
         //     ->selectRaw('rs1 as kode,rs2 as pendidikan')
         //     ->get();

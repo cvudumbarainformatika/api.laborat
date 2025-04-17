@@ -23,7 +23,7 @@ class NakesController extends Controller
     //    $dokter = Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
     //         ->where('kdgroupnakes', '1')->where('aktif', 'AKTIF')
     //         ->get();
-        $dokter = Cache::rememberForever('dokter', function () {
+        $dokter = Cache::remember('dokter', now()->addDays(7), function () {
             return Pegawai::select('nama','kdpegsimrs', 'kdgroupnakes','kddpjp')
             ->where('kdgroupnakes', '1')->where('aktif', 'AKTIF')
             ->get();

@@ -16,7 +16,7 @@ class PendidikanController extends Controller
         // ->selectRaw('rs1 as kode,rs2 as pendidikan')
         // ->get();
 
-        $data = Cache::rememberForever('pendidikan', function () {
+        $data = Cache::remember('pendidikan', now()->addDays(7), function () {
             return Mpendidikan::query()
             ->selectRaw('rs1 as kode,rs2 as pendidikan')
             ->get();

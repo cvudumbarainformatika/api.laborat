@@ -20,7 +20,7 @@ class OksigenController extends Controller
     public function getmaster()
     {
 
-      //  $data = Cache::rememberForever('m_tindakan_apheresis', function () {
+      //  $data = Cache::remember('m_tindakan_apheresis', now()->addDays(7), function () {
       //     return Mtindakanapheresis::all();
       //   });
 

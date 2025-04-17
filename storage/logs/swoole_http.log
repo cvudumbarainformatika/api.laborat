@@ -35,3 +35,4 @@
 [2025-04-16 16:00:21 *73.0]	NOTICE	ProcessFactory::finish() (ERRNO 1004): send 178 bytes failed, because session#31 is closed
 [2025-04-16 16:00:52 $61.0]	WARNING	Server::check_worker_exit_status(): worker(pid=73, id=0) abnormal exit, status=0, signal=9
 [2025-04-16 16:00:52 *74.0]	NOTICE	ProcessFactory::finish() (ERRNO 1004): send 178 bytes failed, because session#33 is closed
+[2025-04-17 01:21:25 #201.0]	WARNING	Worker::report_error(): worker(pid=206, id=0) abnormal exit, status=0, signal=9

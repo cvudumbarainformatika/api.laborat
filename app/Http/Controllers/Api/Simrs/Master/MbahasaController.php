@@ -14,7 +14,7 @@ class MbahasaController extends Controller
     {
         // $listbahasa = Mbahasa::where('flag', '')->get();
 
-        $listbahasa = Cache::rememberForever('bahasa', function () {
+        $listbahasa = Cache::remember('bahasa', now()->addDays(7), function () {
             return Mbahasa::where('flag', '')->get();
         });
         return new JsonResponse($listbahasa);

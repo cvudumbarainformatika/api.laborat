@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-    supervisor
+    supervisor \
+    libbrotli-dev \
+    pkg-config
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -27,7 +29,7 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 RUN pecl install redis \
     && docker-php-ext-enable redis
 
-# Install Swoole
+# Install Swoole (dengan opsi yang lebih sederhana)
 RUN pecl install swoole \
     && docker-php-ext-enable swoole
 
