@@ -217,8 +217,11 @@ class PenerimaanController extends Controller
 
     public function tolakRinciPesanan(Request $request)
     {
-        // cari pesanan rinci
-        $rinciPesanan = PemesananRinci::where('nopemesanan', $request->nopemesanan)
+        /// seharusnya cek apakan ada rincian penerimaan untuk pesanan tsb
+
+        $rinciPenerimaan =
+            // cari pesanan rinci
+            $rinciPesanan = PemesananRinci::where('nopemesanan', $request->nopemesanan)
             ->where('kdobat', $request->kdobat)
             ->first();
         if (!$rinciPesanan) {
@@ -249,6 +252,7 @@ class PenerimaanController extends Controller
         if (count($pesan) === 0) {
             $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
             $kuncipermintaan->flag = '2';
+            // $kuncipermintaan->flag = '3';
             $kuncipermintaan->save();
             // $pesananDikunci = true;
         }
