@@ -1,0 +1,16 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  deploy:
+    name: Trigger Deploy Script
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger webhook to server
+        run: |
+          curl -X POST "${{ vars.DEPLOY_WEBHOOK_URL }}"
