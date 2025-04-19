@@ -355,7 +355,8 @@ class AutogenController extends Controller
         $request->replace([
             'kdgroup_ruangan' => 'ASK',
             'kelas_ruangan' => 'PS',
-            'hak_kelas'=> '3'
+            'hak_kelas'=> '3',
+            'coba'=> 'IYAAAAA'
         ]);
 
         $spesialis = true;

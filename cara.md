@@ -78,3 +78,8 @@ redis-stats:
     @docker compose exec redis redis-cli INFO | grep used_memory_human
     @echo "\nConnected clients:"
     @docker compose exec redis redis-cli INFO | grep connected_clients
+
+
+
+# ... UNTUK DEPLOY ...
+php artisan git:merge-swoole
