@@ -351,17 +351,17 @@ class AutogenController extends Controller
         //     'f' => $f
         // ];
 
-        $request = new Request();
-        $request->replace([
-            'kdgroup_ruangan' => 'ASK',
-            'kelas_ruangan' => 'PS',
-            'hak_kelas'=> '3',
-            'coba'=> 'IYAAAAA'
-        ]);
+        // $request = new Request();
+        // $request->replace([
+        //     'kdgroup_ruangan' => 'ASK',
+        //     'kelas_ruangan' => 'PS',
+        //     'hak_kelas'=> '3',
+        // ]);
 
-        $spesialis = true;
+        // $spesialis = true;
 
-        return self::cekTarip($spesialis, $request); 
+        // return self::cekTarip($spesialis, $request); 
+        echo "PERCOBAAN DEPLOY SWOOLE";
     }
 
     public static function cekTarip($spesialis, $request)
