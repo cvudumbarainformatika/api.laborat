@@ -258,7 +258,8 @@ class NPD_LSController extends Controller
             $bast->whereIn('penerimaan_h.jenis_penerimaan', ['Pesanan']);
         })
         ->where('penerimaan_h.nobast', '!=', '')
-        // ->where('no_npd', '=', '')
+        ->where('penerimaan_h.no_npd', '=', '')
+
         ->whereNotNull('penerimaan_h.tgl_bast')
         ->when(request('q'),function ($query) {
             $query->where('penerimaan_h.nopenerimaan', 'LIKE', '%' . request('q') . '%')
@@ -337,8 +338,8 @@ class NPD_LSController extends Controller
                                             'bast_konsinyasis.jumlah_bastx',)
 
         ->where('bast_konsinyasis.kdpbf', request('kodepenerima'), function ($bast){
-            $bast->where('bast_konsinyasis.nobast', '!=', '');
-                // ->where('no_npd', '=', '');
+            $bast->where('bast_konsinyasis.nobast', '!=', '')
+                ->where('bast_konsinyasis.no_npd', '=', '');
         })
         ->whereNotNull('bast_konsinyasis.tgl_bast')
         ->when(request('q'),function ($query) {
