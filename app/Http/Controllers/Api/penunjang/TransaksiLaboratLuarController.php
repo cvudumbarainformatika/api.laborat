@@ -135,7 +135,7 @@ class TransaksiLaboratLuarController extends Controller
         $apiURL = 'http://192.168.101.200:83/prolims/api/lis/postOrder';
         $postInput = [
             "ADDRESS" => $data[0]->alamat,
-            "BOD" => "19981127",
+            "BOD" => $data[0]->tgl_lahir,
             "CLASS" => "",
             "CLASS_NAME" => "-",
             "COMPANY" => "-",
