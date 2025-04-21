@@ -7,7 +7,7 @@ use Symfony\Component\Process\Process;
 
 class MergeSwooleToDeploy extends Command
 {
-    protected $signature = 'git:merge-swoole';
+    protected $signature = 'git:deploy';
 
     protected $description = 'Merge branch swoole ke deploy dan push ke remote';
 

@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 use function PHPUnit\Framework\isNull;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class AutogenController extends Controller
@@ -361,7 +362,9 @@ class AutogenController extends Controller
         // $spesialis = true;
 
         // return self::cekTarip($spesialis, $request); 
-        echo "PERCOBAAN DEPLOY SWOOLE";
+        // echo "PERCOBAAN DEPLOY SWOOLE";
+        $table = 'permintaan_r';
+        return Schema::connection('farmasi')->getColumnListing($table);
     }
 
     public static function cekTarip($spesialis, $request)

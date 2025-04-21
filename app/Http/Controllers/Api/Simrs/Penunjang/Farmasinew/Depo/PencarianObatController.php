@@ -11,130 +11,312 @@ use Illuminate\Support\Facades\Log;
 class PencarianObatController extends Controller
 {
     public function pencarianObatResep()
+    // {
+    //     try {
+    //         $kdruang = request('kdruang');
+    //         $q = request('q');
+    //         $groupsistembayar = request('groups');
+    //         $tiperesep = request('tiperesep');
+            
+    //         // Prepare sistembayar array once
+    //         $sistembayar = ((int)$groupsistembayar === 1) ? ['SEMUA', 'BPJS'] : ['SEMUA', 'UMUM'];
+            
+    //         // Build efficient base query
+    //         $query = Mobatnew::from('new_masterobat as mo')
+    //             ->select([
+    //                 'mo.kd_obat',
+    //                 'mo.nama_obat as namaobat',
+    //                 'mo.kandungan',
+    //                 'mo.bentuk_sediaan',
+    //                 'mo.satuan_k as satuankecil',
+    //                 'mo.status_fornas as fornas',
+    //                 'mo.status_forkid as forkit',
+    //                 'mo.status_generik as generik',
+    //                 'mo.status_kronis as kronis',
+    //                 'mo.status_prb as prb',
+    //                 'mo.kode108',
+    //                 'mo.uraian108',
+    //                 'mo.kode50',
+    //                 'mo.uraian50',
+    //                 'mo.kekuatan_dosis as kekuatandosis',
+    //                 'mo.volumesediaan',
+    //                 'mo.kelompok_psikotropika as psikotropika',
+    //                 'mo.jenis_perbekalan',
+    //                 DB::raw('COALESCE(SUM(stokreal.jumlah), 0) as total')
+    //             ])
+    //             ->whereIn('mo.sistembayar', $sistembayar)
+    //             ->where(function($query) use ($q) {
+    //                 $query->where('mo.nama_obat', 'LIKE', "%{$q}%");
+    //                 // $query->where('new_masterobat.nama_obat', 'LIKE', "{$q}%")
+    //                 //       ->orWhere('new_masterobat.kandungan', 'LIKE', "{$q}%");
+    //             });
+
+    //         // Add type-specific filters
+    //         // if ($tiperesep === 'prb') {
+    //         //     $query->where('new_masterobat.status_prb', '!=', '');
+    //         // } elseif ($tiperesep === 'iter') {
+    //         //     $query->where('new_masterobat.status_kronis', '!=', '');
+    //         // }
+
+    //         $query->when($tiperesep === 'prb', function ($q) {
+    //             $q->where('mo.status_prb', '!=', '');
+    //         })->when($tiperesep === 'iter', function ($q) {
+    //             $q->where('mo.status_kronis', '!=', '');
+    //         });
+
+    //         // Optimize joins
+    //         $query->leftJoin('stokreal', function($join) use ($kdruang) {
+    //             $join->on('mo.kd_obat', '=', 'stokreal.kdobat')
+    //                  ->where('stokreal.kdruang', '=', $kdruang);
+    //         });
+
+    //         // Add efficient relationships
+    //         $result = $query->with([
+    //             'onepermintaandeporinci' => function($q) use ($kdruang) {
+    //                 $q->select(
+    //                     'permintaan_r.kdobat',
+    //                     DB::raw('COALESCE(SUM(permintaan_r.jumlah_minta), 0) as jumlah_minta')
+    //                 )
+    //                 ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+    //                 ->where('permintaan_h.tujuan', $kdruang)
+    //                 ->whereIn('permintaan_h.flag', ['', '1', '2'])
+    //                 ->groupBy('permintaan_r.kdobat');
+    //             },
+    //             'oneperracikan' => function($q) use ($kdruang) {
+    //                 $q->select(
+    //                     'resep_permintaan_keluar_racikan.kdobat',
+    //                     DB::raw('COALESCE(SUM(CASE WHEN resep_keluar_racikan_r.jumlah is null THEN resep_permintaan_keluar_racikan.jumlah ELSE 0 END), 0) as jumlah')
+    //                 )
+    //                 ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+    //                 ->leftJoin('resep_keluar_racikan_r', function($join) {
+    //                     $join->on('resep_keluar_racikan_r.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+    //                         ->on('resep_keluar_racikan_r.kdobat', '=', 'resep_permintaan_keluar_racikan.kdobat');
+    //                 })
+    //                 ->where('resep_keluar_h.depo', $kdruang)
+    //                 ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+    //                 ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+    //             },
+    //             'onepermintaan' => function($q) use ($kdruang) {
+    //                 $q->select(
+    //                     'resep_permintaan_keluar.kdobat',
+    //                     DB::raw('COALESCE(SUM(CASE WHEN resep_keluar_r.jumlah is null THEN resep_permintaan_keluar.jumlah ELSE 0 END), 0) as jumlah')
+    //                 )
+    //                 ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar.noresep')
+    //                 ->leftJoin('resep_keluar_r', function($join) {
+    //                     $join->on('resep_keluar_r.noresep', '=', 'resep_permintaan_keluar.noresep')
+    //                         ->on('resep_keluar_r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
+    //                 })
+    //                 ->where('resep_keluar_h.depo', $kdruang)
+    //                 ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+    //                 ->groupBy('resep_permintaan_keluar.kdobat');
+    //             }
+    //         ])
+    //         ->groupBy('mo.kd_obat')
+    //         ->orderByDesc('total')
+    //         ->limit(20)
+    //         ->get();
+
+    //         // Log::info($query->toSql());
+    //         // Log::info($query->getBindings());
+
+    //         // Efficient transformation with null checks
+    //         $wew = $result->map(function($item) {
+    //             $total = $item->total ?? 0;
+    //             $jumlahtransx = $item->oneperracikan ? collect($item->oneperracikan)->sum('jumlah') : 0;
+    //             $jumlahtrans = $item->onepermintaan ? collect($item->onepermintaan)->sum('jumlah') : 0;
+    //             $permintaanobatrinci = $item->onepermintaandeporinci ? collect($item->onepermintaandeporinci)->sum('jumlah_minta') : 0;
+                
+    //             $alokasi = max(0, $total - $jumlahtransx - $jumlahtrans - $permintaanobatrinci);
+                
+    //             $item->alokasi = $alokasi;
+    //             return $item;
+    //         });
+
+    //         return new JsonResponse(['dataobat' => $wew]);
+            
+    //     } catch (\Exception $e) {
+    //         Log::error('Pencarian Obat Error: ' . $e->getMessage(), [
+    //             'kdruang' => request('kdruang'),
+    //             'query' => request('q'),
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+            
+    //         return response()->json([
+    //             'error' => 'Terjadi kesalahan dalam pencarian obat',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+    // {
+
+    //     $kdruang = request('kdruang');
+    //     $q = request('q');
+    //     $groupsistembayar = request('groups');
+    //     $tiperesep = request('tiperesep');
+        
+    //     // Prepare sistembayar array once
+    //     $sistembayar = ((int)$groupsistembayar === 1) ? ['SEMUA', 'BPJS'] : ['SEMUA', 'UMUM'];
+
+    //     $results = DB::connection('farmasi')->table('new_masterobat as mo')
+    //     ->selectRaw('
+    //         mo.kd_obat,
+    //         mo.nama_obat AS namaobat,
+    //         mo.kandungan,
+    //         mo.bentuk_sediaan,
+    //         mo.satuan_k AS satuankecil,
+    //         mo.status_fornas AS fornas,
+    //         mo.status_forkid AS forkit,
+    //         mo.status_generik AS generik,
+    //         mo.status_kronis AS kronis,
+    //         mo.status_prb AS prb,
+    //         mo.kode108,
+    //         mo.uraian108,
+    //         mo.kode50,
+    //         mo.uraian50,
+    //         mo.kekuatan_dosis AS kekuatandosis,
+    //         mo.volumesediaan,
+    //         mo.kelompok_psikotropika AS psikotropika,
+    //         mo.jenis_perbekalan,
+
+    //         COALESCE(SUM(sr.jumlah), 0) AS total,
+    //         COALESCE(SUM(pr.jumlah_minta), 0) AS jumlah_minta_depo,
+    //         COALESCE(SUM(CASE WHEN rkr.jumlah IS NULL THEN rpkr.jumlah ELSE 0 END), 0) AS jumlah_terpakai_racikan,
+    //         COALESCE(SUM(CASE WHEN rkrx.jumlah IS NULL THEN rpk.jumlah ELSE 0 END), 0) AS jumlah_terpakai_permintaan,
+
+    //         GREATEST(
+    //             COALESCE(SUM(sr.jumlah), 0)
+    //             - COALESCE(SUM(CASE WHEN rkr.jumlah IS NULL THEN rpkr.jumlah ELSE 0 END), 0)
+    //             - COALESCE(SUM(CASE WHEN rkrx.jumlah IS NULL THEN rpk.jumlah ELSE 0 END), 0)
+    //             - COALESCE(SUM(pr.jumlah_minta), 0),
+    //             0
+    //         ) AS alokasi
+    //     ')
+    //     ->leftJoin('stokreal as sr', function ($join) use ($kdruang) {
+    //         $join->on('mo.kd_obat', '=', 'sr.kdobat')
+    //             ->where('sr.kdruang', '=', $kdruang);
+    //     })
+    //     ->leftJoin('permintaan_r as pr', 'mo.kd_obat', '=', 'pr.kdobat')
+    //     ->leftJoin('permintaan_h as ph', function ($join) use ($kdruang) {
+    //         $join->on('pr.no_permintaan', '=', 'ph.no_permintaan')
+    //             ->where('ph.tujuan', '=', $kdruang)
+    //             ->whereIn('ph.flag', ['', '1', '2']);
+    //     })
+    //     ->leftJoin('resep_permintaan_keluar_racikan as rpkr', 'mo.kd_obat', '=', 'rpkr.kdobat')
+    //     ->leftJoin('resep_keluar_h as rkh', function ($join) use ($kdruang) {
+    //         $join->on('rpkr.noresep', '=', 'rkh.noresep')
+    //             ->where('rkh.depo', '=', $kdruang)
+    //             ->whereIn('rkh.flag', ['', '1', '2']);
+    //     })
+    //     ->leftJoin('resep_keluar_racikan_r as rkr', function ($join) use ($kdruang) {
+    //         $join->on('rkr.noresep', '=', 'rpkr.noresep')
+    //             ->on('rkr.kdobat', '=', 'rpkr.kdobat');
+    //     })
+    //     ->leftJoin('resep_permintaan_keluar as rpk', 'mo.kd_obat', '=', 'rpk.kdobat')
+    //     ->leftJoin('resep_keluar_r as rkrx', function ($join) use ($kdruang) {
+    //         $join->on('rkrx.noresep', '=', 'rpk.noresep')
+    //             ->on('rkrx.kdobat', '=', 'rpk.kdobat');
+    //     })
+    //     ->leftJoin('resep_keluar_h as rkhx', function ($join) use ($kdruang) {
+    //         $join->on('rkhx.noresep', '=', 'rpk.noresep')
+    //             ->where('rkhx.depo', '=', $kdruang)
+    //             ->whereIn('rkhx.flag', ['', '1', '2']);
+    //     })
+    //     ->whereIn('mo.sistembayar', ['SEMUA', 'BPJS'])
+    //     ->where(function ($query) use ($q) {
+    //         $query->where('mo.nama_obat', 'like', "%{$q}%");
+    //             // ->orWhere('mo.kandungan', 'like', 'para%');
+    //     })
+    //     ->groupBy('mo.kd_obat')
+    //     ->orderByDesc('alokasi')
+    //     ->limit(20)
+    //     ->get();
+    //     return new JsonResponse(['dataobat' => $results]);
+    // }
+
     {
-        try {
-            $kdruang = request('kdruang');
-            $q = request('q');
-            $groupsistembayar = request('groups');
-            $tiperesep = request('tiperesep');
-            
-            // Prepare sistembayar array once
-            $sistembayar = ((int)$groupsistembayar === 1) ? ['SEMUA', 'BPJS'] : ['SEMUA', 'UMUM'];
-            
-            // Build efficient base query
-            $query = Mobatnew::query()
-                ->select([
-                    'new_masterobat.kd_obat',
-                    'new_masterobat.nama_obat as namaobat',
-                    'new_masterobat.kandungan',
-                    'new_masterobat.bentuk_sediaan',
-                    'new_masterobat.satuan_k as satuankecil',
-                    'new_masterobat.status_fornas as fornas',
-                    'new_masterobat.status_forkid as forkit',
-                    'new_masterobat.status_generik as generik',
-                    'new_masterobat.status_kronis as kronis',
-                    'new_masterobat.status_prb as prb',
-                    'new_masterobat.kode108',
-                    'new_masterobat.uraian108',
-                    'new_masterobat.kode50',
-                    'new_masterobat.uraian50',
-                    'new_masterobat.kekuatan_dosis as kekuatandosis',
-                    'new_masterobat.volumesediaan',
-                    'new_masterobat.kelompok_psikotropika as psikotropika',
-                    'new_masterobat.jenis_perbekalan',
-                    DB::raw('COALESCE(SUM(stokreal.jumlah), 0) as total')
-                ])
-                ->whereIn('new_masterobat.sistembayar', $sistembayar)
-                ->where(function($query) use ($q) {
-                    $query->where('new_masterobat.nama_obat', 'LIKE', "%{$q}%")
-                          ->orWhere('new_masterobat.kandungan', 'LIKE', "%{$q}%");
-                });
+        $kdruang = request('kdruang');
+        $q = request('q');
+        $groupsistembayar = request('groups');
+        $tiperesep = request('tiperesep');
+        
+        $sistembayar = ((int)$groupsistembayar === 1) ? ['SEMUA', 'BPJS'] : ['SEMUA', 'UMUM'];
+        
+        // Optimasi subqueries dengan menghilangkan pengecekan yang tidak perlu
+        $subRacikan = DB::table('farmasi.resep_permintaan_keluar_racikan as rpr')
+            ->select('rpr.kdobat', 
+                DB::raw('SUM(rpr.jumlah) as jumlah_racikan'))
+            ->join('farmasi.resep_keluar_h as rh', function($join) use ($kdruang) {
+                $join->on('rh.noresep', '=', 'rpr.noresep')
+                     ->where('rh.depo', '=', $kdruang)
+                     ->whereIn('rh.flag', ['', '1', '2']);
+            })
+            ->groupBy('rpr.kdobat');
+        
+        $subPermintaan = DB::table('farmasi.resep_permintaan_keluar as rp')
+            ->select('rp.kdobat',
+                DB::raw('SUM(rp.jumlah) as jumlah_permintaan'))
+            ->join('farmasi.resep_keluar_h as rh', function($join) use ($kdruang) {
+                $join->on('rh.noresep', '=', 'rp.noresep')
+                     ->where('rh.depo', '=', $kdruang)
+                     ->whereIn('rh.flag', ['', '1', '2']);
+            })
+            ->groupBy('rp.kdobat');
+        
+        $subDepo = DB::table('farmasi.permintaan_r as pr')
+            ->select('pr.kdobat',
+                DB::raw('SUM(pr.jumlah_minta) as jumlah_depo'))
+            ->join('farmasi.permintaan_h as ph', function($join) use ($kdruang) {
+                $join->on('ph.no_permintaan', '=', 'pr.no_permintaan')
+                     ->where('ph.tujuan', '=', $kdruang)
+                     ->whereIn('ph.flag', ['', '1', '2']);
+            })
+            ->groupBy('pr.kdobat');
 
-            // Add type-specific filters
-            if ($tiperesep === 'prb') {
-                $query->where('new_masterobat.status_prb', '!=', '');
-            } elseif ($tiperesep === 'iter') {
-                $query->where('new_masterobat.status_kronis', '!=', '');
-            }
-
-            // Optimize joins
-            $query->leftJoin('stokreal', function($join) use ($kdruang) {
-                $join->on('new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-                     ->where('stokreal.kdruang', '=', $kdruang);
-            });
-
-            // Add efficient relationships
-            $result = $query->with([
-                'onepermintaandeporinci' => function($q) use ($kdruang) {
-                    $q->select(
-                        'permintaan_r.kdobat',
-                        DB::raw('COALESCE(SUM(permintaan_r.jumlah_minta), 0) as jumlah_minta')
-                    )
-                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                    ->where('permintaan_h.tujuan', $kdruang)
-                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                    ->groupBy('permintaan_r.kdobat');
-                },
-                'oneperracikan' => function($q) use ($kdruang) {
-                    $q->select(
-                        'resep_permintaan_keluar_racikan.kdobat',
-                        DB::raw('COALESCE(SUM(CASE WHEN resep_keluar_racikan_r.jumlah is null THEN resep_permintaan_keluar_racikan.jumlah ELSE 0 END), 0) as jumlah')
-                    )
-                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
-                    ->leftJoin('resep_keluar_racikan_r', function($join) {
-                        $join->on('resep_keluar_racikan_r.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
-                            ->on('resep_keluar_racikan_r.kdobat', '=', 'resep_permintaan_keluar_racikan.kdobat');
-                    })
-                    ->where('resep_keluar_h.depo', $kdruang)
-                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                    ->groupBy('resep_permintaan_keluar_racikan.kdobat');
-                },
-                'onepermintaan' => function($q) use ($kdruang) {
-                    $q->select(
-                        'resep_permintaan_keluar.kdobat',
-                        DB::raw('COALESCE(SUM(CASE WHEN resep_keluar_r.jumlah is null THEN resep_permintaan_keluar.jumlah ELSE 0 END), 0) as jumlah')
-                    )
-                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar.noresep')
-                    ->leftJoin('resep_keluar_r', function($join) {
-                        $join->on('resep_keluar_r.noresep', '=', 'resep_permintaan_keluar.noresep')
-                            ->on('resep_keluar_r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
-                    })
-                    ->where('resep_keluar_h.depo', $kdruang)
-                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                    ->groupBy('resep_permintaan_keluar.kdobat');
-                }
+        // Query utama yang dioptimasi
+        $query = Mobatnew::query()
+            ->from('farmasi.new_masterobat as mo')
+            ->select([
+                'mo.kd_obat',
+                'mo.nama_obat as namaobat',
+                'mo.kandungan',
+                'mo.bentuk_sediaan',
+                'mo.satuan_k as satuankecil',
+                'mo.status_fornas as fornas',
+                'mo.status_forkid as forkit',
+                'mo.status_generik as generik',
+                'mo.status_kronis as kronis',
+                'mo.status_prb as prb',
+                'mo.kode108',
+                'mo.uraian108',
+                'mo.kode50',
+                'mo.uraian50',
+                'mo.kekuatan_dosis as kekuatandosis',
+                'mo.volumesediaan',
+                'mo.kelompok_psikotropika as psikotropika',
+                'mo.jenis_perbekalan',
+                DB::raw('COALESCE(SUM(stokreal.jumlah), 0) as total'),
+                DB::raw('COALESCE(SUM(stokreal.jumlah), 0) - 
+                        COALESCE(racikan.jumlah_racikan, 0) - 
+                        COALESCE(permintaan.jumlah_permintaan, 0) - 
+                        COALESCE(depo.jumlah_depo, 0) as alokasi')
             ])
-            ->groupBy('new_masterobat.kd_obat')
+            ->leftJoin('farmasi.stokreal', function($join) use ($kdruang) {
+                $join->on('mo.kd_obat', '=', 'stokreal.kdobat')
+                     ->where('stokreal.kdruang', '=', $kdruang);
+            })
+            ->leftJoinSub($subRacikan, 'racikan', 'racikan.kdobat', '=', 'mo.kd_obat')
+            ->leftJoinSub($subPermintaan, 'permintaan', 'permintaan.kdobat', '=', 'mo.kd_obat')
+            ->leftJoinSub($subDepo, 'depo', 'depo.kdobat', '=', 'mo.kd_obat')
+            ->whereIn('mo.sistembayar', $sistembayar)
+            ->where('mo.nama_obat', 'LIKE', "%{$q}%")
+            ->when($tiperesep === 'prb', fn($q) => $q->where('mo.status_prb', '!=', ''))
+            ->when($tiperesep === 'iter', fn($q) => $q->where('mo.status_kronis', '!=', ''))
+            ->groupBy('mo.kd_obat')
             ->orderByDesc('total')
-            ->limit(20)
-            ->get();
-
-            // Efficient transformation with null checks
-            $wew = $result->map(function($item) {
-                $total = $item->total ?? 0;
-                $jumlahtransx = $item->oneperracikan ? collect($item->oneperracikan)->sum('jumlah') : 0;
-                $jumlahtrans = $item->onepermintaan ? collect($item->onepermintaan)->sum('jumlah') : 0;
-                $permintaanobatrinci = $item->onepermintaandeporinci ? collect($item->onepermintaandeporinci)->sum('jumlah_minta') : 0;
-                
-                $alokasi = max(0, $total - $jumlahtransx - $jumlahtrans - $permintaanobatrinci);
-                
-                $item->alokasi = $alokasi;
-                return $item;
-            });
-
-            return new JsonResponse(['dataobat' => $wew]);
-            
-        } catch (\Exception $e) {
-            Log::error('Pencarian Obat Error: ' . $e->getMessage(), [
-                'kdruang' => request('kdruang'),
-                'query' => request('q'),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'error' => 'Terjadi kesalahan dalam pencarian obat',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+            ->limit(20);
+        
+        $result = $query->get();
+        
+        return new JsonResponse(['dataobat' => $result]);
     }
 }

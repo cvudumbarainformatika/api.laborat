@@ -82,4 +82,4 @@ redis-stats:
 
 
 # ... UNTUK DEPLOY ...
-php artisan git:merge-swoole
+php artisan git:deploy
