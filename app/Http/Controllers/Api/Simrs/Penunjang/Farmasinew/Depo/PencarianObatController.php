@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
+use App\Helpers\QueryHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use Illuminate\Http\JsonResponse;
@@ -241,82 +242,97 @@ class PencarianObatController extends Controller
         
         $sistembayar = ((int)$groupsistembayar === 1) ? ['SEMUA', 'BPJS'] : ['SEMUA', 'UMUM'];
         
-        // Optimasi subqueries dengan menghilangkan pengecekan yang tidak perlu
-        $subRacikan = DB::table('farmasi.resep_permintaan_keluar_racikan as rpr')
-            ->select('rpr.kdobat', 
-                DB::raw('SUM(rpr.jumlah) as jumlah_racikan'))
-            ->join('farmasi.resep_keluar_h as rh', function($join) use ($kdruang) {
-                $join->on('rh.noresep', '=', 'rpr.noresep')
-                     ->where('rh.depo', '=', $kdruang)
-                     ->whereIn('rh.flag', ['', '1', '2']);
-            })
-            ->groupBy('rpr.kdobat');
         
-        $subPermintaan = DB::table('farmasi.resep_permintaan_keluar as rp')
-            ->select('rp.kdobat',
-                DB::raw('SUM(rp.jumlah) as jumlah_permintaan'))
-            ->join('farmasi.resep_keluar_h as rh', function($join) use ($kdruang) {
-                $join->on('rh.noresep', '=', 'rp.noresep')
-                     ->where('rh.depo', '=', $kdruang)
-                     ->whereIn('rh.flag', ['', '1', '2']);
-            })
-            ->groupBy('rp.kdobat');
-        
-        $subDepo = DB::table('farmasi.permintaan_r as pr')
-            ->select('pr.kdobat',
-                DB::raw('SUM(pr.jumlah_minta) as jumlah_depo'))
-            ->join('farmasi.permintaan_h as ph', function($join) use ($kdruang) {
-                $join->on('ph.no_permintaan', '=', 'pr.no_permintaan')
-                     ->where('ph.tujuan', '=', $kdruang)
-                     ->whereIn('ph.flag', ['', '1', '2']);
-            })
-            ->groupBy('pr.kdobat');
 
-        // Query utama yang dioptimasi
-        $query = Mobatnew::query()
-            ->from('farmasi.new_masterobat as mo')
-            ->select([
-                'mo.kd_obat',
-                'mo.nama_obat as namaobat',
-                'mo.kandungan',
-                'mo.bentuk_sediaan',
-                'mo.satuan_k as satuankecil',
-                'mo.status_fornas as fornas',
-                'mo.status_forkid as forkit',
-                'mo.status_generik as generik',
-                'mo.status_kronis as kronis',
-                'mo.status_prb as prb',
-                'mo.kode108',
-                'mo.uraian108',
-                'mo.kode50',
-                'mo.uraian50',
-                'mo.kekuatan_dosis as kekuatandosis',
-                'mo.volumesediaan',
-                'mo.kelompok_psikotropika as psikotropika',
-                'mo.jenis_perbekalan',
-                DB::raw('COALESCE(SUM(stokreal.jumlah), 0) as total'),
-                DB::raw('COALESCE(SUM(stokreal.jumlah), 0) - 
-                        COALESCE(racikan.jumlah_racikan, 0) - 
-                        COALESCE(permintaan.jumlah_permintaan, 0) - 
-                        COALESCE(depo.jumlah_depo, 0) as alokasi')
-            ])
+        if (!preg_match('/^[A-Za-z0-9\-]+$/', $kdruang)) {
+            // Validasi gagal, tangani dengan cara yang sesuai
+            // throw new Exception('Invalid kdruangan format');
+            return response()->json([
+                'error' => 'Terjadi kesalahan dalam pencarian obat',
+                'message' => 'Invalid kdruangan format'
+            ], 500);
+        }
+        $result = DB::table('farmasi.new_masterobat as mo')
+            ->select(DB::raw('
+                mo.kd_obat,
+                mo.nama_obat AS namaobat,
+                mo.kandungan,
+                mo.bentuk_sediaan,
+                mo.satuan_k AS satuankecil,
+                mo.status_fornas AS fornas,
+                mo.status_forkid AS forkit,
+                mo.status_generik AS generik,
+                mo.status_kronis AS kronis,
+                mo.status_prb AS prb,
+                mo.kode108,
+                mo.uraian108,
+                mo.kode50,
+                mo.uraian50,
+                mo.kekuatan_dosis AS kekuatandosis,
+                mo.volumesediaan,
+                mo.kelompok_psikotropika AS psikotropika,
+                mo.jenis_perbekalan,
+                COALESCE(SUM(stokreal.jumlah), 0) AS total,
+                COALESCE(SUM(stokreal.jumlah), 0)
+                - COALESCE(racikan.jumlah_racikan, 0)
+                - COALESCE(permintaan.jumlah_permintaan, 0)
+                - COALESCE(permintaan_depo.jumlah_permintaan_depo, 0) AS alokasi
+            '))
             ->leftJoin('farmasi.stokreal', function($join) use ($kdruang) {
                 $join->on('mo.kd_obat', '=', 'stokreal.kdobat')
                      ->where('stokreal.kdruang', '=', $kdruang);
             })
-            ->leftJoinSub($subRacikan, 'racikan', 'racikan.kdobat', '=', 'mo.kd_obat')
-            ->leftJoinSub($subPermintaan, 'permintaan', 'permintaan.kdobat', '=', 'mo.kd_obat')
-            ->leftJoinSub($subDepo, 'depo', 'depo.kdobat', '=', 'mo.kd_obat')
+            // ini urutan where jangan dirubah karena sudah terindex yaaaa
+            ->leftJoin(DB::raw("
+                (SELECT rpr.kdobat, SUM(rpr.jumlah) AS jumlah_racikan
+                FROM farmasi.resep_permintaan_keluar_racikan rpr
+                JOIN farmasi.resep_keluar_h rh ON rh.noresep = rpr.noresep
+                WHERE rh.depo = '{$kdruang}'
+                AND rh.flag IN ('', '1', '2')
+                GROUP BY rpr.kdobat) racikan
+            "), 'racikan.kdobat', '=', 'mo.kd_obat')
+            ->leftJoin(DB::raw("
+                (SELECT rp.kdobat, SUM(rp.jumlah) AS jumlah_permintaan
+                FROM farmasi.resep_permintaan_keluar rp
+                JOIN farmasi.resep_keluar_h rh ON rh.noresep = rp.noresep
+                WHERE rh.depo = '{$kdruang}'
+                AND rh.flag IN ('', '1', '2')
+                GROUP BY rp.kdobat) permintaan
+            "), 'permintaan.kdobat', '=', 'mo.kd_obat')
+            ->leftJoin(DB::raw("
+                (SELECT pr.kdobat, SUM(pr.jumlah_minta) AS jumlah_permintaan_depo
+                FROM farmasi.permintaan_r pr
+                JOIN farmasi.permintaan_h ph ON ph.no_permintaan = pr.no_permintaan
+                WHERE ph.tujuan = '{$kdruang}'
+                AND ph.flag IN ('', '1', '2')
+                GROUP BY pr.kdobat) permintaan_depo
+            "), 'permintaan_depo.kdobat', '=', 'mo.kd_obat')
             ->whereIn('mo.sistembayar', $sistembayar)
-            ->where('mo.nama_obat', 'LIKE', "%{$q}%")
+            ->where(function ($query) use ($q) {
+                $query->where('mo.nama_obat', 'like', "%{$q}%")
+                    ->orWhere('mo.kandungan', 'like', "%{$q}%");
+            })
             ->when($tiperesep === 'prb', fn($q) => $q->where('mo.status_prb', '!=', ''))
             ->when($tiperesep === 'iter', fn($q) => $q->where('mo.status_kronis', '!=', ''))
-            ->groupBy('mo.kd_obat')
+            ->groupBy(
+                'mo.kd_obat'
+            )
             ->orderByDesc('total')
-            ->limit(20);
+            ->limit(20)
+            ->get();
+
+
+
         
-        $result = $query->get();
+
+
+
+
         
+        // $sql = QueryHelper::getSqlWithBindings($query);
+        // Log::info('Query: ' . $sql);
+
+
         return new JsonResponse(['dataobat' => $result]);
     }
 }
