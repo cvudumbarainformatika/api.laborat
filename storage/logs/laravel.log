@@ -2486,3 +2486,6 @@ Kota Probolinggo","rt":"","rw":"","kelurahan":"","kecamatan":"","kota":"","agama
   2 => 'BPJS',
   3 => '%para%',
 )  
+[2025-04-21 13:55:28] local.INFO: Cache miss - fetching fresh user data  
+[2025-04-21 13:55:29] local.INFO: Cache miss - fetching fresh apps data  
+[2025-04-21 13:55:29] local.INFO: Cache miss - fetching fresh sistembayar data  
