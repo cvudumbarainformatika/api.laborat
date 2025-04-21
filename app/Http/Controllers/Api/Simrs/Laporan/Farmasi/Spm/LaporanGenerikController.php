@@ -37,8 +37,6 @@ class LaporanGenerikController extends Controller
                 'permintaanresep:noresep,kdobat,jumlah',
                 'permintaanracikan:noresep,kdobat,jumlah',
 
-                'rincian',
-                'rincianracik',
                 'permintaanresep.mobat:kd_obat,nama_obat,jenis_perbekalan,kelompok_penyimpanan,status_generik,status_forkid,status_fornas,obat_program',
                 'permintaanracikan.mobat:kd_obat,nama_obat,jenis_perbekalan,kelompok_penyimpanan,status_generik,status_forkid,status_fornas,obat_program',
 
@@ -123,8 +121,45 @@ class LaporanGenerikController extends Controller
     }
     public function getLaporanKesesuaianObat()
     {
+        $raw = Resepkeluarheder::select(
+            'noresep',
+            'tgl_permintaan',
+            'dokter',
+            'depo',
+            'ruangan',
+        )->where('tgl_permintaan', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+            // ->when(request('sistem_bayar'), function ($query) {
+            //     $query->whereIn('sistembayar', request('sistem_bayar'));
+            // })
+            ->when(request('depo'), function ($query) {
+                $query->whereIn('depo', request('depo'));
+            })
+            ->with([
+                'rincian:noresep,kdobat,jumlah',
+                'rincianracik:noresep,kdobat,jumlah',
+                'permintaanresep:noresep,kdobat,jumlah',
+                'permintaanracikan:noresep,kdobat,jumlah',
+
+                'permintaanresep.mobat:kd_obat,nama_obat,status_generik,status_forkid,status_fornas',
+                'permintaanracikan.mobat:kd_obat,nama_obat,status_generik,status_forkid,status_fornas',
+                'ketdokter:kdpegsimrs,nama',
+                'poli:rs1,rs2 as nama',
+                'ruanganranap:rs1,rs2 as nama',
+            ])
+            ->whereIn('flag', ['1', '2', '3', '4'])
+
+            ->paginate(100);
+        $data = collect($raw)['data'];
+        $meta = collect($raw)->except('data');
         return new JsonResponse([
             'req' => request()->all(),
+            'data' => $data,
+            'meta' => $meta,
+        ]);
+        return new JsonResponse([
+            'req' => request()->all(),
+            'data' => $data,
+            'meta' => $meta,
 
         ]);
     }
