@@ -87,9 +87,13 @@ class KontrakController extends Controller
         $data = KontrakPengerjaan::where('nokontrak', $request->nokontrak)->first();
         if(!$data){
             return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
-        } else {
-            $data->delete();
         }
+        // Validasi field kunci
+        if ($data->kunci === '1') {
+            return new JsonResponse(['message' => 'Data tidak dapat dihapus karena terkunci'], 403);
+        }
+
+        $data->delete();
         return new JsonResponse([
             'message' => 'Data Berhasil dihapus',
              'data' => $data
