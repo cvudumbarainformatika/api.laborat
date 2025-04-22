@@ -26,14 +26,19 @@ class BukubesarController extends Controller
         return new JsonResponse($ttd);
     }
     public function akunkepmend(){
+        $perPage = request('per_page', 100);
+        $query = Akun50_2024::select('uraian','kodeall3')
+            ->where('akun', '!=', '');
+        // Pencarian yang lebih efektif
+        if(request('q')) {
+            $cari = request('q');
+            $query->where(function($q) use ($cari) {
+                $q->where('uraian', 'like', '%' . $cari . '%')
+                ->orWhere('kodeall3', 'like', '%'. $cari . '%');
+            });
+        }
 
-        $akun=Akun50_2024::select('uraian','kodeall3')
-        ->where('akun', '!=', '')
-        ->when(request('q') !== '' || request('q') !== null, function($x){
-            $x->where('uraian', 'like', '%' . request('q') . '%')
-                ->orWhere('kodeall3', 'like', '%'. request('q') . '%');
-        })
-        ->get();
+        $akun = $query->paginate($perPage);
 
         return new JsonResponse($akun);
     }

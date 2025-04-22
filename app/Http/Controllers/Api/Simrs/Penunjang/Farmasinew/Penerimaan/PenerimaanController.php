@@ -217,8 +217,11 @@ class PenerimaanController extends Controller
 
     public function tolakRinciPesanan(Request $request)
     {
-        // cari pesanan rinci
-        $rinciPesanan = PemesananRinci::where('nopemesanan', $request->nopemesanan)
+        /// seharusnya cek apakan ada rincian penerimaan untuk pesanan tsb
+
+        $rinciPenerimaan =
+            // cari pesanan rinci
+            $rinciPesanan = PemesananRinci::where('nopemesanan', $request->nopemesanan)
             ->where('kdobat', $request->kdobat)
             ->first();
         if (!$rinciPesanan) {
@@ -249,6 +252,7 @@ class PenerimaanController extends Controller
         if (count($pesan) === 0) {
             $kuncipermintaan = PemesananHeder::where('nopemesanan', $request->nopemesanan)->first();
             $kuncipermintaan->flag = '2';
+            // $kuncipermintaan->flag = '3';
             $kuncipermintaan->save();
             // $pesananDikunci = true;
         }
@@ -259,7 +263,25 @@ class PenerimaanController extends Controller
             'message' => 'Pesanan sudah ditolak'
         ]);
     }
+    public function simpanEditNomorFaktur(Request $request)
+    {
+        $penerimaan = PenerimaanHeder::find($request->id);
 
+        if (!$penerimaan) {
+            return new JsonResponse([
+                'req' => $request->all(),
+                'message' => 'Penerimaan tidak ditemukan'
+            ], 410);
+        }
+        $penerimaan->update([
+            'nomorsurat' => $request->nomorsurat,
+        ]);
+        return new JsonResponse([
+            'req' => $request->all(),
+            'data' => $penerimaan,
+            'message' => 'Nomor Faktur berhasil diubah'
+        ]);
+    }
     public function listepenerimaan()
     {
         // $idpegawai = auth()->user()->pegawai_id;
@@ -274,6 +296,7 @@ class PenerimaanController extends Controller
             // });
         }
         $listpenerimaan = PenerimaanHeder::select(
+            'id',
             'nopenerimaan',
             'nopemesanan',
             'tglpenerimaan',
