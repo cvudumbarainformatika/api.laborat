@@ -10,4 +10,12 @@ class Karcis extends Model
     use HasFactory;
     protected $table = 'karcislog';
     protected $guarded = ['id'];
+
+    public $timestamps = false;
+
+
+    public function rincian()
+    {
+        return $this->hasMany(Kwitansidetail::class, 'id_kwitansilog','id');
+    }
 }
