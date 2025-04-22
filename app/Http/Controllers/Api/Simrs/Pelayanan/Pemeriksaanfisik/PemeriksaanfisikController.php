@@ -222,7 +222,7 @@ class PemeriksaanfisikController extends Controller
 
         $imageName = $name . '.' . $image_type;
         // Storage::delete('public/pemeriksaan_fisik/' . $noreg . '/' . $imageName);
-        $wew = Storage::disk('public')->put('pemeriksaan_fisik/' . $noreg . '/' . $imageName, $image_base64);
+        $wew = Storage::disk('remote')->put('public/pemeriksaan_fisik/' . $noreg . '/' . $imageName, $image_base64);
 
         $simpangambar = Simpangambarpemeriksaanfisik::create(
             [
@@ -249,7 +249,8 @@ class PemeriksaanfisikController extends Controller
         if (!$cari) {
             return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
         }
-        Storage::delete('public/' . $filename);
+        // Storage::delete('public/' . $filename);
+        Storage::disk('remote')->delete('public/' . $filename);
         $hapus = $cari->delete();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);

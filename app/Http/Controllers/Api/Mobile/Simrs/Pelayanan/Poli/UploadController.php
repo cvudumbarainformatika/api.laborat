@@ -49,7 +49,7 @@ class UploadController extends Controller
                     //     $gallery = new DokumenUpload();
                     // }
                     $gallery = new DokumenUpload();
-                    $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
+                    $path = $file->storeAs('public/dokumen_luar_poli', $penamaan, 'remote');
 
                     $gallery->noreg = $request->noreg;
                     $gallery->norm = $request->norm;

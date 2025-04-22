@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\penunjang;
 
+use App\Helpers\QueryHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\TransaksiLaborat;
@@ -12,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TransaksiLaboratController extends Controller
 {
@@ -30,11 +32,14 @@ class TransaksiLaboratController extends Controller
                 'kunjungan_rawat_inap.ruangan',
                 'poli',
                 'dokter',
-                'pasien_kunjungan_poli',
-                'pasien_kunjungan_rawat_inap',
+                'pasien_kunjungan_poli:rs15.rs1,rs15.rs2,rs15.rs3,rs15.rs4,rs15.rs6,rs15.rs16,rs15.rs17,rs15.rs31',
+                'pasien_kunjungan_rawat_inap:rs15.rs1,rs15.rs2,rs15.rs3,rs15.rs4,rs15.rs6,rs15.rs16,rs15.rs17,rs15.rs31',
                 'pemeriksaan_laborat'
             ]);
         $data = $query->simplePaginate(request('per_page'));
+
+        $sql = QueryHelper::getSqlWithBindings($query);
+        Log::info('Query: ' . $sql);
 
         return new JsonResponse($data);
     }
