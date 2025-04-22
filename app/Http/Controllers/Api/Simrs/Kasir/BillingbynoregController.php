@@ -10,11 +10,21 @@ use Illuminate\Support\Facades\DB;
 
 class BillingbynoregController extends Controller
 {
-    public function billbynoregrajal()
-    {
+    public  function billbynoregrajalx(){
         $noreg = request('noreg');
+        $data = self::billbynoregrajal($noreg);
+        return new JsonResponse($data);
+    }
+    public static function billbynoregrajal($noreg)
+    {
         $query = KunjunganPoli::select(
-            'rs17.rs1 as noreg',
+            'rs17.rs1 as noreg','rs17.rs1',
+        )->with(
+            [
+                'adminpoli',
+                'kwitansilog',
+                'karcislog'
+            ]
         )
             ->where('rs17.rs1', $noreg)
             ->get();
@@ -59,7 +69,7 @@ class BillingbynoregController extends Controller
         $totalall =  $pelayananrm + $kartuidentitas + $konsulantarpoli + $poliklinik + $tindakanx + $laborat + $radiologi + $onedaycare
             + $fisioterapi + $hd + $penunjanglain
             + $psikologi + $cardio + $eeg + $endoscopy + $obat + $farmasi;
-        return new JsonResponse(
+        return
             [
                 'heder' => $query,
                 'pelayananrm' => $pelayananrm,
@@ -82,8 +92,7 @@ class BillingbynoregController extends Controller
                 'obat' => isset($obat) ?  $obat : 0,
                 'farmasinew' => isset($farmasi) ?  $farmasi : 0,
                 'totalall' => isset($totalall) ?  $totalall : 0,
-            ]
-        );
+            ];
     }
 
     public function billbynoregigd()

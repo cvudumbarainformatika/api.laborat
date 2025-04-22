@@ -15,6 +15,8 @@ use App\Models\Simrs\Anamnesis\HistoryPerkawinan;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
+use App\Models\Simrs\Kasir\Karcis;
+use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Dokter;
@@ -525,5 +527,14 @@ class KunjunganPoli extends Model
     public function konsultasi()
     {
         return $this->hasMany(Konsultasi::class, 'noreg', 'rs1');
+    }
+
+    public function kwitansilog()
+    {
+        return $this->hasMany(Kwitansilog::class, 'noreg', 'noreg');
+    }
+    public function karcislog()
+    {
+        return $this->hasMany(Karcis::class, 'noreg', 'noreg');
     }
 }

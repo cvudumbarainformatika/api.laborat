@@ -11,7 +11,7 @@ Route::group([
     'prefix' => 'simrs/kasir'
 ], function () {
     Route::get('/rajal/kunjunganpoli', [KasirrajalController::class, 'kunjunganpoli']);
-    Route::get('/rajal/billbynoreg', [BillingbynoregController::class, 'billbynoregrajal']);
+    Route::get('/rajal/billbynoreg', [BillingbynoregController::class, 'billbynoregrajalx']);
 
     Route::get('/rajal/tagihanpergolongan', [KasirrajalController::class, 'tagihanpergolongan']);
     Route::post('/rajal/pembayaran', [KasirrajalController::class, 'pembayaran']);
