@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Create Laravel storage directory structure
 mkdir -p /var/www/storage/app/public
@@ -23,4 +23,4 @@ chmod 664 /var/www/storage/logs/websockets.log
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 
 # Start PHP-FPM
-php-fpm
+exec php-fpm
