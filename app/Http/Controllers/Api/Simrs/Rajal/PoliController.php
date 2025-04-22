@@ -682,7 +682,10 @@ class PoliController extends Controller
                 $cekx->save();
             }
 
-            return new JsonResponse($cekx, 200);
+            // return new JsonResponse($cekx, 200);
+            return new JsonResponse([
+                'result'=> $cekx
+            ], 200);
         } else {
             return response()->json([
                 'message' => 'Data tidak ditemukan'
