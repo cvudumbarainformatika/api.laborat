@@ -323,7 +323,7 @@ class TindakanController extends Controller
                     //     $gallery = new Gbrdokumentindakan();
                     // }
                     $gallery = new Gbrdokumentindakan();
-                    $path = $file->storeAs('public/dokumentindakan', $penamaan);
+                    $path = $file->storeAs('public/dokumentindakan', $penamaan, 'remote');
                     // $target = storage_path() . "/app/public/dokumentindakan/" . $penamaan;
                     // $type = pathinfo($target, PATHINFO_EXTENSION);
                     // $data = file_get_contents($target);
@@ -348,7 +348,8 @@ class TindakanController extends Controller
     {
         $template = Gbrdokumentindakan::find($request->id);
         // return $template;
-        Storage::delete($template->nama);
+        // Storage::delete($template->nama);
+        Storage::disk('remote')->delete($template->nama);
         $template->delete();
 
         $res = Tindakan::find($template->rs73_id);

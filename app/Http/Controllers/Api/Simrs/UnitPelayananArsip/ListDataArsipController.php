@@ -99,7 +99,8 @@ class ListDataArsipController extends Controller
                       ['file', $originalname]
                       ])->first();
                     if ($data) {
-                      Storage::delete($data->path);
+                      // Storage::delete($data->path);
+                      Storage::disk('remote')->delete($data->path);
                     }
 
                     $gallery = null;
@@ -111,8 +112,11 @@ class ListDataArsipController extends Controller
 
                     $folder = 'dokumen_arsip/'.$panggilan;
 
-                    if (!is_dir(storage_path("app/public/$folder"))) {
-                      mkdir(storage_path("app/public/$folder"), 0775, true);
+                    // if (!is_dir(storage_path("app/public/$folder"))) {
+                    //   mkdir(storage_path("app/public/$folder"), 0775, true);
+                    // }
+                    if (!Storage::disk('remote')->exists("public/$folder")) {
+                        Storage::disk('remote')->makeDirectory("public/$folder");
                     }
 
 
@@ -125,13 +129,24 @@ class ListDataArsipController extends Controller
                         $constraint->aspectRatio();
                       });
 
-                      $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      // $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      // Buat file temporary dengan nama random (contoh: /tmp/resize_8jf9d2)
+                      $tempPath = tempnam(sys_get_temp_dir(), 'resize_');
+                      $img->save($tempPath, 60);
+
+                      // $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      // Upload ke remote dengan nama file yang kita inginkan ($penamaan)
+                      // Contoh $penamaan: 20240219123456-1-123456.jpg
+                      Storage::disk('remote')->put(
+                        "public/$folder/$penamaan",  // full path dengan nama file
+                        file_get_contents($tempPath)  // isi file
+                      );
+
+                      // Hapus file temporary
+                      unlink($tempPath);
                     }else{
-                      // $file->move(\public_path("storage/$folder/"), $penamaan);
-                    // $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
-                      $path = $file->storeAs('public/'.$folder, $penamaan);
-
-
+                      // $path = $file->storeAs('public/'.$folder, $penamaan);
+                      $path = $file->storeAs('public/'.$folder, $penamaan, 'remote');
                     }
 
                     $gallery->noarsip = $noarsip;

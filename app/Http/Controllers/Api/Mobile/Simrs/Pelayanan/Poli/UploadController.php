@@ -34,20 +34,6 @@ class UploadController extends Controller
                     $file = $files;
                     $originalname = $file->getClientOriginalName();
                     $penamaan = date('YmdHis') . '-xenter-' . $request->norm . '.' . $file->getClientOriginalExtension();
-                    // $data = DokumenUpload::where([
-                    //   ['noreg',$request->noreg],
-                    //   ['original', $originalname]
-                    //   ])->first();
-                    // if ($data) {
-                    //   Storage::delete($data->path);
-                    // } 
-                    
-                    // $gallery = null;
-                    // if ($data) {
-                    //     $gallery = $data;
-                    // } else {
-                    //     $gallery = new DokumenUpload();
-                    // }
                     $gallery = new DokumenUpload();
                     $path = $file->storeAs('public/dokumen_luar_poli', $penamaan, 'remote');
 
@@ -85,7 +71,8 @@ class UploadController extends Controller
       if (!$data) {
         return new JsonResponse(['message'=> 'Data tidak ditemukan'], 500);
       }
-      Storage::delete($data->path);
+      // Storage::delete($data->path);
+      Storage::disk('remote')->delete($data->path);
       $del = $data->delete();
 
       if (!$del) {

@@ -45,7 +45,8 @@ class DokumenUploadIgdController extends Controller
                       ['original', $originalname]
                       ])->first();
                     if ($data) {
-                      Storage::delete($data->path);
+                      // Storage::delete($data->path);
+                      Storage::disk('remote')->delete($data->path);
                     }
 
                     $gallery = null;
@@ -59,8 +60,12 @@ class DokumenUploadIgdController extends Controller
 
 
 
-                    if (!is_dir(storage_path("app/public/$folder"))) {
-                      mkdir(storage_path("app/public/$folder"), 0775, true);
+                    // if (!is_dir(storage_path("app/public/$folder"))) {
+                    //   mkdir(storage_path("app/public/$folder"), 0775, true);
+                    // }
+
+                    if (!Storage::disk('remote')->exists("public/$folder")) {
+                        Storage::disk('remote')->makeDirectory("public/$folder");
                     }
 
                     // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
@@ -73,11 +78,24 @@ class DokumenUploadIgdController extends Controller
                         $constraint->aspectRatio();
                       });
 
-                      $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      // $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      // Buat file temporary dengan nama random (contoh: /tmp/resize_8jf9d2)
+                      $tempPath = tempnam(sys_get_temp_dir(), 'resize_');
+                      $img->save($tempPath, 60);
+
+                      // $img->save(\public_path("storage/$folder/". $penamaan), 60);
+                      // Upload ke remote dengan nama file yang kita inginkan ($penamaan)
+                      // Contoh $penamaan: 20240219123456-1-123456.jpg
+                      Storage::disk('remote')->put(
+                        "public/$folder/$penamaan",  // full path dengan nama file
+                        file_get_contents($tempPath)  // isi file
+                      );
+
+                      // Hapus file temporary
+                      unlink($tempPath);
                     }else{
-                      // $file->move(\public_path("storage/$folder/"), $penamaan);
-                    // $path = $file->storeAs('public/dokumen_luar_poli', $penamaan);
-                      $path = $file->storeAs('public/'.$folder, $penamaan);
+                      // $path = $file->storeAs('public/'.$folder, $penamaan);
+                      $path = $file->storeAs('public/'.$folder, $penamaan, 'remote');
                     }
 
                     $gallery->noreg = $request->noreg;
@@ -109,7 +127,8 @@ class DokumenUploadIgdController extends Controller
       if (!$data) {
         return new JsonResponse(['message'=> 'Data tidak ditemukan'], 500);
       }
-      Storage::delete($data->path);
+      // Storage::delete($data->path);
+      Storage::disk('remote')->delete($data->path);
       $del = $data->delete();
 
       if (!$del) {

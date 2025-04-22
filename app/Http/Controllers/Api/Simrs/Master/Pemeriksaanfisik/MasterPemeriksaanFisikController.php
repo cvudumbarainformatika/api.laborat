@@ -51,7 +51,8 @@ class MasterPemeriksaanFisikController extends Controller
                     $originalname = $file->getClientOriginalName();
                     $penamaan = date('YmdHis') . '-' . $i . '-' . $request->mpemeriksaanfisik_id . '.' . $file->getClientOriginalExtension();
                     $data = Mtemplategambar::where('original', $originalname)->first();
-                    Storage::delete('public/templategambarpemeriksaanfisik/' . $originalname);
+                    // Storage::delete('public/templategambarpemeriksaanfisik/' . $originalname);
+                    Storage::disk('remote')->delete('public/templategambarpemeriksaanfisik/' . $originalname);
 
                     $gallery = null;
                     if ($data) {
