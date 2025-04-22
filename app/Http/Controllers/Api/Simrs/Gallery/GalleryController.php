@@ -36,7 +36,8 @@ class GalleryController extends Controller
                     } else {
                         $gallery = new Gallery();
                     }
-                    $path = $file->storeAs('public/gallery/', $originalname);
+                    $path = $file->storeAs('public/gallery/', $originalname, 'remote');
+                    // $path = Storage::disk('remote')->putFileAs('/', $file, $originalname);
                     $gallery->nama = $path;
                     $gallery->original = $originalname;
                     $gallery->save();

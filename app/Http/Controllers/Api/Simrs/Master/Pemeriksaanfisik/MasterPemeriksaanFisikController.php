@@ -59,8 +59,9 @@ class MasterPemeriksaanFisikController extends Controller
                     } else {
                         $gallery = new Mtemplategambar();
                     }
-                    $path = $file->storeAs('public/templategambarpemeriksaanfisik', $penamaan);
-                    $target = storage_path() . "/app/public/templategambarpemeriksaanfisik/" . $penamaan;
+                    $path = $file->storeAs('public/templategambarpemeriksaanfisik', $penamaan, 'remote');
+                    // $target = storage_path() . "/app/public/templategambarpemeriksaanfisik/" . $penamaan;
+                    $target = config('filesystems.disks.remote.root') . '/' . $path;
                     $type = pathinfo($target, PATHINFO_EXTENSION);
                     $data = file_get_contents($target);
                     $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
@@ -84,7 +85,8 @@ class MasterPemeriksaanFisikController extends Controller
     public function deletetemplate(Request $request)
     {
         $template = Mtemplategambar::find($request->id);
-        Storage::delete('public/templategambarpemeriksaanfisik/' . $template->original);
+        // Storage::delete('public/templategambarpemeriksaanfisik/' . $template->original);
+        Storage::disk('remote')->delete('public/templategambarpemeriksaanfisik/' . $template->original);
         $template->delete();
 
         $res = Mpemeriksaanfisik::find($request->mpemeriksaanfisik_id);

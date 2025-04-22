@@ -53,6 +53,15 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
         ],
 
+        'remote' => [
+            'driver' => 'sftp',
+            'host' => '192.168.150.111', // ganti dengan IP tujuan
+            'username' => 'root',
+            'password' => 'seratussebelassa1',
+            'port' => 2233,
+            'root' => '/home/www/localapi.192.168.150.111/storage/app',
+            'visibility' => 'public',
+        ],
     ],
 
     /*
