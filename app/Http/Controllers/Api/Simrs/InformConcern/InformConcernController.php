@@ -108,8 +108,10 @@ class InformConcernController extends Controller
           $file = $folderPath . $name . '.' . $image_type;
 
           $imageName = $name . '.' . $image_type;
-          Storage::delete('public/' . $folderPath . $imageName);
-          Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+          // Storage::delete('public/' . $folderPath . $imageName);
+          Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
+          // Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+          Storage::disk('remote')->put('public/' . $folderPath . $imageName, $image_base64);
       }
 
       return $file;
@@ -125,10 +127,14 @@ class InformConcernController extends Controller
 
         // $noreg = str_replace('/', '-', $request->noreg);
         // $folderPath = "inform_concern/" . $noreg .'_'.$cek->jenis. '/';
-        Storage::delete('public/' . $cek->ttdPetugas);
-        Storage::delete('public/' . $cek->ttdDokter);
-        Storage::delete('public/' . $cek->ttdSaksiPasien);
-        Storage::delete('public/' . $cek->ttdYgMenyatakan);
+        // Storage::delete('public/' . $cek->ttdPetugas);
+        // Storage::delete('public/' . $cek->ttdDokter);
+        // Storage::delete('public/' . $cek->ttdSaksiPasien);
+        // Storage::delete('public/' . $cek->ttdYgMenyatakan);
+        Storage::disk('remote')->delete('public/' . $cek->ttdPetugas);
+        Storage::disk('remote')->delete('public/' . $cek->ttdDokter);
+        Storage::disk('remote')->delete('public/' . $cek->ttdSaksiPasien);
+        Storage::disk('remote')->delete('public/' . $cek->ttdYgMenyatakan);
         $hapus = $cek->delete();
         if (!$hapus) {
           return new JsonResponse(['message' => 'gagal dihapus'], 500);

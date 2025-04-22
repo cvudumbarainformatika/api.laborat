@@ -108,11 +108,13 @@ class GeneralconsentController extends Controller
             $imageName = $file;
         } else {
             $imageName = $cek->ttdpasien;
-            Storage::delete('public/' . $imageName);
+            // Storage::delete('public/' . $imageName);
+            Storage::disk('remote')->delete('public/' . $imageName);
         }
 
 
-        Storage::disk('public')->put($file, $image_base64);
+        // Storage::disk('public')->put($file, $image_base64);
+        Storage::disk('remote')->put('public/' . $file, $image_base64);
 
         // $data = file_get_contents(Storage::disk('public')->get($file));
         // $base64 = 'data:image/' . $image_type . ';base64,' . base64_encode($data);
@@ -137,10 +139,12 @@ class GeneralconsentController extends Controller
             $imageName = $file;
         } else {
             $imageName = $cek->ttdpetugas;
-            Storage::delete('public/' . $imageName);
+            // Storage::delete('public/' . $imageName);
+            Storage::disk('remote')->delete('public/' . $imageName);
         }
 
-        Storage::disk('public')->put($file, $image_base64);
+        // Storage::disk('public')->put($file, $image_base64);
+        Storage::disk('remote')->put('public/' . $file, $image_base64);
 
         $pegawai = Pegawai::where('nik', $nik)->first();
         $pegawai->ttdpegawai = $file;
@@ -160,14 +164,15 @@ class GeneralconsentController extends Controller
                 $file = $files;
                 $originalname = $file->getClientOriginalName();
                 $data = Generalconsent::where('norm', '=', $request->norm)->first();
-                Storage::delete('public/generalconsent/' . $originalname);
+                // Storage::delete('public/generalconsent/' . $originalname);
+                Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
                 $pdf = null;
                 if ($data) {
                     $pdf = $data;
                 } else {
                     $pdf = new Generalconsent();
                 }
-                $file->storeAs('public/generalconsent/', $originalname);
+                $file->storeAs('public/generalconsent/', $originalname, 'remote');
 
                 $url = "generalconsent/$originalname";
                 $pdf->pdf = $url;
@@ -210,11 +215,13 @@ class GeneralconsentController extends Controller
             $imageName = $file;
         } else {
             $imageName = $cek->ttdpasien;
-            Storage::delete('public/' . $imageName);
+            // Storage::delete('public/' . $imageName);
+            Storage::disk('remote')->delete('public/' . $imageName);
         }
 
 
-        Storage::disk('public')->put($file, $image_base64);
+        // Storage::disk('public')->put($file, $image_base64);
+        Storage::disk('remote')->put('public/' . $file, $image_base64);
 
         // $data = file_get_contents(Storage::disk('public')->get($file));
         // $base64 = 'data:image/' . $image_type . ';base64,' . base64_encode($data);

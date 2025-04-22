@@ -111,8 +111,10 @@ class ImplementasiEdukasiController extends Controller
           $file = $folderPath . $name . '.' . $image_type;
 
           $imageName = $name . '.' . $image_type;
-          Storage::delete('public/' . $folderPath . $imageName);
-          Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+          // Storage::delete('public/' . $folderPath . $imageName);
+          Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
+          // Storage::disk('public')->put($folderPath . $imageName, $image_base64);
+          Storage::disk('remote')->put('public/' . $folderPath . $imageName, $image_base64);
       }
 
       return $file;
