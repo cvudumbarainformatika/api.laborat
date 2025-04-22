@@ -29,6 +29,10 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->between('16:30', '23:50');
 
+        $schedule->command('send:hd')
+            ->everyMinute()
+            ->between('17:30', '23:50');
+
 
         $schedule->command('cache:clear')
             ->dailyAt('00:30');

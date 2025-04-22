@@ -24,6 +24,8 @@ Route::group([
     Route::post('/batal-header', [PenerimaanController::class, 'batalHeader']);
     Route::post('/batal-rinci', [PenerimaanController::class, 'batalRinci']);
 
+    Route::post('/simpaneditnomorfaktur', [PenerimaanController::class, 'simpanEditNomorFaktur']);
+
     Route::post('/insertsementara', [StokrealController::class, 'insertsementara']);
     Route::post('/updatestoksementara', [StokrealController::class, 'updatestoksementara']);
 
