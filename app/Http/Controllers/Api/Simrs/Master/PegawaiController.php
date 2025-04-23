@@ -7,6 +7,7 @@ use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Mobat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class PegawaiController extends Controller
 {
@@ -19,7 +20,11 @@ class PegawaiController extends Controller
         ->get()
         ->toArray(); // <--
       });
-      return new JsonResponse($data);
+      $jsonStart = microtime(true);
+      $response =  new JsonResponse($data);
+      Log::info('JSON encode time: ' . (microtime(true) - $jsonStart));
+
+      return $response;
     }
     public function listNonNakes()
     {
