@@ -78,5 +78,8 @@ class Kernel extends HttpKernel
         'jkn.auth' => \App\Http\Middleware\JknMiddleware::class,
         'block.ip' => \App\Http\Middleware\BlockIpMiddleware::class,
         'cors' => \App\Http\Middleware\Cors::class,
+
+        'auth.log' => \App\Http\Middleware\LogAuthTiming::class,
+
     ];
 }

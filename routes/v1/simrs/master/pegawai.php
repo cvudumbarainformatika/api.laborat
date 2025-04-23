@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group([
-    'middleware' => 'auth:api',
+    'middleware' => 'auth.log:api',
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master/pegawai'
 ], function () {
