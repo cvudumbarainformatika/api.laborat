@@ -14,6 +14,7 @@ use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\User;
 use Exception;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\Node\Stmt\TryCatch;
 
 class AuthController extends Controller
