@@ -255,6 +255,7 @@ class PencarianObatController extends Controller
         $result = DB::table('farmasi.new_masterobat as mo')
             ->select(DB::raw('
                 mo.kd_obat,
+                mo.kd_obat AS kdobat,
                 mo.nama_obat AS namaobat,
                 mo.kandungan,
                 mo.bentuk_sediaan,
