@@ -59,8 +59,8 @@ class ListDataArsipController extends Controller
 
     public function simpanarsip(Request $request)
     {
-
         if ($request->hasFile('dokumen')) {
+
             try {
               DB::beginTransaction();
               $user = FormatingHelper::session_user();
@@ -69,18 +69,16 @@ class ListDataArsipController extends Controller
                 $nomor = '@nomor';
 
 
-        DB::connection('siasik')->select('call noarsip(?,?)',array($nomor, $kdruangarsip));
-        $x = DB::connection('siasik')->table('organisasi')->select('counter_arsip','panggilan','nama')->where('kode', $kdruangarsip)->get();
-        $wew = $x[0]->counter_arsip;
-        $panggilan = $x[0]->panggilan;
-        $pencipta = $kdruangarsip;
-        $unit_pengolah = $kdruangarsip;
-        $noarsip = FormatingHelper::noarsip($wew, $panggilan);
-
-        if ($request->hasFile('dokumen')) {
-
-            try {
-              $files = $request->file('dokumen');
+                DB::connection('siasik')->select('call noarsip(?,?)',array($nomor, $kdruangarsip));
+                $x = DB::connection('siasik')->table('organisasi')->select('counter_arsip','panggilan','nama')->where('kode', $kdruangarsip)->get();
+                $wew = $x[0]->counter_arsip;
+                $panggilan = $x[0]->panggilan;
+                $pencipta = $kdruangarsip;
+                $unit_pengolah = $kdruangarsip;
+                $tanggal = explode('-',$request->tgl);
+                $tahun = $tanggal[0];
+                $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
+                $files = $request->file('dokumen');
 
             //   $user = auth()->user()->pegawai_id;
 
@@ -102,6 +100,7 @@ class ListDataArsipController extends Controller
                     if ($data) {
                       // Storage::delete($data->path);
                       Storage::disk('remote')->delete($data->path);
+
                     }
 
                     $gallery = null;
