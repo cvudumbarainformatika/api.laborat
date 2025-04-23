@@ -72,7 +72,7 @@ class AppServiceProvider extends ServiceProvider
         // });
 
 
-        if (app()->runningInOctane()) {
+        if (config('octane.server')) {
             Event::listen(RequestReceived::class, function () {
                 try {
                     // Cek apakah koneksi MySQL masih hidup
