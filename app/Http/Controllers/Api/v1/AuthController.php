@@ -60,7 +60,7 @@ class AuthController extends Controller
         $me = auth()->user();
         $pegawaiId = $me->pegawai_id;
         $cacheKey = 'account_' . $me->id;
-        
+
         // Hapus cache untuk testing
         Cache::forget($cacheKey);
 
@@ -68,9 +68,9 @@ class AuthController extends Controller
         $user = Cache::remember($cacheKey, 60 * 24 * 7, function () use ($me) {
             Log::info('Cache miss - fetching fresh user data');
             return User::with([
-                'pegawai.role', 
-                'pegawai.ruang', 
-                'pegawai.ruangsim', 
+                'pegawai.role',
+                'pegawai.ruang',
+                'pegawai.ruangsim',
                 'pegawai.ruangan:koderuangan,kdmapping'
             ])->find($me->id);
         });
@@ -79,9 +79,9 @@ class AuthController extends Controller
 
         if (in_array($user->pegawai->role_id, $loadGudang)) {
             $user->load([
-                'pegawai.depo:kode,nama', 
-                'pegawai.role', 
-                'pegawai.depoSim:kode,nama', 
+                'pegawai.depo:kode,nama',
+                'pegawai.role',
+                'pegawai.depoSim:kode,nama',
                 'pegawai.ruangan:koderuangan,kdmapping'
             ]);
         }

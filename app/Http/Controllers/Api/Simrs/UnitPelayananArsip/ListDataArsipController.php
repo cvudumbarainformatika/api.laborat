@@ -60,10 +60,13 @@ class ListDataArsipController extends Controller
     public function simpanarsip(Request $request)
     {
 
-        $user = FormatingHelper::session_user();
-        $kdpegsimrs = $user['kodesimrs'];
-        $kdruangarsip = $user['kode_ruang_arsip'];
-        $nomor = '@nomor';
+        if ($request->hasFile('dokumen')) {
+            try {
+              DB::beginTransaction();
+              $user = FormatingHelper::session_user();
+                $kdpegsimrs = $user['kodesimrs'];
+                $kdruangarsip = $user['kode_ruang_arsip'];
+                $nomor = '@nomor';
 
 
         DB::connection('siasik')->select('call noarsip(?,?)',array($nomor, $kdruangarsip));
@@ -72,9 +75,7 @@ class ListDataArsipController extends Controller
         $panggilan = $x[0]->panggilan;
         $pencipta = $kdruangarsip;
         $unit_pengolah = $kdruangarsip;
-        $tanggal = explode('-',$request->tgl);
-        $tahun = $tanggal[0];
-        $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
+        $noarsip = FormatingHelper::noarsip($wew, $panggilan);
 
         if ($request->hasFile('dokumen')) {
 
@@ -172,9 +173,11 @@ class ListDataArsipController extends Controller
                 }
 
                 $kirim = self::getlistdataarsipbynoarsip($noarsip);
+                DB::commit();
                 return new JsonResponse(['message' => 'success','result'=> $kirim], 200);
               }
             } catch (\Exception $th) {
+                DB::rollback();
               return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
             }
         }
