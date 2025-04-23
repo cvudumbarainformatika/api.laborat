@@ -4,7 +4,7 @@ use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllbillrajalController;
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllbillrajalperpoliController;
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllbillranapController;
 use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\AllBillRekapByRuanganController;
-use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\InacbgController;
+// use App\Http\Controllers\Api\Simrs\Laporan\Keuangan\InacbgController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -26,5 +26,5 @@ Route::group([
     Route::get('/allBillRekapByRuanganperruangan', [AllBillRekapByRuanganController::class, 'allBillRekapByRuanganperruangan']);
 
     //incbg
-    Route::get('/incbglap', [InacbgController::class, 'incbglap']);
+    // Route::get('/incbglap', [InacbgController::class, 'incbglap']);
 });
