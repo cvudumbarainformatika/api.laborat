@@ -16,7 +16,8 @@ class PegawaiController extends Controller
         $kd=['1','2','3'];
         return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
         ->whereIn('kdgroupnakes', $kd)->where('aktif', 'AKTIF')
-        ->get();
+        ->get()
+        ->toArray(); // <--
       });
       return new JsonResponse($data);
     }
