@@ -13,15 +13,35 @@ class PegawaiController extends Controller
 {
     public function listnakes()
     {
-       $data = Cache::remember('list_nakes', now()->addDays(1), function () {
-        $kd=['1','2','3'];
-        return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
-        ->whereIn('kdgroupnakes', $kd)->where('aktif', 'AKTIF')
-        ->get()
-        ->toArray(); // <--
+      //  $data = Cache::remember('list_nakes', now()->addDays(1), function () {
+      //   $kd=['1','2','3'];
+      //   return Petugas::select('nama','nik','nip','kdpegsimrs', 'kdgroupnakes','kddpjp','foto')
+      //   ->whereIn('kdgroupnakes', $kd)->where('aktif', 'AKTIF')
+      //   ->get()
+      //   ->toArray(); // <--
+      // });
+      // $jsonStart = microtime(true);
+      // $response =  new JsonResponse($data);
+      // Log::info('JSON encode time: ' . (microtime(true) - $jsonStart));
+
+      // return $response;
+
+      $start = microtime(true);
+
+      $data = Cache::remember('list_nakes', now()->addDays(1), function () {
+          Log::info('Cache miss: querying DB...');
+          $kd = ['1', '2', '3'];
+          return Petugas::select('nama', 'nik', 'nip', 'kdpegsimrs', 'kdgroupnakes', 'kddpjp', 'foto')
+              ->whereIn('kdgroupnakes', $kd)
+              ->where('aktif', 'AKTIF')
+              ->get()
+              ->toArray(); // pastikan ini ada
       });
+
+      Log::info('Cache retrieval + query time: ' . (microtime(true) - $start));
+
       $jsonStart = microtime(true);
-      $response =  new JsonResponse($data);
+      $response = new JsonResponse($data);
       Log::info('JSON encode time: ' . (microtime(true) - $jsonStart));
 
       return $response;

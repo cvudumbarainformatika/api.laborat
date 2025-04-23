@@ -72,23 +72,23 @@ class AppServiceProvider extends ServiceProvider
         // });
 
 
-        if (config('octane.server')) {
-            Event::listen(RequestReceived::class, function () {
-                try {
-                    // Cek apakah koneksi MySQL masih hidup
-                    DB::connection()->getPdo()->query('SELECT 1');
-                } catch (\Exception $e) {
-                    // Log ketika koneksi MySQL mati
-                    Log::warning('MySQL connection lost, reconnecting...');
+        // if (config('octane.server')) {
+        //     Event::listen(RequestReceived::class, function () {
+        //         try {
+        //             // Cek apakah koneksi MySQL masih hidup
+        //             DB::connection()->getPdo()->query('SELECT 1');
+        //         } catch (\Exception $e) {
+        //             // Log ketika koneksi MySQL mati
+        //             Log::warning('MySQL connection lost, reconnecting...');
     
-                    // Purge dan reconnect
-                    DB::purge('mysql');
-                    DB::reconnect('mysql');
+        //             // Purge dan reconnect
+        //             DB::purge('mysql');
+        //             DB::reconnect('mysql');
     
-                    // Log setelah reconnect berhasil
-                    Log::info('MySQL connection re-established.');
-                }
-            });
-        }
+        //             // Log setelah reconnect berhasil
+        //             Log::info('MySQL connection re-established.');
+        //         }
+        //     });
+        // }
     }
 }
