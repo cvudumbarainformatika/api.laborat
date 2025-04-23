@@ -60,97 +60,97 @@ class AuthController extends Controller
     {
         try {
             $me = auth()->user();
-        $pegawaiId = $me->pegawai_id;
-        $cacheKey = 'account_' . $me->id;
+            $pegawaiId = $me->pegawai_id;
+            $cacheKey = 'account_' . $me->id;
 
-        // Hapus cache untuk testing
-        Cache::forget($cacheKey);
+            // Hapus cache untuk testing
+            Cache::forget($cacheKey);
 
-        // Gunakan remember biasa dengan waktu yang lama (1 minggu)
-        $user = Cache::remember($cacheKey, 60 * 24 * 7, function () use ($me) {
-            Log::info('Cache miss - fetching fresh user data');
-            return User::with([
-                'pegawai.role',
-                'pegawai.ruang',
-                'pegawai.ruangsim',
-                'pegawai.ruangan:koderuangan,kdmapping'
-            ])->find($me->id);
-        });
+            // Gunakan remember biasa dengan waktu yang lama (1 minggu)
+            $user = Cache::remember($cacheKey, 60 * 24 * 7, function () use ($me) {
+                Log::info('Cache miss - fetching fresh user data');
+                return User::with([
+                    'pegawai.role',
+                    'pegawai.ruang',
+                    'pegawai.ruangsim',
+                    'pegawai.ruangan:koderuangan,kdmapping'
+                ])->find($me->id);
+            });
 
-        $loadGudang = array(3, 4, 7);
+            $loadGudang = array(3, 4, 7);
 
-        if (in_array($user->pegawai->role_id, $loadGudang)) {
-            $user->load([
-                'pegawai.depo:kode,nama',
-                'pegawai.role',
-                'pegawai.depoSim:kode,nama',
-                'pegawai.ruangan:koderuangan,kdmapping'
-            ]);
-        }
+            if (in_array($user->pegawai->role_id, $loadGudang)) {
+                $user->load([
+                    'pegawai.depo:kode,nama',
+                    'pegawai.role',
+                    'pegawai.depoSim:kode,nama',
+                    'pegawai.ruangan:koderuangan,kdmapping'
+                ]);
+            }
 
-        // Gunakan remember biasa untuk apps juga
-        $apps = Cache::remember('menu-sso-xenter', 60 * 24 * 7, function () {
-            Log::info('Cache miss - fetching fresh apps data');
-            return Aplikasi::with(['menus', 'menus.submenus'])->get();
-        });
+            // Gunakan remember biasa untuk apps juga
+            $apps = Cache::remember('menu-sso-xenter', 60 * 24 * 7, function () {
+                Log::info('Cache miss - fetching fresh apps data');
+                return Aplikasi::with(['menus', 'menus.submenus'])->get();
+            });
 
-        $akses = 'all';
-        $allAccess = array('sa', 'coba', 'wan');
+            $akses = 'all';
+            $allAccess = array('sa', 'coba', 'wan');
 
-        if (!in_array(auth()->user()->username, $allAccess)) {
-            $akses = AksesUser::where('user_id', $me->id)->get();
-        }
+            if (!in_array(auth()->user()->username, $allAccess)) {
+                $akses = AksesUser::where('user_id', $me->id)->get();
+            }
 
-        // Gunakan remember untuk masterSistemBayar
-        $masterSistemBayar = Cache::remember('master-sistembayar', 60 * 24 * 7, function () {
-            Log::info('Cache miss - fetching fresh sistembayar data');
-            return Msistembayar::query()
-                ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
-                ->where('hidden','!=','')
-                ->where('rs1','!=','')
-                ->get();
-        });
-
-        $pegawai = Petugas::select('id','kdpegsimrs','kdgroupnakes','aktif','statusspesialis')
-            ->find($pegawaiId);
-
-        $notifRkd = [
-            'notif' => 0,
-            'kddokterkonsul' => $pegawai->kdpegsimrs
-        ];
-
-        if ($pegawai) {
-            if ($pegawai->kdgroupnakes === '1' && strtoupper($pegawai->aktif) === 'AKTIF') {
-                $cari = Konsultasi::select(DB::raw('count(kddokterkonsul) as notif'), 'kddokterkonsul')
-                    ->where('kddokterkonsul', '=', $pegawai->kdpegsimrs)
-                    ->where(function ($q) {
-                        $q->whereNull('flag');
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('jawaban');
-                    })
-                    ->groupBy('kddokterkonsul')
-                    ->orderBy('kddokterkonsul')
+            // Gunakan remember untuk masterSistemBayar
+            $masterSistemBayar = Cache::remember('master-sistembayar', 60 * 24 * 7, function () {
+                Log::info('Cache miss - fetching fresh sistembayar data');
+                return Msistembayar::query()
+                    ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
+                    ->where('hidden','!=','')
+                    ->where('rs1','!=','')
                     ->get();
+            });
 
-                if (count($cari) > 0) {
-                    $notifRkd = $cari[0];
+            $pegawai = Petugas::select('id','kdpegsimrs','kdgroupnakes','aktif','statusspesialis')
+                ->find($pegawaiId);
+
+            $notifRkd = [
+                'notif' => 0,
+                'kddokterkonsul' => $pegawai->kdpegsimrs
+            ];
+
+            if ($pegawai) {
+                if ($pegawai->kdgroupnakes === '1' && strtoupper($pegawai->aktif) === 'AKTIF') {
+                    $cari = Konsultasi::select(DB::raw('count(kddokterkonsul) as notif'), 'kddokterkonsul')
+                        ->where('kddokterkonsul', '=', $pegawai->kdpegsimrs)
+                        ->where(function ($q) {
+                            $q->whereNull('flag');
+                        })
+                        ->where(function ($q) {
+                            $q->whereNull('jawaban');
+                        })
+                        ->groupBy('kddokterkonsul')
+                        ->orderBy('kddokterkonsul')
+                        ->get();
+
+                    if (count($cari) > 0) {
+                        $notifRkd = $cari[0];
+                    }
                 }
             }
-        }
 
-        $git = Github::first();
+            $git = Github::first();
 
-        $result = [
-            'apps' => $apps,
-            'akses' => $akses,
-            'user' => $user,
-            'mSistemBayar' => $masterSistemBayar,
-            'notifRkd' => $notifRkd,
-            'git' => $git,
-        ];
+            $result = [
+                'apps' => $apps,
+                'akses' => $akses,
+                'user' => $user,
+                'mSistemBayar' => $masterSistemBayar,
+                'notifRkd' => $notifRkd,
+                'git' => $git,
+            ];
 
-        return new JsonResponse($result);
+            return new JsonResponse($result);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
