@@ -7,6 +7,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Octane\Events\RequestReceived;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Laravel\Octane\Octane;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -65,5 +70,25 @@ class AppServiceProvider extends ServiceProvider
         //         ]
         //     );
         // });
+
+
+        if (app()->runningInOctane()) {
+            Event::listen(RequestReceived::class, function () {
+                try {
+                    // Cek apakah koneksi MySQL masih hidup
+                    DB::connection()->getPdo()->query('SELECT 1');
+                } catch (\Exception $e) {
+                    // Log ketika koneksi MySQL mati
+                    Log::warning('MySQL connection lost, reconnecting...');
+    
+                    // Purge dan reconnect
+                    DB::purge('mysql');
+                    DB::reconnect('mysql');
+    
+                    // Log setelah reconnect berhasil
+                    Log::info('MySQL connection re-established.');
+                }
+            });
+        }
     }
 }
