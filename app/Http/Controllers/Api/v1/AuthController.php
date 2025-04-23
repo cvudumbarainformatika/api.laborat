@@ -13,6 +13,7 @@ use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-
+use PhpParser\Node\Stmt\TryCatch;
 
 class AuthController extends Controller
 {
@@ -57,7 +58,8 @@ class AuthController extends Controller
     }
     public function authuser()
     {
-        $me = auth()->user();
+        try {
+            $me = auth()->user();
         $pegawaiId = $me->pegawai_id;
         $cacheKey = 'account_' . $me->id;
 
@@ -149,6 +151,9 @@ class AuthController extends Controller
         ];
 
         return new JsonResponse($result);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function me()
