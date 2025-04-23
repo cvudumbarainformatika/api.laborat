@@ -59,8 +59,8 @@ class ListDataArsipController extends Controller
 
     public function simpanarsip(Request $request)
     {
-
         if ($request->hasFile('dokumen')) {
+
             try {
               DB::beginTransaction();
               $user = FormatingHelper::session_user();
