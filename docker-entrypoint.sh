@@ -49,7 +49,8 @@ if ! grep -q "^APP_KEY=" /var/www/.env || grep -q "APP_KEY=$" /var/www/.env; the
 fi
 
 
-
+php artisan config:cache
+php artisan route:cache
 
 
 
