@@ -21,24 +21,24 @@ yarn-error.log
 **/.DS_Store
 
 # Ignore all storage content
-/storage/*
+storage/*
 
 # Ignore specific log files
 /storage/logs/*.log
 /storage/logs/websockets.log
 /storage/logs/laravel.log
 
-/storage/framework
+storage/framework
 
 # Keep .gitignore files
-#!/storage/.gitignore
-#!/storage/app/.gitignore
-#!/storage/framework/.gitignore
-#!/storage/framework/cache/.gitignore
-#!/storage/framework/cache/data/.gitignore
-#!/storage/framework/sessions/.gitignore
-#!/storage/framework/views/.gitignore
-#!/storage/logs/.gitignore
+!/storage/.gitignore
+!/storage/app/.gitignore
+!/storage/framework/.gitignore
+!/storage/framework/cache/.gitignore
+!/storage/framework/cache/data/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/views/.gitignore
+!/storage/logs/.gitignore
 
 # Keep directory structure
 #!/storage/app/
