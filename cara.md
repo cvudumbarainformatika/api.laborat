@@ -80,6 +80,13 @@ redis-stats:
     @docker compose exec redis redis-cli INFO | grep connected_clients
 
 
+# supervisor
+supervisorctl status
+supervisorctl reread
+supervisorctl update
+supervisorctl restart all
+
+
 
 # ... UNTUK DEPLOY ...
 php artisan git:deploy
