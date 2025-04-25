@@ -33,6 +33,27 @@ chown -R laravel:laravel /var/www/storage /var/www/bootstrap/cache
 chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 chmod 664 /var/www/storage/logs/*.log
 
+
+# Jalankan composer install kalau vendor belum ada
+if [ ! -d "/var/www/vendor" ]; then
+  composer install --no-interaction --prefer-dist --optimize-autoloader
+fi
+
+# Generate key kalau belum ada .env atau APP_KEY
+if [ ! -f "/var/www/.env" ]; then
+  cp /var/www/.env.example /var/www/.env
+fi
+
+if ! grep -q "^APP_KEY=" /var/www/.env || grep -q "APP_KEY=$" /var/www/.env; then
+  php artisan key:generate
+fi
+
+
+
+
+
+
+
 # Jalankan Supervisor untuk menanggani queue, websockets, dan swoole
 echo "Starting Supervisor..."
 if ! [ -x "$(command -v /usr/bin/supervisord)" ]; then
