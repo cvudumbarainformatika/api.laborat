@@ -320,10 +320,18 @@ class KartustokController extends Controller
         $bulan = request('bulan');
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
-        $tglAwal = $x . '-01';
-        $tglAkhir = $x . date('-t', strtotime($x . '-01'));
-        $dateAwal = Carbon::parse($tglAwal);
-        $dateAkhir = Carbon::parse($tglAkhir);
+        // $tglAwal = $x . '-01';
+        // $tglAkhir = $x . date('-t', strtotime($x . '-01'));
+        // $dateAwal = Carbon::parse($tglAwal);
+        // $dateAkhir = Carbon::parse($tglAkhir);
+        $bulan = request('bulan');
+        $tahun = request('tahun');
+        $dateAwal = Carbon::createFromDate($tahun, $bulan, 1)->startOfDay();
+        $dateAkhir = Carbon::createFromDate($tahun, $bulan, 1)->endOfMonth()->endOfDay();
+
+        $tglAwal = $dateAwal->toDateTimeString(); // "2025-04-01 00:00:00"
+        $tglAkhir = $dateAkhir->toDateTimeString(); // "2025-04-30 23:59:59"
+
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // $date->format('Y-m-d')
