@@ -9,5 +9,5 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/historypasien'
 ], function () {
-    Route::get('/historypasienfull', [HistorypasienfullController::class, 'historypasienfull']);
+    Route::get('/historypasienfull', [HistorypasienfullController::class, 'historypasienfullAwal']);
 });
