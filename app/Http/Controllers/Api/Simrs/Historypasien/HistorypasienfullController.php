@@ -33,7 +33,7 @@ class HistorypasienfullController extends Controller
                 [
                     'anamnesis',
                     'pemeriksaanfisik' => function ($p) {
-                        $p->with(['gambars','detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        $p->with(['gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                             ->orderBy('id', 'DESC');
                     },
                     'diagnosa' => function ($a) {
@@ -42,7 +42,7 @@ class HistorypasienfullController extends Controller
                     },
                     //    'diagnosa.masterdiagnosa:rs1,rs4',
                     'tindakan' => function ($t) {
-                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url','sambungan:rs73_id,ket')
+                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
                             ->orderBy('id', 'DESC');
                     },
                     //    'tindakan.mastertindakan:rs1,rs2',
@@ -55,16 +55,16 @@ class HistorypasienfullController extends Controller
                     'transradiologi:rs1,rs4',
                     'transradiologi.relmasterpemeriksaan:rs1,rs2,rs3,kdmeta',
                     'hasilradiologi',
-                    'apotekranap',
-                    'apotekranap.masterobat',
-                    'apotekranaplalu',
-                    'apotekranaplalu.masterobat',
-                    'apotekranapracikanheder',
-                    'apotekranapracikanheder.apotekranapracikanrinci',
-                    'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
-                    'apotekranapracikanhederlalu',
-                    'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
-                    'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
+                    // 'apotekranap',
+                    // 'apotekranap.masterobat',
+                    // 'apotekranaplalu',
+                    // 'apotekranaplalu.masterobat',
+                    // 'apotekranapracikanheder',
+                    // 'apotekranapracikanheder.apotekranapracikanrinci',
+                    // 'apotekranapracikanheder.apotekranapracikanrinci.masterobat',
+                    // 'apotekranapracikanhederlalu',
+                    // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
+                    // 'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
                     'apotekrajal',
                     'apotekrajal.masterobat',
                     'apotekrajalpolilalu.masterobat',
@@ -72,7 +72,7 @@ class HistorypasienfullController extends Controller
                     'apotekracikanrajal.masterobat',
                     'apotekracikanrajallalu',
                     'apotekracikanrajallalu.masterobat',
-                    'dokumenluar'=> function($a){
+                    'dokumenluar' => function ($a) {
                         $a->with(['pegawai:id,nama']);
                     },
                     'kamaroperasi' => function ($kamaroperasi) {
@@ -80,9 +80,7 @@ class HistorypasienfullController extends Controller
                     },
                     'praanastesi'
                 ]
-            )
-            
-            ;
+            );
 
 
         $history = Kunjunganranap::select(
@@ -102,7 +100,7 @@ class HistorypasienfullController extends Controller
                 [
                     'anamnesis',
                     'pemeriksaanfisik' => function ($p) {
-                        $p->with(['gambars','detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
+                        $p->with(['gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                             ->orderBy('id', 'DESC');
                     },
                     'diagnosa' => function ($a) {
@@ -111,7 +109,7 @@ class HistorypasienfullController extends Controller
                     },
                     //    'diagnosa.masterdiagnosa:rs1,rs4',
                     'tindakan' => function ($t) {
-                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url','sambungan:rs73_id,ket')
+                        $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'sambungan:rs73_id,ket')
                             ->orderBy('id', 'DESC');
                     },
                     //    'tindakan.mastertindakan:rs1,rs2',
@@ -134,14 +132,14 @@ class HistorypasienfullController extends Controller
                     'apotekranapracikanhederlalu',
                     'apotekranapracikanhederlalu.apotekranapracikanrincilalu',
                     'apotekranapracikanhederlalu.apotekranapracikanrincilalu.masterobat',
-                    'apotekrajal',
-                    'apotekrajal.masterobat',
-                    'apotekrajalpolilalu.masterobat',
-                    'apotekracikanrajal',
-                    'apotekracikanrajal.masterobat',
-                    'apotekracikanrajallalu',
-                    'apotekracikanrajallalu.masterobat',
-                    'dokumenluar'=> function($a){
+                    // 'apotekrajal',
+                    // 'apotekrajal.masterobat',
+                    // 'apotekrajalpolilalu.masterobat',
+                    // 'apotekracikanrajal',
+                    // 'apotekracikanrajal.masterobat',
+                    // 'apotekracikanrajallalu',
+                    // 'apotekracikanrajallalu.masterobat',
+                    'dokumenluar' => function ($a) {
                         $a->with(['pegawai:id,nama']);
                     },
                     'kamaroperasi' => function ($kamaroperasi) {
@@ -149,20 +147,22 @@ class HistorypasienfullController extends Controller
                     },
                     'praanastesi'
                 ]
-            )
-            
-            ;
+            );
 
-            $rawQuery = $history->unionAll($historyx);
-                        // Lanjutkan dengan eager load setelah di-wrap dalam query builder
-            $final = DB::table(DB::raw("({$rawQuery->toSql()}) as sub"))
-            ->mergeBindings($rawQuery->getQuery()) // penting!
-            ->orderBy('tanggal', 'DESC')
-            ->get();
-            // ->orderby('tanggal', 'DESC')
-            // ->get();
-            //->paginate(request('per_page'));
-        $opoo = new JsonResponse(['data' => $final],200);
+        // $rawQuery = $history->unionAll($historyx);
+        //             // Lanjutkan dengan eager load setelah di-wrap dalam query builder
+        // $final = DB::table(DB::raw("({$rawQuery->toSql()}) as sub"))
+        // ->mergeBindings($rawQuery->getQuery()) // penting!
+        // ->orderBy('tanggal', 'DESC')
+        // ->get();
+        // // ->orderby('tanggal', 'DESC')
+        // ->get();
+        //->paginate(request('per_page'));
+        $historyxData = $historyx->get();
+        $historyData = $history->get();
+
+        $merged = $historyxData->merge($historyData)->sortByDesc('tanggal')->values();
+        $opoo = new JsonResponse(['data' => $merged], 200);
         return $opoo;
     }
 }
