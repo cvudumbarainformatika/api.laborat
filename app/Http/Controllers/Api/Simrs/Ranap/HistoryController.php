@@ -175,7 +175,8 @@ class HistoryController extends Controller
                     ]
                 )->where('kdruang', 'POL014');
             },
-            'rencanaterapidokter'
+            'rencanaterapidokter',
+            'skalatransfer',
         ])
         ->first();
 

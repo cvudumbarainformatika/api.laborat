@@ -80,6 +80,13 @@ redis-stats:
     @docker compose exec redis redis-cli INFO | grep connected_clients
 
 
+# supervisor
+supervisorctl status
+supervisorctl reread
+supervisorctl update
+supervisorctl restart all
+
+
 
 # ... UNTUK DEPLOY ...
 php artisan git:deploy
@@ -91,30 +98,3 @@ php artisan git:deploy
 curl -o /dev/null -s -w "Total: %{time_total}s\nDNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTTFB: %{time_starttransfer}s\n" \
 -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC4xNTAuMTEyOjM1MDEvYXBpL3YxL2xvZ2luIiwiaWF0IjoxNzQ1NDE4MzM5LCJleHAiOjE3NDU0NDcxMzksIm5iZiI6MTc0NTQxODMzOSwianRpIjoiTk9FTnlOUkFiYTdJbjhlNiIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.gBBsj19Y0vYEuZYcGKzM1yt0tQLq_fpJEEfI6yInUJc" \
 http://192.168.150.112:3501/api/simrs/master/pegawai/listnakes
-
-
-curl -o /dev/null -s -w "Total: %{time_total}s\nDNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTTFB: %{time_starttransfer}s\n" \
--H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC4xNTAuMTEyOjM1MDEvYXBpL3YxL2xvZ2luIiwiaWF0IjoxNzQ1NDE4MzM5LCJleHAiOjE3NDU0NDcxMzksIm5iZiI6MTc0NTQxODMzOSwianRpIjoiTk9FTnlOUkFiYTdJbjhlNiIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.gBBsj19Y0vYEuZYcGKzM1yt0tQLq_fpJEEfI6yInUJc" \
-http://127.0.0.1:3501/api/simrs/master/pegawai/listnakes
-
-
-
-curl --compressed -o /dev/null -s -w "Total: %{time_total}s\nDNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTTFB: %{time_starttransfer}s\n" \
--H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC4xNTAuMTEyOjM1MDEvYXBpL3YxL2xvZ2luIiwiaWF0IjoxNzQ1NDE4MzM5LCJleHAiOjE3NDU0NDcxMzksIm5iZiI6MTc0NTQxODMzOSwianRpIjoiTk9FTnlOUkFiYTdJbjhlNiIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.gBBsj19Y0vYEuZYcGKzM1yt0tQLq_fpJEEfI6yInUJc" \
-http://192.168.150.112:3501/api/simrs/master/pegawai/listnakes
-
-
-
-curl -s -o /dev/null -w "%{size_download}\n" \
--H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC4xNTAuMTEyOjM1MDEvYXBpL3YxL2xvZ2luIiwiaWF0IjoxNzQ1NDE4MzM5LCJleHAiOjE3NDU0NDcxMzksIm5iZiI6MTc0NTQxODMzOSwianRpIjoiTk9FTnlOUkFiYTdJbjhlNiIsInN1YiI6IjEiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.gBBsj19Y0vYEuZYcGKzM1yt0tQLq_fpJEEfI6yInUJc" \
-http://192.168.150.112:3501/api/simrs/master/pegawai/listnakes
-
-
-
-# install portainer di server
-docker run -d -p 39090:9000 --name portainer \
-  --restart=always \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v portainer_data:/data \
-  portainer/portainer-ce
-

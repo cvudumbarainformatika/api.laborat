@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class LapOperasionalController extends Controller
 {
+    private function getKoderekeningPendapatan()
+    {
+        return "CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))";
+    }
     public function get_lo(){
         $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         // $awal=request('tgl', 'Y'.'-'.'01-01');
@@ -24,18 +28,18 @@ class LapOperasionalController extends Controller
         if($thn !== $thnakhir){
          return response()->json(['message' => 'Tahun Tidak Sama'], 500);
         }
-
+        $kodeRekening = $this->getKoderekeningPendapatan();
         $pagupendapatan = Tampung_pendapatan::where('tahun', $thn)
         ->select(
                 'akun50_2024.kodeall3 as kode6',
                 'akun50_2024.uraian',
-                DB::raw("CONCAT('7', SUBSTRING(koderekeningblud, 2)) as koderekeningblud"),
+                DB::raw("{$kodeRekening} as koderekeningblud"),
                 DB::raw('sum(t_tampung_pendapatan.pagu) as pagupendapatan'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
-                DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                DB::raw("SUBSTRING_INDEX({$kodeRekening}, '.', 1) as kode1"),
+                DB::raw("SUBSTRING_INDEX({$kodeRekening}, '.', 2) as kode2"),
+                DB::raw("SUBSTRING_INDEX({$kodeRekening}, '.', 3) as kode3"),
+                DB::raw("SUBSTRING_INDEX({$kodeRekening}, '.', 4) as kode4"),
+                DB::raw("SUBSTRING_INDEX({$kodeRekening}, '.', 5) as kode5"),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode1, ".", 1) LIMIT 1) as uraian1'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode2, ".", 2) LIMIT 1) as uraian2'),
                 DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode3, ".", 3) LIMIT 1) as uraian3'),
