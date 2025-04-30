@@ -390,7 +390,8 @@ class HistorypasienfullController extends Controller
             )
                 ->join('rs24', 'rs24.rs1', '=', 'rs23.rs5')
                 ->join('rs21', 'rs21.rs1', '=', 'rs23.rs10')
-                ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs23.rs1')->where('rs17.rs1', $noreg)
+                ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs23.rs1')
+                ->where('rs23.rs1', $noreg)
                 ->with(
                     [
                         'anamnesis',
