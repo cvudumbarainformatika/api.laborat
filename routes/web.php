@@ -115,7 +115,9 @@ Route::get('/clear-cache', function () {
     echo 'cache cleared';
 });
 
-
+Route::get('/opcache-status', function () {
+    return response()->json(opcache_get_status());
+});
 
 
 // Route::get('/unsubscribe/{user}', function (Request $request, $user) {
