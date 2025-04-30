@@ -17,7 +17,7 @@ use PhpParser\Node\Stmt\Return_;
 class SerahterimaController extends Controller
 {
     public function getkontrak(){
-        $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $tahun=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $data = KontrakPengerjaan::where('kunci', '!=', '')
         ->whereBetween('tgltrans', [$tahun.'-01-01', $tahun.'-12-31'])
         ->when(request('q'), function($q){
@@ -31,16 +31,21 @@ class SerahterimaController extends Controller
     }
     public function savedata(Request $request)
     {
-        if
-        (
-            $request->noserahterima === '' || $request->noserahterima === null) {
-            $cek = Serahterima_header::count();
-            $total = (int) $cek + (int) 1;
-            $kodebarang = FormatingHelper::nostp($total, 'SERAHTERIMA');
-        }
-        else
-        {
-            $kodebarang = $request->kodebarang;
+        // Tentukan noserahterima
+        if (empty($request->noserahterima)) {
+            // Panggil stored procedure noserahterimaPekerjaan di siasik
+            DB::connection('siasik')->select('call noserahterimapekerjaan(@nomor)');
+            $x = DB::connection('siasik')->table('conter')->select('noserahterimapekerjaan')->first();
+
+            if (!$x) {
+                throw new \Exception('Gagal mendapatkan nomor dari prosedur noserahterimaPekerjaan');
+            }
+            $nomer = (int)$x->noserahterimapekerjaan; // Gunakan nomor dari counter sebagai $total
+
+            // Format nomor menggunakan FormatingHelper::nostp
+            $noserahterima = FormatingHelper::nostp($nomer, 'SERAHTERIMA');
+        } else {
+            $noserahterima = $request->noserahterima;
         }
         $time = date('Y-m-d H:i:s');
         $user = auth()->user()->pegawai_id;
@@ -52,7 +57,7 @@ class SerahterimaController extends Controller
             $save = Serahterima_header::updateOrCreate
             (
                 [
-                    'noserahterimapekerjaan' => $kodebarang
+                    'noserahterimapekerjaan' => $noserahterima
                 ],
                 [
                     'nokontrak'=>$request->nokontrak ?? '',
@@ -109,7 +114,7 @@ class SerahterimaController extends Controller
             return new JsonResponse(
                 [
                     'message' => 'Ada Kesalahan',
-                    'error' => $er
+                    'error' => $er->getMessage()
                 ], 500
             );
         }

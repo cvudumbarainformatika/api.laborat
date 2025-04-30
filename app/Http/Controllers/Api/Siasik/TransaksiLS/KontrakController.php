@@ -100,42 +100,27 @@ class KontrakController extends Controller
         ]);
     }
 
-    public static function buatnomor(){
-        $huruf = ('KP');
-        // $no = ('4.02.0.00.0.00.01.0000');
+    public static function buatnomor()
+    {
+        // Panggil stored procedure kontrakPekerjaan
+        DB::connection('siasik')->select('call kontrakPekerjaan(@nomor)');
+        $x = DB::connection('siasik')->table('conter')->select('kontrakPekerjaan')->first();
+
+        if (!$x) {
+            throw new \Exception('Gagal mendapatkan nomor dari prosedur kontrakPekerjaan');
+        }
+        $no = (int)$x->kontrakPekerjaan; // Pastikan $no adalah integer
+
+        $huruf = 'KP';
         date_default_timezone_set('Asia/Jakarta');
-        // $tgl = date('Y/m/d');
-        $rom = array('','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII');
+        $rom = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
         $thn = date('Y');
-        // $time = date('mis');
-        // $nomer=Transaksi::latest();
-        $cek = KontrakPengerjaan::count();
-        if ($cek == null){
-            $urut = "00001";
-            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($huruf).'/'.$thn;
-        }
-        else{
-            $ambil=KontrakPengerjaan::all()->last();
-            $urut = (int)substr($ambil->nokontrak, 0, 5) + 1;
-            //cara menyambungkan antara tgl dn kata dihubungkan tnda .
-            // $urut = "000" . $urut;
-            if(strlen($urut) == 1){
-                $urut = "0000" . $urut;
-            }
-            else if(strlen($urut) == 2){
-                $urut = "000" . $urut;
-            }
-            else if(strlen($urut) == 3){
-                $urut = "00" . $urut;
-            }
-            else if(strlen($urut) == 4){
-                $urut = "0" . $urut;
-            }
-            else {
-                $urut = (int)$urut;
-            }
-            $sambung = $urut.'/'.$rom[date('n')].'/'.strtoupper($huruf).'/'.$thn;
-        }
+
+        // Format $no ke 5 digit dengan padding nol
+        $no = str_pad($no, 5, '0', STR_PAD_LEFT);
+
+        // Gabungkan format nomor kontrak
+        $sambung = $no . '/' . $rom[date('n')] . '/' . strtoupper($huruf) . '/' . $thn;
 
         return $sambung;
     }
