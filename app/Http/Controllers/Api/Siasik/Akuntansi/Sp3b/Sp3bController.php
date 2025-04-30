@@ -273,9 +273,8 @@ class Sp3bController extends Controller
     public function savedata(Request $request){
 
         $validator = Validator::make($request->all(), [
-            'nosp3b' => 'required|min:5|max:5|unique:siasik.sp3b,nosp3b'
+            'nosp3b' => 'required|max:5|unique:siasik.sp3b,nosp3b'
         ], [
-            'nosp3b.min' => 'Nomor SP3B harus terdiri dari 5 karakter.',
             'nosp3b.max' => 'Nomor SP3B harus terdiri dari 5 karakter.',
             'nosp3b.unique' => 'Nomor SP3B sudah digunakan.'
         ]);
@@ -290,10 +289,18 @@ class Sp3bController extends Controller
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->kdpegsimrs;
+
+        $nosp3b = $request->nosp3b.request('bulan').'/SP3B/03.0301.01/'.request('tahun');
+         // Pengecekan manual apakah nomor SP3B sudah ada
+        if (Sp3b::where('nosp3b', $nosp3b)->exists()) {
+            return new JsonResponse([
+                'message' => 'Data SP3B Bulan Berkenaan Sudah Ada.'
+            ], 422);
+        }
         try {
             DB::beginTransaction();
-            $nosp3b = $request->nosp3b.'/SP3B/03.0301.01/'.request('tahun');
-            $save = sp3b::create([
+
+            $save = Sp3b::create([
                 'nosp3b' =>$nosp3b,
                 'tanggal' =>$request->tanggal ?? '',
                 'bulan_realisasi'=>$tanggalTerakhir ?? '',
