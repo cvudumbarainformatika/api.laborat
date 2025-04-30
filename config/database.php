@@ -66,7 +66,8 @@ return [
         'sigarang' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST_100', '127.0.0.1'),
+            // 'host' => env('DB_HOST_100', '127.0.0.1'),
+            'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE_SECOND', 'forge'),
             // 'username' => env('DB_USERNAME_100', 'forge'),
