@@ -21,6 +21,7 @@ use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class KasirrajalController extends Controller
 {
@@ -302,6 +303,34 @@ class KasirrajalController extends Controller
                     ],
                     200
                 );
+            }
+        }else if($request->carabayar === 'qris'){
+            if($request->jenislayanan === 'karcis'){
+                $validator = Validator::make($request->all(), [
+                    'billNumber' => 'required',
+                    'purposetrx' => 'required',
+                    'storelabel' => 'required',
+                    'customerlabel' => 'required',
+                    'terminalUser' => 'required',
+                    'amount' => 'required',
+                    'core_reference' => 'required',
+                    'customerPan' => 'required',
+                    'merchantPan' => 'required',
+                    'invoice_number' => 'required',
+                    'transactionDate' => 'required'
+                ]);
+
+                if ($validator->fails()) {
+                    $response = [
+                        'responsCode' => '201',
+                        'responsDesc' => 'Missing some required data',
+                        'error' => $validator->errors(),
+                    ];
+                    return new JsonResponse($response, 200);
+                    // return response()->json($validator->errors(), 422);
+                }
+
+                $req_qris = Tagihannontunai::where('rs17', $request->invoice_number)->first();
             }
         }
 
