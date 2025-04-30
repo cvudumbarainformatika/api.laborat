@@ -10,4 +10,5 @@ Route::group([
     'prefix' => 'simrs/historypasien'
 ], function () {
     Route::get('/historypasienfull', [HistorypasienfullController::class, 'historypasienfull']);
+    Route::get('/detail-history', [HistorypasienfullController::class, 'getDetailHistory']);
 });

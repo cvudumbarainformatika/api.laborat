@@ -13,6 +13,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class BukubesarController extends Controller
@@ -25,20 +26,49 @@ class BukubesarController extends Controller
         ->get();
         return new JsonResponse($ttd);
     }
-    public function akunkepmend(){
-        $perPage = request('per_page', 100);
-        $query = Akun50_2024::select('uraian','kodeall3')
+    public function akunkepmend()
+    {
+        $perPage = request('per_page', 100); // Default ke 100 per halaman, 0 untuk semua data
+
+        // Mapping levelrinci
+        $levelRinci = [
+            '1' => 1,   // Akun
+            '3' => 3,   // Kelompok
+            '6' => 6,   // Jenis
+            '9' => 9,   // Objek
+            '12' => 12, // Rincian Objek
+            '17' => 17  // SubRincian Objek
+        ];
+
+        $query = Akun50_2024::select('uraian', 'kodeall3')
             ->where('akun', '!=', '');
-        // Pencarian yang lebih efektif
-        if(request('q')) {
+
+        // Filter berdasarkan levelberapa
+        if (request('levelberapa')) {
+            $level = request('levelberapa');
+            if (isset($levelRinci[$level])) {
+                $length = $levelRinci[$level];
+                $query->whereRaw('LENGTH(TRIM(kodeall3)) = ?', [$length]);
+            } else {
+                Log::warning('Levelberapa tidak valid: ' . $level);
+            }
+        }
+
+        // Pencarian
+        if (request('q')) {
             $cari = request('q');
-            $query->where(function($q) use ($cari) {
+            $query->where(function ($q) use ($cari) {
                 $q->where('uraian', 'like', '%' . $cari . '%')
-                ->orWhere('kodeall3', 'like', '%'. $cari . '%');
+                  ->orWhere('kodeall3', 'like', '%' . $cari . '%');
             });
         }
 
-        $akun = $query->paginate($perPage);
+        if ($perPage <= 0) {
+            $akun = $query->get();
+            return new JsonResponse(['data' => $akun]);
+        }
+
+        $akun = $query->simplePaginate($perPage);
 
         return new JsonResponse($akun);
     }
