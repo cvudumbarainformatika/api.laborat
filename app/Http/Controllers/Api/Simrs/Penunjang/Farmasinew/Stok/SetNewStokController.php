@@ -968,9 +968,24 @@ class SetNewStokController extends Controller
                         ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
                         ->get();
                     $distribusiOk = collect($persiapanOperasiDistribusiRinci)->sum('distribusi');
-                    $kembaliOk = collect($persiapanOperasiDistribusiRinci)->sum('kembali');
+                    $persiapanOperasiKmbaliRinci = PersiapanOperasiDistribusi::select(
+                        'persiapan_operasi_distribusis.kd_obat',
+                        'persiapan_operasi_distribusis.nopenerimaan',
+                        DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as kembali'),
+                    )
+                        ->join('persiapan_operasis', 'persiapan_operasi_distribusis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
+                        ->whereBetween('persiapan_operasis.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where('persiapan_operasi_distribusis.kd_obat', $kdobat)
+                        ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
+                        ->groupBy('persiapan_operasi_distribusis.kd_obat', 'persiapan_operasi_distribusis.nopenerimaan')
+                        ->get();
+
+                    $kembaliOk = collect($persiapanOperasiKmbaliRinci)->sum('kembali');
 
                     foreach ($persiapanOperasiDistribusiRinci as $key) {
+                        $rawNoper[] = $key->nopenerimaan;
+                    }
+                    foreach ($persiapanOperasiKmbaliRinci as $key) {
                         $rawNoper[] = $key->nopenerimaan;
                     }
                 }
@@ -1080,7 +1095,7 @@ class SetNewStokController extends Controller
                                 $salAwal =  collect($saldoAwalDepoRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
                                 $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
                                 $retDep =  collect($returRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
-                                $kemB =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->kembali ?? 0;
+                                $kemB =  collect($persiapanOperasiKmbaliRinci)->firstWhere('nopenerimaan', $key)->kembali ?? 0;
                                 // keluar
                                 $disT =  collect($persiapanOperasiDistribusiRinci)->firstWhere('nopenerimaan', $key)->distribusi ?? 0;
                                 $mutKel =  collect($mutasiKeluarDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
