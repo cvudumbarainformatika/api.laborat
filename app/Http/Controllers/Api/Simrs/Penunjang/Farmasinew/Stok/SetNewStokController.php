@@ -896,7 +896,10 @@ class SetNewStokController extends Controller
                     $noresep = PersiapanOperasiRinci::select(
                         'persiapan_operasi_rincis.noresep',
                     )->join('persiapan_operasis', 'persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasis.nopermintaan')
-                        ->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                        ->where(function ($w) use ($tglAwal, $tglAkhir) {
+                            $w->whereBetween('persiapan_operasis.tgl_permintaan', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                                ->orWhereBetween('persiapan_operasis.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+                        })
                         ->where('persiapan_operasi_rincis.kd_obat', $kdobat)
                         ->groupBy('persiapan_operasi_rincis.noresep')
                         ->pluck('persiapan_operasi_rincis.noresep');
