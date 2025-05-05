@@ -1290,7 +1290,8 @@ class SetNewStokController extends Controller
                     'resepKeluar' => $resepKeluar,
                     'retur' => $retur,
                     'resepKeluarRacikan' => $resepKeluarRacikan,
-                    'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi ?? null,
+                    // 'persiapanOperasiDistribusi' => $persiapanOperasiDistribusi ?? null,
+                    'persiapanOperasiKmbaliRinci' => $persiapanOperasiKmbaliRinci ?? null,
 
                     'rawNoper' => $rawNoper,
                     'noper' => $noper,
