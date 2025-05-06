@@ -349,7 +349,7 @@ class TindakanController extends Controller
         $template = Gbrdokumentindakan::find($request->id);
         // return $template;
         // Storage::delete($template->nama);
-        Storage::disk('remote')->delete($template->nama);
+        // Storage::disk('remote')->delete($template->nama);
         $template->delete();
 
         $res = Tindakan::find($template->rs73_id);

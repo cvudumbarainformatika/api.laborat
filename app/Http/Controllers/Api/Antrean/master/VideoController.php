@@ -51,7 +51,7 @@ class VideoController extends Controller
             $old_path = $data->url;
             if (!empty($old_path)) {
                 // Storage::delete('public/' . $old_path);
-                Storage::disk('remote')->delete('public/' . $old_path);
+                // Storage::disk('remote')->delete('public/' . $old_path);
             }
         }
 
@@ -80,7 +80,7 @@ class VideoController extends Controller
         $id = $request->id;
         $data = Video::find($id);
         // Storage::delete('public/' . $data->url);
-        Storage::disk('remote')->delete('public/' . $data->url);
+        // Storage::disk('remote')->delete('public/' . $data->url);
         $del = $data->delete();
 
         if (!$del) {

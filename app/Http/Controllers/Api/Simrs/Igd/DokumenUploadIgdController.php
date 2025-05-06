@@ -46,7 +46,7 @@ class DokumenUploadIgdController extends Controller
                       ])->first();
                     if ($data) {
                       // Storage::delete($data->path);
-                      Storage::disk('remote')->delete($data->path);
+                      // Storage::disk('remote')->delete($data->path);
                     }
 
                     $gallery = null;
@@ -64,9 +64,9 @@ class DokumenUploadIgdController extends Controller
                     //   mkdir(storage_path("app/public/$folder"), 0775, true);
                     // }
 
-                    if (!Storage::disk('remote')->exists("public/$folder")) {
-                        Storage::disk('remote')->makeDirectory("public/$folder");
-                    }
+                    // if (!Storage::disk('remote')->exists("public/$folder")) {
+                    //     Storage::disk('remote')->makeDirectory("public/$folder");
+                    // }
 
                     // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
                     // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
@@ -128,7 +128,7 @@ class DokumenUploadIgdController extends Controller
         return new JsonResponse(['message'=> 'Data tidak ditemukan'], 500);
       }
       // Storage::delete($data->path);
-      Storage::disk('remote')->delete($data->path);
+      // Storage::disk('remote')->delete($data->path);
       $del = $data->delete();
 
       if (!$del) {
