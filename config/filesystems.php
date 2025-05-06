@@ -56,8 +56,10 @@ return [
         'remote' => [
             'driver' => 'sftp',
             'host' => '192.168.150.111', // ganti dengan IP tujuan
-            'username' => 'root',
-            'password' => 'seratussebelassa1',
+            // 'username' => 'root',
+            // 'password' => 'seratussebelassa1',
+            'username' => 'www',
+            'password' => 'sasa0102',
             'port' => 2233,
             'root' => '/home/www/localapi.192.168.150.111/storage/app',
             'visibility' => 'public',
