@@ -250,7 +250,7 @@ class PemeriksaanfisikController extends Controller
             return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
         }
         // Storage::delete('public/' . $filename);
-        // Storage::disk('remote')->delete('public/' . $filename);
+        Storage::disk('remote')->delete('public/' . $filename);
         $hapus = $cari->delete();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);

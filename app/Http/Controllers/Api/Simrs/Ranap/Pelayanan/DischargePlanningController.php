@@ -223,7 +223,7 @@ class DischargePlanningController extends Controller
 
           $imageName = $name . '.' . $image_type;
           // Storage::delete('public/' . $folderPath . $imageName);
-          // Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
+          Storage::disk('remote')->delete('public/' . $folderPath . $imageName);
           // Storage::disk('public')->put($folderPath . $imageName, $image_base64);
           Storage::disk('remote')->put('public/' . $folderPath . $imageName, $image_base64);
       }

@@ -99,7 +99,7 @@ class ListDataArsipController extends Controller
                       ])->first();
                     if ($data) {
                       // Storage::delete($data->path);
-                      // Storage::disk('remote')->delete($data->path);
+                      Storage::disk('remote')->delete($data->path);
 
                     }
 

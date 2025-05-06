@@ -30,7 +30,7 @@ class GalleryController extends Controller
                     $originalname = $file->getClientOriginalName();
                     $data = Gallery::where('original', $originalname)->first();
                     // Storage::delete('public/gallery/' . $originalname);
-                    // Storage::disk('remote')->delete('public/gallery/' . $originalname);
+                    Storage::disk('remote')->delete('public/gallery/' . $originalname);
                     $gallery = null;
                     if ($data) {
                         $gallery = $data;

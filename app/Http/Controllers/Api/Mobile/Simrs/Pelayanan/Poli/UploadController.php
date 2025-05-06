@@ -72,7 +72,7 @@ class UploadController extends Controller
         return new JsonResponse(['message'=> 'Data tidak ditemukan'], 500);
       }
       // Storage::delete($data->path);
-      // Storage::disk('remote')->delete($data->path);
+      Storage::disk('remote')->delete($data->path);
       $del = $data->delete();
 
       if (!$del) {

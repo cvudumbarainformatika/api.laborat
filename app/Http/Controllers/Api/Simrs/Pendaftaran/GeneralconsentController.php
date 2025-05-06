@@ -109,7 +109,7 @@ class GeneralconsentController extends Controller
         } else {
             $imageName = $cek->ttdpasien;
             // Storage::delete('public/' . $imageName);
-            // Storage::disk('remote')->delete('public/' . $imageName);
+            Storage::disk('remote')->delete('public/' . $imageName);
         }
 
 
@@ -140,7 +140,7 @@ class GeneralconsentController extends Controller
         } else {
             $imageName = $cek->ttdpetugas;
             // Storage::delete('public/' . $imageName);
-            // Storage::disk('remote')->delete('public/' . $imageName);
+            Storage::disk('remote')->delete('public/' . $imageName);
         }
 
         // Storage::disk('public')->put($file, $image_base64);
@@ -165,7 +165,7 @@ class GeneralconsentController extends Controller
                 $originalname = $file->getClientOriginalName();
                 $data = Generalconsent::where('norm', '=', $request->norm)->first();
                 // Storage::delete('public/generalconsent/' . $originalname);
-                // Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
+                Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
                 $pdf = null;
                 if ($data) {
                     $pdf = $data;
@@ -216,7 +216,7 @@ class GeneralconsentController extends Controller
         } else {
             $imageName = $cek->ttdpasien;
             // Storage::delete('public/' . $imageName);
-            // Storage::disk('remote')->delete('public/' . $imageName);
+            Storage::disk('remote')->delete('public/' . $imageName);
         }
 
 
