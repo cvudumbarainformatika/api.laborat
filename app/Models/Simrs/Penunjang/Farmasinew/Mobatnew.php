@@ -14,6 +14,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mutasi\Mutasigudangkedepo;
 use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\RestriksiObat;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\RestriksiObatKecualiRuangan;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
@@ -325,5 +327,14 @@ class Mobatnew extends Model
     public function pengembalianrincififo()
     {
         return $this->hasMany(PengembalianRinciFifo::class, 'kdobat', 'kd_obat');
+    }
+
+    public function restriksiobat()
+    {
+        return $this->hasOne(RestriksiObat::class, 'kd_obat', 'kd_obat');
+    }
+    public function kecuali()
+    {
+        return $this->hasMany(RestriksiObatKecualiRuangan::class, 'kd_obat', 'kd_obat');
     }
 }
