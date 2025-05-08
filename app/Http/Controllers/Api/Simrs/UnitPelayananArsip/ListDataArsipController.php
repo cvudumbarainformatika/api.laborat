@@ -32,6 +32,11 @@ class ListDataArsipController extends Controller
         ->join('master_kode','data_arsip.kode','master_kode.kode')
         ->join('master_lokasi','data_arsip.lokasi','master_lokasi.id')
         ->join('master_media','data_arsip.media','master_media.id')
+        ->with(
+            [
+                'unitpengolah'
+            ]
+        )
         ->where(function ($query) {
             $query->where('data_arsip.noarsip', 'LIKE', '%' . request('q') . '%')
                 ->orWhere('data_arsip.uraian', 'LIKE', '%' . request('q') . '%')
@@ -60,7 +65,6 @@ class ListDataArsipController extends Controller
     public function simpanarsip(Request $request)
     {
         if ($request->hasFile('dokumen')) {
-
             try {
               DB::beginTransaction();
               $user = FormatingHelper::session_user();
@@ -179,6 +183,20 @@ class ListDataArsipController extends Controller
                 DB::rollback();
               return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
             }
+        }else{
+            $update = Dataarsip::where('noarsip', $request->noarsip)->first();
+            $update->update([
+                'uraian' => $request->uraian,
+                'ket' => $request->keaslian,
+                'kode' => $request->kodekelasifikasi,
+                'jumlah' => $request->jumlah,
+                'nobox' => $request->nobox,
+                'lokasi' => $request->lokasi,
+                'media' => $request->media,
+                'keterangan' => $request->keterangan,
+            ]);
+            $kirim = self::getlistdataarsipbynoarsip($request->noarsip);
+            return new JsonResponse(['message' => 'success','result'=> $kirim,'update'=> 'true'], 200);
         }
     }
 }
