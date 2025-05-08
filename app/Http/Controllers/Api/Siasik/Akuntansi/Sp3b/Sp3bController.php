@@ -62,7 +62,7 @@ class Sp3bController extends Controller
             'jurnal_postingotom.kode as kode6',
             DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian'),
-            DB::raw('sum(jurnal_postingotom.debit) as subtotal')
+            DB::raw('sum(jurnal_postingotom.debit-jurnal_postingotom.kredit) as subtotal')
             )
         ->whereBetween('jurnal_postingotom.tanggal', [$tahunawal.'-01-01', $sebelum])
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
@@ -134,7 +134,7 @@ class Sp3bController extends Controller
         ->select('jurnal_postingotom.tanggal',
             DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) as kode'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 3) LIMIT 1) as uraian'),
-            DB::raw('sum(jurnal_postingotom.debit) as subtotal')
+            DB::raw('sum(jurnal_postingotom.debit-jurnal_postingotom.kredit) as subtotal')
             )
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
         ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')

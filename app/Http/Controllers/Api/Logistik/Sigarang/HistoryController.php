@@ -15,6 +15,7 @@ use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaanruangan\Penerimaanruangan;
 use App\Models\Sigarang\Transaksi\Permintaanruangan\Permintaanruangan;
 use App\Models\Sigarang\Transaksi\Retur\Retur;
+use App\Models\Simpeg\Petugas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -33,25 +34,31 @@ class HistoryController extends Controller
         $retur = Retur::query();
         $nama = request('nama');
         $user = auth()->user();
-        $pegawai = Pegawai::find($user->pegawai_id);
-        $raw = Pegawai::select('id')->where('kode_ruang', $pegawai->kode_ruang)->get();
-        $col = collect($raw);
-        $idpegawai = $col->map(function ($item) {
-            return $item->id;
-        });
-        $idpegawai[] = 0;
+        $pegawai = Petugas::find($user->pegawai_id);
+        $raw = Petugas::select('id')->where('kode_ruang', $pegawai->kode_ruang)->pluck('id')->toArray();
+        $idpegawai = [];
+        $idpegawai = array_merge($raw, [0]);
+        // $col = collect($raw);
+        // $idpegawai = $col->map(function ($item) {
+        //     return $item->id;
+        // });
+        // $idpegawai[] = 0;
 
+        $requestQ = request('q');
+        $from = request('from');
+        $to = request('to');
+        $kontrak = request('kontrak');
         // pemesanan
 
         if ($nama === 'Pemesanan') {
-            if (request('q')) {
-                $pemesanan->where('nomor', 'LIKE', '%' . request('q') . '%');
+            if ($requestQ) {
+                $pemesanan->where('nomor', 'LIKE', '%' . $requestQ . '%');
             }
-            if (request('kontrak')) {
-                $pemesanan->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
+            if ($kontrak) {
+                $pemesanan->where('kontrak', 'LIKE', '%' . $kontrak . '%');
             }
-            if (request('from')) {
-                $pemesanan->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+            if ($from) {
+                $pemesanan->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
             }
             if ($pegawai->role_id !== 1) {
                 if ($pegawai->kode_ruang === 'Gd-02010102') {
@@ -70,14 +77,14 @@ class HistoryController extends Controller
         } else if ($nama === 'Penerimaan') {
 
 
-            $penerimaan->when(request('q'), function ($search) {
-                $search->where('nomor', 'LIKE', '%' . request('q') . '%');
+            $penerimaan->when($requestQ, function ($search) use ($requestQ) {
+                $search->where('nomor', 'LIKE', '%' . $requestQ . '%');
             })
-                ->when(request('from'), function ($w) {
-                    $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+                ->when($from, function ($w) use ($from, $to) {
+                    $w->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
                 })
-                ->when(request('kontrak'), function ($w) {
-                    $w->where('kontrak', 'LIKE', '%' . request('kontrak') . '%');
+                ->when($kontrak, function ($w) use ($kontrak) {
+                    $w->where('kontrak', 'LIKE', '%' . $kontrak . '%');
                 });
 
             $data = $penerimaan->with('perusahaan',  'details.barangrs.barang108', 'details.satuan')
@@ -88,17 +95,17 @@ class HistoryController extends Controller
             */
         } else if ($nama === 'Gudang') {
 
-            $penerimaan->when(request('q'), function ($search) {
-                $search->where('nomor', 'LIKE', '%' . request('q') . '%');
+            $penerimaan->when($requestQ, function ($search) use ($requestQ) {
+                $search->where('nomor', 'LIKE', '%' . $requestQ . '%');
             })
-                ->when(request('from'), function ($w) {
-                    $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+                ->when($from, function ($w) use ($from, $to) {
+                    $w->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
                 });
-            // if (request('q')) {
-            //     $penerimaan->where('nomor', 'LIKE', '%' . request('q') . '%');
+            // if ($requestQ) {
+            //     $penerimaan->where('nomor', 'LIKE', '%' . $requestQ . '%');
             // }
-            // if (request('from')) {
-            //     $penerimaan->whereBetween('tanggal', [request('from'), request('to')]);
+            // if ($from) {
+            //     $penerimaan->whereBetween('tanggal', [$from, $to]);
             // }
             $data = $gudang->with('asal', 'tujuan', 'details.barangrs.barang108', 'details.satuan')
                 ->latest('tanggal')
@@ -111,13 +118,13 @@ class HistoryController extends Controller
             if ($pegawai) {
                 if ($pegawai->role_id === 5) {
                     $pengguna = PenggunaRuang::where('kode_ruang', $pegawai->kode_ruang)->first();
-                    $ruang = PenggunaRuang::where('kode_pengguna', $pengguna->kode_pengguna)->get();
-                    $raw = collect($ruang);
-                    $only = $raw->map(function ($y) {
-                        return $y->kode_ruang;
-                    });
+                    $ruang = PenggunaRuang::select('kode_ruang')->where('kode_pengguna', $pengguna->kode_pengguna)->distinct('kode_ruang')->pluck('kode_ruang')->toArray();
+                    // $raw = collect($ruang);
+                    // $only = $raw->map(function ($y) {
+                    //     return $y->kode_ruang;
+                    // });
 
-                    $filterRuangan = $permintaan->whereIn('kode_ruang', $only);
+                    $filterRuangan = $permintaan->whereIn('kode_ruang', $ruang);
                 } else if ($pegawai->role_id === 4) {
                     $filterRuangan = $permintaan->where('status', '>=', 4);
                 } else {
@@ -126,17 +133,17 @@ class HistoryController extends Controller
             } else {
                 $filterRuangan = $permintaan;
             }
-            $filterRuangan->when(request('q'), function ($search) {
-                $search->where('no_permintaan', 'LIKE', '%' . request('q') . '%');
+            $filterRuangan->when($requestQ, function ($search) use ($requestQ) {
+                $search->where('no_permintaan', 'LIKE', '%' . $requestQ . '%');
             })
-                ->when(request('from'), function ($w) {
-                    $w->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+                ->when($from, function ($w) use ($from, $to) {
+                    $w->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
                 })
                 ->when(request('ruang'), function ($w) {
                     $ru = Ruang::select('kode')->where('uraian', 'LIKE', '%' . request('ruang') . '%')->get();
                     $w->whereIn('kode_ruang', $ru);
                 });
-            $data = $filterRuangan->filter(request(['q']))
+            $data = $filterRuangan->where('no_permintaan', 'LIKE', '%' . $requestQ . '%')
                 ->with([
                     'details.barangrs.barang108',
                     'details.satuan',
@@ -156,8 +163,8 @@ class HistoryController extends Controller
         } else if ($nama === 'Distribusi Depo') {
 
 
-            if (request('from')) {
-                $distribusidepo->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+            if ($from) {
+                $distribusidepo->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
             }
             if ($pegawai->role_id === 4) {
                 $distribusidepo->where('kode_depo', $pegawai->kode_ruang);
@@ -170,8 +177,8 @@ class HistoryController extends Controller
             * pemakaian ruangan
             */
         } else if ($nama === 'Pemakaian Ruangan') {
-            if (request('from')) {
-                $pemakaianruangan->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+            if ($from) {
+                $pemakaianruangan->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
             }
             $data = $pemakaianruangan->filter(request(['q']))
                 ->with(
@@ -189,11 +196,11 @@ class HistoryController extends Controller
             */
         } else if ($nama === 'Penerimaan Ruangan') {
 
-            if (request('q')) {
-                $penerimaanruangan->where('no_distribusi', 'LIKE', '%' . request('q') . '%');
+            if ($requestQ) {
+                $penerimaanruangan->where('no_distribusi', 'LIKE', '%' . $requestQ . '%');
             }
-            if (request('from')) {
-                $penerimaanruangan->whereBetween('tanggal', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
+            if ($from) {
+                $penerimaanruangan->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59']);
             }
             $data = $penerimaanruangan->with('details.barangrs.barang108', 'details.satuan', 'pj', 'pengguna')
                 ->latest('tanggal')

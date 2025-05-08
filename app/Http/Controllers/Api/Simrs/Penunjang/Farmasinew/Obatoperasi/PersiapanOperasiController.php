@@ -1579,4 +1579,25 @@ class PersiapanOperasiController extends Controller
             ], 410);
         }
     }
+
+    public function hapusRincianPerpersiapanOperasi(Request $request)
+    {
+        $header = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+        if (!$header) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 410);
+        }
+        if ((int)$header->flag > 1) {
+            return new JsonResponse(['message' => 'Sudah di distribusikan, data tidak boleh di hapus'], 410);
+        }
+        $data = PersiapanOperasiRinci::find($request->id);
+        if (!$data) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 410);
+        }
+        $data->delete();
+        return new JsonResponse([
+            'data' => $data,
+            'header' => $header,
+            'message' => 'Data berhasil di hapus'
+        ]);
+    }
 }

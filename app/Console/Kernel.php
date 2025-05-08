@@ -71,11 +71,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('stok:drj')
             ->dailyAt('20:30');
         $schedule->command('stok:dri')
-            ->dailyAt('20:40');
+            ->dailyAt('23:20');
         $schedule->command('stok:dok')
             ->dailyAt('20:50');
         $schedule->command('stok:dir')
-            ->dailyAt('21:00');
+            ->dailyAt('23:00');
 
 
         // perbaikan data per depo end
