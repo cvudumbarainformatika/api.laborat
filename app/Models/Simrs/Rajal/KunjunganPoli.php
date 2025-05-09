@@ -12,6 +12,7 @@ use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Anamnesis\AnamnesisKebidanan;
 use App\Models\Simrs\Anamnesis\HistoryKehamilan;
 use App\Models\Simrs\Anamnesis\HistoryPerkawinan;
+use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
@@ -536,5 +537,10 @@ class KunjunganPoli extends Model
     public function karcislog()
     {
         return $this->hasMany(Karcis::class, 'noreg', 'noreg');
+    }
+
+    public function rs239_implementasi()
+    {
+        return $this->hasMany(ImplementasiEdukasi::class, 'noreg', 'rs1');
     }
 }

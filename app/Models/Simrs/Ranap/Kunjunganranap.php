@@ -10,6 +10,7 @@ use App\Models\Simrs\Covid\StatusCovid;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
 use App\Models\Simrs\DischargePlanning\SkriningPulang;
 use App\Models\Simrs\DischargePlanning\SummaryPulang;
+use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\KeteranganTindakan;
 use App\Models\Simrs\Ews\ProcedureM;
@@ -654,5 +655,10 @@ class Kunjunganranap extends Model
     public function pengkajian()
     {
         return $this->hasMany(PengkajianHemodialisa::class, 'rs1', 'noreg');
+    }
+
+    public function rs239_implementasi()
+    {
+        return $this->hasMany(ImplementasiEdukasi::class, 'noreg', 'rs1');
     }
 }
