@@ -19,6 +19,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Sistembayarlain;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\RestriksiObat;
+use App\Models\Simrs\Penunjang\Farmasinew\Obat\RestriksiObatKecualiRuangan;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
@@ -385,14 +387,14 @@ class EresepController extends Controller
         $q = request('q');
         $groupsistembayar = request('groups');
         $tiperesep = request('tiperesep');
-        
+
         // Cache sistembayar array
         $sistembayar = ((int)$groupsistembayar === 1) ? ['SEMUA', 'BPJS'] : ['SEMUA', 'UMUM'];
 
         // Optimize: First get matching obat IDs with index
         $matchingObatIds = Mobatnew::select('kd_obat')
             ->whereIn('sistembayar', $sistembayar)
-            ->where(function($query) use ($q) {
+            ->where(function ($query) use ($q) {
                 $query->where('nama_obat', 'LIKE', "%$q%")
                     ->orWhere('kandungan', 'LIKE', "%$q%");
             });
@@ -428,66 +430,66 @@ class EresepController extends Controller
             'stokreal.kdobat',
             DB::raw("COALESCE(SUM(CASE WHEN stokreal.kdruang = ? THEN stokreal.jumlah ELSE 0 END), 0) as total")
         ])
-        ->addBinding($kdruang, 'select')
-        ->whereIn('new_masterobat.kd_obat', $obatIds)
-        ->leftJoin('stokreal', function($join) use ($kdruang) {
-            $join->on('new_masterobat.kd_obat', '=', 'stokreal.kdobat')
-                ->where('stokreal.kdruang', '=', $kdruang);
-        });
+            ->addBinding($kdruang, 'select')
+            ->whereIn('new_masterobat.kd_obat', $obatIds)
+            ->leftJoin('stokreal', function ($join) use ($kdruang) {
+                $join->on('new_masterobat.kd_obat', '=', 'stokreal.kdobat')
+                    ->where('stokreal.kdruang', '=', $kdruang);
+            });
 
         // Eager load with optimized subqueries
         $listobat = $listobat->with([
-            'onepermintaandeporinci' => function($q) use ($kdruang) {
+            'onepermintaandeporinci' => function ($q) use ($kdruang) {
                 $q->select([
                     'permintaan_r.kdobat',
                     DB::raw('COALESCE(SUM(permintaan_r.jumlah_minta), 0) as jumlah_minta')
                 ])
-                ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
-                ->where('permintaan_h.tujuan', $kdruang)
-                ->whereIn('permintaan_h.flag', ['', '1', '2'])
-                ->groupBy('permintaan_r.kdobat');
+                    ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'permintaan_r.no_permintaan')
+                    ->where('permintaan_h.tujuan', $kdruang)
+                    ->whereIn('permintaan_h.flag', ['', '1', '2'])
+                    ->groupBy('permintaan_r.kdobat');
             },
-            'oneperracikan' => function($q) use ($kdruang) {
+            'oneperracikan' => function ($q) use ($kdruang) {
                 $q->select([
                     'resep_permintaan_keluar_racikan.kdobat',
                     DB::raw('COALESCE(SUM(CASE WHEN resep_keluar_racikan_r.jumlah is null THEN resep_permintaan_keluar_racikan.jumlah ELSE 0 END), 0) as jumlah')
                 ])
-                ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
-                ->leftJoin('resep_keluar_racikan_r', function($join) {
-                    $join->on('resep_keluar_racikan_r.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
-                        ->on('resep_keluar_racikan_r.kdobat', '=', 'resep_permintaan_keluar_racikan.kdobat');
-                })
-                ->where('resep_keluar_h.depo', $kdruang)
-                ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                ->groupBy('resep_permintaan_keluar_racikan.kdobat');
+                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+                    ->leftJoin('resep_keluar_racikan_r', function ($join) {
+                        $join->on('resep_keluar_racikan_r.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
+                            ->on('resep_keluar_racikan_r.kdobat', '=', 'resep_permintaan_keluar_racikan.kdobat');
+                    })
+                    ->where('resep_keluar_h.depo', $kdruang)
+                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                    ->groupBy('resep_permintaan_keluar_racikan.kdobat');
             },
-            'onepermintaan' => function($q) use ($kdruang) {
+            'onepermintaan' => function ($q) use ($kdruang) {
                 $q->select([
                     'resep_permintaan_keluar.kdobat',
                     DB::raw('COALESCE(SUM(CASE WHEN resep_keluar_r.jumlah is null THEN resep_permintaan_keluar.jumlah ELSE 0 END), 0) as jumlah')
                 ])
-                ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar.noresep')
-                ->leftJoin('resep_keluar_r', function($join) {
-                    $join->on('resep_keluar_r.noresep', '=', 'resep_permintaan_keluar.noresep')
-                        ->on('resep_keluar_r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
-                })
-                ->where('resep_keluar_h.depo', $kdruang)
-                ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
-                ->groupBy('resep_permintaan_keluar.kdobat');
+                    ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_permintaan_keluar.noresep')
+                    ->leftJoin('resep_keluar_r', function ($join) {
+                        $join->on('resep_keluar_r.noresep', '=', 'resep_permintaan_keluar.noresep')
+                            ->on('resep_keluar_r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
+                    })
+                    ->where('resep_keluar_h.depo', $kdruang)
+                    ->whereIn('resep_keluar_h.flag', ['', '1', '2'])
+                    ->groupBy('resep_permintaan_keluar.kdobat');
             }
         ])
-        ->groupBy('new_masterobat.kd_obat')
-        ->orderBy('total', 'DESC')
-        ->limit(20)
-        ->get();
+            ->groupBy('new_masterobat.kd_obat')
+            ->orderBy('total', 'DESC')
+            ->limit(20)
+            ->get();
 
         // Map results maintaining original response structure
-        $wew = $listobat->map(function($x) {
+        $wew = $listobat->map(function ($x) {
             $total = $x->total ?? 0;
             $jumlahtransx = $x['oneperracikan']->jumlah ?? 0;
             $jumlahtrans = $x['onepermintaan']->jumlah ?? 0;
             $permintaanobatrinci = $x['onepermintaandeporinci']->jumlah_minta ?? 0;
-            
+
             $alokasi = (float)$total - (float)$jumlahtrans - (float)$jumlahtransx - (float)$permintaanobatrinci;
             $x->alokasi = $alokasi <= 0 ? 0 : $alokasi;
             return $x;
@@ -517,6 +519,7 @@ class EresepController extends Controller
          * 'Gd-04010102' Ranap
          * 'Gd-05010101' Rajal
          */
+
         $depoLimit = ['Gd-04010102', 'Gd-05010101'];
         // return new JsonResponse([
         //     'siba'=>(int)$request->groupsistembayarlain
@@ -524,6 +527,108 @@ class EresepController extends Controller
         // pembatasan untuk pasien bpjs saja
         $total = 0;
         if (in_array($request->kodedepo, $depoLimit) && (int)$request->groupsistembayarlain === 1) {
+
+            // pembatasan obat fornas ranap start --------
+            /**
+             * 1. cek apakah obat itu ada ppembatasan
+             * 2. cek apakah ruangan termasuk yang dikecualikan
+             * 3. hitung jumlah obat keluar, jika melebihi batasan, maka return error
+             * 4. cek retur, jika diretur maka kurangi sejumlah yang di retur
+             * 5. cek permintaan atas obat tersebut yang sudah dikirim ke depo, jika melebihi, return error
+             *
+             * depo = $request->kodedepo
+             * kdobat = $request->kodeobat
+             * kd_ruang = $request->kdruangan
+             */
+            if ($request->kodedepo === 'Gd-04010102') {
+                $pembatasanFornas = RestriksiObat::where('depo', $request->kodedepo)
+                    ->where('kd_obat', $request->kodeobat)
+                    ->orderBy('tgl_mulai_berlaku', 'desc')
+                    ->first();
+                if ($pembatasanFornas) {
+                    $jumlahPembatasan = (int) $pembatasanFornas->jumlah;
+                    $kecualiRuang = RestriksiObatKecualiRuangan::where('depo', $request->kodedepo)
+                        ->where('kd_obat', $request->kodeobat)
+                        ->where('kd_ruang', $request->kdruangan)
+                        ->first();
+                    if (!$kecualiRuang) {
+                        $jumlah = (int)$request->jumlah_diminta;
+                        // jumlah obat keluar
+                        $rincianKeluar = Resepkeluarrinci::where('resep_keluar_h.noreg', $request->noreg)
+                            ->leftJoin('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
+                            ->where('kdobat', $request->kodeobat)
+                            ->where('ruangan', '!=', 'POL014')
+                            ->sum('jumlah');
+                        // jumlah retur
+                        $retur = Returpenjualan_r::where('retur_penjualan_r.noreg', $request->noreg)
+                            ->leftJoin('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                            ->where('kdobat', $request->kodeobat)
+                            ->where('kdruangan', '!=', 'POL014')
+                            ->sum('retur_penjualan_r.jumlah_retur');
+                        $obatKeluar = (int)$rincianKeluar - (int)$retur;
+                        // jumlah permintaan
+                        $raw = Permintaanresep::query()
+                            ->leftJoin('resep_keluar_h', 'resep_permintaan_keluar.noresep', '=', 'resep_keluar_h.noresep')
+                            ->leftJoin('resep_keluar_r', function ($q) {
+                                $q->on('resep_permintaan_keluar.noresep', '=', 'resep_keluar_r.noresep')
+                                    ->on('resep_permintaan_keluar.kdobat', '=', 'resep_keluar_r.kdobat');
+                            })
+                            ->where('resep_keluar_h.noreg', $request->noreg)
+                            ->where('resep_permintaan_keluar.kdobat', $request->kodeobat)
+                            ->whereNull('resep_keluar_r.kdobat')
+                            ->where('resep_keluar_h.ruangan', '!=', 'POL014');
+
+                        $minta = $raw->whereIn('flag', ['1', '2'])->sum('resep_permintaan_keluar.jumlah');
+                        $resep = $raw->whereIn('flag', ['1', '2'])->pluck('resep_permintaan_keluar.noresep')->toArray();
+
+                        $obat = Mobatnew::select('nama_obat', 'kd_obat')->where('kd_obat', '=', $request->kodeobat)->first();
+                        if ((int)$obatKeluar >= (int)$jumlahPembatasan) {
+                            return new JsonResponse([
+                                'message' => 'Jumlah ' . $obat->nama_obat . ' sudah diberikan sebanyak ' . $obatKeluar .
+                                    ' batasan Restriksi fornas adalah ' . $jumlahPembatasan,
+                            ], 410);
+                        }
+                        if ((int)$obatKeluar + (int)$minta > (int)$jumlahPembatasan) {
+                            $reseps = implode(', ', $resep);
+                            return new JsonResponse([
+                                'message' => 'Jumlah ' . $obat->nama_obat . ' sudah diberikan sebanyak ' . $obatKeluar .
+                                    ' ditambahkan dengan permintaan Resep nomor ' . $reseps . ' sebanyak ' . (int)$minta .
+                                    ' melebihi batasan Restriksi fornas yaitu ' . $jumlahPembatasan . ' ( ' . (int)$obatKeluar + (int)$minta . ' >= ' . (int)$jumlahPembatasan . ' )',
+                            ], 410);
+                        }
+                        if ((int)$obatKeluar + (int)$jumlah > (int)$jumlahPembatasan) {
+
+                            return new JsonResponse([
+                                'message' => 'Jumlah ' . $obat->nama_obat . ' sudah diberikan sebanyak ' . $obatKeluar .
+                                    ' ditambahkan dengan jumlah permintaan sekarang sejumlah ' . (int)$jumlah .
+                                    ' melebihi batasan Restriksi fornas yaitu ' . $jumlahPembatasan . ' ( ' . (int)$obatKeluar + (int)$jumlah . ' >= ' . (int)$jumlahPembatasan . ' )',
+                            ], 410);
+                        }
+                        if ((int)$obatKeluar + (int)$minta + (int)$jumlah > (int)$jumlahPembatasan) {
+                            $reseps = implode(', ', $resep);
+                            return new JsonResponse([
+                                'message' => 'Jumlah ' . $obat->nama_obat .
+                                    ' sudah diberikan sebanyak ' . $obatKeluar .
+                                    ' ditambahkan dengan permintaan Resep nomor ' . $reseps . ' sebanyak ' . (int)$minta .
+                                    ' dan jumlah permintaan sekarang sejumlah ' . (int)$jumlah .
+                                    ' melebihi batasan Restriksi fornas yaitu ' . $jumlahPembatasan . ' ( ' . (int)$obatKeluar + (int)$minta + (int)$jumlah . ' >= ' . (int)$jumlahPembatasan . ' )',
+                            ], 410);
+                        }
+                    }
+                }
+
+                // return new JsonResponse([
+                //     'message' => 'cek pembatasan',
+                //     'pembatasanFornas' => $pembatasanFornas,
+                //     'kecualiRuang' => $kecualiRuang ?? null,
+                //     'jumlah' => $jumlah ?? null,
+                //     'rincianKeluar' => $rincianKeluar ?? null,
+                //     'retur' => $retur ?? null,
+                //     'minta' => $minta ?? null,
+                //     'jumlahPembatasan' => $jumlahPembatasan ?? null,
+                // ], 410);
+            }
+            // pembatasan obat fornas ranap end --------
             // jumlah Racikan
             $racikan = Permintaanresepracikan::where('noresep', $request->noresep)->groupBy('namaracikan')->get()->count();
             // non racikan
@@ -531,6 +636,7 @@ class EresepController extends Controller
                 ->leftJoin('new_masterobat', 'new_masterobat.kd_obat', '=', 'resep_permintaan_keluar.kdobat')
                 ->where('resep_permintaan_keluar.noresep', $request->noresep)
                 ->where('new_masterobat.jenis_perbekalan', 'obat')
+                ->get()
                 ->count();
 
             $total = (int)$racikan + (int)$nonracikan;
@@ -611,11 +717,11 @@ class EresepController extends Controller
 
             // return new JsonResponse([
             //     'message' => 'Batasan',
-            //     'racikan'=>$racikan,
-            //     'non racikan'=>$nonracikan,
-            //     'depo'=>$request->kodedepo,
-            //     'obat minta'=>$obatMinta,
-            // ],410);
+            //     'racikan' => $racikan,
+            //     'non racikan' => $nonracikan,
+            //     'depo' => $request->kodedepo,
+            //     'obat minta' => $obatMinta,
+            // ], 410);
         }
         try {
             DB::connection('farmasi')->beginTransaction();
@@ -2105,7 +2211,81 @@ class EresepController extends Controller
                 ], 201);
             }
         }
-        // return new JsonResponse($request->all());
+        // return new JsonResponse($request->all(), 410);
+        // pembatasan obat fornas ranap start --------
+        /**
+         * 1. cek apakah obat itu ada ppembatasan
+         * 2. cek apakah ruangan termasuk yang dikecualikan
+         * 3. hitung jumlah obat keluar, jika melebihi batasan, maka return error
+         * 4. cek retur, jika diretur maka kurangi sejumlah yang di retur
+         *
+         * depo = $request->kodedepo
+         * kdobat = $request->kdobat
+         * kd_ruang = $request->kdruangan
+         */
+        if ($request->kodedepo === 'Gd-04010102' && (int)$request->groupsistembayar === 1) {
+            $headerResep = Resepkeluarheder::where('noresep', $request->noresep)->first();
+            if ($headerResep) {
+                $kdRuang = $headerResep->ruangan;
+                $pembatasanFornas = RestriksiObat::where('depo', $request->kodedepo)
+                    ->where('kd_obat', $request->kdobat)
+                    ->orderBy('tgl_mulai_berlaku', 'desc')
+                    ->first();
+                if ($pembatasanFornas) {
+                    $jumlahPembatasan = (int) $pembatasanFornas->jumlah;
+                    $kecualiRuang = RestriksiObatKecualiRuangan::where('depo', $request->kodedepo)
+                        ->where('kd_obat', $request->kdobat)
+                        ->where('kd_ruang', $kdRuang)
+                        ->first();
+                    if (!$kecualiRuang) {
+                        $jumlah = (int)$request->jumlah;
+                        // jumlah obat keluar
+                        $rincianKeluar = Resepkeluarrinci::where('resep_keluar_h.noreg', $request->noreg)
+                            ->leftJoin('resep_keluar_h', 'resep_keluar_r.noresep', '=', 'resep_keluar_h.noresep')
+                            ->where('kdobat', $request->kdobat)
+                            ->where('ruangan', '!=', 'POL014')
+                            ->sum('jumlah');
+                        // jumlah retur
+                        $retur = Returpenjualan_r::where('retur_penjualan_r.noreg', $request->noreg)
+                            ->leftJoin('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
+                            ->where('kdobat', $request->kdobat)
+                            ->where('kdruangan', '!=', 'POL014')
+                            ->sum('retur_penjualan_r.jumlah_retur');
+                        $obatKeluar = (int)$rincianKeluar - (int)$retur;
+
+                        $obat = Mobatnew::select('nama_obat', 'kd_obat')->where('kd_obat', '=', $request->kdobat)->first();
+                        if ((int)$obatKeluar >= (int)$jumlahPembatasan) {
+                            return new JsonResponse([
+                                'message' => 'Jumlah ' . $obat->nama_obat . ' sudah diberikan sebanyak ' . $obatKeluar .
+                                    ' batasan Restriksi fornas adalah ' . $jumlahPembatasan,
+                            ], 410);
+                        }
+                        if ((int)$obatKeluar + (int)$jumlah > (int)$jumlahPembatasan) {
+
+                            return new JsonResponse([
+                                'message' => 'Jumlah ' . $obat->nama_obat . ' sudah diberikan sebanyak ' . $obatKeluar .
+                                    ' ditambahkan dengan jumlah dikeluarkan sekarang sejumlah ' . (int)$jumlah .
+                                    ' melebihi batasan Restriksi fornas yaitu ' . $jumlahPembatasan . ' ( ' . (int)$obatKeluar + (int)$jumlah . ' >= ' . (int)$jumlahPembatasan . ' ) ',
+                            ], 410);
+                        }
+                    }
+                }
+            }
+
+            // return new JsonResponse([
+            //     'message' => 'cek pembatasan',
+            //     'pembatasanFornas' => $pembatasanFornas,
+            //     'kecualiRuang' => $kecualiRuang ?? null,
+            //     'jumlah' => $jumlah ?? null,
+            //     'rincianKeluar' => $rincianKeluar ?? null,
+            //     'retur' => $retur ?? null,
+            //     'obatKeluar' => $obatKeluar ?? null,
+            //     'jumlahPembatasan' => $jumlahPembatasan ?? null,
+            // ], 410);
+        }
+        // pembatasan obat fornas ranap end --------
+
+
         $cekjumlahstok = Stokreal::select(DB::raw('sum(jumlah) as jumlahstok'))
             ->where('kdobat', $request->kdobat)->where('kdruang', $request->kodedepo)
             ->where('jumlah', '>', 0)
