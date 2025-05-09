@@ -140,8 +140,8 @@ class LaporanGenerikController extends Controller
                 'permintaanresep:noresep,kdobat,jumlah',
                 'permintaanracikan:noresep,kdobat,jumlah',
 
-                'permintaanresep.mobat:kd_obat,nama_obat,status_generik,status_forkid,status_fornas',
-                'permintaanracikan.mobat:kd_obat,nama_obat,status_generik,status_forkid,status_fornas',
+                'permintaanresep.mobat:kd_obat,nama_obat,kelompok_penyimpanan,status_generik,status_forkid,status_fornas',
+                'permintaanracikan.mobat:kd_obat,nama_obat,kelompok_penyimpanan,status_generik,status_forkid,status_fornas',
                 'ketdokter:kdpegsimrs,nama',
                 'poli:rs1,rs2 as nama',
                 'ruanganranap:rs1,rs2 as nama',

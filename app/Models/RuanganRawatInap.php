@@ -9,4 +9,6 @@ class RuanganRawatInap extends Model
 {
     use HasFactory;
     protected $table = 'rs24';
+
+    protected $connection = 'mysql';
 }

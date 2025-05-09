@@ -254,12 +254,14 @@ class NPD_LSController extends Controller
                                             'penerimaan_h.kdpbf',
                                             'penerimaan_h.no_npd',)
 
-        ->where('penerimaan_h.kdpbf', request('kodepenerima'), function ($bast){
-            $bast->whereIn('penerimaan_h.jenis_penerimaan', ['Pesanan']);
-        })
+        // ->where('penerimaan_h.kdpbf', request('kodepenerima'), function ($bast){
+        //     $bast->whereIn('penerimaan_h.jenis_penerimaan', ['Pesanan']);
+        // })
+        ->where('penerimaan_h.kdpbf', request('kodepenerima'))
+        ->whereIn('penerimaan_h.jenis_penerimaan', ['Pesanan'])
         ->where('penerimaan_h.nobast', '!=', '')
         // ->where('penerimaan_h.no_npd', '=', '')
-
+        ->whereNull('penerimaan_h.tgl_pencairan_npk')
         ->whereNotNull('penerimaan_h.tgl_bast')
         ->when(request('q'),function ($query) {
             $query->where('penerimaan_h.nopenerimaan', 'LIKE', '%' . request('q') . '%')
@@ -337,9 +339,15 @@ class NPD_LSController extends Controller
                                             'bast_konsinyasis.tgl_bast',
                                             'bast_konsinyasis.jumlah_bastx',)
 
-        ->where('bast_konsinyasis.kdpbf', request('kodepenerima'), function ($bast){
-            $bast->where('bast_konsinyasis.nobast', '!=', '');
-                // ->where('bast_konsinyasis.no_npd', '=', '')
+        // ->where('bast_konsinyasis.kdpbf', request('kodepenerima'), function ($bast){
+        //     $bast->where('bast_konsinyasis.nobast', '!=', '')
+        //         // ->where('bast_konsinyasis.no_npd', '=', '')
+        //         ->orWhere('bast_konsinyasis.tgl_pencairan_npk', '=', null);
+        // })
+        ->where('bast_konsinyasis.kdpbf', request('kodepenerima'))
+        ->where(function ($query) {
+            $query->where('bast_konsinyasis.nobast', '!=', '')
+                ->orWhereNull('bast_konsinyasis.tgl_pencairan_npk');
         })
         ->whereNotNull('bast_konsinyasis.tgl_bast')
         ->when(request('q'),function ($query) {
@@ -864,28 +872,29 @@ class NPD_LSController extends Controller
                 $tglPencairan = Carbon::parse($npk->tglentrycair)->format('Y-m-d');
 
                 // Update data PenerimaanHeder yang sesuai
-                // $updateResult = PenerimaanHeder::where('no_npd', $npk->nonpdls)
-                // ->whereNull('tgl_pencairan_npk')
-                //     // ->where('flag_bayar', '=', '')
-                //     ->update([
-                //         'tgl_pencairan_npk' => $tglPencairan,
-                //         'nilai_pembayaran' => $npk->total,
-                //         'total_pembayaran' => $npk->total,
-                //         'user_bayar' => '1619',
-                //         'flag_bayar' => '1'
-                //     ]);
-
-                $updateResult = BastKonsinyasi::where('no_npd', $npk->nonpdls)
-                    ->whereNull('tgl_pencairan_npk')
+                $updateResult = PenerimaanHeder::where('no_npd', $npk->nonpdls)
+                ->whereNull('tgl_pencairan_npk')
                     // ->where('flag_bayar', '=', '')
                     ->update([
                         'tgl_pencairan_npk' => $tglPencairan,
-                        'tgl_pembayaran' => $tglPencairan,
+                        // 'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
                         'user_bayar' => '1619',
                         'flag_bayar' => '1'
                     ]);
+
+                // $updateResult = BastKonsinyasi::where('no_npd', $npk->nonpdls)
+                //     ->whereNull('tgl_pencairan_npk')
+                //     // ->where('flag_bayar', '=', '')
+                //     ->update([
+                //         'tgl_pencairan_npk' => $tglPencairan,
+                //         'tgl_pembayaran' => $tglPencairan,
+                //         'nilai_pembayaran' => $npk->total,
+                //         'total_pembayaran' => $npk->total,
+                //         'user_bayar' => '1619',
+                //         'flag_bayar' => '1'
+                //     ]);
 
                 if ($updateResult) {
                     $updatedCount += $updateResult;

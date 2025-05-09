@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Penerimaan;
 
 use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -55,15 +56,15 @@ class PenerimaanHeder extends Model
     }
     public function terima()
     {
-        return $this->belongsTo(Pegawai::class, 'user', 'kdpegsimrs');
+        return $this->belongsTo(Petugas::class, 'user', 'kdpegsimrs');
     }
     public function bast()
     {
-        return $this->belongsTo(Pegawai::class, 'user_bast', 'kdpegsimrs');
+        return $this->belongsTo(Petugas::class, 'user_bast', 'kdpegsimrs');
     }
     public function bayar()
     {
-        return $this->belongsTo(Pegawai::class, 'user_bayar', 'kdpegsimrs');
+        return $this->belongsTo(Petugas::class, 'user_bayar', 'kdpegsimrs');
     }
 
     public function penjualanrinci()
@@ -73,7 +74,7 @@ class PenerimaanHeder extends Model
 
     public function pemeseanan_heder()
     {
-        return $this->hasOne(PemesananHeder::class,'nopemesanan', 'nopemesanan');
+        return $this->hasOne(PemesananHeder::class, 'nopemesanan', 'nopemesanan');
     }
 
     public function newMasterobat()
