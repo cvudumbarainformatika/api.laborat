@@ -200,6 +200,7 @@ class KonsultasiController extends Controller
         }
 
         $tglJawab = $data->tgl_jawaban ?? null;
+        $ranap = false;
 
         if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
 
@@ -212,7 +213,8 @@ class KonsultasiController extends Controller
             $tarifKonsul = null;
             if ($dokter->kdgroupnakes === '1') {
 
-                $ranap = $request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005' ? false : true; // tambahan HD dari wawan
+                // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
+                $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
                 if ($ranap) {
 
