@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
+use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -376,9 +377,14 @@ class PenerimaanController extends Controller
                 ->where('nobatch', $key['no_batch'])
                 ->where('tglexp', $key['tgl_exp'])
                 ->first();
+            $namaOb = $key['masterobat']['nama_obat'] ?? '';
+            if (!$temp) {
+                return new JsonResponse([
+                    'message' => 'Data Stok ' . ($namaOb) . ' Tidak Ditemukan',
+                ], 410);
+            }
             $trm = (float)$key['jumlah'];
             $st = (float)$temp['jumlah'];
-            $namaOb = $key['masterobat']['nama_obat'] ?? '';
             $selisih = (float)($trm - $st);
             if ($selisih != 0) {
                 $tmpStr = $str . $namaOb . ' keluar sebanyak ' . ($selisih) . ', ';
