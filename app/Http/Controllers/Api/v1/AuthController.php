@@ -125,6 +125,8 @@ class AuthController extends Controller
                         ->where('kddokterkonsul', '=', $pegawai->kdpegsimrs)
                         ->where(function ($q) {
                             $q->whereNull('flag');
+                                // ->orWhereNull('jawaban')
+                            ;
                         })
                         ->where(function ($q) {
                             $q->whereNull('jawaban');
