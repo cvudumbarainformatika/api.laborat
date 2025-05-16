@@ -13,7 +13,7 @@ class DataCacheController extends Controller
 {
     public function index()
     {
-        $contents = File::get(storage_path('json/listscache.json'));
+        $contents = File::get(storage_path('../json/listscache.json'));
         return JsonResponse::fromJsonString($contents);
     }
 
