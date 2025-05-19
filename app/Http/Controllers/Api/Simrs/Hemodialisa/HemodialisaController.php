@@ -122,9 +122,9 @@ class HemodialisaController extends Controller
         )
             ->leftjoin('rs107 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
-            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
             // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
@@ -346,10 +346,15 @@ class HemodialisaController extends Controller
             'rs17.rs2 as norm',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
-        )->where('rs1', $noreg)
+            'rs19.rs6 as kodepolibpjs',
+            'rs222.rs8 as sep',
+        )->where('rs17.rs1', $noreg)
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs17.rs1')
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs17.rs1') // memo
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+            ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             ->first();
+
         $ranap = Kunjunganranap::select(
             'rs23.rs1',
             'rs23.rs1 as noreg',
