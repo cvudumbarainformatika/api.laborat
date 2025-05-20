@@ -58,9 +58,9 @@ class RegistrasiRanapController extends Controller
         return new JsonResponse(['message' => 'DATA MASTER PASIEN GAGAL DISIMPAN/DIUPDATE'], 500);
       }
 
-      
+
       return self::regKunjungan($request);
-      
+
 
     }
 
@@ -86,7 +86,7 @@ class RegistrasiRanapController extends Controller
     public static function regKunjungan($request)
     {
       $cekRanap = Kunjunganranap::select('rs1')->where('rs2','=', $request->norm)->where('rs22','=', '')->get();
-      $cekHutang = Hutangpasien::where('rs2', $request->norm)->where('rs18','1')->get();
+      $cekHutang = Hutangpasien::where('rs8', $request->norm)->where('rs18','1')->get();
       $cekIgd = KunjunganPoli::select('rs1')->where('rs2', $request->norm)->where('rs19', '')->where('rs8', 'POL014')->get();
 
       if (count($cekRanap) > 0) {
@@ -99,24 +99,24 @@ class RegistrasiRanapController extends Controller
         return new JsonResponse(['message' => 'Maaf, kondisi akhir di igd belum dientri. segera hubungi admin igd.'], 500);
       }
 
-      
+
       //NOREG jk kosong ambil dari counter
 
-      
+
 
       $tglMsk = Carbon::now();
       $tglmasuk = $tglMsk->toDateTimeString();
 
       $ruang = $request->isTitipan === 'Ya' ? $request->kode_ruang ?? '' : $request->hakruang ?? '';
       $titipan = $request->isTitipan === 'Ya'? $request->hakruang ?? '' : '';
-      
-      $kamar = $request->kamar ?? ''; 
-      $noBed = $request->no_bed ?? ''; 
 
-      
+      $kamar = $request->kamar ?? '';
+      $noBed = $request->no_bed ?? '';
+
+
 
       $tempNoreg = null;
-      
+
 
       if ($request->has('noreg') ) {
         if ($request->noreg === null || $request->noreg === '') {
@@ -142,11 +142,11 @@ class RegistrasiRanapController extends Controller
               'titipan' => $titipan
             ]
           );
-  
+
           $tempNoreg = $request->noreg;
         }
-        
-          
+
+
       } else { // INI DARI SELAIN IGD (bisa dr poli atau lain-lain SPRI)
         $tempNoreg = self::createNoreg($request, $tglmasuk, $ruang, $kamar, $noBed);
 
@@ -184,8 +184,8 @@ class RegistrasiRanapController extends Controller
             $rs25NonKelas->rs4 = 'N';
             $rs25NonKelas->save();
           }
-        } 
-        
+        }
+
       // }
 
       // INSERT TARIF
@@ -195,7 +195,7 @@ class RegistrasiRanapController extends Controller
         return new JsonResponse(['message' => 'MAAF ... TARIF TIDAK DITEMUKAN'], 500);
       }
 
-      
+
 
       $kodekamar=$tarif[0]->kodekamar;
       $koderuang=$tarif[0]->koderuang;
@@ -212,7 +212,7 @@ class RegistrasiRanapController extends Controller
         $koderuangkelas=$koderuang.$kelas;
       }
 
-      
+
 
       Rstigalimax::where('rs1','=', $tempNoreg)
         ->where('rs3','=', 'K1#')
@@ -336,7 +336,7 @@ class RegistrasiRanapController extends Controller
         $reg->titipan = $titipan ?? '';
         $reg->save();
 
-        
+
         return $noreg;
     }
 
