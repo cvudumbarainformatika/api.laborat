@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group([
-    // 'middleware' => 'auth:api',
+    'middleware' => 'auth:api',
     'prefix' => 'transaksi/belanja_ls'
 ], function () {
     Route::get('/bidang', [NPD_LSController::class, 'bidang']);

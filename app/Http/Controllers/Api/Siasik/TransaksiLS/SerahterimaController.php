@@ -6,6 +6,7 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
+use App\Models\Siasik\TransaksiLS\Serahterima_rinci;
 use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Sigarang\Pegawai;
 use Carbon\Carbon;
@@ -16,6 +17,26 @@ use PhpParser\Node\Stmt\Return_;
 
 class SerahterimaController extends Controller
 {
+    public function listdatastp()
+    {
+        $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        $data = Serahterima_header::whereBetween('serahterima_heder.tgltrans', [$tahunawal.'-01-01', $tahun.'-12-31'])
+            ->with('rinci')
+            ->when(request('q'), function($q){
+                $q->where('serahterima_heder.noserahterimapekerjaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('serahterima_heder.nokontrak', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('serahterima_heder.namaperusahaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('serahterima_heder.kegiatanblud', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('serahterima_heder.namapptk', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('serahterima_heder.totalpermintaanls', 'LIKE', '%' . request('q') . '%')
+                    ;
+            })
+            ->orderBy('serahterima_heder.tgltrans', 'desc')
+            ->get();
+        return new JsonResponse($data);
+
+    }
     public function getkontrak(){
         $tahun=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $data = KontrakPengerjaan::where('kunci', '!=', '')
@@ -32,7 +53,7 @@ class SerahterimaController extends Controller
     public function savedata(Request $request)
     {
         // Tentukan noserahterima
-        if (empty($request->noserahterima)) {
+        if (empty($request->noserahterimapekerjaan)) {
             // Panggil stored procedure noserahterimaPekerjaan di siasik
             DB::connection('siasik')->select('call noserahterimapekerjaan(@nomor)');
             $x = DB::connection('siasik')->table('conter')->select('noserahterimapekerjaan')->first();
@@ -43,9 +64,9 @@ class SerahterimaController extends Controller
             $nomer = (int)$x->noserahterimapekerjaan; // Gunakan nomor dari counter sebagai $total
 
             // Format nomor menggunakan FormatingHelper::nostp
-            $noserahterima = FormatingHelper::nostp($nomer, 'SERAHTERIMA');
+            $noserahterima = FormatingHelper::nostp($nomer, 'STP');
         } else {
-            $noserahterima = $request->noserahterima;
+            $noserahterima = $request->noserahterimapekerjaan;
         }
         $time = date('Y-m-d H:i:s');
         $user = auth()->user()->pegawai_id;
@@ -118,5 +139,56 @@ class SerahterimaController extends Controller
                 ], 500
             );
         }
+    }
+
+    public function getlistform()
+    {
+        $data = Serahterima_header::where('serahterima_heder.noserahterimapekerjaan', request('noserahterimapekerjaan'))
+        ->select('serahterima_heder.noserahterimapekerjaan',
+                        'serahterima_heder.tgltrans',
+                        'serahterima50.*',
+        )
+        ->join('serahterima50', 'serahterima50.noserahterimapekerjaan', 'serahterima_heder.noserahterimapekerjaan')
+        ->get();
+
+        return new JsonResponse($data);
+    }
+
+    public function deleterinci(Request $request)
+    {
+        $header = Serahterima_header::where('noserahterimapekerjaan', $request->noserahterimapekerjaan)
+        ->where('kunci', '!=', '')
+        ->get();
+        if(count($header) > 0){
+            return new JsonResponse(['message' => 'NPD Masih Dikunci'], 500);
+        }
+
+        if($request->id){
+            $findrinci = Serahterima_rinci::where('id', $request->id)->first();
+        }
+
+        if (!$findrinci) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
+        }
+        else {
+        $findrinci->delete();
+        }
+
+        $rinciAll = Serahterima_rinci::where('noserahterimapekerjaan', $request->noserahterimapekerjaan)->get();
+        if(count($rinciAll) == 0){
+            $header = Serahterima_header::where('noserahterimapekerjaan', $request->noserahterimapekerjaan)->first();
+            if($header){
+                $header->delete();
+                return new JsonResponse(['message' => 'Data Berhasil dihapus'], 200);
+            }  else {
+                return new JsonResponse([
+                    'message' => 'Data header tidak ditemukan',
+                ], 404);
+            }
+        }
+        return new JsonResponse([
+            'message' => 'Data Berhasil dihapus',
+             'data' => $rinciAll
+        ]);
     }
 }
