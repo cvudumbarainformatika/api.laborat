@@ -79,8 +79,7 @@ class AllbillrajalperpoliController extends Controller
                     'tindakanpoliumum:rs1,rs2,rs3,rs4,rs5,rs7,rs13',
                     'visiteumum:rs1,rs4,rs5',
                     'psikologtransumum:rs1,rs2,rs3,rs5,rs6,rs7,rs13',
-                    'pendapatanumum:noreg,norm,tgl,total,batal',
-                    'pendapatanallbpjs:noreg,tenaga_ahli,keperawatan,penunjang,radiologi,Pelayanan_darah,rehabilitasi,kamar,rawat_intensif,obat,alkes,bmhp,sewa_alat,tarif_poli_eks,delete_status,status_klaim'
+                    'pendapatanumum:noreg,norm,tgl,total,batal'
                 )
                     ->whereBetween('rs3', [$dari, $sampai])
                     ->where('rs8', '!=', 'POL014')->where('rs8', '!=', 'PEN004')->where('rs8', '!=', 'PEN005')
