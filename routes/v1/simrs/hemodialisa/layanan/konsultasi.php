@@ -19,6 +19,7 @@ Route::group([
     // Route::get('/notifNotRead', [KonsultasiController::class, 'notifRkd']);
     Route::get('/getdatarkd', [KonsultasiController::class, 'getdatarkd']);
     Route::post('/updateFlag', [KonsultasiController::class, 'updateFlag']);
+    Route::post('/updateFlagAllRead', [KonsultasiController::class, 'updateFlagAllRead']);
     Route::post('/updateJawaban', [KonsultasiController::class, 'updateJawaban']);
 
 

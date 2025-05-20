@@ -100,83 +100,83 @@ class KonsultasiController extends Controller
     public function getdatarkd()
     {
         $user = FormatingHelper::session_user();
-        $data = Konsultasi::selectRaw('
-        id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user,kdruang
-       ')->where('kddokterkonsul', $user['kodesimrs'])
-            ->with([
-                'dokterkonsul' => function ($q) {
-                    $q->select('nama', 'kdpegsimrs', 'nip', 'nik', 'foto', 'aktif')
-                        ->where('aktif', 'AKTIF');
-                },
-                'nakesminta' => function ($q) {
-                    $q->select('nama', 'kdpegsimrs', 'nip', 'nik', 'foto', 'aktif')
-                        ->where('aktif', 'AKTIF');
-                },
-                'userinput' => function ($q) {
-                    $q->select('nama', 'kdpegsimrs', 'nip', 'nik', 'foto', 'aktif')
-                        ->where('aktif', 'AKTIF');
-                },
-                'kunjunganranap' => function ($q) {
-                    $q->select(
-                        'rs23.rs1',
-                        'rs23.rs2',
-                        'rs23.rs3',
-                        'rs23.rs5',
-                        'rs23.rs41 as statuspulang',
-                        'rs15.rs2 as nama',
-                        'rs23.rs19 as kodesistembayar', // ini untuk farmasi
-                        'rs24.rs2 as ruangan',
-                        'rs24.rs3 as kelas_ruangan',
-                        'rs24.rs4 as kdgroup_ruangan',
-                    )
-                        ->leftJoin('rs15', 'rs15.rs1', 'rs23.rs2')
-                        ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
-                        ->with([
-                            'diagnosamedis' => function ($q) {
-                                $q->with('masterdiagnosa')
-                                    ->where('rs13', '!=', 'POL014');
-                            }
-                        ])
-                    ;
-                },
-                'kunjunganpoli' => function ($q) {
-                    $q->select(
-                        'rs17.rs1',
-                        'rs17.rs2',
-                        'rs17.rs3',
-                        'rs17.rs8',
-                        'rs17.rs19 as statuspulang',
-                        'rs15.rs2 as nama',
-                    )
-                        ->leftJoin('rs15', 'rs15.rs1', 'rs17.rs2')
-                        ->where('rs17.rs8', '!=', 'POL014')
-                    ;
-                },
-                'kunjunganigd' => function ($q) {
-                    $q->select(
-                        'rs17.rs1',
-                        'rs17.rs2',
-                        'rs17.rs3',
-                        'rs17.rs8',
-                        'rs17.rs19 as statuspulang',
-                        'rs15.rs2 as nama',
-                        'rs19.rs2 as ruangan'
-                    )
-                        ->leftJoin('rs15', 'rs15.rs1', 'rs17.rs2')
-                        ->leftJoin('rs19', 'rs19.rs1', 'rs17.rs8')
-                        ->with([
-                            'diagnosa' => function ($q) {
-                                $q->with('masterdiagnosa')
-                                    ->where('rs13', '=', 'POL014');
-                            }
-                        ])
-                        ->where('rs17.rs8', '=', 'POL014')
-                    ;
-                },
+        $data = Konsultasi::selectRaw('id,noreg,norm,flag,kddokterkonsul,ketuntuk,permintaan,tgl_permintaan,jawaban,tgl_jawaban,kdminta,user,kdruang')
+        ->where('kddokterkonsul', $user['kodesimrs'])
+        ->where('flag', request('status'))
+        ->with([
+            'dokterkonsul' => function ($q) {
+                $q->select('nama', 'kdpegsimrs', 'nip', 'nik', 'foto', 'aktif')
+                    ->where('aktif', 'AKTIF');
+            },
+            'nakesminta' => function ($q) {
+                $q->select('nama', 'kdpegsimrs', 'nip', 'nik', 'foto', 'aktif')
+                    ->where('aktif', 'AKTIF');
+            },
+            'userinput' => function ($q) {
+                $q->select('nama', 'kdpegsimrs', 'nip', 'nik', 'foto', 'aktif')
+                    ->where('aktif', 'AKTIF');
+            },
+            'kunjunganranap' => function ($q) {
+                $q->select(
+                    'rs23.rs1',
+                    'rs23.rs2',
+                    'rs23.rs3',
+                    'rs23.rs5',
+                    'rs23.rs41 as statuspulang',
+                    'rs15.rs2 as nama',
+                    'rs23.rs19 as kodesistembayar', // ini untuk farmasi
+                    'rs24.rs2 as ruangan',
+                    'rs24.rs3 as kelas_ruangan',
+                    'rs24.rs4 as kdgroup_ruangan',
+                )
+                    ->leftJoin('rs15', 'rs15.rs1', 'rs23.rs2')
+                    ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
+                    ->with([
+                        'diagnosamedis' => function ($q) {
+                            $q->with('masterdiagnosa')
+                                ->where('rs13', '!=', 'POL014');
+                        }
+                    ])
+                ;
+            },
+            'kunjunganpoli' => function ($q) {
+                $q->select(
+                    'rs17.rs1',
+                    'rs17.rs2',
+                    'rs17.rs3',
+                    'rs17.rs8',
+                    'rs17.rs19 as statuspulang',
+                    'rs15.rs2 as nama',
+                )
+                    ->leftJoin('rs15', 'rs15.rs1', 'rs17.rs2')
+                    ->where('rs17.rs8', '!=', 'POL014')
+                ;
+            },
+            'kunjunganigd' => function ($q) {
+                $q->select(
+                    'rs17.rs1',
+                    'rs17.rs2',
+                    'rs17.rs3',
+                    'rs17.rs8',
+                    'rs17.rs19 as statuspulang',
+                    'rs15.rs2 as nama',
+                    'rs19.rs2 as ruangan'
+                )
+                    ->leftJoin('rs15', 'rs15.rs1', 'rs17.rs2')
+                    ->leftJoin('rs19', 'rs19.rs1', 'rs17.rs8')
+                    ->with([
+                        'diagnosa' => function ($q) {
+                            $q->with('masterdiagnosa')
+                                ->where('rs13', '=', 'POL014');
+                        }
+                    ])
+                    ->where('rs17.rs8', '=', 'POL014')
+                ;
+            },
 
-            ])
-            ->orderBy('id', 'desc')
-            ->paginate(50);
+        ])
+        ->orderBy('id', 'desc')
+        ->simplePaginate(request('perPage'));
 
         return response()->json($data);
     }
@@ -187,6 +187,24 @@ class KonsultasiController extends Controller
         $data->flag = '1';
         $data->save();
     }
+    public function updateFlagAllRead(Request $request)
+    {
+        $akun = Petugas::find(auth()->user()->pegawai_id)->kdpegsimrs;
+
+        $data = Konsultasi::where('kddokterkonsul', $akun)
+                ->whereNull('flag')
+                ->whereNull('jawaban')
+                ->update(['flag'=> '1']);
+
+        return response()->json(
+            [
+                'data'=> $data,
+                'akun'=> $akun
+            ]
+        );
+    }
+
+
     public function updateJawaban(Request $request)
     {
 
@@ -201,6 +219,8 @@ class KonsultasiController extends Controller
 
         $tglJawab = $data->tgl_jawaban ?? null;
         $ranap = false;
+        // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
+        $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
 
         if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
 
@@ -213,8 +233,7 @@ class KonsultasiController extends Controller
             $tarifKonsul = null;
             if ($dokter->kdgroupnakes === '1') {
 
-                // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
-                $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
+                
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
                 if ($ranap) {
 
@@ -269,7 +288,7 @@ class KonsultasiController extends Controller
         // $lazy = Konsultasi::find($data->id)->with([
         //   'tarif:rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
         //   'nakesminta:kdpegsimrs,nama,kdgroupnakes,statusspesialis',
-        // ]);
+        // ]); 
         // $lazy=$data;
         $lazy = $data->load([
             'tarif:id,rs1,rs3,rs4,rs5,rs6,rs7,rs8,rs9,rs10',
