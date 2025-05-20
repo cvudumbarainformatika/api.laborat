@@ -406,6 +406,7 @@ class AllBillRekapByRuanganController extends Controller
         )
         ->whereBetween('rs17.rs3', [$dari, $sampai])
         ->where('rs19.rs1','!=','POL014')->where('rs19.rs4','Poliklinik')
+        ->where('rs19', '=', '1')
         ->orderBY('rs19.rs2')
         ->get();
         return new JsonResponse($data);
