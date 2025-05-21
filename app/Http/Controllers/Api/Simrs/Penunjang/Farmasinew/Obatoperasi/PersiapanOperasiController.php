@@ -41,9 +41,15 @@ class PersiapanOperasiController extends Controller
                 } else $rm = [];
             }
         }
-        $data = PersiapanOperasi::with(
-            'rinci.obat:kd_obat,nama_obat,satuan_k',
-            'rinci.susulan:kdpegsimrs,nama',
+        $data = PersiapanOperasi::with([
+            'rinci' => function ($q) {
+                $q->with([
+                    'obat:kd_obat,nama_obat,satuan_k',
+                    'susulan:kdpegsimrs,nama'
+                ])->orderBy('id', 'ASC');
+            },
+            // 'rinci.obat:kd_obat,nama_obat,satuan_k',
+            // 'rinci.susulan:kdpegsimrs,nama',
             'pasien:rs1,rs2',
             'list:rs1,rs4,rs14',
             'list.sistembayar:rs1,rs2,groups',
@@ -51,7 +57,7 @@ class PersiapanOperasiController extends Controller
             'list.kunjunganranap.relmasterruangranap:rs1,rs2',
             'list.kunjunganrajal:rs1,rs8',
             'list.kunjunganrajal.relmpoli:rs1,rs2'
-        )
+        ])
             ->whereIn('flag', $flag)
             ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->where(function ($query) use ($rm) {

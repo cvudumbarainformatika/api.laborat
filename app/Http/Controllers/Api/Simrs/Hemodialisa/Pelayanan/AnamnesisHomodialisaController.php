@@ -103,7 +103,7 @@ class AnamnesisHomodialisaController extends Controller
                         'skor' => $request->skor ?? 0,
                         'scorenyeri' => $request->skorNyeri ?? 0,
                         'keteranganscorenyeri' => $request->keluhanNyeri ?? '',
-                        'kdruang' => $request->kdruang,
+                        'kdruang' => 'PEN005',
                         'awal' => $request->awal ?? null,
                         'user'  => $kdpegsimrs,
                     ]
@@ -127,7 +127,7 @@ class AnamnesisHomodialisaController extends Controller
                         'riwayatpenyakitsekarang' => $request->form['rwPenySkr'] ?? '',
                         'riwayatpenyakitkeluarga' => $request->form['rwPenyKlrg'] ?? '',
                         'riwayat_pekerjaan_yang_berhubungan_dengan_zat_berbahaya' => $request->form['rwPkrjDgZatBahaya'] ?? '',
-                        'kdruang' => $request->kdruang,
+                        'kdruang' => 'PEN005',
                         'awal' => $request->awal ?? null,
                         'user'  => $kdpegsimrs,
                     ]

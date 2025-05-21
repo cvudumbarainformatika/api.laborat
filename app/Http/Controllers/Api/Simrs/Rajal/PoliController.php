@@ -605,6 +605,8 @@ class PoliController extends Controller
                     $newapotekrajal->whereIn('flag', ['', '1', '2', '3', '4'])->with([
                         'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
                         'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
+                        'sistembayar',
+                        'dokter:nama,kdpegsimrs',
                     ])
                         ->orderBy('id', 'DESC');
                 },
@@ -684,7 +686,7 @@ class PoliController extends Controller
 
             // return new JsonResponse($cekx, 200);
             return new JsonResponse([
-                'result'=> $cekx
+                'result' => $cekx
             ], 200);
         } else {
             return response()->json([
