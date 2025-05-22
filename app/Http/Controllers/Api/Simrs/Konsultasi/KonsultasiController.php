@@ -231,12 +231,15 @@ class KonsultasiController extends Controller
 
             // cek tarif
             $tarifKonsul = null;
+
+            // jika yang jawab dokter
             if ($dokter->kdgroupnakes === '1') {
 
                 
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
                 if ($ranap) {
 
+                    // jika dokter spesialis
                     $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
                     // jika bukan dari IGD dan HD
                     $tarifKonsul = self::cekTarip($spesialis, $request, $dokter);
@@ -254,7 +257,7 @@ class KonsultasiController extends Controller
 
 
                     // jika yg minta dokter
-                    if ($request->kdgroupnakesminta === '1') {
+                    // if ($request->kdgroupnakesminta === '1') {
                         // jika billing belum masuk
                         if (count($cekTarif) === 0) {
                             $masukTarif = Visite::create([
@@ -270,7 +273,7 @@ class KonsultasiController extends Controller
                             // ini baru
                             $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
                         }
-                    }
+                    // }
                 }
             }
         }
