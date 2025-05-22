@@ -21,18 +21,23 @@ class ResetterPasswordController extends Controller
   {
 
       $akun = User::where('username', request('nik'))->first();
-      $pegawai = Petugas::where('nik', request('nik'))->where('aktif', 'AKTIF')
-      ->first();
+      $pegawai = Petugas::where('nik', request('nik'))->where('aktif', 'AKTIF')->first();
 
 
-      if (!$akun) {
-        return new JsonResponse(['message' => 'Akun Tidak ditemukan'], 404);
+      if (!$akun || !$pegawai) {
+          return new JsonResponse(['message' => 'Akun Tidak ditemukan'], 404);
       }
 
-     if (request('password')) {
-      $akun->password = bcrypt(request('password'));
+      $password= '123456789';
+
+    //  if (request('password')) {
+      $akun->password = bcrypt($password);
       $akun->save();
-     }
+
+      $pegawai->account_pass = $password;
+      $pegawai->save();
+
+    //  }
 
       $data = [
         'akun' => $akun,
