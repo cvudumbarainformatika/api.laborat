@@ -436,6 +436,7 @@ class HemodialisaController extends Controller
                 $q->select([
                     'rs253.id',
                     'rs253.rs1',
+                    'rs253.rs2',
                     'rs253.rs1 as noreg',
                     'rs253.rs2 as norm',
                     'rs253.rs3 as tgl',
@@ -496,6 +497,8 @@ class HemodialisaController extends Controller
                         'kebidanan',
                         //  'penilaian'
                     ])
+                    ->where('rs253.awal', '1')
+                    ->where('rs253.kdruang', 'PEN005')
                     ->groupBy('rs253.id');
             },
             'diagnosakeperawatanAwalHd' => function ($q) use ($kepHd) {
@@ -607,6 +610,10 @@ class HemodialisaController extends Controller
                         'kebidanan',
                         //  'penilaian'
                     ])
+                    ->where(function ($q) {
+                        $q->where('rs253.kdruang', '=', 'PEN005')
+                            ->orWhere('rs253.awal', '!=', '1');
+                    })
                     ->groupBy('rs253.id');
             },
             'diagnosakeperawatan' => function ($q) {

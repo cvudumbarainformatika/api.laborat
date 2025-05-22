@@ -425,7 +425,7 @@ class Kunjunganranap extends Model
     }
     public function pemeriksaanAwalHd()
     {
-        return $this->hasMany(PemeriksaanUmum::class, 'rs1', 'rs1');
+        return $this->hasMany(PemeriksaanUmum::class, 'rs2', 'norm');
     }
     public function penilaian()
     {
