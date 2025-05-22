@@ -537,7 +537,10 @@ class HemodialisaController extends Controller
                         'pediatrik',
                         'kebidanan'
                     ])
-
+                    ->where(function ($q) {
+                        $q->where('rs209.kdruang', '=', 'PEN005')
+                            ->orWhere('rs209.awal', '!=', '1');
+                    })
                     ->groupBy('rs209.id');
             },
             'pemeriksaan' => function ($q) {
