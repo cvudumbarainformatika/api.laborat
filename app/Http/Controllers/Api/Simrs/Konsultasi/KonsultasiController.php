@@ -222,10 +222,23 @@ class KonsultasiController extends Controller
         // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
         $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
 
-        if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
+
+       
+
+       
+
+           
+
 
             $hari_ini = date('Y-m-d H:i:s');
-            $data->tgl_jawaban = $hari_ini;
+            
+
+             if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
+                // jika belum menjawab maka simpan tanggal harini
+                $data->tgl_jawaban = $hari_ini;
+            }
+
+            
 
             // cari tarif dokter dan masukkan ke tarif jika dlm 1 hari belum ada data masuk
 
@@ -276,7 +289,7 @@ class KonsultasiController extends Controller
                     // }
                 }
             }
-        }
+        // }
 
 
 
