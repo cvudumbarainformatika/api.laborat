@@ -145,6 +145,10 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
     }
+    public function anamnesisAwalHd()
+    {
+        return $this->hasMany(Anamnesis::class, 'rs2', 'norm');
+    }
     public function pemeriksaanfisik()
     {
         return $this->hasMany(Pemeriksaanfisik::class, 'rs1', 'rs1');
@@ -160,6 +164,10 @@ class KunjunganPoli extends Model
     public function diagnosakeperawatan()
     {
         return $this->hasMany(Diagnosakeperawatan::class, 'noreg', 'rs1');
+    }
+    public function diagnosakeperawatanAwalHd()
+    {
+        return $this->hasMany(Diagnosakeperawatan::class, 'norm', 'norm');
     }
     public function diagnosakebidanan()
     {
@@ -503,6 +511,10 @@ class KunjunganPoli extends Model
     public function pemeriksaan()
     {
         return $this->hasMany(PemeriksaanUmum::class, 'rs1', 'rs1');
+    }
+    public function pemeriksaanAwalHd()
+    {
+        return $this->hasMany(PemeriksaanUmum::class, 'rs2', 'norm');
     }
     public function penilaian()
     {

@@ -128,6 +128,8 @@ class RadiologiController extends Controller
             ])
                 ->orderBy('id', 'DESC');
         },
+        'radiologi'
+        
     ])
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli

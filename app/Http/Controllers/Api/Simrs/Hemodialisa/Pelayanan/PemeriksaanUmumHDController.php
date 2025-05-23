@@ -91,6 +91,83 @@ class PemeriksaanUmumHDController extends Controller
                 'kebidanan',
                 //  'penilaian'
             ])
+
+            ->where('rs253.kdruang', 'PEN005')
+            ->groupBy('rs253.id')
+            ->get();
+
+        return $data;
+    }
+    public static function getDataAwal($noreg)
+    {
+        // $akun = auth()->user()->pegawai_id;
+        // $nakes = Petugas::select('kdgroupnakes')->find($akun)->kdgroupnakes;
+        // $data = PemeriksaanUmum::select('rs253.*')
+        $data = PemeriksaanUmum::select([
+            'rs253.id',
+            'rs253.rs1',
+            'rs253.rs2',
+            'rs253.rs1 as noreg',
+            'rs253.rs2 as norm',
+            'rs253.rs3 as tgl',
+            'rs253.rs4 as ruang',
+            'rs253.pernapasan as pernapasanigd',
+            'rs253.nadi as nadiigd',
+            'rs253.tensi as tensiigd',
+            'rs253.beratbadan',
+            'rs253.tinggibadan',
+            'rs253.kdruang',
+            'rs253.user',
+            'rs253.awal',
+            'rs253.rs5',
+            'rs253.rs6',
+            'rs253.rs7',
+            'rs253.rs8',
+            'rs253.rs9',
+            'rs253.rs10',
+            'rs253.rs11',
+            'rs253.rs12',
+            'rs253.rs13',
+
+            'sambung.keadaanUmum',
+            'sambung.bb',
+            'sambung.tb',
+            'sambung.nadi',
+            'sambung.suhu',
+            'sambung.sistole',
+            'sambung.diastole',
+            'sambung.pernapasan',
+            'sambung.spo',
+            'sambung.tkKesadaran',
+            'sambung.tkKesadaranKet',
+            'sambung.sosial',
+            'sambung.spiritual',
+            'sambung.statusPsikologis',
+            'sambung.ansuransi',
+            'sambung.edukasi',
+            'sambung.ketEdukasi',
+            'sambung.penyebabSakit',
+            'sambung.komunikasi',
+            'sambung.makananPokok',
+            'sambung.makananPokokLain',
+            'sambung.pantanganMkanan',
+
+            'pegawai.nama as petugas',
+            'pegawai.kdgroupnakes as nakes',
+        ])
+            ->leftJoin('rs253_sambung as sambung', 'rs253.id', '=', 'sambung.rs253_id')
+            ->leftJoin('kepegx.pegawai as pegawai', 'rs253.user', '=', 'pegawai.kdpegsimrs')
+            ->where('rs253.rs2', '=', $noreg)
+            ->with([
+                'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                'neonatal',
+                'pediatrik',
+                'kebidanan',
+                //  'penilaian'
+            ])
+
+            ->where('rs253.awal', '1')
+            ->where('rs253.kdruang', 'PEN005')
             ->groupBy('rs253.id')
             ->get();
 
@@ -128,7 +205,7 @@ class PemeriksaanUmumHDController extends Controller
                         'beratbadan' => $request->form['bb'],
                         'tinggibadan' => $request->form['tb'],
 
-                        'kdruang' => $request->kdruang,
+                        'kdruang' => 'PEN005',
                         'awal' => $request->awal ?? null,
                         'user'  => $kdpegsimrs,
 
@@ -164,7 +241,7 @@ class PemeriksaanUmumHDController extends Controller
                         'beratbadan' => $request->form['bb'],
                         'tinggibadan' => $request->form['tb'],
 
-                        'kdruang' => $request->kdruang,
+                        'kdruang' => 'PEN005',
                         'awal' => $request->awal ?? null,
                         'user'  => $kdpegsimrs,
 
@@ -374,12 +451,17 @@ class PemeriksaanUmumHDController extends Controller
             //     'message' => 'BERHASIL DISIMPAN',
             //     'result' => self::getdata($request->noreg),
             // ], 200);
+            if ($request->awal == '1') {
+                $result = self::getDataAwal($request->norm);
+            } else {
+                $result = self::getdata($request->noreg);
+            }
 
             $data = [
                 'success' => true,
                 'message' => 'BERHASIL DISIMPAN',
                 'idPemeriksaan' => $simpan->id,
-                'result' => self::getdata($request->noreg),
+                'result' => $result,
             ];
 
             return $data;

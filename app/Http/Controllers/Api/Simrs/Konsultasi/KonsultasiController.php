@@ -222,21 +222,37 @@ class KonsultasiController extends Controller
         // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
         $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
 
-        if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
+
+       
+
+       
+
+           
+
 
             $hari_ini = date('Y-m-d H:i:s');
-            $data->tgl_jawaban = $hari_ini;
+            
+
+             if ($tglJawab === null || $tglJawab === '0000-00-00 00:00:00' || $tglJawab === '') {
+                // jika belum menjawab maka simpan tanggal harini
+                $data->tgl_jawaban = $hari_ini;
+            }
+
+            
 
             // cari tarif dokter dan masukkan ke tarif jika dlm 1 hari belum ada data masuk
 
             // cek tarif
             $tarifKonsul = null;
+
+            // jika yang jawab dokter
             if ($dokter->kdgroupnakes === '1') {
 
                 
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
                 if ($ranap) {
 
+                    // jika dokter spesialis
                     $spesialis = strtoupper($dokter->statusspesialis) === 'SPESIALIS';
                     // jika bukan dari IGD dan HD
                     $tarifKonsul = self::cekTarip($spesialis, $request, $dokter);
@@ -254,7 +270,7 @@ class KonsultasiController extends Controller
 
 
                     // jika yg minta dokter
-                    if ($request->kdgroupnakesminta === '1') {
+                    // if ($request->kdgroupnakesminta === '1') {
                         // jika billing belum masuk
                         if (count($cekTarif) === 0) {
                             $masukTarif = Visite::create([
@@ -270,10 +286,10 @@ class KonsultasiController extends Controller
                             // ini baru
                             $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
                         }
-                    }
+                    // }
                 }
             }
-        }
+        // }
 
 
 

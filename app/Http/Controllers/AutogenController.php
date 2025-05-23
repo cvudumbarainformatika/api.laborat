@@ -361,7 +361,7 @@ class AutogenController extends Controller
 
         // $spesialis = true;
 
-        // return self::cekTarip($spesialis, $request); 
+        // return self::cekTarip($spesialis, $request);
         // echo "PERCOBAAN DEPLOY SWOOLE";
         $table = 'permintaan_r';
         return Schema::connection('farmasi')->getColumnListing($table);
@@ -399,7 +399,7 @@ class AutogenController extends Controller
 
             $flag_biaya = $rsx->rs3;
 
-            if ($request->kelas_ruangan === "3" || $request->kelas_ruangan === "IC" || $request->kelas_ruangan === "ICC" || $request->kelas_ruangan === "NICU" || $request->kelas_ruangan === "IN" ) {
+            if ($request->kelas_ruangan === "3" || $request->kelas_ruangan === "IC" || $request->kelas_ruangan === "ICC" || $request->kelas_ruangan === "NICU" || $request->kelas_ruangan === "IN") {
                 $sarana = $rsx->rs6;
                 $pelayanan = $rsx->rs7;
             } else if ($request->kelas_ruangan == "2") {
@@ -424,10 +424,10 @@ class AutogenController extends Controller
                 if ($hakKelas === '1') {
                     $sarana = $rsx->rs10;
                     $pelayanan = $rsx->rs11;
-                } else if($hakKelas === '2'){
+                } else if ($hakKelas === '2') {
                     $sarana = $rsx->rs8;
                     $pelayanan = $rsx->rs9;
-                } else if($hakKelas === '3'){
+                } else if ($hakKelas === '3') {
                     $sarana = $rsx->rs6;
                     $pelayanan = $rsx->rs7;
                 }
@@ -435,11 +435,7 @@ class AutogenController extends Controller
 
                 $sarana = $rsx->pss;
                 $pelayanan = $rsx->psp;
-                
             }
-
-
-            
         } else {
 
             //select * from rs30tarif where (rs3='V1#
@@ -489,10 +485,10 @@ class AutogenController extends Controller
                 if ($hakKelas === '1') {
                     $sarana = $rsx->rs10;
                     $pelayanan = $rsx->rs11;
-                } else if($hakKelas === '2'){
+                } else if ($hakKelas === '2') {
                     $sarana = $rsx->rs8;
                     $pelayanan = $rsx->rs9;
-                } else if($hakKelas === '3'){
+                } else if ($hakKelas === '3') {
                     $sarana = $rsx->rs6;
                     $pelayanan = $rsx->rs7;
                 }
@@ -500,7 +496,6 @@ class AutogenController extends Controller
 
                 $sarana = $rsx->pss;
                 $pelayanan = $rsx->psp;
-                
             }
         }
 
@@ -3328,8 +3323,8 @@ class AutogenController extends Controller
 
     public function bpjsCoba()
     {
-        $rujukan = '1327R0010125B000006';
-        $data = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/Keluar/' . $rujukan);
+        // $rujukan = '1327R0010125B000006';
+        $data = BridgingbpjsHelper::get_url('vclaim', 'referensi/poli/Hemodialisa');
         return new JsonResponse([
             'data' => $data
         ]);
