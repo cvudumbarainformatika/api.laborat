@@ -11,4 +11,5 @@ Route::group([
     Route::post('/savedata', [SerahterimaController::class, 'savedata']);
     Route::get('/getrincian', [SerahterimaController::class, 'getlistform']);
     Route::post('/deleterinci', [SerahterimaController::class, 'deleterinci']);
+    Route::post('/kuncidata', [SerahterimaController::class, 'kuncidata']);
 });
