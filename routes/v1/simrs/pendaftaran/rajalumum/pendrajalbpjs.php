@@ -38,4 +38,6 @@ Route::group([
 
     Route::post('/re-createsep', [Bridbpjscontroller::class, 'reCreateSep']); // re-create sep
 
+    Route::post('/carisep', [Bridbpjscontroller::class, 'carisep']); // re-create sep
+
 });

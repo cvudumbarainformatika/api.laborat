@@ -594,4 +594,16 @@ class Bridbpjscontroller extends Controller
         );
         return $insertsep;
     }
+
+    public function carisep(Request $request)
+    {
+        // return $request->nosep;
+        // $request->validate([
+        //     'nosep' => 'required'
+        // ]);
+
+        $data = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $request->nosep);
+        $datax = BridgingbpjsHelper::get_url('vclaim', 'Peserta/nokartu/' . $request->noka . '/tglSEP/' . date('Y-m-d'));
+        return new JsonResponse(['data' => $data,'datax'=>$datax],200);
+    }
 }
