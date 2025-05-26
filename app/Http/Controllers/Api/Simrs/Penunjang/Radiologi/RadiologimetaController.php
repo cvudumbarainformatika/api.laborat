@@ -10,26 +10,36 @@ use App\Models\Simrs\Penunjang\Radiologi\Mpemeriksaanradiologimeta;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class RadiologimetaController extends Controller
 {
     public function listmasterpemeriksaanradiologi()
     {
-        $listmasterpemeriksaanradiologi = Mpemeriksaanradiologimeta::get();
-        return new JsonResponse($listmasterpemeriksaanradiologi);
+        $data = Cache::remember('m_pemeriksaan_radiologi_meta', now()->addDays(7), function () {
+            return Mpemeriksaanradiologimeta::get();
+        });
+        // $listmasterpemeriksaanradiologi = Mpemeriksaanradiologimeta::get();
+        return new JsonResponse($data);
     }
 
     public function jenispermintaanradiologi()
     {
-        $jenispermintaanradiologi = Mjenispemeriksaanradiologimeta::all();
-        return new JsonResponse($jenispermintaanradiologi);
+        $data = Cache::remember('m_jenis_pemeriksaan_radiologi_meta', now()->addDays(7), function () {
+            return Mjenispemeriksaanradiologimeta::all();
+        });
+        // $jenispermintaanradiologi = Mjenispemeriksaanradiologimeta::all();
+        return new JsonResponse($data);
     }
 
     public function listpermintaanradiologirinci()
     {
-        $rincianpermintaan = Mpemeriksaanradiologi::all();
-        return new JsonResponse($rincianpermintaan);
+        $data = Cache::remember('m_pemeriksaan_radiologi', now()->addDays(7), function () {
+            return Mpemeriksaanradiologi::all();
+        });
+        // $rincianpermintaan = Mpemeriksaanradiologi::all();
+        return new JsonResponse($data);
     }
 
     public function simpanpermintaanradiologi(Request $request)

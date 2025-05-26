@@ -2,33 +2,13 @@
 
 namespace App\Http\Controllers\Api\Simrs\Radiologi;
 
-use App\Events\ChatMessageEvent;
-use App\Events\NotifMessageEvent;
-use App\Helpers\BridgingbpjsHelper;
-use App\Helpers\FormatingHelper;
-use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
-use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\BridantrianbpjsController;
-use App\Http\Controllers\Api\Simrs\Planing\PlaningController;
 use App\Http\Controllers\Controller;
-use App\Models\KunjunganRawatInap;
-use App\Models\Pegawai\Mpegawaisimpeg;
-use App\Models\Sigarang\Pegawai;
-use App\Models\Simrs\Kasir\Pembayaran;
-use App\Models\Simrs\Master\MtindakanX;
-use App\Models\Simrs\Pendaftaran\Karcispoli;
-use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
-use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
-use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
-use App\Models\Simrs\Penunjang\Lain\Lain;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
-use App\Models\Simrs\Rajal\Memodiagnosadokter;
-use App\Models\Simrs\Rajal\WaktupulangPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PHPUnit\TextUI\XmlConfiguration\Group;
 
 class RadiologiController extends Controller
 {
@@ -120,17 +100,17 @@ class RadiologiController extends Controller
         // 'rs24.rs2 as ruangan',
         // 'rs23.rs2 as status_masuk',
         // 'antrian_ambil.nomor as noantrian'
-      )->with([
-        'newapotekrajal' => function ($newapotekrajal) {
-            $newapotekrajal->with([
-                'permintaanresep.mobat:kd_obat,nama_obat',
-                'permintaanracikan.mobat:kd_obat,nama_obat',
-            ])
-                ->orderBy('id', 'DESC');
-        },
-        'radiologi'
-        
-    ])
+      )
+        // ->with([
+        //     'newapotekrajal' => function ($newapotekrajal) {
+        //         $newapotekrajal->with([
+        //             'permintaanresep.mobat:kd_obat,nama_obat',
+        //             'permintaanracikan.mobat:kd_obat,nama_obat',
+        //         ])
+        //             ->orderBy('id', 'DESC');
+        //     },
+        //     'radiologi.rincians.relmasterpemeriksaan'
+        // ])
         ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
         ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
         ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
@@ -362,5 +342,60 @@ class RadiologiController extends Controller
             ->groupBy('rs106.rs2');
             // ->orderby('rs17.rs3', $sort);
         return $q;
+    }
+
+    public function getDataPasienRadiologiByNota()
+    {
+        $query = Transpermintaanradiologi::query();
+        $data = $query
+            ->select([
+                'rs106.id',
+                'rs106.rs1',
+                'rs106.rs1 as noreg',
+                'rs106.rs2 as nota',
+                 DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
+                'rs106.rs3 as tgl_kunjungan',
+                'rs106.catatanpermintaan',
+                'rs106.cito',
+                'rs106.diagnosakerja',
+                'rs106.metodepenyampaianhasil',
+                'rs106.rs4',
+                'rs106.rs5',
+                'rs106.rs6',
+                'rs106.rs7',
+                'rs106.rs8',
+                'rs106.rs9',
+                'rs106.rs10',
+                'rs106.rs11',
+                'rs106.rs12',
+                'rs106.rs13',
+                'rs106.rs14',
+                'rs106.rs15',
+                'rs106.statusalergipasien',
+                'rs106.statuskehamilan',
+            ])
+            ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
+            ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
+            ->leftjoin('rs24', 'rs24.rs1', '=', 'rs106.rs10') //ruangan ranap
+            ->where('rs106.rs2', request('nota'))
+            ->with([
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+            ])
+            ->first();
+
+        if (!$data) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 500);
+        }
+
+        return response()->json([
+            'permintaan' =>$data->getAttributes(),
+            'newapotekrajal' => $data->newapotekrajal ?? [],
+        ]);
     }
 }
