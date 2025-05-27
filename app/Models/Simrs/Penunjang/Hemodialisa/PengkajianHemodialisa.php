@@ -41,4 +41,8 @@ class PengkajianHemodialisa extends Model
     protected $table = 'rs265';
     protected $guarded = ['id'];
     public $timestamps = false;
+
+    protected $casts = [
+        'resiko_jatuh' => 'array',
+    ];
 }
