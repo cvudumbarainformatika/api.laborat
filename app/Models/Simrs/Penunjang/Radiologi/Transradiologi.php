@@ -9,7 +9,7 @@ class Transradiologi extends Model
 {
     use HasFactory;
     protected $table = 'rs48';
-    protected $gurded = ['id'];
+    protected $guarded = ['id'];
     public $timestamps = false;
     protected $appends = ['subtotal'];
     protected $primaryKey = 'rs1';

@@ -3535,4 +3535,12 @@ class AutogenController extends Controller
         $getkarcis = FormatingHelper::getKarcisPoli($kd_poli, $flag);
         return new JsonResponse($getkarcis);
     }
+
+    public function cekSep()
+    {
+        $sep = request('sep');
+        $tgl = DateHelper::getDateTime();
+        $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+        return $a;
+    }
 }

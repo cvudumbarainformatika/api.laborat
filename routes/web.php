@@ -76,6 +76,7 @@ Route::get('/autogen/reset-counter', [AutogenController::class, 'resetCounter'])
 Route::get('/autogen/tindakan-id', [AutogenController::class, 'tindakanId']);
 Route::get('/autogen/reset-password', [ResetterPasswordController::class, 'index']);
 Route::get('/autogen/bpjs-coba', [AutogenController::class, 'bpjsCoba']);
+Route::get('/autogen/cek-sep', [AutogenController::class, 'cekSep']);
 
 Route::get('/perbaikan-data', [SetNewStokController::class, 'perbaikanData']);
 Route::get('/perbaikan-data-depo', [SetNewStokController::class, 'PerbaikanDataPerDepo']);
