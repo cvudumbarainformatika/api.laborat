@@ -5,6 +5,7 @@ namespace App\Models\Simrs\Ranap;
 use App\Models\KunjunganPoli;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Covid\StatusCovid;
 use App\Models\Simrs\DischargePlanning\DischargePlanning;
@@ -94,6 +95,11 @@ class Kunjunganranap extends Model
     protected $connection = 'mysql';
     //protected $connection = 'farmasi';
 
+    // ini dipake hd
+    public function pegsim()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpeg');
+    }
     public function statuscovid()
     {
         return $this->hasMany(StatusCovid::class, 'noreg', 'noreg');
