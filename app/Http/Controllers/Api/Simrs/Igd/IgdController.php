@@ -177,7 +177,9 @@ class IgdController extends Controller
             'historyperkawinan',
             'historykehamilan',
             'anamnesekebidanan',
-            'bankdarah',
+            'bankdarah' => function($bankdarah){
+                $bankdarah->where('rs11','POL014');
+            },
             // 'peresepanobat' => function($peresepanobat){
             //     $peresepanobat->with(
             //         [
@@ -220,7 +222,7 @@ class IgdController extends Controller
                         'perawat',
                         'perawat2'
                     ]
-                );
+                )->where('rs5','POL014');
             },
             'laborats' => function ($t) {
                 $t->with('details.pemeriksaanlab')->where('unit_pengirim', 'POL014')
@@ -231,6 +233,9 @@ class IgdController extends Controller
                     ->orderBy('id', 'DESC')->where('rs23','POL014');
             },
             'radiologi' => function ($t) {
+                $t->where('rs10','POL014')->orderBy('id', 'DESC');
+            },
+            'hasilradiologi' => function ($t) {
                 $t->orderBy('id', 'DESC');
             },
             'penunjanglain' => function ($t) {
@@ -249,7 +254,7 @@ class IgdController extends Controller
                     ->orderBy('id', 'DESC');
             },
             'ok' => function ($q) {
-                $q->orderBy('id', 'DESC');
+                $q->where('rs10','POL014')->orderBy('id', 'DESC');
             },
             'diagnosakeperawatan'=> function ($d) {
                 $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
@@ -259,7 +264,7 @@ class IgdController extends Controller
             },
             'pemeriksaanfisikpsikologidll' => function($pemeriksaanfisikpsikologidll){
                 $pemeriksaanfisikpsikologidll->select('rs253.*','kepegx.pegawai.kdpegsimrs','kepegx.pegawai.nama')->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
-                ->with('pemerisaanpsikologidll')->where('kdruang','POL014');
+                ->with('pemerisaanpsikologidll','datasimpeg')->where('kdruang','POL014');
             },
             'newapotekrajal' => function ($newapotekrajal) {
                 $newapotekrajal->with([
