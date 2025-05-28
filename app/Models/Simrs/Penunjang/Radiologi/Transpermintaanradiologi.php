@@ -22,6 +22,12 @@ class Transpermintaanradiologi extends Model
         return  $this->hasMany(Transradiologi::class, 'rs1', 'rs1');
     }
 
+    // ini berdasarkan nota
+    public function rincians()
+    {
+        return  $this->hasMany(Transradiologi::class, 'rs2', 'rs2');
+    }
+
     public function newapotekrajal()
     {
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');

@@ -27,6 +27,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use DateTime;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Calculation\TextData\Format;
 
 class NPD_LSController extends Controller
@@ -63,6 +64,7 @@ class NPD_LSController extends Controller
                     'npdls_heder.nonpdls',
                     'npdls_heder.nonpk',
                     'npdls_heder.nopencairan',
+                    'npdls_heder.nonotadinas',
                     'npdls_heder.tglnpdls',
                     'npdls_heder.pptk',
                     'npdls_heder.kodepptk',
@@ -575,45 +577,46 @@ class NPD_LSController extends Controller
     }
     public function kuncinpd (Request $request)
     {
-        $header = NpdLS_heder::where('nonpdls', $request->nonpdls)
-        ->where('verif', '!=', '')
-        ->get();
-        if(count($header) > 0){
-            return new JsonResponse(['message' => 'Data Sudah Terverifikasi'], 500);
+        $request->validate([
+            'nonpdls' => 'required|string'
+        ]);
+
+        try {
+            $header = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
+            if (!$header) {
+                return response()->json(['message' => 'Data tidak ditemukan'], 404);
+            }
+            if ($header->kunci == '1') {
+                // Buka kunci → harus superadmin
+                $user = auth()->user()->pegawai_id;
+                $pg = Pegawai::find($user);
+
+                if (!$pg || $pg->kdpegsimrs !== 'sa') {
+                    return response()->json(['message' => 'Anda tidak Memiliki Izin Membuka Kunci Data ini, Silahkan Hubungi Admin'], 403);
+                }
+
+                if (!empty($header->verif)) {
+                    return response()->json(['message' => 'NPD-LS Sudah Terverifikasi'], 400);
+                }
+
+                $header->kunci = '';
+                $header->save();
+
+                return response()->json(['message' => 'Kunci berhasil dibuka'], 200);
+            } else {
+                $header->kunci = '1';
+                $header->save();
+
+                return response()->json(['message' => 'Data berhasil dikunci'], 200);
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal Membuka Kunci Serahterima: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Terjadi Kesalahan saat Membuka Kunci',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        // $kunci = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
-        // $x = $kunci->kunci;
-        // if ($x === '1') {
-        //     return new JsonResponse(['message' => 'Data Terkunci'], 500);
-        // } elseif ($x === ''){
-        //     return new JsonResponse(['message' => 'Data Tidak Dikunci'], 500);
-        // }
-
-        // $kunci = NpdLS_heder::where('nonpdls', [$request->nonpdls])->first();
-        // if (!$kunci) {
-        // return response()->json(['message' => 'NPD tidak ditemukan'], 404);
-        // }
-        // // $kunci->kunci = '1';
-        // // $kunci->save();
-        // if($kunci->kunci === '1'){
-        //      NpdLS_heder::where('nonpdls', $request->nonpdls)->update(['kunci' => '']);
-        //       return response()->json(['message' => 'Data Berhasil Dibuka'], 200);
-        // } elseif ($kunci->kunci === '') {
-        //     NpdLS_heder::where('nonpdls', $request->nonpdls)->update(['kunci' => '1']);
-        //       return response()->json(['message' => 'Data Berhasil Dikunci'], 200);
-        // }
-
-
-        // if ($request->kunci === '1') {
-        //     $kunci->kunci = '';
-        //     $message = 'Data Berhasil Dibuka';
-        // } elseif ($request->kunci === '') {
-        //     $kunci->kunci = '1';
-        //     $message = 'Data Berhasil Dikunci';
-        // }
-        // $kunci->save();
-
-        // return response()->json(['message' => $message], 200);
     }
     public function deleterinci(Request $request)
     {

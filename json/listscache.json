@@ -22,5 +22,8 @@
   {"nama":"m_bdrs", "ketId":null, "controller":"BankDarahController", "method":"getmaster"},
   {"nama":"m_tindakan_apheresis", "ketId":null, "controller":"ApheresisController", "method":"getmaster"},
   {"nama":"m_hais", "ketId":null, "controller":"HaisController", "method":"getmaster"},
-  {"nama":"m_khasus_diagnosa", "ketId":"id1", "controller":"DiagnosaController", "method":"listtipekhasus"}
+  {"nama":"m_khasus_diagnosa", "ketId":"id1", "controller":"DiagnosaController", "method":"listtipekhasus"},
+  {"nama":"m_pemeriksaan_radiologi", "ketId":null, "controller":"RadiologimetaController", "method":"listpermintaanradiologirinci"},
+  {"nama":"m_jenis_pemeriksaan_radiologi_meta", "ketId":null, "controller":"RadiologimetaController", "method":"jenispermintaanradiologi"},
+  {"nama":"m_pemeriksaan_radiologi_meta", "ketId":null, "controller":"RadiologimetaController", "method":"listmasterpemeriksaanradiologi"}
 ]

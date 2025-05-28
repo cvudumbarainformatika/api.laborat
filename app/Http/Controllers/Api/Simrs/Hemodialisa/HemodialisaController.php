@@ -353,32 +353,34 @@ class HemodialisaController extends Controller
         $noreg = $request->noreg;
         $rajal = KunjunganPoli::select(
             // 'rs17.rs1',
-            DB::raw('(CASE WHEN permintaan.rs2 ="" THEN rs17.rs1 ELSE permintaan.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
+            DB::raw('(CASE WHEN rs107.rs2 IS NULL THEN rs17.rs1 ELSE rs107.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             'rs19.rs6 as kodepolibpjs',
             'rs222.rs8 as sep',
-        )->where('rs17.rs1', $noreg)
+        )
+            ->where('rs17.rs1', $noreg)
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs17.rs1')
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs17.rs1') // memo
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
-            ->leftjoin('rs107 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
+            ->leftjoin('rs107', 'rs17.rs1', '=', 'rs107.rs1') //permintaan
             ->first();
 
         $ranap = Kunjunganranap::select(
             // 'rs23.rs1',
-            DB::raw('(CASE WHEN permintaan.rs2 ="" THEN rs23.rs1 ELSE permintaan.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
+            DB::raw('(CASE WHEN rs107.rs2 IS NULL THEN rs23.rs1 ELSE rs107.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
-        )->where('rs23.rs1', $noreg)
+        )
+            ->where('rs23.rs1', $noreg)
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1')
             ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
-            ->leftjoin('rs107 as permintaan', 'rs23.rs1', '=', 'permintaan.rs1') //permintaan
+            ->leftjoin('rs107', 'rs23.rs1', '=', 'rs107.rs1') //permintaan
             ->first();
         $data = $ranap ?? $rajal;
 
@@ -618,7 +620,7 @@ class HemodialisaController extends Controller
             },
             'diagnosakeperawatan' => function ($q) {
                 $q->with('intervensi', 'intervensi.masterintervensi')
-                    ->where('kdruang', '!=', 'POL014')
+                    ->where('kdruang', '=', 'PEN005')
                     ->orderBy('id', 'DESC');
             },
             'penilaian' => function ($q) {
