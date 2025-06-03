@@ -155,6 +155,8 @@ class JadwalController extends Controller
         // dasar update, user id, tanggal, kategory_id
         $user = User::find($id);
 
+        // $tanggal = date('Y-m-d');
+
         if ($request->status === 'masuk') {
             $data = TransaksiAbsen::updateOrCreate(
                 [

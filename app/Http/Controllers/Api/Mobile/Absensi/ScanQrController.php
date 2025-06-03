@@ -24,6 +24,15 @@ class ScanQrController extends Controller
     public function data(Request $request)
     {
         $temp = explode('#', $request->qr);
+
+        if ($request->tanggal !== date('Y-m-d')) {
+
+            return new JsonResponse([
+                'message' => 'Tanggal di Hp Anda Bukan Hari ini !',
+                'req' => $request->all()
+            ], 406);
+        }
+
         $validator = Validator::make($request->all(), [
             'lokasi' => 'required',
         ]);
@@ -38,6 +47,8 @@ class ScanQrController extends Controller
                 'req' => $request->all()
             ], 406);
         }
+
+        
 
 
         $data = Qrcode::where('ip', $temp[0])->first();

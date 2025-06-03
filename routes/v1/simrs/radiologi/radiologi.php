@@ -8,6 +8,7 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/radiologi/radiologi'
 ], function () {
-    Route::get('/pasienradiologi', [RadiologiController::class, 'index']); // ini yang baru
-    Route::get('/getDataPasienRadiologiByNota', [RadiologiController::class, 'getDataPasienRadiologiByNota']); // ini yang baru
+    Route::get('/pasienradiologi', [RadiologiController::class, 'index']); 
+    Route::get('/getDataPasienRadiologiByNota', [RadiologiController::class, 'getDataPasienRadiologiByNota']); 
+    Route::post('/simpanHasilByKode', [RadiologiController::class, 'simpanHasil']); 
 });

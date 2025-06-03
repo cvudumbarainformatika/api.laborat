@@ -369,8 +369,12 @@ class AutogenController extends Controller
 
         // return self::cekTarip($spesialis, $request);
         // echo "PERCOBAAN DEPLOY SWOOLE";
-        $table = 'permintaan_r';
-        return Schema::connection('farmasi')->getColumnListing($table);
+        // $table = 'permintaan_r';
+        // return Schema::connection('farmasi')->getColumnListing($table);
+
+        $cek_tanggal = '2025-06-04' !== date('Y-m-d');
+
+       return response()->json(['status' => $cek_tanggal]);
     }
 
     public static function cekTarip($spesialis, $request)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Radiologi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Radiologi\HasilRadiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -351,6 +352,7 @@ class RadiologiController extends Controller
             ->select([
                 'rs106.id',
                 'rs106.rs1',
+                'rs106.rs2',
                 'rs106.rs1 as noreg',
                 'rs106.rs2 as nota',
                  DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
@@ -383,9 +385,21 @@ class RadiologiController extends Controller
                     $newapotekrajal->with([
                         'permintaanresep.mobat:kd_obat,nama_obat',
                         'permintaanracikan.mobat:kd_obat,nama_obat',
-                    ])
-                        ->orderBy('id', 'DESC');
+                    ])->orderBy('id', 'DESC');
                 },
+                'rincians'=> function($r){
+                    $r->leftJoin('rs151', function ($join) {
+                        $join->on('rs48.rs2', '=', 'rs151.rs5')
+                            ->on('rs48.rs1', '=', 'rs151.rs1')
+                            ->on('rs48.rs4','=','rs151.kode');
+                    })->leftJoin('rs47', function ($join){
+                        $join->on('rs48.rs4', '=', 'rs47.rs1');
+                    })
+                    ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.rs4 as pelaksana','rs151.id','rs151.rs2 as tgl',
+                        'rs47.rs2 as nama', 'rs47.rs1 as kode', 'rs47.rs3 as jenis',
+                    );
+                }
+                
             ])
             ->first();
 
@@ -394,8 +408,32 @@ class RadiologiController extends Controller
         }
 
         return response()->json([
-            'permintaan' =>$data->getAttributes(),
+            'permintaan' =>$data,
             'newapotekrajal' => $data->newapotekrajal ?? [],
         ]);
     }
+
+    public function simpanHasil(Request $request)
+    {
+
+        $nota = $request->rs2;
+        $kode = $request->kode;
+        $data = HasilRadiologi::where('rs5', $nota)->where('kode', $kode)->first();
+        
+        if (!$data) {
+            $data = new HasilRadiologi(); // buat instance baru
+        }
+
+        $data->rs1 = $request->rs1;
+        $data->rs2 = date('Y-m-d H:i:s');
+        $data->rs3 = $request->kesimpulan;
+        $data->rs4 = $request->pelaksana;
+        $data->rs5 = $nota;
+        $data->hasil = $request->hasil;
+        $data->kode = $request->kode;
+        $data->save();
+
+        return response()->json(['message' => 'Data berhasil disimpan'], 200);
+    }
+    
 }
