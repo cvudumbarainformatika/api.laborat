@@ -62,12 +62,12 @@ class DokumenUploadController extends Controller
                         //   mkdir(storage_path("app/public/$folder"), 0775, true);
                         // }
 
-                        // if (!Storage::disk('remote')->exists("public/$folder")) {
-                        //     Storage::disk('remote')->makeDirectory("public/$folder");
-                        // }
-                        if (!Storage::exists("public/$folder")) {
-                            Storage::makeDirectory("public/$folder");
+                        if (!Storage::disk('remote')->exists("public/$folder")) {
+                            Storage::disk('remote')->makeDirectory("public/$folder");
                         }
+                        // if (!Storage::exists("public/$folder")) {
+                        //     Storage::makeDirectory("public/$folder");
+                        // }
 
                         // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
                         // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
@@ -98,8 +98,8 @@ class DokumenUploadController extends Controller
                             // Hapus file temporary
                             unlink($tempPath);
                         } else {
-                            $path = $file->storeAs('public/' . $folder, $penamaan);
-                            // $path = $file->storeAs('public/' . $folder, $penamaan, 'remote');
+                            // $path = $file->storeAs('public/' . $folder, $penamaan);
+                            $path = $file->storeAs('public/' . $folder, $penamaan, 'remote');
                         }
 
 
@@ -135,8 +135,8 @@ class DokumenUploadController extends Controller
         if (!$data) {
             return new JsonResponse(['message' => 'Data tidak ditemukan'], 500);
         }
-        Storage::delete($data->path);
-        // Storage::disk('remote')->delete($data->path);
+        // Storage::delete($data->path);
+        Storage::disk('remote')->delete($data->path);
         $del = $data->delete();
 
         if (!$del) {
