@@ -77,7 +77,7 @@ class PersiapanOperasiController extends Controller
     {
         $belum = PersiapanOperasi::with([
             'rinci' => function ($ri) {
-                $ri->with('obat:kd_obat,nama_obat,satuan_k');
+                $ri->with('obat:kd_obat,nama_obat,satuan_k')->orderBy('id', 'ASC');;
             },
             'pasien:rs1,rs2',
             'userminta:kdpegsimrs,nama',

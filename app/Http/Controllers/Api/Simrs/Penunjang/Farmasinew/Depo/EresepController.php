@@ -2223,7 +2223,7 @@ class EresepController extends Controller
          * kdobat = $request->kdobat
          * kd_ruang = $request->kdruangan
          */
-        if ($request->kodedepo === 'Gd-04010102' && (int)$request->groupsistembayar === 1) {
+        if ($request->kodedepo === 'Gd-04010102' && (int)$request->groupsistembayar === 1 && (int)$request->jumlah > 0) {
             $headerResep = Resepkeluarheder::where('noresep', $request->noresep)->first();
             if ($headerResep) {
                 $kdRuang = $headerResep->ruangan;

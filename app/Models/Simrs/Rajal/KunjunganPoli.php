@@ -8,6 +8,7 @@ use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Anamnesis\AnamnesisKebidanan;
 use App\Models\Simrs\Anamnesis\HistoryKehamilan;
@@ -100,6 +101,11 @@ class KunjunganPoli extends Model
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
 
+    // ini dipake hd
+    public function pegsim()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpeg');
+    }
     public function masterpasien()
     {
         return $this->hasOne(Mpasien::class, 'rs1', 'rs2');

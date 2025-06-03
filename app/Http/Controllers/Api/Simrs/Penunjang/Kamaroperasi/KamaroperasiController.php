@@ -115,12 +115,24 @@ class KamaroperasiController extends Controller
                     'dokter',
                     'kunjunganranap.relmasterruangranap',
                     'kunjunganrajal.relmpoli',
-                    'permintaanobatoperasi.rinci.obat:kd_obat,nama_obat',
+                    'permintaanobatoperasi' => function ($permintaanobatoperasi) {
+                        $permintaanobatoperasi->with([
+                            'rinci' => function ($rinci) {
+                                $rinci->with([
+                                    'obat:kd_obat,nama_obat'
+                                ])
+                                    ->orderBy('id', 'ASC');
+                            }
+                        ])
+                            ->whereIn('flag', ['', '1', '2', '3', '4'])
+                            ->orderBy('id', 'DESC');
+                    },
                     'newapotekrajal' => function ($newapotekrajal) {
                         $newapotekrajal->with([
                             'permintaanresep.mobat:kd_obat,nama_obat',
                             'permintaanracikan.mobat:kd_obat,nama_obat',
-                        ])->whereIn('flag', ['', '1', '2', '3', '4'])
+                        ])
+                            ->whereIn('flag', ['', '1', '2', '3', '4'])
                             ->orderBy('id', 'DESC');
                     },
                 ]

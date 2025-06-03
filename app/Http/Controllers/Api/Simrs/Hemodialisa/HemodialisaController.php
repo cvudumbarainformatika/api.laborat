@@ -356,6 +356,7 @@ class HemodialisaController extends Controller
             DB::raw('(CASE WHEN rs107.rs2 IS NULL THEN rs17.rs1 ELSE rs107.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
             'rs17.rs1 as noreg',
             'rs17.rs2 as norm',
+            'rs17.rs9 as kdpeg',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             'rs19.rs6 as kodepolibpjs',
@@ -374,6 +375,7 @@ class HemodialisaController extends Controller
             DB::raw('(CASE WHEN rs107.rs2 IS NULL THEN rs23.rs1 ELSE rs107.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
+            'rs23.rs10 as kdpeg',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
         )
@@ -721,6 +723,7 @@ class HemodialisaController extends Controller
                 $neo->with(['pegawai:id,nama'])
                     ->orderBy('id', 'DESC');
             },
+            'pegsim:kdpegsimrs,nik,nama,id,nip',
         ]);
 
         return new JsonResponse([
