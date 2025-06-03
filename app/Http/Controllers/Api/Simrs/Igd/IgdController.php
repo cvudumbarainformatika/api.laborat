@@ -133,6 +133,9 @@ class IgdController extends Controller
         ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1')
         ->where('rs17.rs1', $request->noreg)->where('rs17.rs8','POL014')
         ->with([
+            'rs35x' => function($a){
+                $a->where('rs3','A2#');
+            },
             'anamnesis' => function($anamnesis){
                 $anamnesis->with(['anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'])->where('kdruang', 'POL014');
             },
@@ -177,8 +180,14 @@ class IgdController extends Controller
             'historyperkawinan',
             'historykehamilan',
             'anamnesekebidanan',
+            'transradiologi' => function($transradiologi){
+                $transradiologi->with('relmasterpemeriksaan')->where('rs26','POL014');
+            },
             'bankdarah' => function($bankdarah){
                 $bankdarah->where('rs11','POL014');
+            },
+            'bankdarahtrans' => function($bankdarahtrans){
+                $bankdarahtrans->where('rs14','POL014');
             },
             // 'peresepanobat' => function($peresepanobat){
             //     $peresepanobat->with(
@@ -229,8 +238,9 @@ class IgdController extends Controller
                     ->orderBy('id', 'DESC');
             },
             'laboratold'=> function ($t) {
-                $t->with('pemeriksaanlab')
-                    ->orderBy('id', 'DESC')->where('rs23','POL014');
+                $t->select('rs51.*','rs49.rs2 as pemeriksaan','rs49.rs21 as paket')->with('pemeriksaanlab')
+                ->leftjoin('rs49','rs49.rs1','rs51.rs4')
+                    ->orderBy('id', 'DESC')->where('rs51.rs23','POL014');
             },
             'radiologi' => function ($t) {
                 $t->where('rs10','POL014')->orderBy('id', 'DESC');
@@ -243,7 +253,6 @@ class IgdController extends Controller
             },
             'tindakan' => function ($t) {
                 $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url','mpoli:rs1,rs2')
-                    ->where('rs4','<>','T00075')
                     ->orderBy('id', 'DESC')->where('rs22','POL014');
             },
             'diagnosa' => function ($d) {
@@ -255,6 +264,9 @@ class IgdController extends Controller
             },
             'ok' => function ($q) {
                 $q->where('rs10','POL014')->orderBy('id', 'DESC');
+            },
+            'oktrans' => function ($o) {
+                $o->with('mastertindakanoperasi')->where('rs15','POL014')->orderBy('id', 'DESC');
             },
             'diagnosakeperawatan'=> function ($d) {
                 $d->with('petugas:id,nama,satset_uuid','intervensi.masterintervensi');
@@ -304,7 +316,10 @@ class IgdController extends Controller
                         'datasimpeg'
                     ]);
             },
-            'rencanaterapidokter'
+            'rencanaterapidokter',
+            'kamarjenazah' => function($kamarjenazah){
+                $kamarjenazah->with('pelayananjenazah')->where('rs14','POL014');
+            }
         ])
         ->first();
 

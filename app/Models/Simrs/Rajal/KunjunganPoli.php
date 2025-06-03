@@ -16,9 +16,11 @@ use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\ProcedureM;
 use App\Models\Simrs\Generalconsent\Generalconsent;
+use App\Models\Simrs\jenazah\billjenazah;
 use App\Models\Simrs\Kasir\Karcis;
 use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Kasir\Pembayaran;
+use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
@@ -47,6 +49,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penjaminan\listcasmixrajal;
 use App\Models\Simrs\Penunjang\Ambulan\ReqAmbulan;
 use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
+use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
 use App\Models\Simrs\Penunjang\DietTrans;
 use App\Models\Simrs\Penunjang\Eeg\Eegtrans;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajal;
@@ -60,6 +63,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
 use App\Models\Simrs\Penunjang\Hemodialisa\PengkajianHemodialisa;
+use App\Models\Simrs\Penunjang\Kamarjenazah\Kamarjenasahtrans;
 use App\Models\Simrs\Penunjang\Kamarjenazah\KamarjenazahPermintaan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
@@ -554,5 +558,25 @@ class KunjunganPoli extends Model
     public function rs239_implementasi()
     {
         return $this->hasMany(ImplementasiEdukasi::class, 'noreg', 'rs1');
+    }
+
+    public function rs35x()
+    {
+        return $this->hasOne(Rstigalimax::class, 'rs1', 'rs1');
+    }
+
+    public function bankdarahtrans()
+    {
+        return $this->hasMany(Bdrstrans::class, 'rs1', 'rs1');
+    }
+
+    public function oktrans()
+    {
+        return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
+    }
+
+    public function kamarjenazah()
+    {
+        return $this->hasMany(Kamarjenasahtrans::class, 'rs1', 'rs1');
     }
 }

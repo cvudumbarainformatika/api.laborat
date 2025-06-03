@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Kamarjenazah;
 
+use App\Models\Simrs\Master\Mtindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,5 +21,10 @@ class Kamarjenasahtrans extends Model
         $subtotal = $harga1+$harga2;
        // $data->select($subtotal)->where('rs3','=','RM#')->get();
         return ($subtotal);
+    }
+
+    public function pelayananjenazah()
+    {
+        return $this->hasOne(Mtindakan::class, 'rs1', 'rs5');
     }
 }
