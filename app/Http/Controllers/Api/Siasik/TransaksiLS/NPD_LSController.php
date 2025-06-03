@@ -22,6 +22,7 @@ use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use App\Models\Siasik\TransaksiLS\NewpajakNpdls;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
+use App\Models\Siasik\TransaksiLS\Serahterima_header;
 use App\Models\Siasik\TransaksiLS\TransPajak;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
@@ -423,6 +424,33 @@ class NPD_LSController extends Controller
 
         return new JsonResponse($bast);
     }
+
+    public function bastpekerjaan(){
+        $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        $data = Serahterima_header::where('serahterima_heder.kodepihakketiga', request('kodepenerima'))
+        ->whereBetween('serahterima_heder.tgltrans', [$tahun.'-01-01', $tahun.'-12-31'])
+        ->where('serahterima_heder.kunci', '=', '1')
+        ->where('serahterima_heder.nonpdls', '=', '')
+        ->join('serahterima50', 'serahterima50.noserahterimapekerjaan', '=', 'serahterima_heder.noserahterimapekerjaan')
+        ->join('mappingpptkkegiatan', 'mappingpptkkegiatan.kodekegiatan', '=', 'serahterima_heder.kodekegiatanblud')
+        ->join('pihak_ketiga', 'pihak_ketiga.kode', '=', 'serahterima_heder.kodepihakketiga')
+        ->select(
+            'serahterima_heder.*',
+            'mappingpptkkegiatan.kodebidang',
+            'mappingpptkkegiatan.bidang',
+            'mappingpptkkegiatan.alias',
+            'pihak_ketiga.bank',
+            'pihak_ketiga.norek as rekening',
+            'pihak_ketiga.npwp',
+            DB::raw('SUM(serahterima50.nominalpembayaran) as nominalpembayaran')
+        )
+        ->groupBy('serahterima_heder.noserahterimapekerjaan')
+        ->with('rinci')
+        ->get();
+        return new JsonResponse($data);
+    }
+
+
     public function coba(){
         // $nip = '196611251996032003';
         $akun=NpdLS_heder::all();
