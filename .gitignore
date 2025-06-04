@@ -29,6 +29,7 @@ storage/*
 /storage/logs/laravel.log
 
 storage/framework
+/storage/framework
 
 # Keep .gitignore files
 !/storage/.gitignore
