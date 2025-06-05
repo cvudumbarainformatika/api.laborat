@@ -250,7 +250,7 @@ class PemeriksaanfisikController extends Controller
             return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
         }
         // Storage::delete('public/' . $filename);
-        Storage::disk('remote')->delete('public/' . $filename);
+        // Storage::disk('remote')->delete('public/' . $filename);
         $hapus = $cari->delete();
         if (!$hapus) {
             return new JsonResponse(['message' => 'gagal dihapus'], 501);
@@ -260,7 +260,7 @@ class PemeriksaanfisikController extends Controller
 
     public function historypemeriksaanfisik()
     {
-    
+
         $history = Pemeriksaanfisik::select(
             "id",
             "rs1",
@@ -300,12 +300,12 @@ class PemeriksaanfisikController extends Controller
             "created_at",
             "updated_at"
         )
-        ->where('rs2', request('norm'))
-        ->where('rs3', '<', Carbon::now()->toDateString())
-        ->with( 'gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp')
-        ->orderby('id', 'DESC')
-        ->get()
-        ->chunk(10);
+            ->where('rs2', request('norm'))
+            ->where('rs3', '<', Carbon::now()->toDateString())
+            ->with('gambars', 'detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu', 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp')
+            ->orderby('id', 'DESC')
+            ->get()
+            ->chunk(10);
 
         $collapsed = $history->collapse();
 

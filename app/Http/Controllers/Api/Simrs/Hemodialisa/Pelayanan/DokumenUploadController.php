@@ -42,9 +42,9 @@ class DokumenUploadController extends Controller
                             ['noreg', $request->noreg],
                             ['original', $originalname]
                         ])->first();
-                        if ($data) {
-                            Storage::delete($data->path);
-                        }
+                        // if ($data) {
+                        //     Storage::delete($data->path);
+                        // }
 
                         $gallery = null;
                         if ($data) {
@@ -136,7 +136,7 @@ class DokumenUploadController extends Controller
             return new JsonResponse(['message' => 'Data tidak ditemukan'], 500);
         }
         // Storage::delete($data->path);
-        Storage::disk('remote')->delete($data->path);
+        // Storage::disk('remote')->delete($data->path);
         $del = $data->delete();
 
         if (!$del) {

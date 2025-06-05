@@ -62,7 +62,7 @@ class TindakanController extends Controller
                 $query->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
                     ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%');
             })
-            ->where('rs30.rs1','<>','T00075')
+            ->where('rs30.rs1', '<>', 'T00075')
             // ->where('rs30.rs2', 'Like', '%' . request('kdpoli') . '%')
             // ->where('rs30.rs4')
             ->get();
@@ -83,11 +83,10 @@ class TindakanController extends Controller
 
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
-        if($kdpegsimrs === '' || $kdpegsimrs === null)
-        {
+        if ($kdpegsimrs === '' || $kdpegsimrs === null) {
             return new JsonResponse([
                 'message' => 'Data Kepegawaian Anda Belum Termaping...!!!'
-            ],410);
+            ], 410);
         }
         // $simpantindakan = Tindakan::firstOrNew(
         //     [
@@ -158,7 +157,7 @@ class TindakanController extends Controller
 
         // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
-        $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs','sambungan:rs73_id,ket');
+        $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'sambungan:rs73_id,ket');
         return new JsonResponse(
             [
                 'message' => 'Tindakan Berhasil Disimpan.',
@@ -183,11 +182,10 @@ class TindakanController extends Controller
 
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
-        if($kdpegsimrs === '' || $kdpegsimrs === null)
-        {
+        if ($kdpegsimrs === '' || $kdpegsimrs === null) {
             return new JsonResponse([
                 'message' => 'Data Kepegawaian Anda Belum Termaping...!!!'
-            ],410);
+            ], 410);
         }
 
         $nota = $request->nota ?? $notatindakan;
@@ -228,7 +226,7 @@ class TindakanController extends Controller
         $nota = Tindakan::select('rs2 as nota')->where('rs1', $request->noreg)->where('rs22', 'POL014')
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
 
-       // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
+        // EwseklaimController::ewseklaimrajal_newclaim($request->noreg);
 
         $simpantindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'mpoli:rs1,rs2');
         return new JsonResponse(
@@ -289,7 +287,7 @@ class TindakanController extends Controller
     public function notatindakanIgd()
     {
         $nota = Tindakan::select('rs2 as nota')->where('rs1', request('noreg'))
-            ->where('rs22','POL014')
+            ->where('rs22', 'POL014')
             ->groupBy('rs2')->orderBy('id', 'DESC')->get();
         return new JsonResponse($nota);
     }
@@ -349,7 +347,7 @@ class TindakanController extends Controller
         $template = Gbrdokumentindakan::find($request->id);
         // return $template;
         // Storage::delete($template->nama);
-        Storage::disk('remote')->delete($template->nama);
+        // Storage::disk('remote')->delete($template->nama);
         $template->delete();
 
         $res = Tindakan::find($template->rs73_id);
@@ -373,7 +371,10 @@ class TindakanController extends Controller
     public static function dataTindakanByNoreg($noreg, $ruangan)
     {
         $data = Tindakan::select(
-            'id','rs1','rs2','rs4',
+            'id',
+            'rs1',
+            'rs2',
+            'rs4',
             'rs1 as noreg',
             'rs2 as nota',
             'rs3',
@@ -391,10 +392,10 @@ class TindakanController extends Controller
             'rs23',
             'rs24',
         )
-        ->with(['mastertindakan:rs1,rs2','sambungan:rs73_id,ket'])
-        ->where('rs1', $noreg)
-        ->where('rs22', '!=', 'POL014')
-        ->get();
+            ->with(['mastertindakan:rs1,rs2', 'sambungan:rs73_id,ket'])
+            ->where('rs1', $noreg)
+            ->where('rs22', '!=', 'POL014')
+            ->get();
 
         return $data;
     }
@@ -409,10 +410,10 @@ class TindakanController extends Controller
     public function simpantindakanranap(Request $request)
     {
 
-        $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=','1')->get();
+        $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=', '1')->get();
 
         if (count($cekKasir) > 0) {
-            return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal '.$cekKasir[0]->rs42], 500);
+            return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal ' . $cekKasir[0]->rs42], 500);
         }
 
         DB::select('call nota_tindakan(@nomor)');
@@ -464,7 +465,8 @@ class TindakanController extends Controller
         $tindakan->sambungan()->updateOrCreate(
             ['rs73_id' => $idTindakan],
             [
-                'nota' => $tindakan->rs2, 'noreg' => $request->noreg,
+                'nota' => $tindakan->rs2,
+                'noreg' => $request->noreg,
                 'kd_tindakan' => $request->kdtindakan,
                 'ket' => $request->keterangan,
                 'rs73_id' => $idTindakan
