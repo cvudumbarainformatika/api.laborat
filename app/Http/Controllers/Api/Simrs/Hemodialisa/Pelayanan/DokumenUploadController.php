@@ -86,14 +86,14 @@ class DokumenUploadController extends Controller
                             // $img->save(\public_path("storage/$folder/". $penamaan), 60);
                             // Upload ke remote dengan nama file yang kita inginkan ($penamaan)
                             // Contoh $penamaan: 20240219123456-1-123456.jpg
-                            //   Storage::disk('remote')->put(
-                            //     "public/$folder/$penamaan",  // full path dengan nama file
-                            //     file_get_contents($tempPath)  // isi file
-                            //   );
-                            Storage::put(
+                            Storage::disk('remote')->put(
                                 "public/$folder/$penamaan",  // full path dengan nama file
                                 file_get_contents($tempPath)  // isi file
                             );
+                            // $str = Storage::put(
+                            //     "public/$folder/$penamaan",  // full path dengan nama file
+                            //     file_get_contents($tempPath)  // isi file
+                            // );
 
                             // Hapus file temporary
                             unlink($tempPath);
@@ -118,7 +118,11 @@ class DokumenUploadController extends Controller
                     }
 
                     $kirim = DokumenUpload::where([['noreg', '=', $request->noreg]])->get();
-                    return new JsonResponse(['message' => 'success', 'result' => $kirim->load('pegawai:id,nama')], 200);
+                    return new JsonResponse([
+                        'message' => 'success',
+                        // 'img' => $str ?? null,
+                        'result' => $kirim->load('pegawai:id,nama')
+                    ], 200);
                 }
             } catch (\Exception $th) {
                 return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
