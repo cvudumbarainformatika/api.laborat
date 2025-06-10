@@ -98,7 +98,7 @@ class RanapController extends Controller
             'rs23_nosurat.kddrygmenyatakan',
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
-        )
+            )
 
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
