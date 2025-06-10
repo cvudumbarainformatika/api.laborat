@@ -65,7 +65,17 @@ class ResumeController extends Controller
                     $planning
                         ->where('rs4', 'not like', '%Pulang%');
                 },
-                'diagnosakeperawatan.intervensi.masterintervensi'
+                'diagnosakeperawatan.intervensi.masterintervensi',
+
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->whereIn('flag', ['3', '4'])->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
+                        'sistembayar',
+                        'dokter:nama,kdpegsimrs',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
             ]
         )->where('rs17.rs1', request('noreg'))
             ->get();
