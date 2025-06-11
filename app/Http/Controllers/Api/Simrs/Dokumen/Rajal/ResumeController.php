@@ -68,7 +68,16 @@ class ResumeController extends Controller
                 'diagnosakeperawatan.intervensi.masterintervensi',
 
                 'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->whereIn('flag', ['3', '4'])->with([
+                    $newapotekrajal->select(
+                        'noresep',
+                        'noreg',
+                        'sistembayar',
+                        'dokter',
+                    )->whereIn('flag', ['3', '4'])->with([
+                        'rincian:kdobat,noresep,jumlah',
+                        'rincianracik:kdobat,noresep,jumlah',
+                        'permintaanresep:kdobat,noresep,jumlah',
+                        'permintaanracikan:kdobat,noresep,jumlah',
                         'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
                         'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
                         'sistembayar',
@@ -76,9 +85,13 @@ class ResumeController extends Controller
                     ])
                         ->orderBy('id', 'DESC');
                 },
+                'newapotekrajalretur:noreg,noretur',
+                'newapotekrajalretur.rinci:noretur,noresep,kdobat,jumlah_retur',
             ]
         )->where('rs17.rs1', request('noreg'))
-            ->get();
-        return new JsonResponse($resume);
+            ->first();
+        return new JsonResponse([
+            'data' => $resume
+        ]);
     }
 }

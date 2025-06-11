@@ -60,6 +60,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanhedlalu;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrinci;
 use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
@@ -321,6 +322,11 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
     }
+    public function newapotekrajalretur()
+    {
+        return $this->hasMany(Returpenjualan_h::class, 'noreg', 'rs1');
+    }
+
     public function apotek()
     {
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
