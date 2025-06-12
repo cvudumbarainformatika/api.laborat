@@ -233,6 +233,15 @@ class IgdController extends Controller
                     ]
                 )->where('rs5','POL014');
             },
+            'ambulantrans' => function($ambulantrans) {
+                $ambulantrans->with(
+                    [
+                        'tujuan',
+                        'perawat',
+                        'perawat2'
+                    ]
+                )->where('rs20','POL014');
+            },
             'laborats' => function ($t) {
                 $t->with('details.pemeriksaanlab')->where('unit_pengirim', 'POL014')
                     ->orderBy('id', 'DESC');
@@ -282,7 +291,9 @@ class IgdController extends Controller
                 $newapotekrajal->with([
                     'permintaanresep.mobat:kd_obat,nama_obat',
                     'permintaanracikan.mobat:kd_obat,nama_obat',
-                ])
+                    'rincian.mobat:kd_obat,nama_obat',
+                    'rincianracik.mobat:kd_obat,nama_obat'
+                ])->where('ruangan','POL014')
                     ->orderBy('id', 'DESC');
             },
             'tinjauanulang' => function($tinjauanulang){
@@ -319,7 +330,7 @@ class IgdController extends Controller
             'rencanaterapidokter',
             'kamarjenazah' => function($kamarjenazah){
                 $kamarjenazah->with('pelayananjenazah')->where('rs14','POL014');
-            }
+            },
         ])
         ->first();
 

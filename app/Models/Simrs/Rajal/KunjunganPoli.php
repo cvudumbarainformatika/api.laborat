@@ -48,6 +48,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
 use App\Models\Simrs\Penjaminan\listcasmixrajal;
+use App\Models\Simrs\Penunjang\Ambulan\Ambulan;
 use App\Models\Simrs\Penunjang\Ambulan\ReqAmbulan;
 use App\Models\Simrs\Penunjang\Bankdarah\PermintaanBankdarah;
 use App\Models\Simrs\Penunjang\Bdrs\Bdrstrans;
@@ -450,6 +451,11 @@ class KunjunganPoli extends Model
     public function ambulan()
     {
         return $this->hasMany(ReqAmbulan::class, 'rs1', 'rs1');
+    }
+
+    public function ambulantrans()
+    {
+        return $this->hasMany(Ambulan::class, 'rs1', 'rs1');
     }
 
     public function bankdarah()

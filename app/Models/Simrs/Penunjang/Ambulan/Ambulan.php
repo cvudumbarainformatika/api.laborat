@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Ambulan;
 
+use App\Models\Simrs\Master\Mnakes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,5 +26,19 @@ class Ambulan extends Model
         $subtotal = $harga1+$harga2+$harga3+$harga4+$harga5+$harga6+$harga7+$harga8;
        // $data->select($subtotal)->where('rs3','=','RM#')->get();
         return ($subtotal);
+    }
+
+    public function tujuan()
+    {
+        return $this->hasOne(TujuanAmbulan::class, 'rs1','rs10');
+    }
+
+    public function perawat()
+    {
+        return $this->hasOne(Mnakes::class, 'rs1','rs13');
+    }
+    public function perawat2()
+    {
+        return $this->hasOne(Mnakes::class, 'rs1','rs14');
     }
 }
