@@ -62,13 +62,47 @@ class ResumeController extends Controller
                         ->join('rs73_sambung', 'rs73.id', 'rs73_sambung.rs73_id');
                 },
                 'planning' => function ($planning) {
-                    $planning
+                    $planning->with([
+                        // 'masterpoli',
+                        'rekomdpjp' => function ($q) {
+                            $q->orderBy('id', 'DESC');
+                        },
+                        'transrujukan.diagnosa:rs1,rs4',
+                        'listkonsul',
+                        'spri',
+                        'ranap',
+                        'kontrol',
+                        'operasi',
+                    ])
                         ->where('rs4', 'not like', '%Pulang%');
                 },
-                'diagnosakeperawatan.intervensi.masterintervensi'
+                'diagnosakeperawatan.intervensi.masterintervensi',
+
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->select(
+                        'noresep',
+                        'noreg',
+                        'sistembayar',
+                        'dokter',
+                    )->whereIn('flag', ['3', '4'])->with([
+                        'rincian:kdobat,noresep,jumlah',
+                        'rincianracik:kdobat,noresep,jumlah',
+                        'permintaanresep:kdobat,noresep,jumlah',
+                        'permintaanracikan:kdobat,noresep,jumlah',
+                        'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
+                        'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
+                        'sistembayar',
+                        'dokter:nama,kdpegsimrs',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
+                'newapotekrajalretur:noreg,noretur',
+                'newapotekrajalretur.rinci:noretur,noresep,kdobat,jumlah_retur',
             ]
         )->where('rs17.rs1', request('noreg'))
-            ->get();
-        return new JsonResponse($resume);
+            ->first();
+        return new JsonResponse([
+            'data' => $resume
+        ]);
     }
 }

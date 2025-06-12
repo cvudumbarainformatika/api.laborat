@@ -17,10 +17,10 @@ class GeneralconsentController extends Controller
     public function mastergeneralconsent()
     {
         $data = Mgeneralconsent::select('kelompok', 'pernyataan')
-        // ->where('flag','=',null)
-        ->when(request('kelompok'), function ($query, $param) {
-            $query->where('kelompok', $param);
-        })->get();
+            // ->where('flag','=',null)
+            ->when(request('kelompok'), function ($query, $param) {
+                $query->where('kelompok', $param);
+            })->get();
         return new JsonResponse($data);
     }
 
@@ -50,11 +50,11 @@ class GeneralconsentController extends Controller
                 'nikpetugas' => $request->nikpetugas,
                 'ttdpasien' => $ttdpasien,
                 'ttdpetugas' => $ttdpetugas,
-                'wali1'=> $request->wali1,
-                'wali2'=> $request->wali2,
-                'hubunganWali1'=> $request->hubunganWali1,
-                'hubunganWali2'=> $request->hubunganWali2,
-                'user_input'=> $user,
+                'wali1' => $request->wali1,
+                'wali2' => $request->wali2,
+                'hubunganWali1' => $request->hubunganWali1,
+                'hubunganWali2' => $request->hubunganWali2,
+                'user_input' => $user,
             ]
         );
 
@@ -109,7 +109,7 @@ class GeneralconsentController extends Controller
         } else {
             $imageName = $cek->ttdpasien;
             // Storage::delete('public/' . $imageName);
-            Storage::disk('remote')->delete('public/' . $imageName);
+            // Storage::disk('remote')->delete('public/' . $imageName);
         }
 
 
@@ -140,7 +140,7 @@ class GeneralconsentController extends Controller
         } else {
             $imageName = $cek->ttdpetugas;
             // Storage::delete('public/' . $imageName);
-            Storage::disk('remote')->delete('public/' . $imageName);
+            // Storage::disk('remote')->delete('public/' . $imageName);
         }
 
         // Storage::disk('public')->put($file, $image_base64);
@@ -165,7 +165,7 @@ class GeneralconsentController extends Controller
                 $originalname = $file->getClientOriginalName();
                 $data = Generalconsent::where('norm', '=', $request->norm)->first();
                 // Storage::delete('public/generalconsent/' . $originalname);
-                Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
+                // Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
                 $pdf = null;
                 if ($data) {
                     $pdf = $data;
@@ -216,7 +216,7 @@ class GeneralconsentController extends Controller
         } else {
             $imageName = $cek->ttdpasien;
             // Storage::delete('public/' . $imageName);
-            Storage::disk('remote')->delete('public/' . $imageName);
+            // Storage::disk('remote')->delete('public/' . $imageName);
         }
 
 
