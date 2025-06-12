@@ -296,6 +296,12 @@ class IgdController extends Controller
                 ])->where('ruangan','POL014')
                     ->orderBy('id', 'DESC');
             },
+            'newapotekrajalretur' => function ($newapotekrajalretur) {
+                $newapotekrajalretur->with([
+                    'rinci.mobatnew:kd_obat,nama_obat',
+                ])->where('kdruangan','POL014')
+                    ->orderBy('id', 'DESC');
+            },
             'tinjauanulang' => function($tinjauanulang){
                 $tinjauanulang->select('peninjauan_ulang_igd.*','kepegx.pegawai.nama')->with([
                     'tinjauanulangnips',
