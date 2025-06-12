@@ -62,7 +62,18 @@ class ResumeController extends Controller
                         ->join('rs73_sambung', 'rs73.id', 'rs73_sambung.rs73_id');
                 },
                 'planning' => function ($planning) {
-                    $planning
+                    $planning->with([
+                        // 'masterpoli',
+                        'rekomdpjp' => function ($q) {
+                            $q->orderBy('id', 'DESC');
+                        },
+                        'transrujukan.diagnosa:rs1,rs4',
+                        'listkonsul',
+                        'spri',
+                        'ranap',
+                        'kontrol',
+                        'operasi',
+                    ])
                         ->where('rs4', 'not like', '%Pulang%');
                 },
                 'diagnosakeperawatan.intervensi.masterintervensi',
