@@ -68,6 +68,7 @@ class LaporanGenerikController extends Controller
                 'tgl_selesai',
                 'dokter',
                 'depo',
+                'ruangan',
                 'sistembayar',
                 DB::raw('((TIMESTAMPDIFF(MINUTE,resep_keluar_h.tgl_kirim,resep_keluar_h.tgl_selesai))) AS rt_menit'),
             )->where('tgl_permintaan', 'LIKE', '%' . $tahun . '-' . $bulan . '%')
@@ -82,8 +83,10 @@ class LaporanGenerikController extends Controller
                     'rincian:noresep,kdobat,jumlah',
                     'rincianracik:noresep,kdobat,jumlah',
 
+                    'poli:rs1,rs2 as nama',
+                    'ruanganranap:rs1,rs2 as nama',
                     'sistembayar:rs1,rs2',
-                    // 'ketdokter:kdpegsimrs,nama',
+                    'ketdokter:kdpegsimrs,nama',
                 ])
                 ->whereIn('flag', ['1', '2', '3', '4'])
 
