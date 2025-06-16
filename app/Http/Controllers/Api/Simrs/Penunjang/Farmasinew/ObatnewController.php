@@ -40,6 +40,7 @@ class ObatnewController extends Controller
         $request['kekuatan_dosis'] = $request->kekuatan_dosis ?? '';
         $request['obat_program'] = $request->obat_program ?? '';
         $request['obat_donasi'] = $request->obat_donasi ?? '';
+        $request['obat_kebijakan'] = $request->obat_kebijakan ?? '';
 
         $simpan = Mobatnew::updateOrCreate(
             ['kd_obat' => $kodeobat],

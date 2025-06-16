@@ -428,12 +428,14 @@ class NPD_LSController extends Controller
     public function bastpekerjaan(){
         $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         $data = Serahterima_header::where('serahterima_heder.kodepihakketiga', request('kodepenerima'))
+        ->where('serahterima_heder.kodekegiatanblud', request('kodekegiatanblud'))
         ->whereBetween('serahterima_heder.tgltrans', [$tahun.'-01-01', $tahun.'-12-31'])
         ->where('serahterima_heder.kunci', '=', '1')
         ->where('serahterima_heder.nonpdls', '=', '')
         ->join('serahterima50', 'serahterima50.noserahterimapekerjaan', '=', 'serahterima_heder.noserahterimapekerjaan')
         ->join('mappingpptkkegiatan', 'mappingpptkkegiatan.kodekegiatan', '=', 'serahterima_heder.kodekegiatanblud')
         ->join('pihak_ketiga', 'pihak_ketiga.kode', '=', 'serahterima_heder.kodepihakketiga')
+
         ->select(
             'serahterima_heder.*',
             'mappingpptkkegiatan.kodebidang',
@@ -445,7 +447,22 @@ class NPD_LSController extends Controller
             DB::raw('SUM(serahterima50.nominalpembayaran) as nominalpembayaran')
         )
         ->groupBy('serahterima_heder.noserahterimapekerjaan')
-        ->with('rinci')
+        ->with('rinci'
+            // , function ($rinci){
+            //     $rinci->join('t_tampung', 't_tampung.idpp', '=', 'serahterima50.idserahterima_rinci')
+            //     ->select(
+            //         'serahterima50.*',
+            //         't_tampung.koderek50',
+            //         't_tampung.koderek108',
+            //         't_tampung.uraian108',
+            //         't_tampung.uraian50',
+            //         't_tampung.volume',
+            //         't_tampung.satuan',
+            //         't_tampung.harga',
+            //         't_tampung.pagu'
+            //     );
+            // }
+        )
         ->get();
         return new JsonResponse($data);
     }
@@ -527,7 +544,11 @@ class NPD_LSController extends Controller
                     'bast'=>$request->bast ?? '',
                     // 'kunci'=>'1'
                 ]);
-                $penerimaans = [];
+
+                Serahterima_header::where('noserahterimapekerjaan', $request->noserahterima)
+                    ->update(['nonpdls' => $save->nonpdls]);
+
+            $penerimaans = [];
             foreach ($request->rincians as $rinci){
 
                 $save->npdlsrinci()->create(
@@ -680,6 +701,7 @@ class NPD_LSController extends Controller
                 $header->delete();
                 PenerimaanHeder::whereIn('no_npd', [$request->nonpdls])->update(['no_npd' => '']);
                 BastKonsinyasi::whereIn('no_npd', [$request->nonpdls])->update(['no_npd' => '']);
+                Serahterima_header::whereIn('nonpdls', [$request->nonpdls])->update(['nonpdls' => '']);
                 return new JsonResponse([
                     'message' => 'Data Berhasil dihapus',
                     'data' => []

@@ -100,7 +100,7 @@ class SerahterimaController extends Controller
                     'userentry'=>$pegawai ?? '',
                 ]
             );
-            foreach ($request->rincian as $rinci)
+            foreach ($request->rinci as $rinci)
             {
                 $save->rinci()->create(
                     [
