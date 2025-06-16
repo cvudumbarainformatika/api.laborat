@@ -597,4 +597,5 @@ class KunjunganPoli extends Model
     {
         return $this->hasMany(Kamarjenasahtrans::class, 'rs1', 'rs1');
     }
+
 }

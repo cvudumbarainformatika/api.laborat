@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Laborat;
 
+use App\Models\Interpretasi;
 use App\Models\Simrs\Master\Mpemeriksaanlab;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,11 @@ class Laboratpemeriksaan extends Model
     public function laboratmetas()
     {
         return $this->hasMany(LaboratMeta::class, 'rs2', 'nota');
+    }
+
+    public function interpretasi()
+    {
+        return $this->belongsTo(Interpretasi::class, 'rs5', 'rs2');
     }
 
     public function getSubtotalAttribute()

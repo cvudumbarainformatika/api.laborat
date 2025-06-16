@@ -247,7 +247,11 @@ class IgdController extends Controller
                     ->orderBy('id', 'DESC');
             },
             'laboratold'=> function ($t) {
-                $t->select('rs51.*','rs49.rs2 as pemeriksaan','rs49.rs21 as paket')->with('pemeriksaanlab')
+                $t->select('rs51.*','rs49.rs2 as pemeriksaan','rs49.rs21 as paket')->with(
+                    [
+                        'pemeriksaanlab',
+                        'interpretasi'
+                    ])
                 ->leftjoin('rs49','rs49.rs1','rs51.rs4')
                     ->orderBy('id', 'DESC')->where('rs51.rs23','POL014');
             },

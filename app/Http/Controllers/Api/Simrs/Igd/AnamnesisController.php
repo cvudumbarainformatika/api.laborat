@@ -23,7 +23,7 @@ class AnamnesisController extends Controller
 
         if ($request->has('id')) {
 
-            $hasilx = Anamnesis::where('id', $request->id)->update(
+            $data = Anamnesis::where('id', $request->id)->update(
                 [
                     'rs1' => $request->noreg,
                     'rs2' => $request->norm,
@@ -161,19 +161,31 @@ class AnamnesisController extends Controller
                 $hapusbps = $caribps->delete();
             }
 
-            $hasil = Anamnesis::select('rs209.*')->with(
-                [
-                    'anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'
-                ]
-            )->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
-            ->where('rs209.rs1', $request->noreg)
-            ->where('kdruang', 'POL014')
-            ->limit(1)
-            ->orderBy('rs209.id','Desc')
-            ->get();
+            // $hasil = Anamnesis::select('rs209.*')->with(
+            //     [
+            //         'anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'
+            //     ]
+            // )->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs209.user')
+            // ->where('rs209.rs1', $request->noreg)
+            // ->where('kdruang', 'POL014')
+            // ->limit(1)
+            // ->orderBy('rs209.id','Desc')
+            // ->get();
+
+            $hasil = Anamnesis::with(
+                    [
+                        'anamnesetambahan','anamnesebps','anamnesenips','datasimpeg'
+                    ]
+                )->where('id', $request->id)
+                ->where('kdruang', 'POL014')
+                ->limit(1)
+                ->orderBy('id','Desc')
+                ->get();
+
+
 
             return new JsonResponse([
-                'message' => 'BERHASIL DISIMPAN',
+                'message' => 'BERHASIL DISIMPANx',
                 'result' => $hasil
             ], 200);
 
