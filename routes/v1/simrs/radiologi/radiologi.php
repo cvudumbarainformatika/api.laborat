@@ -11,11 +11,18 @@ Route::group([
 ], function () {
     Route::get('/pasienradiologi', [RadiologiController::class, 'index']); 
     Route::get('/getDataPasienRadiologiByNota', [RadiologiController::class, 'getDataPasienRadiologiByNota']); 
-    Route::post('/simpanHasilByKode', [RadiologiController::class, 'simpanHasil']); 
+    Route::post('/simpanHasilByKode', [RadiologiController::class, 'simpanHasil']);
+    Route::post('/terimapasienradiologi', [RadiologiController::class, 'terimapasienradiologi']); 
+    Route::post('/batalkanpasienradiologi', [RadiologiController::class, 'batalkanpasienradiologi']); 
+    Route::post('/selesaikanlayananradiologi', [RadiologiController::class, 'selesaikanlayananradiologi']); 
 
 
     Route::post('/simpanPermintaan', [RadiologiLuarController::class, 'simpanPermintaan']); 
     Route::get('/pasienradiologiluar', [RadiologiLuarController::class, 'index']); 
+    Route::post('/simpanHasilRadiologiLuar', [RadiologiLuarController::class, 'simpanHasilRadiologiLuar']); 
+    Route::post('/terimapasienradiologiluar', [RadiologiLuarController::class, 'terimapasienradiologiluar']); 
+    Route::post('/batalkanpasienradiologiluar', [RadiologiLuarController::class, 'batalkanpasienradiologiluar']); 
+    Route::post('/selesaikanlayananradiologiluar', [RadiologiLuarController::class, 'selesaikanlayananradiologiluar']); 
 
     
 });

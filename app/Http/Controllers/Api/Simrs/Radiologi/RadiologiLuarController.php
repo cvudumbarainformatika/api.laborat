@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Radiologi;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Radiologi\HasilRadiologiLuar;
 use App\Models\Simrs\Penunjang\Radiologi\RadiologiLuar;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,7 @@ class RadiologiLuarController extends Controller
   public function index()
   {
 
-     $total = $this->query_table()->get()->count();
+      $total = $this->query_table()->get()->count();
       $data = $this->query_table()->simplePaginate(request('per_page'));
 
       $response = (object)[
@@ -24,26 +25,6 @@ class RadiologiLuarController extends Controller
       ];
 
       return response()->json($response);
-
-
-    //  $data = RadiologiLuar::select([
-    //     'rs1 as notrans',
-    //     'rs8 as tglentri',
-    //     'rs2 as nama',
-    //     'rs3 as alamat',
-    //     'rs4 as kelamin',
-    //     DB::raw('YEAR(CURDATE()) - YEAR(rs5) as usia'),
-    //     'rs6 as dari',
-    //     'rs9 as permintaan',
-    //     'rs10 as flag',
-    //     'jenispembayaran',
-    //     'perusahaan'
-    // ])
-    // ->whereNull('rs11')
-    // ->orderByDesc('rs1')
-    // ->simplePaginate(request('per_page'));
-
-    // return new JsonResponse($data);
   }
 
   private function query_table()
@@ -61,12 +42,14 @@ class RadiologiLuarController extends Controller
       $status = request('status') ?? 'Semua';
 
     $select =  RadiologiLuar::select([
+        'rs270.rs1',
         'rs270.rs1 as notrans',
         'rs270.rs8 as tglentri',
         'rs270.rs2 as nama',
         'rs270.rs3 as alamat',
         'rs270.rs4 as kelamin',
         DB::raw('YEAR(CURDATE()) - YEAR(rs270.rs5) as usia'),
+        'rs270.rs5 as tgllahir',
         'rs270.rs6 as dari',
         'rs270.rs9 as permintaan',
         'rs270.rs10 as flag',
@@ -75,20 +58,37 @@ class RadiologiLuarController extends Controller
         'perusahaan.perusahaan',
         'rs270.nik',
     ]);
-    // ->whereNull('rs11')
-    // ->orderByDesc('rs1');
+
+    $select->with(['rincians'=>function($q){
+        // $q->select('rs271.id','rs271.rs1','rs271.rs2','rs271.rs3','rs271.rs4','rs271.rs5','rs271.rs6','rs271.rs7','rs271.rs8','rs271.rs9','rs271.rs10','rs271.rs11','rs47.rs2 as nama')
+        $q->select('rs271.*','rs47.rs2 as nama', 'rs47.rs3 as jenis', 
+        'rs272.hasil as hasil', 
+        'rs272.rs8 as kesimpulan',
+        'rs272.rs9 as pelaksana',
+        )
+        // ->leftJoin('rs47', function ($join){$join->on('rs271.rs3', '=', 'rs47.rs1');});
+        ->leftJoin('rs47', fn($join) => $join->on('rs271.rs3', '=', 'rs47.rs1'))
+        ->leftJoin('rs272', fn($join) => 
+            $join->on('rs272.kode', '=', 'rs271.rs3')
+                ->on('rs272.rs1', '=', 'rs271.rs1')
+        );
+    }]);
+
 
     $select->leftJoin('perusahaan', 'perusahaan.id', '=', 'rs270.perusahaan');
+    
+    $select->whereBetween('rs270.rs8', [$tgl, $tglx]);
 
     if ($status !== 'Semua') {
       if ($status === 'Terlayani') {
             $select->where('rs270.rs10', '=', '1');
-            $select->whereBetween('rs270.rs8', [$tgl, $tglx]);
+            // $select->whereBetween('rs270.rs8', [$tgl, $tglx]);
         } else {
-            $select->where('rs270.rs10', '=', '');
+            $select->whereIn('rs270.rs10', [null,'']);
         }
     } else {
-      $select->whereBetween('rs270.rs8', [$tgl, $tglx]);
+      $select->whereIn('rs270.rs10', [null,'', '1', '2', '3']);
+              // ->whereBetween('rs270.rs8', [$tgl, $tglx]);
     }
 
     if (request('q') !== '' && request('q') !== null) {
@@ -185,6 +185,72 @@ class RadiologiLuarController extends Controller
     $prefix = now()->format('ymd');
     $number = str_pad($n, 4, '0', STR_PAD_LEFT);
     return "{$prefix}/{$number}{$kode}";
+  }
+
+  public function simpanHasilRadiologiLuar(Request $request)
+  {
+      $notrans = trim($request->notrans);
+      $tgllahir = $request->tgllahir;
+
+      // Cek apakah permintaan radiologi ada berdasarkan nota dan kode
+      $cek = DB::table('rs271')->where('rs1', $notrans)->where('rs3', $request->kode)->exists();
+
+      if ($cek) {
+          $simpan = HasilRadiologiLuar::updateOrCreate(
+            [
+              'rs1' => $notrans,
+              'kode' => $request->kode
+            ],
+            [
+              
+              'rs2' => trim($request->nama),
+              'rs3' => trim($request->alamat),
+              'rs4' => trim($request->kelamin),
+              'rs5' => $tgllahir,
+              'rs6' => trim($request->yangmemimnta),
+              'rs7' => Carbon::now()->format('Y-m-d H:i:s'),
+              'rs8' => trim($request->kesimpulan),
+              'rs9' => trim($request->dokter),
+              'rs10' => Carbon::now()->format('Y-m-d H:i:s'), // ini nanti jadi updated at
+              'rs11' => auth()->user()->pegawai_id ?? 'system', // fallback jika belum login
+              'hasil' => $request->hasil
+          ]
+        );
+
+          // DB::table('rs270')->where('rs1', $notrans)->update([
+          //     'rs11' => 1,
+          // ]);
+
+          return new JsonResponse(['message' => 'Data berhasil disimpan', 'data' => $simpan], 200);
+      } else {
+          return response("Hasil Tidak Bisa Dientry Karena Belum Ada Permintaan...!!");
+      }
+  }
+
+
+  public function terimapasienradiologiluar(Request $request)
+  {
+      $notrans = trim($request->notrans);
+      DB::table('rs270')->where('rs1', $notrans)->update([
+          'rs10' => '2',
+      ]);
+      return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
+  }
+  public function batalkanpasienradiologiluar(Request $request)
+  {
+      $notrans = trim($request->notrans);
+      DB::table('rs270')->where('rs1', $notrans)->update([
+          'rs10' => '3',
+      ]);
+      return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
+  }
+  public function selesaikanlayananradiologiluar(Request $request)
+  {
+      $notrans = trim($request->notrans);
+      DB::table('rs270')->where('rs1', $notrans)->update([
+          'rs10' => '1',
+      ]);
+      return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
   }
 
 

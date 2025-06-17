@@ -5,18 +5,10 @@ namespace App\Models\Simrs\Penunjang\Radiologi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RadiologiLuar extends Model
+class HasilRadiologiLuar extends Model
 {
     use HasFactory;
-    protected $table = 'rs270';
+    protected $table = 'rs272';
     protected $guarded = ['id'];
     public $timestamps = false;
-
-
-    public function rincians()
-    {
-       return $this->hasMany(RincianPermintaanLuar::class, 'rs1', 'rs1');
-    }
-
-
 }

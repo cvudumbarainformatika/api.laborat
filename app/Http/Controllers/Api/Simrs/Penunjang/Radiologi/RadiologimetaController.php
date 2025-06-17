@@ -118,7 +118,7 @@ class RadiologimetaController extends Controller
                     'rs4' => $request->permintaan,
                     'rs7' => $request->keterangan,
                     'rs8' => $request->kodedokter, //$request->kodedokter
-                    'rs9' => '1',
+                    'rs9' => '',
                     'rs10' => $request->kodepoli, // ruangan
                     'rs11' => $userid['kodesimrs'],
                     'rs13' => $request->isRanap ? $request->kdgroup_ruangan : $request->kodepoli, // group_ruangan

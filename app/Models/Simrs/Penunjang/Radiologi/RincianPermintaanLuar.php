@@ -5,18 +5,16 @@ namespace App\Models\Simrs\Penunjang\Radiologi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RadiologiLuar extends Model
+class RincianPermintaanLuar extends Model
 {
     use HasFactory;
-    protected $table = 'rs270';
+    protected $table = 'rs271';
     protected $guarded = ['id'];
     public $timestamps = false;
 
-
-    public function rincians()
+    public function mpemeriksaanradiologi()
     {
-       return $this->hasMany(RincianPermintaanLuar::class, 'rs1', 'rs1');
+        return $this->belongsTo(Mpemeriksaanradiologi::class, 'rs3', 'rs1');
     }
-
 
 }
