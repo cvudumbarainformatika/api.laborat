@@ -317,31 +317,31 @@ class IgdController extends Controller
                     'tinjauanulangbps'
                 ])->leftjoin('kepegx.pegawai','kepegx.pegawai.kdpegsimrs','peninjauan_ulang_igd.user');
             },
-            'konsuldokterspesialis' => function ($konsuldokterspesialis){
-                $konsuldokterspesialis->with(
-                    [
-                        'tindakan' => function($tindakans){
-                            $tindakans->with(
-                                [
-                                    'ruangranap',
-                                    'dokumentransfer'
-                                ]
-                            );
-                        },
-                        'planrujukan',
-                        'planpulang' => function ($planpulang) {
-                            $planpulang->with(
-                                [
-                                    'dokterpenangungjawabpulang' => function ($dokterpenangungjawabpulang) {
-                                        $dokterpenangungjawabpulang->select('*')
-                                            ->leftjoin('m_golruang', 'm_golruang.kode_gol', 'pegawai.golruang')
-                                            ->leftjoin('m_jabatan', 'm_jabatan.kode_jabatan', 'pegawai.jabatan');
-                                    }
-                                ]
-                            );
-                        }
-                    ]);
-                },
+            // 'konsuldokterspesialis' => function ($konsuldokterspesialis){
+            //     $konsuldokterspesialis->with(
+            //         [
+            //             'tindakan' => function($tindakans){
+            //                 $tindakans->with(
+            //                     [
+            //                         'ruangranap',
+            //                         'dokumentransfer'
+            //                     ]
+            //                 );
+            //             },
+            //             'planrujukan',
+            //             'planpulang' => function ($planpulang) {
+            //                 $planpulang->with(
+            //                     [
+            //                         'dokterpenangungjawabpulang' => function ($dokterpenangungjawabpulang) {
+            //                             $dokterpenangungjawabpulang->select('*')
+            //                                 ->leftjoin('m_golruang', 'm_golruang.kode_gol', 'pegawai.golruang')
+            //                                 ->leftjoin('m_jabatan', 'm_jabatan.kode_jabatan', 'pegawai.jabatan');
+            //                         }
+            //                     ]
+            //                 );
+            //             }
+            //         ]);
+            //     },
                 'ambulan' => function ($ambulan) {
                     $ambulan->with(
                         [
@@ -436,7 +436,8 @@ class IgdController extends Controller
                                     ]
                                 );
                             },
-                            'nakesminta'
+                            'nakesminta',
+                            'dokterkonsul'
                         ]
                     )->where('kdruang', 'POL014');
                 },
