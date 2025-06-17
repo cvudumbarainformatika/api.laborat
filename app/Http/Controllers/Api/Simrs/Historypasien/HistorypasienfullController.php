@@ -438,6 +438,7 @@ class HistorypasienfullController extends Controller
                         'dokumenluar' => function ($a) {
                             $a->with(['pegawai:id,nama']);
                         },
+                        
                         'kamaroperasi' => function ($kamaroperasi) {
                             $kamaroperasi->with(['mastertindakanoperasi']);
                         },
@@ -473,6 +474,7 @@ class HistorypasienfullController extends Controller
                 )->first();
         } else {
             $data = KunjunganPoli::select(
+                'rs17.rs2', 'rs17.rs3', 'rs17.rs4', 'rs17.rs9', 'rs17.rs19',
                 'rs17.rs1',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
@@ -536,6 +538,32 @@ class HistorypasienfullController extends Controller
                             $kamaroperasi->with(['mastertindakanoperasi']);
                         },
                         'praanastesi',
+                        'planning' => function ($p) {
+                            $p->with([
+                                'masterpoli',
+                                'rekomdpjp' => function ($q) {
+                                    $q->orderBy('id', 'DESC');
+                                },
+                                'transrujukan.diagnosa:rs1,rs4', 
+                                'listkonsul'=> function ($q) {
+                                    $q->select('listkonsulanpoli.*', DB::raw('pa.rs2 as poliasal'),
+                                        DB::raw('pt.rs2 as politujuan'))
+                                        ->leftJoin('rs19 as pa', 'listkonsulanpoli.kdpoli_asal', '=', 'pa.rs1')
+                                        ->leftJoin('rs19 as pt', 'listkonsulanpoli.kdpoli_tujuan', '=', 'pt.rs1');
+                                },
+                                'spri',
+                                'ranap',
+                                'kontrol',
+                                'operasi',
+                            ])->orderBy('id', 'DESC');
+                        },
+                        'jawabankonsul' => function ($x) {
+                            $x->with([
+                                'poliAsal:rs1,rs2',
+                                'poliTujuan:rs1,rs2',
+                            ])
+                                ->orderBy('id', 'DESC');
+                        },
                         'newapotekrajal' => function ($apt) {
                             $apt->with(
                                 [
