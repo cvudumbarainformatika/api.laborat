@@ -29,6 +29,11 @@ class PemakaianR extends Model
         // return $this;
         return $this->hasMany(PenerimaanRinci::class, 'kdobat', 'kd_obat');
     }
+    public function penerimaanrinci()
+    {
+        // return $this;
+        return $this->hasMany(PenerimaanRinci::class, 'nopenerimaan', 'nopenerimaan');
+    }
     public function opname()
     {
         return $this->hasMany(Stokopname::class, 'kdobat', 'kd_obat');
