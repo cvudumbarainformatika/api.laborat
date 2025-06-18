@@ -259,6 +259,17 @@ class FormatingHelper
         return $has . $n  . '/' . $kode . '/' . $rom[date('n')] . '/' . date('Y');
     }
 
+    public static function nonotadinas($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        $rom = array('','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII');
+        for ($i = 1; $i <= 6 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $has . $n  .'/' . $rom[date('n')] . '/' . $kode .  '/' . date('Y');
+    }
+
     public static function noarsip($n, $kode, $tahun)
     {
         $has = null;
