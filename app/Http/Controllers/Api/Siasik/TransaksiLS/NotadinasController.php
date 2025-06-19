@@ -24,11 +24,16 @@ class NotadinasController extends Controller
             ->join('npdls_heder', 'npdls_heder.nonotadinas', '=',  'notadinas_heder.nonotadinas')
             ->with('rincians', function ($query) {
                 $query->join('npdls_heder', 'npdls_heder.nonpdls', '=',  'notadinas_rinci.nonpdls')
+                // ->leftJoin('npdls_rinci', 'npdls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
                 ->select('npdls_heder.pptk',
                  'npdls_heder.penerima',
                  'npdls_heder.bidang',
+                 'npdls_heder.tglnpdls',
                  'npdls_heder.keterangan',
-                 'notadinas_rinci.*');
+                 'npdls_heder.nonpdls',
+                 'notadinas_rinci.*',
+                //  'npdls_rinci.*'
+                );
             })
             ->select('notadinas_heder.*',
                 'npdls_heder.nonpk',
@@ -89,6 +94,32 @@ class NotadinasController extends Controller
         } else {
             $nonotadinas = $request->nonotadinas;
         }
+
+        if (empty($request->nosptjm)) {
+            DB::connection('siasik')->select('call nosptjm(@nomor)');
+            $x = DB::connection('siasik')->table('conter')->select('nosptjm')->first();
+
+            if (!$x) {
+                throw new \Exception('Gagal mendapatkan nomor dari prosedur nosptjm');
+            }
+            $nomer = (int)$x->nosptjm;
+            $nosptjm = FormatingHelper::nonotadinas($nomer, 'SPTJ');
+        } else {
+            $nosptjm = $request->nosptjm;
+        }
+
+        if (empty($request->noverifikasi)) {
+            DB::connection('siasik')->select('call noverifikasi(@nomor)');
+            $x = DB::connection('siasik')->table('conter')->select('noverifikasi')->first();
+
+            if (!$x) {
+                throw new \Exception('Gagal mendapatkan nomor dari prosedur noverifikasi');
+            }
+            $nomer = (int)$x->noverifikasi;
+            $noverifikasi = FormatingHelper::nonotadinas($nomer, 'VERIF-SPJ');
+        } else {
+            $noverifikasi = $request->noverifikasi;
+        }
         $time = date('Y-m-d H:i:s');
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
@@ -102,6 +133,8 @@ class NotadinasController extends Controller
                     'nonotadinas' => $nonotadinas
                 ],
                 values: [
+                    'nosptjm' => $nosptjm ?? '',
+                    'noverifikasi' => $noverifikasi ?? '',
                     'tglnotadinas'=>$request->tglnotadinas ?? '',
                     'kodepptk'=>$request->kodepptk ?? '',
                     'namapptk'=>$request->namapptk ?? '',
