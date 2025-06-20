@@ -7,10 +7,11 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Transpermintaanradiologi extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'rs106';
     protected $guarded = ['id'];
     // public $timestamps = false;

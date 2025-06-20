@@ -262,6 +262,8 @@ class RadiologimetaController extends Controller
 
     public function hapusradiologi(Request $request)
     {
+        
+        
         $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=', '1')->get();
         if (count($cekKasir) > 0) {
             return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal ' . $cekKasir[0]->rs42], 500);
@@ -272,7 +274,8 @@ class RadiologimetaController extends Controller
             return new JsonResponse(['message' => 'data tidak ditemukan'], 501);
         }
 
-        $kunci = $cari->rs12 === '1';
+        // $kunci = $cari->rs12 === '1'; ini yg lama
+        $kunci = $cari->rs9 === '1'|| $cari->rs9 === '2'; 
         if ($kunci) {
             return new JsonResponse(['message' => 'Maaf, Data telah dikunci'], 500);
         }

@@ -564,7 +564,7 @@ class RanapController extends Controller
                                     ->on('rs48.rs1', '=', 'rs151.rs1')
                                     ->on('rs48.rs4','=','rs151.kode');
                             })
-                            ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.rs4 as pelaksana');
+                            ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.hasilhtml','rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
                         }, 'rincians.relmasterpemeriksaan'
                     ])->orderBy('id', 'DESC')
                         ->where('rs10', '!=', 'POL014')

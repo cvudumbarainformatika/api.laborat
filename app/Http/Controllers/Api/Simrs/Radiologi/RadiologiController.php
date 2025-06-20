@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Radiologi;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Radiologi\HasilRadiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
+use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -409,6 +410,8 @@ class RadiologiController extends Controller
                 'rs106.rs15',
                 'rs106.statusalergipasien',
                 'rs106.statuskehamilan',
+                'rs106.trmtgl',
+                'rs106.updateststgl',
             ])
             ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
@@ -429,7 +432,7 @@ class RadiologiController extends Controller
                     })->leftJoin('rs47', function ($join){
                         $join->on('rs48.rs4', '=', 'rs47.rs1');
                     })
-                    ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.rs4 as pelaksana','rs151.id','rs151.rs2 as tgl',
+                    ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.rs4 as pelaksana','rs151.id','rs151.rs2 as tgl', 'rs151.hasilhtml','rs151.kesimpulanhtml',
                         'rs47.rs2 as nama', 'rs47.rs1 as kode', 'rs47.rs3 as jenis',
                     );
                 }
@@ -465,6 +468,8 @@ class RadiologiController extends Controller
         $data->rs5 = $nota;
         $data->hasil = $request->hasil;
         $data->kode = $request->kode;
+        $data->hasilhtml = $request->hasilhtml;
+        $data->kesimpulanhtml = $request->kesimpulanhtml;
         $data->save();
 
         return response()->json(['message' => 'Data berhasil disimpan'], 200);
@@ -475,8 +480,9 @@ class RadiologiController extends Controller
     public function terimapasienradiologi(Request $request)
     {
         $notrans = trim($request->notrans);
-        DB::table('rs106')->where('rs2', $notrans)->update([
+        Transpermintaanradiologi::where('rs2', $notrans)->update([
             'rs9' => '2',
+            'trmtgl' => date('Y-m-d H:i:s')
         ]);
         return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
     }
@@ -484,16 +490,23 @@ class RadiologiController extends Controller
     public function batalkanpasienradiologi(Request $request)
     {
         $notrans = trim($request->notrans);
-        DB::table('rs106')->where('rs2', $notrans)->update([
+        Transpermintaanradiologi::where('rs2', $notrans)->update([
             'rs9' => '3',
+            'alasanpembatalan' => $request->alasan,
+            'updateststgl' => date('Y-m-d H:i:s')
         ]);
+
+        Transradiologi::where('rs2', $notrans)->delete();
+
+        
         return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
     }
     public function selesaikanlayananradiologi(Request $request)
     {
         $notrans = trim($request->notrans);
-        DB::table('rs106')->where('rs2', $notrans)->update([
+        Transpermintaanradiologi::where('rs2', $notrans)->update([
             'rs9' => '1',
+            'updateststgl' => date('Y-m-d H:i:s')
         ]);
         return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
     }

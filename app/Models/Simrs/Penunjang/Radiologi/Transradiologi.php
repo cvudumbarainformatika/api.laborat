@@ -4,10 +4,11 @@ namespace App\Models\Simrs\Penunjang\Radiologi;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Transradiologi extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'rs48';
     protected $guarded = ['id'];
     public $timestamps = false;
