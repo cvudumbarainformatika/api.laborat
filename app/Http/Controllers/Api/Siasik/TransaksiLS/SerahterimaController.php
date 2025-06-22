@@ -20,10 +20,19 @@ class SerahterimaController extends Controller
 {
     public function listdatastp()
     {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $data = Serahterima_header::whereBetween('serahterima_heder.tgltrans', [$tahunawal.'-01-01', $tahun.'-12-31'])
-            ->with('rinci')
+        ->select('serahterima_heder.*');
+
+        if ($sa !== 'sa') {
+            $data->where('serahterima_heder.kodepptk', $pegawai);
+        }
+            $stp=$data->with('rinci')
             ->when(request('q'), function($q){
                 $q->where('serahterima_heder.noserahterimapekerjaan', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('serahterima_heder.nokontrak', 'LIKE', '%' . request('q') . '%')
@@ -35,7 +44,7 @@ class SerahterimaController extends Controller
             })
             ->orderBy('serahterima_heder.tgltrans', 'desc')
             ->get();
-        return new JsonResponse($data);
+        return new JsonResponse($stp);
 
     }
     public function getkontrak(){

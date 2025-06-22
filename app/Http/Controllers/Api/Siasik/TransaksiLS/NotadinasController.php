@@ -17,10 +17,18 @@ class NotadinasController extends Controller
 {
     public function listdata()
     {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
-        $data = Notadinas_header::whereBetween('notadinas_heder.tglnotadinas', [$tahunawal.'-01-01', $tahun.'-12-31'])
-            ->join('notadinas_rinci', 'notadinas_rinci.nonotadinas', '=',  'notadinas_heder.nonotadinas')
+        $data = Notadinas_header::whereBetween('notadinas_heder.tglnotadinas', [$tahunawal.'-01-01', $tahun.'-12-31']);
+
+            if ($sa !== 'sa') {
+                $data->where('notadinas_heder.kodepptk', $pegawai);
+            }
+            $nota=$data->join('notadinas_rinci', 'notadinas_rinci.nonotadinas', '=',  'notadinas_heder.nonotadinas')
             ->join('npdls_heder', 'npdls_heder.nonotadinas', '=',  'notadinas_heder.nonotadinas')
             ->with('rincians', function ($query) {
                 $query->join('npdls_heder', 'npdls_heder.nonpdls', '=',  'notadinas_rinci.nonpdls')
@@ -52,7 +60,7 @@ class NotadinasController extends Controller
             ->groupBy('notadinas_heder.nonotadinas')
             ->orderBy('notadinas_heder.tglnotadinas', 'desc')
             ->get();
-        return new JsonResponse($data);
+        return new JsonResponse($nota);
 
     }
 
