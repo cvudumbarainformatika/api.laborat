@@ -16,22 +16,28 @@ class KontrakController extends Controller
 {
     public function listkontrak()
     {
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
-        $data = KontrakPengerjaan::when(request('q'),function ($query) {
+        $data = KontrakPengerjaan::whereBetween('tgltrans', [$tahunawal.'-01-01', $tahun.'-12-31']);
+        if ($sa !== 'sa') {
+            $data->where('kodepptk', $pegawai);
+        }
+        $kontrak=$data->when(request('q'),function ($query) {
             $query->where('nokontrak', 'LIKE', '%' . request('q') . '%')
             ->orWhere('namaperusahaan', 'LIKE', '%' . request('q') . '%')
             ->orWhere('nilaikontrak', 'LIKE', '%' . request('q') . '%')
             ->orWhere('nokontrakx', 'LIKE', '%' . request('q') . '%')
             ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
         })
-        // ->whereYear('tgltrans', date('Y'))
-        ->whereBetween('tgltrans', [$tahunawal.'-01-01', $tahun.'-12-31'])
         ->orderBy('tglentry', 'desc')
         ->get();
         // ->paginate(request('per_page'));
 
-        return new JsonResponse($data);
+        return new JsonResponse($kontrak);
     }
     public function simpankontrak(Request $request)
     {
