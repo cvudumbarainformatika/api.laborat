@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\Antrean\master\PoliController;
+use App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal\Bridbpjscontroller;
 use App\Http\Controllers\Api\Simrs\Rajal\EditsuratbpjsController;
-use App\Http\Controllers\Api\Simrs\Rajal\KunjunganPoliBynoregController;
 use App\Http\Controllers\Api\Simrs\Rajal\KunjunganPoliController;
 use App\Http\Controllers\Api\Simrs\Rajal\PoliController as RajalPoliController;
 use App\Http\Controllers\Api\Simrs\Rajal\RmeRajalController;
@@ -34,4 +34,6 @@ Route::group([
     Route::post('/tidakhadir', [RajalPoliController::class, 'tidakhadir']);
 
     Route::get('/datamrerajal', [RmeRajalController::class, 'rmerajal']);
+
+    Route::get('/suratkontrolbysuratkontrol', [RmeRajalController::class, 'suratkontrolbysuratkontrol']);
 });

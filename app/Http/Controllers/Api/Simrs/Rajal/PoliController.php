@@ -551,6 +551,9 @@ class PoliController extends Controller
                 'radiologi' => function ($t) {
                     $t->orderBy('id', 'DESC');
                 },
+                'hasilradiologi' => function ($t) {
+                    $t->orderBy('id', 'DESC');
+                },
                 'penunjanglain' => function ($t) {
                     $t->with('masterpenunjang')->orderBy('id', 'DESC');
                 },
@@ -568,9 +571,22 @@ class PoliController extends Controller
                 'ok' => function ($q) {
                     $q->orderBy('id', 'DESC');
                 },
+                'kamaroperasi' => function ($kamaroperasi) {
+                    $kamaroperasi->with(['mastertindakanoperasi','laporanoperasi']);
+                },
                 'taskid' => function ($q) {
                     $q->orderBy('taskid', 'DESC');
                 },
+                'bpjssuratkontrol',
+                'laboratold'=> function ($t) {
+                $t->select('rs51.*','rs49.rs2 as pemeriksaan','rs49.rs21 as paket')->with(
+                    [
+                        'pemeriksaanlab',
+                        'interpretasi'
+                    ])
+                ->leftjoin('rs49','rs49.rs1','rs51.rs4')
+                    ->orderBy('id', 'DESC');
+            },
                 'planning' => function ($p) {
                     $p->with([
                         'masterpoli',
@@ -602,11 +618,13 @@ class PoliController extends Controller
                     $sharing->orderBy('id', 'DESC');
                 },
                 'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->whereIn('flag', ['', '1', '2', '3', '4'])->with([
+                    $newapotekrajal->with([
                         'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
                         'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
-                        'sistembayar',
-                        'dokter:nama,kdpegsimrs',
+                            'rincian.mobat:kd_obat,nama_obat',
+                            'rincianracik.mobat:kd_obat,nama_obat',
+                        // 'sistembayar',
+                        // 'dokter:nama,kdpegsimrs',
                     ])
                         ->orderBy('id', 'DESC');
                 },

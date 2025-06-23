@@ -300,8 +300,8 @@ class IgdController extends Controller
                 $newapotekrajal->with([
                     'permintaanresep.mobat:kd_obat,nama_obat',
                     'permintaanracikan.mobat:kd_obat,nama_obat',
-                    'rincian.mobat:kd_obat,nama_obat',
-                    'rincianracik.mobat:kd_obat,nama_obat'
+                        'rincian.mobat:kd_obat,nama_obat',
+                        'rincianracik.mobat:kd_obat,nama_obat'
                 ])->where('ruangan','POL014')
                     ->orderBy('id', 'DESC');
             },

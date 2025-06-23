@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 
+use App\Models\Simrs\Laporan\Operasi\LaporanOperasi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,5 +28,9 @@ class Kamaroperasi extends Model
     public function mastertindakanoperasi()
     {
         return $this->hasOne(Masteroperasi::class, 'rs1', 'rs4');
+    }
+    public function laporanoperasi()
+    {
+        return $this->hasOne(LaporanOperasi::class, 'tindakan', 'id');
     }
 }

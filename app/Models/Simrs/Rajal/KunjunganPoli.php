@@ -77,6 +77,7 @@ use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
 use App\Models\Simrs\Planing\Planing_Igd_Lama;
+use App\Models\Simrs\Planing\Simpansuratkontrol;
 use App\Models\Simrs\Planing\SkalaTransferIgd;
 use App\Models\Simrs\Rajal\Igd\PemberianObatIgd;
 use App\Models\Simrs\Rajal\Igd\RencanaTerapiDokter;
@@ -596,6 +597,11 @@ class KunjunganPoli extends Model
     public function kamarjenazah()
     {
         return $this->hasMany(Kamarjenasahtrans::class, 'rs1', 'rs1');
+    }
+
+    public function bpjssuratkontrol()
+    {
+        return $this->hasOne(Simpansuratkontrol::class, 'noreg', 'rs1');
     }
 
 }

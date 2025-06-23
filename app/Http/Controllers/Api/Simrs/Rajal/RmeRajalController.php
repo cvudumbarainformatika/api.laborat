@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Rajal;
 
+use App\Helpers\BridgingbpjsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
@@ -56,5 +57,12 @@ class RmeRajalController extends Controller
         )->where('rs1', request('noreg'))
             ->get();
         return new JsonResponse($data);
+    }
+
+    public function suratkontrolbysuratkontrol()
+    {
+        $suratKontrol = request('noSuratKontrol');
+        $kontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . $suratKontrol);
+        return $kontrol;
     }
 }
