@@ -55,12 +55,14 @@ class NPD_LSController extends Controller
     }
     public function listnpdls()
     {
-        // $user = auth()->user()->pegawai_id;
-        // $pg= Pegawai::find($user);
-        // $pegawai= $pg->kdpegsimrs;
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
-        $npdls = NpdLS_heder::select(
+        $data = NpdLS_heder::whereBetween('tglnpdls', [$tahunawal . '-01-01', $tahun . '-12-31'])
+        ->select(
             'npdls_heder.id',
                     'npdls_heder.nonpdls',
                     'npdls_heder.nonpk',
@@ -85,40 +87,51 @@ class NPD_LSController extends Controller
                     'npdls_heder.nopencairan',
                     'npdls_heder.userentry',
                     'npdls_heder.serahterimapekerjaan',
-                    'npdls_heder.kunci')
-            // ->where('userentry', $pegawai)
-            ->when(request('q'),function ($query) {
-                $query
-                ->where('nonpdls', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('tglnpdls', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('pptk', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('bidang', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('penerima', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('keterangan', 'LIKE', '%' . request('q') . '%')
-                ->orWhere('nopencairan', 'LIKE', '%' . request('q') . '%')
-                ;
-            })->whereBetween('tglnpdls', [$tahunawal.'-01-01', $tahun.'-12-31'])
-            ->with(['npdlsrinci'=> function($rinci){
-                $rinci->select('npdls_rinci.nonpdls',
-                            'npdls_rinci.id',
-                            'npdls_rinci.bast_r_id',
-                            'npdls_rinci.nopenerimaan',
-                            'npdls_rinci.koderek50',
-                            'npdls_rinci.rincianbelanja',
-                            'npdls_rinci.koderek108',
-                            'npdls_rinci.uraian108',
-                            'npdls_rinci.itembelanja',
-                            'npdls_rinci.volumels',
-                            'npdls_rinci.satuan',
-                            'npdls_rinci.hargals',
-                            'npdls_rinci.nominalpembayaran');
-            },'npkrinci'=>function($cair) {
-                $cair->select('nonpk','nonpdls')
-                ->with('header', function($header){
-                    $header->select('nonpk', 'tglpindahbuku');
-                });
-            }, 'pajak', 'newpajak'])
+                    'npdls_heder.kunci');
+            if ($sa !== 'sa') {
+                $data->where('kodepptk', $pegawai);
+            }
+
+            $data->when(request('q'), function ($query) {
+                $query->where('nonpdls', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('tglnpdls', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('pptk', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('bidang', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('penerima', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('keterangan', 'LIKE', '%' . request('q') . '%')
+                        ->orWhere('nopencairan', 'LIKE', '%' . request('q') . '%');
+            });
+
+            // $data->;
+
+            $npdls = $data->with([
+                'npdlsrinci' => function ($rinci) {
+                    $rinci->select(
+                        'npdls_rinci.nonpdls',
+                        'npdls_rinci.id',
+                        'npdls_rinci.bast_r_id',
+                        'npdls_rinci.nopenerimaan',
+                        'npdls_rinci.koderek50',
+                        'npdls_rinci.rincianbelanja',
+                        'npdls_rinci.koderek108',
+                        'npdls_rinci.uraian108',
+                        'npdls_rinci.itembelanja',
+                        'npdls_rinci.volumels',
+                        'npdls_rinci.satuan',
+                        'npdls_rinci.hargals',
+                        'npdls_rinci.nominalpembayaran'
+                    );
+                },
+                'npkrinci' => function ($cair) {
+                    $cair->select('nonpk', 'nonpdls')
+                            ->with('header', function ($header) {
+                                $header->select('nonpk', 'tglpindahbuku');
+                            });
+                },
+                'pajak',
+                'newpajak'
+            ])
             ->orderBy('tglnpdls', 'desc')
             ->get();
         return new JsonResponse($npdls);
@@ -644,7 +657,7 @@ class NPD_LSController extends Controller
                     return response()->json(['message' => 'Anda tidak Memiliki Izin Membuka Kunci Data ini, Silahkan Hubungi Admin'], 403);
                 }
 
-                if (!empty($header->verif)) {
+                if (!empty($header->verif || $header->nonotadinas)) {
                     return response()->json(['message' => 'NPD-LS Sudah Terverifikasi'], 400);
                 }
 

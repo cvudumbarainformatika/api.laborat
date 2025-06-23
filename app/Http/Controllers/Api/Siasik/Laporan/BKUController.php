@@ -122,10 +122,12 @@ class BKUController extends Controller
         ->whereBetween('tglSpm', [$awal, $akhir])
         ->get();
 
-        $pegawai = Mpegawaisimpeg::whereIn('jabatan', ['J00001','J00005','J00034','J00035'])
+        $pegawai = Mpegawaisimpeg::whereIn('jabatan', ['J00001','J00005','J00034','J00035','J00192'])
         ->where('aktif', 'AKTIF')
         ->select('pegawai.nip',
-                'pegawai.nama')
+                'pegawai.nama',
+                'pegawai.jabatan')
+        ->orderBy('pegawai.jabatan', 'asc')
         ->get();
 
         $silpa=SisaAnggaran::select('silpa.notrans',
