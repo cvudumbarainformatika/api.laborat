@@ -405,12 +405,45 @@ class ReturpenjualanController extends Controller
                 $stok->update(['jumlah' => $jumlah]);
                 $key->update(['flag' => '1']);
             }
-
+            $permintaanHead->load(
+                [
+                    'rincian.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
+                    'rincianracik.mobat:kd_obat,nama_obat,satuan_k,kandungan,status_generik,status_forkid,status_fornas,kode108,uraian108,kode50,uraian50',
+                    'datapasien:rs1,rs2,rs3,rs17,rs16,rs46,rs49',
+                    'dokter:kdpegsimrs,nama',
+                    'ruanganranap:rs1,rs2',
+                    'poli:rs1,rs2',
+                    'sistembayar:rs1,rs2',
+                    'rincianwret' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_r.noresep',
+                            'resep_keluar_r.kdobat',
+                            'retur_penjualan_r.jumlah_retur',
+                        )
+                            ->leftjoin('retur_penjualan_r', function ($j) {
+                                $j->on('retur_penjualan_r.noresep', '=', 'resep_keluar_r.noresep')
+                                    ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_r.kdobat');
+                            });
+                    },
+                    'rincianracikwret' => function ($ri) {
+                        $ri->select(
+                            'resep_keluar_racikan_r.noresep',
+                            'resep_keluar_racikan_r.kdobat',
+                            'retur_penjualan_r.jumlah_retur',
+                        )
+                            ->leftjoin('retur_penjualan_r', function ($j) {
+                                $j->on('retur_penjualan_r.noresep', '=', 'resep_keluar_racikan_r.noresep')
+                                    ->on('retur_penjualan_r.kdobat', '=', 'resep_keluar_racikan_r.kdobat');
+                            });
+                    }
+                ]
+            );
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'retur disimpan',
                 'data' => $simpanHeader,
-                'retur rinci' => $returRinci
+                'resep' => $permintaanHead,
+                'retur_rinci' => $returRinci
             ]);
         } catch (\Exception $e) {
             // May day,  rollback!!! rollback!!!
