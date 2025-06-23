@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\Siasik\TransaksiLS\SerahterimaController;
 use Illuminate\Support\Facades\Route;
 Route::group([
-    // 'middleware' => 'auth:api',
+    'middleware' => 'auth:api',
     'prefix' => 'transaksi/serahterima'
 ], function () {
     Route::get('/listdata', [SerahterimaController::class, 'listdatastp']);

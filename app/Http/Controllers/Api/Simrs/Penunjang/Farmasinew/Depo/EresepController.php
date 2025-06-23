@@ -27,6 +27,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRacikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Template\TemplateResepRinci;
+use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
+use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\SistemBayar;
 use Carbon\Carbon;
@@ -1333,16 +1335,23 @@ class EresepController extends Controller
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
-                $rm = [];
+                $rm = Mpasien::select('rs1')
+                    ->where('rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs1', 'LIKE', '%' . request('q') . '%')
+                    ->pluck('rs1')
+                    ->toArray();
             } else {
                 if (strlen(request('q')) >= 3) {
-                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
-                    $rm = collect($data)->map(function ($x) {
-                        return $x->norm;
-                    })->toArray();
+                    $rm = Mpasien::select('rs1')
+                        ->where('rs2', 'LIKE', '%' . request('q') . '%')
+                        ->pluck('rs1')
+                        ->toArray();
                 } else $rm = [];
             }
         }
+        // return new JsonResponse([
+        //     'rm' => $rm
+        // ]);
         if (request('to') === '' || request('from') === null) {
             $tgl = Carbon::now()->format('Y-m-d 00:00:00');
             $tglx = Carbon::now()->format('Y-m-d 23:59:59');
@@ -4033,6 +4042,51 @@ class EresepController extends Controller
             'user' => $user,
             'toSave' => $toSave,
             'simpan' => $simpan,
+        ]);
+    }
+
+    public function historyLabPasien()
+    {
+        $data = LaboratMeta::select(
+            'noreg',
+            'norm',
+            'tgl_permintaan',
+            'unit_pengirim',
+            'nota',
+        )
+            ->where('norm', request()->norm)
+            ->with([
+                'poli:rs1,rs2',
+                'ranap:rs4,rs5',
+                'details:rs1,rs2,rs3,rs4,rs21,rs27',
+                'details.pemeriksaanlab:rs1,rs2,rs21,rs22',
+            ])
+            ->orderBy('tgl_permintaan', 'DESC')
+            ->get();
+
+        return new JsonResponse([
+            'req' => request()->all(),
+            'data' => $data
+        ]);
+    }
+    public function simpanPersyaratanLab(Request $request)
+    {
+
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Resep Tidak ditemukan'
+            ]);
+        }
+
+        $data->update([
+            'persyarantan_lab' => $request->persyarantan_lab
+        ]);
+
+        return new JsonResponse([
+            'req' => $request->all(),
+            'data' => $data,
+            'message' => 'sukses disimpan',
         ]);
     }
 }

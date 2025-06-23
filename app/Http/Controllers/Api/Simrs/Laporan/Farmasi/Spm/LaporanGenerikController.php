@@ -124,13 +124,17 @@ class LaporanGenerikController extends Controller
     }
     public function getLaporanKesesuaianObat()
     {
+        // yang diambil hanya yang sistem bayar bpjs
+        $sisba = SistemBayar::select('rs1')->where('groups', '1')->pluck('rs1')->toArray();
         $raw = Resepkeluarheder::select(
             'noresep',
             'tgl_permintaan',
             'dokter',
             'depo',
             'ruangan',
-        )->where('tgl_permintaan', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
+        )
+            ->whereIn('sistembayar', $sisba)
+            ->where('tgl_permintaan', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
             // ->when(request('sistem_bayar'), function ($query) {
             //     $query->whereIn('sistembayar', request('sistem_bayar'));
             // })
@@ -158,12 +162,7 @@ class LaporanGenerikController extends Controller
             'req' => request()->all(),
             'data' => $data,
             'meta' => $meta,
-        ]);
-        return new JsonResponse([
-            'req' => request()->all(),
-            'data' => $data,
-            'meta' => $meta,
-
+            // 'sisba' => $sisba,
         ]);
     }
     public function getOptionKelompok()

@@ -81,6 +81,10 @@ Route::group([
 
     // simpan tgl pelayanan obat
     Route::post('/simpan-tgl-pelayanan', [EresepController::class, 'simpanTglPelayananObat']);
+
+    // ambil history laborat pasien
+    Route::get('history-lab-pasien', [EresepController::class, 'historyLabPasien']);
+    Route::post('simpan-persyaratan-lab', [EresepController::class, 'simpanPersyaratanLab']);
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
     Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
