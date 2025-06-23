@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\StokrealController;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Transaksi\Retur\Retur;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
@@ -219,6 +220,9 @@ class ReturpenjualanController extends Controller
     public function newreturpenjualan(Request $request)
     {
 
+
+
+
         $user = FormatingHelper::session_user();
         $req = $request->all();
         $tmpRin = collect($req['listObat'])->sum('jumlah_retur');
@@ -229,16 +233,42 @@ class ReturpenjualanController extends Controller
             return new JsonResponse(['message' => 'Tidak ada Jumlah Obat yang akan diretur'], 410);
         }
 
+
         try {
 
+            // cari nomor retur
+            $adaRetur = Returpenjualan_h::where('noresep', $request->noresep)->first();
+            // kurangi list obat
+            // step 1 cari obat yang diretur
+            if ($adaRetur) {
+                $obatRetur = Returpenjualan_r::where('noretur', $adaRetur->noretur)->pluck('kdobat')->toArray();
+                $adalist = collect($request->listObat);
+                $listObat = $adalist->filter(function ($item) use ($obatRetur) {
+                    $kdobat = is_array($item) ? $item['kdobat'] : $item->kdobat;
+                    return !in_array($kdobat, $obatRetur);
+                })->values()->all();
+                $sumRet = collect($listObat)->sum('jumlah_retur');
+                if ($sumRet <= 0) {
+                    return new JsonResponse(['message' => 'Tidak ada Jumlah Obat yang akan diretur'], 410);
+                }
+            } else {
+                $listObat = $request->listObat;
+            }
+            // return new JsonResponse([
+            //     'req' => $request->all(),
+            //     'adaRetur' => $adaRetur,
+            //     'obatRetur' => $obatRetur,
+            //     'listObat' => $listObat,
+            //     'message' => ' test sik lur....'
+            // ], 410);
             DB::connection('farmasi')->beginTransaction();
-            if ($request->noretur == '' || $request->noretur == null) {
+            if (!$adaRetur) {
                 DB::connection('farmasi')->select('call returpenjualan(@nomor)');
                 $x = DB::connection('farmasi')->table('conter')->select('returpenjualan')->first();
                 $wew = $x->returpenjualan;
                 $noretur = FormatingHelper::penerimaanobat($wew, 'RET-PEN');
             } else {
-                $noretur = $request->noretur;
+                $noretur = $adaRetur->noretur;
             }
             $noret = ['noretur' => $noretur];
 
@@ -255,8 +285,8 @@ class ReturpenjualanController extends Controller
             $rinci = [];
             $racik = [];
 
-            if (count($request->listObat)) {
-                foreach ($request->listObat as $key) {
+            if (sizeof($listObat)) {
+                foreach ($listObat as $key) {
                     if ($key['jumlah_retur'] > 0) {
                         $obats = Resepkeluarrinci::where('noreg', $request->noreg)
                             ->where('noresep', $request->noresep)
@@ -332,82 +362,6 @@ class ReturpenjualanController extends Controller
                     }
                 }
             }
-            // if (count($request->rincianracik)) {
-            //     foreach ($request->rincianracik as $key) {
-            //         if ($key['jumlah_retur'] > 0) {
-            //             $jum = $key['jumlah_retur'];
-            //             $index = 0;
-
-            //             $obats = Resepkeluarrinciracikan::where('noreg', $request->noreg)
-            //                 ->where('noresep', $request->noresep)
-            //                 ->where('kdobat', $key['kdobat'])
-            //                 ->orderBy('id', 'DESC')
-            //                 ->get();
-
-            //             while ($jum > 0) {
-            //                 $ada = (int)$obats[$index]->jumlah;
-            //                 if ($ada < $jum) {
-            //                     $temp = [
-            //                         'noretur' => $noretur,
-            //                         'noreg' => $request->noreg,
-            //                         'noresep' => $request->noresep,
-            //                         'kdobat' => $key['kdobat'],
-            //                         'kandungan' => $key['mobat']['kandungan'],
-            //                         'fornas' => $key['mobat']['status_generik'],
-            //                         'forkit' => $key['mobat']['status_forkid'],
-            //                         'generik' => $key['mobat']['status_fornas'],
-            //                         'kode108' => $key['mobat']['kode108'],
-            //                         'uraian108' => $key['mobat']['uraian108'],
-            //                         'kode50' => $key['mobat']['kode50'],
-            //                         'uraian50' => $key['mobat']['uraian50'],
-            //                         'nopenerimaan' => $obats[$index]->nopenerimaan,
-            //                         'jumlah_keluar' => $ada,
-            //                         'jumlah_retur' => $ada,
-            //                         'harga_beli' => $key['harga_beli'],
-            //                         'hpp' => $key['hpp'],
-            //                         'harga_jual' => $key['harga_jual'],
-            //                         'nilai_r' => $key['nilai_r'],
-            //                         'user' => $user['kodesimrs'],
-            //                         'created_at' => date('Y-m-d H:i:s'),
-            //                         'updated_at' => date('Y-m-d H:i:s'),
-            //                     ];
-
-            //                     $sisa = $jum - $ada;
-            //                     $index += 1;
-            //                     $jum = $sisa;
-            //                     array_push($racik, $temp);
-            //                 } else {
-            //                     $temp = [
-            //                         'noretur' => $noretur,
-            //                         'noreg' => $request->noreg,
-            //                         'noresep' => $request->noresep,
-            //                         'kdobat' => $key['kdobat'],
-            //                         'kandungan' => $key['mobat']['kandungan'],
-            //                         'fornas' => $key['mobat']['status_generik'],
-            //                         'forkit' => $key['mobat']['status_forkid'],
-            //                         'generik' => $key['mobat']['status_fornas'],
-            //                         'kode108' => $key['mobat']['kode108'],
-            //                         'uraian108' => $key['mobat']['uraian108'],
-            //                         'kode50' => $key['mobat']['kode50'],
-            //                         'uraian50' => $key['mobat']['uraian50'],
-            //                         'nopenerimaan' => $obats[$index]->nopenerimaan,
-            //                         'jumlah_keluar' => $ada,
-            //                         'jumlah_retur' => $jum,
-            //                         'harga_beli' => $key['harga_beli'],
-            //                         'hpp' => $key['hpp'],
-            //                         'harga_jual' => $key['harga_jual'],
-            //                         'nilai_r' => $key['nilai_r'],
-            //                         'user' => $user['kodesimrs'],
-            //                         'created_at' => date('Y-m-d H:i:s'),
-            //                         'updated_at' => date('Y-m-d H:i:s'),
-            //                     ];
-            //                     $jum = 0;
-            //                     array_push($racik, $temp);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
 
             $simpanHeader = Returpenjualan_h::firstOrCreate($noret, $isiHead);
             if (!$simpanHeader) {
@@ -416,18 +370,13 @@ class ReturpenjualanController extends Controller
             if (count($rinci)) {
                 Returpenjualan_r::insert($rinci);
             }
-            // if (count($racik)) {
-            //     Returpenjualan_r::insert($racik);
-            // }
             $permintaanHead = Resepkeluarheder::where('noresep', $request->noresep)->where('noreg', $request->noreg)->first();
             if ($permintaanHead) {
-                // $permintaanHead->flag = '4';
-                // $permintaanHead->save();
                 $permintaanHead->update(['flag' => '4']);
             }
 
             $simpanHeader->load('rinci');
-            $returRinci = Returpenjualan_r::where('noretur', $simpanHeader->noretur)->get();
+            $returRinci = Returpenjualan_r::where('noretur', $simpanHeader->noretur)->whereNull('flag')->get();
             // foreach ($returRinci as $key) {
             //     $data = (object) [];
             //     $data->koderuang = $request->depo;
@@ -450,11 +399,11 @@ class ReturpenjualanController extends Controller
                         'data' => $stok,
                         'key' => $key,
 
-
                     ], 410);
                 }
                 $jumlah = (int) $stok->jumlah + (int)$key['jumlah_retur'];
                 $stok->update(['jumlah' => $jumlah]);
+                $key->update(['flag' => '1']);
             }
 
             DB::connection('farmasi')->commit();
