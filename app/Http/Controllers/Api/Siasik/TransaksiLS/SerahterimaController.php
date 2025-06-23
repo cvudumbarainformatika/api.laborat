@@ -48,9 +48,16 @@ class SerahterimaController extends Controller
 
     }
     public function getkontrak(){
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $tahun=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
-        $data = KontrakPengerjaan::where('kunci', '!=', '')
-        ->whereBetween('tgltrans', [$tahun.'-01-01', $tahun.'-12-31'])
+        $data = KontrakPengerjaan::where('kunci', '!=', '');
+        if ($sa !== 'sa') {
+            $data->where('kodepptk', $pegawai);
+        }
+        $getkontrak=$data->whereBetween('tgltrans', [$tahun.'-01-01', $tahun.'-12-31'])
         ->when(request('q'), function($q){
             $q->where('nokontrak', 'LIKE', '%' . request('q') . '%')
                 ->orWhere('namaperusahaan', 'LIKE', '%' . request('q') . '%')
@@ -58,7 +65,7 @@ class SerahterimaController extends Controller
                 ->orWhere('kegiatanblud', 'LIKE', '%' . request('q') . '%');
         })
         ->get();
-        return new JsonResponse($data);
+        return new JsonResponse($getkontrak);
     }
     public function savedata(Request $request)
     {
