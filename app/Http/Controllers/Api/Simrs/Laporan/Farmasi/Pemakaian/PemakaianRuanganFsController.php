@@ -57,7 +57,7 @@ class PemakaianRuanganFsController extends Controller
                     $q->where('dari', '=', $kode_ruang);
                 }
             )
-            ->where('tgl_terima_depo', 'LIKE', '%' . $tahun . '-' . $bulan . '%')
+            ->where('tgl_kirim_depo', 'LIKE', '%' . $tahun . '-' . $bulan . '%')
             ->distinct()->pluck('kd_obat')->toArray();
         $pake = PemakaianR::select('kd_obat')
             ->leftJoin('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
@@ -89,7 +89,7 @@ class PemakaianRuanganFsController extends Controller
                         'harga',
                         'nopenerimaan',
                         'dari',
-                        'tgl_terima_depo'
+                        'tgl_kirim_depo'
                     )
                         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->when(
@@ -102,7 +102,7 @@ class PemakaianRuanganFsController extends Controller
                                 $q->where('dari', '=', $kode_ruang);
                             }
                         )
-                        ->where('tgl_terima_depo', 'LIKE', '%' . $tahun . '-' . $bulan . '%');
+                        ->where('tgl_kirim_depo', 'LIKE', '%' . $tahun . '-' . $bulan . '%');
                 },
                 'pemakaian' => function ($q) use ($kode_ruang, $bulan, $tahun, $kodeOb, $filteredR, $filteredG) {
                     $q->select(
