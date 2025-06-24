@@ -1449,11 +1449,18 @@ class EresepController extends Controller
             ->where('resep_keluar_h.depo', request('kddepo'))
             ->when(request('tipe'), function ($qu) {
                 if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
-                    $addThree = Carbon::now()->addMonth(3)->format('m');
-                    $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
-                    $qu->where('resep_keluar_h.tiperesep', request('tipe'))
-                        ->where('resep_keluar_h.noresep_asal', '')
-                        ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d'), $year . '-' . $addThree . '-31']);
+                    $iterTiming = request('iter_timing');
+                    if ($iterTiming == 'berlaku') {
+                        $addThree = Carbon::now()->addMonth(3)->format('m');
+                        $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
+                        $qu->where('resep_keluar_h.tiperesep', request('tipe'))
+                            ->where('resep_keluar_h.noresep_asal', '')
+                            ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d'), $year . '-' . $addThree . '-31']);
+                    } else {
+                        $qu->where('resep_keluar_h.tiperesep', request('tipe'))
+                            ->where('resep_keluar_h.noresep_asal', '')
+                            ->whereBetween('resep_keluar_h.tgl_kirim', [request('from'), request('to')]);
+                    }
                 } else {
                     $qu->where('resep_keluar_h.tiperesep', request('tipe'));
                 }
