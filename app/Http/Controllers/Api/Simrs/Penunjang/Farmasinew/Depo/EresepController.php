@@ -736,7 +736,7 @@ class EresepController extends Controller
                 $tiperesep = $request->tiperesep ?? 'normal';
                 $iter_expired = $request->iter_expired ?? null;
                 $iter_jml = $request->iter_jml ?? null;
-                if ($request->tiperesep === 'normal') {
+                if ($request->tiperesep === 'normal' || $request->tiperesep === 'prb') {
                     $iter_expired =  null;
                     $iter_jml =  null;
                 }
@@ -1449,11 +1449,18 @@ class EresepController extends Controller
             ->where('resep_keluar_h.depo', request('kddepo'))
             ->when(request('tipe'), function ($qu) {
                 if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
-                    $addThree = Carbon::now()->addMonth(3)->format('m');
-                    $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
-                    $qu->where('resep_keluar_h.tiperesep', request('tipe'))
-                        ->where('resep_keluar_h.noresep_asal', '')
-                        ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d'), $year . '-' . $addThree . '-31']);
+                    $iterTiming = request('iter_timing');
+                    if ($iterTiming == 'berlaku') {
+                        $addThree = Carbon::now()->addMonth(3)->format('m');
+                        $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
+                        $qu->where('resep_keluar_h.tiperesep', request('tipe'))
+                            ->where('resep_keluar_h.noresep_asal', '')
+                            ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d'), $year . '-' . $addThree . '-31']);
+                    } else {
+                        $qu->where('resep_keluar_h.tiperesep', request('tipe'))
+                            ->where('resep_keluar_h.noresep_asal', '')
+                            ->whereBetween('resep_keluar_h.tgl_kirim', [request('from'), request('to')]);
+                    }
                 } else {
                     $qu->where('resep_keluar_h.tiperesep', request('tipe'));
                 }
@@ -2763,7 +2770,8 @@ class EresepController extends Controller
                                     $join->on('resep_keluar_r.noresep', '=', 'resep_permintaan_keluar.noresep')
                                         ->on('resep_keluar_r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
                                 })
-                                ->whereNotNull('resep_keluar_r.kdobat');
+                                ->whereNotNull('resep_keluar_r.kdobat')
+                                ->groupBy('resep_keluar_r.kdobat');
                         },
                         'asalpermintaanracikan' => function ($per) {
                             $per->select('resep_permintaan_keluar_racikan.*')
@@ -2771,7 +2779,8 @@ class EresepController extends Controller
                                     $join->on('resep_keluar_racikan_r.noresep', '=', 'resep_permintaan_keluar_racikan.noresep')
                                         ->on('resep_keluar_racikan_r.kdobat', '=', 'resep_permintaan_keluar_racikan.kdobat');
                                 })
-                                ->whereNotNull('resep_keluar_racikan_r.kdobat');
+                                ->whereNotNull('resep_keluar_racikan_r.kdobat')
+                                ->groupBy('resep_keluar_racikan_r.kdobat');
                         },
                         'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                         'asalpermintaanresep.mobat.indikasi',
@@ -2918,7 +2927,9 @@ class EresepController extends Controller
 
     public function copyResep(Request $request)
     {
-
+        // return new JsonResponse([
+        //     'req' => $request->all()
+        // ], 410);
 
         $head = $request->head;
         $ada = Resepkeluarheder::where('tiperesep', $head['tiperesep'])
@@ -2962,6 +2973,12 @@ class EresepController extends Controller
         try {
             DB::connection('farmasi')->beginTransaction();
             $head['noresep'] = $noresep;
+            $head['flag'] = '2';
+            // $head['tgl'] = date('Y-m-d');
+            // $head['tgl_permintaan'] = date('Y-m-d H:i:s');
+            $head['tgl_kirim'] = date('Y-m-d H:i:s');
+            $head['tgl_diterima'] = date('Y-m-d H:i:s');
+            $head['tgl_selesai'] = null;
 
             if (count($request->kirimResep) > 0) {
                 foreach ($request->kirimResep as $key) {
@@ -3111,7 +3128,7 @@ class EresepController extends Controller
                     $racik[] = $key;
                 }
             }
-            if (count($request->kirimResep) <= 0 && count($request->kirimRacik)) {
+            if (count($request->kirimResep) <= 0 && count($request->kirimRacik) <= 0) {
                 return new JsonResponse(['message' => 'Tidak ada obat untuk di input'], 410);
             }
             /**
