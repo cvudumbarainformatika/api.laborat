@@ -736,7 +736,7 @@ class EresepController extends Controller
                 $tiperesep = $request->tiperesep ?? 'normal';
                 $iter_expired = $request->iter_expired ?? null;
                 $iter_jml = $request->iter_jml ?? null;
-                if ($request->tiperesep === 'normal') {
+                if ($request->tiperesep === 'normal' || $request->tiperesep === 'prb') {
                     $iter_expired =  null;
                     $iter_jml =  null;
                 }
