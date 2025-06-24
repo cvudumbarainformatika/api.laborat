@@ -5,6 +5,8 @@ namespace App\Models\Simrs\Laporan\Operasi;
 use App\Models\KunjunganPoli;
 use App\Models\KunjunganRawatInap;
 use App\Models\Pasien;
+use App\Models\Poli;
+use App\Models\RuanganRawatInap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

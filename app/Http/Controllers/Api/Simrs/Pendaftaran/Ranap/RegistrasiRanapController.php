@@ -229,7 +229,7 @@ class RegistrasiRanapController extends Controller
             'rs14' => $pelayanan,
             'rs16' => $koderuang,
             'rs17' => $kelas,
-            'rs18' => $koderuangkelas
+            'rs18' => $ruang
         ]);
 
 
