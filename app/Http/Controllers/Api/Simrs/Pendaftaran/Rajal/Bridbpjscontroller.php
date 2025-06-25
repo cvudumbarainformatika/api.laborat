@@ -243,9 +243,7 @@ class Bridbpjscontroller extends Controller
         return $kontrol;
     }
 
-    public function createSPRI()
-    {
-    }
+    public function createSPRI() {}
 
     public function cariseppeserta()
     {
@@ -346,7 +344,10 @@ class Bridbpjscontroller extends Controller
         $sep = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->noSep : null;
         $unit = $history['metadata']['code'] === '200' ? $history['result']->histori[0]->poliTujSep : '';
         $infoHis = $history['metadata']['code'] === '200' ? $history['result']->histori[0] : '';
-        // return new JsonResponse(['message' => $history['result']->histori[0]]);
+        // return new JsonResponse([
+        //     'message' => $history['result']->histori[0],
+        //     'sep' => $sep
+        // ]);
         // ambil master pasien
 
         // jika tidak ada history
@@ -461,7 +462,7 @@ class Bridbpjscontroller extends Controller
         $suratKontrol = $dataInfo->kontrol->noSurat ?? null;
         if ($suratKontrol) {
             $kontrol = BridgingbpjsHelper::get_url('vclaim', '/RencanaKontrol/noSuratKontrol/' . $suratKontrol);
-            if ($kontrol['metadata']['code'] === '200') {
+            if ($kontrol['metadata']['code'] === '200' && $kontrol['result']) {
                 $temp = $kontrol['result']->sep;
                 $tglrujukan = $temp->provPerujuk->tglRujukan;
                 // $namadiagnosa = $infoHis->diagnosa ?? $temp->diagnosa;
@@ -472,7 +473,11 @@ class Bridbpjscontroller extends Controller
         }
         if ($rujukan) {
             $rujukanPcare = BridgingbpjsHelper::get_url('vclaim', 'Rujukan/' . $rujukan);
-            if ($rujukanPcare['metadata']['code'] === '200') {
+            // return new JsonResponse([
+            //     'rujukanPcare' => $rujukanPcare,
+            //     'rujukan' => $rujukan,
+            // ]);
+            if ($rujukanPcare['metadata']['code'] === '200' && $rujukanPcare['result']) {
                 $temp = $rujukanPcare['result']->rujukan;
                 $tglrujukan = $temp->tglKunjungan;
                 // $namadiagnosa = $infoHis->diagnosa ?? ($temp->diagnosa ?? $temp->diagnosa->kode . ' - ' . $temp->diagnosa->nama);
@@ -604,6 +609,6 @@ class Bridbpjscontroller extends Controller
 
         $data = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $request->nosep);
         $datax = BridgingbpjsHelper::get_url('vclaim', 'Peserta/nokartu/' . $request->noka . '/tglSEP/' . date('Y-m-d'));
-        return new JsonResponse(['data' => $data,'datax'=>$datax],200);
+        return new JsonResponse(['data' => $data, 'datax' => $datax], 200);
     }
 }
