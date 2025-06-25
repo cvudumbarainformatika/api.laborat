@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Siasik\TransaksiLS;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\TransaksiLS\Notadinas_header;
 use App\Models\Siasik\TransaksiLS\Notadinas_rinci;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
@@ -41,7 +42,17 @@ class NotadinasController extends Controller
                  'npdls_heder.nonpdls',
                  'notadinas_rinci.*',
                 //  'npdls_rinci.*'
-                );
+                )->with('npdlsrinci', function ($query) {
+                    $query->join('akun50_2024', 'akun50_2024.kodeall2', 'npdls_rinci.koderek50')
+                    ->select(
+                        'npdls_rinci.nonpdls',
+                        'npdls_rinci.nominalpembayaran as pengajuan',
+                        'akun50_2024.kodeall3 as koderekening',
+                        'akun50_2024.uraian as rekeningbelanja',
+                        DB::raw('0 as pagu'), // Add pagu = 0
+                        DB::raw('0 as realisasi') // Add realisasi = 0
+                    );
+                });
             })
             ->select('notadinas_heder.*',
                 'npdls_heder.nonpk',
@@ -294,5 +305,44 @@ class NotadinasController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    public function laprealisasi(){
+        $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        $anggaran = PergeseranPaguRinci::where('tgl', $tahun)
+        ->where('kodekegiatanblud', request('kodekegiatan'))
+        ->where('pagu', '!=', '0')
+        ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        ->select('t_tampung.kodekegiatanblud',
+                't_tampung.tgl',
+                't_tampung.notrans',
+                't_tampung.koderek108',
+                't_tampung.uraian108',
+                't_tampung.uraian50',
+                't_tampung.usulan',
+                't_tampung.volume',
+                't_tampung.satuan',
+                't_tampung.harga',
+                't_tampung.pagu',
+                't_tampung.idpp',
+                'akun50_2024.kodeall3 as koderek50',)
+                ->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
+                    $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                        'spjpanjar_rinci.jumlahbelanjapanjar as realisasi',);
+                    },'realisasi'=> function ($realisasi) {
+                    $realisasi
+                    ->join('npdls_heder', 'npdls_heder.nonpdls', '=',  'npdls_rinci.nonpdls')
+                    ->where('npdls_heder.nopencairan', '!=', '')
+                    ->select(
+                        'npdls_rinci.idserahterima_rinci',
+                        'npdls_rinci.nominalpembayaran as realisasi');
+                    },'contrapost'=> function ($realisasi) {
+                    $realisasi->select('contrapost.idpp',
+                                        'contrapost.nominalcontrapost as nilaicp',);
+                    }])
+        ->groupBy('t_tampung.idpp')
+        ->get();
+        return new JsonResponse($anggaran);
     }
 }

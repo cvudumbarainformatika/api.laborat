@@ -12,4 +12,9 @@ class Notadinas_rinci extends Model
     protected $guarded = ['id'];
     protected $table = 'notadinas_rinci';
     public $timestamps = false;
+
+    public function npdlsrinci()
+    {
+        return $this->hasMany(NpdLS_rinci::class, 'nonpdls', 'nonpdls');
+    }
 }
