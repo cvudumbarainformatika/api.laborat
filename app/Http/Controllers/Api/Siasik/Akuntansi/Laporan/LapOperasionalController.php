@@ -73,6 +73,30 @@ class LapOperasionalController extends Controller
         ->orderBy('kode6', 'asc')
         ->get();
 
+        $penyesuaianpendapatan = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.' . '%')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'jurnalumum_rinci.kodepsap13 as kode6',
+                'jurnalumum_rinci.uraianpsap13 as uraian',
+                DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->groupBy( 'jurnalumum_rinci.kodepsap13')
+        ->get();
+
 
         $bebanotom = Create_JurnalPosting::join('akun50_2024', 'akun50_2024.kodeall3', 'jurnal_postingotom.kode')
         ->select(
@@ -99,15 +123,16 @@ class LapOperasionalController extends Controller
         ->get();
 
 
-        $penyesuaian = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        $penyesuaianbeban = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
         ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.' . '%')
         ->select('jurnalumum_heder.tanggal',
                 'jurnalumum_heder.nobukti',
                 'jurnalumum_rinci.nobukti',
                 'jurnalumum_rinci.kodepsap13 as kode6',
                 'jurnalumum_rinci.uraianpsap13 as uraian',
-                DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as subtotal'),
+                DB::raw('sum(jurnalumum_rinci.debet-jurnalumum_rinci.kredit) as subtotal'),
                 DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
                 DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
                 DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
@@ -412,8 +437,10 @@ class LapOperasionalController extends Controller
         $data = [
             'pagupendapatan' => $pagupendapatan,
             'beban' => $bebanotom,
+            'penyesuaianbeban' => $penyesuaianbeban,
             'pendapatan' => $pendapatan,
-            'penyesuaian' => $penyesuaian,
+            'penyesuaianpendapatan' => $penyesuaianpendapatan,
+
             // 'psaprealisasipendapatan' => $psaprealisasipendapatan,
             // 'psaprealisasipendapatanx' => $psaprealisasipendapatanx,
             // 'psappendpatanhibah' => $psappendpatanhibah,
