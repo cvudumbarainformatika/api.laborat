@@ -43,6 +43,7 @@ class SaldoawalController extends Controller
         $pegawai= $pg->kdpegsimrs;
         $year=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $time = date('Y-m-d H:i:s');
+        $date = Carbon::create($year, 1, 1)->format('Y-m-d');
 
         if (!$request->has('id')){
             $saldo=SaldoAwal::firstOrCreate(
@@ -54,6 +55,7 @@ class SaldoawalController extends Controller
                             'kredit' => $request['kredit'],
                             'tahun' => $year ?? '',
                             'tglentry' => $time ?? '',
+                            'tanggal' => $date ?? '',
                             'userentry'=> $pegawai ?? ''
                         ]);
         } else {
