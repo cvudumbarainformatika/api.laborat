@@ -1,3 +1,4 @@
+(untuk windows jangan lupa CRLF ubah ke LF)
 docker compose build --no-cache
 docker compose up -d
 docker compose exec app composer install
