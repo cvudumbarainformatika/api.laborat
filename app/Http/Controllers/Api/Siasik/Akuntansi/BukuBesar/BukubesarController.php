@@ -183,7 +183,7 @@ class BukubesarController extends Controller
         ->get();
 
         $saldoawal = SaldoAwal::select(
-            'saldoawal.tglentry as tanggal',
+            'saldoawal.tanggal',
             'saldoawal.kodepsap13 as kode6',
             'saldoawal.uraianpsap13 as uraian',
             'saldoawal.debit',
@@ -193,7 +193,7 @@ class BukubesarController extends Controller
             DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 3) as kode3'),
             DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 4) as kode4'),
             DB::raw('SUBSTRING_INDEX(saldoawal.kodepsap13, ".", 5) as kode5'))
-        ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
+        ->whereBetween('saldoawal.tanggal', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
         ->orderBy('kode6', 'ASC')
         ->get();
 
