@@ -611,6 +611,13 @@ class PoliController extends Controller
                     ])
                         ->orderBy('id', 'DESC');
                 },
+                'jawabankonsulbynoreg' => function ($x) {
+                    $x->select('jawaban_konsul_polis.noreg_lama as noreg','jawaban_konsul_polis.*')->with([
+                        'poliAsal:rs1,rs2',
+                        'poliTujuan:rs1,rs2',
+                    ])
+                        ->orderBy('id', 'DESC');
+                },
                 'diet' => function ($diet) {
                     $diet->orderBy('id', 'DESC');
                 },

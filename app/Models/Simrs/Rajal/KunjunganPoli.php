@@ -604,4 +604,8 @@ class KunjunganPoli extends Model
         return $this->hasOne(Simpansuratkontrol::class, 'noreg', 'rs1');
     }
 
+     public function jawabankonsulbynoreg()
+    {
+        return $this->hasMany(JawabanKonsulPoli::class,  'noreg_lama', 'rs1');
+    }
 }
