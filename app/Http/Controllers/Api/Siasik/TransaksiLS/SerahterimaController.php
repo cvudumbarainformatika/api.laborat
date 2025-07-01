@@ -29,7 +29,7 @@ class SerahterimaController extends Controller
         $data = Serahterima_header::whereBetween('serahterima_heder.tgltrans', [$tahunawal.'-01-01', $tahun.'-12-31'])
         ->select('serahterima_heder.*');
 
-        if ($sa !== 'sa') {
+        if ($sa !== 'sa' && $sa !==  '1619' && $sa !==  '38' && $sa !==  '1618') {
             $data->where('serahterima_heder.kodepptk', $pegawai);
         }
             $stp=$data->with('rinci')
