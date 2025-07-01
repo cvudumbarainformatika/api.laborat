@@ -1482,10 +1482,10 @@ class EresepController extends Controller
                     if (request('flag') === 'semua') {
                         $qu->where(function ($q) use ($tgl, $tglx) {
                             $q->where(function ($m) use ($tgl, $tglx) {
-                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
+                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4'])
                                     ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
                             })->orWhere(function ($q) use ($tgl, $tglx) {
-                                $q->where('resep_keluar_h.flag', '')
+                                $q->whereIn('resep_keluar_h.flag', ['', '5'])
                                     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
                             });
                         });
