@@ -88,7 +88,7 @@ class NPD_LSController extends Controller
                     'npdls_heder.userentry',
                     'npdls_heder.serahterimapekerjaan',
                     'npdls_heder.kunci');
-            if ($sa !== 'sa') {
+            if ($sa !== 'sa' && $sa !==  '1619' && $sa !==  '38' && $sa !==  '1618') {
                 $data->where('kodepptk', $pegawai);
             }
 
@@ -981,8 +981,8 @@ class NPD_LSController extends Controller
             //     ->get();
 
             return new JsonResponse([
-                'message' => 'Update berhasil. Jumlah data diupdate: ' . $updatedCount,
-                // 'datanpk' => $updatedNpkData,
+                'message' => 'Update berhasil. Jumlah data diupdate: ' . $updatedCount, $updateResult,
+                'datanpk' => $npkData,
                 // 'updated_data' => $updatedPenerimaanData,
             ], 200);
 
