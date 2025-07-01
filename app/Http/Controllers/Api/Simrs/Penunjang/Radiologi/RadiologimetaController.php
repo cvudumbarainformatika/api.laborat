@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Radiologi\Mpemeriksaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Mpemeriksaanradiologimeta;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Penunjang\Radiologi\TransradiologiSementara;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -164,7 +165,10 @@ class RadiologimetaController extends Controller
                         $hargapelayananx = $item['pelayanan'];
                     }
 
-                    Transradiologi::create(
+
+                    // ini di awal Transradiologi di ganti ke sementara dahulu sebelum terima pasien
+
+                    TransradiologiSementara::create(
                         [
                             'rs1'=> $request->noreg,
                             'rs2' => $simpanpermintaanradiologi->rs2,

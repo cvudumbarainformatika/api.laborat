@@ -25,6 +25,8 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
+        // $schedule->command('permintaanRadiologi:update-batal')->daily();
+
         $schedule->command('send:rajal')
             ->everyMinute()
             ->between('16:30', '23:50');

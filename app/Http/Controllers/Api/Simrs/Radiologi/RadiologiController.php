@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Radiologi\HasilRadiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Penunjang\Radiologi\TransradiologiSementara;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -45,7 +46,7 @@ class RadiologiController extends Controller
       $status = request('status') ?? 'Semua';
 
       $data = Transpermintaanradiologi::query();
-      $select = $data->select('rs106.rs1',
+      $select = $data->select('rs106.rs1','rs106.rs2',
         'rs106.rs1 as noreg',
         // 'rs107.rs2 as norm',
         DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
@@ -121,6 +122,7 @@ class RadiologiController extends Controller
 
 
         $q = $select
+            ->with(['rinciansementara.relmasterpemeriksaan'])
             ->whereBetween('rs106.rs3', [$tgl, $tglx])
             ->where('rs106.rs2', '!=', '')
             ->whereNotNull('rs106.rs2')
@@ -484,6 +486,21 @@ class RadiologiController extends Controller
             'rs9' => '2',
             'trmtgl' => date('Y-m-d H:i:s')
         ]);
+
+
+        // pindah billing dari sementara ke kenyataan
+        $items = DB::table('rs48_sem')
+            ->where(function ($q) use ($notrans) {
+                $q->where('rs2','=', $notrans);
+            })
+            ->get();
+
+        foreach ($items as $item) {
+            $data = (array) $item;
+            unset($data['id']);
+            DB::table('rs48')->insert($data);
+        }
+
         return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
     }
 

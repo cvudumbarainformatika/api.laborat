@@ -14,6 +14,7 @@ use App\Models\TransaksiLaborat;
 use App\Models\Simrs\Master\Mkamar;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -3545,6 +3546,28 @@ class AutogenController extends Controller
         $sep = request('sep');
         $tgl = DateHelper::getDateTime();
         $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+
+        $sukses = $a['metadata']['code'] == '200' ? true : false;
+        // return $a['result'];
+
+        if ($sukses) {
+            $result = $a['result'];
+
+            $simpan = Seprajal::firstOrCreate(
+            [
+                'rs8' => $result->noSep,
+            ],
+            [
+                'rs2' => $result->peserta->noMr,
+                'rs3' => $result->poli,
+                'rs6' => date('Y-m-d H:i:s'),
+                'rs7' => $result->diagnosa,
+                'rs13' => $result->peserta->noKartu,
+            ]
+            );
+            return $simpan;
+        }
+
         return $a;
     }
 }

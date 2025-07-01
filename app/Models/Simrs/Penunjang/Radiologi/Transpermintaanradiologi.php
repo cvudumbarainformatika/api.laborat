@@ -28,6 +28,10 @@ class Transpermintaanradiologi extends Model
     {
         return  $this->hasMany(Transradiologi::class, 'rs2', 'rs2');
     }
+    public function rinciansementara()
+    {
+        return  $this->hasMany(TransradiologiSementara::class, 'rs2', 'rs2');
+    }
 
     public function newapotekrajal()
     {
