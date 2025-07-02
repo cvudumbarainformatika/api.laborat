@@ -39,6 +39,41 @@ use Illuminate\Support\Facades\DB;
 class EresepController extends Controller
 {
 
+    public function getForPrint()
+    {
+        $noresep = request('noresep');
+        $data = Resepkeluarheder::select('noresep', 'noresep_asal', 'flag')
+            ->with([
+                'permintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'rincian' => function ($ri) {
+                    $ri->select('*', DB::raw('sum(jumlah) as jumlah'),  'harga_jual as hargajual')
+                        ->with(
+                            'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                        )
+                        ->where('jumlah', '>', 0)
+                        ->groupBy('kdobat', 'noresep', 'noreg');
+                },
+                'rincianracik' => function ($ri) {
+                    $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
+                        ->with(
+                            'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+
+                        )
+                        ->where('jumlah', '>', 0)
+                        ->groupBy('kdobat', 'noresep', 'noreg', 'namaracikan');
+                },
+                'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+                'asalpermintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+
+            ])
+            ->where('noresep', $noresep)
+            ->first();
+        return new JsonResponse([
+            'data' => $data,
+            'req' => request()->all(),
+        ]);
+    }
     public function conterracikan()
     {
         $conter = Permintaanresepracikan::where('noresep', request('noresep'))

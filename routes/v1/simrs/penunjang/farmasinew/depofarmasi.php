@@ -91,4 +91,7 @@ Route::group([
 
     // ------- Mutasi Antar Depo ----------
     Route::get('/list-mutasi', [DepoController::class, 'listMutasi']);
+
+    // gat for print
+    Route::get('/get-for-print', [EresepController::class, 'getForPrint']);
 });
