@@ -1486,15 +1486,15 @@ class EresepController extends Controller
                 if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
                     $iterTiming = request('iter_timing');
                     if ($iterTiming == 'berlaku') {
-                        $addThree = Carbon::now()->addMonth(3)->format('m');
-                        $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
+                        // $addThree = Carbon::now()->addMonth(3)->format('m');
+                        // $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
                         $qu->where('resep_keluar_h.tiperesep', request('tipe'))
                             ->where('resep_keluar_h.noresep_asal', '')
-                            ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d'), $year . '-' . $addThree . '-31']);
+                            ->whereBetween('resep_keluar_h.iter_expired', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']); // luput
                     } else {
                         $qu->where('resep_keluar_h.tiperesep', request('tipe'))
                             ->where('resep_keluar_h.noresep_asal', '')
-                            ->whereBetween('resep_keluar_h.tgl_kirim', [request('from'), request('to')]);
+                            ->whereBetween('resep_keluar_h.tgl_kirim', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']);
                     }
                 } else {
                     $qu->where('resep_keluar_h.tiperesep', request('tipe'));
@@ -1505,9 +1505,9 @@ class EresepController extends Controller
                     if (request('flag') === 'semua') {
                         $qu->where(function ($q) use ($tgl, $tglx) {
                             $q->where(function ($m) use ($tgl, $tglx) {
-                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5']);
+                                $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4']);
                             })->orWhere(function ($q) use ($tgl, $tglx) {
-                                $q->where('resep_keluar_h.flag', '');
+                                $q->whereIn('resep_keluar_h.flag', ['', '5']);
                             });
                         });
                     } else {
