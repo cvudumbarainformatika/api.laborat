@@ -31,6 +31,9 @@ chmod 664 /var/www/storage/logs/websockets.log
 # chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 # chmod 664 /var/www/storage/logs/*.log
 
+touch /var/www/storage/logs/supervisord.log
+chmod 664 /var/www/storage/logs/supervisord.log
+
 
 # Jalankan composer install kalau vendor belum ada
 if [ ! -d "/var/www/vendor" ]; then
@@ -60,8 +63,8 @@ if ! [ -x "$(command -v /usr/bin/supervisord)" ]; then
   exit 1
 fi
 
-/usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 
 # Pastikan supervisord berjalan, kemudian jalankan PHP-FPM
-echo "Starting PHP-FPM..."
-exec php-fpm
+# echo "Starting PHP-FPM..."
+# exec php-fpm
