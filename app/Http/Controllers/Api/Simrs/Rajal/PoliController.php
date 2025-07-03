@@ -635,6 +635,7 @@ class PoliController extends Controller
                     ])
                         ->orderBy('id', 'DESC');
                 },
+                'intradialitikhd'
                 // ini buat satset
                 // resep keluar fix
                 // 'apotek' => function ($apot) {

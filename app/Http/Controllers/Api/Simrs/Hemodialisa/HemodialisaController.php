@@ -93,6 +93,7 @@ class HemodialisaController extends Controller
             'rs15.rs46 as noka',
             'rs15.rs49 as noktp',
             'rs15.rs55 as nohp',
+
             // 'permintaan.rs2 as nota_permintaan',
             DB::raw('(CASE WHEN permintaan.rs2 ="" THEN NULL ELSE permintaan.rs2 END) as nota_permintaan'),
 
@@ -108,7 +109,7 @@ class HemodialisaController extends Controller
             // 'rs21.rs2 as dokter',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-
+            'listkirimcasmixRajal.noreg as kesmik',
 
 
             // 'rs222.rs8 as sep',
@@ -127,6 +128,7 @@ class HemodialisaController extends Controller
             ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+            ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1')
             // ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
             // ->leftjoin('rs141', 'rs141.rs1', '=', 'rs17.rs1') // status pasien di IGD
             // ->leftjoin('rs24', 'rs24.rs1', '=', 'rs141.rs5') // nama ruangan
@@ -282,7 +284,7 @@ class HemodialisaController extends Controller
             // 'rs23.rs2 as status_masuk',
             // 'antrian_ambil.nomor as noantrian'
             // 'rs17.rs19 as status',
-        )
+        ) ->selectRaw('"" as keterangan')
             ->leftjoin('rs17', 'rs107.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs107.rs1', '=', 'rs23.rs1') //ranap
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs107.rs10') //ruangan ranap
