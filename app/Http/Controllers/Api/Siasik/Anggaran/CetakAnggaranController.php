@@ -250,6 +250,13 @@ class CetakAnggaranController extends Controller
                 'namabidang' => $item->namabidang,
                 'kodekegiatan' => $item->kodekegiatan,
                 'kegiatan' => $item->kegiatan,
+                'capaianprogram' => $item->capaianprogram,
+                'masukan' => $item->masukan,
+                'keluaran' => $item->keluaran,
+                'hasil' => $item->hasil,
+                'targetcapaian' => $item->targetcapaian,
+                'targetkeluaran' => $item->targetkeluaran,
+                'targethasil' => $item->targethasil,
                 'hasilpergeseran' => $hasilpergeseran,
             ];
         })->all();
@@ -340,6 +347,13 @@ class CetakAnggaranController extends Controller
             'namabidang' => $item['namabidang'],
             'kodekegiatan' => $item['kodekegiatan'],
             'kegiatan' => $item['kegiatan'],
+            'capaianprogram' => $item['capaianprogram'],
+            'masukan' => $item['masukan'],
+            'keluaran' => $item['keluaran'],
+            'hasil' => $item['hasil'],
+            'targetcapaian' => $item['targetcapaian'],
+            'targetkeluaran' => $item['targetkeluaran'],
+            'targethasil' => $item['targethasil'],
             'hasilpergeseran' => $item['hasilpergeseran'],
             'perubahanpak' => $perubahanpak,
         ];
