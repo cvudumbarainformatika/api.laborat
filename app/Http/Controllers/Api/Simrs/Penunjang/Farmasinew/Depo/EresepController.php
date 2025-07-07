@@ -3479,6 +3479,7 @@ class EresepController extends Controller
 
     public function tolakResep(Request $request)
     {
+        // return new JsonResponse($request->all(), 410);
         $data = Resepkeluarheder::find($request->id);
         if (!$data) {
             $data2 = Resepkeluarheder::where($request->noresep)->first();
@@ -3495,6 +3496,13 @@ class EresepController extends Controller
                 'message' => 'Resep sudah ditolak',
                 'data' => $data2
             ]);
+        }
+        $rincian = Resepkeluarrinci::where('noresep', $request->noresep)->get();
+        $rincianRacik = Resepkeluarrinciracikan::where('noresep', $request->noresep)->get();
+        if (sizeof($rincian) > 0 || sizeof($rincianRacik) > 0) {
+            return new JsonResponse([
+                'message' => 'Resep tidak boleh ditolak karena sudah ada obat keluar',
+            ], 410);
         }
         $data->flag = '5';
         $data->alasan = $request->alasan ?? null;
