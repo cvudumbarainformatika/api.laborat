@@ -23,7 +23,7 @@ class TarifHelper
 								WHEN 'ISO' THEN rs30tarif.isos
 								WHEN '2' THEN rs30tarif.rs8
 								WHEN '1' THEN rs30tarif.rs10
-                                WHEN 'HCU' THEN rs30tarif.rs10
+                WHEN 'HCU' THEN rs30tarif.hcus
 								WHEN 'Utama' THEN rs30tarif.rs12
 								WHEN 'VIP' THEN rs30tarif.rs14
 								WHEN 'VVIP' THEN rs30tarif.rs16
@@ -34,10 +34,10 @@ class TarifHelper
 								WHEN 'ICC' THEN rs30tarif.rs7
 								WHEN 'NICU' THEN rs30tarif.rs7
 								WHEN 'IN' THEN rs30tarif.rs7
-								WHEN 'ISO' THEN rs30tarif.isos
+								WHEN 'ISO' THEN rs30tarif.isop
 								WHEN '2' THEN rs30tarif.rs9
 								WHEN '1' THEN rs30tarif.rs11
-                                WHEN 'HCU' THEN rs30tarif.rs11
+                WHEN 'HCU' THEN rs30tarif.hcup
 								WHEN 'Utama' THEN rs30tarif.rs13
 								WHEN 'VIP' THEN rs30tarif.rs15
 								WHEN 'VVIP' THEN rs30tarif.rs17
