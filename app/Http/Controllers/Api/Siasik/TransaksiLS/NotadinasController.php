@@ -333,7 +333,7 @@ class NotadinasController extends Controller
                     },'realisasi'=> function ($realisasi) {
                     $realisasi
                     ->join('npdls_heder', 'npdls_heder.nonpdls', '=',  'npdls_rinci.nonpdls')
-                    ->where('npdls_heder.nopencairan', '!=', '')
+                    // ->where('npdls_heder.nopencairan', '!=', '')
                     ->select(
                         'npdls_rinci.idserahterima_rinci',
                         'npdls_rinci.nominalpembayaran as realisasi');
