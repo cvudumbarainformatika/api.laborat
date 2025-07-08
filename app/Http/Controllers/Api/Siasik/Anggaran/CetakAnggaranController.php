@@ -44,6 +44,15 @@ class CetakAnggaranController extends Controller
             't_tampung.volume',
             't_tampung.harga',
             't_tampung.satuan',
+            'penyesesuaianperioritas_heder.pptk',
+            'penyesesuaianperioritas_heder.kodepptk',
+            'penyesesuaianperioritas_heder.capaianprogram',
+            'penyesesuaianperioritas_heder.masukan',
+            'penyesesuaianperioritas_heder.keluaran',
+            'penyesesuaianperioritas_heder.hasil',
+            'penyesesuaianperioritas_heder.targetcapaian',
+            'penyesesuaianperioritas_heder.targetkeluaran',
+            'penyesesuaianperioritas_heder.targethasil',
             'akun50_2024.kodeall3 as kode',
             'akun50_2024.uraian as uraian'
         )->addSelect(DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 1) as kode1'),
@@ -52,6 +61,7 @@ class CetakAnggaranController extends Controller
                     DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 4) as kode4'),
                     DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall2, ".", 5) as kode5'))
         ->join('akun50_2024', 'akun50_2024.kodeall2', '=', 't_tampung.koderek50')
+        ->join('penyesesuaianperioritas_heder', 'penyesesuaianperioritas_heder.kodekegiatan', '=', 't_tampung.kodekegiatanblud')
         ->with(['lvl1' => function($sel){
             $sel->select('akun50_2024.kodeall3','akun50_2024.uraian');
         }, 'lvl2' => function($sel){
