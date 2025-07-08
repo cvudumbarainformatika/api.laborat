@@ -672,7 +672,7 @@ class NPD_LSController extends Controller
                 return response()->json(['message' => 'Data berhasil dikunci'], 200);
             }
         } catch (\Exception $e) {
-            Log::error('Gagal Membuka Kunci Serahterima: ' . $e->getMessage());
+            // Log::error('Gagal Membuka Kunci Serahterima: ' . $e->getMessage());
 
             return response()->json([
                 'message' => 'Terjadi Kesalahan saat Membuka Kunci',
@@ -997,4 +997,56 @@ class NPD_LSController extends Controller
         }
 
     }
+
+    public function updateNopenerimaan()
+    {
+        // Ambil data dari penerimaan_h (server farmasi)
+        $penerimaans = DB::connection('farmasi')
+            ->table('penerimaan_h')
+            ->where('no_npd', request('no_npd'))
+            ->select('no_npd', 'nopenerimaan', 'subtotal_bast')
+            ->get();
+
+        // Update npdls_rinci (server siasik) berdasarkan data dari farmasi
+        foreach ($penerimaans as $penerimaan) {
+            DB::connection('siasik')
+                ->table('npdls_rinci')
+                ->where('nopenerimaan', '=', '')
+                ->where('nonpdls', $penerimaan->no_npd)
+                ->where('totalls', $penerimaan->subtotal_bast)
+                ->update(['nopenerimaan' => $penerimaan->nopenerimaan]);
+        }
+
+        return response()->json(['message' => 'Update berhasil']);
+    }
+    // {
+    //     $batchSize = 500; // Jumlah data per batch
+    //     $offset = 0;
+
+    //     do {
+    //         // Ambil data dari penerimaan_h secara bertahap
+    //         $penerimaans = DB::connection('farmasi')
+    //             ->table('penerimaan_h')
+    //             ->select('no_npd', 'nopenerimaan', 'subtotal_bast')
+    //             ->offset($offset)
+    //             ->limit($batchSize)
+    //             ->get();
+
+    //         if ($penerimaans->isEmpty()) break;
+
+    //         // Update npdls_rinci untuk setiap batch
+    //         foreach ($penerimaans as $penerimaan) {
+    //             DB::connection('siasik')
+    //                 ->table('npdls_rinci')
+    //                 ->where('nopenerimaan', '=', '')
+    //                 ->where('nonpdls', $penerimaan->no_npd)
+    //                 ->where('totalls', $penerimaan->subtotal_bast)
+    //                 ->update(['nopenerimaan' => $penerimaan->nopenerimaan]);
+    //         }
+
+    //         $offset += $batchSize;
+    //     } while (true);
+
+    //     return response()->json(['message' => 'Update berhasil']);
+    // }
 }

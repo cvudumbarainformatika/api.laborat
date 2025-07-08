@@ -247,7 +247,7 @@ class SerahterimaController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Gagal membuka kunci serahterima: ' . $e->getMessage());
+            // Log::error('Gagal membuka kunci serahterima: ' . $e->getMessage());
 
             return response()->json([
                 'message' => 'Terjadi kesalahan saat membuka kunci',
