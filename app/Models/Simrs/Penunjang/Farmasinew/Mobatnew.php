@@ -33,6 +33,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Stok\StokrealSementara;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Mobatnew extends Model
 {
@@ -201,6 +202,51 @@ class Mobatnew extends Model
     {
         return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat');
     }
+
+
+    // mutasi ngambang untuk laporan mutasi fifo start ------
+    public function mutasimasukngambang()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat')
+            ->select(
+                'mutasi_gudangdepo.no_permintaan',
+                'mutasi_gudangdepo.kd_obat',
+                'mutasi_gudangdepo.kd_obat as kdobat',
+                'mutasi_gudangdepo.nopenerimaan',
+                'mutasi_gudangdepo.harga',
+                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'),
+                DB::raw('sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga) as sub'),
+                'permintaan_h.tgl_kirim_depo',
+                'permintaan_h.tgl_terima_depo',
+                'permintaan_h.tgl_terima_depo as tgl',
+                'permintaan_h.dari as kdruang'
+            )
+            ->join('permintaan_h', 'mutasi_gudangdepo.no_permintaan', '=', 'permintaan_h.no_permintaan')
+            ->whereRaw("DATE_FORMAT(permintaan_h.tgl_kirim_depo, '%Y-%m') != DATE_FORMAT(permintaan_h.tgl_terima_depo, '%Y-%m')")
+            ->where('permintaan_h.dari', 'LIKE', 'Gd-%');
+    }
+    public function mutasikeluarngambang()
+    {
+        return $this->hasMany(Mutasigudangkedepo::class, 'kd_obat', 'kd_obat')
+            ->select(
+                'mutasi_gudangdepo.no_permintaan',
+                'mutasi_gudangdepo.kd_obat',
+                'mutasi_gudangdepo.kd_obat as kdobat',
+                'mutasi_gudangdepo.nopenerimaan',
+                'mutasi_gudangdepo.harga',
+                DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'),
+                DB::raw('sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga) as sub'),
+                'permintaan_h.tgl_kirim_depo',
+                'permintaan_h.tgl_terima_depo',
+                'permintaan_h.tgl_kirim_depo as tgl',
+                'permintaan_h.dari as kdruang'
+            )
+            ->join('permintaan_h', 'mutasi_gudangdepo.no_permintaan', '=', 'permintaan_h.no_permintaan')
+            ->whereRaw("DATE_FORMAT(permintaan_h.tgl_kirim_depo, '%Y-%m') != DATE_FORMAT(permintaan_h.tgl_terima_depo, '%Y-%m')")
+            ->where('permintaan_h.dari', 'LIKE', 'Gd-%');
+    }
+    // mutasi ngambang untuk laporan mutasi fifo start ------
+
 
     public function persiapanoperasirinci()
     {

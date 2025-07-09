@@ -481,6 +481,29 @@ class PersediaanFiFoController extends Controller
                 // ->groupBy('retur_penyedia_r.kdobat', 'retur_penyedia_r.nopenerimaan', 'retur_penyedia_r.noresep');
             },
             'daftarharga:kd_obat,nopenerimaan,harga',
+            'mutasikeluarngambang' => function ($kel) {
+                $kel->where('permintaan_h.tgl_kirim_depo', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->with([
+                        'depo:kode,nama',
+                    ]);
+                if (request('jenis') === 'rekap') {
+                    $kel->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
+                } else {
+                    $kel->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.no_permintaan');
+                }
+            },
+            'mutasimasukngambang' => function ($kel) {
+                $kel->where('permintaan_h.tgl_terima_depo', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
+                    ->with([
+                        'depo:kode,nama',
+                    ]);
+
+                if (request('jenis') === 'rekap') {
+                    $kel->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan');
+                } else {
+                    $kel->groupBy('mutasi_gudangdepo.kd_obat', 'mutasi_gudangdepo.nopenerimaan', 'mutasi_gudangdepo.no_permintaan');
+                }
+            },
 
         ]);
         // }
