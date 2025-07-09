@@ -66,6 +66,9 @@ Route::group([
     Route::post('/simpandokumentindakanpoli', [TindakanController::class, 'simpandokumentindakanpoli']);
     Route::post('/hapusdokumentindakan', [TindakanController::class, 'hapusdokumentindakan']);
 
+    // Simpan keterangan tidakan saja
+    Route::post('/simpan-ket-tindakan', [TindakanController::class, 'simpanKetTindakan']);
+
     Route::post('/ewseklaimrajal_newclaim', [EwseklaimController::class, 'ewseklaimrajal_newclaim']);
     Route::get('/caridiagnosa', [EwseklaimController::class, 'caridiagnosa']);
     Route::get('/carisimulasi', [EwseklaimController::class, 'carisimulasi']);

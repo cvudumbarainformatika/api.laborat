@@ -168,6 +168,39 @@ class TindakanController extends Controller
         );
     }
 
+    public function simpanKetTindakan(Request $request)
+    {
+        $tindakan = Tindakan::find($request->rs73_id);
+        if (!$tindakan) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan, tidak bisa edit'], 410);
+        }
+        $sambung = TindakanSambung::where('rs73_id', $request->rs73_id)->first();
+        if (!$sambung) {
+            TindakanSambung::updateOrCreate(
+                ['nota' => $tindakan->rs2, 'noreg' => $tindakan->rs1, 'kd_tindakan' => $tindakan->rs4],
+                ['ket' => $request->ket, 'rs73_id' => $tindakan->id]
+            );
+        } else {
+            $sambung->update([
+                'ket' => $request->ket,
+            ]);
+        }
+
+        $tindakan->update([
+            'rs20' => $request->ket,
+        ]);
+
+        $tindakan->load('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'sambungan:rs73_id,ket');
+        return new JsonResponse(
+            [
+                'message' => 'Keterangan Tindakan Berhasil Diupdate.',
+                'result' => $tindakan,
+                'request' => $request->all(),
+
+            ],
+            200
+        );
+    }
     public function simpantindakanIgd(Request $request)
     {
         DB::select('call nota_tindakan(@nomor)');
