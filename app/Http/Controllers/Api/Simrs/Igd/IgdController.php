@@ -79,6 +79,10 @@ class IgdController extends Controller
             ->leftjoin('rs250', 'rs250.rs1', '=', 'rs17.rs1')
             ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1')
             // ->leftjoin('bpjs_respon_time', 'bpjs_respon_time.noreg', '=', 'rs17.rs1')
+            ->addSelect(DB::raw(
+                '(SELECT rs26 FROM rs17 WHERE rs17.rs2 = rs15.rs1 AND rs17.rs26 != "0000-00-00 00:00:00"  AND rs17.rs8 = "POL014" ORDER BY rs26 DESC LIMIT 1)
+                 as last_visit'
+            ))
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
             ->where('rs17.rs8', 'POL014')
             // ->where(function ($q) {
