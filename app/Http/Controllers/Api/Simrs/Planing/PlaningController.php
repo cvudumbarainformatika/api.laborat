@@ -874,7 +874,7 @@ class PlaningController extends Controller
                     $createspri = BridbpjsplanController::updateSpri($request);
                     $xxx = $createspri['metadata']['code'];
                     if ($xxx === 200 || $xxx === '200') {
-                        $nospri = $createspri['response']->noSPRI;
+                        $nospri = $createspri['response']->noSPRI ?? $createspri['result']->noSPRI;
                         $simpanspri = self::updatespri($request, $groupsistembayar, $nospri);
                         if ($simpanspri === 500) {
                             return new JsonResponse(['message' => 'Maaf, Data Gagal Diupdate Di RS...!!!'], 500);

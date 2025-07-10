@@ -572,21 +572,22 @@ class PoliController extends Controller
                     $q->orderBy('id', 'DESC');
                 },
                 'kamaroperasi' => function ($kamaroperasi) {
-                    $kamaroperasi->with(['mastertindakanoperasi','laporanoperasi']);
+                    $kamaroperasi->with(['mastertindakanoperasi', 'laporanoperasi']);
                 },
                 'taskid' => function ($q) {
                     $q->orderBy('taskid', 'DESC');
                 },
                 'bpjssuratkontrol',
-                'laboratold'=> function ($t) {
-                $t->select('rs51.*','rs49.rs2 as pemeriksaan','rs49.rs21 as paket')->with(
-                    [
-                        'pemeriksaanlab',
-                        'interpretasi'
-                    ])
-                ->leftjoin('rs49','rs49.rs1','rs51.rs4')
-                    ->orderBy('id', 'DESC');
-            },
+                'laboratold' => function ($t) {
+                    $t->select('rs51.*', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket')->with(
+                        [
+                            'pemeriksaanlab',
+                            'interpretasi'
+                        ]
+                    )
+                        ->leftjoin('rs49', 'rs49.rs1', 'rs51.rs4')
+                        ->orderBy('id', 'DESC');
+                },
                 'planning' => function ($p) {
                     $p->with([
                         'masterpoli',
@@ -612,7 +613,7 @@ class PoliController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'jawabankonsulbynoreg' => function ($x) {
-                    $x->select('jawaban_konsul_polis.noreg_lama as noreg','jawaban_konsul_polis.*')->with([
+                    $x->select('jawaban_konsul_polis.noreg_lama as noreg', 'jawaban_konsul_polis.*')->with([
                         'poliAsal:rs1,rs2',
                         'poliTujuan:rs1,rs2',
                     ])
@@ -628,8 +629,8 @@ class PoliController extends Controller
                     $newapotekrajal->with([
                         'permintaanresep.mobat:kd_obat,nama_obat,kode_bpjs',
                         'permintaanracikan.mobat:kd_obat,nama_obat,kode_bpjs',
-                            'rincian.mobat:kd_obat,nama_obat',
-                            'rincianracik.mobat:kd_obat,nama_obat',
+                        'rincian.mobat:kd_obat,nama_obat',
+                        'rincianracik.mobat:kd_obat,nama_obat',
                         // 'sistembayar',
                         // 'dokter:nama,kdpegsimrs',
                     ])
@@ -761,9 +762,14 @@ class PoliController extends Controller
     {
         $userid = FormatingHelper::session_user();
         $data = Memodiagnosadokter::updateOrCreate(
-            ['noreg' => $request->noreg],
-            ['diagnosa' => $request->memo],
-            ['user' => $userid['kodesimrs']],
+            [
+                'noreg' => $request->noreg,
+                'kdruang' => $request->kdruang
+            ],
+            [
+                'diagnosa' => $request->memo,
+                'user' => $userid['kodesimrs']
+            ],
         );
         return new JsonResponse(
             [

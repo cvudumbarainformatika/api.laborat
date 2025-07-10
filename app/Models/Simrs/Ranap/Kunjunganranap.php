@@ -649,6 +649,10 @@ class Kunjunganranap extends Model
     {
         return $this->hasOne(Memodiagnosadokter::class, 'noreg', 'rs1');
     }
+    public function manymemo()
+    {
+        return $this->hasMany(Memodiagnosadokter::class, 'noreg', 'rs1');
+    }
     public function procedure()
     {
         return $this->hasMany(ProcedureM::class, 'noreg', 'rs1');

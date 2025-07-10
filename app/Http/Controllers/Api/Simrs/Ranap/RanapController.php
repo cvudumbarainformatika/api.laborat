@@ -786,6 +786,7 @@ class RanapController extends Controller
                     $q->where('stat', '=', 'MASUK')
                         ->where('ruang', '!=', 'POL014');
                 },
+                'manymemo'
 
             ])->first();
 
