@@ -63,17 +63,17 @@ class Kernel extends ConsoleKernel
         // perbaikan data per depo start
 
         $schedule->command('stok:gko')
-            ->dailyAt('20:00');
+            ->dailyAt('22:00');
         $schedule->command('stok:gfo')
-            ->dailyAt('20:10');
+            ->dailyAt('22:10');
         $schedule->command('stok:dfo')
-            ->dailyAt('20:20');
+            ->dailyAt('22:20');
         $schedule->command('stok:drj')
-            ->dailyAt('20:30');
+            ->dailyAt('22:30');
         $schedule->command('stok:dri')
             ->dailyAt('23:20');
         $schedule->command('stok:dok')
-            ->dailyAt('20:50');
+            ->dailyAt('22:50');
         $schedule->command('stok:dir')
             ->dailyAt('23:00');
 
