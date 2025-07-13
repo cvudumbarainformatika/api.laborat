@@ -137,61 +137,54 @@ class ListDataArsipController extends Controller
 
     public function simpanarsipdokumen(Request $request)
     {
-        if (!$request->hasFile('dokumen')) {
-            return response()->json(['message' => 'Tidak ada file dikirim'], 422);
-        }
+        // // return 'sasa';
+        // dd($request->file('dokumen'));
+//         return response()->json([
+//     'hasFile' => $request->hasFile('dokumen'),
+//     'file' => [
+//     'original_name' => $request->file('dokumen')->getClientOriginalName(),
+//     'mime_type'     => $request->file('dokumen')->getMimeType(),
+//     'size'          => $request->file('dokumen')->getSize(),
+//     'extension'     => $request->file('dokumen')->getClientOriginalExtension(),
+//     'is_valid'      => $request->file('dokumen')->isValid(),
+// ],
+//     'all' => $request->all()
+// ]);
+        // if (!$request->hasFile('dokumen')) {
+        //     return response()->json(['message' => 'Tidak ada file dikirim'], 422);
+        // }
 
-        try {
-            DB::beginTransaction();
+        // try {
+        //     DB::beginTransaction();
 
-            $user = FormatingHelper::session_user();
-            $kdpegsimrs = $user['kodesimrs'];
-
+            // $user = FormatingHelper::session_user();
+            // $kdpegsimrs = $user['kodesimrs'];
+            $file = $request->file('dokumen');
             $noarsip = $request->noarsip;
-            $files = $request->file('dokumen');
-            if (!is_array($files)) {
-                $files = [$files]; // Normalisasi: selalu dalam bentuk array
-            }
+            $originalname = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            // $files = $request->file('dokumen');
+            // if (!is_array($files)) {
+            //     $files = [$files]; // Normalisasi: selalu dalam bentuk array
+            // }
 
             $panggilan = explode('-', $noarsip);
             $panggilan = end($panggilan); // Contoh: ambil "IT" dari 0000007-2025-IT
             $folder = 'dokumen_arsip/' . $panggilan;
+            $penamaan = time() . '-' . $noarsip . '.' . $extension;
 
-            // Buat folder di disk jika belum ada
+            $penamaan = time() . '-' . $noarsip . '.' . $extension;
+
+             // Buat folder di disk jika belum ada
             if (!Storage::disk('remote')->exists($folder)) {
                 Storage::disk('remote')->makeDirectory($folder);
             }
 
-            foreach ($files as $i => $file) {
+            $file->storeAs('public/' . $folder, $penamaan, 'remote');
 
-                $originalname = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                $penamaan = $i . '-' . $noarsip . '.' . $extension;
+            $fullPath = "$folder/$penamaan";
 
-                // Path tujuan
-                $fullPath = "$folder/$penamaan";
-
-                // Proses simpan file
-                if ($extension !== 'pdf') {
-                    // Resize gambar dan simpan ke path temporary
-                    $img = Image::make($file)->resize(600, null, function ($constraint) {
-                        $constraint->aspectRatio();
-                    });
-
-                    $tempPath = tempnam(sys_get_temp_dir(), 'resize_');
-                    $img->save($tempPath, 60);
-
-                    Storage::disk('remote')->put($fullPath, file_get_contents($tempPath));
-                    unlink($tempPath);
-                } else {
-                    // Simpan PDF langsung
-                    // return 'sasa';
-                   // $file->storeAs($folder, $penamaan, 'remote');
-                    $file->storeAs('public/' . $folder, $penamaan, 'remote');
-                }
-
-                // Simpan/Update path di DB
-                $update = Dataarsip::where('noarsip', $noarsip)->first();
+             $update = Dataarsip::where('noarsip', $noarsip)->first();
                 if ($update) {
                     $update->update([
                         'file'  => $originalname,
@@ -199,19 +192,18 @@ class ListDataArsipController extends Controller
                         'url'  => $fullPath
                     ]);
                 }
-            }
 
             $kirim = self::getlistdataarsipbynoarsip($noarsip);
-            DB::commit();
+        // DB::commit();
 
             return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return new JsonResponse([
-                'message' => 'Upload gagal',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        // } catch (\Exception $e) {
+        //     DB::rollback();
+        //     return new JsonResponse([
+        //         'message' => 'Upload gagal',
+        //         'error'   => $e->getMessage()
+        //     ], 500);
+        // }
     }
 
 
