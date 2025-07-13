@@ -173,8 +173,6 @@ class ListDataArsipController extends Controller
             $folder = 'dokumen_arsip/' . $panggilan;
             $penamaan = time() . '-' . $noarsip . '.' . $extension;
 
-            $penamaan = time() . '-' . $noarsip . '.' . $extension;
-
              // Buat folder di disk jika belum ada
             if (!Storage::disk('remote')->exists($folder)) {
                 Storage::disk('remote')->makeDirectory($folder);
