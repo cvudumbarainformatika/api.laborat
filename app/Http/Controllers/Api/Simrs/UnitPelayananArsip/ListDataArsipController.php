@@ -135,120 +135,82 @@ class ListDataArsipController extends Controller
         }
     }
 
-     public function simpanarsipdokumen(Request $request)
+    public function simpanarsipdokumen(Request $request)
     {
-        if ($request->hasFile('dokumen')) {
-            try {
-                DB::beginTransaction();
-                $user = FormatingHelper::session_user();
-                $kdpegsimrs = $user['kodesimrs'];
+        if (!$request->hasFile('dokumen')) {
+            return response()->json(['message' => 'Tidak ada file dikirim'], 422);
+        }
 
-                $noarsip = $request->noarsip;
-                $files = $request->file('dokumen');
-                $str = $request->noarsip;
-                $parts = explode('-', $str);
-                $panggilan = end($parts); // ambil kata tera
+        try {
+            DB::beginTransaction();
 
-                //   $user = auth()->user()->pegawai_id;
+            $user = FormatingHelper::session_user();
+            $kdpegsimrs = $user['kodesimrs'];
 
-                if (!empty($files)) {
-
-                    for ($i = 0; $i < count($files); $i++) {
-                        $file = $files[$i];
-
-                        $originalname = $file->getClientOriginalName();
-                        $penamaan = $i . '-' . $noarsip . '.' . $file->getClientOriginalExtension();
-
-                        $extension = $file->getClientOriginalExtension();
-
-                        // return new JsonResponse($extension);
-                        $data = Dataarsip::where([
-                            ['noarsip', $noarsip],
-                            ['file', $originalname]
-                        ])->first();
-                        if ($data) {
-                            // Storage::delete($data->path);
-                            //   Storage::disk('remote')->delete($data->path);
-
-                        }
-
-                        $gallery = null;
-                        if ($data) {
-                            $gallery = $data;
-                        } else {
-                            $gallery = new Dataarsip();
-                        }
-
-                        $folder = 'dokumen_arsip/' . $panggilan;
-
-                        // if (!is_dir(storage_path("app/public/$folder"))) {
-                        //   mkdir(storage_path("app/public/$folder"), 0775, true);
-                        // }
-                        if (!Storage::disk('remote')->exists("public/$folder")) {
-                            Storage::disk('remote')->makeDirectory("public/$folder");
-                        }
-
-
-                        // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
-                        // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
-
-                        if ($extension !== 'pdf') {
-
-                            $img = Image::make($file)->resize(600, null, function ($constraint) {
-                                $constraint->aspectRatio();
-                            });
-
-                            // $img->save(\public_path("storage/$folder/". $penamaan), 60);
-                            // Buat file temporary dengan nama random (contoh: /tmp/resize_8jf9d2)
-                            $tempPath = tempnam(sys_get_temp_dir(), 'resize_');
-                            $img->save($tempPath, 60);
-
-                            // $img->save(\public_path("storage/$folder/". $penamaan), 60);
-                            // Upload ke remote dengan nama file yang kita inginkan ($penamaan)
-                            // Contoh $penamaan: 20240219123456-1-123456.jpg
-                            Storage::disk('remote')->put(
-                                "public/$folder/$penamaan",  // full path dengan nama file
-                                file_get_contents($tempPath)  // isi file
-                            );
-
-                            // Hapus file temporary
-                            unlink($tempPath);
-                        } else {
-                            // $path = $file->storeAs('public/'.$folder, $penamaan);
-                            $path = $file->storeAs('public/' . $folder, $penamaan, 'remote');
-                        }
-
-                        $gallery->path = "public/$folder/$penamaan";
-                        $gallery->url = $folder . '/' . $penamaan;
-                        $update = Dataarsip::where('noarsip', $noarsip)->first();
-                        $update->update([
-                            'path' => $gallery->path,
-                            'url' => $gallery->url,
-                        ]);
-                    }
-
-                    $kirim = self::getlistdataarsipbynoarsip($noarsip);
-                    DB::commit();
-                    return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
-                }
-            } catch (\Exception $th) {
-                DB::rollback();
-                return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
+            $noarsip = $request->noarsip;
+            $files = $request->file('dokumen');
+            if (!is_array($files)) {
+                $files = [$files]; // Normalisasi: selalu dalam bentuk array
             }
-        } else {
-            $update = Dataarsip::where('noarsip', $request->noarsip)->first();
-            $update->update([
-                'uraian' => $request->uraian,
-                'ket' => $request->keaslian,
-                'kode' => $request->kodekelasifikasi,
-                'jumlah' => $request->jumlah,
-                'nobox' => $request->nobox,
-                'lokasi' => $request->lokasi,
-                'media' => $request->media,
-                'keterangan' => $request->keterangan,
-            ]);
-            $kirim = self::getlistdataarsipbynoarsip($request->noarsip);
-            return new JsonResponse(['message' => 'success', 'result' => $kirim, 'update' => 'true'], 200);
+
+            $panggilan = explode('-', $noarsip);
+            $panggilan = end($panggilan); // Contoh: ambil "IT" dari 0000007-2025-IT
+            $folder = 'dokumen_arsip/' . $panggilan;
+
+            // Buat folder di disk jika belum ada
+            if (!Storage::disk('remote')->exists($folder)) {
+                Storage::disk('remote')->makeDirectory($folder);
+            }
+
+            foreach ($files as $i => $file) {
+
+                $originalname = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $penamaan = $i . '-' . $noarsip . '.' . $extension;
+
+                // Path tujuan
+                $fullPath = "$folder/$penamaan";
+
+                // Proses simpan file
+                if ($extension !== 'pdf') {
+                    // Resize gambar dan simpan ke path temporary
+                    $img = Image::make($file)->resize(600, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
+
+                    $tempPath = tempnam(sys_get_temp_dir(), 'resize_');
+                    $img->save($tempPath, 60);
+
+                    Storage::disk('remote')->put($fullPath, file_get_contents($tempPath));
+                    unlink($tempPath);
+                } else {
+                    // Simpan PDF langsung
+                    // return 'sasa';
+                   // $file->storeAs($folder, $penamaan, 'remote');
+                    $file->storeAs('public/' . $folder, $penamaan, 'remote');
+                }
+
+                // Simpan/Update path di DB
+                $update = Dataarsip::where('noarsip', $noarsip)->first();
+                if ($update) {
+                    $update->update([
+                        'file'  => $originalname,
+                        'path' => 'public/' . $fullPath,
+                        'url'  => $fullPath
+                    ]);
+                }
+            }
+
+            $kirim = self::getlistdataarsipbynoarsip($noarsip);
+            DB::commit();
+
+            return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return new JsonResponse([
+                'message' => 'Upload gagal',
+                'error'   => $e->getMessage()
+            ], 500);
         }
     }
 
