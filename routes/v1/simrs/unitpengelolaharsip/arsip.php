@@ -10,5 +10,6 @@ Route::group([
 ], function () {
     Route::get('/listarsip', [ListDataArsipController::class, 'listdataarsip']);
     Route::post('/simpanarsip', [ListDataArsipController::class, 'simpanarsip']);
+    Route::post('/simpanarsipdokumen', [ListDataArsipController::class, 'simpanarsipdokumen']);
 
 });

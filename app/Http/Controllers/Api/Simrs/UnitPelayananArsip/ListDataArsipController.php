@@ -68,8 +68,30 @@ class ListDataArsipController extends Controller
 
     public function simpanarsip(Request $request)
     {
-        if ($request->hasFile('dokumen')) {
+        // return $request->noarsip;
+        if ($request->filled('noarsip')) {
             try {
+                DB::beginTransaction();
+                $update = Dataarsip::where('noarsip', $request->noarsip)->first();
+                $update->update([
+                    'uraian' => $request->uraian,
+                    'ket' => $request->keaslian,
+                    'kode' => $request->kodekelasifikasi,
+                    'jumlah' => $request->jumlah,
+                    'nobox' => $request->nobox,
+                    'lokasi' => $request->lokasi,
+                    'media' => $request->media,
+                    'keterangan' => $request->keterangan,
+                ]);
+                $kirim = self::getlistdataarsipbynoarsip($request->noarsip);
+                DB::commit();
+                return new JsonResponse(['message' => 'success', 'result' => $kirim, 'update' => 'true'], 200);
+            }catch(\Exception $th) {
+                DB::rollback();
+                return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
+            }
+        } else {
+           try {
                 DB::beginTransaction();
                 $user = FormatingHelper::session_user();
                 $kdpegsimrs = $user['kodesimrs'];
@@ -86,7 +108,46 @@ class ListDataArsipController extends Controller
                 $tanggal = explode('-', $request->tgl);
                 $tahun = $tanggal[0];
                 $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
+
+                $simpan = Dataarsip::create([
+                    'noarsip' => $noarsip,
+                    'pencipta' => $pencipta,
+                    'unit_pengolah' => $unit_pengolah,
+                    'tanggal' => $request->tgl,
+                    'uraian' => $request->uraian,
+                    'ket' => $request->keaslian,
+                    'kode' => $request->kodekelasifikasi,
+                    'jumlah' => $request->jumlah,
+                    'nobox' => $request->nobox,
+                    'lokasi' => $request->lokasi,
+                    'media' => $request->media,
+                    'keterangan' => $request->keterangan,
+                    'username' => $kdpegsimrs,
+                    'flaging' => '1',
+                ]);
+                $kirim = self::getlistdataarsipbynoarsip($noarsip);
+            DB::commit();
+                    return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
+            }catch(\Exception $th) {
+                DB::rollback();
+                return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
+            }
+        }
+    }
+
+     public function simpanarsipdokumen(Request $request)
+    {
+        if ($request->hasFile('dokumen')) {
+            try {
+                DB::beginTransaction();
+                $user = FormatingHelper::session_user();
+                $kdpegsimrs = $user['kodesimrs'];
+
+                $noarsip = $request->noarsip;
                 $files = $request->file('dokumen');
+                $str = $request->noarsip;
+                $parts = explode('-', $str);
+                $panggilan = end($parts); // ambil kata tera
 
                 //   $user = auth()->user()->pegawai_id;
 
@@ -157,25 +218,13 @@ class ListDataArsipController extends Controller
                             $path = $file->storeAs('public/' . $folder, $penamaan, 'remote');
                         }
 
-                        $gallery->noarsip = $noarsip;
-                        $gallery->pencipta = $pencipta;
-                        $gallery->unit_pengolah = $unit_pengolah;
-                        $gallery->tanggal = $request->tgl;
-                        $gallery->uraian = $request->uraian;
-                        $gallery->ket = $request->keaslian;
-                        $gallery->kode = $request->kodekelasifikasi;
-                        $gallery->jumlah = $request->jumlah;
-                        $gallery->nobox = $request->nobox;
-                        $gallery->lokasi = $request->lokasi;
-                        $gallery->media = $request->media;
-                        $gallery->file = $originalname;
-                        $gallery->username = $kdpegsimrs;
-                        $gallery->flaging = '1';
-
                         $gallery->path = "public/$folder/$penamaan";
                         $gallery->url = $folder . '/' . $penamaan;
-                        $gallery->keterangan = $request->keterangan;
-                        $gallery->save();
+                        $update = Dataarsip::where('noarsip', $noarsip)->first();
+                        $update->update([
+                            'path' => $gallery->path,
+                            'url' => $gallery->url,
+                        ]);
                     }
 
                     $kirim = self::getlistdataarsipbynoarsip($noarsip);
@@ -202,4 +251,143 @@ class ListDataArsipController extends Controller
             return new JsonResponse(['message' => 'success', 'result' => $kirim, 'update' => 'true'], 200);
         }
     }
+
+
+
+    // public function simpanarsip(Request $request)
+    // {
+    //     if ($request->hasFile('dokumen')) {
+    //         try {
+    //             DB::beginTransaction();
+    //             $user = FormatingHelper::session_user();
+    //             $kdpegsimrs = $user['kodesimrs'];
+    //             $kdruangarsip = $user['kode_ruang_arsip'];
+    //             $nomor = '@nomor';
+
+
+    //             DB::connection('siasik')->select('call noarsip(?,?)', array($nomor, $kdruangarsip));
+    //             $x = DB::connection('siasik')->table('organisasi')->select('counter_arsip', 'panggilan', 'nama')->where('kode', $kdruangarsip)->get();
+    //             $wew = $x[0]->counter_arsip;
+    //             $panggilan = $x[0]->panggilan;
+    //             $pencipta = $kdruangarsip;
+    //             $unit_pengolah = $kdruangarsip;
+    //             $tanggal = explode('-', $request->tgl);
+    //             $tahun = $tanggal[0];
+    //             $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
+    //             $files = $request->file('dokumen');
+
+    //             //   $user = auth()->user()->pegawai_id;
+
+    //             if (!empty($files)) {
+
+    //                 for ($i = 0; $i < count($files); $i++) {
+    //                     $file = $files[$i];
+
+    //                     $originalname = $file->getClientOriginalName();
+    //                     $penamaan = $i . '-' . $noarsip . '.' . $file->getClientOriginalExtension();
+
+    //                     $extension = $file->getClientOriginalExtension();
+
+    //                     // return new JsonResponse($extension);
+    //                     $data = Dataarsip::where([
+    //                         ['noarsip', $noarsip],
+    //                         ['file', $originalname]
+    //                     ])->first();
+    //                     if ($data) {
+    //                         // Storage::delete($data->path);
+    //                         //   Storage::disk('remote')->delete($data->path);
+
+    //                     }
+
+    //                     $gallery = null;
+    //                     if ($data) {
+    //                         $gallery = $data;
+    //                     } else {
+    //                         $gallery = new Dataarsip();
+    //                     }
+
+    //                     $folder = 'dokumen_arsip/' . $panggilan;
+
+    //                     // if (!is_dir(storage_path("app/public/$folder"))) {
+    //                     //   mkdir(storage_path("app/public/$folder"), 0775, true);
+    //                     // }
+    //                     if (!Storage::disk('remote')->exists("public/$folder")) {
+    //                         Storage::disk('remote')->makeDirectory("public/$folder");
+    //                     }
+
+
+    //                     // // Upload Avatar (IMAGE INTERVENTION - LARAVEL)
+    //                     // Image::make($request->file("upload_image"))->save(storage_path("app/public/post-images/".$id.".png"));
+
+    //                     if ($extension !== 'pdf') {
+
+    //                         $img = Image::make($file)->resize(600, null, function ($constraint) {
+    //                             $constraint->aspectRatio();
+    //                         });
+
+    //                         // $img->save(\public_path("storage/$folder/". $penamaan), 60);
+    //                         // Buat file temporary dengan nama random (contoh: /tmp/resize_8jf9d2)
+    //                         $tempPath = tempnam(sys_get_temp_dir(), 'resize_');
+    //                         $img->save($tempPath, 60);
+
+    //                         // $img->save(\public_path("storage/$folder/". $penamaan), 60);
+    //                         // Upload ke remote dengan nama file yang kita inginkan ($penamaan)
+    //                         // Contoh $penamaan: 20240219123456-1-123456.jpg
+    //                         Storage::disk('remote')->put(
+    //                             "public/$folder/$penamaan",  // full path dengan nama file
+    //                             file_get_contents($tempPath)  // isi file
+    //                         );
+
+    //                         // Hapus file temporary
+    //                         unlink($tempPath);
+    //                     } else {
+    //                         // $path = $file->storeAs('public/'.$folder, $penamaan);
+    //                         $path = $file->storeAs('public/' . $folder, $penamaan, 'remote');
+    //                     }
+
+    //                     $gallery->noarsip = $noarsip;
+    //                     $gallery->pencipta = $pencipta;
+    //                     $gallery->unit_pengolah = $unit_pengolah;
+    //                     $gallery->tanggal = $request->tgl;
+    //                     $gallery->uraian = $request->uraian;
+    //                     $gallery->ket = $request->keaslian;
+    //                     $gallery->kode = $request->kodekelasifikasi;
+    //                     $gallery->jumlah = $request->jumlah;
+    //                     $gallery->nobox = $request->nobox;
+    //                     $gallery->lokasi = $request->lokasi;
+    //                     $gallery->media = $request->media;
+    //                     $gallery->file = $originalname;
+    //                     $gallery->username = $kdpegsimrs;
+    //                     $gallery->flaging = '1';
+
+    //                     $gallery->path = "public/$folder/$penamaan";
+    //                     $gallery->url = $folder . '/' . $penamaan;
+    //                     $gallery->keterangan = $request->keterangan;
+    //                     $gallery->save();
+    //                 }
+
+    //                 $kirim = self::getlistdataarsipbynoarsip($noarsip);
+    //                 DB::commit();
+    //                 return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
+    //             }
+    //         } catch (\Exception $th) {
+    //             DB::rollback();
+    //             return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
+    //         }
+    //     } else {
+    //         $update = Dataarsip::where('noarsip', $request->noarsip)->first();
+    //         $update->update([
+    //             'uraian' => $request->uraian,
+    //             'ket' => $request->keaslian,
+    //             'kode' => $request->kodekelasifikasi,
+    //             'jumlah' => $request->jumlah,
+    //             'nobox' => $request->nobox,
+    //             'lokasi' => $request->lokasi,
+    //             'media' => $request->media,
+    //             'keterangan' => $request->keterangan,
+    //         ]);
+    //         $kirim = self::getlistdataarsipbynoarsip($request->noarsip);
+    //         return new JsonResponse(['message' => 'success', 'result' => $kirim, 'update' => 'true'], 200);
+    //     }
+    // }
 }
