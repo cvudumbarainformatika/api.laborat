@@ -530,7 +530,7 @@ class RegJurnalController extends Controller
             'verif' => '1',
             'tglverif' => $time
         ]);
-    return new JsonResponse (['message' => 'Verifikasi Dibatalkan', 'notrans' => $request->notrans], 200);
+    return new JsonResponse (['message' => 'Data Berhasil di Verifikasi', 'notrans' => $request->notrans], 200);
     }
     public function verifAll(Request $request){
     // INI UNTUK VERIF ALL //
