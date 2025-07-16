@@ -398,7 +398,7 @@ class ReturpenjualanController extends Controller
 
                     while ($jum > 0 && $index < count($obats)) {
                         $current = $obats[$index];
-                        $ada = (int) $current->jumlah;
+                        $ada = (float) $current->jumlah;
 
                         $retur = min($ada, $jum);
 
