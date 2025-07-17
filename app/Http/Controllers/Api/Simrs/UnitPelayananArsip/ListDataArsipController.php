@@ -137,36 +137,19 @@ class ListDataArsipController extends Controller
 
     public function simpanarsipdokumen(Request $request)
     {
-        // // return 'sasa';
-        // dd($request->file('dokumen'));
-//         return response()->json([
-//     'hasFile' => $request->hasFile('dokumen'),
-//     'file' => [
-//     'original_name' => $request->file('dokumen')->getClientOriginalName(),
-//     'mime_type'     => $request->file('dokumen')->getMimeType(),
-//     'size'          => $request->file('dokumen')->getSize(),
-//     'extension'     => $request->file('dokumen')->getClientOriginalExtension(),
-//     'is_valid'      => $request->file('dokumen')->isValid(),
-// ],
-//     'all' => $request->all()
-// ]);
-        // if (!$request->hasFile('dokumen')) {
-        //     return response()->json(['message' => 'Tidak ada file dikirim'], 422);
-        // }
 
-        // try {
-        //     DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-            // $user = FormatingHelper::session_user();
-            // $kdpegsimrs = $user['kodesimrs'];
+
+            if (!$request->hasFile('dokumen') || !$request->file('dokumen')->isValid()) {
+                return response()->json(['message' => 'File tidak valid atau tidak ada'], 422);
+            }
+
             $file = $request->file('dokumen');
             $noarsip = $request->noarsip;
             $originalname = $file->getClientOriginalName();
             $extension = $file->getClientOriginalExtension();
-            // $files = $request->file('dokumen');
-            // if (!is_array($files)) {
-            //     $files = [$files]; // Normalisasi: selalu dalam bentuk array
-            // }
 
             $panggilan = explode('-', $noarsip);
             $panggilan = end($panggilan); // Contoh: ambil "IT" dari 0000007-2025-IT
@@ -174,11 +157,22 @@ class ListDataArsipController extends Controller
             $penamaan = time() . '-' . $noarsip . '.' . $extension;
 
              // Buat folder di disk jika belum ada
-            if (!Storage::disk('remote')->exists($folder)) {
-                Storage::disk('remote')->makeDirectory($folder);
+            if (!Storage::disk('remote')->exists('public/'.$folder)) {
+                Storage::disk('remote')->makeDirectory('public/'.$folder);
             }
 
-            $file->storeAs('public/' . $folder, $penamaan, 'remote');
+            // if (!Storage::exists($folder)) {
+            //     Storage::makeDirectory($folder);
+            // }
+
+            $storagePath = $file->storeAs('public/' . $folder, $penamaan, 'remote');
+            // $storagePath = $file->storeAs('public/' . $folder, $penamaan);
+
+            if (!$storagePath) {
+                return response()->json([
+                    'message' => 'Gagal menyimpan file ke storage',
+                ], 500);
+            }
 
             $fullPath = "$folder/$penamaan";
 
@@ -186,22 +180,22 @@ class ListDataArsipController extends Controller
                 if ($update) {
                     $update->update([
                         'file'  => $originalname,
-                        'path' => 'public/' . $fullPath,
+                        'path' => $storagePath,
                         'url'  => $fullPath
                     ]);
                 }
 
             $kirim = self::getlistdataarsipbynoarsip($noarsip);
-        // DB::commit();
+        DB::commit();
 
             return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
-        // } catch (\Exception $e) {
-        //     DB::rollback();
-        //     return new JsonResponse([
-        //         'message' => 'Upload gagal',
-        //         'error'   => $e->getMessage()
-        //     ], 500);
-        // }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return new JsonResponse([
+                'message' => 'Upload gagal',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 
 

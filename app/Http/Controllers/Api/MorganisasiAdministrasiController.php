@@ -11,7 +11,10 @@ class MorganisasiAdministrasiController extends Controller
 {
     public function listorganisasi()
     {
-        $data = MorganisasiAdministrasi::where('hiddenx',null)->get();
+        $data = MorganisasiAdministrasi::where(function ($query) {
+                $query->wherenull('hiddenx')
+                    ->orWhere('hiddenx','');
+            })->get();
         return new JsonResponse($data);
     }
 }
