@@ -74,6 +74,7 @@ class ListDataArsipController extends Controller
                 DB::beginTransaction();
                 $update = Dataarsip::where('noarsip', $request->noarsip)->first();
                 $update->update([
+                    'tanggal' => $request->tgl,
                     'uraian' => $request->uraian,
                     'ket' => $request->keaslian,
                     'kode' => $request->kodekelasifikasi,
