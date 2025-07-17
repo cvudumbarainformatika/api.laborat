@@ -523,7 +523,7 @@ class ReturpenjualanController extends Controller
                 'retur_rinci' => $returRinci
             ]);
         } catch (\Exception $e) {
-            // May day,  rollback!!! rollback!!!
+            // May day,  rollback!!! rollback!!!!
             DB::connection('farmasi')->rollback();
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan...!!! ' . $e->getMessage(),
