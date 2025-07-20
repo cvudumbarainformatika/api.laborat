@@ -115,17 +115,23 @@ class PelayananController extends Controller
         // );
 
         $poli_hariinibelum = DB::table('rs17')
-            ->select('rs1', 'rs3', 'rs2', 'rs8', 'rs14', 'rs19')
-            ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025'])
+            ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1')
+            ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
+            ->where('rs19.rs4', 'Poliklinik')->where('rs19.rs5', '1')
+            ->whereNotIn('rs19.rs1', ['POL027','POL011','POL035'])
+           // ->whereNotIn('rs8', ['POL014', 'POL005', 'POL025','POL036'])
             // ->whereDate('rs3', '=', Carbon::today())
-            ->whereBetween('rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59'])
-            ->where('rs19', '=', '')
+            ->whereBetween('rs17.rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59'])
+            ->where('rs17.rs19', '=', '')
             ->get();
 
         $poli_hariinisudah = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
+            ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
-            ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
+            ->where('rs19.rs4', 'Poliklinik')->where('rs19.rs5', '1')
+            ->whereNotIn('rs19.rs1', ['POL027','POL011','POL035'])
+           // ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025','POL036'])
             // ->whereBetween('rs17.rs3', ['2023-02-21 00:00:00', '2023-02-21 23:59:59']) // super cepat
             ->whereBetween('rs17.rs3', [request('tgl') . ' 00:00:00', request('tgl') . ' 23:59:59']) // super cepat
             // ->where(DB::raw("(DATE_FORMAT(rs17.rs3, '%Y-%m-%d'))"), request('tgl'))
@@ -135,8 +141,11 @@ class PelayananController extends Controller
 
         $poli_tahun = DB::table('rs17')
             ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
+            ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1')
             ->selectRaw('count(rs17.rs1) as jumlah, MONTH(rs17.rs3) month')
-            ->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
+            //->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])
+            ->where('rs19.rs4', 'Poliklinik')->where('rs19.rs5', '1')
+            ->whereNotIn('rs19.rs1', ['POL027','POL011','POL035'])
             ->whereBetween('rs17.rs3', [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']) // super cepat
             ->where('rs17.rs19', '=', '1')
             ->groupBy('month')
@@ -178,7 +187,8 @@ class PelayananController extends Controller
             ->get();
 
 
-        $poli = Poli::where('rs5', '1')
+        $poli = Poli::where('rs5', '1')->where('rs4', 'Poliklinik')
+            ->whereNotIn('rs1', ['POL027','POL011','POL035'])
             ->orderBy('rs2', 'ASC')->get();
 
         $data = array(
