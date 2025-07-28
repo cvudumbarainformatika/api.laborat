@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-use function PHPUnit\Framework\isNull;
 
 class SpjOpnameController extends Controller
 {
@@ -61,13 +60,13 @@ class SpjOpnameController extends Controller
         if (sizeof($sm) > 0) {
             foreach ($raw as $key) {
                 if ($key->onefisik) {
-                    if (isNull($data['tglopname'])) $data['tglopname'] = $key->onefisik->tglopname;
+                    if (is_null($data['tglopname'])) $data['tglopname'] = $key->onefisik->tglopname;
                     $key->jmlFisik = $key->onefisik->jumlah;
                     $key->keterangan = $key->onefisik->keterangan;
                     $key->kdruang = $key->onefisik->kdruang;
                 }
                 if ($key->oneopname) {
-                    if (isNull($data['tglopname'])) $data['tglopname'] = $key->oneopname->tglopname;
+                    if (is_null($data['tglopname'])) $data['tglopname'] = $key->oneopname->tglopname;
                     $key->jmlOpname = $key->oneopname->total;
                     if (!$key->onefisik) $key->kdruang = $key->oneopname->kdruang;
                 }
