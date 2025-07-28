@@ -422,7 +422,7 @@ class DistribusigudangController extends Controller
             ->groupBy('kdobat', 'kdruang')
             ->first();
 
-        if (!$stokAwal || (int) $request->jumlah_minta > (int) $stokAwal->jumlah) {
+        if (!$stokAwal || (float) $request->jumlah_minta > (float) $stokAwal->jumlah) {
             return new JsonResponse([
                 'message' => 'Stok tidak mencukupi, sisa stok: ' . ($stokAwal->jumlah ?? 0)
             ], 422);
@@ -467,28 +467,34 @@ class DistribusigudangController extends Controller
                     $sudahAdaDetail = Mutasigudangkedepo::where('no_permintaan', $request->nopermintaan)
                         ->where('nopenerimaan', $stokItem->nopenerimaan)
                         ->where('kd_obat', $stokItem->kdobat)
-                        ->where('jml', $pengurangan)
+                        ->where('nobatch', $stokItem->nobatch)
+                        // ->where('jml', $pengurangan)
+                        ->lockForUpdate()
                         ->first();
 
-                    if ($sudahAdaDetail) continue;
+                    if (!$sudahAdaDetail) {
+                        $mutasi = Mutasigudangkedepo::firstOrCreate(
+                            [
+                                'no_permintaan' => $request->nopermintaan,
+                                'nopenerimaan' => $stokItem->nopenerimaan,
+                                'kd_obat' => $stokItem->kdobat,
+                                'nobatch' => $stokItem->nobatch,
+                            ],
+                            [
+                                'jml' => $pengurangan,
+                                'tglpenerimaan' => $stokItem->tglpenerimaan,
+                                'harga' => $stokItem->harga ?? 0,
+                                'tglexp' => $stokItem->tglexp,
+                            ]
+                        );
 
-                    $mutasi = Mutasigudangkedepo::create([
-                        'no_permintaan' => $request->nopermintaan,
-                        'nopenerimaan' => $stokItem->nopenerimaan,
-                        'kd_obat' => $stokItem->kdobat,
-                        'jml' => $pengurangan,
-                        'nobatch' => $stokItem->nobatch,
-                        'tglpenerimaan' => $stokItem->tglpenerimaan,
-                        'harga' => $stokItem->harga ?? 0,
-                        'tglexp' => $stokItem->tglexp,
-                    ]);
+                        if (!$mutasi) {
+                            throw new \Exception('Data mutasi gagal dibuat');
+                        }
 
-                    if (!$mutasi) {
-                        throw new \Exception('Data mutasi gagal dibuat');
+                        $stokItem->decrement('jumlah', $pengurangan);
+                        $jmldiminta -= $pengurangan;
                     }
-
-                    $stokItem->decrement('jumlah', $pengurangan);
-                    $jmldiminta -= $pengurangan;
                 }
 
                 $nyamuta = Mutasigudangkedepo::select('kd_obat', DB::raw('SUM(jml) as jml'))
@@ -529,7 +535,7 @@ class DistribusigudangController extends Controller
                 ]
             ];
 
-            event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
 
             return new JsonResponse([
                 'message' => 'Data berhasil disimpan',
