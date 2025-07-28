@@ -43,6 +43,7 @@ class StokrealController extends Controller
             ]
         );
         if (!$simpanstokreal) {
+            throw new \Exception('Data gagal disimpan ke stok');
             return 500;
         }
         // $ada = Stokrel::where('nopenerimaan', $nopenerimaan)

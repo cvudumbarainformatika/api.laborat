@@ -163,9 +163,11 @@ class PenerimaanController extends Controller
             }
             $stokrealsimpan = StokrealController::stokreal($nopenerimaan, $request);
             if ($stokrealsimpan !== 200) {
-                PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
-                PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
-                return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
+
+                // PenerimaanHeder::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                // PenerimaanRinci::where('nopenerimaan', $nopenerimaan)->first()->delete();
+                // return new JsonResponse(['message' => 'Gagal Tersimpan Ke Stok...!!!'], 500);
+                throw new \Exception('Data gagal disimpan ke stok');
             }
 
             // cari rinci pesanan
@@ -212,7 +214,12 @@ class PenerimaanController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
-            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
+            return response()->json([
+                'message' => 'ada kesalahan ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+
+            ], 500);
         }
     }
 
