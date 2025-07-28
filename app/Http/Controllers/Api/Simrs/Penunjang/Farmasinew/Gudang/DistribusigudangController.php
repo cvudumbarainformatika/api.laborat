@@ -535,7 +535,7 @@ class DistribusigudangController extends Controller
                 ]
             ];
 
-            // event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
+            event(new NotifMessageEvent($msg, 'depo-farmasi', auth()->user()));
 
             return new JsonResponse([
                 'message' => 'Data berhasil disimpan',
