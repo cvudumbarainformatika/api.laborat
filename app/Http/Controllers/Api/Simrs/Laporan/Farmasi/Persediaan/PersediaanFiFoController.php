@@ -253,9 +253,9 @@ class PersediaanFiFoController extends Controller
                     'persiapan_operasis.norm',
                     // 'persiapan_operasi_distribusis.tgl_retur',
                     'persiapan_operasi_rincis.noresep',
-                    // 'daftar_hargas.harga',
+                    'daftar_hargas.harga',
                     DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                    // DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
+                    DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
                     // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
                 )
@@ -264,10 +264,10 @@ class PersediaanFiFoController extends Controller
                         $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                             ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
-                    // ->leftJoin('daftar_hargas', function ($join) {
-                    //     $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
-                    //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                    // })
+                    ->leftJoin('daftar_hargas', function ($join) {
+                        $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                            ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                    })
                     ->where('persiapan_operasis.tgl_distribusi', 'LIKE', '%' .  request('tahun') . '-' . request('bulan') . '%')
                     ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                     ->with([
@@ -288,12 +288,12 @@ class PersediaanFiFoController extends Controller
                     'persiapan_operasis.nopermintaan',
                     // 'persiapan_operasis.tgl_distribusi',
                     'persiapan_operasi_distribusis.tgl_retur as tgl',
-                    // 'persiapan_operasi_rincis.noresep',
+                    'persiapan_operasi_rincis.noresep',
                     'persiapan_operasis.norm',
-                    // 'daftar_hargas.harga',
+                    'daftar_hargas.harga',
                     // DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
                     DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                    // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
+                    DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
 
                 )
                     ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -301,10 +301,10 @@ class PersediaanFiFoController extends Controller
                         $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                             ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
-                    // ->leftJoin('daftar_hargas', function ($join) {
-                    //     $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
-                    //         ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
-                    // })
+                    ->leftJoin('daftar_hargas', function ($join) {
+                        $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
+                            ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
+                    })
                     ->where('persiapan_operasis.tgl_retur', 'LIKE', '%' . request('tahun') . '-' . request('bulan') . '%')
                     ->whereIn('persiapan_operasis.flag', ['2', '3', '4'])
                     ->havingRaw('sum(persiapan_operasi_distribusis.jumlah_retur) > 0')
