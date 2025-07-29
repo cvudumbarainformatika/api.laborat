@@ -2451,6 +2451,7 @@ class EresepController extends Controller
                             'tiperacikan' => $request->tiperacikan,
                             'kdobat' => $request->kdobat,
                             'nopenerimaan' => $stokItem->nopenerimaan,
+                            'nobatch' => $stokItem->nobatch,
                             'jumlahdibutuhkan' => $request->jumlahdibutuhkan,
                             'jumlah' => $pengurangan, // Perbaikan: set jumlah sesuai pengurangan
                             'harga_beli' => $stokItem->harga,
@@ -2474,6 +2475,7 @@ class EresepController extends Controller
                             'kode50' => $request->kode50,
                             'uraian50' => $request->uraian50,
                             'nopenerimaan' => $stokItem->nopenerimaan,
+                            'nobatch' => $stokItem->nobatch,
                             'jumlah' => $pengurangan, // Perbaikan: set jumlah sesuai pengurangan
                             'harga_beli' => $stokItem->harga,
                             'hpp' => $harga,
