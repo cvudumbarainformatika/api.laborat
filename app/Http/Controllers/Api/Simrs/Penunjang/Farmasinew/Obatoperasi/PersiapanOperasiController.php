@@ -1207,7 +1207,11 @@ class PersiapanOperasiController extends Controller
                 $ada = (float)$dist[$index]->jumlah;
                 $hargaBeli = Stokreal::where('kdobat', $key['kd_obat'])
                     ->where('nopenerimaan', $dist[$index]->nopenerimaan)
-                    ->where('kdruang', 'Gd-04010103')->first();
+                    ->where('kdruang', 'Gd-04010103')
+                    ->when($dist[$index]->nobatch !== '' || $dist[$index]->nobatch !== null, function ($x) use ($dist, $index) {
+                        $x->where('nobatch', $dist[$index]->nobatch);
+                    })
+                    ->first();
                 if ($ada < $masuk) {
                     $rin = [
                         'noreg' => $request->noreg,
@@ -1222,6 +1226,7 @@ class PersiapanOperasiController extends Controller
                         'kode50' => $masterObat->kode50,
                         'uraian50' => $masterObat->uraian50,
                         'nopenerimaan' => $dist[$index]->nopenerimaan,
+                        'nobatch' => $dist[$index]->nobatch,
                         'nilai_r' => 300,
                         'jumlah' => $ada,
                         'harga_beli' => $hargaBeli->harga ?? 0,
@@ -1252,6 +1257,7 @@ class PersiapanOperasiController extends Controller
                         'kode50' => $masterObat->kode50,
                         'uraian50' => $masterObat->uraian50,
                         'nopenerimaan' => $dist[$index]->nopenerimaan,
+                        'nobatch' => $dist[$index]->nobatch,
                         'nilai_r' => 300,
                         'jumlah' => $masuk,
                         'harga_beli' => $hargaBeli->harga ?? 0,
