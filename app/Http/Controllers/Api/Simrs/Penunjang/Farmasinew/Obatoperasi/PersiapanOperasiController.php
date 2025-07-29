@@ -559,6 +559,8 @@ class PersiapanOperasiController extends Controller
                                     'nopermintaan' => $key['nopermintaan'],
                                     'kd_obat' => $key['kd_obat'],
                                     'nopenerimaan' => $stok['nopenerimaan'],
+                                    'nobatch' => $stok['nobatch'],
+                                    'harga' => $stok['harga'],
                                     'nodistribusi' => $stok['nodistribusi'],
                                     'jumlah' => $ada,
                                     'created_at' => date('Y-m-d H:i:s'),
@@ -567,6 +569,7 @@ class PersiapanOperasiController extends Controller
                                 $adaSt = collect($data)->where('nopermintaan', $key['nopermintaan'])
                                     ->where('kd_obat', $key['kd_obat'])
                                     ->where('nopenerimaan', $stok['nopenerimaan'],)
+                                    ->where('nobatch', $stok['nobatch'],)
                                     ->where('nodistribusi', $stok['nodistribusi'])
                                     ->where('jumlah', $ada,)
                                     ->first();
@@ -580,6 +583,8 @@ class PersiapanOperasiController extends Controller
                                     'nopermintaan' => $key['nopermintaan'],
                                     'kd_obat' => $key['kd_obat'],
                                     'nopenerimaan' => $stok['nopenerimaan'],
+                                    'nobatch' => $stok['nobatch'],
+                                    'harga' => $stok['harga'],
                                     'nodistribusi' => $stok['nodistribusi'],
                                     'jumlah' => $distribusi,
                                     'created_at' => date('Y-m-d H:i:s'),
@@ -589,6 +594,7 @@ class PersiapanOperasiController extends Controller
                                 $adaSt = collect($data)->where('nopermintaan', $key['nopermintaan'])
                                     ->where('kd_obat', $key['kd_obat'])
                                     ->where('nopenerimaan', $stok['nopenerimaan'],)
+                                    ->where('nobatch', $stok['nobatch'],)
                                     ->where('nodistribusi', $stok['nodistribusi'])
                                     ->where('jumlah', $distribusi,)
                                     ->first();
@@ -825,6 +831,8 @@ class PersiapanOperasiController extends Controller
                             'kd_obat' => $request->kodeobat,
                             'nopenerimaan' => $stok[$index]->nopenerimaan,
                             'nodistribusi' => $stok[$index]->nodistribusi,
+                            'nobatch' => $stok[$index]->nobatch,
+                            'harga' => $stok[$index]->harga,
                             'jumlah' => $ada,
                             'created_at' => date('Y-m-d H:i:s'),
                             'updated_at' => date('Y-m-d H:i:s'),
@@ -833,6 +841,7 @@ class PersiapanOperasiController extends Controller
                             ->where('kd_obat', $request->kodeobat)
                             ->where('nopenerimaan', $stok[$index]->nopenerimaan,)
                             ->where('nodistribusi', $stok[$index]->nodistribusi)
+                            ->where('nobatch', $stok[$index]->nobatch)
                             ->where('jumlah', $ada,)
                             ->first();
                         if (!$adaSt) $dist[] = $temp;
@@ -846,6 +855,8 @@ class PersiapanOperasiController extends Controller
                             'kd_obat' => $request->kodeobat,
                             'nopenerimaan' => $stok[$index]->nopenerimaan,
                             'nodistribusi' => $stok[$index]->nodistribusi,
+                            'nobatch' => $stok[$index]->nobatch,
+                            'harga' => $stok[$index]->harga,
                             'jumlah' => $distribusi,
                             'created_at' => date('Y-m-d H:i:s'),
                             'updated_at' => date('Y-m-d H:i:s'),
@@ -854,6 +865,7 @@ class PersiapanOperasiController extends Controller
                             ->where('kd_obat', $request->kodeobat)
                             ->where('nopenerimaan', $stok[$index]->nopenerimaan,)
                             ->where('nodistribusi', $stok[$index]->nodistribusi)
+                            ->where('nobatch', $stok[$index]->nobatch)
                             ->where('jumlah', $distribusi,)
                             ->first();
                         if (!$adaSt) $dist[] = $temp;
@@ -895,7 +907,10 @@ class PersiapanOperasiController extends Controller
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
                 'message' => 'Data Gagal Disimpan, Ada Kesalahan Prosedur, silahkan hubungi tim IT',
-                'result' => '' . $e,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                // 'result' => '' . $e,
             ], 410);
         }
     }
