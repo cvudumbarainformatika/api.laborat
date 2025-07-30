@@ -1333,8 +1333,19 @@ class PersiapanOperasiController extends Controller
                 $resepKeluar = [];
                 foreach ($details as $detItem) {
                     $kem = (float)$detItem->jumlah_kembali;
-                    $res = (float)$detItem->jumlah_resep;
-                    if ($kem == 0 && $res == 0) continue;
+                    $resep = (float)$detItem->jumlah_resep;
+                    if ($kem == 0 && $resep == 0) {
+                        $perDistA = PersiapanOperasiDistribusi::where('kd_obat', $detItem->kd_obat)
+                            ->where('nopermintaan', $request->nopermintaan)
+                            ->orderBy('id', 'DESC')
+                            ->lockForUpdate()
+                            ->get();
+                        foreach ($perDistA as $distItem) {
+                            $distItem->tgl_retur = now();
+                            $distItem->save();
+                        }
+                        continue;
+                    }
 
                     $har = HargaHelper::getHarga($detItem->kd_obat, $gr);
                     $res = $har['res'];
@@ -1355,8 +1366,8 @@ class PersiapanOperasiController extends Controller
 
                         $retu = min($jum, $kem);
                         $hargaBeli = (float)$distItem->harga;
-                        $distItem->jumlah_retur = $retu;
                         $distItem->tgl_retur = now();
+                        $distItem->jumlah_retur = $retu;
                         $distItem->save();
                         if ($detItem->jumlah_resep > 0) {
                             if (!$hargaBeli) {
