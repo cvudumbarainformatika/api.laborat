@@ -58,6 +58,7 @@ Route::group([
     Route::post('/hapus-permintaan-obat', [EresepController::class, 'hapusPermintaanObat']);
     Route::post('/terima-resep', [EresepController::class, 'terimaResep']);
     Route::post('/resep-selesai', [EresepController::class, 'resepSelesai']);
+    Route::post('/resep-simpan-selesai', [EresepController::class, 'resepSimpanSelesai']);
     Route::post('/tolak-resep', [EresepController::class, 'tolakResep']);
     Route::post('/isi-alasan', [EresepController::class, 'isiAlasan']);
     Route::post('/simpan-telaah-resep', [EresepController::class, 'simpanTelaahResep']);

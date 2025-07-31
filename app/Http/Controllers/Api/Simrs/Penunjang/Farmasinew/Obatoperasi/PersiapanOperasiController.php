@@ -1640,17 +1640,29 @@ class PersiapanOperasiController extends Controller
             ->when(!empty($nodistribusi), function ($q) use ($nodistribusi) {
                 $q->where('nodistribusi', $nodistribusi);
             })
-            ->when(!empty($nobatch), function ($q) use ($nobatch) {
+            ->when(!empty($nobatch) && $nobatch != '-', function ($q) use ($nobatch) {
                 $q->where('nobatch', $nobatch);
             })
             ->where('kdruang', 'Gd-04010103')
             ->lockForUpdate() // tambahin ini untuk cegah race condition
             ->first();
 
-        if (!$stok) throw new \Exception("Stok tidak ditemukan untuk $kdobat");
+        if ($stok) {
+            $stok->jumlah = (float)$stok->jumlah + $jumlah;
+            $stok->save();
+        } else {
+            $stok2 = Stokreal::where('kdobat', $kdobat)
+                ->where('nopenerimaan', $nopenerimaan)
 
-        $stok->jumlah = (float)$stok->jumlah + $jumlah;
-        $stok->save();
+                ->when(!empty($nobatch) && $nobatch != '-', function ($q) use ($nobatch) {
+                    $q->where('nobatch', $nobatch);
+                })
+                ->where('kdruang', 'Gd-04010103')
+                ->lockForUpdate() // tambahin ini untuk cegah race condition
+                ->first();
+
+            if (!$stok2) throw new \Exception("Stok tidak ditemukan untuk $kdobat");
+        }
     }
 
     public function hapusRincianPerpersiapanOperasi(Request $request)

@@ -1903,6 +1903,10 @@ class EresepController extends Controller
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
     }
+    public function resepSimpanSelesai(Request $request)
+    {
+        return new JsonResponse(['message' => 'Resep Sudah Diselesaikan', 'data' => $request->all()], 410);
+    }
     public function resepSelesai(Request $request)
     {
         $data = Resepkeluarheder::find($request->id);
