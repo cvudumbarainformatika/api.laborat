@@ -1151,7 +1151,7 @@ class PersiapanOperasiController extends Controller
                                 throw new \Exception("Stok obat " . $key->kd_obat . " tidak ditemukan");
                             }
                             $totalStok2 = (float)$stok2->jumlah + $key->jumlah;
-                            $stok->update([
+                            $stok2->update([
                                 'jumlah' => $totalStok2
                             ]);
                         } else {
