@@ -1135,12 +1135,7 @@ class PersiapanOperasiController extends Controller
                             })
                             ->where('kdruang', 'Gd-04010103')
                             ->first();
-                        if ($stok) {
-                            $totalStok = (float)$stok->jumlah + $key->jumlah;
-                            $stok->update([
-                                'jumlah' => $totalStok
-                            ]);
-                        } else {
+                        if (!$stok) {
                             $stok2 = Stokreal::where('kdobat', $key->kd_obat)
                                 ->where('nopenerimaan', $key->nopenerimaan)
 
@@ -1152,6 +1147,11 @@ class PersiapanOperasiController extends Controller
                             if (!$stok2) {
                                 throw new \Exception("Stok obat " . $key->kd_obat . " tidak ditemukan");
                             }
+                            $totalStok2 = (float)$stok->jumlah + $key->jumlah;
+                            $stok->update([
+                                'jumlah' => $totalStok2
+                            ]);
+                        } else {
                             $totalStok = (float)$stok->jumlah + $key->jumlah;
                             $stok->update([
                                 'jumlah' => $totalStok
