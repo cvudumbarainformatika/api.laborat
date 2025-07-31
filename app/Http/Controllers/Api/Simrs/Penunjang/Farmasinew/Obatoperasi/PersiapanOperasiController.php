@@ -1121,6 +1121,9 @@ class PersiapanOperasiController extends Controller
                 }
                 if (count($dist) > 0) {
                     foreach ($dist as $key) {
+                        if (!$key->jumlah) {
+                            throw new Exception('Jumlah obat kosong ' . $key->kd_obat . ' sejumlah ' . $key->jumlah);
+                        }
                         $key->update([
                             'jumlah_retur' => $key->jumlah,
                             'tgl_retur' => date('Y-m-d H:i:s')
