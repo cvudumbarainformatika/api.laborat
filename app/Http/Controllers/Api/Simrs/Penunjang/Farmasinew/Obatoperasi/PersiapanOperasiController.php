@@ -1133,7 +1133,6 @@ class PersiapanOperasiController extends Controller
                             ->when(!empty($key->nobatch), function ($x) use ($key) {
                                 $x->where('nobatch', $key->nobatch);
                             })
-                            // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                             ->where('kdruang', 'Gd-04010103')
                             ->first();
                         if ($stok) {
@@ -1148,7 +1147,6 @@ class PersiapanOperasiController extends Controller
                                 ->when(!empty($key->nobatch), function ($x) use ($key) {
                                     $x->where('nobatch', $key->nobatch);
                                 })
-                                // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                                 ->where('kdruang', 'Gd-04010103')
                                 ->first();
                             if (!$stok2) {
