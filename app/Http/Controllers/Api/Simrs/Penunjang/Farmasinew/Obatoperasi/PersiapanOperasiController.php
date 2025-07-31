@@ -1136,7 +1136,7 @@ class PersiapanOperasiController extends Controller
                             // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
                             ->where('kdruang', 'Gd-04010103')
                             ->first();
-                        if (!$stok) {
+                        if ($stok) {
                             $totalStok = (float)$stok->jumlah + $key->jumlah;
                             $stok->update([
                                 'jumlah' => $totalStok
