@@ -264,7 +264,7 @@ class PersediaanFiFoController extends Controller
                         $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                             ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
-                    ->leftJoin('daftar_hargas', function ($join) {
+                    ->leftJoin(DB::raw('(SELECT kd_obat, nopenerimaan, MAX(harga) as harga FROM daftar_hargas GROUP BY kd_obat, nopenerimaan) as daftar_hargas'), function ($join) {
                         $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
                             ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
@@ -301,7 +301,7 @@ class PersediaanFiFoController extends Controller
                         $join->on('persiapan_operasi_rincis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
                             ->on('persiapan_operasi_rincis.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
-                    ->leftJoin('daftar_hargas', function ($join) {
+                    ->leftJoin(DB::raw('(SELECT kd_obat, nopenerimaan, MAX(harga) as harga FROM daftar_hargas GROUP BY kd_obat, nopenerimaan) as daftar_hargas'), function ($join) {
                         $join->on('daftar_hargas.nopenerimaan', '=', 'persiapan_operasi_distribusis.nopenerimaan')
                             ->on('daftar_hargas.kd_obat', '=', 'persiapan_operasi_distribusis.kd_obat');
                     })
