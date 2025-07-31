@@ -474,7 +474,7 @@ class DepoController extends Controller
                         'harga' => $wew->harga,
                         'tglexp' => $wew->tglexp,
                         'tglpenerimaan' => $wew->tglpenerimaan,
-                        'nodistribusi' => $wew->no_permintaan,
+                        // 'nodistribusi' => $wew->no_permintaan,
                     ]);
                 } else {
                     $create = Stokreal::create(
