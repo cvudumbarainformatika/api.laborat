@@ -18,6 +18,7 @@ use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\SistemBayar;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -1081,79 +1082,113 @@ class PersiapanOperasiController extends Controller
     }
     public function batalOperasi(Request $request)
     {
-        $head = PersiapanOperasi::find($request->id);
-        if (!$head) {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $head = PersiapanOperasi::find($request->id);
+            if (!$head) {
+                return new JsonResponse([
+                    'message' => 'Persiapan untuk operasi tidak ditemukan',
+                    // 'head' => $head,
+                    // 'data' => $data,
+                    'req' => $request->all(),
+                ], 410);
+            }
+            if ($head->flag === '1') {
+                $head->update(['flag' => '5']);
+                return new JsonResponse([
+                    'message' => 'Persiapan untuk operasi dibatalkan',
+                    'head' => $head,
+                    // 'data' => $data,
+                    'req' => $request->all(),
+                ]);
+            } else if ($head->flag === '2') {
+                $rinci = PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->get();
+                $dist = PersiapanOperasiDistribusi::where('nopermintaan', $head->nopermintaan)->get();
+                // if (count($dist) <= 0 || count($rinci) <= 0) {
+                //     return new JsonResponse([
+                //         'message' => 'Rincian persiapan untuk operasi tidak ditemukan',
+                //         'head' => $head,
+                //         'rinci' => $rinci,
+                //         'dist' => $dist,
+                //         // 'data' => $data,
+                //         'req' => $request->all(),
+                //     ], 410);
+                // }
+                if (count($rinci) > 0) {
+                    foreach ($rinci as $key) {
+                        $key->update(['jumlah_kembali' => $key->jumlah_distribusi]);
+                    }
+                }
+                if (count($dist) > 0) {
+                    foreach ($dist as $key) {
+                        $key->update([
+                            'jumlah_retur' => $key->jumlah,
+                            'tgl_retur' => date('Y-m-d H:i:s')
+                        ]);
+                        $stok = Stokreal::where('kdobat', $key->kd_obat)
+                            ->where('nopenerimaan', $key->nopenerimaan)
+                            ->when(!empty($key->nodistribusi), function ($x) use ($key) {
+                                $x->where('nodistribusi', $key->nodistribusi);
+                            })
+                            ->when(!empty($key->nobatch), function ($x) use ($key) {
+                                $x->where('nobatch', $key->nobatch);
+                            })
+                            // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
+                            ->where('kdruang', 'Gd-04010103')
+                            ->first();
+                        if (!$stok) {
+                            $totalStok = (float)$stok->jumlah + $key->jumlah;
+                            $stok->update([
+                                'jumlah' => $totalStok
+                            ]);
+                        } else {
+                            $stok2 = Stokreal::where('kdobat', $key->kd_obat)
+                                ->where('nopenerimaan', $key->nopenerimaan)
+
+                                ->when(!empty($key->nobatch), function ($x) use ($key) {
+                                    $x->where('nobatch', $key->nobatch);
+                                })
+                                // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
+                                ->where('kdruang', 'Gd-04010103')
+                                ->first();
+                            if (!$stok2) {
+                                throw new \Exception("Stok obat " . $key->kd_obat . " tidak ditemukan");
+                            }
+                            $totalStok = (float)$stok->jumlah + $key->jumlah;
+                            $stok->update([
+                                'jumlah' => $totalStok
+                            ]);
+                        }
+                        // $stok->jumlah = $totalStok;
+                        // $stok->save();
+                    }
+                }
+                $head->update(['flag' => '5']);
+                return new JsonResponse([
+                    'message' => 'Persiapan untuk operasi dibatalkan',
+                    'head' => $head,
+                    'rinci' => $rinci,
+                    'dist' => $dist,
+                    // 'data' => $data,
+                    'req' => $request->all(),
+                ]);
+            }
+            DB::connection('farmasi')->commit();
             return new JsonResponse([
-                'message' => 'Persiapan untuk operasi tidak ditemukan',
-                // 'head' => $head,
+                // 'message' => 'Obat sudah di hapus dari resep',
+                'head' => $head,
                 // 'data' => $data,
+                'req' => $request->all(),
+            ]);
+        } catch (Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => $e->getMessage(),
+                'line' => '' . $e->getLine(),
+                'file' =>  $e->getFile(),
                 'req' => $request->all(),
             ], 410);
         }
-        if ($head->flag === '1') {
-            $head->update(['flag' => '5']);
-            return new JsonResponse([
-                'message' => 'Persiapan untuk operasi dibatalkan',
-                'head' => $head,
-                // 'data' => $data,
-                'req' => $request->all(),
-            ]);
-        } else if ($head->flag === '2') {
-            $rinci = PersiapanOperasiRinci::where('nopermintaan', $head->nopermintaan)->get();
-            $dist = PersiapanOperasiDistribusi::where('nopermintaan', $head->nopermintaan)->get();
-            // if (count($dist) <= 0 || count($rinci) <= 0) {
-            //     return new JsonResponse([
-            //         'message' => 'Rincian persiapan untuk operasi tidak ditemukan',
-            //         'head' => $head,
-            //         'rinci' => $rinci,
-            //         'dist' => $dist,
-            //         // 'data' => $data,
-            //         'req' => $request->all(),
-            //     ], 410);
-            // }
-            if (count($rinci) > 0) {
-                foreach ($rinci as $key) {
-                    $key->update(['jumlah_kembali' => $key->jumlah_distribusi]);
-                }
-            }
-            if (count($dist) > 0) {
-                foreach ($dist as $key) {
-                    $key->update([
-                        'jumlah_retur' => $key->jumlah,
-                        'tgl_retur' => date('Y-m-d H:i:s')
-                    ]);
-                    $stok = Stokreal::where('kdobat', $key->kd_obat)
-                        ->where('nopenerimaan', $key->nopenerimaan)
-                        ->when($key->nodistribusi !== '', function ($x) use ($key) {
-                            $x->where('nodistribusi', $key->nodistribusi);
-                        })
-                        // ->where('nodistribusi', $getDataDistribusi[$ind]->nodistribusi)
-                        ->where('kdruang', 'Gd-04010103')
-                        ->first();
-                    $totalStok = (float)$stok->jumlah + $key->jumlah;
-                    $stok->update([
-                        'jumlah' => $totalStok
-                    ]);
-                    // $stok->jumlah = $totalStok;
-                    // $stok->save();
-                }
-            }
-            $head->update(['flag' => '5']);
-            return new JsonResponse([
-                'message' => 'Persiapan untuk operasi dibatalkan',
-                'head' => $head,
-                'rinci' => $rinci,
-                'dist' => $dist,
-                // 'data' => $data,
-                'req' => $request->all(),
-            ]);
-        }
-        return new JsonResponse([
-            // 'message' => 'Obat sudah di hapus dari resep',
-            'head' => $head,
-            // 'data' => $data,
-            'req' => $request->all(),
-        ]);
     }
     public static function resepKeluar($key, $request, $kode, $data)
     {
