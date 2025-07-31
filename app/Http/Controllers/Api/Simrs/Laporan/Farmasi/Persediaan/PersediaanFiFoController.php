@@ -248,15 +248,12 @@ class PersediaanFiFoController extends Controller
                     'persiapan_operasi_distribusis.kd_obat as kdobat',
                     'persiapan_operasi_distribusis.kd_obat',
                     'persiapan_operasi_distribusis.nopenerimaan',
-                    // 'persiapan_operasis.nopermintaan',
                     'persiapan_operasis.tgl_distribusi as tgl',
                     'persiapan_operasis.norm',
-                    // 'persiapan_operasi_distribusis.tgl_retur',
                     'persiapan_operasi_rincis.noresep',
                     'daftar_hargas.harga',
                     DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
                     DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
-                    // DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as retur'),
 
                 )
                     ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
