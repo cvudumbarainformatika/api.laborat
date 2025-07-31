@@ -1095,6 +1095,8 @@ class PersiapanOperasiController extends Controller
             }
             if ($head->flag === '1') {
                 $head->update(['flag' => '5']);
+
+                DB::connection('farmasi')->commit();
                 return new JsonResponse([
                     'message' => 'Persiapan untuk operasi dibatalkan',
                     'head' => $head,
@@ -1165,6 +1167,7 @@ class PersiapanOperasiController extends Controller
                     }
                 }
                 $head->update(['flag' => '5']);
+                DB::connection('farmasi')->commit();
                 return new JsonResponse([
                     'message' => 'Persiapan untuk operasi dibatalkan',
                     'head' => $head,
