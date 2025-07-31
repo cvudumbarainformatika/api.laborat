@@ -472,8 +472,8 @@ class DepoController extends Controller
                     $stoknya->update([
                         'jumlah' => $total,
                         'harga' => $wew->harga,
-                        'tglexp' => $wew->tglexp,
-                        'tglpenerimaan' => $wew->tglpenerimaan,
+                        // 'tglexp' => $wew->tglexp,
+                        // 'tglpenerimaan' => $wew->tglpenerimaan,
                         // 'nodistribusi' => $wew->no_permintaan,
                     ]);
                 } else {
