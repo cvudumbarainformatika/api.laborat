@@ -24,8 +24,10 @@ Route::group([
     Route::post('/savepajakls', [NPD_LSController::class, 'savepajakls']);
     Route::get('/listpajak', [NPD_LSController::class, 'listpajak']);
     Route::post('/deletepajak', [NPD_LSController::class, 'deletepajak']);
-    Route::post('/updateuser', [NPD_LSController::class, 'updateuser']);
+    Route::post('/updatedataxx', [NPD_LSController::class, 'updatedata']);
 
-    Route::get('/coba', [NPD_LSController::class, 'coba']);
+
+    Route::post('/updatenopenerimaan', [NPD_LSController::class, 'updateNopenerimaan']);
+
 
 });
