@@ -469,7 +469,7 @@ class ReturpenjualanController extends Controller
                     ->where('kdruang', $request->depo)
                     // ->where('jumlah', '>', 0)
                     // ->latest()
-                    ->orderBy('tglexp', 'DESC')
+                    ->orderBy('tglpenerimaan', 'DESC')
                     ->first();
                 if (!$stok) {
                     return new JsonResponse([
