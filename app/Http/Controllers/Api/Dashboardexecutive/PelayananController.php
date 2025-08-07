@@ -134,11 +134,7 @@ class PelayananController extends Controller
         ->get();
 
         $poli_hariinisudah = DB::table('rs17')
-<<<<<<< HEAD
             // ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
-=======
-            ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
->>>>>>> 6d5d152056bdce03eac776647153d8ebfffbccaa
             ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1')
             ->select('rs17.rs1', 'rs17.rs3', 'rs17.rs2', 'rs17.rs8', 'rs17.rs14', 'rs17.rs19')
             ->where('rs19.rs4', 'Poliklinik')->where('rs19.rs5', '1')
