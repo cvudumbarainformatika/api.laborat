@@ -57,10 +57,10 @@ class EresepController extends Controller
                 },
                 'rincianracik' => function ($ri) {
                     $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
-                        ->with(
+                        ->with([
                             'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
 
-                        )
+                        ])
                         ->where('jumlah', '>', 0)
                         ->groupBy('kdobat', 'noresep', 'noreg', 'namaracikan');
                 },
