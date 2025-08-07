@@ -33,6 +33,20 @@ class KepegawaianController extends Controller
             where aktif='AKTIF' and (flag='P01' or flag='P04') group by golruang order by golruang desc
         ");
 
+        $kebutuhanpegawai = DB::connection('kepex')->select("
+            SELECT
+            m_goljabatan.goljabatan AS jabatan,
+            kebutuhan_pegawai.kebutuhan AS standart,
+            kebutuhan_pegawai.eksisting AS eksisting,
+            CASE
+                WHEN kebutuhan_pegawai.eksisting > kebutuhan_pegawai.kebutuhan THEN 'Kelebihan'
+                WHEN kebutuhan_pegawai.eksisting = kebutuhan_pegawai.kebutuhan THEN 'Cukup'
+                ELSE 'Kurang'
+            END AS status
+            FROM kebutuhan_pegawai
+            LEFT JOIN m_goljabatan ON kebutuhan_pegawai.id_goljabatan = m_goljabatan.id
+        ");
+
         // $pegawai = Pegawai::where('aktif', '=', 'AKTIF')
         //     ->with([
         //         "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) {
@@ -54,6 +68,7 @@ class KepegawaianController extends Controller
             'golongan' => $golongan,
             'yg_absen' => $trans_absens,
             'yg_libur' => $trans_libur,
+            'kebutuhanpegawai' => $kebutuhanpegawai
         );
         return response()->json($data);
     }

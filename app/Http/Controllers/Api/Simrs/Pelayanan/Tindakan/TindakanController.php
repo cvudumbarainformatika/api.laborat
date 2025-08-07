@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Simrs\Bridgingeklaim\EwseklaimController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
+use App\Models\Simrs\SuratPasien\SuratKeteranganDokter;
 use App\Models\Simrs\Tindakan\Gbrdokumentindakan;
 use App\Models\Simrs\Tindakan\Tindakan;
 use App\Models\Simrs\Tindakan\TindakanSambung;
@@ -274,6 +275,16 @@ class TindakanController extends Controller
 
     public function hapustindakanpoli(Request $request)
     {
+
+        $cek = SuratKeteranganDokter::where('tindakan_id', $request->id)
+        ->where(function ($query) {
+        $query->whereNull('batal')
+            ->orWhere('batal', '');
+        })->count();
+
+        if($cek > 0){
+            return new JsonResponse(['message' => 'Tindakan ini tidak bisa dihapus, karena sudah digunakan di Surat Keterangan Dokter'], 500);
+        }
 
         $cari = Tindakan::find($request->id);
         if (!$cari) {

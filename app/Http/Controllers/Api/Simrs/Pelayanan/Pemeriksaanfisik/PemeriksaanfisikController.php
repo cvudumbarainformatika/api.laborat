@@ -10,6 +10,7 @@ use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisikdetail;
 use App\Models\Simrs\Pemeriksaanfisik\Pemeriksaanfisiksubdetail;
 use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
+use App\Models\Simrs\SuratPasien\SuratKeteranganDokter;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -192,9 +193,24 @@ class PemeriksaanfisikController extends Controller
 
     public function hapuspemeriksaanfisik(Request $request)
     {
+
         $cari = Pemeriksaanfisik::find($request->id);
         if (!$cari) {
             return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
+        }
+        $noreg = $cari->rs1;
+        $cek = SuratKeteranganDokter::where('noreg',$noreg)
+        ->where(function ($query) {
+        $query->whereNull('batal')
+            ->orWhere('batal', '');
+        })->count();
+
+        if($cek > 0){
+            return new JsonResponse(['message' => 'Tindakan ini tidak bisa dihapus, karena sudah digunakan di Surat Keterangan Dokter'], 500);
+        }
+
+        if($cek > 0){
+            return new JsonResponse(['message' => 'Tindakan ini tidak bisa dihapus, karena sudah digunakan di Surat Keterangan Dokter'], 500);
         }
         $hapus = $cari->delete();
         if (!$hapus) {

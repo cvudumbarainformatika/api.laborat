@@ -38,7 +38,8 @@ class ListDataArsipController extends Controller
             ->join('master_media', 'data_arsip.media', 'master_media.id')
             ->with(
                 [
-                    'unitpengolah'
+                    'unitpengolah',
+                    'user'
                 ]
             )
             ->where(function ($query) {
@@ -92,48 +93,75 @@ class ListDataArsipController extends Controller
                 return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
             }
         } else {
-           try {
-                DB::beginTransaction();
-                $user = FormatingHelper::session_user();
-                $kdpegsimrs = $user['kodesimrs'];
-                $kdruangarsip = $user['kode_ruang_arsip'];
-                $nomor = '@nomor';
+            try {
+                    // Ambil data user dari session helper
+                    $user = FormatingHelper::session_user();
+                    $kdpegsimrs = $user['kodesimrs'];
+                    $kdruangarsip = $user['kode_ruang_arsip'];
 
+                    // Mulai transaksi di kedua koneksi
+                    DB::connection('siasik')->beginTransaction();
+                    DB::connection('arsip')->beginTransaction(); // default
 
-                DB::connection('siasik')->select('call noarsip(?,?)', array($nomor, $kdruangarsip));
-                $x = DB::connection('siasik')->table('organisasi')->select('counter_arsip', 'panggilan', 'nama')->where('kode', $kdruangarsip)->get();
-                $wew = $x[0]->counter_arsip;
-                $panggilan = $x[0]->panggilan;
-                $pencipta = $kdruangarsip;
-                $unit_pengolah = $kdruangarsip;
-                $tanggal = explode('-', $request->tgl);
-                $tahun = $tanggal[0];
-                $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
+                    // Panggil prosedur noarsip di koneksi siasik
+                    $nomor = '@nomor';
+                    DB::connection('siasik')->select('call noarsip(?, ?)', [$nomor, $kdruangarsip]);
 
-                $simpan = Dataarsip::create([
-                    'noarsip' => $noarsip,
-                    'pencipta' => $pencipta,
-                    'unit_pengolah' => $unit_pengolah,
-                    'tanggal' => $request->tgl,
-                    'uraian' => $request->uraian,
-                    'ket' => $request->keaslian,
-                    'kode' => $request->kodekelasifikasi,
-                    'jumlah' => $request->jumlah,
-                    'nobox' => $request->nobox,
-                    'lokasi' => $request->lokasi,
-                    'media' => $request->media,
-                    'keterangan' => $request->keterangan,
-                    'username' => $kdpegsimrs,
-                    'flaging' => '1',
-                ]);
-                $kirim = self::getlistdataarsipbynoarsip($noarsip);
-            DB::commit();
+                    // Ambil counter terbaru setelah call noarsip
+                    $dataOrganisasi = DB::connection('siasik')
+                        ->table('organisasi')
+                        ->select('counter_arsip', 'panggilan', 'nama')
+                        ->where('kode', $kdruangarsip)
+                        ->first();
+
+                    $wew = $dataOrganisasi->counter_arsip;
+                    $panggilan = $dataOrganisasi->panggilan;
+
+                    // Format tanggal arsip
+                    $tanggal = explode('-', $request->tgl);
+                    $tahun = $tanggal[0];
+
+                    // Bangun noarsip
+                    $noarsip = FormatingHelper::noarsip($wew, $panggilan, $tahun);
+
+                    // Simpan ke tabel dataarsip pada koneksi 'arsip'
+                    Dataarsip::on('arsip')->create([
+                        'noarsip' => $noarsip,
+                        'pencipta' => $kdruangarsip,
+                        'unit_pengolah' => $kdruangarsip,
+                        'tanggal' => $request->tgl,
+                        'uraian' => $request->uraian,
+                        'ket' => $request->keaslian,
+                        'kode' => $request->kodekelasifikasi,
+                        'jumlah' => $request->jumlah,
+                        'nobox' => $request->nobox,
+                        'lokasi' => $request->lokasi,
+                        'media' => $request->media,
+                        'keterangan' => $request->keterangan,
+                        'username' => $kdpegsimrs,
+                        'flaging' => '1',
+                    ]);
+
+                    // Commit kedua koneksi
+                    DB::connection('siasik')->commit();
+                    DB::connection('arsip')->commit();
+
+                    // Ambil data hasil simpan untuk response
+                    $kirim = self::getlistdataarsipbynoarsip($noarsip);
+
                     return new JsonResponse(['message' => 'success', 'result' => $kirim], 200);
-            }catch(\Exception $th) {
-                DB::rollback();
-                return new JsonResponse(['message' => 'invalid dokumen', 'error' => $th->getMessage()], 500);
+                } catch (\Exception $e) {
+                    // Rollback dua koneksi
+                    DB::connection('siasik')->rollBack();
+                    DB::connection('arsip')->rollBack();
+
+                    return new JsonResponse([
+                        'message' => 'invalid dokumen',
+                        'error' => $e->getMessage()
+                    ], 500);
+                }
             }
-        }
+
     }
 
 

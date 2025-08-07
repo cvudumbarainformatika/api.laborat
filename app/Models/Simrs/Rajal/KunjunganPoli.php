@@ -89,6 +89,7 @@ use App\Models\Simrs\Ranap\Pelayanan\Pemeriksaan\Penilaian;
 use App\Models\Simrs\Ranap\Rs141;
 use App\Models\Simrs\Rekom\Rekomdpjp;
 use App\Models\Simrs\Sharing\SharingTrans;
+use App\Models\Simrs\SuratPasien\SuratKeteranganDokter;
 use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -616,5 +617,10 @@ class KunjunganPoli extends Model
     public function jawabankonsulbynoreg()
     {
         return $this->hasMany(JawabanKonsulPoli::class,  'noreg_lama', 'rs1');
+    }
+
+     public function suratketerangandokter()
+    {
+        return $this->hasMany(SuratKeteranganDokter::class, 'noreg', 'rs1');
     }
 }
