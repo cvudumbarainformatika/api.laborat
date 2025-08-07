@@ -49,9 +49,9 @@ class EresepController extends Controller
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'rincian' => function ($ri) {
                     $ri->select('*', DB::raw('sum(jumlah) as jumlah'),  'harga_jual as hargajual')
-                        ->with(
+                        ->with([
                             'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                        )
+                        ])
                         ->where('jumlah', '>', 0)
                         ->groupBy('kdobat', 'noresep', 'noreg');
                 },
