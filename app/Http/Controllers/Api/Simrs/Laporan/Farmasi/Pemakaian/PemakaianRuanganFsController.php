@@ -39,9 +39,9 @@ class PemakaianRuanganFsController extends Controller
         $filteredR = array_values(array_filter($kodeRuanganSims, function ($item) {
             return str_starts_with($item, 'R-');
         }));
-        $filteredG = array_values(array_filter($kodeRuanganSims, function ($item) {
-            return str_starts_with($item, 'Gd-');
-        }));
+        // $filteredG = array_values(array_filter($kodeRuanganSims, function ($item) {
+        //     return str_starts_with($item, 'Gd-');
+        // }));
         $kode_ruang = request('kode_ruang');
         $bulan = request('bulan');
         $tahun = request('tahun');
@@ -49,9 +49,9 @@ class PemakaianRuanganFsController extends Controller
             ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
             ->when(
                 $kode_ruang == 'all',
-                function ($q) use ($filteredR, $filteredG) {
-                    if (sizeof($filteredG) > 0) $q->where('dari', 'LIKE', 'R-%');
-                    else $q->whereIn('dari', $filteredR);
+                function ($q) use ($filteredR) {
+                    if (sizeof($filteredR) > 0) $q->whereIn('dari', $filteredR);
+                    else $q->where('dari', 'LIKE', 'R-%');
                 },
                 function ($q) use ($kode_ruang) {
                     $q->where('dari', '=', $kode_ruang);
@@ -63,9 +63,9 @@ class PemakaianRuanganFsController extends Controller
             ->leftJoin('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
             ->when(
                 $kode_ruang == 'all',
-                function ($q) use ($filteredR, $filteredG) {
-                    if (sizeof($filteredG) > 0) $q->where('kdruang', 'LIKE', 'R-%');
-                    else $q->whereIn('kdruang', $filteredR);
+                function ($q) use ($filteredR) {
+                    if (sizeof($filteredR) > 0) $q->whereIn('kdruang', $filteredR);
+                    else $q->where('kdruang', 'LIKE', 'R-%');
                 },
                 function ($q) use ($kode_ruang) {
                     $q->where('kdruang', '=', $kode_ruang);
@@ -81,7 +81,7 @@ class PemakaianRuanganFsController extends Controller
             'satuan_k'
         )
             ->with([
-                'mutasi' => function ($q) use ($kode_ruang, $bulan, $tahun, $filteredR, $filteredG) {
+                'mutasi' => function ($q) use ($kode_ruang, $bulan, $tahun, $filteredR) {
                     $q->select(
                         'mutasi_gudangdepo.no_permintaan',
                         'kd_obat',
@@ -94,9 +94,9 @@ class PemakaianRuanganFsController extends Controller
                         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
                         ->when(
                             $kode_ruang == 'all',
-                            function ($q) use ($filteredR, $filteredG) {
-                                if (sizeof($filteredG) > 0) $q->where('dari', 'LIKE', 'R-%');
-                                else $q->whereIn('dari', $filteredR);
+                            function ($q) use ($filteredR) {
+                                if (sizeof($filteredR) > 0) $q->whereIn('dari', $filteredR);
+                                else  $q->where('dari', 'LIKE', 'R-%');
                             },
                             function ($q) use ($kode_ruang) {
                                 $q->where('dari', '=', $kode_ruang);
@@ -104,7 +104,7 @@ class PemakaianRuanganFsController extends Controller
                         )
                         ->where('tgl_kirim_depo', 'LIKE', '%' . $tahun . '-' . $bulan . '%');
                 },
-                'pemakaian' => function ($q) use ($kode_ruang, $bulan, $tahun, $kodeOb, $filteredR, $filteredG) {
+                'pemakaian' => function ($q) use ($kode_ruang, $bulan, $tahun, $kodeOb, $filteredR) {
                     $q->select(
                         'pemakaian_r.nopemakaian',
                         'pemakaian_r.kd_obat',
@@ -116,9 +116,9 @@ class PemakaianRuanganFsController extends Controller
                         ->leftJoin('pemakaian_h', 'pemakaian_h.nopemakaian', '=', 'pemakaian_r.nopemakaian')
                         ->when(
                             $kode_ruang == 'all',
-                            function ($q) use ($filteredR, $filteredG) {
-                                if (sizeof($filteredG) > 0) $q->where('pemakaian_h.kdruang', 'LIKE', 'R-%');
-                                else $q->whereIn('pemakaian_h.kdruang', $filteredR);
+                            function ($q) use ($filteredR) {
+                                if (sizeof($filteredR) > 0) $q->whereIn('pemakaian_h.kdruang', $filteredR);
+                                else $q->where('pemakaian_h.kdruang', 'LIKE', 'R-%');
                             },
                             function ($q) use ($kode_ruang) {
                                 $q->where('pemakaian_h.kdruang', '=', $kode_ruang);
@@ -145,8 +145,6 @@ class PemakaianRuanganFsController extends Controller
         $data['pegawai'] = $pegawai;
         $data['kodeRuanganSims'] = $kodeRuanganSims;
         $data['filteredR'] = $filteredR;
-        $data['filteredG'] = $filteredG;
-        $data['count'] = sizeof($filteredG);
         return new JsonResponse($data);
     }
 }
