@@ -53,16 +53,7 @@ class PemakaianObatController extends Controller
                         ->whereBetween('tglpenerimaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
                         ->groupBy('penerimaan_r.kdobat');
                 },
-                // 'mutasikeluar' => function ($mut) {
-                //     $mut->select(
-                //         'mutasi_gudangdepo.kd_obat',
-                //         DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'),
-                //         DB::raw('sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga) as subtotal'),
-                //     )
-                //         ->leftJoin('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
-                //         ->whereBetween('permintaan_h.tgl_kirim_depo', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
-                //         ->where('permintaan_h.dari', 'LIKE', '%R-%');
-                // },
+
 
                 'mutasikeluar' => function ($mut) {
                     $mut->select(

@@ -13,7 +13,8 @@ class CreateKamarOperasiDetailTemplatesTable extends Migration
      */
     public function up()
     {
-        Schema::connection('farmasi')->create('kamar_operasi_detail_templates', function (Blueprint $table) {
+        Schema::create('kamar_operasi_detail_templates', function (Blueprint $table) {
+            // Schema::connection('farmasi')->create('kamar_operasi_detail_templates', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('kamar_operasi_template_id');
             $table->string('kd_obat');
@@ -29,6 +30,7 @@ class CreateKamarOperasiDetailTemplatesTable extends Migration
      */
     public function down()
     {
-        Schema::connection('farmasi')->dropIfExists('kamar_operasi_detail_templates');
+        Schema::dropIfExists('kamar_operasi_detail_templates');
+        // Schema::connection('farmasi')->dropIfExists('kamar_operasi_detail_templates');
     }
 }

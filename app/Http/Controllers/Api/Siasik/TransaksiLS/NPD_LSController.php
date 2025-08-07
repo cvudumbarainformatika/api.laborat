@@ -500,6 +500,8 @@ class NPD_LSController extends Controller
                 'keterangan' => 'required|min:3',
                 'pptk' => 'required',
                 'tglnpdls' => 'required',
+                'penerima' => 'required',
+                'kegiatanbelud' => 'required'
                 // 'nopenerimaan' => 'unique:siasik.npdls_rinci,nopenerimaan',
                 // 'itembelanja' => 'required'
                 ]);
@@ -901,25 +903,7 @@ class NPD_LSController extends Controller
         ]);
     }
 
-    public function updateuser(){
-    // INI UNTUK VERIF ALL //
-        // $time = date('Y-m-d H:i:s');
-
-        // update user di bast konsinyasi
-        // $data = BastKonsinyasi::where('flag_bayar', '=', '1')
-        // ->update(['user_bayar' => '1619',]);
-        // ->get();
-
-        // update tglverifdi jurnal
-        // $datatime = Create_JurnalPosting::where('tglverif', '=', NULL)->update(['tglverif' => $time]);
-
-        // return new JsonResponse ([
-        //     // 'message' => 'Data Berhasil di Verifikasi',
-        //     // 'datanpk' => $npk,
-        //     'update' => $data,
-
-        // ], 200);
-
+    public function updatedata(){
 
         // Mulai transaksi database untuk memastikan konsistensi data
         DB::beginTransaction();
@@ -927,7 +911,8 @@ class NPD_LSController extends Controller
         try {
             // Ambil data dari NpkLS_rinci yang memenuhi kriteria
             $npkData = NpkLS_rinci::where('nopencairan', '!=', '')
-                ->select('nonpdls', 'total', 'tglentrycair')
+                ->where('nonpk', request('nonpk'))
+                ->select('nonpk','nonpdls', 'total', 'tglentrycair')
                 ->get();
 
             // Proses update data PenerimaanHeder
@@ -950,38 +935,29 @@ class NPD_LSController extends Controller
                         'flag_bayar' => '1'
                     ]);
 
-                // $updateResult = BastKonsinyasi::where('no_npd', $npk->nonpdls)
-                //     ->whereNull('tgl_pencairan_npk')
-                //     // ->where('flag_bayar', '=', '')
-                //     ->update([
-                //         'tgl_pencairan_npk' => $tglPencairan,
-                //         'tgl_pembayaran' => $tglPencairan,
-                //         'nilai_pembayaran' => $npk->total,
-                //         'total_pembayaran' => $npk->total,
-                //         'user_bayar' => '1619',
-                //         'flag_bayar' => '1'
-                //     ]);
+                $updateResultKons = BastKonsinyasi::where('no_npd', $npk->nonpdls)
+                    ->whereNull('tgl_pencairan_npk')
+                    // ->where('flag_bayar', '=', '')
+                    ->update([
+                        'tgl_pencairan_npk' => $tglPencairan,
+                        'tgl_pembayaran' => $tglPencairan,
+                        'nilai_pembayaran' => $npk->total,
+                        'total_pembayaran' => $npk->total,
+                        'user_bayar' => '1619',
+                        'flag_bayar' => '1'
+                    ]);
 
-                if ($updateResult) {
+                if ($updateResult || $updateResultKons) {
                     $updatedCount += $updateResult;
+                    $updatedCount += $updateResultKons;
                 }
             }
 
             // Commit transaksi jika semua berhasil
             DB::commit();
 
-            // Ambil data terbaru untuk response
-            // $updatedNpkData = NpkLS_rinci::where('nopencairan', '!=', '')
-            //     ->select('nonpdls', 'total', 'tglentrycair')
-            //     ->get();
-
-            // $updatedPenerimaanData = PenerimaanHeder::where('no_npd', '!=', '')
-            //     ->whereNotNull('tgl_pencairan_npk')
-            //     ->select('no_npd', 'tgl_pencairan_npk', 'nilai_pembayaran', 'total_pembayaran', 'user_bayar', 'flag_bayar')
-            //     ->get();
-
             return new JsonResponse([
-                'message' => 'Update berhasil. Jumlah data diupdate: ' . $updatedCount, $updateResult,
+                'message' => 'Update berhasil. Jumlah data diupdate: ' . $updatedCount, $updateResult, $updateResultKons,
                 'datanpk' => $npkData,
                 // 'updated_data' => $updatedPenerimaanData,
             ], 200);
