@@ -1424,9 +1424,14 @@ class EresepController extends Controller
             'permintaanresep.aturansigna:signa,jumlah',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
             'permintaanracikan.mobat.indikasi',
+
             'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
             'asalpermintaanresep.mobat.indikasi',
             'asalpermintaanresep.aturansigna:signa,jumlah',
+
+            'asalpermintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'asalpermintaanracikan.mobat.indikasi',
+            'asalpermintaanracikan.aturansigna:signa,jumlah',
             'poli',
             'info',
             'antrian' => function ($q) {
@@ -1459,11 +1464,7 @@ class EresepController extends Controller
                 $q->on('antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
                     ->where('antrian_ambil.pelayanan_id', '=', 'AP0001');
             })
-            // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.kwitansilog'), function ($q) {
-            //     $q->on('resep_keluar_h.noresep', 'LIKE', 'kwitansilog.nota' );
-            // })
-            // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
-            // ->where('antrian_ambil.pelayanan_id', '=', 'AP0001')
+
             ->select(
                 'resep_keluar_h.*',
                 'antrian_ambil.nomor',
@@ -1487,8 +1488,7 @@ class EresepController extends Controller
                 if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
                     $iterTiming = request('iter_timing');
                     if ($iterTiming == 'berlaku') {
-                        // $addThree = Carbon::now()->addMonth(3)->format('m');
-                        // $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
+
                         $qu->where('resep_keluar_h.tiperesep', request('tipe'))
                             ->where('resep_keluar_h.noresep_asal', '')
                             ->whereBetween('resep_keluar_h.iter_expired', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']); // luput
@@ -1533,35 +1533,7 @@ class EresepController extends Controller
                 $qu->where('resep_keluar_h.flag', '')
                     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
             });
-        // ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
 
-        // if (request('tipe')) {
-        //     if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
-        //         $query->where('resep_keluar_h.tiperesep', request('tipe'))
-        //             ->where('resep_keluar_h.noresep_asal', '')
-        //             ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
-        //     } else {
-        //         $query->where('resep_keluar_h.tiperesep', request('tipe'));
-        //     }
-        // }
-
-        // if (request('flag')) {
-        //     if (request('flag') === 'semua') {
-        //         $query->where(function ($q) use ($tgl, $tglx) {
-        //             $q->where(function ($m) use ($tgl, $tglx) {
-        //                 $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
-        //                     ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
-        //             })->orWhere(function ($q) use ($tgl, $tglx) {
-        //                 $q->where('resep_keluar_h.flag', '')
-        //                     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-        //             });
-        //         });
-        //     } else {
-        //         $query->where('resep_keluar_h.flag', request('flag'));
-        //     }
-        // } else {
-        //     $query->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-        // }
         if (request('sistembayar')) {
             $query->where('resep_keluar_h.sistembayar', request('sistembayar'));
         }
