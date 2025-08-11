@@ -64,13 +64,13 @@ trait LogsActivity
                 }
             }
 
-            info('DEBUG LOG', [
-                'event' => $event,
-                'model' => class_basename($model),
-                'connection' => $model->getConnectionName(),
-                'before' => $before,
-                'after' => $after
-            ]);
+            // info('DEBUG LOG', [
+            //     'event' => $event,
+            //     'model' => class_basename($model),
+            //     'connection' => $model->getConnectionName(),
+            //     'before' => $before,
+            //     'after' => $after
+            // ]);
             // 🔹 Simpan log ke tabel
             UserActivity::create([
                 'user_id'     => Auth::id() ?? null,
