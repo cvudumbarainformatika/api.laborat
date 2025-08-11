@@ -32,7 +32,7 @@ trait LogsActivity
             $source = self::getActionSource();
 
             UserActivity::create([
-                'user_id'     => auth()->user()->id ?? null,
+                'user_id'     => auth()->user()->pegawai_id ?? null,
                 'action'      => class_basename($model) . ' ' . $event,
                 'description' => json_encode($changes, JSON_UNESCAPED_UNICODE),
                 'ip_address'  => request()?->ip(),
@@ -51,6 +51,7 @@ trait LogsActivity
 
     protected static function getModelChanges(string $event, Model $model): array
     {
+        $original = null;
         $before = null;
         $after = null;
 
@@ -59,6 +60,7 @@ trait LogsActivity
                 $after = $model->getAttributes();
                 break;
             case 'updated':
+                $original = $model->getOriginal(); // Changed this line to get all original values
                 $before = array_intersect_key($model->getOriginal(), $model->getChanges());
                 $after = $model->getChanges();
                 break;
@@ -68,6 +70,7 @@ trait LogsActivity
         }
 
         return [
+            'original' => $original,
             'before' => $before,
             'after' => $after,
         ];
