@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Models\Simrs\Penunjang\Farmasinew\Msigna;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,5 +26,9 @@ class Permintaanresepracikan extends Model
     public function head()
     {
         $this->belongsTo(Resepkeluarheder::class, 'noresep', 'noresep');
+    }
+    public function aturansigna()
+    {
+        return $this->belongsTo(Msigna::class, 'aturan', 'signa');
     }
 }

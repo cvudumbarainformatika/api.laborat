@@ -49,18 +49,18 @@ class EresepController extends Controller
                 'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
                 'rincian' => function ($ri) {
                     $ri->select('*', DB::raw('sum(jumlah) as jumlah'),  'harga_jual as hargajual')
-                        ->with(
+                        ->with([
                             'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
-                        )
+                        ])
                         ->where('jumlah', '>', 0)
                         ->groupBy('kdobat', 'noresep', 'noreg');
                 },
                 'rincianracik' => function ($ri) {
                     $ri->select('*', DB::raw('sum(jumlah) as jumlah'))
-                        ->with(
+                        ->with([
                             'mobat:kd_obat,nama_obat,satuan_k,status_kronis',
 
-                        )
+                        ])
                         ->where('jumlah', '>', 0)
                         ->groupBy('kdobat', 'noresep', 'noreg', 'namaracikan');
                 },
@@ -1424,9 +1424,14 @@ class EresepController extends Controller
             'permintaanresep.aturansigna:signa,jumlah',
             'permintaanracikan.mobat:kd_obat,nama_obat,satuan_k,kekuatan_dosis,status_kronis,kelompok_psikotropika',
             'permintaanracikan.mobat.indikasi',
+
             'asalpermintaanresep.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
             'asalpermintaanresep.mobat.indikasi',
             'asalpermintaanresep.aturansigna:signa,jumlah',
+
+            'asalpermintaanracikan.mobat:kd_obat,nama_obat,satuan_k,status_kronis',
+            'asalpermintaanracikan.mobat.indikasi',
+            'asalpermintaanracikan.aturansigna:signa,jumlah',
             'poli',
             'info',
             'antrian' => function ($q) {
@@ -1459,11 +1464,7 @@ class EresepController extends Controller
                 $q->on('antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
                     ->where('antrian_ambil.pelayanan_id', '=', 'AP0001');
             })
-            // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.kwitansilog'), function ($q) {
-            //     $q->on('resep_keluar_h.noresep', 'LIKE', 'kwitansilog.nota' );
-            // })
-            // ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), 'antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
-            // ->where('antrian_ambil.pelayanan_id', '=', 'AP0001')
+
             ->select(
                 'resep_keluar_h.*',
                 'antrian_ambil.nomor',
@@ -1487,8 +1488,7 @@ class EresepController extends Controller
                 if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
                     $iterTiming = request('iter_timing');
                     if ($iterTiming == 'berlaku') {
-                        // $addThree = Carbon::now()->addMonth(3)->format('m');
-                        // $year = ((int)date('m') + 3) <= 12 ? date('Y')  : Carbon::now()->addYears(1)->format('Y');
+
                         $qu->where('resep_keluar_h.tiperesep', request('tipe'))
                             ->where('resep_keluar_h.noresep_asal', '')
                             ->whereBetween('resep_keluar_h.iter_expired', [request('from') . ' 00:00:00', request('to') . ' 23:59:59']); // luput
@@ -1533,35 +1533,7 @@ class EresepController extends Controller
                 $qu->where('resep_keluar_h.flag', '')
                     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
             });
-        // ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
 
-        // if (request('tipe')) {
-        //     if (request('tipe') === 'iter' && request('kddepo') === 'Gd-05010101') {
-        //         $query->where('resep_keluar_h.tiperesep', request('tipe'))
-        //             ->where('resep_keluar_h.noresep_asal', '')
-        //             ->whereBetween('resep_keluar_h.iter_expired', [date('Y-m-d 00:00:00'), date('Y') . '-0' . ((int)date('m') + 3) . '-31 23:59:59']);
-        //     } else {
-        //         $query->where('resep_keluar_h.tiperesep', request('tipe'));
-        //     }
-        // }
-
-        // if (request('flag')) {
-        //     if (request('flag') === 'semua') {
-        //         $query->where(function ($q) use ($tgl, $tglx) {
-        //             $q->where(function ($m) use ($tgl, $tglx) {
-        //                 $m->whereIn('resep_keluar_h.flag', ['1', '2', '3', '4', '5'])
-        //                     ->whereBetween('resep_keluar_h.tgl_kirim', [$tgl, $tglx]);
-        //             })->orWhere(function ($q) use ($tgl, $tglx) {
-        //                 $q->where('resep_keluar_h.flag', '')
-        //                     ->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-        //             });
-        //         });
-        //     } else {
-        //         $query->where('resep_keluar_h.flag', request('flag'));
-        //     }
-        // } else {
-        //     $query->where('resep_keluar_h.flag', '')->whereBetween('resep_keluar_h.tgl_permintaan', [$tgl, $tglx]);
-        // }
         if (request('sistembayar')) {
             $query->where('resep_keluar_h.sistembayar', request('sistembayar'));
         }
@@ -1904,6 +1876,35 @@ class EresepController extends Controller
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
     }
+    public function cekResep(Request $request)
+    {
+        $header = Resepkeluarheder::where('noresep', $request->noresep)->first();
+        $permintaanFinal = collect($request->permintaanresep)->where('jumlah', '>', 0)->toArray();
+        $permintaanRacikanFinal = collect($request->permintaanracikan)->where('jumlahobat', '>', 0)->toArray();
+
+        $groupSistembayar = (int)$request->sistembayar['groups'];
+        $msg = '';
+        $sisaObat = null;
+        $pembatasan = null;
+        $pembatasanRi = null;
+        if ($request->depo === 'Gd-04010102' && $groupSistembayar === 1) {
+            $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header);
+            $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header);
+            $msg = 'Pembatasan sudah di cek';
+        }
+        // cek jumlah sisa obat rajal
+        if ($request->depo === 'Gd-05010101') {
+            $sisaObat = self::cekSisaObatRajal($permintaanFinal, $request->norm);
+            $msg = 'Cek konsumsi non racikan';
+        }
+
+        return new JsonResponse([
+            'message' => $msg,
+            'pembatasan' => $pembatasan,
+            'pembatasanRi' => $pembatasanRi,
+            'sisaObat' => $sisaObat,
+        ]);
+    }
     public function resepSimpanSelesai(Request $request)
     {
         // cek header flag, sudah selesai apa belum
@@ -2029,10 +2030,10 @@ class EresepController extends Controller
                             'noreg' => $key['noreg'],
                             'noresep' => $key['noresep'],
                             'kdobat' => $key['kdobat'],
-                            'kandungan' => $key['kandungan'],
-                            'fornas' => $key['fornas'],
-                            'forkit' => $key['forkit'],
-                            'generik' => $key['generik'],
+                            'kandungan' => $key['kandungan'] ?? '',
+                            'fornas' => $key['fornas'] ?? '',
+                            'forkit' => $key['forkit'] ?? '',
+                            'generik' => $key['generik'] ?? '',
                             'kode108' => $key['kode108'],
                             'uraian108' => $key['uraian108'],
                             'kode50' => $key['kode50'],
@@ -2229,23 +2230,31 @@ class EresepController extends Controller
                     ->whereIn('kdobat', $kodeObatKeluar)
                     ->where('ruangan', 'NOT LIKE', '%POL%')
                     ->get();
+                $rincianObatKeluarRac = Resepkeluarrinciracikan::where('resep_keluar_h.noreg', $request->noreg)
+                    ->leftJoin('resep_keluar_h', 'resep_keluar_racikan_r.noresep', '=', 'resep_keluar_h.noresep')
+                    ->whereIn('kdobat', $kodeObatKeluar)
+                    ->where('ruangan', 'NOT LIKE', '%POL%')
+                    ->get();
                 $returObat = Returpenjualan_r::where('retur_penjualan_r.noreg', $request->noreg)
                     ->leftJoin('retur_penjualan_h', 'retur_penjualan_r.noretur', '=', 'retur_penjualan_h.noretur')
                     ->whereIn('kdobat', $kodeObatKeluar)
                     ->where('kdruangan', 'NOT LIKE', '%POL%')
                     ->get();
                 // cek masing obat yang dibatasi
+                $hasil = [];
                 foreach ($obatDibatasi as $key) {
                     $obatnya = collect($rincian)->where('kdobat', $key->kd_obat)->first();
                     $jumlah = (float)$obatnya['jumlah'] ?? (float)$obatnya['jumlahobat'];
                     $jumlahPembatasan = (int)$key->jumlah;
-                    $rincianKeluar = $rincianObatKeluar->where('kdobat', $key->kd_obat)->sum('jumlah');
+                    $rincianKeluar = $rincianObatKeluar->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
+                    $rincianKeluarRac = $rincianObatKeluarRac->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
                     $retur = $returObat->where('kdobat', $key->kd_obat)->sum('jumlah_retur');
-                    $obatKeluar = (int)$rincianKeluar - (int)$retur;
+                    $obatKeluar = (int)$rincianKeluar + (int)$rincianKeluarRac - (int)$retur;
                     if (((int)$obatKeluar >= (int)$jumlahPembatasan) || ((int)$obatKeluar + (int)$jumlah > (int)$jumlahPembatasan)) {
                         $key->jumlah_pembatasan = (int)$jumlahPembatasan;
                         $key->obat_keluar = (int)$obatKeluar;
                         $key->jumlah_permintaan = (int)$jumlah;
+                        $hasil[] = $key;
                     }
                 }
             }
@@ -2255,7 +2264,7 @@ class EresepController extends Controller
                 'kdRuang' => $kdRuang,
                 'kecualiRuangan' => $kecualiRuangans ?? null,
                 'obatKecualiRuangan' => $obatKecualiRuangan ?? null,
-                'obatDibatasi' => $obatDibatasi ?? null,
+                'obatDibatasi' => $hasil ?? null,
                 'kodeObatKeluar' => $kodeObatKeluar ?? null,
                 'rincianObatKeluar' => $rincianObatKeluar ?? null,
                 'returObat' => $returObat ?? null,
@@ -2263,7 +2272,7 @@ class EresepController extends Controller
             ];
         } else {
             return [
-                'obatDibatasi' => $obatDibatasi ?? []
+                'obatDibatasi' => $hasil ?? []
             ];
         }
     }

@@ -501,7 +501,7 @@ class NPD_LSController extends Controller
                 'pptk' => 'required',
                 'tglnpdls' => 'required',
                 'penerima' => 'required',
-                'kegiatanbelud' => 'required'
+                'kegiatanblud' => 'required'
                 // 'nopenerimaan' => 'unique:siasik.npdls_rinci,nopenerimaan',
                 // 'itembelanja' => 'required'
                 ]);
