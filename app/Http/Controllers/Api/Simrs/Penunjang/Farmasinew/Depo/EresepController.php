@@ -2001,8 +2001,9 @@ class EresepController extends Controller
                             $key['created_at'] = date('Y-m-d H:i:s');
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
-                            $stok = Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => 0]);
+                            // $stok = Stokreal::where('id', $caristok[$index]->id)
+                            //     ->update(['jumlah' => 0]);
+                            $this->updateStok($caristok[$index]->id, 0);
 
                             $masuk = $sisax;
                             $index = $index + 1;
@@ -2021,8 +2022,9 @@ class EresepController extends Controller
                             $key['created_at'] = date('Y-m-d H:i:s');
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
-                            $stok = Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => $sisax]);
+                            // $stok = Stokreal::where('id', $caristok[$index]->id)
+                            //     ->update(['jumlah' => $sisax]);
+                            $this->updateStok($caristok[$index]->id, $sisax);
                             $masuk = 0;
                         }
                         $key['user'] = auth()->user()->pegawai_id;
@@ -2097,8 +2099,9 @@ class EresepController extends Controller
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
 
-                            Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => 0]);
+                            // Stokreal::where('id', $caristok[$index]->id)
+                            //     ->update(['jumlah' => 0]);
+                            $this->updateStok($caristok[$index]->id, 0);
 
                             $masuk = $sisax;
                             $index = $index + 1;
@@ -2118,8 +2121,10 @@ class EresepController extends Controller
                             $key['created_at'] = date('Y-m-d H:i:s');
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
-                            Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => $sisax]);
+                            // Stokreal::where('id', $caristok[$index]->id)
+                            // ->update(['jumlah' => $sisax]);
+                            $this->updateStok($caristok[$index]->id, $sisax);
+
 
                             $masuk = 0;
                         }
@@ -2201,6 +2206,11 @@ class EresepController extends Controller
                 'trace' =>  $e->getTrace(),
             ], 410);
         }
+    }
+    private function updateStok($id, $sisa)
+    {
+        $stok = Stokreal::find($id);
+        $stok->update(['jumlah' => $sisa]);
     }
     public static function cekPembatasanObatRanap($rincian, $request, $header)
     {

@@ -3,8 +3,7 @@
 namespace App\Traits;
 
 use App\Models\UserActivity;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
 
 trait LogsActivity
 {
@@ -22,68 +21,26 @@ trait LogsActivity
             self::log('deleted', $model);
         });
     }
-    protected static function log($event, $model)
+    protected static function log(string $event, Model $model): void
     {
-        if (app()->runningInConsole()) {
+        if (app()->runningInConsole() && !config('logging.log_console_actions', false)) {
             return;
         }
 
         try {
-            $before = null;
-            $after  = null;
+            $changes = self::getModelChanges($event, $model);
+            $source = self::getActionSource();
 
-            if ($event === 'created') {
-                $after = $model->getAttributes();
-            } elseif ($event === 'updated') {
-                $before = array_intersect_key($model->getOriginal(), $model->getChanges());
-                $after  = $model->getChanges();
-            } elseif ($event === 'deleted') {
-                $before = $model->getOriginal();
-            }
-
-            // 🔹 Bagian cari controller atau file pemanggil
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 20);
-
-            $caller = collect($trace)->first(function ($t) {
-                return isset($t['class']) && str_contains($t['class'], 'App\\Http\\Controllers');
-            });
-
-            if (!$caller) {
-                // fallback: cari file dalam folder app/Http
-                $caller = collect($trace)->first(function ($t) {
-                    return isset($t['file']) && str_contains($t['file'], base_path('app/Http'));
-                });
-            }
-
-            $source = null;
-            if ($caller) {
-                if (isset($caller['class'])) {
-                    $source = $caller['class'] . '@' . ($caller['function'] ?? '') . ' (line ' . ($caller['line'] ?? '-') . ')';
-                } elseif (isset($caller['file'])) {
-                    $source = str_replace(base_path() . '/', '', $caller['file']) . ' (line ' . ($caller['line'] ?? '-') . ')';
-                }
-            }
-
-            // info('DEBUG LOG', [
-            //     'event' => $event,
-            //     'model' => class_basename($model),
-            //     'connection' => $model->getConnectionName(),
-            //     'before' => $before,
-            //     'after' => $after
-            // ]);
-            // 🔹 Simpan log ke tabel
             UserActivity::create([
-                'user_id'     => Auth::id() ?? null,
+                'user_id'     => auth()->user()->id ?? null,
                 'action'      => class_basename($model) . ' ' . $event,
-                'description' => json_encode([
-                    'before' => $before,
-                    'after'  => $after,
-                ], JSON_UNESCAPED_UNICODE),
+                'description' => json_encode($changes, JSON_UNESCAPED_UNICODE),
                 'ip_address'  => request()?->ip(),
                 'user_agent'  => request()?->header('User-Agent'),
-                'source'      => $source ?? null, // pastikan kolom ini nullable
+                'source'      => $source ?? null,
             ]);
         } catch (\Throwable $e) {
+            report($e); // Use Laravel's error reporting
             info('Failed to log user activity', [
                 'event' => $event,
                 'model' => class_basename($model),
@@ -92,20 +49,55 @@ trait LogsActivity
         }
     }
 
+    protected static function getModelChanges(string $event, Model $model): array
+    {
+        $before = null;
+        $after = null;
 
-    // protected static function log($event, $model)
-    // {
+        switch ($event) {
+            case 'created':
+                $after = $model->getAttributes();
+                break;
+            case 'updated':
+                $before = array_intersect_key($model->getOriginal(), $model->getChanges());
+                $after = $model->getChanges();
+                break;
+            case 'deleted':
+                $before = $model->getOriginal();
+                break;
+        }
 
-    //     // Hanya log saat bukan di console (misal queue, seeder, dll bisa skip)
-    //     if (app()->runningInConsole()) {
-    //         return;
-    //     }
+        return [
+            'before' => $before,
+            'after' => $after,
+        ];
+    }
 
+    protected static function getActionSource(): ?string
+    {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 20);
 
-    //     try {
-    //         $before = null;
-    //         $after  = null;
+        // Look for controller first
+        $caller = collect($trace)->first(function ($t) {
+            return isset($t['class']) && str_contains($t['class'], 'App\\Http\\Controllers');
+        });
 
+        // Fallback to any app/Http file
+        if (!$caller) {
+            $caller = collect($trace)->first(function ($t) {
+                return isset($t['file']) && str_contains($t['file'], base_path('app/Http'));
+            });
+        }
+
+        if (!$caller) {
+            return null;
+        }
+
+        return isset($caller['class'])
+            ? $caller['class'] . '@' . ($caller['function'] ?? '') . ' (line ' . ($caller['line'] ?? '-') . ')'
+            : str_replace(base_path() . '/', '', $caller['file']) . ' (line ' . ($caller['line'] ?? '-') . ')';
+    }
+}
     //         if ($event === 'created') {
     //             $after = $model->getAttributes();
     //         } elseif ($event === 'updated') {
@@ -133,4 +125,4 @@ trait LogsActivity
     //         ]);
     //     }
     // }
-}
+// }
