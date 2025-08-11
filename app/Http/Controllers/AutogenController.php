@@ -47,6 +47,12 @@ class AutogenController extends Controller
     {
         echo bcrypt('123456789');
     }
+    public function testModel()
+    {
+        // 29870.10
+        Stokreal::find(1)->update(['harga' => 29870]);
+        return 'wew';
+    }
 
     public function tindakanId()
     {

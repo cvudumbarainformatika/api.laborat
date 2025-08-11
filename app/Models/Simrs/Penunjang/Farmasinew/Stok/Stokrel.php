@@ -10,12 +10,13 @@ use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mminmaxobat;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stokrel extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'stokreal';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
