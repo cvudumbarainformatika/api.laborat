@@ -1876,6 +1876,35 @@ class EresepController extends Controller
         }
         return new JsonResponse(['message' => 'data tidak ditemukan'], 410);
     }
+    public function cekResep(Request $request)
+    {
+        $header = Resepkeluarheder::where('noresep', $request->noresep)->first();
+        $permintaanFinal = collect($request->permintaanresep)->where('jumlah', '>', 0)->toArray();
+        $permintaanRacikanFinal = collect($request->permintaanracikan)->where('jumlahobat', '>', 0)->toArray();
+
+        $groupSistembayar = (int)$request->sistembayar['groups'];
+        $msg = '';
+        $sisaObat = null;
+        $pembatasan = null;
+        $pembatasanRi = null;
+        if ($request->depo === 'Gd-04010102' && $groupSistembayar === 1) {
+            $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header);
+            $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header);
+            $msg = 'Pembatasan sudah di cek';
+        }
+        // cek jumlah sisa obat rajal
+        if ($request->depo === 'Gd-05010101') {
+            $sisaObat = self::cekSisaObatRajal($permintaanFinal, $request->norm);
+            $msg = 'Cek konsumsi non racikan';
+        }
+
+        return new JsonResponse([
+            'message' => $msg,
+            'pembatasan' => $pembatasan,
+            'pembatasanRi' => $pembatasanRi,
+            'sisaObat' => $sisaObat,
+        ]);
+    }
     public function resepSimpanSelesai(Request $request)
     {
         // cek header flag, sudah selesai apa belum
