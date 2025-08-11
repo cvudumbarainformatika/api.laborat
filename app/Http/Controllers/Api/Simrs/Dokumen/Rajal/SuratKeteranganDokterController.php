@@ -130,14 +130,16 @@ class SuratKeteranganDokterController extends Controller
 
     public function cekpembayaran(Request $request)
     {
-        if($request->tindakan_id === 'UMUM'){
+        if($request->sistembayar === 'UMUM'){
             $data = Kwitansidetail::where('id_trans', $request->tindakan_id)->count();
             // return $data;
             if($data > 0){
                 return new JsonResponse(['message' => 'OK'], 200);
             }else{
-                return new JsonResponse(['message' => 'Pasien belum dibayar ke Kasir'], 500);
+                return new JsonResponse(['message' => 'Pasien belum Bayar ke Kasir'], 500);
             }
+        }else if(stripos($request->sistembayar, "BPJS") !== false){
+            return new JsonResponse(['message' => 'Sistem Bayar Ini Tidak Mendukung...!!!'], 500);
         }else{
             return new JsonResponse(['message' => 'OK'], 200);
         }
