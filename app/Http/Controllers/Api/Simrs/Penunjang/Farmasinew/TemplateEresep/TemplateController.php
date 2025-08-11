@@ -273,12 +273,12 @@ class TemplateController extends Controller
                 ], 410);
             }
         }
-        return new JsonResponse([
-            'message' => 'Cek kesesuaian obat dengan sistem bayar pasien out of if',
-            'req' => $request->all(),
-            'kodeobat' => $kodeobat,
-            'mobat' => $mobat,
-        ]);
+        // return new JsonResponse([
+        //     'message' => 'Cek kesesuaian obat dengan sistem bayar pasien out of if',
+        //     'req' => $request->all(),
+        //     'kodeobat' => $kodeobat,
+        //     'mobat' => $mobat,
+        // ]);
 
         /**
          * cek pembatasan obat start
@@ -1045,7 +1045,9 @@ class TemplateController extends Controller
                 // 'adaAlokasiRacikan' => $adaAlokasiRacikan,
                 // 'tidakAdaAlokasiRacikan' => $tidakAdaAlokasiRacikan,
                 'error' => ' ' . $e,
-                'message' => 'rolled back ada kesalahan'
+                'message' => 'ada kesalahan ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
             ], 410);
         }
     }
