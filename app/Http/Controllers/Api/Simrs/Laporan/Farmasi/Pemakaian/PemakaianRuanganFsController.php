@@ -88,6 +88,7 @@ class PemakaianRuanganFsController extends Controller
                         'jml',
                         'harga',
                         'nopenerimaan',
+                        'nobatch',
                         'dari',
                         'tgl_kirim_depo'
                     )
@@ -109,6 +110,7 @@ class PemakaianRuanganFsController extends Controller
                         'pemakaian_r.nopemakaian',
                         'pemakaian_r.kd_obat',
                         'pemakaian_r.jumlah',
+                        'pemakaian_r.nobatch',
                         'pemakaian_r.nopenerimaan',
                         'pemakaian_h.kdruang',
                         'pemakaian_h.tgl'
