@@ -2260,7 +2260,7 @@ class EresepController extends Controller
                     $rincianKeluarRac = $rincianObatKeluarRac->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
                     $retur = $returObat->where('kdobat', $key->kd_obat)->sum('jumlah_retur');
                     $obatKeluar = (int)$rincianKeluar + (int)$rincianKeluarRac - (int)$retur;
-                    if (((int)$obatKeluar >= (int)$jumlahPembatasan) || ((int)$obatKeluar + (int)$jumlah > (int)$jumlahPembatasan)) {
+                    if (((int)$obatKeluar >= (int)$jumlahPembatasan) || ((int)$obatKeluar + (int)$jumlah >= (int)$jumlahPembatasan)) {
                         $key->jumlah_pembatasan = (int)$jumlahPembatasan;
                         $key->obat_keluar = (int)$obatKeluar;
                         $key->jumlah_permintaan = (int)$jumlah;
