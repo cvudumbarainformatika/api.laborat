@@ -6,12 +6,13 @@ use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Obat\BarangRusak;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\Stokrel;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PenerimaanRinci extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'penerimaan_r';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
