@@ -2254,13 +2254,13 @@ class EresepController extends Controller
                 $hasil = [];
                 foreach ($obatDibatasi as $key) {
                     $obatnya = collect($rincian)->where('kdobat', $key->kd_obat)->first();
-                    $jumlah = (float)$obatnya['jumlah'] ?? (float)$obatnya['jumlahobat'];
+                    $jumlah = (float)$obatnya['jumlahobat'] ?? (float)$obatnya['jumlah'];
                     $jumlahPembatasan = (int)$key->jumlah;
                     $rincianKeluar = $rincianObatKeluar->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
                     $rincianKeluarRac = $rincianObatKeluarRac->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
                     $retur = $returObat->where('kdobat', $key->kd_obat)->sum('jumlah_retur');
                     $obatKeluar = (int)$rincianKeluar + (int)$rincianKeluarRac - (int)$retur;
-                    if (((int)$obatKeluar >= (int)$jumlahPembatasan) || ((int)$obatKeluar + (int)$jumlah >= (int)$jumlahPembatasan)) {
+                    if (((int)$obatKeluar >= (int)$jumlahPembatasan) || ((int)$obatKeluar + (int)$jumlah > (int)$jumlahPembatasan)) {
                         $key->jumlah_pembatasan = (int)$jumlahPembatasan;
                         $key->obat_keluar = (int)$obatKeluar;
                         $key->jumlah_permintaan = (int)$jumlah;
