@@ -1888,8 +1888,8 @@ class EresepController extends Controller
         $pembatasan = null;
         $pembatasanRi = null;
         if ($request->depo === 'Gd-04010102' && $groupSistembayar === 1) {
-            $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header);
-            $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header);
+            $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header, 'nr');
+            $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header, 'rac');
             $msg = 'Pembatasan sudah di cek';
         }
         // cek jumlah sisa obat rajal
@@ -1938,8 +1938,8 @@ class EresepController extends Controller
             // cek pembatasan fornas ranap
             $groupSistembayar = (int)$request->sistembayar['groups'];
             if ($request->depo === 'Gd-04010102' && $groupSistembayar === 1) {
-                $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header);
-                $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header);
+                $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header, 'nr');
+                $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header, 'rac');
                 if (collect($pembatasan['obatDibatasi'])->isNotEmpty() || collect($pembatasanRi['obatDibatasi'])->isNotEmpty()) {
                     throw new Exception('ada Pembatasan Obat Ranap, silahkan di cek kembali');
                 }
@@ -2212,7 +2212,7 @@ class EresepController extends Controller
         $stok = Stokreal::find($id);
         $stok->update(['jumlah' => $sisa]);
     }
-    public static function cekPembatasanObatRanap($rincian, $request, $header)
+    public static function cekPembatasanObatRanap($rincian, $request, $header, $tipe)
     {
         $headerResep = $header;
         $obat = collect($rincian)->pluck('kdobat')->toArray();
@@ -2254,7 +2254,7 @@ class EresepController extends Controller
                 $hasil = [];
                 foreach ($obatDibatasi as $key) {
                     $obatnya = collect($rincian)->where('kdobat', $key->kd_obat)->first();
-                    $jumlah = (float)$obatnya['jumlahobat'] ?? (float)$obatnya['jumlah'];
+                    $jumlah = (($tipe == 'rac') ? (float)$obatnya['jumlahobat'] : (float)$obatnya['jumlah']);
                     $jumlahPembatasan = (int)$key->jumlah;
                     $rincianKeluar = $rincianObatKeluar->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
                     $rincianKeluarRac = $rincianObatKeluarRac->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
