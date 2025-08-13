@@ -100,6 +100,10 @@ class Kunjunganranap extends Model
     {
         return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpeg');
     }
+    public function pegsimhd()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpeghd');
+    }
     public function statuscovid()
     {
         return $this->hasMany(StatusCovid::class, 'noreg', 'noreg');

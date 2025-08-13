@@ -284,7 +284,7 @@ class HemodialisaController extends Controller
             // 'rs23.rs2 as status_masuk',
             // 'antrian_ambil.nomor as noantrian'
             // 'rs17.rs19 as status',
-        ) ->selectRaw('"" as keterangan')
+        )->selectRaw('"" as keterangan')
             ->leftjoin('rs17', 'rs107.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs107.rs1', '=', 'rs23.rs1') //ranap
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs107.rs10') //ruangan ranap
@@ -378,6 +378,7 @@ class HemodialisaController extends Controller
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
             'rs23.rs10 as kdpeg',
+            'rs107.rs8 as kdpeghd',
             'rs23_meta.kd_jeniskasus',
             'memodiagnosadokter.diagnosa as memodiagnosa',
         )
@@ -726,6 +727,7 @@ class HemodialisaController extends Controller
                     ->orderBy('id', 'DESC');
             },
             'pegsim:kdpegsimrs,nik,nama,id,nip',
+            'pegsimhd:kdpegsimrs,nik,nama,id,nip',
         ]);
 
         return new JsonResponse([
