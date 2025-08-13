@@ -361,8 +361,8 @@ class AutogenController extends Controller
 
         // $request = new Request();
         // $request->replace([
-        //     'kdgroup_ruangan' => 'ASK',
-        //     'kelas_ruangan' => 'PS',
+        //     'kdgroup_ruangan' => 'SKR',
+        //     'kelas_ruangan' => 'ISO',
         //     'hak_kelas'=> '3',
         // ]);
 
@@ -373,9 +373,22 @@ class AutogenController extends Controller
         // $table = 'permintaan_r';
         // return Schema::connection('farmasi')->getColumnListing($table);
 
-        $cek_tanggal = '2025-06-04' !== date('Y-m-d');
+    //     $cek_tanggal = '2025-06-04' !== date('Y-m-d');
 
-       return response()->json(['status' => $cek_tanggal]);
+    //    return response()->json(['status' => $cek_tanggal]);
+
+
+        $years = [];
+        $currentYear = date('Y');
+
+        for ($i = 0; $i < 5; $i++) {
+            $years[] = $currentYear - $i;
+        }
+
+        $data = DB::table('ikm')->select('tahun', 'jumlah')->whereIn('tahun', $years)->get();
+
+        return response()->json($data);
+
     }
 
     public static function cekTarip($spesialis, $request)
@@ -394,13 +407,13 @@ class AutogenController extends Controller
                     ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
                     ->first();
             } else {
-                $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+                $rsx = Rstigapuluhtarif::where('rs3', 'K5#')
                     ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
                     ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
                     ->first();
             }
 
-            // return $rsx;
+            return $rsx;
             //   return $rsx;
             if (!$rsx) {
                 $sarana = 0;
