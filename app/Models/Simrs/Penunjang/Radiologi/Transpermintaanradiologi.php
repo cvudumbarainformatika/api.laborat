@@ -11,7 +11,7 @@ use App\Traits\LogsActivity;
 
 class Transpermintaanradiologi extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
     protected $table = 'rs106';
     protected $guarded = ['id'];
     // public $timestamps = false;

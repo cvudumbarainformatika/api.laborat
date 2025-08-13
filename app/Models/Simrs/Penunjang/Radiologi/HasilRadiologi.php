@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class HasilRadiologi extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
     protected $table = 'rs151';
     protected $guarded = ['id'];
 

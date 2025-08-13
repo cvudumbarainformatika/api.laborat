@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class TransradiologiSementara extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
     protected $table = 'rs48_sem';
     protected $guarded = ['id'];
     public $timestamps = false;

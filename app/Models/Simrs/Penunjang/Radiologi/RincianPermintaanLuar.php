@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class RincianPermintaanLuar extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
     protected $table = 'rs271';
     protected $guarded = ['id'];
     public $timestamps = false;

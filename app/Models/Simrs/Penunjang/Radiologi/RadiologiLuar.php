@@ -8,7 +8,7 @@ use App\Traits\LogsActivity;
 
 class RadiologiLuar extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
     protected $table = 'rs270';
     protected $guarded = ['id'];
     public $timestamps = false;
