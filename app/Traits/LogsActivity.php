@@ -31,14 +31,14 @@ trait LogsActivity
             $changes = self::getModelChanges($event, $model);
             $source = self::getActionSource();
 
-            // UserActivity::create([
-            //     'user_id'     => auth()->user()->pegawai_id ?? null,
-            //     'action'      => class_basename($model) . ' ' . $event,
-            //     'description' => json_encode($changes, JSON_UNESCAPED_UNICODE),
-            //     'ip_address'  => request()?->ip(),
-            //     'user_agent'  => request()?->header('User-Agent'),
-            //     'source'      => $source ?? null,
-            // ]);
+            UserActivity::create([
+                'user_id'     => auth()->user()->pegawai_id ?? null,
+                'action'      => class_basename($model) . ' ' . $event,
+                'description' => json_encode($changes, JSON_UNESCAPED_UNICODE),
+                'ip_address'  => request()?->ip(),
+                'user_agent'  => request()?->header('User-Agent'),
+                'source'      => $source ?? null,
+            ]);
         } catch (\Throwable $e) {
             report($e); // Use Laravel's error reporting
             info('Failed to log user activity', [
