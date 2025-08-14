@@ -48,6 +48,7 @@ class RadiologiController extends Controller
       $data = Transpermintaanradiologi::query();
       $select = $data->select('rs106.rs1','rs106.rs2',
         'rs106.rs1 as noreg',
+        'rs106.cito as cito',
         // 'rs107.rs2 as norm',
         DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
         'rs106.rs3 as tgl_kunjungan',
