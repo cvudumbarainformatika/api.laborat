@@ -52,7 +52,7 @@ class AuthController extends Controller
         if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        
+
         return self::createNewToken($token);
     }
 
@@ -110,12 +110,12 @@ class AuthController extends Controller
                 Log::info('Cache miss - fetching fresh sistembayar data');
                 return Msistembayar::query()
                     ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
-                    ->where('hidden','!=','')
-                    ->where('rs1','!=','')
+                    ->where('hidden', '!=', '')
+                    ->where('rs1', '!=', '')
                     ->get();
             });
 
-            $pegawai = Petugas::select('id','kdpegsimrs','kdgroupnakes','aktif','statusspesialis')
+            $pegawai = Petugas::select('id', 'kdpegsimrs', 'kdgroupnakes', 'aktif', 'statusspesialis')
                 ->find($pegawaiId);
 
             $notifRkd = [
@@ -274,14 +274,14 @@ class AuthController extends Controller
     {
 
 
-        UserActivity::create([
-            'user_id' => auth()->user()->id ?? null,
-            'pegawai_id' => auth()->user()->pegawai_id ?? null,
-            'action' => 'Login',
-            'description' => 'User login',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->header('User-Agent'),
-        ]);
+        // UserActivity::create([
+        //     'user_id' => auth()->user()->id ?? null,
+        //     'pegawai_id' => auth()->user()->pegawai_id ?? null,
+        //     'action' => 'Login',
+        //     'description' => 'User login',
+        //     'ip_address' => request()->ip(),
+        //     'user_agent' => request()->header('User-Agent'),
+        // ]);
 
         auth()->logout();
         return response()->json(['message' => 'User sukses logout dari aplikasi']);
@@ -398,14 +398,14 @@ class AuthController extends Controller
         //     'akses' => $akses
         // ]);
 
-        UserActivity::create([
-            'user_id' => $user->id,
-            'pegawai_id' => $user->pegawai_id,
-            'action' => 'Login',
-            'description' => 'User login',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->header('User-Agent'),
-        ]);
+        // UserActivity::create([
+        //     'user_id' => $user->id,
+        //     'pegawai_id' => $user->pegawai_id,
+        //     'action' => 'Login',
+        //     'description' => 'User login',
+        //     'ip_address' => request()->ip(),
+        //     'user_agent' => request()->header('User-Agent'),
+        // ]);
 
         return response()->json([
             'token' => $token,
