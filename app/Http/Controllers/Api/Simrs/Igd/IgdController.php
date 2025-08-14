@@ -305,12 +305,12 @@ class IgdController extends Controller
                                     ->on('rs48.rs1', '=', 'rs151.rs1')
                                     ->on('rs48.rs4', '=', 'rs151.kode');
                             })
-                            ->select(
-                                'rs48.*',
-                                'rs151.hasil',
-                                'rs151.rs3 as kesimpulan',
-                                'rs151.rs4 as pelaksana'
-                            );
+                                ->select(
+                                    'rs48.*',
+                                    'rs151.hasil',
+                                    'rs151.rs3 as kesimpulan',
+                                    'rs151.rs4 as pelaksana'
+                                );
                         },
                         'rincians.relmasterpemeriksaan'
                     ])->orderBy('rs106.id', 'DESC');
@@ -369,21 +369,49 @@ class IgdController extends Controller
                         'tinjauanulangbps'
                     ])->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', 'peninjauan_ulang_igd.user');
                 },
-                'konsuldokterspesialis' => function ($konsuldokterspesialis) {
-                    $konsuldokterspesialis->with(
-                        [
-                            'tindakan' => function ($tindakans) {
-                                $tindakans->with(
-                                    [
-                                        'mastertindakan'
-                                    ]
-                                );
-                            },
-                            'nakesminta',
-                            'dokterkonsul'
-                        ]
-                    )->where('kdruang', 'POL014');
-                },
+                // *************************** versi ebelum resolve conflict
+                // 'konsuldokterspesialis' => function ($konsuldokterspesialis){
+                //     $konsuldokterspesialis->with(
+                //         [
+                //             'tindakan' => function($tindakans){
+                //                 $tindakans->with(
+                //                     [
+                //                         'ruangranap',
+                //                         'dokumentransfer'
+                //                     ]
+                //                 );
+                //             },
+                //             'planrujukan',
+                //             'planpulang' => function ($planpulang) {
+                //                 $planpulang->with(
+                //                     [
+                //                         'dokterpenangungjawabpulang' => function ($dokterpenangungjawabpulang) {
+                //                             $dokterpenangungjawabpulang->select('*')
+                //                                 ->leftjoin('m_golruang', 'm_golruang.kode_gol', 'pegawai.golruang')
+                //                                 ->leftjoin('m_jabatan', 'm_jabatan.kode_jabatan', 'pegawai.jabatan');
+                //                         }
+                //                     ]
+                //                 );
+                //             }
+                //         ]);
+                //     },
+
+                // *************************** versi setelah resolve conflict
+                // 'konsuldokterspesialis' => function ($konsuldokterspesialis) {
+                //     $konsuldokterspesialis->with(
+                //         [
+                //             'tindakan' => function ($tindakans) {
+                //                 $tindakans->with(
+                //                     [
+                //                         'mastertindakan'
+                //                     ]
+                //                 );
+                //             },
+                //             'nakesminta',
+                //             'dokterkonsul'
+                //         ]
+                //     )->where('kdruang', 'POL014');
+                // },
                 'skalatransfer',
                 'dokumenluar' => function ($neo) {
                     $neo->with(['pegawai:id,nama']);
