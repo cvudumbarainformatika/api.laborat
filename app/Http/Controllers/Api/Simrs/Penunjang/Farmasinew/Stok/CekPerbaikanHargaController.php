@@ -388,9 +388,9 @@ class CekPerbaikanHargaController extends Controller
                         $data = Mutasigudangkedepo::find($key['id']);
                         if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
                         $data->update(['harga' => $key['harga']]);
-                        if ($data->nobatch != $key['nobatch']) $data->update(['nobatch' => $key['nobatch']]);
-                        if ($data->tglexp != $key['tglexp']) $data->update(['tglexp' => $key['tglexp']]);
-                        if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
+                        // if ($data->nobatch != $key['nobatch']) $data->update(['nobatch' => $key['nobatch']]);
+                        // if ($data->tglexp != $key['tglexp']) $data->update(['tglexp' => $key['tglexp']]);
+                        // if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
                         $items[] = [
                             'data' => $data,
                             'penerimaan' => $key,

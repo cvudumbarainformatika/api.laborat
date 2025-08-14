@@ -511,7 +511,8 @@ class PenyesuaianController extends Controller
     {
         $gudangs = ['Gd-05010100', 'Gd-03010100'];
         // $now = date('Y-m');
-        $now = Carbon::now()->subMonth()->format('Y-m');
+        // $now = Carbon::now()->subMonth()->format('Y-m');
+        $now = Carbon::now()->format('Y-m');
         $koderuangan = request('kdruang');
         $kdobat = request('kdobat');
         $penerimaan = null;
