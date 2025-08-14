@@ -397,21 +397,21 @@ class IgdController extends Controller
                 //     },
 
                 // *************************** versi setelah resolve conflict
-                // 'konsuldokterspesialis' => function ($konsuldokterspesialis) {
-                //     $konsuldokterspesialis->with(
-                //         [
-                //             'tindakan' => function ($tindakans) {
-                //                 $tindakans->with(
-                //                     [
-                //                         'mastertindakan'
-                //                     ]
-                //                 );
-                //             },
-                //             'nakesminta',
-                //             'dokterkonsul'
-                //         ]
-                //     )->where('kdruang', 'POL014');
-                // },
+                'konsuldokterspesialis' => function ($konsuldokterspesialis) {
+                    $konsuldokterspesialis->with(
+                        [
+                            'tindakan' => function ($tindakans) {
+                                $tindakans->with(
+                                    [
+                                        'mastertindakan'
+                                    ]
+                                );
+                            },
+                            'nakesminta',
+                            'dokterkonsul'
+                        ]
+                    )->where('kdruang', 'POL014');
+                },
                 'skalatransfer',
                 'dokumenluar' => function ($neo) {
                     $neo->with(['pegawai:id,nama']);
