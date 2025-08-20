@@ -132,8 +132,9 @@ class RadiologiController extends Controller
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
                         $sts->where('rs106.rs9', '=','1');
+                    } else if ($status === 'Proses') {
+                        $sts->whereIn('rs106.rs9', ['2']);
                     } else {
-                        // $sts->where('rs106.rs9', '=', '');
                         $sts->whereIn('rs106.rs9', [null, '']);
                     }
                 } else {
