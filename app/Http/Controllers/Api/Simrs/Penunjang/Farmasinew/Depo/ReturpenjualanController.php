@@ -121,7 +121,7 @@ class ReturpenjualanController extends Controller
                 $tglx = Carbon::now()->format('Y-m-d 23:59:59');
                 $q->whereBetween('tgl_permintaan', [$tgl, $tglx]);
             })
-            ->when(request('flag'), function ($x) {
+            ->when(request('flag') && request('kddepo') != 'Gd-04010102', function ($x) {
                 $x->whereIn('flag', request('flag'));
             })
             ->when(count($noresep) > 0, function ($q) use ($noresep) {
@@ -132,7 +132,22 @@ class ReturpenjualanController extends Controller
                 function ($q) {
                     // rs 23 flagnya nya di rs 22 yang kosong atau null
                     $q->leftJoin('rs.rs23', 'rs.rs23.rs1', '=', 'farmasi.resep_keluar_h.noreg')
-                        ->whereNotIn('rs.rs23.rs22', ['3', '2']);
+                        ->whereNotIn('rs.rs23.rs22', ['3', '2'])
+                        ->where(function ($y) {
+                            $flag = request()->input('flag', []);
+                            if (in_array('3', $flag)) {
+                                $y->where(function ($z) {
+                                    $z->where('flag', '3')
+                                        ->whereNotNull('flag_permintaan_retur');
+                                });
+                            }
+                            if (in_array('4', $flag)) {
+                                $y->orWhere(function ($z) {
+                                    $z->where('flag', '4')
+                                        ->whereNull('flag_permintaan_retur');
+                                });
+                            }
+                        });
                 },
                 // rs 17 itu rs 19
                 // function ($q) {
@@ -286,83 +301,6 @@ class ReturpenjualanController extends Controller
             $rinci = [];
             $racik = [];
 
-            // if (sizeof($listObat)) {
-            //     foreach ($listObat as $key) {
-            //         if ($key['jumlah_retur'] > 0) {
-            //             $obats = Resepkeluarrinci::where('noreg', $request->noreg)
-            //                 ->where('noresep', $request->noresep)
-            //                 ->where('kdobat', $key['kdobat'])
-            //                 ->orderBy('id', 'DESC')
-            //                 ->get();
-
-            //             $jum = $key['jumlah_retur'];
-            //             $index = 0;
-
-
-            //             while ($jum > 0) {
-            //                 $ada = (int)$obats[$index]->jumlah;
-            //                 if ($ada < $jum) {
-            //                     $temp = [
-            //                         'noretur' => $noretur,
-            //                         'noreg' => $request->noreg,
-            //                         'noresep' => $request->noresep,
-            //                         'kdobat' => $key['kdobat'],
-            //                         'kandungan' => $key['mobat']['kandungan'] ?? '',
-            //                         'fornas' => $key['mobat']['status_generik'] ?? '',
-            //                         'forkit' => $key['mobat']['status_forkid'] ?? '',
-            //                         'generik' => $key['mobat']['status_fornas'] ?? '',
-            //                         'kode108' => $key['mobat']['kode108'],
-            //                         'uraian108' => $key['mobat']['uraian108'],
-            //                         'kode50' => $key['mobat']['kode50'],
-            //                         'uraian50' => $key['mobat']['uraian50'],
-            //                         'nopenerimaan' => $obats[$index]->nopenerimaan,
-            //                         'jumlah_keluar' => $ada,
-            //                         'jumlah_retur' => $ada,
-            //                         'harga_beli' => $key['harga_beli'],
-            //                         'hpp' => $key['hpp'],
-            //                         'harga_jual' => $key['harga_jual'],
-            //                         'nilai_r' => $key['nilai_r'],
-            //                         'user' => $user['kodesimrs'],
-            //                         'created_at' => date('Y-m-d H:i:s'),
-            //                         'updated_at' => date('Y-m-d H:i:s'),
-            //                     ];
-
-            //                     $sisa = $jum - $ada;
-            //                     $index += 1;
-            //                     $jum = $sisa;
-            //                     array_push($rinci, $temp);
-            //                 } else {
-            //                     $temp = [
-            //                         'noretur' => $noretur,
-            //                         'noreg' => $request->noreg,
-            //                         'noresep' => $request->noresep,
-            //                         'kdobat' => $key['kdobat'],
-            //                         'kandungan' => $key['mobat']['kandungan'] ?? '',
-            //                         'fornas' => $key['mobat']['status_generik'] ?? '',
-            //                         'forkit' => $key['mobat']['status_forkid'] ?? '',
-            //                         'generik' => $key['mobat']['status_fornas'] ?? '',
-            //                         'kode108' => $key['mobat']['kode108'],
-            //                         'uraian108' => $key['mobat']['uraian108'],
-            //                         'kode50' => $key['mobat']['kode50'],
-            //                         'uraian50' => $key['mobat']['uraian50'],
-            //                         'nopenerimaan' => $obats[$index]->nopenerimaan,
-            //                         'jumlah_keluar' => $ada,
-            //                         'jumlah_retur' => $jum,
-            //                         'harga_beli' => $key['harga_beli'],
-            //                         'hpp' => $key['hpp'],
-            //                         'harga_jual' => $key['harga_jual'],
-            //                         'nilai_r' => $key['nilai_r'],
-            //                         'user' => $user['kodesimrs'],
-            //                         'created_at' => date('Y-m-d H:i:s'),
-            //                         'updated_at' => date('Y-m-d H:i:s'),
-            //                     ];
-            //                     $jum = 0;
-            //                     array_push($rinci, $temp);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
 
             // kodingan baru
 
@@ -450,7 +388,10 @@ class ReturpenjualanController extends Controller
             }
             $permintaanHead = Resepkeluarheder::where('noresep', $request->noresep)->where('noreg', $request->noreg)->first();
             if ($permintaanHead) {
-                $permintaanHead->update(['flag' => '4']);
+                $permintaanHead->update([
+                    'flag_permintaan_retur' => null,
+                    'flag' => '4',
+                ]);
             }
 
             $simpanHeader->load('rinci');
@@ -533,5 +474,38 @@ class ReturpenjualanController extends Controller
                 'err' => $e
             ], 410);
         }
+    }
+
+    public function permintaanRetur(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            $pert = Resepkeluarheder::where('noresep', $request->noresep)->first();
+            if (!$pert) return new JsonResponse(['message' => 'Data Resep tidak ditemukan tidak bisa mebuat permintaan retur']);
+            $pert->update(['flag_permintaan_retur' => '1']);
+        }
+        $data->update(['flag_permintaan_retur' => '1']);
+
+        return new JsonResponse([
+            'message' => 'Permintaan Retur ke Depo sudah di kirimkan',
+            'data' => $data ?? null,
+            'req' => $request->all(),
+        ]);
+    }
+    public function selesaiPermintaanRetur(Request $request)
+    {
+        $data = Resepkeluarheder::find($request->id);
+        if (!$data) {
+            $pert = Resepkeluarheder::where('noresep', $request->noresep)->first();
+            if (!$pert) return new JsonResponse(['message' => 'Data Resep tidak ditemukan tidak bisa mebuat permintaan retur']);
+            $pert->update(['flag_permintaan_retur' => null]);
+        }
+        $data->update(['flag_permintaan_retur' => null]);
+
+        return new JsonResponse([
+            'message' => 'Permintaan Retur oleh ruangan sudah di selesaikan',
+            'data' => $data ?? null,
+            'req' => $request->all(),
+        ]);
     }
 }

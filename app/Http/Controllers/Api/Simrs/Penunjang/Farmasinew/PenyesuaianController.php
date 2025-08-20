@@ -255,7 +255,8 @@ class PenyesuaianController extends Controller
                         ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('retur_gudangs.kunci', '1')
                         ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo');
-                }
+                },
+                // pengembalian pinjaman
 
             ])
 
@@ -306,7 +307,7 @@ class PenyesuaianController extends Controller
 
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
-        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-01');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // return new JsonResponse([
         //     'tglAwal' => $tglAwal,
@@ -510,9 +511,9 @@ class PenyesuaianController extends Controller
     public function getTransaksi()
     {
         $gudangs = ['Gd-05010100', 'Gd-03010100'];
-        // $now = date('Y-m');
-        // $now = Carbon::now()->subMonth()->format('Y-m');
-        $now = Carbon::now()->format('Y-m');
+        $now = date('Y-m');
+        $now = Carbon::now()->subMonth()->format('Y-m');
+        // $now = Carbon::now()->format('Y-m');
         $koderuangan = request('kdruang');
         $kdobat = request('kdobat');
         $penerimaan = null;
