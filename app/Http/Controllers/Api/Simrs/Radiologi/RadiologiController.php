@@ -146,6 +146,9 @@ class RadiologiController extends Controller
                     ->orWhere('rs106.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien17.rs46', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('pasien17.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien17.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien23.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('pasien23.rs2', 'LIKE', '%' . request('q') . '%')
                     ;
             });
 

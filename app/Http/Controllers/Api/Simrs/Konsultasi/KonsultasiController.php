@@ -328,15 +328,65 @@ class KonsultasiController extends Controller
         $rs = null;
 
         if ($spesialis) {
-            $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
-                ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-                ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-                ->get();
+            // $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
+            //     ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+            //     ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+            //     ->get();
+
+
+
+            if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+                if (strtoupper($pegawai->statusspesialis === 'SPESIALIS')) {
+                  # code...
+                  $rs = Rstigapuluhtarif::where('rs3', 'K6#')
+                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                      ->first();
+              } else if (strtoupper($pegawai->statusspesialis === 'SUB SPESIALIS')) {
+                  $rs = Rstigapuluhtarif::where('rs3', 'K10#')
+                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                      ->first();
+              }
+            } else {
+                
+
+                if (strtoupper($pegawai->statusspesialis === 'SPESIALIS')) {
+                  # code...
+                  $rs = Rstigapuluhtarif::where('rs3', 'K5#')
+                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                      ->first();
+              } else if (strtoupper($pegawai->statusspesialis === 'SUB SPESIALIS')) {
+                  $rs = Rstigapuluhtarif::where('rs3', 'K11#')
+                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                      ->first();
+              }
+
+            }
+
+            
+
+
         } else {
-            $rs = Rstigapuluhtarif::where('rs3', 'K4#')->orWhere('rs3', 'K8#')
+
+            if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+
+                $rs = Rstigapuluhtarif::where('rs3', 'K8#')->orWhere('rs3', 'K8#')
                 ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
                 ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
                 ->get();
+
+            } else {
+
+                 $rs = Rstigapuluhtarif::where('rs3', 'K4#')->orWhere('rs3', 'K8#')
+                ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                ->get();
+            }
+
+           
         }
 
         // return $rs;
