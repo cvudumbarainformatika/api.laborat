@@ -133,21 +133,22 @@ class ReturpenjualanController extends Controller
                     // rs 23 flagnya nya di rs 22 yang kosong atau null
                     $q->leftJoin('rs.rs23', 'rs.rs23.rs1', '=', 'farmasi.resep_keluar_h.noreg')
                         ->whereNotIn('rs.rs23.rs22', ['3', '2'])
-                        ->where(function ($y) {
-                            $flag = request()->input('flag', []);
-                            if (in_array('3', $flag)) {
-                                $y->where(function ($z) {
-                                    $z->where('flag', '3')
-                                        ->whereNotNull('flag_permintaan_retur');
-                                });
-                            }
-                            if (in_array('4', $flag)) {
-                                $y->orWhere(function ($z) {
-                                    $z->where('flag', '4')
-                                        ->whereNull('flag_permintaan_retur');
-                                });
-                            }
-                        });
+                        // ->where(function ($y) {
+                        //     $flag = request()->input('flag', []);
+                        //     if (in_array('3', $flag)) {
+                        //         $y->where(function ($z) {
+                        //             $z->where('flag', '3')
+                        //                 ->whereNotNull('flag_permintaan_retur');
+                        //         });
+                        //     }
+                        //     if (in_array('4', $flag)) {
+                        //         $y->orWhere(function ($z) {
+                        //             $z->where('flag', '4')
+                        //                 ->whereNull('flag_permintaan_retur');
+                        //         });
+                        //     }
+                        // })
+                    ;
                 },
                 // rs 17 itu rs 19
                 // function ($q) {
