@@ -530,6 +530,9 @@ class RadiologiController extends Controller
             'rs9' => '1',
             'updateststgl' => date('Y-m-d H:i:s')
         ]);
+
+
+
         return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
     }
 }

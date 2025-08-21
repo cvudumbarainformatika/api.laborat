@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Radiologi;
 
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -27,6 +28,10 @@ class Transpermintaanradiologi extends Model
     public function rincians()
     {
         return  $this->hasMany(Transradiologi::class, 'rs2', 'rs2');
+    }
+    public function dokter()
+    {
+        return  $this->hasOne(Petugas::class, 'kdpegsimrs', 'rs8');
     }
     public function rinciansementara()
     {

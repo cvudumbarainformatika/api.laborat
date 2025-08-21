@@ -312,7 +312,9 @@ class IgdController extends Controller
                                     'rs151.rs4 as pelaksana'
                                 );
                         },
-                        'rincians.relmasterpemeriksaan'
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+
                     ])->orderBy('rs106.id', 'DESC');
                 },
                 'hasilradiologi' => function ($t) {
