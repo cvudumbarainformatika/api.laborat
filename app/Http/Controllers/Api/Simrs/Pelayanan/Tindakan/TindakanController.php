@@ -475,13 +475,16 @@ class TindakanController extends Controller
 
         $nota = $request->nota ?? $notatindakan;
 
-        $tindakan = Tindakan::where(['rs1' => $request->noreg, 'rs4' => $request->kdtindakan, 'rs2' => $nota])->first();
-        if (!$tindakan) {
-            $tindakan = new Tindakan();
-            $tindakan->rs5 = $request->jmltindakan ?? '';
-        } else {
-            $tindakan->rs5 = (int)$tindakan->rs5 + (int)$request->jmltindakan;
-        }
+        // $tindakan = Tindakan::where(['rs1' => $request->noreg, 'rs4' => $request->kdtindakan, 'rs2' => $nota])->first();
+        // if (!$tindakan) {
+        //     $tindakan = new Tindakan();
+        //     $tindakan->rs5 = $request->jmltindakan ?? '';
+        // } else {
+        //     $tindakan->rs5 = (int)$tindakan->rs5 + (int)$request->jmltindakan;
+        // }
+
+        $tindakan = new Tindakan();
+        $tindakan->rs5 = $request->jmltindakan ?? '';
 
         $tindakan->rs2 = $nota;
         $tindakan->rs1 = $request->noreg ?? '';
