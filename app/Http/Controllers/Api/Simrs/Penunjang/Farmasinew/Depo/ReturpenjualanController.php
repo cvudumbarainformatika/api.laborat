@@ -480,18 +480,23 @@ class ReturpenjualanController extends Controller
     public function permintaanRetur(Request $request)
     {
         $data = Resepkeluarheder::find($request->id);
+
         if (!$data) {
             $pert = Resepkeluarheder::where('noresep', $request->noresep)->first();
             if (!$pert) return new JsonResponse(['message' => 'Data Resep tidak ditemukan tidak bisa mebuat permintaan retur']);
             $pert->update(['flag_permintaan_retur' => '1']);
         }
-        $data->update(['flag_permintaan_retur' => '1']);
-
-        return new JsonResponse([
-            'message' => 'Permintaan Retur ke Depo sudah di kirimkan',
-            'data' => $data ?? null,
-            'req' => $request->all(),
-        ]);
+        $depos = ['Gd-02010104', 'Gd-04010102']; // igd dan ranap
+        if (in_array($data->depo, $depos)) {
+            $data->update(['flag_permintaan_retur' => '1']);
+            return new JsonResponse([
+                'message' => 'Permintaan Retur ke Depo sudah di kirimkan',
+                'data' => $data ?? null,
+                'req' => $request->all(),
+            ]);
+        } else {
+            return new JsonResponse(['message' => 'Permintaan Retur hanya untuk depo Rawat Inap dan IGD. Resep ini tidak dibuat di depo tersebut'], 410);
+        }
     }
     public function selesaiPermintaanRetur(Request $request)
     {
