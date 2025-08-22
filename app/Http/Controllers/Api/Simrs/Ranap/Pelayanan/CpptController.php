@@ -257,50 +257,98 @@ class CpptController extends Controller
       $pelayanan=0;
       $flag_biaya=null;
 
+
+        //  if ($spesialis) {
+        //     $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
+        //     $status  = strtoupper($user->statusspesialis);
+
+        //     if ($kelasIC) {
+        //         $kode = $status === 'SPESIALIS' ? 'V3#' : ($status === 'SUB SPESIALIS' ? 'V7#' : null);
+        //     } else {
+        //         $kode = $status === 'SPESIALIS' ? 'V2#' : ($status === 'SUB SPESIALIS' ? 'V4#' : null);
+        //     }
+
+        //     $rsx = $kode
+        //         ? Rstigapuluhtarif::where('rs3', $kode)
+        //             ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
+        //             ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
+        //             ->get()
+        //         : null;
+
+            
+        // } else {
+        //     $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
+        //     $kode    = $kelasIC ? ['V5#'] : ['V1#'];
+
+        //     $rsx = Rstigapuluhtarif::whereIn('rs3', $kode)
+        //         ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
+        //         ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
+        //         ->get();
+        // }
+
+
+
         if ($spesialis) {
           // "select * from rs30tarif where (rs3='V2#' or rs3='V3#'
           $rsx=null;
-          if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
-            // $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
-            // ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-            // ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-            // ->first();
+          // if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
+          //   // $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
+          //   // ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+          //   // ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+          //   // ->first();
 
-             if (strtoupper($user->statusspesialis === 'SPESIALIS')) {
-                  # code...
-                  $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
-                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-                      ->first();
-              } else if (strtoupper($user->statusspesialis === 'SUB SPESIALIS')) {
-                  $rsx = Rstigapuluhtarif::where('rs3', 'V7#')
-                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-                      ->first();
-              }
-
-
-          } else {
-            // $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
-            // ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
-            // ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
-            // ->first();
-
-            if (strtoupper($user->statusspesialis === 'SPESIALIS')) {
-                  # code...
-                  $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
-                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-                      ->first();
-              } else if (strtoupper($user->statusspesialis === 'SUB SPESIALIS')) {
-                  $rsx = Rstigapuluhtarif::where('rs3', 'V4#')
-                      ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-                      ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-                      ->first();
-              }
+          //    if (strtoupper($user->statusspesialis === 'SPESIALIS')) {
+          //         # code...
+          //         $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
+          //             ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+          //             ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+          //             ->first();
+          //     } else if (strtoupper($user->statusspesialis === 'SUB SPESIALIS')) {
+          //         $rsx = Rstigapuluhtarif::where('rs3', 'V7#')
+          //             ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+          //             ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+          //             ->first();
+          //     }
 
 
-          }
+          // } else {
+          //   // $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+          //   // ->where('rs4', 'like', '%|'.$request->kdgroup_ruangan.'|%')
+          //   // ->where('rs5', 'like', '%|'.$request->kelas_ruangan.'|%')
+          //   // ->first();
+
+          //   if (strtoupper($user->statusspesialis === 'SPESIALIS')) {
+          //         # code...
+          //         $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+          //             ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+          //             ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+          //             ->first();
+          //     } else if (strtoupper($user->statusspesialis === 'SUB SPESIALIS')) {
+          //         $rsx = Rstigapuluhtarif::where('rs3', 'V4#')
+          //             ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+          //             ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+          //             ->first();
+          //     }
+
+
+          // }
+
+
+          $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
+          $status  = strtoupper($user->statusspesialis);
+
+            if ($kelasIC) {
+                $kode = $status === 'SPESIALIS' ? 'V3#' : ($status === 'SUB SPESIALIS' ? 'V7#' : null);
+            } else {
+                $kode = $status === 'SPESIALIS' ? 'V2#' : ($status === 'SUB SPESIALIS' ? 'V4#' : null);
+            }
+
+            $rsx = $kode
+                ? Rstigapuluhtarif::where('rs3', $kode)
+                    ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
+                    ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
+                    ->get()
+                : null;
          
         
           //   return $rsx;
@@ -415,6 +463,10 @@ class CpptController extends Controller
               
           }
         }
+
+        
+
+       
 
         $tarif = (int) $sarana + (int) $pelayanan;
 
