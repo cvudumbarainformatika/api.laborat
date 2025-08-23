@@ -138,6 +138,7 @@ class CpptController extends Controller
     
     public function saveCppt(Request $request)
     {
+      
 
       $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=','1')->get();
 
@@ -148,6 +149,8 @@ class CpptController extends Controller
       $user = Pegawai::find(auth()->user()->pegawai_id);
       $kdpegsimrs = $user->kdpegsimrs;
       $nakes = $user->kdgroupnakes;
+
+      // return self::insertTarif($request,$user, $kdpegsimrs);
 
        $anamnesis = AnamnesisController::storeAnamnesis((object) $request->anamnesis);
       //  return $anamnesis;
@@ -219,8 +222,10 @@ class CpptController extends Controller
 
         // cek tarif
         $tarifVisite = self::cekTarip($spesialis, $request, $user);
+
+        // return $tarifVisite;
         if (!$tarifVisite) {
-          return new JsonResponse(['message' => 'Maaf Ada error Server .... harap menghubungi IT'], 500);
+          return new JsonResponse(['message' => 'Maaf Ada error Server .... Tarif Visite Belum Masuk'], 500);
         }
 
         // cek apakah sudah ada billing
@@ -256,6 +261,12 @@ class CpptController extends Controller
       $sarana=0;
       $pelayanan=0;
       $flag_biaya=null;
+
+
+      // return [
+      //   'spesialis' => $spesialis,
+      //   'user' => $user,
+      // ];
 
 
         //  if ($spesialis) {
@@ -347,11 +358,11 @@ class CpptController extends Controller
                 ? Rstigapuluhtarif::where('rs3', $kode)
                     ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
                     ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
-                    ->get()
+                    ->first()
                 : null;
          
         
-          //   return $rsx;
+            // return $rsx;
           if (!$rsx) {
             $sarana=0;
             $pelayanan=0;
