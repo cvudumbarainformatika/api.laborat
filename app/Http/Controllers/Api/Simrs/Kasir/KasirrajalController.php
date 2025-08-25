@@ -281,28 +281,38 @@ class KasirrajalController extends Controller
 
     public function pembayaran(Request $request)
     {
-        if($request->carabayar === 'Tunai'){
-            if($request->jenislayanan === 'karcis'){
-                DB::select('call karcisrj(@nomor)');
-                $x = DB::table('rs1')->select('karcisrj')->get();
-                $wew = $x[0]->karcisrj;
-                $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
 
-                $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
-                if ($simpankarcis == 5000) {
-                    return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
+        if($request->carabayar === 'Tunai'){
+
+            if($request->jenislayanan === 'karcis'){
+                try{
+                   DB::beginTransaction();
+                        DB::select('call karcisrj(@nomor)');
+                        $x = DB::table('rs1')->select('karcisrj')->get();
+                        $wew = $x[0]->karcisrj;
+                        $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+
+                        $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
+                        if ($simpankarcis == 5000) {
+                            return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
+                        }
+                        if ($simpankarcis == 500) {
+                            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+                        }
+                        $data = BillingbynoregController::billbynoregrajal($request->noreg);
+
+                    DB::commit();
+                        return new JsonResponse(
+                            [
+                                'message' => 'Data Berhasil Disimpan',
+                                'result' => $data
+                            ],
+                            200
+                        );
+                }catch(\Exception $th){
+                    DB::rollBack();
+                    return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
                 }
-                if ($simpankarcis == 500) {
-                    return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-                }
-                $data = BillingbynoregController::billbynoregrajal($request->noreg);
-                return new JsonResponse(
-                    [
-                        'message' => 'Data Berhasil Disimpan',
-                        'result' => $data
-                    ],
-                    200
-                );
             }
         }else if($request->carabayar === 'qris'){
             if($request->jenislayanan === 'karcis'){
