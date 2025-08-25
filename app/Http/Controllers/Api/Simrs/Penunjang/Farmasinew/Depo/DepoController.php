@@ -471,7 +471,7 @@ class DepoController extends Controller
                     $total = (float)$wew->jumlah + (float)$stoknya->jumlah;
                     $stoknya->update([
                         'jumlah' => $total,
-                        'harga' => $wew->harga,
+                        // 'harga' => $wew->harga,
                         // 'tglexp' => $wew->tglexp,
                         // 'tglpenerimaan' => $wew->tglpenerimaan,
                     ]);

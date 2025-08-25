@@ -24,6 +24,37 @@ class ScanQrController extends Controller
     public function data(Request $request)
     {
         $temp = explode('#', $request->qr);
+
+        $shift_malams = ['5','17','26'];
+
+        if (!in_array((string)$request->kategory_id, $shift_malams)) {
+            // jalankan kode jika kategory_id tidak ada dalam array $shift_malams
+            if ($request->tanggal !== date('Y-m-d')) {
+                return new JsonResponse([
+                    'message' => 'Tanggal di Hp Anda Bukan Hari ini !',
+                    'req' => $request->all()
+                ], 406);
+            }
+        } else { // jika dia shift malam
+            $absenMasuk = $request->status === 'masuk';
+            if ($absenMasuk) {
+                if ($request->tanggal !== date('Y-m-d')) {
+                    return new JsonResponse([
+                        'message' => 'Tanggal di Hp Anda Bukan Hari ini !',
+                        'req' => $request->all()
+                    ], 406);
+                }
+            }
+        }
+
+        // if ($request->tanggal !== date('Y-m-d')) {
+
+        //     return new JsonResponse([
+        //         'message' => 'Tanggal di Hp Anda Bukan Hari ini !',
+        //         'req' => $request->all()
+        //     ], 406);
+        // }
+
         $validator = Validator::make($request->all(), [
             'lokasi' => 'required',
         ]);
@@ -38,6 +69,8 @@ class ScanQrController extends Controller
                 'req' => $request->all()
             ], 406);
         }
+
+        
 
 
         $data = Qrcode::where('ip', $temp[0])->first();

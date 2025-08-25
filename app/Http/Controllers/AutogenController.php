@@ -14,6 +14,7 @@ use App\Models\TransaksiLaborat;
 use App\Models\Simrs\Master\Mkamar;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Counter;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -46,6 +47,12 @@ class AutogenController extends Controller
     public function pass()
     {
         echo bcrypt('123456789');
+    }
+    public function testModel()
+    {
+        // 29870.10
+        Stokreal::find(1)->update(['harga' => 29870]);
+        return 'wew';
     }
 
     public function tindakanId()
@@ -352,22 +359,52 @@ class AutogenController extends Controller
         //     'f' => $f
         // ];
 
-        // $request = new Request();
-        // $request->replace([
-        //     'kdgroup_ruangan' => 'ASK',
-        //     'kelas_ruangan' => 'PS',
-        //     'hak_kelas'=> '3',
-        // ]);
+    //    echo 'coba';
 
-        // $spesialis = true;
+        $coba = 'SUB SPESIALIS';
 
-        // return self::cekTarip($spesialis, $request);
-        // echo "PERCOBAAN DEPLOY SWOOLE";
-        $table = 'permintaan_r';
-        return Schema::connection('farmasi')->getColumnListing($table);
+        $user = new Request();
+
+        $request = new Request();
+
+        $user->merge([
+            'statusspesialis' => $coba
+        ]);
+
+        $request->merge([
+            'statusspesialis' => $coba,
+            'kelas_ruangan' => 'ICC',
+            'kdgroup_ruangan' => 'IC',
+        ]);
+
+        $spesialis = ($coba === 'SPESIALIS' || $coba === 'SUB SPESIALIS');
+
+        // echo $spesialis;
+
+        return self::cekTarip($spesialis, $request, $user);
+    //     echo "PERCOBAAN DEPLOY SWOOLE";
+    //     $table = 'permintaan_r';
+    //     return Schema::connection('farmasi')->getColumnListing($table);
+
+    //     $cek_tanggal = '2025-06-04' !== date('Y-m-d');
+
+    //    return response()->json(['status' => $cek_tanggal]);
+
+
+        // $years = [];
+        // $currentYear = date('Y');
+
+        // for ($i = 0; $i < 5; $i++) {
+        //     $years[] = $currentYear - $i;
+        // }
+
+        // $data = DB::table('ikm')->select('tahun', 'jumlah')->whereIn('tahun', $years)->get();
+
+        // return response()->json($data);
+
     }
 
-    public static function cekTarip($spesialis, $request)
+    public static function cekTarip($spesialis, $request, $user)
     {
 
         $sarana = 0;
@@ -378,12 +415,22 @@ class AutogenController extends Controller
             // "select * from rs30tarif where (rs3='V2#' or rs3='V3#'
             $rsx = null;
             if ($request->kelas_ruangan === "IC" || $request->kelas_ruangan === "ICC" || $request->kelas_ruangan === "NICU") {
-                $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
-                    ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-                    ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-                    ->first();
+
+                // ini jika spesialis biasa
+                if (strtoupper($user->statusspesialis === 'SPESIALIS')) {
+                    # code...
+                    $rsx = Rstigapuluhtarif::where('rs3', 'V3#')
+                        ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                        ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                        ->first();
+                } else if (strtoupper($user->statusspesialis === 'SUB SPESIALIS')) {
+                    $rsx = Rstigapuluhtarif::where('rs3', 'V7#')
+                        ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
+                        ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
+                        ->first();
+                }
             } else {
-                $rsx = Rstigapuluhtarif::where('rs3', 'V2#')
+                $rsx = Rstigapuluhtarif::where('rs3', 'K5#')
                     ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
                     ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
                     ->first();
@@ -3528,5 +3575,35 @@ class AutogenController extends Controller
         $flag = 'Baru';
         $getkarcis = FormatingHelper::getKarcisPoli($kd_poli, $flag);
         return new JsonResponse($getkarcis);
+    }
+
+    public function cekSep()
+    {
+        $sep = request('sep');
+        $tgl = DateHelper::getDateTime();
+        $a = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
+
+        $sukses = $a['metadata']['code'] == '200' ? true : false;
+        // return $a['result'];
+
+        if ($sukses) {
+            $result = $a['result'];
+
+            $simpan = Seprajal::firstOrCreate(
+            [
+                'rs8' => $result->noSep,
+            ],
+            [
+                'rs2' => $result->peserta->noMr,
+                'rs3' => $result->poli,
+                'rs6' => date('Y-m-d H:i:s'),
+                'rs7' => $result->diagnosa,
+                'rs13' => $result->peserta->noKartu,
+            ]
+            );
+            return $simpan;
+        }
+
+        return $a;
     }
 }

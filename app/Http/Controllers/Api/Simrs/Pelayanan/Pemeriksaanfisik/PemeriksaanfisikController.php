@@ -143,16 +143,16 @@ class PemeriksaanfisikController extends Controller
                     'rs1' => $noreg,
                     'rs2' => $norm,
                     'rs3' => date('Y-m-d H:i:s'),
-                    'rs4' => $value['vodawal'] ?? '',
-                    'rs5' => $value['vodrefraksi'] ?? '',
-                    'rs6' => $value['vodakhir'] ?? '',
-                    'rs7' => $value['vosawal'] ?? '',
-                    'rs8' => $value['vosrefraksi'] ?? '',
-                    'rs9' => $value['vosakhir'] ?? '',
-                    'rs10' => $value['tod'] ?? '',
-                    'rs11' => $value['tos'] ?? '',
-                    'rs12' => $value['fondosod'] ?? '',
-                    'rs13' => $value['fondosos'] ?? '',
+                    'rs4' => $value['vodawal'] ?? $value['rs4'] ?? '',
+                    'rs5' => $value['vodrefraksi'] ?? $value['rs5'] ?? '',
+                    'rs6' => $value['vodakhir'] ?? $value['rs6'] ?? '',
+                    'rs7' => $value['vosawal'] ?? $value['rs7'] ??'',
+                    'rs8' => $value['vosrefraksi'] ?? $value['rs8'] ??'',
+                    'rs9' => $value['vosakhir'] ?? $value['rs9'] ?? '',
+                    'rs10' => $value['tod'] ?? $value['rs10'] ?? '',
+                    'rs11' => $value['tos'] ?? $value['rs11'] ?? '',
+                    'rs12' => $value['fondosod'] ?? $value['rs12'] ?? '',
+                    'rs13' => $value['fondosos'] ?? $value['rs13'] ?? '',
                     'user' => $kdpegsimrs
                 ];
                 // if (!empty($value['id'])) {
@@ -164,6 +164,8 @@ class PemeriksaanfisikController extends Controller
                 // }
                 $matas[] = $mata;
             }
+
+            // return $matas;
 
 
             $idpemeriksaan = $simpanperiksaan->id;

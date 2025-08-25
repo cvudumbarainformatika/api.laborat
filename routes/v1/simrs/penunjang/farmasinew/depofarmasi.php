@@ -92,6 +92,9 @@ Route::group([
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
     Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
+    /// --- ini permintaan retur dari ruangan -----
+    Route::post('/kirim-permintaan-retur', [ReturpenjualanController::class, 'permintaanRetur']);
+    Route::post('/selesai-permintaan-retur', [ReturpenjualanController::class, 'selesaiPermintaanRetur']);
 
     // ------- Mutasi Antar Depo ----------
     Route::get('/list-mutasi', [DepoController::class, 'listMutasi']);

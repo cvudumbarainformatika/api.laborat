@@ -110,6 +110,10 @@ class KunjunganPoli extends Model
     {
         return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpeg');
     }
+    public function pegsimhd()
+    {
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'kdpeg');
+    }
     public function manymemo()
     {
         return $this->hasMany(Memodiagnosadokter::class, 'noreg', 'rs1');
@@ -619,7 +623,7 @@ class KunjunganPoli extends Model
         return $this->hasMany(JawabanKonsulPoli::class,  'noreg_lama', 'rs1');
     }
 
-     public function suratketerangandokter()
+    public function suratketerangandokter()
     {
         return $this->hasMany(SuratKeteranganDokter::class, 'noreg', 'rs1');
     }

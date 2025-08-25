@@ -6,12 +6,13 @@ use App\Models\Sigarang\Gudang;
 use App\Models\Sigarang\Ruang;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaandepoheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Mutasigudangkedepo extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'mutasi_gudangdepo';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';

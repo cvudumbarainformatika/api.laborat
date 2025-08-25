@@ -11,7 +11,12 @@ class PerusahaanController extends Controller
 {
     public function index()
     {
-        $data = Perusahaan::all();
+        // $data = Perusahaan::all();
+
+        $data = cache()->remember('perusahaan', now()->addHours(8), function ()  {
+            return Perusahaan::all();
+        });
+
         return new JsonResponse($data);
     }
 }

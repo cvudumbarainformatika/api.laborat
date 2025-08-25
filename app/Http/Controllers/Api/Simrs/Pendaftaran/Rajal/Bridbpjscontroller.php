@@ -422,6 +422,14 @@ class Bridbpjscontroller extends Controller
                 'ins' => $sepsimrs
             ], 410);
         }
+        // cek jika sep sudah pernah ada
+        $ada = Seprajal::where('rs8', $sep)->where('rs2', $request->norm)->first();
+        if ($ada) {
+            return new JsonResponse([
+                'message' => 'nomor Sep ' . $sep . ' sudah ada di database',
+                'data' => $ada
+            ], 410);
+        }
         $infoSep = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $sep);
         $dataInfo = $infoSep['result'];
         // return new JsonResponse(['message' => $dataInfo]);

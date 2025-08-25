@@ -292,17 +292,30 @@ class IgdController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'laboratold' => function ($t) {
-                    $t->select('rs51.*', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket')->with(
-                        [
-                            'pemeriksaanlab',
-                            'interpretasi'
-                        ]
-                    )
+                    $t->select('rs51.*', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket')->with('pemeriksaanlab')
                         ->leftjoin('rs49', 'rs49.rs1', 'rs51.rs4')
                         ->orderBy('id', 'DESC')->where('rs51.rs23', 'POL014');
                 },
                 'radiologi' => function ($t) {
                     $t->where('rs10', 'POL014')->orderBy('id', 'DESC');
+                    $t->with([
+                        'rincians' => function ($r) {
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
+                            })
+                                ->select(
+                                    'rs48.*',
+                                    'rs151.hasil',
+                                    'rs151.rs3 as kesimpulan',
+                                    'rs151.rs4 as pelaksana'
+                                );
+                        },
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+
+                    ])->orderBy('rs106.id', 'DESC');
                 },
                 'hasilradiologi' => function ($t) {
                     $t->orderBy('id', 'DESC');
@@ -358,6 +371,7 @@ class IgdController extends Controller
                         'tinjauanulangbps'
                     ])->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', 'peninjauan_ulang_igd.user');
                 },
+                // *************************** versi ebelum resolve conflict
                 // 'konsuldokterspesialis' => function ($konsuldokterspesialis){
                 //     $konsuldokterspesialis->with(
                 //         [
@@ -383,90 +397,8 @@ class IgdController extends Controller
                 //             }
                 //         ]);
                 //     },
-                'ambulan' => function ($ambulan) {
-                    $ambulan->with(
-                        [
-                            'tujuan',
-                            'perawat',
-                            'perawat2'
-                        ]
-                    )->where('rs5', 'POL014');
-                },
-                'ambulantrans' => function ($ambulantrans) {
-                    $ambulantrans->with(
-                        [
-                            'tujuan',
-                            'perawat',
-                            'perawat2'
-                        ]
-                    )->where('rs20', 'POL014');
-                },
-                'laborats' => function ($t) {
-                    $t->with('details.pemeriksaanlab')->where('unit_pengirim', 'POL014')
-                        ->orderBy('id', 'DESC');
-                },
-                'laboratold' => function ($t) {
-                    $t->select('rs51.*', 'rs49.rs2 as pemeriksaan', 'rs49.rs21 as paket')->with('pemeriksaanlab')
-                        ->leftjoin('rs49', 'rs49.rs1', 'rs51.rs4')
-                        ->orderBy('id', 'DESC')->where('rs51.rs23', 'POL014');
-                },
-                'radiologi' => function ($t) {
-                    $t->where('rs10', 'POL014')->orderBy('id', 'DESC');
-                },
-                'hasilradiologi' => function ($t) {
-                    $t->orderBy('id', 'DESC');
-                },
-                'penunjanglain' => function ($t) {
-                    $t->with('masterpenunjang')->orderBy('id', 'DESC');
-                },
-                'tindakan' => function ($t) {
-                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'mpoli:rs1,rs2')
-                        ->orderBy('id', 'DESC')->where('rs22', 'POL014');
-                },
-                'diagnosa' => function ($d) {
-                    $d->with('masterdiagnosa')->where('rs13', 'POL014');
-                },
-                'pemeriksaanfisik' => function ($a) {
-                    $a->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
-                        ->orderBy('id', 'DESC');
-                },
-                'ok' => function ($q) {
-                    $q->where('rs10', 'POL014')->orderBy('id', 'DESC');
-                },
-                'oktrans' => function ($o) {
-                    $o->with('mastertindakanoperasi')->where('rs15', 'POL014')->orderBy('id', 'DESC');
-                },
-                'diagnosakeperawatan' => function ($d) {
-                    $d->with('petugas:id,nama,satset_uuid', 'intervensi.masterintervensi');
-                },
-                'diagnosakebidanan' => function ($diag) {
-                    $diag->with('intervensi.masterintervensi');
-                },
-                'pemeriksaanfisikpsikologidll' => function ($pemeriksaanfisikpsikologidll) {
-                    $pemeriksaanfisikpsikologidll->select('rs253.*', 'kepegx.pegawai.kdpegsimrs', 'kepegx.pegawai.nama')->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs253.user')
-                        ->with('pemerisaanpsikologidll', 'datasimpeg')->where('kdruang', 'POL014');
-                },
-                'newapotekrajal' => function ($newapotekrajal) {
-                    $newapotekrajal->with([
-                        'permintaanresep.mobat:kd_obat,nama_obat',
-                        'permintaanracikan.mobat:kd_obat,nama_obat',
-                        'rincian.mobat:kd_obat,nama_obat',
-                        'rincianracik.mobat:kd_obat,nama_obat'
-                    ])->where('ruangan', 'POL014')
-                        ->orderBy('id', 'DESC');
-                },
-                'newapotekrajalretur' => function ($newapotekrajalretur) {
-                    $newapotekrajalretur->with([
-                        'rinci.mobatnew:kd_obat,nama_obat',
-                    ])->where('kdruangan', 'POL014')
-                        ->orderBy('id', 'DESC');
-                },
-                'tinjauanulang' => function ($tinjauanulang) {
-                    $tinjauanulang->select('peninjauan_ulang_igd.*', 'kepegx.pegawai.nama')->with([
-                        'tinjauanulangnips',
-                        'tinjauanulangbps'
-                    ])->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', 'peninjauan_ulang_igd.user');
-                },
+
+                // *************************** versi setelah resolve conflict
                 'konsuldokterspesialis' => function ($konsuldokterspesialis) {
                     $konsuldokterspesialis->with(
                         [

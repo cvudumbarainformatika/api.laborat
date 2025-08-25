@@ -305,12 +305,12 @@ class CekPerbaikanHargaController extends Controller
                 ->where('tgl_selesai', 'LIKE', '%' . $now . '%')
                 ->whereIn('flag', ['3', '4'])
                 ->pluck('noresep');
-            $data['resep'] = Resepkeluarrinci::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli as harga', 'nopenerimaan')
+            $data['resep'] = Resepkeluarrinci::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli as harga', 'nopenerimaan', 'nobatch')
                 ->whereIn('noresep', $haResep)
                 ->whereIn('kdobat', $data['kode'])
                 ->where('jumlah', '>', 0)
                 ->get();
-            $data['racikan'] = Resepkeluarrinciracikan::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli as harga', 'nopenerimaan')
+            $data['racikan'] = Resepkeluarrinciracikan::select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli as harga', 'nopenerimaan', 'nobatch')
                 ->whereIn('noresep', $haResep)
                 ->whereIn('kdobat', $data['kode'])
                 ->where('jumlah', '>', 0)
@@ -321,12 +321,12 @@ class CekPerbaikanHargaController extends Controller
                 ->where('resep_keluar_h.depo', $request->kdruang)
                 ->where('retur_penjualan_h.tgl_retur', 'LIKE', '%' . $now . '%')
                 ->pluck('retur_penjualan_h.noretur');
-            $data['retur'] = Returpenjualan_r::select('id', 'noresep', 'noretur', 'kdobat', 'jumlah_retur as jumlah', 'harga_beli as harga', 'nopenerimaan')
+            $data['retur'] = Returpenjualan_r::select('id', 'noresep', 'noretur', 'kdobat', 'jumlah_retur as jumlah', 'harga_beli as harga', 'nopenerimaan', 'nobatch')
                 ->whereIn('noretur', $heRet)
                 ->whereIn('kdobat', $data['kode'])
                 ->with([
                     'resep' => function ($q) use ($data) {
-                        $q->select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan')
+                        $q->select('id', 'noresep', 'kdobat', 'jumlah', 'harga_beli', 'nopenerimaan', 'nobatch')
                             ->whereIn('kdobat', $data['kode']);
                     }
                 ])
@@ -388,9 +388,9 @@ class CekPerbaikanHargaController extends Controller
                         $data = Mutasigudangkedepo::find($key['id']);
                         if (!$data) throw new \Exception('Data Stok Tidak Ditemukan', 410);
                         $data->update(['harga' => $key['harga']]);
-                        if ($data->nobatch != $key['nobatch']) $data->update(['nobatch' => $key['nobatch']]);
-                        if ($data->tglexp != $key['tglexp']) $data->update(['tglexp' => $key['tglexp']]);
-                        if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
+                        // if ($data->nobatch != $key['nobatch']) $data->update(['nobatch' => $key['nobatch']]);
+                        // if ($data->tglexp != $key['tglexp']) $data->update(['tglexp' => $key['tglexp']]);
+                        // if ($data->tglpenerimaan != $key['tglpenerimaan']) $data->update(['tglpenerimaan' => $key['tglpenerimaan']]);
                         $items[] = [
                             'data' => $data,
                             'penerimaan' => $key,

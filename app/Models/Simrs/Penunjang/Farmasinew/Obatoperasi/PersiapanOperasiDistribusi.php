@@ -5,12 +5,14 @@ namespace App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PersiapanOperasiDistribusi extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
 

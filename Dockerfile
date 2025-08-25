@@ -1,45 +1,21 @@
-FROM php:8.3-fpm
+FROM bitnami/php-fpm:8.3-debian-12
 
-# Gunakan user host machine
+# Install supervisor
 ARG user=laravel
 ARG uid=1000
 ARG gid=1000
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    supervisor \
-    libbrotli-dev \
-    pkg-config \
-    # Tambahkan dependencies untuk GD (baru tgl 22 april 2025)
-    libjpeg-dev \
-    libfreetype6-dev \
-    libwebp-dev
+RUN install_packages \
+  git curl unzip zip supervisor \
+  libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+  libxml2-dev libzip-dev pkg-config libbrotli-dev \
+  autoconf make gcc g++ build-essential
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Enable needed PHP extensions (gd already precompiled, others can be enabled)
+RUN php -m | grep -q redis || \
+    (pecl install redis && echo "extension=redis.so" > /opt/bitnami/php/etc/conf.d/redis.ini)
 
-# Install PHP extensions
-# RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) gd pdo_mysql mbstring exif pcntl bcmath zip
-
-# Install Redis Extension
-RUN pecl install redis \
-    && docker-php-ext-enable redis
-
-# Install Swoole (dengan opsi yang lebih sederhana)
-RUN pecl install swoole \
-    && docker-php-ext-enable swoole
-
-# Get latest Composer
+# Copy Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Create system user

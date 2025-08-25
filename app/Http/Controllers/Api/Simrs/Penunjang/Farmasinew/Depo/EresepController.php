@@ -1888,8 +1888,8 @@ class EresepController extends Controller
         $pembatasan = null;
         $pembatasanRi = null;
         if ($request->depo === 'Gd-04010102' && $groupSistembayar === 1) {
-            $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header);
-            $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header);
+            $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header, 'nr');
+            $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header, 'rac');
             $msg = 'Pembatasan sudah di cek';
         }
         // cek jumlah sisa obat rajal
@@ -1938,8 +1938,8 @@ class EresepController extends Controller
             // cek pembatasan fornas ranap
             $groupSistembayar = (int)$request->sistembayar['groups'];
             if ($request->depo === 'Gd-04010102' && $groupSistembayar === 1) {
-                $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header);
-                $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header);
+                $pembatasan = self::cekPembatasanObatRanap($permintaanFinal, $request, $header, 'nr');
+                $pembatasanRi = self::cekPembatasanObatRanap($permintaanRacikanFinal, $request, $header, 'rac');
                 if (collect($pembatasan['obatDibatasi'])->isNotEmpty() || collect($pembatasanRi['obatDibatasi'])->isNotEmpty()) {
                     throw new Exception('ada Pembatasan Obat Ranap, silahkan di cek kembali');
                 }
@@ -2001,8 +2001,9 @@ class EresepController extends Controller
                             $key['created_at'] = date('Y-m-d H:i:s');
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
-                            $stok = Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => 0]);
+                            // $stok = Stokreal::where('id', $caristok[$index]->id)
+                            //     ->update(['jumlah' => 0]);
+                            $this->updateStok($caristok[$index]->id, 0);
 
                             $masuk = $sisax;
                             $index = $index + 1;
@@ -2021,8 +2022,9 @@ class EresepController extends Controller
                             $key['created_at'] = date('Y-m-d H:i:s');
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
-                            $stok = Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => $sisax]);
+                            // $stok = Stokreal::where('id', $caristok[$index]->id)
+                            //     ->update(['jumlah' => $sisax]);
+                            $this->updateStok($caristok[$index]->id, $sisax);
                             $masuk = 0;
                         }
                         $key['user'] = auth()->user()->pegawai_id;
@@ -2097,8 +2099,9 @@ class EresepController extends Controller
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
 
-                            Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => 0]);
+                            // Stokreal::where('id', $caristok[$index]->id)
+                            //     ->update(['jumlah' => 0]);
+                            $this->updateStok($caristok[$index]->id, 0);
 
                             $masuk = $sisax;
                             $index = $index + 1;
@@ -2118,8 +2121,10 @@ class EresepController extends Controller
                             $key['created_at'] = date('Y-m-d H:i:s');
                             $key['updated_at'] = date('Y-m-d H:i:s');
 
-                            Stokreal::where('id', $caristok[$index]->id)
-                                ->update(['jumlah' => $sisax]);
+                            // Stokreal::where('id', $caristok[$index]->id)
+                            // ->update(['jumlah' => $sisax]);
+                            $this->updateStok($caristok[$index]->id, $sisax);
+
 
                             $masuk = 0;
                         }
@@ -2202,7 +2207,12 @@ class EresepController extends Controller
             ], 410);
         }
     }
-    public static function cekPembatasanObatRanap($rincian, $request, $header)
+    private function updateStok($id, $sisa)
+    {
+        $stok = Stokreal::find($id);
+        $stok->update(['jumlah' => $sisa]);
+    }
+    public static function cekPembatasanObatRanap($rincian, $request, $header, $tipe)
     {
         $headerResep = $header;
         $obat = collect($rincian)->pluck('kdobat')->toArray();
@@ -2244,7 +2254,7 @@ class EresepController extends Controller
                 $hasil = [];
                 foreach ($obatDibatasi as $key) {
                     $obatnya = collect($rincian)->where('kdobat', $key->kd_obat)->first();
-                    $jumlah = (float)$obatnya['jumlah'] ?? (float)$obatnya['jumlahobat'];
+                    $jumlah = (($tipe == 'rac') ? (float)$obatnya['jumlahobat'] : (float)$obatnya['jumlah']);
                     $jumlahPembatasan = (int)$key->jumlah;
                     $rincianKeluar = $rincianObatKeluar->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
                     $rincianKeluarRac = $rincianObatKeluarRac->where('kdobat', $key->kd_obat)->sum('jumlah') ?? 0;
@@ -3957,6 +3967,14 @@ class EresepController extends Controller
     {
         // return new JsonResponse($request->all(), 410);
         $data = Resepkeluarheder::find($request->id);
+        $rincian = Resepkeluarrinci::where('noresep', $request->noresep)->get();
+        $rincianRacik = Resepkeluarrinciracikan::where('noresep', $request->noresep)->get();
+        if (sizeof($rincian) > 0 || sizeof($rincianRacik) > 0) {
+            return new JsonResponse([
+                'message' => 'Resep tidak boleh ditolak karena sudah ada obat keluar',
+            ], 410);
+        }
+
         if (!$data) {
             $data2 = Resepkeluarheder::where($request->noresep)->first();
             if (!$data2) {
@@ -3972,13 +3990,6 @@ class EresepController extends Controller
                 'message' => 'Resep sudah ditolak',
                 'data' => $data2
             ]);
-        }
-        $rincian = Resepkeluarrinci::where('noresep', $request->noresep)->get();
-        $rincianRacik = Resepkeluarrinciracikan::where('noresep', $request->noresep)->get();
-        if (sizeof($rincian) > 0 || sizeof($rincianRacik) > 0) {
-            return new JsonResponse([
-                'message' => 'Resep tidak boleh ditolak karena sudah ada obat keluar',
-            ], 410);
         }
         $data->flag = '5';
         $data->alasan = $request->alasan ?? null;

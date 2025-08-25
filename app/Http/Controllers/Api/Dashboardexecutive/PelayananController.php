@@ -156,11 +156,7 @@ class PelayananController extends Controller
         ->get();
 
         $poli_tahun = DB::table('rs17')
-<<<<<<< HEAD
             // ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
-=======
-            ->join('rs141', 'rs17.rs1', '=', 'rs141.rs1')
->>>>>>> 6d5d152056bdce03eac776647153d8ebfffbccaa
             ->join('rs19', 'rs17.rs8', '=', 'rs19.rs1')
             ->selectRaw('count(rs17.rs1) as jumlah, MONTH(rs17.rs3) month')
             //->whereNotIn('rs17.rs8', ['POL014', 'POL005', 'POL025'])

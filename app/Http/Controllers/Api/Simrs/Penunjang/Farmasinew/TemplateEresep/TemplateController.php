@@ -247,6 +247,38 @@ class TemplateController extends Controller
 
     public function order(Request $request)
     {
+        /**
+         * cek kesesuaian obat dengan sistem bayar pasien
+         */
+        if ((int)$request->groupsistembayar == 1) {
+
+            $items = collect($request->items);
+            $kodeobat = collect($request->items)->pluck('kodeobat')->toArray();
+            $mobat = Mobatnew::select('kd_obat', 'nama_obat', 'sistembayar')->whereIn('kd_obat', $kodeobat)->where('sistembayar', 'UMUM')->get();
+            if (count($mobat) > 0) {
+                $data = [];
+                foreach ($items as $key) {
+                    $obat = $mobat->where('kd_obat', $key['kodeobat'])->first();
+                    if (!$obat) {
+                        $data[] = $key;
+                    } else {
+                        $key['isError'] = true;
+                        $data[] = $key;
+                    }
+                }
+                return new JsonResponse([
+                    'message' => 'Obat umum tidak sesuai sistem bayar pasien',
+                    // 'mobat' => $mobat,
+                    'items' => $data,
+                ], 410);
+            }
+        }
+        // return new JsonResponse([
+        //     'message' => 'Cek kesesuaian obat dengan sistem bayar pasien out of if',
+        //     'req' => $request->all(),
+        //     'kodeobat' => $kodeobat,
+        //     'mobat' => $mobat,
+        // ]);
 
         /**
          * cek pembatasan obat start
@@ -1013,7 +1045,9 @@ class TemplateController extends Controller
                 // 'adaAlokasiRacikan' => $adaAlokasiRacikan,
                 // 'tidakAdaAlokasiRacikan' => $tidakAdaAlokasiRacikan,
                 'error' => ' ' . $e,
-                'message' => 'rolled back ada kesalahan'
+                'message' => 'ada kesalahan ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
             ], 410);
         }
     }

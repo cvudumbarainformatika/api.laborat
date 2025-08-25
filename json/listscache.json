@@ -25,5 +25,6 @@
   {"nama":"m_khasus_diagnosa", "ketId":"id1", "controller":"DiagnosaController", "method":"listtipekhasus"},
   {"nama":"m_pemeriksaan_radiologi", "ketId":null, "controller":"RadiologimetaController", "method":"listpermintaanradiologirinci"},
   {"nama":"m_jenis_pemeriksaan_radiologi_meta", "ketId":null, "controller":"RadiologimetaController", "method":"jenispermintaanradiologi"},
-  {"nama":"m_pemeriksaan_radiologi_meta", "ketId":null, "controller":"RadiologimetaController", "method":"listmasterpemeriksaanradiologi"}
+  {"nama":"m_pemeriksaan_radiologi_meta", "ketId":null, "controller":"RadiologimetaController", "method":"listmasterpemeriksaanradiologi"},
+  {"nama":"perusahaan", "ketId":null, "controller":"PerusahaanController", "method":"index"}
 ]

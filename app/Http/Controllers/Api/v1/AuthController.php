@@ -13,6 +13,7 @@ use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\User;
+use App\Models\UserActivity;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class AuthController extends Controller
         if (!$token = auth()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+
         return self::createNewToken($token);
     }
 
@@ -108,12 +110,12 @@ class AuthController extends Controller
                 Log::info('Cache miss - fetching fresh sistembayar data');
                 return Msistembayar::query()
                     ->select('rs1 as kode', 'rs2 as nama', 'rs9 as jenis', 'groups')
-                    ->where('hidden','!=','')
-                    ->where('rs1','!=','')
+                    ->where('hidden', '!=', '')
+                    ->where('rs1', '!=', '')
                     ->get();
             });
 
-            $pegawai = Petugas::select('id','kdpegsimrs','kdgroupnakes','aktif','statusspesialis')
+            $pegawai = Petugas::select('id', 'kdpegsimrs', 'kdgroupnakes', 'aktif', 'statusspesialis')
                 ->find($pegawaiId);
 
             $notifRkd = [
@@ -270,6 +272,17 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+
+
+        // UserActivity::create([
+        //     'user_id' => auth()->user()->id ?? null,
+        //     'pegawai_id' => auth()->user()->pegawai_id ?? null,
+        //     'action' => 'Login',
+        //     'description' => 'User login',
+        //     'ip_address' => request()->ip(),
+        //     'user_agent' => request()->header('User-Agent'),
+        // ]);
+
         auth()->logout();
         return response()->json(['message' => 'User sukses logout dari aplikasi']);
     }
@@ -383,6 +396,15 @@ class AuthController extends Controller
         //     'kode_ruang' => $pegawai->kode_ruang,
         //     'depo' => $gud,
         //     'akses' => $akses
+        // ]);
+
+        // UserActivity::create([
+        //     'user_id' => $user->id,
+        //     'pegawai_id' => $user->pegawai_id,
+        //     'action' => 'Login',
+        //     'description' => 'User login',
+        //     'ip_address' => request()->ip(),
+        //     'user_agent' => request()->header('User-Agent'),
         // ]);
 
         return response()->json([

@@ -13,7 +13,7 @@ services:
     working_dir: /var/www
     ports:
       - "6003:6003" # WebSocket
-      - "8000:8000" # Swoole
+      - "8000:8000"
     volumes:
       - ./:/var/www
     environment:

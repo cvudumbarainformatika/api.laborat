@@ -549,7 +549,17 @@ class PoliController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'radiologi' => function ($t) {
-                    $t->orderBy('id', 'DESC');
+                    $t->with([
+                        'rincians'=> function($r){
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4','=','rs151.kode');
+                            })
+                            ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.hasilhtml','rs151.kesimpulanhtml','rs151.rs4 as pelaksana');
+                        }, 'rincians.relmasterpemeriksaan', 
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                    ])->orderBy('id', 'DESC');
                 },
                 'hasilradiologi' => function ($t) {
                     $t->orderBy('id', 'DESC');
@@ -594,7 +604,7 @@ class PoliController extends Controller
                         'rekomdpjp' => function ($q) {
                             $q->orderBy('id', 'DESC');
                         },
-                        'transrujukan.diagnosa:rs1,rs4',
+                        'transrujukan.diagnosa:rs1,rs4', 
                         'listkonsul',
                         'spri',
                         'ranap',

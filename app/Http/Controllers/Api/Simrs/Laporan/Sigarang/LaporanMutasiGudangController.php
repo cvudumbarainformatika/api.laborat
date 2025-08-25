@@ -274,7 +274,8 @@ class LaporanMutasiGudangController extends Controller
                 },
 
 
-            ]);
+            ])
+            ->withTrashed();
 
 
         $data = $barang->orderBy('kode_108', 'ASC')->orderBy('nama', 'ASC')->get();

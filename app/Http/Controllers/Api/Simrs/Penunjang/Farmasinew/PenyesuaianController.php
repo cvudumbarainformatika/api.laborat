@@ -25,8 +25,8 @@ class PenyesuaianController extends Controller
     public function index()
     {
         $koderuangan = request('koderuangan');
-        $bulan = '11';
-        // $bulan = request('bulan');
+        // $bulan = '07';
+        $bulan = request('bulan');
         $tahun = request('tahun');
         $x = $tahun . '-' . $bulan;
         $tglAwal = $x . '-01';
@@ -35,18 +35,6 @@ class PenyesuaianController extends Controller
         $dateAkhir = Carbon::parse($tglAkhir);
         $blnLaluAwal = $dateAwal->subMonth()->format('Y-m');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
-        // $date->format('Y-m-d')
-        // return new JsonResponse($dateAwal);
-        // return new JsonResponse([
-        //     'lalu awal' => $blnLaluAwal,
-        //     'lalu Akhir' => $blnLaluAkhir,
-        //     'Akhir' => $tglAkhir,
-        // ]);
-
-        // $ruangan = Ruang::select('uraian')->where('kode', $koderuangan)->first()->uraian ?? null ;
-        // $gudang=Gudang::select('nama')->where('kode', $koderuangan)->first()->nama ?? null;
-
-        // $ruang= $ruangan?? $gudang ?? null;
 
         $list = Mobatnew::query()
             ->select('kd_obat', 'nama_obat', 'satuan_k', 'satuan_b', 'id', 'flag', 'merk', 'kandungan')
@@ -267,7 +255,8 @@ class PenyesuaianController extends Controller
                         ->whereBetween('retur_gudangs.tgl_retur', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
                         ->where('retur_gudangs.kunci', '1')
                         ->groupBy('retur_gudang_details.kd_obat', 'retur_gudangs.depo');
-                }
+                },
+                // pengembalian pinjaman
 
             ])
 
@@ -318,7 +307,7 @@ class PenyesuaianController extends Controller
 
         $dateAwal = Carbon::parse($tglAwal);
         $dateAkhir = Carbon::parse($tglAkhir);
-        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-d');
+        $blnLaluAwal = $dateAwal->subMonth()->format('Y-m-01');
         $blnLaluAkhir = $dateAkhir->subMonth()->format('Y-m-t');
         // return new JsonResponse([
         //     'tglAwal' => $tglAwal,
@@ -522,8 +511,9 @@ class PenyesuaianController extends Controller
     public function getTransaksi()
     {
         $gudangs = ['Gd-05010100', 'Gd-03010100'];
-        // $now = date('Y-m');
+        $now = date('Y-m');
         $now = Carbon::now()->subMonth()->format('Y-m');
+        // $now = Carbon::now()->format('Y-m');
         $koderuangan = request('kdruang');
         $kdobat = request('kdobat');
         $penerimaan = null;

@@ -13,12 +13,13 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Harga\DaftarHarga;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiRinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Stok\PenyesuaianStok;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stokreal extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'stokreal';
     protected $guarded = ['id'];
     protected $connection = 'farmasi';
