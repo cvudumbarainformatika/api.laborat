@@ -40,7 +40,7 @@ class RadiologimetaController extends Controller
     public function listpermintaanradiologirinci()
     {
         $data = Cache::remember('m_pemeriksaan_radiologi', now()->addDays(7), function () {
-            return Mpemeriksaanradiologi::where('hidden', '')->all();
+            return Mpemeriksaanradiologi::where('hidden', '')->get();
         });
         // $rincianpermintaan = Mpemeriksaanradiologi::all();
         return new JsonResponse($data);
