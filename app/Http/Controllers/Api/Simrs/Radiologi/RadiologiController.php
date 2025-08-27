@@ -526,13 +526,13 @@ class RadiologiController extends Controller
     public function selesaikanlayananradiologi(Request $request)
     {
         $notrans = trim($request->notrans);
-        Transpermintaanradiologi::where('rs2', $notrans)->update([
+        $data = Transpermintaanradiologi::where('rs2', $notrans)->update([
             'rs9' => '1',
             'updateststgl' => date('Y-m-d H:i:s')
         ]);
 
 
 
-        return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
+        return new JsonResponse(['message' => 'Data berhasil disimpan', 'result'=> $data], 200);
     }
 }
