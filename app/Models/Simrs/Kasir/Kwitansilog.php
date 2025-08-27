@@ -11,4 +11,9 @@ class Kwitansilog extends Model
     protected $table = 'kwitansilog';
     protected $guarded = ['id'];
     protected $connection = 'mysql';
+
+    public function rincian()
+    {
+        return $this->hasMany(Kwitansidetail::class, 'no_kwitansi','nokwitansi');
+    }
 }

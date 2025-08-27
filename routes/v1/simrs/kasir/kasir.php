@@ -24,7 +24,7 @@ Route::group([
     Route::get('/rajal/billbynoreg', [BillingbynoregController::class, 'billbynoregrajalx']);
 
     Route::get('/rajal/tagihanpergolongan', [KasirrajalController::class, 'tagihanpergolongan']);
-    Route::post('/rajal/pembayaran', [KasirrajalController::class, 'pembayaran']);
+    Route::post('/rajal/pembayarankarcis', [KasirrajalController::class, 'pembayarankarcis']);
 
 
     // kasir igd
