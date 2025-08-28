@@ -280,7 +280,16 @@ class KasirrajalController extends Controller
 
     public function pembayarankarcis(Request $request)
     {
-
+        $datakarcis = Karcis::with([
+                'rincian'
+            ])->where('noreg', '151106/05/2025/J')->get();
+            return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil Disimpan',
+                    'kwitansikarcis' => $datakarcis
+                ],
+                200
+            );
         if($request->carabayar === 'Tunai'){
             try{
                 DB::beginTransaction();
