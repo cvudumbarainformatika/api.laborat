@@ -10,6 +10,7 @@ use App\Models\Simrs\Konsultasi\Konsultasi;
 use App\Models\Simrs\Master\Mhais;
 use App\Models\Simrs\Master\Rstigapuluhtarif;
 use App\Models\Simrs\Visite\Visite;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -213,6 +214,10 @@ class KonsultasiController extends Controller
         $dokter = Petugas::find(auth()->user()->pegawai_id);
 
         $data = Konsultasi::find($request->id);
+
+        // 
+        
+
         if (!$data) {
             return new JsonResponse(['message' => 'data tidak ditemukan'], 500);
         }
@@ -224,10 +229,6 @@ class KonsultasiController extends Controller
 
 
        
-
-       
-
-           
 
 
             $hari_ini = date('Y-m-d H:i:s');
@@ -246,7 +247,7 @@ class KonsultasiController extends Controller
             $tarifKonsul = null;
 
             // jika yang jawab dokter
-            if ($dokter->kdgroupnakes === '1') {
+            if ($data->kddokterkonsul) {
 
                 
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
@@ -261,23 +262,26 @@ class KonsultasiController extends Controller
                         return new JsonResponse(['message' => 'Maaf ... Ada Kesalahan Pada Tarif Konsul'], 500);
                     }
 
+                   $tgl_konsul = $data->tgl_permintaan ?? Carbon::now();
+                   $tgl_konsul = Carbon::parse($tgl_konsul)->format('Y-m-d'); 
+
                     //cek data tarif harini untuk dokter
                     $cekTarif = Visite::select('*')
                         ->where('rs1', $request->noreg)
-                        ->where('rs3', $dokter->kdpegsimrs)
-                        ->where('rs2', 'LIKE', '%' . date('Y-m-d') . '%')
+                        ->where('rs3', $data->kddokterkonsul)
+                        ->where('rs2', 'LIKE', '%' . $tgl_konsul . '%')
                         ->where('rs6', $tarifKonsul['flag_biaya'])
                         ->get();
 
-
+                    // return new JsonResponse($cekTarif);
                     // jika yg minta dokter
                     // if ($request->kdgroupnakesminta === '1') {
                         // jika billing belum masuk
                         if (count($cekTarif) === 0) {
                             $masukTarif = Visite::create([
                                 'rs1' => $request->noreg,
-                                'rs2' => $hari_ini,
-                                'rs3' => $dokter->kdpegsimrs ?? '',
+                                'rs2' => $tgl_konsul,
+                                'rs3' => $data->kddokterkonsul ?? '',
                                 'rs4' => $tarifKonsul['sarana'],
                                 'rs5' => $tarifKonsul['pelayanan'],
                                 'rs6' => $tarifKonsul['flag_biaya'],
@@ -288,6 +292,9 @@ class KonsultasiController extends Controller
                             $data->rs140_id = $masukTarif ? $masukTarif->id ?? null : null;
                         }
                     // }
+                    
+                    // return new JsonResponse($cekTarif);
+                    
                 }
             }
         // }
