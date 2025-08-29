@@ -13,6 +13,8 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
+use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PermintaanRetur;
+use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PermintaanReturDetail;
 use App\Models\Simrs\Penunjang\Farmasinew\Stokreal;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -459,6 +461,23 @@ class ReturpenjualanController extends Controller
                     }
                 ]
             );
+
+            // cek permintaan retur untuk update flag permintaan retur
+            $det = PermintaanReturDetail::select('permintaan_retur_details.*')
+                ->leftJoin('permintaan_returs', 'permintaan_returs.nopermintaan', '=', 'permintaan_retur_details.nopermintaan')
+                ->whereNull('flag')
+                ->where('noresep', $request->noresep)
+                ->where('permintaan_retur_details.noreg', $request->noreg)
+                ->first();
+            if ($det) {
+                $nopermintaan = $det->nopermintaan;
+                $allDetNores = PermintaanReturDetail::where('nopermintaan', $nopermintaan)->pluck('noresep')->toArray();
+                $exist = Resepkeluarheder::whereIn('noresep', $allDetNores)->where('noreg', $request->noreg)->whereNotNull('flag_permintaan_retur')->exists();
+                if (!$exist) {
+                    $perm = PermintaanRetur::where('nopermintaan', $nopermintaan)->first();
+                    $perm->update(['flag' => '1']);
+                }
+            }
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'retur disimpan',
@@ -508,6 +527,23 @@ class ReturpenjualanController extends Controller
             $pert->update(['flag_permintaan_retur' => null]);
         }
         $data->update(['flag_permintaan_retur' => null]);
+
+        // cek permintaan retur untuk update flag permintaan retur
+        $det = PermintaanReturDetail::select('permintaan_retur_details.*')
+            ->leftJoin('permintaan_returs', 'permintaan_returs.nopermintaan', '=', 'permintaan_retur_details.nopermintaan')
+            ->whereNull('flag')
+            ->where('noresep', $data->noresep)
+            ->where('permintaan_retur_details.noreg', $data->noreg)
+            ->first();
+        if ($det) {
+            $nopermintaan = $det->nopermintaan;
+            $allDetNores = PermintaanReturDetail::where('nopermintaan', $nopermintaan)->pluck('noresep')->toArray();
+            $exist = Resepkeluarheder::whereIn('noresep', $allDetNores)->where('noreg', $data->noreg)->whereNotNull('flag_permintaan_retur')->exists();
+            if (!$exist) {
+                $perm = PermintaanRetur::where('nopermintaan', $nopermintaan)->first();
+                $perm->update(['flag' => '1']);
+            }
+        }
 
         return new JsonResponse([
             'message' => 'Permintaan Retur oleh ruangan sudah di selesaikan',
