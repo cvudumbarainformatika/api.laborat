@@ -225,6 +225,7 @@ class KonsultasiController extends Controller
         $tglJawab = $data->tgl_jawaban ?? null;
         $ranap = false;
         // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
+
         $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
 
 
@@ -253,6 +254,11 @@ class KonsultasiController extends Controller
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
                 if ($ranap) {
 
+                    // ini menimpa yang di atas
+                    $dokter = Petugas::where('kdpegsimrs', $data->kddokterkonsul)->first();
+                    if (!$dokter) {
+                       return new JsonResponse(['message' => 'Maaf ... Ada Kesalahan Pada Tarif Konsul'], 500);
+                    }
                     // jika dokter spesialis
                     $spesialis = (strtoupper($dokter->statusspesialis) === 'SPESIALIS' || strtoupper($dokter->statusspesialis) === 'SUB SPESIALIS');
                     // jika bukan dari IGD dan HD
@@ -262,14 +268,16 @@ class KonsultasiController extends Controller
                         return new JsonResponse(['message' => 'Maaf ... Ada Kesalahan Pada Tarif Konsul'], 500);
                     }
 
-                   $tgl_konsul = $data->tgl_permintaan ?? Carbon::now();
-                   $tgl_konsul = Carbon::parse($tgl_konsul)->format('Y-m-d'); 
+                   $tgl = $data->tgl_permintaan ?? Carbon::now();
+                   $tanggalan = Carbon::parse($tgl)->format('Y-m-d');
+                   $tgl_konsul = Carbon::parse($tgl)->format('Y-m-d H:i:s'); 
 
                     //cek data tarif harini untuk dokter
                     $cekTarif = Visite::select('*')
                         ->where('rs1', $request->noreg)
                         ->where('rs3', $data->kddokterkonsul)
-                        ->where('rs2', 'LIKE', '%' . $tgl_konsul . '%')
+                        ->where('rs8', $request->kdgroup_ruangan)
+                        ->where('rs2', 'LIKE', '%' . $tanggalan . '%')
                         ->where('rs6', $tarifKonsul['flag_biaya'])
                         ->get();
 
