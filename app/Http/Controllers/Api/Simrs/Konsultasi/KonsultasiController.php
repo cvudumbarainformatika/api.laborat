@@ -345,88 +345,6 @@ class KonsultasiController extends Controller
     {
         $rs = null;
 
-        // return  [
-        //     'spesialis' => $spesialis,
-        //     'request' => $request->kelas_ruangan,
-        //     'pegawai' => $pegawai
-        // ];
-
-        // if ($spesialis) {
-        //     // $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
-        //     //     ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //     //     ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //     //     ->get();
-
-        //     // $rs = Rstigapuluhtarif::where('rs3', 'K5#')
-        //     //           ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //     //           ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //     //           ->first();
-
-            
-
-        //     if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
-        //         if (strtoupper($pegawai->statusspesialis === 'SPESIALIS')) {
-        //           # code...
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K6#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-        //       } else if (strtoupper($pegawai->statusspesialis === 'SUB SPESIALIS')) {
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K10#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-
-                
-        //       }
-        //     } else {
-                
-
-        //         if (strtoupper($pegawai->statusspesialis === 'SPESIALIS')) {
-        //           # code...
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K5#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-
-
-        //         return response()->json([
-        //         'rs1' => $rs]);
-        //       } else if (strtoupper($pegawai->statusspesialis === 'SUB SPESIALIS')) {
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K11#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-        //       }
-
-        //     }
-
-            
-
-
-        // } else {
-
-        //     if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
-
-        //         $rs = Rstigapuluhtarif::where('rs3', 'K8#')->orWhere('rs3', 'K8#')
-        //         ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //         ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //         ->get();
-
-        //     } else {
-
-        //          $rs = Rstigapuluhtarif::where('rs3', 'K4#')->orWhere('rs3', 'K8#')
-        //         ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //         ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //         ->get();
-        //     }
-
-           
-        // }
-
-
-
-
 
         if ($spesialis) {
             $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
@@ -442,29 +360,31 @@ class KonsultasiController extends Controller
                 ? Rstigapuluhtarif::where('rs3', $kode)
                     ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
                     ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
-                    ->get()
+                    ->first()
                 : null;
 
             
         } else {
             $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
-            $kode    = $kelasIC ? ['K8#'] : ['K4#', 'K8#'];
+            $kode    = $kelasIC ? ['K8#'] : ['K4#'];
 
             $rs = Rstigapuluhtarif::whereIn('rs3', $kode)
                 ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
                 ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
-                ->get();
+                ->first();
         }
 
         // return response()->json(['percobaan' => $rs]);
 
-        $rsx = collect($rs)->filter(function ($q) use ($request) {
-            return Str::contains($q['rs5'], $request->kelas_ruangan) && Str::contains($q['rs4'], $request->kdgroup_ruangan);
-        })->first();
+        // $rsx = collect($rs)->filter(function ($q) use ($request) {
+        //     return Str::contains($q['rs5'], $request->kelas_ruangan) && Str::contains($q['rs4'], $request->kdgroup_ruangan);
+        // })->first();
 
-        if (!$rsx) {
-            return null;
-        }
+        // if (!$rsx) {
+        //     return null;
+        // }
+
+        $rsx = $rs;
 
         // return response()->json(['percobaan222' => $rsx]);
 
@@ -488,7 +408,7 @@ class KonsultasiController extends Controller
                 } else if ($request->kelas_ruangan == "2") {
                     $sarana = $rsx->rs8;
                     $pelayanan = $rsx->rs9;
-                } else if ($request->kelas_ruangan == "1") {
+                } else if ($request->kelas_ruangan == "1" || $request->kelas_ruangan == "ISO") {
                     $sarana = $rsx->rs10;
                     $pelayanan = $rsx->rs11;
                 } else if ($request->kelas_ruangan == "Utama") {
@@ -526,7 +446,7 @@ class KonsultasiController extends Controller
                 } else if ($request->kelas_ruangan === "2") {
                     $sarana = $rsx->rs8;
                     $pelayanan = $rsx->rs9;
-                } else if ($request->kelas_ruangan === "1") {
+                } else if ($request->kelas_ruangan === "1" || $request->kelas_ruangan == "ISO") {
                     $sarana = $rsx->rs10;
                     $pelayanan = $rsx->rs11;
                 } else if ($request->kelas_ruangan === "Utama") {
