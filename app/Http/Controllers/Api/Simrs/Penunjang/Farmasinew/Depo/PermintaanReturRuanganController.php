@@ -60,7 +60,16 @@ class PermintaanReturRuanganController extends Controller
         $noresep = Resepkeluarrinci::select('noresep')->where('noreg', $request->noreg)->pluck('noresep')->toArray();
         $data = Resepkeluarheder::where('noreg', $request->noreg)
             ->with([
-                'rincian.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                // rincian nya bawa yang ga ada di rincian permintaan retur
+                'rincian' => function ($q) {
+                    $q->with('mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan')
+                        ->select('resep_keluar_r.*')
+                        ->leftJoin('permintaan_retur_details', function ($join) {
+                            $join->on('permintaan_retur_details.noresep', '=', 'resep_keluar_r.noresep')
+                                ->on('permintaan_retur_details.kdobat', '=', 'resep_keluar_r.kdobat');
+                        })
+                        ->whereNull('permintaan_retur_details.kdobat');
+                },
                 'ruanganranap',
                 'poli'
             ])
@@ -79,7 +88,7 @@ class PermintaanReturRuanganController extends Controller
                 },
                 'pegawai:nama,kdpegsimrs'
             ])
-            ->whereNull('flag')
+            // ->whereNull('flag')
             ->get();
 
         return new JsonResponse([
