@@ -16,6 +16,7 @@ class Karcis extends Model
 
     public function rincian()
     {
-        return $this->hasMany(Kwitansidetail::class, 'id_kwitansilog','id');
+        return $this->hasMany(Kwitansidetail::class, 'no_kwitansi','nokarcis');
     }
+
 }

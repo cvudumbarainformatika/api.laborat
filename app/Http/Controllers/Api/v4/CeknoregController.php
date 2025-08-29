@@ -20,6 +20,7 @@ class CeknoregController extends Controller
   public function cek(Request $request)
   {
     $str=$request->noreg;
+    // return $str;
     $decode=base64_decode($str);
     if (!$decode) {
       return new JsonResponse(['message' => 'invalid'], 500);
@@ -29,27 +30,26 @@ class CeknoregController extends Controller
       return new JsonResponse(['message' => 'invalid'], 500);
     }
 
+
+    // return new JsonResponse($split, 200);
+
     $noreg=$split[0];
     $dok=$split[1] ?? null;
     $asal=$split[2] ?? null;
     $petugas=$split[3] ?? null;
 
     $dataPetugas = Pegawai::select('id','nip','nik','nama','foto','ttdpegawai','kdpegsimrs')->where('kdpegsimrs', $petugas)->first();
-
-    $cekx = KunjunganPoli::select('rs1','rs2','rs3','rs1 as noreg', 'rs2 as norm','rs3 as tglmasuk', 'rs9', 'rs19')->where('rs1', $noreg)
-    ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
     
-    if ($asal !== 'RAWAT JALAN') {
-      $cekx=Kunjunganranap::select(
-        'rs1',
-        'rs2',
-        'rs1 as noreg',
-        'rs2 as norm',
-        'rs3 as tglmasuk',
-        'rs4 as rs3',
-        'rs10')->where('rs1', $noreg)
+    $cekx=null;
+    
+    if ($asal === 'RAWAT JALAN') {
+
+        $cekx = KunjunganPoli::select('rs1','rs2','rs3','rs1 as noreg', 'rs2 as norm','rs3 as tglmasuk', 'rs9', 'rs19')->where('rs1', $noreg)
         ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+
     } else if ($asal === 'RADIOLOGI') {
+
+         
       $query = Transpermintaanradiologi::query();
         $cekx = $query
             ->select([
@@ -68,7 +68,23 @@ class CeknoregController extends Controller
             ->where('rs106.rs2', $noreg)
            
             ->first();
+
+    } else {
+
+         $cekx=Kunjunganranap::select(
+            'rs1',
+            'rs2',
+            'rs1 as noreg',
+            'rs2 as norm',
+            'rs3 as tglmasuk',
+            'rs4 as rs3',
+            'rs10')->where('rs1', $noreg)
+            ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+      
     }
+
+
+    // return $cekx;
     if (!$cekx) {
       return new JsonResponse(['message' => 'invalid'], 500);
     }

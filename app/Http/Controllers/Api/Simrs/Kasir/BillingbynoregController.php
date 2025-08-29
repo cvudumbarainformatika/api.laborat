@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Simrs\Kasir;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Karcis;
+use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,8 +14,21 @@ class BillingbynoregController extends Controller
 {
     public  function billbynoregrajalx(){
         $noreg = request('noreg');
-        $data = self::billbynoregrajal($noreg);
-        return new JsonResponse($data);
+        $data = Kwitansilog::with([
+            'rincian'
+        ])->where('noreg', $noreg)->get();
+
+        $datakarcis = Karcis::with([
+            'rincian'
+        ])->where('noreg', $noreg)->get();
+
+        return new JsonResponse(
+            [
+                'kwitansi' => $data,
+                'kwitansikarcis' => $datakarcis
+            ],
+            200
+        );
     }
     public static function billbynoregrajal($noreg)
     {

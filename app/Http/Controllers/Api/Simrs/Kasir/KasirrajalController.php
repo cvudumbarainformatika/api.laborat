@@ -27,7 +27,6 @@ class KasirrajalController extends Controller
 {
     public function kunjunganpoli()
     {
-
         $tgl = request('tgl');
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
@@ -279,30 +278,49 @@ class KasirrajalController extends Controller
         return $data;
     }
 
-    public function pembayaran(Request $request)
+    public function pembayarankarcis(Request $request)
     {
+        // $datakarcis = Karcis::with([
+        //         'rincian'
+        //     ])->where('noreg', '151106/05/2025/J')->get();
+        //     return new JsonResponse(
+        //         [
+        //             'message' => 'Data Berhasil Disimpan',
+        //             'kwitansikarcis' => $datakarcis
+        //         ],
+        //         200
+        //     );
         if($request->carabayar === 'Tunai'){
-            if($request->jenislayanan === 'karcis'){
-                DB::select('call karcisrj(@nomor)');
-                $x = DB::table('rs1')->select('karcisrj')->get();
-                $wew = $x[0]->karcisrj;
-                $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+            try{
+                DB::beginTransaction();
+                    DB::select('call karcisrj(@nomor)');
+                    $x = DB::table('rs1')->select('karcisrj')->get();
+                    $wew = $x[0]->karcisrj;
+                    $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
 
-                $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
-                if ($simpankarcis == 5000) {
-                    return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
-                }
-                if ($simpankarcis == 500) {
-                    return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-                }
-                $data = BillingbynoregController::billbynoregrajal($request->noreg);
-                return new JsonResponse(
-                    [
-                        'message' => 'Data Berhasil Disimpan',
-                        'result' => $data
-                    ],
-                    200
-                );
+                    $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
+
+                    if ($simpankarcis == 5000) {
+                        return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
+                    }
+                    if ($simpankarcis == 500) {
+                        return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+                    }
+
+                DB::commit();
+                    $datakarcis = Karcis::with([
+                        'rincian'
+                    ])->where('noreg', $request->noreg)->get();
+                    return new JsonResponse(
+                        [
+                            'message' => 'Data Berhasil Disimpan',
+                            'kwitansikarcis' => $datakarcis
+                        ],
+                        200
+                    );
+            }catch(\Exception $th){
+                DB::rollBack();
+                return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
             }
         }else if($request->carabayar === 'qris'){
             if($request->jenislayanan === 'karcis'){
@@ -470,6 +488,7 @@ class KasirrajalController extends Controller
         foreach ($rinci as $val) {
             $txtrinci .= ','.$val['rs6'] . ':' . $val['jml'] . ',';
         }
+
         $simpankarcis = Karcis::firstOrCreate(
             [
 
