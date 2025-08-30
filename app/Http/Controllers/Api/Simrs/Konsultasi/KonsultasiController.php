@@ -347,13 +347,13 @@ class KonsultasiController extends Controller
 
 
         if ($spesialis) {
-            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
+            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU", "IN"]);
             $status  = strtoupper($pegawai->statusspesialis);
 
             if ($kelasIC) {
-                $kode = $status === 'SPESIALIS' ? 'K6#' : ($status === 'SUB SPESIALIS' ? 'K10#' : null);
+                $kode = $status === 'SPESIALIS' ? 'K9#' : ($status === 'SUB SPESIALIS' ? 'K10#' : 'K9#');
             } else {
-                $kode = $status === 'SPESIALIS' ? 'K5#' : ($status === 'SUB SPESIALIS' ? 'K11#' : null);
+                $kode = $status === 'SPESIALIS' ? 'K5#' : ($status === 'SUB SPESIALIS' ? 'K11#' : 'K5#');
             }
 
             $rs = $kode
@@ -365,7 +365,7 @@ class KonsultasiController extends Controller
 
             
         } else {
-            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
+            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU", "IN"]);
             $kode    = $kelasIC ? ['K8#'] : ['K4#'];
 
             $rs = Rstigapuluhtarif::whereIn('rs3', $kode)
@@ -386,7 +386,7 @@ class KonsultasiController extends Controller
 
         $rsx = $rs;
 
-        // return response()->json(['percobaan222' => $rsx]);
+        // return response()->json(['percobaan222' => $rsx, $pegawai]);
 
         $sarana = 0;
         $pelayanan = 0;
