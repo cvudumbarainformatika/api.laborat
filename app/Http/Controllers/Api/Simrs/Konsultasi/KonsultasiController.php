@@ -347,7 +347,7 @@ class KonsultasiController extends Controller
 
 
         if ($spesialis) {
-            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU", "IN"]);
+            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU"]);
             $status  = strtoupper($pegawai->statusspesialis);
 
             if ($kelasIC) {
@@ -365,7 +365,7 @@ class KonsultasiController extends Controller
 
             
         } else {
-            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU", "IN"]);
+            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU"]);
             $kode    = $kelasIC ? ['K8#'] : ['K4#'];
 
             $rs = Rstigapuluhtarif::whereIn('rs3', $kode)
