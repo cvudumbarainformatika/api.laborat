@@ -225,6 +225,7 @@ class KonsultasiController extends Controller
         $tglJawab = $data->tgl_jawaban ?? null;
         $ranap = false;
         // $ranap = !($request->kdruang !== 'POL014' || $request->kdruang !== 'PEN005') ? false : true; // tambahan HD dari wawan
+
         $ranap = $request->kdruang !== 'POL014' && $request->kdruang !== 'PEN005'; // Perbaikan logika tak ubah wan ....
 
 
@@ -253,6 +254,11 @@ class KonsultasiController extends Controller
                 // jika nantinya HD ada tarif makan masuk ke tindakan, rs 73 seharga 80.000
                 if ($ranap) {
 
+                    // ini menimpa yang di atas
+                    $dokter = Petugas::where('kdpegsimrs', $data->kddokterkonsul)->first();
+                    if (!$dokter) {
+                       return new JsonResponse(['message' => 'Maaf ... Ada Kesalahan Pada Tarif Konsul'], 500);
+                    }
                     // jika dokter spesialis
                     $spesialis = (strtoupper($dokter->statusspesialis) === 'SPESIALIS' || strtoupper($dokter->statusspesialis) === 'SUB SPESIALIS');
                     // jika bukan dari IGD dan HD
@@ -262,14 +268,16 @@ class KonsultasiController extends Controller
                         return new JsonResponse(['message' => 'Maaf ... Ada Kesalahan Pada Tarif Konsul'], 500);
                     }
 
-                   $tgl_konsul = $data->tgl_permintaan ?? Carbon::now();
-                   $tgl_konsul = Carbon::parse($tgl_konsul)->format('Y-m-d'); 
+                   $tgl = $data->tgl_permintaan ?? Carbon::now();
+                   $tanggalan = Carbon::parse($tgl)->format('Y-m-d');
+                   $tgl_konsul = Carbon::parse($tgl)->format('Y-m-d H:i:s'); 
 
                     //cek data tarif harini untuk dokter
                     $cekTarif = Visite::select('*')
                         ->where('rs1', $request->noreg)
                         ->where('rs3', $data->kddokterkonsul)
-                        ->where('rs2', 'LIKE', '%' . $tgl_konsul . '%')
+                        ->where('rs8', $request->kdgroup_ruangan)
+                        ->where('rs2', 'LIKE', '%' . $tanggalan . '%')
                         ->where('rs6', $tarifKonsul['flag_biaya'])
                         ->get();
 
@@ -337,128 +345,48 @@ class KonsultasiController extends Controller
     {
         $rs = null;
 
-        // return  [
-        //     'spesialis' => $spesialis,
-        //     'request' => $request->kelas_ruangan,
-        //     'pegawai' => $pegawai
-        // ];
-
-        // if ($spesialis) {
-        //     // $rs = Rstigapuluhtarif::where('rs3', 'K5#')->orWhere('rs3', 'K6#')
-        //     //     ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //     //     ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //     //     ->get();
-
-        //     // $rs = Rstigapuluhtarif::where('rs3', 'K5#')
-        //     //           ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //     //           ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //     //           ->first();
-
-            
-
-        //     if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
-        //         if (strtoupper($pegawai->statusspesialis === 'SPESIALIS')) {
-        //           # code...
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K6#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-        //       } else if (strtoupper($pegawai->statusspesialis === 'SUB SPESIALIS')) {
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K10#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-
-                
-        //       }
-        //     } else {
-                
-
-        //         if (strtoupper($pegawai->statusspesialis === 'SPESIALIS')) {
-        //           # code...
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K5#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-
-
-        //         return response()->json([
-        //         'rs1' => $rs]);
-        //       } else if (strtoupper($pegawai->statusspesialis === 'SUB SPESIALIS')) {
-        //           $rs = Rstigapuluhtarif::where('rs3', 'K11#')
-        //               ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //               ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //               ->first();
-        //       }
-
-        //     }
-
-            
-
-
-        // } else {
-
-        //     if ($request->kelas_ruangan==="IC" || $request->kelas_ruangan==="ICC" || $request->kelas_ruangan==="NICU" ){
-
-        //         $rs = Rstigapuluhtarif::where('rs3', 'K8#')->orWhere('rs3', 'K8#')
-        //         ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //         ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //         ->get();
-
-        //     } else {
-
-        //          $rs = Rstigapuluhtarif::where('rs3', 'K4#')->orWhere('rs3', 'K8#')
-        //         ->where('rs4', 'like', '%|' . $request->kdgroup_ruangan . '|%')
-        //         ->where('rs5', 'like', '%|' . $request->kelas_ruangan . '|%')
-        //         ->get();
-        //     }
-
-           
-        // }
-
-
-
-
 
         if ($spesialis) {
-            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
+            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU"]);
             $status  = strtoupper($pegawai->statusspesialis);
 
             if ($kelasIC) {
-                $kode = $status === 'SPESIALIS' ? 'K6#' : ($status === 'SUB SPESIALIS' ? 'K10#' : null);
+                $kode = $status === 'SPESIALIS' ? 'K9#' : ($status === 'SUB SPESIALIS' ? 'K10#' : 'K9#');
             } else {
-                $kode = $status === 'SPESIALIS' ? 'K5#' : ($status === 'SUB SPESIALIS' ? 'K11#' : null);
+                $kode = $status === 'SPESIALIS' ? 'K5#' : ($status === 'SUB SPESIALIS' ? 'K11#' : 'K5#');
             }
 
             $rs = $kode
                 ? Rstigapuluhtarif::where('rs3', $kode)
                     ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
                     ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
-                    ->get()
+                    ->first()
                 : null;
 
             
         } else {
-            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU"]);
-            $kode    = $kelasIC ? ['K8#'] : ['K4#', 'K8#'];
+            $kelasIC = in_array($request->kelas_ruangan, ["IC", "ICC", "NICU", "PICU"]);
+            $kode    = $kelasIC ? ['K8#'] : ['K4#'];
 
             $rs = Rstigapuluhtarif::whereIn('rs3', $kode)
                 ->where('rs4', 'like', "%|{$request->kdgroup_ruangan}|%")
                 ->where('rs5', 'like', "%|{$request->kelas_ruangan}|%")
-                ->get();
+                ->first();
         }
 
         // return response()->json(['percobaan' => $rs]);
 
-        $rsx = collect($rs)->filter(function ($q) use ($request) {
-            return Str::contains($q['rs5'], $request->kelas_ruangan) && Str::contains($q['rs4'], $request->kdgroup_ruangan);
-        })->first();
+        // $rsx = collect($rs)->filter(function ($q) use ($request) {
+        //     return Str::contains($q['rs5'], $request->kelas_ruangan) && Str::contains($q['rs4'], $request->kdgroup_ruangan);
+        // })->first();
 
-        if (!$rsx) {
-            return null;
-        }
+        // if (!$rsx) {
+        //     return null;
+        // }
 
-        // return response()->json(['percobaan222' => $rsx]);
+        $rsx = $rs;
+
+        // return response()->json(['percobaan222' => $rsx, $pegawai]);
 
         $sarana = 0;
         $pelayanan = 0;
@@ -480,7 +408,7 @@ class KonsultasiController extends Controller
                 } else if ($request->kelas_ruangan == "2") {
                     $sarana = $rsx->rs8;
                     $pelayanan = $rsx->rs9;
-                } else if ($request->kelas_ruangan == "1") {
+                } else if ($request->kelas_ruangan == "1" || $request->kelas_ruangan == "ISO") {
                     $sarana = $rsx->rs10;
                     $pelayanan = $rsx->rs11;
                 } else if ($request->kelas_ruangan == "Utama") {
@@ -518,7 +446,7 @@ class KonsultasiController extends Controller
                 } else if ($request->kelas_ruangan === "2") {
                     $sarana = $rsx->rs8;
                     $pelayanan = $rsx->rs9;
-                } else if ($request->kelas_ruangan === "1") {
+                } else if ($request->kelas_ruangan === "1" || $request->kelas_ruangan == "ISO") {
                     $sarana = $rsx->rs10;
                     $pelayanan = $rsx->rs11;
                 } else if ($request->kelas_ruangan === "Utama") {

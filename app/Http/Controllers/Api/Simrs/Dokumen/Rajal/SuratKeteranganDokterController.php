@@ -25,12 +25,28 @@ class SuratKeteranganDokterController extends Controller
 
                 $notatindakan = FormatingHelper::notatindakan($wew, 'T-HD');
 
+                if ($request->jenis === 'SRT02') {
+                    $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
+                }
+
+
                 $cekharga = Mtindakan::where('rs1', 'T00668')->first();
+
+                if ($request->jenis === 'SRT02') {
+                    $cekharga = Mtindakan::where('rs1', 'TX0148')->first();
+                }
+
                 $js = $cekharga->rs8 ?? 0;
                 $jp = $cekharga->rs9 ?? 0;
 
+
                 $wew = FormatingHelper::session_user();
                 $kdpegsimrs = $wew['kodesimrs'];
+
+                $rs20 = 'Surat Keterangan Dokter';
+                if ($request->jenis === 'SRT02') {
+                    $rs20 = 'Surat Keterangan Kesehatan Jiwa';
+                }
 
                 $createbill = Tindakan::create([
                     'rs1' => $request->noreg,
@@ -46,12 +62,12 @@ class SuratKeteranganDokterController extends Controller
                     // 'rs11' => $request->kdpoli,
                     'rs13' => $jp,
                     'rs14' => $jp,
-                    'rs20' => 'Surat Keterangan Dokter',
+                    'rs20' => $rs20,
                     'rs22' => $request->kdpoli,
                     'rs24' => $request->sistembayar,
                 ]);
 
-                $kode = 'SRT01';
+                $kode = $request->jenis;
                 $nomor = '@nomor';
 
                 DB::connection('mysql')->select('call conterSurat('.$nomor.', "'.$kode.'")');
@@ -74,6 +90,15 @@ class SuratKeteranganDokterController extends Controller
                     'perbedaanWarna' => $request->warna,
                     // 'tinggiBadan' => $request->tinggi,
                     // 'beratBadan' => $request->berat,
+
+
+                    // ini untuk test kejiwaan
+                    'pendidikan' => $request->pendidikan,
+                    'statusperkawinan' => $request->statusperkawinan,
+                    'psikatopologi' => $request->psikatopologi,
+                    'kepribadian' => $request->kepribadian,
+                    'kecerdasan' => $request->kecerdasan,
+
                     'kesimpulan' => $request->doc,
                     'dokter' => $request->dokter,
                     'kdRuang' => $request->kdpoli,
