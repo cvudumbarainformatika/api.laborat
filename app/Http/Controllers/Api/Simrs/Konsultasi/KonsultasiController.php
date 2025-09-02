@@ -313,9 +313,9 @@ class KonsultasiController extends Controller
 
         $data->flag = '2';
 
-        $data->jawaban = $user['kodesimrs'];
+        $data->jawaban = $request->jawaban;
         // $data->kdruang = $request->kdruang;
-        $data->user_jawab = $dokter->kdpegsimrs ?? null;
+        $data->user_jawab = $user['kodesimrs'] ?? null;
         $data->save();
 
         // return $data;
