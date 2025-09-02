@@ -378,7 +378,7 @@ class CpptController extends Controller
           }else if($request->kelas_ruangan=="2"){
 						$sarana=$rsx->rs8;
 						$pelayanan=$rsx->rs9;
-					}else if($request->kelas_ruangan=="1"){
+					}else if($request->kelas_ruangan=="1" || $request->kelas_ruangan=="ISO"){
 						$sarana=$rsx->rs10;
 						$pelayanan=$rsx->rs11;
 					}else if($request->kelas_ruangan=="Utama"){
@@ -441,7 +441,7 @@ class CpptController extends Controller
 					}else if($request->kelas_ruangan==="2"){
 						$sarana=$rsx->rs8;
 						$pelayanan=$rsx->rs9;
-					}else if($request->kelas_ruangan==="1"){
+					}else if($request->kelas_ruangan==="1" || $request->kelas_ruangan=="ISO"){
 						$sarana=$rsx->rs10;
 						$pelayanan=$rsx->rs11;
 					}else if($request->kelas_ruangan==="Utama"){
