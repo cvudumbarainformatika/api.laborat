@@ -309,10 +309,11 @@ class KonsultasiController extends Controller
 
 
 
+        $user = FormatingHelper::session_user();
 
         $data->flag = '2';
 
-        $data->jawaban = $request->jawaban;
+        $data->jawaban = $user['kodesimrs'];
         // $data->kdruang = $request->kdruang;
         $data->user_jawab = $dokter->kdpegsimrs ?? null;
         $data->save();
