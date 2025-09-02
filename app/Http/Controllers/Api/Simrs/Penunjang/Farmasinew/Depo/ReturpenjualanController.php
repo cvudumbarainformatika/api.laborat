@@ -499,7 +499,7 @@ class ReturpenjualanController extends Controller
 
     public function permintaanRetur(Request $request)
     {
-        return new JsonResponse(['message' => 'Permintaan Retur Ini Sudah ditutup silahkan isi permintaaan retur dari akun perawat.'], 410);
+        return new JsonResponse(['message' => 'Permintaan Retur Ini Sudah ditutup silahkan isi permintaaan retur dari akun perawat atau bidan.'], 410);
         $data = Resepkeluarheder::find($request->id);
 
         if (!$data) {
