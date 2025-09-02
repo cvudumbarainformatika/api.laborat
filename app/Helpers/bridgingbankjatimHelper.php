@@ -9,12 +9,15 @@ class bridgingbankjatimHelper
 {
     public static function createqris($request)
     {
+
+        $billNumberxx =$request->jenislayanan === 'KARCIS' ? $request->noreg :  $request->nota;
         $url = "https://jatimva.bankjatim.co.id/MC/Qris/Dynamic";
-        $total = $request->total;
-        $bj = 0.4;
+        $total = (int) $request->total;
+        $bj = (int) 0.4;
+
         $totalall = (int) $total + (int) ($total * $bj / 100);
-        $tglsekarang = date('y-m-d');
-        $billNumber_tampung = $request->nota;
+        $tglsekarang = date('Y-m-d 23:59:59');
+        $billNumber_tampung = $billNumberxx;
         $terminalUser_tampung = 'U012001';
         $merchanthashkey = '8M9R0BZE21';
 
@@ -26,8 +29,9 @@ class bridgingbankjatimHelper
         $storelabel = 'RSUD DR M SALEH';
         $customerlabel = 'PUBLIC';
         $terminalUser = $terminalUser_tampung;
-        $expiredDate = date('Y-m-d 23:59:59');;
+        $expiredDate = $tglsekarang;
         $amount = $totalall;
+
         $data = [
             'merchantPan' => $merchantPan,
             'hashcodeKey' => $hashcodeKey,
@@ -40,6 +44,7 @@ class bridgingbankjatimHelper
             'amount' => $amount
         ];
         $myvars = json_encode($data);
+
         $reqjatim = self::reqqris('POST', $url, $myvars);
         return $reqjatim;
     }
@@ -78,6 +83,7 @@ class bridgingbankjatimHelper
         }
 
         curl_setopt($session, CURLOPT_RETURNTRANSFER, TRUE);
+
         $response = curl_exec($session);
         return json_decode($response);
     }

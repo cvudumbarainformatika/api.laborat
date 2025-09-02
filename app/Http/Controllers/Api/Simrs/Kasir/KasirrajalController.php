@@ -322,34 +322,21 @@ class KasirrajalController extends Controller
                 DB::rollBack();
                 return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
             }
-        }else if($request->carabayar === 'qris'){
-            if($request->jenislayanan === 'karcis'){
-                $validator = Validator::make($request->all(), [
-                    'billNumber' => 'required',
-                    'purposetrx' => 'required',
-                    'storelabel' => 'required',
-                    'customerlabel' => 'required',
-                    'terminalUser' => 'required',
-                    'amount' => 'required',
-                    'core_reference' => 'required',
-                    'customerPan' => 'required',
-                    'merchantPan' => 'required',
-                    'invoice_number' => 'required',
-                    'transactionDate' => 'required'
-                ]);
+        }else if($request->carabayar === 'Qris'){
 
-                if ($validator->fails()) {
-                    $response = [
-                        'responsCode' => '201',
-                        'responsDesc' => 'Missing some required data',
-                        'error' => $validator->errors(),
-                    ];
-                    return new JsonResponse($response, 200);
-                    // return response()->json($validator->errors(), 422);
+                try{
+                   DB::beginTransaction();
+                        $pembayaranqris = self::pembayaranqris($request, $request->noreg);
+                          return $pembayaranqris;
+                        if($pembayaranqris == 500){
+                            return new JsonResponse(['message' => 'Membuat QRIS Gagal...!!!'], 500);
+                        }
+                  DB::commit();
+                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                }catch(\Exception $th){
+                    DB::rollBack();
+                    return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
                 }
-
-                $req_qris = Tagihannontunai::where('rs17', $request->invoice_number)->first();
-            }
         }
 
         // if ($request->groupssistembayar === '1') {
@@ -426,13 +413,16 @@ class KasirrajalController extends Controller
 
     public static function pembayaranqris($request, $nokarcis)
     {
+
         $qris = bridgingbankjatimHelper::createqris($request);
+        //  return $qris;
         $xxx = $qris->responsCode;
+        // return $xxx;
         if ($xxx == '00') {
 
             $total = $request->total;
             $bj = 0.4;
-            $totalall = (int) $total + (int) ($total * $bj / 100);
+          //  $totalall = (int) $total + (int) ($total * $bj / 100);
             $status = '';
             if ($qris->status == '1') {
                 $status = 'true';
@@ -457,7 +447,7 @@ class KasirrajalController extends Controller
                     'rs15' => $qris->qrValue,
                     'rs16' => $qris->nmid,
                     'rs18' => $bj,
-                    'rs19' => $totalall,
+                    'rs19' => $qris->totalAmount,
                 ]
             );
             if (!$simpanqris) {
