@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Pelayanan\jasaKeperawatan;
+namespace App\Http\Controllers\Api\Simrs\Pelayanan\JasaKeperawatan;
 
 use App\Helpers\CekTarifHelper;
 use App\Helpers\FormatingHelper;
