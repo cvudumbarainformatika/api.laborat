@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Pelayanan\jasaKeperawatan\JasaKeperawatanController;
+use App\Http\Controllers\Api\Simrs\Pelayanan\JasaKeperawatan\JasaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\JasaVisiteKonsul\JasaVisiteKonsulController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
 use Illuminate\Support\Facades\Route;
