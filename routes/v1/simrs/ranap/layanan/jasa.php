@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Pelayanan\jasaKeperawatan\JasaKeperawatanController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\JasaVisiteKonsul\JasaVisiteKonsulController;
 use App\Http\Controllers\Api\Simrs\Pelayanan\Tindakan\TindakanController;
 use Illuminate\Support\Facades\Route;
@@ -13,4 +14,11 @@ Route::group([
     Route::post('/simpan', [JasaVisiteKonsulController::class, 'simpan']); 
     Route::post('/hapus', [JasaVisiteKonsulController::class, 'hapus']); 
     // Route::get('/listtindakanranap', [TindakanController::class, 'getTindakanRanap']); // fixed
+
+
+
+    Route::get('/keperawatan/list', [JasaKeperawatanController::class, 'index']); 
+    Route::get('/keperawatan/gettarif', [JasaKeperawatanController::class, 'getTarif']); 
+    Route::post('/keperawatan/simpan', [JasaKeperawatanController::class, 'simpan']); 
+    Route::post('/keperawatan/hapus', [JasaKeperawatanController::class, 'hapus']); 
 });
