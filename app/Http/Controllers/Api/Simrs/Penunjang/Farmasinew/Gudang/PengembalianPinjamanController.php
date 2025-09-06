@@ -265,9 +265,9 @@ class PengembalianPinjamanController extends Controller
                         [
                             'nopengembalian' => $key->nopengembalian,
                             'kdobat' => $key->kdobat,
+                            'id_rincipenerimaan' => $key->id_rincipenerimaan,
                         ],
                         [
-                            'id_rincipenerimaan' => $key->id_rincipenerimaan,
                             'nopenerimaan' => $stokItem->nopenerimaan,
                             'jml_dikembalikan' => $pengurangan,
                             'harga' => $stokItem->harga,
