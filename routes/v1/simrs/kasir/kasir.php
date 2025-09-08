@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Simrs\Kasir\BillingbynoregController;
 use App\Http\Controllers\Api\Simrs\Kasir\CariKarcisController;
+use App\Http\Controllers\Api\Simrs\Kasir\CariKwitansinonTunai;
 use App\Http\Controllers\Api\Simrs\Kasir\FlagingManualVaController;
 use App\Http\Controllers\Api\Simrs\Kasir\KasirrajalController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,7 @@ Route::group([
     Route::get('/rajal/cari-laborat', [CariKarcisController::class, 'carilaborat']);
     Route::get('/rajal/cari-radiologi', [CariKarcisController::class, 'cariradiologi']);
     Route::get('/rajal/cari-sharingbpjs', [CariKarcisController::class, 'getSharingRajal']);
+     Route::get('/rajal/getKwitansinontunai', [CariKwitansinonTunai::class, 'getKwitansinontunai']);
 
 
     Route::get('/rajal/kunjunganpoli', [KasirrajalController::class, 'kunjunganpoli']);
