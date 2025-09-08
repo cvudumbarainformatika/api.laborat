@@ -13,6 +13,7 @@ class SuratKeteranganDokter extends Model
     protected $guarded = ['id'];
     protected $casts = [
         'kepribadian' => 'array',
+        'riwayatObat' => 'array',
     ];
 
      public function dokter()

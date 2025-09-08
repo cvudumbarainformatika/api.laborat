@@ -323,4 +323,90 @@ class CekTarifHelper
         ];
     }
 
+    public static function cekTarifKeperawatan( $kdRuang, $kelas)
+    {
+      $results = DB::table('rs30tarif')
+        ->where('rs3', 'AK#')
+        ->where('rs4', 'like', "%|{$kdRuang}|%")
+        ->where('rs5', 'like', "%|{$kelas}|%")
+        // ->where('rs2', 'like', "%{$term}%")
+        ->orderBy('rs2')
+        ->get();
+
+      $data = [];
+
+      foreach ($results as $rs) {
+          $kode_biaya = $rs->rs1;
+          $nama       = $rs->rs2;
+
+          // Tentukan sarana & pelayanan sesuai kelas
+          switch ($kelas) {
+              case "3":
+                  $sarana    = $rs->rs6;
+                  $pelayanan = $rs->rs7;
+                  break;
+              case "2":
+                  $sarana    = $rs->rs8;
+                  $pelayanan = $rs->rs9;
+                  break;
+              case "1":
+                  $sarana    = $rs->rs10;
+                  $pelayanan = $rs->rs11;
+                  break;
+              case "Utama":
+                  $sarana    = $rs->rs12;
+                  $pelayanan = $rs->rs13;
+                  break;
+              case "VIP":
+                  $sarana    = $rs->rs14;
+                  $pelayanan = $rs->rs15;
+                  break;
+              case "VVIP":
+                  $sarana    = $rs->rs16;
+                  $pelayanan = $rs->rs17;
+                  break;
+              case "HCU":
+                  $sarana    = $rs->hcus;
+                  $pelayanan = $rs->hcup;
+                  break;
+              case "IC":
+                  $sarana    = $rs->icus;
+                  $pelayanan = $rs->icup;
+                  break;
+              case "ICC":
+                  $sarana    = $rs->iccus;
+                  $pelayanan = $rs->iccup;
+                  break;
+              case "NICU":
+                  $sarana    = $rs->nicus;
+                  $pelayanan = $rs->nicup;
+                  break;
+              case "IN":
+                  $sarana    = $rs->ins;
+                  $pelayanan = $rs->inp;
+                  break;
+              case "PS":
+                  $sarana    = $rs->pss;
+                  $pelayanan = $rs->psp;
+                  break;
+              case "ISO":
+                  $sarana    = $rs->isos;
+                  $pelayanan = $rs->isop;
+                  break;
+              default:
+                  $sarana = $pelayanan = 0;
+          }
+
+          $data[] = [
+              'label'      => $nama , // asumsi rp() helper format rupiah
+              'kode_biaya' => $kode_biaya,
+              'sarana'     => $sarana,
+              'pelayanan'  => $pelayanan,
+              'tarif'      => (int)$sarana + (int)$pelayanan,
+              'value'      => $rs->rs2,
+          ];
+      }
+
+      return $data;
+    }
 }
