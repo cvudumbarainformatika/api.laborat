@@ -130,4 +130,51 @@ class KontrakController extends Controller
 
         return $sambung;
     }
+
+    public function kuncidata(Request $request)
+    {
+        $request->validate([
+            'nokontrak' => 'required|string'
+        ]);
+
+        try {
+            $header = KontrakPengerjaan::where('nokontrak', $request->nokontrak)->first();
+
+            if (!$header) {
+                return response()->json(['message' => 'Data tidak ditemukan'], 404);
+            }
+
+            if ($header->kunci == '1') {
+                // Buka kunci → harus superadmin
+                $user = auth()->user()->pegawai_id;
+                $pg = Pegawai::find($user);
+
+                if (!$pg || $pg->kdpegsimrs !== 'sa') {
+                    return response()->json(['message' => 'Anda tidak Memiliki Izin Membuka Kunci Data ini, Silahkan Hubungi Admin'], 403);
+                }
+
+                if (!empty($header->nonpdls)) {
+                    return response()->json(['message' => 'Serahterima Sudah di NPD-LS'], 400);
+                }
+
+                $header->kunci = '';
+                $header->save();
+
+                return response()->json(['message' => 'Kunci berhasil dibuka'], 200);
+            } else {
+                $header->kunci = '1';
+                $header->save();
+
+                return response()->json(['message' => 'Data berhasil dikunci'], 200);
+            }
+
+        } catch (\Exception $e) {
+            // Log::error('Gagal membuka kunci serahterima: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat membuka kunci',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

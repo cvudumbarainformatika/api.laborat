@@ -675,7 +675,10 @@ class PenerimaanController extends Controller
             $pemesananH->save();
         }
 
-        $stok = Stokreal::where('nopenerimaan', $request->nopenerimaan)->where('kdobat', $penerimaanR->kdobat)->where('flag', '1')->get();
+        $stok = Stokreal::where('nopenerimaan', $request->nopenerimaan)
+            ->where('kdobat', $penerimaanR->kdobat)
+            ->where('nobatch', $penerimaanR->no_batch)
+            ->where('flag', '1')->get();
         if (count($stok)) {
             foreach ($stok as $st) {
                 $st->delete();

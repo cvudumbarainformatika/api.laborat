@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Kasir;
 use App\Helpers\bridgingbankjatimHelper;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Kasir\Karcis;
 use App\Models\Simrs\Kasir\Kwitansidetail;
 use App\Models\Simrs\Kasir\Kwitansilog;
@@ -27,7 +28,6 @@ class KasirrajalController extends Controller
 {
     public function kunjunganpoli()
     {
-
         $tgl = request('tgl');
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
@@ -279,190 +279,162 @@ class KasirrajalController extends Controller
         return $data;
     }
 
-    public function pembayaran(Request $request)
+    public function pembayarankarcis(Request $request)
     {
-        if($request->carabayar === 'Tunai'){
-            if($request->jenislayanan === 'karcis'){
-                DB::select('call karcisrj(@nomor)');
-                $x = DB::table('rs1')->select('karcisrj')->get();
-                $wew = $x[0]->karcisrj;
-                $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
-
-                $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
-                if ($simpankarcis == 5000) {
-                    return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
-                }
-                if ($simpankarcis == 500) {
-                    return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
-                }
-                $data = BillingbynoregController::billbynoregrajal($request->noreg);
-                return new JsonResponse(
-                    [
-                        'message' => 'Data Berhasil Disimpan',
-                        'result' => $data
-                    ],
-                    200
-                );
-            }
-        }else if($request->carabayar === 'qris'){
-            if($request->jenislayanan === 'karcis'){
-                $validator = Validator::make($request->all(), [
-                    'billNumber' => 'required',
-                    'purposetrx' => 'required',
-                    'storelabel' => 'required',
-                    'customerlabel' => 'required',
-                    'terminalUser' => 'required',
-                    'amount' => 'required',
-                    'core_reference' => 'required',
-                    'customerPan' => 'required',
-                    'merchantPan' => 'required',
-                    'invoice_number' => 'required',
-                    'transactionDate' => 'required'
-                ]);
-
-                if ($validator->fails()) {
-                    $response = [
-                        'responsCode' => '201',
-                        'responsDesc' => 'Missing some required data',
-                        'error' => $validator->errors(),
-                    ];
-                    return new JsonResponse($response, 200);
-                    // return response()->json($validator->errors(), 422);
-                }
-
-                $req_qris = Tagihannontunai::where('rs17', $request->invoice_number)->first();
-            }
-        }
-
-        // if ($request->groupssistembayar === '1') {
-        //     return 'wew';
-        // } else {
-        //     DB::select('call karcisrj(@nomor)');
-        //     $x = DB::table('rs1')->select('karcisrj')->get();
-        //     $wew = $x[0]->karcisrj;
-        //     $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
-
-        //     if ($request->jenispembayaran == 'karcis') {
-        //         if ($request->carabayar == 'qris') {
-        //             $bayarqris = self::pembayaranqris($request, $nokarcis);
-        //             if ($bayarqris == '500') {
-        //                 return new JsonResponse(['message' => 'Qris Gagal disimpan di DB RS...!!!']);
-        //             } else {
-        //                 $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
-        //                 if ($simpankarcis == 500) {
-        //                     return new JsonResponse(['Data Gagal Disimpan...!!!'], 500);
-        //                 }
-        //                 return new JsonResponse(
-        //                     [
-        //                         'message' => 'Qris Berhasil disimpan...!!!s',
-        //                         'result' => $bayarqris
-        //                     ]
-        //                 );
-        //             }
-        //         } else {
-        //             $cek = Karcis::where('noreg', $request->noreg)->where('batal', '')->count();
-        //             if ($cek > 0) {
-        //                 return new JsonResponse(['message' => 'Maaf Karcis Sudah tercetak...!!!'], 500);
-        //             }
-        //             $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
-        //             if ($simpankarcis == 500) {
-        //                 return new JsonResponse(['Data Gagal Disimpan...!!!'], 500);
-        //             }
-
-        //             return new JsonResponse(
-        //                 [
-        //                     'message' => 'Data Berhasil Disimpan',
-        //                     'result' => $simpankarcis
-        //                 ],
-        //                 200
-        //             );
-        //         }
-        //     } else {
-        //         DB::select('call kwitansilog(@nomor)');
-        //         $x = DB::table('rs1')->select('rs47')->get();
-        //         $wew = $x[0]->rs47;
-        //         $nokwitansi = FormatingHelper::karcisrj($wew, 'R-KJ1');
-
-        //         if ($request->carabayar === 'qris') {
-        //             $bayarqris = self::pembayaranqris($request, $nokwitansi);
-        //             if ($bayarqris == '500') {
-        //                 return new JsonResponse(['message' => 'Qris Gagal disimpan di DB RS...!!!']);
-        //             } elseif ($bayarqris == '200') {
-        //                 $simpankwitansi = self::simpanpembayaranselainkarcis($request, $nokwitansi);
-        //                 if ($simpankwitansi == '500') {
-        //                     return new JsonResponse(['Data Gagal Disimpan...!!!'], 500);
-        //                 }
-        //                 return new JsonResponse(
-        //                     [
-        //                         'message' => 'Qris Berhasil disimpan...!!!s',
-        //                         'result' => $simpankwitansi
-        //                     ]
-        //                 );
-        //             } else {
-        //                 return new JsonResponse(['result' => $bayarqris]);
-        //             }
-        //         }
-        //     }
+        // $cek = Karcis::with(
+        //     [
+        //         'rincian'
+        //     ]
+        // )->where('batal', '!=', '1')->where('noreg', $request->noreg)->count();
+        // if($cek > 0){
+        //     return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
         // }
+
+        if($request->carabayar === 'Tunai'){
+            try{
+                DB::beginTransaction();
+                    DB::select('call karcisrj(@nomor)');
+                    $x = DB::table('rs1')->select('karcisrj')->get();
+                    $wew = $x[0]->karcisrj;
+                    $nokarcis = FormatingHelper::karcisrj($wew, 'KRJ');
+
+                    $simpankarcis = self::simpanpembayarankarcis($request, $nokarcis);
+                    if ($simpankarcis == 500) {
+                        return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+                    }
+
+               DB::commit();
+                    $datakarcis = Karcis::with([
+                        'rincian',
+                        'pegawai:kdpegsimrs,nama'
+                    ])->where('noreg', $request->noreg)->get();
+                    return new JsonResponse(
+                        [
+                            'message' => 'Data Berhasil Disimpan',
+                            'kwitansikarcis' => $datakarcis
+                        ],
+                        200
+                    );
+            }catch(\Exception $th){
+                DB::rollBack();
+                return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
+            }
+        }else if($request->carabayar === 'Qris'){
+                try{
+                   DB::beginTransaction();
+                        $pembayaranqris = self::pembayaranqris($request, $request->noreg);
+                          return $pembayaranqris;
+                        if($pembayaranqris == 500){
+                            return new JsonResponse(['message' => 'Membuat QRIS Gagal...!!!'], 500);
+                        }
+                DB::commit();
+                        return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!'], 200);
+                }catch(\Exception $th){
+                    DB::rollBack();
+                    return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
+                }
+        }else if($request->carabayar === 'VA'){
+            //try{
+                // DB::beginTransaction();
+                        $pembayaranva = self::pembayaranqris($request, $request->noreg);
+
+                        if($pembayaranva == 500){
+                            return new JsonResponse(['message' => 'Membuat QRIS Gagal...!!!'], 500);
+                        }
+            //     DB::commit();
+                         return new JsonResponse(
+                            [
+                                'message' => 'Data Berhasil Disimpan...!!!',
+                                'result' => $pembayaranva
+                            ], 200);
+            // }catch(\Exception $th){
+            //     DB::rollBack();
+            //     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
+            // }
+        }
     }
 
     public static function pembayaranqris($request, $nokarcis)
     {
-        $qris = bridgingbankjatimHelper::createqris($request);
-        $xxx = $qris->responsCode;
-        if ($xxx == '00') {
-
-            $total = $request->total;
-            $bj = 0.4;
-            $totalall = (int) $total + (int) ($total * $bj / 100);
-            $status = '';
-            if ($qris->status == '1') {
-                $status = 'true';
-            }
-            $simpanqris = Tagihannontunai::firstOrCreate(
-                [
-                    'rs17' => $qris->invoice_number
-                ],
-                [
-                    'rs1' => $request->noreg,
-                    'rs2' => $request->nama,
-                    'rs3' => $request->norm,
-                    'rs4' => $nokarcis,
-                    'rs5' => date('Y-m-d H:i:s'),
-                    'rs6' =>  date('Y-m-d'),
-                    'rs7' => auth()->user()->pegawai_id,
-                    'rs8' => $total,
-                    'rs9' => $total,
-                    'rs10' => 'KASIR RAJAL',
-                    'rs11' => 'KARCIS',
-                    'rs13' => $status,
-                    'rs15' => $qris->qrValue,
-                    'rs16' => $qris->nmid,
-                    'rs18' => $bj,
-                    'rs19' => $totalall,
-                ]
-            );
-            if (!$simpanqris) {
+        $user = Pegawai::find(auth()->user()->pegawai_id);
+        if($request->carabayar === 'Qris'){
+            $jatimresp = bridgingbankjatimHelper::createqris($request);
+            $xxx = $jatimresp->responsCode;
+            if ($xxx == '00') {
+                $total = $request->total;
+                $bj = 0.4;
+                $status = '';
+                if ($jatimresp->status == '1') {
+                    $status = 'true';
+                }
+                $simpanjatimresp = Tagihannontunai::firstOrCreate(
+                    [
+                        'rs17' => $jatimresp->invoice_number
+                    ],
+                    [
+                        'rs1' => $request->noreg,
+                        'rs2' => $request->nama,
+                        'rs3' => $request->norm,
+                        'rs4' => $nokarcis,
+                        'rs5' => date('Y-m-d H:i:s'),
+                        'rs6' =>  date('Y-m-d'),
+                        'rs7' => $user,
+                        'rs8' => $total,
+                        'rs9' => $total,
+                        'rs10' => 'KASIR RAJAL',
+                        'rs11' => 'KARCIS',
+                        'rs13' => $status,
+                        'rs15' => $jatimresp->qrValue,
+                        'rs16' => $jatimresp->nmid,
+                        'rs18' => $bj,
+                        'rs19' => $jatimresp->totalAmount,
+                    ]
+                );
+                if (!$simpanjatimresp) {
+                    return 500;
+                }
+                return $jatimresp;
+            } else {
                 return 500;
             }
-            return $qris;
-        } else {
-            return 500;
+        }else{
+            $jatimresp = bridgingbankjatimHelper::createva($request);
+            $koversi = json_decode(json_encode($jatimresp), true);
+            $xxx = $koversi['response']['Status']['ResponseCode']; //
+            if ($xxx == '00') {
+                $simpanjatimresp = Tagihannontunai::firstOrCreate(
+                    [
+                        'rs1' => $request->noreg,
+                        'rs2' => $request->nama,
+                        'rs3' => $request->norm,
+                        'rs4' => $koversi['response']['VirtualAccount'], // array
+                        'rs5' => date('Y-m-d H:i:s'),
+                        'rs6' => $jatimresp['tglkadaluarsax'],
+                        'rs7' => $user,
+                        'rs8' => $request->total,
+                        'rs9' => $request->total,
+                        'rs10' => 'KASIR RAJAL',
+                        'rs11' => 'KARCIS',
+                       'rs13' => $koversi['response']['Status']['IsError'], // array
+                        // 'rs15' => $jatimresp->qrValue,
+                        // 'rs16' => $jatimresp->nmid,
+                        // 'rs18' => $bj,
+                        // 'rs19' => $jatimresp->totalAmount,
+                    ]
+                );
+                if (!$simpanjatimresp) {
+                    return 500;
+                }
+                return $jatimresp;
+            } else {
+                return 500;
+            }
         }
     }
 
     public static function simpanpembayarankarcis($request, $nokarcis)
     {
-        $data = Karcis::with(
-            [
-                'rincian'
-            ]
-        )->where('batal', '!=', '1')
-        ->where('noreg', $request->noreg)->count();
-        if($data > 0){
-            return 5000;
-        }
-
+        $user = Pegawai::find(auth()->user()->pegawai_id);
         $txtrinci="";
 		$rinci = Karcispoli::select('rs6', DB::raw('rs7+rs11 as jml'))->where('rs1', $request->noreg)
         ->whereIn('rs3', ['RM#', 'K2#', 'K1#', 'K3#', 'K4#', 'K5#', 'K6#'])
@@ -470,6 +442,7 @@ class KasirrajalController extends Controller
         foreach ($rinci as $val) {
             $txtrinci .= ','.$val['rs6'] . ':' . $val['jml'] . ',';
         }
+
         $simpankarcis = Karcis::firstOrCreate(
             [
 
@@ -488,7 +461,7 @@ class KasirrajalController extends Controller
                 'rinci' => $txtrinci,
                 'carabayar' => $request->carabayar,
                 'tglx' => date('Y-m-d H:i:s'),
-                'users' => auth()->user()->pegawai_id
+                'users' => $user
             ]
         );
         if (!$simpankarcis) {
@@ -497,6 +470,7 @@ class KasirrajalController extends Controller
 
         $x = ['RM#', 'K2#', 'K1#', 'K3#', 'K4#', 'K5#', 'K6#'];
         $cariid = Pembayaran::select('id', 'rs6', DB::raw('rs7+rs11 as jml'))->whereIn('rs3', $x)->where('rs1', $request->noreg)->get();
+        // return $cariid;
         foreach ($cariid as $val) {
             //$wew[] = $val['jml'];
             $simpandetail = Kwitansidetail::create(

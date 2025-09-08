@@ -439,6 +439,8 @@ class DepoController extends Controller
     }
     public function newterimadistribusi(Request $request)
     {
+        $belum = Permintaandepoheder::where('no_permintaan', $request->no_permintaan)->where('flag', '3')->first();
+        if (!$belum) return new JsonResponse(['message' => 'Permintaan sudah diterima'], 410);
         try {
             DB::connection('farmasi')->beginTransaction();
             $obatditerima = Mutasigudangkedepo::select(
@@ -524,9 +526,10 @@ class DepoController extends Controller
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
-                'message' => 'Data Gagal Disimpan ',
-                'result' => '' . $e,
-                'err' =>  $e,
+                'message' => 'Data Gagal Disimpan ' . $e->getMessage(),
+                // 'result' => '' . $e,
+                'flie' =>  $e->getFile(),
+                'line' =>  $e->getLine(),
                 'caristok' => $caristok ?? '',
                 'mutasi' => $mutasi ?? '',
                 'stoknya' => $data ?? '',

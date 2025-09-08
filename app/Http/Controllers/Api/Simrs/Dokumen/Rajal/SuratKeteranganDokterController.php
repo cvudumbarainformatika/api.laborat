@@ -25,33 +25,55 @@ class SuratKeteranganDokterController extends Controller
 
                 $notatindakan = FormatingHelper::notatindakan($wew, 'T-HD');
 
-                $cekharga = Mtindakan::where('rs1', 'T00668')->first();
-                $js = $cekharga->rs8 ?? 0;
-                $jp = $cekharga->rs9 ?? 0;
+                if ($request->jenis === 'SRT02' || $request->jenis === 'SRT03') {
+                    $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
+                } 
 
-                $wew = FormatingHelper::session_user();
-                $kdpegsimrs = $wew['kodesimrs'];
 
-                $createbill = Tindakan::create([
-                    'rs1' => $request->noreg,
-                    'rs2' => $notatindakan,
-                    'rs3' => date('Y-m-d H:i:s'),
-                    'rs4' => 'T00668',
-                    'rs5' => 1,
-                    'rs6' => $js,
-                    'rs7' => $js,
-                    'rs8' => $request->kddpjp,
-                    'rs9' => $kdpegsimrs,
-                    // 'rs10' => $jp,
-                    // 'rs11' => $request->kdpoli,
-                    'rs13' => $jp,
-                    'rs14' => $jp,
-                    'rs20' => 'Surat Keterangan Dokter',
-                    'rs22' => $request->kdpoli,
-                    'rs24' => $request->sistembayar,
-                ]);
+                $createbill = null;
+                if ($request->jenis !== 'SRT03') {
+                    $createbill = self::createBill($request, $notatindakan);
+                }
 
-                $kode = 'SRT01';
+
+                // $cekharga = Mtindakan::where('rs1', 'T00668')->first();
+
+                // if ($request->jenis === 'SRT02') {
+                //     $cekharga = Mtindakan::where('rs1', 'TX0148')->first();
+                // }
+
+                // $js = $cekharga->rs8 ?? 0;
+                // $jp = $cekharga->rs9 ?? 0;
+
+
+                // $wew = FormatingHelper::session_user();
+                // $kdpegsimrs = $wew['kodesimrs'];
+
+                // $rs20 = 'Surat Keterangan Dokter';
+                // if ($request->jenis === 'SRT02') {
+                //     $rs20 = 'Surat Keterangan Kesehatan Jiwa';
+                // }
+
+                // $createbill = Tindakan::create([
+                //     'rs1' => $request->noreg,
+                //     'rs2' => $notatindakan,
+                //     'rs3' => date('Y-m-d H:i:s'),
+                //     'rs4' => 'T00668',
+                //     'rs5' => 1,
+                //     'rs6' => $js,
+                //     'rs7' => $js,
+                //     'rs8' => $request->kddpjp,
+                //     'rs9' => $kdpegsimrs,
+                //     // 'rs10' => $jp,
+                //     // 'rs11' => $request->kdpoli,
+                //     'rs13' => $jp,
+                //     'rs14' => $jp,
+                //     'rs20' => $rs20,
+                //     'rs22' => $request->kdpoli,
+                //     'rs24' => $request->sistembayar,
+                // ]);
+
+                $kode = $request->jenis;
                 $nomor = '@nomor';
 
                 DB::connection('mysql')->select('call conterSurat('.$nomor.', "'.$kode.'")');
@@ -74,10 +96,22 @@ class SuratKeteranganDokterController extends Controller
                     'perbedaanWarna' => $request->warna,
                     // 'tinggiBadan' => $request->tinggi,
                     // 'beratBadan' => $request->berat,
+
+
+                    // ini untuk test kejiwaan
+                    'pendidikan' => $request->pendidikan,
+                    'statusperkawinan' => $request->statusperkawinan,
+                    'psikatopologi' => $request->psikatopologi,
+                    'kepribadian' => $request->kepribadian,
+                    'kecerdasan' => $request->kecerdasan,
+
+                    // ini untuk napza
+                    'riwayatObat' => $request->riwayatObat,
+
                     'kesimpulan' => $request->doc,
                     'dokter' => $request->dokter,
                     'kdRuang' => $request->kdpoli,
-                    'tindakan_id' => $createbill->id,
+                    'tindakan_id' => $createbill ? $createbill->id : null,
                 ]);
             DB::commit();
                 return new JsonResponse(['message' => 'Berhasil menyimpan surat keterangan dokter','result' => $simpan], 200);
@@ -85,6 +119,48 @@ class SuratKeteranganDokterController extends Controller
                 DB::rollback();
                 return new JsonResponse(['message' => 'Gagal Disimpan', 'error' => $th->getMessage()], 500);
             }
+    }
+
+    public static function createBill($request, $notatindakan)
+    {
+       $cekharga = Mtindakan::where('rs1', 'T00668')->first();
+
+        if ($request->jenis === 'SRT02') {
+            $cekharga = Mtindakan::where('rs1', 'TX0148')->first();
+        }
+
+        $js = $cekharga->rs8 ?? 0;
+        $jp = $cekharga->rs9 ?? 0;
+
+
+        $wew = FormatingHelper::session_user();
+        $kdpegsimrs = $wew['kodesimrs'];
+
+        $rs20 = 'Surat Keterangan Dokter';
+        if ($request->jenis === 'SRT02') {
+            $rs20 = 'Surat Keterangan Kesehatan Jiwa';
+        }
+
+        $createbill = Tindakan::create([
+            'rs1' => $request->noreg,
+            'rs2' => $notatindakan,
+            'rs3' => date('Y-m-d H:i:s'),
+            'rs4' => 'T00668',
+            'rs5' => 1,
+            'rs6' => $js,
+            'rs7' => $js,
+            'rs8' => $request->kddpjp,
+            'rs9' => $kdpegsimrs,
+            // 'rs10' => $jp,
+            // 'rs11' => $request->kdpoli,
+            'rs13' => $jp,
+            'rs14' => $jp,
+            'rs20' => $rs20,
+            'rs22' => $request->kdpoli,
+            'rs24' => $request->sistembayar,
+        ]);
+
+        return $createbill;
     }
 
     public function skdbatal(Request $request)
@@ -130,6 +206,7 @@ class SuratKeteranganDokterController extends Controller
 
     public function cekpembayaran(Request $request)
     {
+        // return new JsonResponse(['message' => 'OK'], 200);
         if($request->sistembayar === 'UMUM'){
             $data = Kwitansidetail::where('id_trans', $request->tindakan_id)->count();
             // return $data;

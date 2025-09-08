@@ -40,7 +40,7 @@ class RadiologimetaController extends Controller
     public function listpermintaanradiologirinci()
     {
         $data = Cache::remember('m_pemeriksaan_radiologi', now()->addDays(7), function () {
-            return Mpemeriksaanradiologi::all();
+            return Mpemeriksaanradiologi::where('hidden', '')->get();
         });
         // $rincianpermintaan = Mpemeriksaanradiologi::all();
         return new JsonResponse($data);
@@ -53,7 +53,7 @@ class RadiologimetaController extends Controller
         }
 
         // cekk kasir
-        // jika bukan rawat inap 
+        // jika bukan rawat inap
         $ranap = $request->isRanap;
 		$num_cek_lock=null;
         if (!$ranap) {
@@ -73,7 +73,7 @@ class RadiologimetaController extends Controller
         }
 
         if ($num_cek_lock) {
-            
+
             return new JsonResponse(
                 [
                     'status' => 'Error',
@@ -266,8 +266,8 @@ class RadiologimetaController extends Controller
 
     public function hapusradiologi(Request $request)
     {
-        
-        
+
+
         $cekKasir = DB::table('rs23')->select('rs42')->where('rs1', $request->noreg)->where('rs41', '=', '1')->get();
         if (count($cekKasir) > 0) {
             return response()->json(['status' => 'failed', 'message' => 'Maaf, data pasien telah dikunci oleh kasir pada tanggal ' . $cekKasir[0]->rs42], 500);
@@ -279,7 +279,7 @@ class RadiologimetaController extends Controller
         }
 
         // $kunci = $cari->rs12 === '1'; ini yg lama
-        $kunci = $cari->rs9 === '1'|| $cari->rs9 === '2'; 
+        $kunci = $cari->rs9 === '1'|| $cari->rs9 === '2';
         if ($kunci) {
             return new JsonResponse(['message' => 'Maaf, Data telah dikunci'], 500);
         }

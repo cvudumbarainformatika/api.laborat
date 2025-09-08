@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Kasir;
 
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,6 +17,12 @@ class Karcis extends Model
 
     public function rincian()
     {
-        return $this->hasMany(Kwitansidetail::class, 'id_kwitansilog','id');
+        return $this->hasMany(Kwitansidetail::class, 'no_kwitansi','nokarcis');
     }
+
+    public function pegawai()
+    {
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs','users');
+    }
+
 }

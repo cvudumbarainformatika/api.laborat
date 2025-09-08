@@ -11,6 +11,7 @@ class Tagihannontunai extends Model
     use HasFactory;
     protected $table = 'rs297';
     protected $guarded = ['id'];
+     public $timestamps = false;
 
     public function flagbayar()
     {

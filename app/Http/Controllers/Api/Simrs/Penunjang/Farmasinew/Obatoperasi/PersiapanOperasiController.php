@@ -462,6 +462,9 @@ class PersiapanOperasiController extends Controller
 
     public function simpanDistribusi(Request $request)
     {
+        // cek header apakah masih dalam staus belum distribusi
+        $belum = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->where('flag', '1')->first();
+        if (!$belum) return new JsonResponse(['message' => 'Status Persiapan Operasi bukan dikirim, apakah sudah di distribusikan?'], 410);
         // cek stok
         $cek = $request->rinci;
         $st = [];

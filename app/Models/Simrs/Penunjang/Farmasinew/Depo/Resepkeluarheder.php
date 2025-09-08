@@ -12,6 +12,7 @@ use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Penunjang\Farmasinew\PelayananInformasiObat;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -131,5 +132,10 @@ class Resepkeluarheder extends Model
     public function telaah()
     {
         return $this->hasOne(TelaahResep::class, 'noresep', 'noresep');
+    }
+
+    public function retur()
+    {
+        return $this->hasOne(Returpenjualan_h::class, 'noresep', 'noresep');
     }
 }

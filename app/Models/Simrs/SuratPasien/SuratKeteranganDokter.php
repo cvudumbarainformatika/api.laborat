@@ -11,6 +11,10 @@ class SuratKeteranganDokter extends Model
     use HasFactory;
     protected $table = 'suratketerangandokter';
     protected $guarded = ['id'];
+    protected $casts = [
+        'kepribadian' => 'array',
+        'riwayatObat' => 'array',
+    ];
 
      public function dokter()
     {

@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use LZCompressor\LZString;
 
@@ -9,12 +10,15 @@ class bridgingbankjatimHelper
 {
     public static function createqris($request)
     {
+
+        $billNumberxx =$request->jenislayanan === 'KARCIS' ? $request->noreg :  $request->nota;
         $url = "https://jatimva.bankjatim.co.id/MC/Qris/Dynamic";
-        $total = $request->total;
-        $bj = 0.4;
+        $total = (int) $request->total;
+        $bj = (int) 0.4;
+
         $totalall = (int) $total + (int) ($total * $bj / 100);
-        $tglsekarang = date('y-m-d');
-        $billNumber_tampung = $request->nota;
+        $tglsekarang = date('Y-m-d 23:59:59');
+        $billNumber_tampung = $billNumberxx;
         $terminalUser_tampung = 'U012001';
         $merchanthashkey = '8M9R0BZE21';
 
@@ -26,8 +30,9 @@ class bridgingbankjatimHelper
         $storelabel = 'RSUD DR M SALEH';
         $customerlabel = 'PUBLIC';
         $terminalUser = $terminalUser_tampung;
-        $expiredDate = date('Y-m-d 23:59:59');;
+        $expiredDate = $tglsekarang;
         $amount = $totalall;
+
         $data = [
             'merchantPan' => $merchantPan,
             'hashcodeKey' => $hashcodeKey,
@@ -40,8 +45,49 @@ class bridgingbankjatimHelper
             'amount' => $amount
         ];
         $myvars = json_encode($data);
+
         $reqjatim = self::reqqris('POST', $url, $myvars);
         return $reqjatim;
+    }
+
+    public static function createva($request)
+    {
+        $url="https://jatimva.bankjatim.co.id/Va/RegPen/";
+        $vajatim= 18012000;
+        $tgl = substr(date('Ymd'),2,-2);
+        $kasir=2;
+
+        DB::select('call conterva(@nomor)');
+        $x = DB::table('rs1')->select('rs297')->get();
+        $counter = $x[0]->rs297;
+
+        $tglsekarang= date('Y-m-d');
+		$tglkadaluarsax = date('Y-m-d', strtotime('+6 days', strtotime($tglsekarang)));
+		$tglkadaluarsa=str_replace("-","",$tglkadaluarsax);
+
+        $idpembayaran=$vajatim.''.$kasir.''.$tgl.''.$counter;
+        $data = [
+            "VirtualAccount"=>$idpembayaran,
+			"Nama"=>$request->nama,
+			"TotalTagihan"=>$request->total,
+			"TanggalExp"=>$tglkadaluarsa,
+			"Berita1"=>"RSUD MOHAMAD SALEH",
+			"Berita2"=>$request->kodepoli,
+			"Berita3"=>'PELUNASAN',
+			"Berita4"=>"",
+			"Berita5"=>"",
+			"FlagProses"=> 1,
+			"Flag"=> "F",
+			"FlagLunas"=> "N",
+			"sign"=> "+"
+        ];
+        $myvars = json_encode($data);
+
+        $reqjatim = self::reqqris('POST', $url, $myvars);
+         return [
+            'response' => $reqjatim,
+            'tglkadaluarsax' => $tglkadaluarsax
+        ];
     }
 
     public static function reqqris($method, $url, $myvars)
@@ -78,6 +124,7 @@ class bridgingbankjatimHelper
         }
 
         curl_setopt($session, CURLOPT_RETURNTRANSFER, TRUE);
+
         $response = curl_exec($session);
         return json_decode($response);
     }

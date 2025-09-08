@@ -33,8 +33,9 @@ class PulangController extends Controller
   {
 
     /// cek permintaan retur resep
-    // $resep = Resepkeluarheder::where('noreg', $request->noreg)->where('depo',  'Gd-04010102')->whereNotNull('flag_permintaan_retur')->first();
-    // if ($resep) return new JsonResponse(['message' => 'Proses Retur Obat Belum selesai. Pasien Belum Bisa di Pulangkan'], 410);
+    $resep = Resepkeluarheder::where('noreg', $request->noreg)->whereIn('depo',  ['Gd-04010102', 'Gd-02010104'])->whereNotNull('flag_permintaan_retur')->first();
+    if ($resep) return new JsonResponse(['message' => 'Proses Retur Obat Belum selesai. Pasien Belum Bisa di Pulangkan'], 410);
+    // kasih trigger untuk ngisi tabel pamakaian obat (lek sido) 
     $user = Pegawai::find(auth()->user()->pegawai_id);
     $kdpegsimrs = $user->kdpegsimrs;
     //  return $anamnesis;
