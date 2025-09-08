@@ -11,4 +11,9 @@ class MapHeder extends Model
     protected $connection = 'arsip';
     protected $table = 'kelompokMap_H';
     protected $guarded = ['id'];
+
+    public function rinciandalammap()
+    {
+        return $this->hasMany(MapRincian::class, 'id_heder', 'id');
+    }
 }

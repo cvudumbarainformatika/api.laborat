@@ -10,6 +10,7 @@ Route::group([
 ], function () {
     Route::get('/list-data', [DataMapController::class, 'listdata']);
     Route::post('/simpan-map', [DataMapController::class, 'simpanmap']);
-
+    Route::post('/simpanisimap', [DataMapController::class, 'simpanisimap']);
+    Route::get('/rincian-map', [DataMapController::class, 'rinciandidalammap']);
 });
 

@@ -50,6 +50,7 @@ class ListDataArsipController extends Controller
                     ->orWhere('master_kode.nama', 'LIKE', '%' . request('q') . '%');
             })
             ->whereIn('data_arsip.unit_pengolah', $bidangbagian)
+            ->where('data_arsip.flagmap', '')
             ->paginate(request('per_page'));
         return new JsonResponse($data);
     }
@@ -228,6 +229,46 @@ class ListDataArsipController extends Controller
         }
     }
 
+    public function listdataarsipuntukmap()
+    {
+        if (request('bidangbagian') === '' || request('bidangbagian') === null) {
+            // $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
+            // $raw = collect($organisasi);
+            // $only = $raw->map(function ($y) {
+            //     return $y->kode;
+            // });
+            $bidangbagian = ['1.2.4.2'];
+        } else {
+            $bidangbagian = array(request('bidangbagian'));
+        }
+        $data = Dataarsip::select(
+            'data_arsip.*',
+            'master_kode.kode as kodeklasifikasi',
+            'master_kode.nama as namakelasifikasi',
+            'master_lokasi.nama_lokasi',
+            'master_media.nama_media'
+        )
+            ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
+            ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
+            ->join('master_media', 'data_arsip.media', 'master_media.id')
+            ->with(
+                [
+                    'unitpengolah',
+                    'user'
+                ]
+            )
+            ->where(function ($query) {
+                $query->where('data_arsip.noarsip', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('data_arsip.uraian', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('data_arsip.nobox', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('master_kode.kode', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('master_kode.nama', 'LIKE', '%' . request('q') . '%');
+            })
+            ->whereIn('data_arsip.unit_pengolah', $bidangbagian)
+            ->where('data_arsip.flagmap', '')
+            ->get();
+        return new JsonResponse($data);
+    }
 
 
     // public function simpanarsip(Request $request)

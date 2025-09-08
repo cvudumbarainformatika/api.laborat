@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Simrs\UnitPelayananArsip;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\MorganisasiAdministrasi;
+use App\Models\Simrs\UnitPengelolahArsip\Dataarsip;
 use App\Models\Simrs\UnitPengelolahArsip\MapHeder;
+use App\Models\Simrs\UnitPengelolahArsip\MapRincian;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -67,4 +69,50 @@ class DataMapController extends Controller
             return new JsonResponse(['message' => 'Data Gagal Disimpan', 'error' => $e], 500);
         }
     }
+
+    public function simpanisimap(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+                $user = FormatingHelper::session_user();
+                $kdpegsimrs = $user['kodesimrs'];
+                $simpan = MapRincian::updateOrCreate(
+                    [
+                        'id_heder' => $request->idmap,
+                        'noarsip' => $request->noarsip,
+                        'users'=> $kdpegsimrs
+                    ]
+                );
+                $update = Dataarsip::where('noarsip', $request->noarsip)->first();
+                $update->flagmap = 1;
+                $update->save();
+            DB::commit();
+                $rincianmap = MapRincian::with(
+                        [
+                            'dataarsip' => function ($q) {
+                                $q->with(['klasifikasi','unitpengolah','media','user']);
+                            }
+                        ]
+                    )->where('id_heder', $request->idmap)->get();
+                return new JsonResponse(
+                    ['message' => 'Data Berhasil Disimpan','result' => $request->noarsip,'rincianmap' => $rincianmap,'idmap' => $request->idmap],200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['message' => 'Data Gagal Disimpan', 'error' => $e], 500);
+        }
+    }
+
+    public function rinciandidalammap()
+    {
+        $data = MapRincian::with(
+            [
+                'dataarsip' => function ($q) {
+                    $q->with(['klasifikasi','unitpengolah','media','user']);
+                }
+            ]
+        )
+        ->where('id_heder', request('idmap'))->get();
+        return new JsonResponse($data);
+    }
+
 }

@@ -11,4 +11,9 @@ class MapRincian extends Model
     protected $connection = 'arsip';
     protected $table = 'kelompokMap_R';
     protected $guarded = ['id'];
+
+    public function dataarsip()
+    {
+        return $this->belongsTo(Dataarsip::class, 'noarsip', 'noarsip');
+    }
 }

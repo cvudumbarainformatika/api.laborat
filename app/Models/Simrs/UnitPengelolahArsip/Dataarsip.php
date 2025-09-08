@@ -2,6 +2,8 @@
 
 namespace App\Models\Simrs\UnitPengelolahArsip;
 
+use App\Models\Arsip\Master\MkelasifikasiArsip;
+use App\Models\Arsip\Master\MmediaArsip;
 use App\Models\MorganisasiAdministrasi;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,5 +24,15 @@ class Dataarsip extends Model
     public function user()
     {
         return $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'username');
+    }
+
+    public function klasifikasi()
+    {
+        return $this->hasOne(MkelasifikasiArsip::class, 'kode', 'kode');
+    }
+
+    public function media()
+    {
+        return $this->hasOne(MmediaArsip::class, 'id', 'media');
     }
 }
