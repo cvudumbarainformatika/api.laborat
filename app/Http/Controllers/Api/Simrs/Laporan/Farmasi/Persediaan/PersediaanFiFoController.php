@@ -148,7 +148,7 @@ class PersediaanFiFoController extends Controller
                     'stokopname.nopenerimaan',
                     'stokopname.harga',
                     DB::raw('sum(stokopname.jumlah) as jumlah'),
-                    DB::raw('sum(stokopname.jumlah * stokopname.harga) as sub'),
+                    DB::raw('ROUND(sum(stokopname.jumlah * stokopname.harga),2) as sub'),
                     // DB::raw('stokopname.harga as harga'),
                     // 'daftar_hargas.harga as dftHar',
                 )
@@ -173,7 +173,7 @@ class PersediaanFiFoController extends Controller
                     'penerimaan_r.satuan_kcl',
                     'penerimaan_r.harga_netto_kecil as harga',
                     DB::raw('sum(penerimaan_r.jml_terima_k) as jumlah'),
-                    DB::raw('sum(penerimaan_r.harga_netto_kecil * penerimaan_r.jml_terima_k) as sub')
+                    DB::raw('ROUND(sum(penerimaan_r.harga_netto_kecil * penerimaan_r.jml_terima_k),2) as sub')
                 )
                     ->leftJoin('penerimaan_h', 'penerimaan_h.nopenerimaan', '=', 'penerimaan_r.nopenerimaan')
                     ->with('pbf:kode,nama')
@@ -193,7 +193,7 @@ class PersediaanFiFoController extends Controller
                     'resep_keluar_r.nopenerimaan',
                     'resep_keluar_r.harga_beli as harga',
                     DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
-                    DB::raw('sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli) as sub')
+                    DB::raw('ROUND(sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli),2) as sub')
 
                 )
                     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
@@ -219,7 +219,7 @@ class PersediaanFiFoController extends Controller
                     'resep_keluar_r.nopenerimaan',
                     'resep_keluar_r.harga_beli as harga',
                     DB::raw('sum(resep_keluar_r.jumlah) as jumlah'),
-                    DB::raw('sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli) as sub')
+                    DB::raw('ROUND(sum(resep_keluar_r.jumlah * resep_keluar_r.harga_beli),2) as sub')
 
                 )
                     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_r.noresep')
@@ -253,7 +253,7 @@ class PersediaanFiFoController extends Controller
                     'persiapan_operasi_rincis.noresep',
                     'daftar_hargas.harga',
                     DB::raw('sum(persiapan_operasi_distribusis.jumlah) as jumlah'),
-                    DB::raw('sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga) as sub'),
+                    DB::raw('ROUND(sum(persiapan_operasi_distribusis.jumlah * daftar_hargas.harga),2) as sub'),
 
                 )
                     ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -290,7 +290,7 @@ class PersediaanFiFoController extends Controller
                     'daftar_hargas.harga',
                     // DB::raw('sum(persiapan_operasi_distribusis.jumlah) as keluar'),
                     DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur) as jumlah'),
-                    DB::raw('sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga) as sub'),
+                    DB::raw('ROUND(sum(persiapan_operasi_distribusis.jumlah_retur * daftar_hargas.harga),2) as sub'),
 
                 )
                     ->leftJoin('persiapan_operasis', 'persiapan_operasis.nopermintaan', '=', 'persiapan_operasi_distribusis.nopermintaan')
@@ -325,7 +325,7 @@ class PersediaanFiFoController extends Controller
                     'resep_keluar_racikan_r.harga_beli as harga',
                     'resep_keluar_racikan_r.harga_beli as harga',
                     DB::raw('sum(resep_keluar_racikan_r.jumlah) as jumlah'),
-                    DB::raw('sum(resep_keluar_racikan_r.jumlah * resep_keluar_racikan_r.harga_beli) as sub')
+                    DB::raw('ROUND(sum(resep_keluar_racikan_r.jumlah * resep_keluar_racikan_r.harga_beli),2) as sub')
 
                 )
                     ->join('resep_keluar_h', 'resep_keluar_h.noresep', '=', 'resep_keluar_racikan_r.noresep')
@@ -350,7 +350,7 @@ class PersediaanFiFoController extends Controller
                     'retur_penjualan_r.nopenerimaan',
                     'retur_penjualan_r.harga_beli as harga',
                     DB::raw('sum(retur_penjualan_r.jumlah_retur) as jumlah'),
-                    DB::raw('sum(retur_penjualan_r.jumlah_retur * retur_penjualan_r.harga_beli) as sub'),
+                    DB::raw('ROUND(sum(retur_penjualan_r.jumlah_retur * retur_penjualan_r.harga_beli),2) as sub'),
 
                 )
                     ->join('retur_penjualan_h', 'retur_penjualan_h.noretur', '=', 'retur_penjualan_r.noretur')
@@ -375,7 +375,7 @@ class PersediaanFiFoController extends Controller
                     'mutasi_gudangdepo.nopenerimaan',
                     'mutasi_gudangdepo.harga',
                     DB::raw('sum(mutasi_gudangdepo.jml) as jumlah'),
-                    DB::raw('sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga) as sub'),
+                    DB::raw('ROUND(sum(mutasi_gudangdepo.jml * mutasi_gudangdepo.harga),2) as sub'),
                     'permintaan_h.dari',
                     'permintaan_h.dari as kdruang',
                     'permintaan_h.tgl_kirim_depo as tgl',
@@ -401,7 +401,7 @@ class PersediaanFiFoController extends Controller
                     'penyesuaian_stoks.tgl_penyesuaian as tgl',
                     'stokreal.harga',
                     DB::raw('sum(penyesuaian_stoks.penyesuaian) as jumlah'),
-                    DB::raw('sum(penyesuaian_stoks.penyesuaian * stokreal.harga) as sub'),
+                    DB::raw('ROUND(sum(penyesuaian_stoks.penyesuaian * stokreal.harga),2) as sub'),
 
                 )
                     ->join('stokreal', 'stokreal.id', '=', 'penyesuaian_stoks.stokreal_id')
@@ -419,7 +419,7 @@ class PersediaanFiFoController extends Controller
                     'tgl_kunci as tgl',
                     'status as ket',
                     DB::raw('sum(jumlah) as jumlah'),
-                    DB::raw('sum(jumlah * harga_net_default) as sub'),
+                    DB::raw('ROUND(sum(jumlah * harga_net_default),2) as sub'),
 
                 )
                     ->where('tgl_kunci', 'LIKE', request('tahun') . '-' . request('bulan') . '%')
@@ -436,7 +436,7 @@ class PersediaanFiFoController extends Controller
                     'retur_penyedia_r.nopenerimaan_default as nopenerimaan',
                     'retur_penyedia_r.harga_net_default as harga',
                     DB::raw('sum(retur_penyedia_r.jumlah_retur) as jumlah'),
-                    DB::raw('sum(retur_penyedia_r.jumlah_retur * retur_penyedia_r.harga_net_default) as sub'),
+                    DB::raw('ROUND(sum(retur_penyedia_r.jumlah_retur * retur_penyedia_r.harga_net_default),2) as sub'),
 
                 )
                     ->join('retur_penyedia_h', 'retur_penyedia_h.no_retur', '=', 'retur_penyedia_r.no_retur')
@@ -461,7 +461,7 @@ class PersediaanFiFoController extends Controller
                     'pengembalian_rinci_fifos.nopenerimaan',
                     'pengembalian_rinci_fifos.harga',
                     DB::raw('sum(pengembalian_rinci_fifos.jml_dikembalikan) as jumlah'),
-                    DB::raw('sum(pengembalian_rinci_fifos.jml_dikembalikan * pengembalian_rinci_fifos.harga) as sub'),
+                    DB::raw('ROUND(sum(pengembalian_rinci_fifos.jml_dikembalikan * pengembalian_rinci_fifos.harga),2) as sub'),
 
                 )
                     ->join('pengembalians', 'pengembalians.nopengembalian', '=', 'pengembalian_rinci_fifos.nopengembalian')
