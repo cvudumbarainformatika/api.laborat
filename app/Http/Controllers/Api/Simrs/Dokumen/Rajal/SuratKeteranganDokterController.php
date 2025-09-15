@@ -75,14 +75,20 @@ class SuratKeteranganDokterController extends Controller
 
                 $kode = $request->jenis;
                 $nomor = '@nomor';
+                if($request->nomorSurat === '' || $request->nomorSurat === null){
+                    DB::connection('mysql')->select('call conterSurat('.$nomor.', "'.$kode.'")');
+                    $datamaster = MsuratKeteranganDokter::where('kodeSurat', $kode)->first();
+                    // return new JsonResponse([ 'result' => $datamaster], 200);
+                    $nosurat = $datamaster->fAwal.''.$datamaster->conter.''.$datamaster->fAkhir;
+                }else{
+                    $nosurat = $request->nomorSurat;
+                }
 
-                DB::connection('mysql')->select('call conterSurat('.$nomor.', "'.$kode.'")');
-                $datamaster = MsuratKeteranganDokter::where('kodeSurat', $kode)->first();
-                // return new JsonResponse([ 'result' => $datamaster], 200);
-                $nosurat = $datamaster->fAwal.''.$datamaster->conter.''.$datamaster->fAkhir;
 
-                $simpan = SuratKeteranganDokter::create([
+                $simpan = SuratKeteranganDokter::updateOrCreate([
                     'nosurat' => $nosurat,
+                ],
+                [
                     'noreg' => $request->noreg,
                     'norm' => $request->norm,
                     'kdsurat' => $kode,

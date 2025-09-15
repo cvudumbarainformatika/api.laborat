@@ -296,13 +296,13 @@ class KasirrajalController extends Controller
                         [
                             'noreg' => $request->noreg,
                             'norm' => $request->norm,
-                            'tgl' => date('Y-M-d H:i:s'),
+                            'tgl' => date('Y-m-d H:i:s'),
                             'nama' => $request->nama,
                             'ruangan' => $request->poli,
                             'sistembayar' => $request->sistembayar,
                             'total' => $request->total,
                             'flag' => 'Kasir Rajal',
-                            'tglx' => date('Y-M-d H:i:s'),
+                            'tglx' => date('Y-m-d H:i:s'),
                             'userid' => auth()->user()->pegawai_id,
                             'nota' => $request->nota,
                             'carabayar' => $request->carabayar,
@@ -312,20 +312,53 @@ class KasirrajalController extends Controller
                     if (!$insertkwitansilog) {
                         return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
                     }
-                    $cariid = Pembayaran::select('id', 'rs6', DB::raw('rs7+rs11 as jml'))->whereIn('rs3', $x)->where('rs1', $request->noreg)->get();
-                    $insertkwitansi_d= Kwitansidetail::create(
-                        [
+
+                    if($request->jenis === 'Tindakan')
+                    {
+                        $val = DB::table('rs73')
+                            ->selectRaw("GROUP_CONCAT(rs73.id SEPARATOR ',') AS id_trans")
+                            ->selectRaw("rs30.rs2 AS keterangan")
+                            ->selectRaw("SUM((rs73.rs7+rs73.rs13)*rs73.rs5) AS subtotal")
+                            ->selectRaw("rs73.rs22 AS kd_jenis")
+                            ->selectRaw("rs19.rs2 AS jenis")
+                            ->leftJoin('rs19', 'rs73.rs22', '=', 'rs19.rs1')
+                            ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
+                            ->join('rs21', 'rs21.rs1', '=', 'rs73.rs8')
+                            ->where('rs73.rs1', $request->noreg)
+                            ->where('rs73.rs2', $request->nota)
+                            ->where('rs73.rs22', '<>', 'OPERASI')
+                            ->groupBy('rs73.rs22')
+                            ->get();
+
+                        $jenis = $request->jenis;
+                    }
+
+                    foreach ($val as $row) {
+                    $insertkwitansi_d =    Kwitansidetail::create([
                             'no_pembayaran' => '-',
-                            'no_kwitansi' => $nokwitansi,
-                            'id_trans' => $val['id'],
-                            'noreg' => $request->noreg,
-                            'pelayanan' => 'RAJAL',
-                            'jenis' => $val['rs6'],
-                            'unit' => $request->kodepoli,
-                            'jml' => $val['jml'],
-                            'id_kwitansilog' => $simpankarcis['id']
-                        ]
-                    );
+                            'no_kwitansi'   => $nokwitansi,
+                            'id_trans'      => $row->id_trans,
+                            'noreg'         => $request->noreg,
+                            'pelayanan'     => 'RAJAL',
+                            'jenis'         => $jenis,
+                            'unit'          => $request->kodepoli,
+                            'jml'           => $row->subtotal,
+                        ]);
+                    }
+
+                    // $insertkwitansi_d= Kwitansidetail::create(
+                    //     [
+                    //         'no_pembayaran' => '-',
+                    //         'no_kwitansi' => $nokwitansi,
+                    //         'id_trans' => $val->id_trans,
+                    //         'noreg' => $request->noreg,
+                    //         'pelayanan' => 'RAJAL',
+                    //         'jenis' => $jenis,
+                    //         'unit' => $request->kodepoli,
+                    //         'jml' =>  $val->subtotal
+                    //     ]
+                    // );
+
                     if (!$insertkwitansi_d) {
                         return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
                     }
@@ -333,11 +366,11 @@ class KasirrajalController extends Controller
             DB::commit();
             $hasil = kwitansilog::with(
                 [
-                    'detail',
+                    'rincian',
                     'pegawai:kdpegsimrs,nama'
                 ]
-            )->where('nokwitansi', $request->noreg)->get();
-            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!','result' => $hasil], 200);
+            )->where('nokwitansi', $nokwitansi)->get();
+            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!','kwitansi' => $hasil], 200);
         }catch(\Exception $th){
             DB::rollBack();
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
