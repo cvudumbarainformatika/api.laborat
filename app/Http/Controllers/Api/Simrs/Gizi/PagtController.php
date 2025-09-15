@@ -17,7 +17,7 @@ class PagtController extends Controller
 
     public function list()
     {
-      $data = PagtGizi::with('petugas')->where('noreg', 'Like', '%' . request('noreg') . '%')->get();
+      $data = PagtGizi::with('petugas')->where('noreg', '=', request('noreg'))->get();
       return response()->json($data);
     }
 

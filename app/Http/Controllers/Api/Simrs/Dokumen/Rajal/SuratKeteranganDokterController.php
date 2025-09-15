@@ -26,7 +26,7 @@ class SuratKeteranganDokterController extends Controller
                 $notatindakan = FormatingHelper::notatindakan($wew, 'T-HD');
 
                 if ($request->jenis === 'SRT02' || $request->jenis === 'SRT03') {
-                    $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
+                    $notatindakan = FormatingHelper::notatindakan($wew, 'T-HD');
                 } 
 
 
