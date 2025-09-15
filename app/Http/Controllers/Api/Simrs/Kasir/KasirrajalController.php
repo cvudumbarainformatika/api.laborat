@@ -279,16 +279,81 @@ class KasirrajalController extends Controller
         return $data;
     }
 
+    public function pembayarannonkarcis(Request $request)
+    {
+        try{
+            DB::beginTransaction();
+                if($request->carabayar === 'Tunai'){
+                    DB::select('call nokwitansi(@nomor)');
+                        $x = DB::table('rs1')->select('rs47')->get();
+                        $wew = $x[0]->rs47;
+                        $nokwitansi = FormatingHelper::nokwitansi($wew, 'RJ');
+
+                    $insertkwitansilog = Kwitansilog::firstOrCreate(
+                        [
+                            'nokwitansi' => $nokwitansi,
+                        ],
+                        [
+                            'noreg' => $request->noreg,
+                            'norm' => $request->norm,
+                            'tgl' => date('Y-M-d H:i:s'),
+                            'nama' => $request->nama,
+                            'ruangan' => $request->poli,
+                            'sistembayar' => $request->sistembayar,
+                            'total' => $request->total,
+                            'flag' => 'Kasir Rajal',
+                            'tglx' => date('Y-M-d H:i:s'),
+                            'userid' => auth()->user()->pegawai_id,
+                            'nota' => $request->nota,
+                            'carabayar' => $request->carabayar,
+                            'jenispembayaran' => $request->jenispembayaran
+                        ]
+                    );
+                    if (!$insertkwitansilog) {
+                        return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+                    }
+                    $cariid = Pembayaran::select('id', 'rs6', DB::raw('rs7+rs11 as jml'))->whereIn('rs3', $x)->where('rs1', $request->noreg)->get();
+                    $insertkwitansi_d= Kwitansidetail::create(
+                        [
+                            'no_pembayaran' => '-',
+                            'no_kwitansi' => $nokwitansi,
+                            'id_trans' => $val['id'],
+                            'noreg' => $request->noreg,
+                            'pelayanan' => 'RAJAL',
+                            'jenis' => $val['rs6'],
+                            'unit' => $request->kodepoli,
+                            'jml' => $val['jml'],
+                            'id_kwitansilog' => $simpankarcis['id']
+                        ]
+                    );
+                    if (!$insertkwitansi_d) {
+                        return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
+                    }
+                }
+            DB::commit();
+            $hasil = kwitansilog::with(
+                [
+                    'detail',
+                    'pegawai:kdpegsimrs,nama'
+                ]
+            )->where('nokwitansi', $request->noreg)->get();
+            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!','result' => $hasil], 200);
+        }catch(\Exception $th){
+            DB::rollBack();
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
+        }
+    }
+
     public function pembayarankarcis(Request $request)
     {
-        // $cek = Karcis::with(
-        //     [
-        //         'rincian'
-        //     ]
-        // )->where('batal', '!=', '1')->where('noreg', $request->noreg)->count();
-        // if($cek > 0){
-        //     return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
-        // }
+        $cek = Karcis::with(
+            [
+                'rincian'
+            ]
+        )->where('batal', '!=', '1')->where('noreg', $request->noreg)->count();
+        if($cek > 0){
+            return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
+        }
 
         if($request->carabayar === 'Tunai'){
             try{
@@ -334,23 +399,23 @@ class KasirrajalController extends Controller
                     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
                 }
         }else if($request->carabayar === 'VA'){
-            //try{
-                // DB::beginTransaction();
+            try{
+                DB::beginTransaction();
                         $pembayaranva = self::pembayaranqris($request, $request->noreg);
 
                         if($pembayaranva == 500){
                             return new JsonResponse(['message' => 'Membuat QRIS Gagal...!!!'], 500);
                         }
-            //     DB::commit();
+                DB::commit();
                          return new JsonResponse(
                             [
                                 'message' => 'Data Berhasil Disimpan...!!!',
                                 'result' => $pembayaranva
                             ], 200);
-            // }catch(\Exception $th){
-            //     DB::rollBack();
-            //     return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
-            // }
+            }catch(\Exception $th){
+                DB::rollBack();
+                return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
+            }
         }
     }
 
@@ -493,31 +558,5 @@ class KasirrajalController extends Controller
         return 200;
     }
 
-    public static function simpanpembayaranselainkarcis($request, $nokwitansi)
-    {
-        $insertkwitansilog = Kwitansilog::firstOrCreate(
-            [
-                'nokwitansi' => $nokwitansi,
-            ],
-            [
-                'noreg' => $request->noreg,
-                'norm' => $request->norm,
-                'tgl' => date('Y-M-d H:i:s'),
-                'nama' => $request->nama,
-                'ruangan' => $request->poli,
-                'sistembayar' => $request->sistembayar,
-                'total' => $request->total,
-                'flag' => 'Kasir Rajal',
-                'tglx' => date('Y-M-d H:i:s'),
-                'userid' => auth()->user()->pegawai_id,
-                'nota' => $request->nota,
-                'carabayar' => $request->carabayar,
-                'jenispembayaran' => $request->jenispembayaran
-            ]
-        );
-        if (!$insertkwitansilog) {
-            return 500;
-        }
-        return 200;
-    }
+
 }

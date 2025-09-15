@@ -279,4 +279,14 @@ class FormatingHelper
         }
         return $has . $n . "-" . $tahun . "-" . $kode;
     }
+
+    public static function nokwitansi($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 6 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $kode. '-' . date("Ymd") . $has . $n;
+    }
 }
