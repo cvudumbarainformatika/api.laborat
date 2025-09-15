@@ -27,7 +27,7 @@ class SuratKeteranganDokterController extends Controller
 
                 if ($request->jenis === 'SRT02' || $request->jenis === 'SRT03') {
                     $notatindakan = FormatingHelper::notatindakan($wew, 'T-RJ');
-                } 
+                }
 
 
                 $createbill = null;
@@ -94,6 +94,7 @@ class SuratKeteranganDokterController extends Controller
                     'pendengaranKiri' => $request->pendengarankiri,
                     'pendengaranKanan' => $request->pendengarankanan,
                     'perbedaanWarna' => $request->warna,
+                    'gimut' => $request->gimut,
                     // 'tinggiBadan' => $request->tinggi,
                     // 'beratBadan' => $request->berat,
 
