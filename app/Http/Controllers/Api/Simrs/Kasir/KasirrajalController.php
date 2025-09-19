@@ -313,7 +313,8 @@ class KasirrajalController extends Controller
                         return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
                     }
 
-                    if($request->jenis === 'Tindakan')
+                    $jenis = $request->jenis;
+                    if($jenis === 'Tindakan')
                     {
                         $val = DB::table('rs73')
                             ->selectRaw("GROUP_CONCAT(rs73.id SEPARATOR ',') AS id_trans")
@@ -330,7 +331,27 @@ class KasirrajalController extends Controller
                             ->groupBy('rs73.rs22')
                             ->get();
 
-                        $jenis = $request->jenis;
+                    }else if($jenis === 'Laborat'){
+                        $q1 = DB::table('rs49')
+                            ->join('rs51', 'rs49.rs1', '=', 'rs51.rs4')
+                            ->selectRaw("'' as flag, rs51.id as id_trans, rs51.rs2 as nota, rs51.rs3 as tgl, rs51.rs8 as kodedokter,
+                                        rs49.rs2 as keterangan, (rs51.rs6+rs51.rs13) as biaya,
+                                        rs51.rs5 as jml, ((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotal")
+                            ->where('rs49.rs21', '=', '')
+                            ->where('rs51.rs1', '=', $request->noreg)
+                            ->where('rs51.rs2', '=', $request->nota);
+
+                        $q2 = DB::table('rs49')
+                            ->join('rs51', 'rs49.rs1', '=', 'rs51.rs4')
+                            ->selectRaw("'x' as flag, rs51.id as id_trans, rs51.rs2 as nota, rs51.rs3 as tgl, rs51.rs8 as kodedokter,
+                                        rs49.rs21 as keterangan, (rs51.rs6+rs51.rs13) as biaya,
+                                        rs51.rs5 as jml, ((rs51.rs6+rs51.rs13)*rs51.rs5) as subtotal")
+                            ->where('rs49.rs21', '<>', '')
+                            ->where('rs51.rs1', '=', $request->noreg)
+                            ->where('rs51.rs2', '=', $request->nota)
+                            ->groupBy('rs49.rs21', 'rs51.id', 'rs51.rs2', 'rs51.rs3', 'rs51.rs8', 'rs51.rs6', 'rs51.rs13', 'rs51.rs5');
+
+                            $val = $q1->unionAll($q2)->orderBy('id_trans')->get();
                     }
 
                     foreach ($val as $row) {
@@ -387,6 +408,12 @@ class KasirrajalController extends Controller
         if($cek > 0){
             return new JsonResponse(['message' => 'Karcis Sudah Pernah Dicetak...!!!'], 500);
         }
+        // ini buat test inject nota karcis
+        // $datakarcis = Karcis::with([
+        //                 'rincian',
+        //                 'pegawai:kdpegsimrs,nama'
+        //             ])->where('noreg', '151610/08/2025/J')->limit(1)->get();
+        // return new JsonResponse(['kwitansikarcis' => $datakarcis]);
 
         if($request->carabayar === 'Tunai'){
             try{
@@ -532,7 +559,8 @@ class KasirrajalController extends Controller
 
     public static function simpanpembayarankarcis($request, $nokarcis)
     {
-        $user = Pegawai::find(auth()->user()->pegawai_id);
+        $wew = FormatingHelper::session_user();
+        $kdpegsimrs = $wew['kodesimrs'];
         $txtrinci="";
 		$rinci = Karcispoli::select('rs6', DB::raw('rs7+rs11 as jml'))->where('rs1', $request->noreg)
         ->whereIn('rs3', ['RM#', 'K2#', 'K1#', 'K3#', 'K4#', 'K5#', 'K6#'])
@@ -559,7 +587,7 @@ class KasirrajalController extends Controller
                 'rinci' => $txtrinci,
                 'carabayar' => $request->carabayar,
                 'tglx' => date('Y-m-d H:i:s'),
-                'users' => $user
+                'users' => $kdpegsimrs ?? ''
             ]
         );
         if (!$simpankarcis) {

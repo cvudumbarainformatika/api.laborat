@@ -20,10 +20,10 @@ Route::group([
     Route::get('/rajal/cari-radiologi', [CariKarcisController::class, 'cariradiologi']);
     Route::get('/rajal/cari-sharingbpjs', [CariKarcisController::class, 'getSharingRajal']);
      Route::get('/rajal/getKwitansinontunai', [CariKwitansinonTunai::class, 'getKwitansinontunai']);
-
+    Route::get('/rajal/rekapbillbynoreg', [BillingbynoregController::class, 'rekapbillbynoreg']);
 
     Route::get('/rajal/kunjunganpoli', [KasirrajalController::class, 'kunjunganpoli']);
-    Route::get('/rajal/billbynoreg', [BillingbynoregController::class, 'billbynoregrajalx']);
+    Route::get('/rajal/billbynoregx', [BillingbynoregController::class, 'billbynoregrajalx']);
 
     Route::get('/rajal/tagihanpergolongan', [KasirrajalController::class, 'tagihanpergolongan']);
     Route::post('/rajal/pembayarankarcis', [KasirrajalController::class, 'pembayarankarcis']);

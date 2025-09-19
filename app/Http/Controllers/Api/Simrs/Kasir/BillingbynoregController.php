@@ -15,11 +15,13 @@ class BillingbynoregController extends Controller
     public  function billbynoregrajalx(){
         $noreg = request('noreg');
         $data = Kwitansilog::with([
-            'rincian'
+            'rincian',
+            'pegawai:kdpegsimrs,nama'
         ])->where('noreg', $noreg)->get();
 
         $datakarcis = Karcis::with([
-            'rincian'
+            'rincian',
+            'pegawai:kdpegsimrs,nama'
         ])->where('noreg', $noreg)->get();
 
         return new JsonResponse(
@@ -30,6 +32,19 @@ class BillingbynoregController extends Controller
             200
         );
     }
+
+    public function rekapbillbynoreg()
+    {
+        $noreg = request('noreg');
+        $data = $this->billbynoregrajal($noreg);
+        return new JsonResponse(
+            [
+                'data' => $data,
+            ],
+            200
+        );
+    }
+
     public static function billbynoregrajal($noreg)
     {
         $query = KunjunganPoli::select(
