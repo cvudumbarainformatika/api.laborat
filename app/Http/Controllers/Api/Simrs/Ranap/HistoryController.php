@@ -17,7 +17,20 @@ class HistoryController extends Controller
 
     public function layananigd(Request $request)
     {
-        $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3','rs4','rs8', 'rs9','rs14', 'rs19')->where('rs1', $request->noreg)->where('rs8','POL014')
+        $cekx = KunjunganPoli::select(
+            'rs17.rs1', 'rs17.rs2', 'rs17.rs3','rs17.rs4','rs17.rs8', 'rs17.rs9','rs17.rs14', 'rs17.rs19',
+
+            'rs19.rs2 as poli',
+            'kepegx.pegawai.nama as dokter',
+            'rs17.rs3 as tgl_kunjungan',
+            'rs17.rs26 as tglpulang',
+
+            )
+            
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs17.rs9') //dokter
+            ->where('rs17.rs1', $request->noreg)
+            ->where('rs17.rs8','POL014')
         ->with([
             'anamnesis' => function($anamnesis){
                 $anamnesis->with(['anamnesetambahan','anamnesebps','anamnesenips'])->where('kdruang', 'POL014');

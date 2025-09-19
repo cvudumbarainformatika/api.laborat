@@ -58,6 +58,8 @@ class PagtController extends Controller
                 'rw_peny_dhl'         => $data['rwPenyDhl'] ?? null,
                 'rw_peny_dhl_ket'     => $data['rwPenyDhlKet'] ?? null,
                 'rw_peny_skr'         => $data['rwPenySkr'] ?? null,
+                'energi'         => $data['energi'] ?? null,
+                'extra'         => $data['extra'] ?? null,
                 'user_id'             => $user['kodesimrs'] ?? null
             ]
         );

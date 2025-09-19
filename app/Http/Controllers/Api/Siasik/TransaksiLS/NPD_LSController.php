@@ -88,7 +88,7 @@ class NPD_LSController extends Controller
                     'npdls_heder.userentry',
                     'npdls_heder.serahterimapekerjaan',
                     'npdls_heder.kunci');
-            if ($sa !== 'sa' && $sa !==  '1619' && $sa !==  '38' && $sa !==  '1618') {
+            if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '1618' && $sa !== '81_X' && $sa !== '1215') {
                 $data->where('kodepptk', $pegawai);
             }
 

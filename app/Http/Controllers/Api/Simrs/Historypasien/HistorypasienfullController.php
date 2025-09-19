@@ -383,6 +383,7 @@ class HistorypasienfullController extends Controller
                 'rs23.rs1',
                 'rs23.rs1 as noreg',
                 'rs23.rs2 as norm',
+                'rs15.rs2 as nama',
                 'rs23.rs3 as tanggal',
                 'rs24.rs2 as ruangan',
                 'rs21.rs2 as dpjp',
@@ -391,6 +392,7 @@ class HistorypasienfullController extends Controller
                 ->join('rs24', 'rs24.rs1', '=', 'rs23.rs5')
                 ->join('rs21', 'rs21.rs1', '=', 'rs23.rs10')
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs23.rs1')
+                ->leftjoin('rs15', 'rs15.rs1', '=', 'rs23.rs2')
                 ->where('rs23.rs1', $noreg)
                 ->with(
                     [
@@ -478,15 +480,26 @@ class HistorypasienfullController extends Controller
                 'rs17.rs1',
                 'rs17.rs1 as noreg',
                 'rs17.rs2 as norm',
+                'rs15.rs2 as nama',
+
+                DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+                DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
                 'rs17.rs3 as tanggal',
                 'rs19.rs2 as ruangan',
                 'rs21.rs2 as dpjp',
-                'memodiagnosadokter.diagnosa as memo'
+                'rs21.rs2 as dokter',
+                'rs9.rs2 as sistembayar',
+                'memodiagnosadokter.diagnosa as memo',
+                'memodiagnosadokter.diagnosa as memodiagnosa',
 
             )
-                ->join('rs19', 'rs19.rs1', '=', 'rs17.rs8')
-                ->join('rs21', 'rs21.rs1', '=', 'rs17.rs9')
+                ->leftJoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+                ->leftJoin('rs21', 'rs21.rs1', '=', 'rs17.rs9')
                 ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
+                ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+                ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
                 ->where('rs17.rs1', $noreg)
                 ->with(
                     [

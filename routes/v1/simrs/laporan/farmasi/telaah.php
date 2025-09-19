@@ -9,4 +9,5 @@ Route::group([
   'prefix' => 'simrs/laporan/farmasi/telaah'
 ], function () {
   Route::get('/get-data', [TelaahResepController::class, 'getData']);
+  Route::get('/get-pegawai', [TelaahResepController::class, 'getPegawai']);
 });

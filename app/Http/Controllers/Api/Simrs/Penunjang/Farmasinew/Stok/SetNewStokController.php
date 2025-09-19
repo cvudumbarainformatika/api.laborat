@@ -641,6 +641,25 @@ class SetNewStokController extends Controller
                 }
                 $uniNopeSt = array_unique($nopeSt);
 
+                usort($uniNopeSt, function ($a, $b) {
+                    // pecah berdasarkan "/"
+                    [$numA, $bulanA, $tahunA] = explode('/', $a);
+                    [$numB, $bulanB, $tahunB] = explode('/', $b);
+
+                    // casting ke int biar bisa dibandingkan
+                    $tahunA = (int) $tahunA;
+                    $tahunB = (int) $tahunB;
+                    $bulanA = (int) $bulanA;
+                    $bulanB = (int) $bulanB;
+                    $numA   = (int) $numA;
+                    $numB   = (int) $numB;
+
+                    // urutkan DESC → terbaru dulu
+                    if ($tahunA !== $tahunB) return $tahunB <=> $tahunA;
+                    if ($bulanA !== $bulanB) return $bulanB <=> $bulanA;
+                    return $numB <=> $numA;
+                });
+
                 // return [
                 //     'stok' => $stok,
                 //     'nope' => $nope,
@@ -681,19 +700,33 @@ class SetNewStokController extends Controller
                             $sisanya = $maSuk - $keLuar;
 
                             if ($sisanya > 0) {
-                                // $temp = $anuaad + $sisanya;
-                                // $anuaad = $temp;
-                                $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
-                                if ($stokNya) {
-                                    if ((float)$sisanya >= (float)$ada) {
-                                        $sisaJumlah = 0;
-                                        $stokNya->update(['jumlah' => $ada]);
-                                    } else if ((float)$ada > 0) {
-                                        $sisaJumlah = (float)$ada - (float) $sisanya;
-                                        $stokNya->update(['jumlah' => $sisanya]);
-                                    }
-                                    $ada = $sisaJumlah;
-                                } else {
+                                $rincianPenerimaan = PenerimaanRinci::where('nopenerimaan', $key)->get();
+                                // ambil stok per nopenerimaan, urut FIFO berdasarkan tglexp
+                                $stokPerNoper = collect($stok)
+                                    ->where('nopenerimaan', $key)
+                                    ->sortByDesc('tglpenerimaan');
+                                foreach ($stokPerNoper as $st) {
+                                    if ($sisanya <= 0 || $ada <= 0) break;
+                                    $rinci = $rincianPenerimaan->firstWhere('no_batch', $st->nobatch);
+                                    $kapasitasBatch = $rinci->jml_terima_k ?? 0;
+
+                                    // alokasi FIFO: ambil sebanyak mungkin dari batch ini
+                                    $alokasi = min($kapasitasBatch, $ada);
+
+                                    $st->update(['jumlah' => $alokasi]);
+
+                                    $hasil[] = [
+                                        'nopenerimaan' => $key,
+                                        'nobatch' => $st->nobatch,
+                                        'kapasitas' => $kapasitasBatch,
+                                        'pakai' => $alokasi
+                                    ];
+
+                                    $ada -= $alokasi; // kurangi stok global
+                                    $sisanya -= $alokasi; // kurangi stok global
+                                }
+                                if ($ada > 0) {
+                                    // masih ada sisa yang belum bisa dialokasikan
                                     $err[] = [
                                         'data' => [
                                             'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
@@ -702,6 +735,25 @@ class SetNewStokController extends Controller
                                     ];
                                     $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
                                 }
+                                // $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
+                                // if ($stokNya) {
+                                //     if ((float)$sisanya >= (float)$ada) {
+                                //         $sisaJumlah = 0;
+                                //         $stokNya->update(['jumlah' => $ada]);
+                                //     } else if ((float)$ada > 0) {
+                                //         $sisaJumlah = (float)$ada - (float) $sisanya;
+                                //         $stokNya->update(['jumlah' => $sisanya]);
+                                //     }
+                                //     $ada = $sisaJumlah;
+                                // } else {
+                                //     $err[] = [
+                                //         'data' => [
+                                //             'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
+                                //         ],
+                                //         'status' => 410
+                                //     ];
+                                //     $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
+                                // }
                             }
                             // $tmpmas = $anumas + $maSuk;
                             // $anumas = $tmpmas;
@@ -764,6 +816,7 @@ class SetNewStokController extends Controller
                     'mutkel' => $mutkel,
                     'rus' => $rus,
                     'retG' => $retG,
+                    'hasil' => $hasil,
                     // 'stok' => $stok ?? [],
                     'message' => $message
                 ];
@@ -1029,6 +1082,24 @@ class SetNewStokController extends Controller
                 }
                 // sudut pandang foreach
                 $noper = array_unique($rawNoper);
+                usort($noper, function ($a, $b) {
+                    // pecah berdasarkan "/"
+                    [$numA, $bulanA, $tahunA] = explode('/', $a);
+                    [$numB, $bulanB, $tahunB] = explode('/', $b);
+
+                    // casting ke int biar bisa dibandingkan
+                    $tahunA = (int) $tahunA;
+                    $tahunB = (int) $tahunB;
+                    $bulanA = (int) $bulanA;
+                    $bulanB = (int) $bulanB;
+                    $numA   = (int) $numA;
+                    $numB   = (int) $numB;
+
+                    // urutkan DESC → terbaru dulu
+                    if ($tahunA !== $tahunB) return $tahunB <=> $tahunA;
+                    if ($bulanA !== $bulanB) return $bulanB <=> $bulanA;
+                    return $numB <=> $numA;
+                });
 
                 $totalStok = FarmasinewStokreal::select('kdobat', DB::raw('sum(jumlah) as jumlah'))->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)->first();
@@ -1047,32 +1118,11 @@ class SetNewStokController extends Controller
                 $retG = $returGudang ?? 0;
 
 
-
-                // return [
-                //     'saldoAwalDepoRinci' => $saldoAwalDepoRinci,
-                //     'mutasiMasukDepoRinci' => $mutasiMasukDepoRinci,
-                //     'mutasiKeluarDepoRinci' => $mutasiKeluarDepoRinci,
-                //     'resepKeluarRinci' => $resepKeluarRinci,
-                //     'returRinci' => $returRinci,
-                //     'resepKeluarRacikanRinci' => $resepKeluarRacikanRinci,
-                //     'persiapanOperasiDistribusiRinci' => $persiapanOperasiDistribusiRinci ?? [],
-                //     'returGudangRinci' => $returGudangRinci,
-                //     'saldoAwal' => $saldoAwal,
-                //     'mutasiMasuk' => $mutasiMasuk,
-                //     'mutasiKeluar' => $mutasiKeluar,
-                //     'resepKeluar' => $resepKeluar,
-                //     'retur' => $retur,
-                //     'resepKeluarRacikan' => $resepKeluarRacikan,
-                //     'distribusiOk' => $distribusiOk ?? null,
-                //     'kembaliOk' => $kembaliOk ?? null,
-                //     'returGudang' => $returGudang,
-                // ];
-
                 $stok = FarmasinewStokreal::lockForUpdate()
                     ->where('kdobat', $kdobat)
                     ->where('kdruang', $koderuangan)
                     ->orderBy('tglpenerimaan', 'DESC')
-                    ->orderBy('nodistribusi', 'DESC')
+                    // ->orderBy('nodistribusi', 'DESC')
                     ->get();
                 $err = [];
                 $hasil = [];
@@ -1086,7 +1136,7 @@ class SetNewStokController extends Controller
                     if ((float)$sisa != (float)$tts) {
                         //     // cek ketorolac
                         $ada = $sisa;
-                        if ($sisa > 0) {
+                        if ($ada > 0) {
                             // nol kan semua
                             foreach ($stok as $st) {
                                 $st->update([
@@ -1094,6 +1144,8 @@ class SetNewStokController extends Controller
                                 ]);
                             }
                             foreach ($noper as $key) {
+
+                                $hasilba = [];
                                 // masuk
                                 $salAwal =  collect($saldoAwalDepoRinci)->firstWhere('nopenerimaan', $key)->total ?? 0;
                                 $mutMas =  collect($mutasiMasukDepoRinci)->firstWhere('nopenerimaan', $key)->jumlah ?? 0;
@@ -1113,29 +1165,74 @@ class SetNewStokController extends Controller
                                 $tmpmas = $anumas + $maSuk;
                                 $anumas = $tmpmas;
                                 $tmpkel = $anukel + $keLuar;
-                                $anumas = $tmpkel;
+                                $anukel = $tmpkel;
 
                                 if ($sisanya > 0) {
                                     $temp = $anuaad + $sisanya;
                                     $anuaad = $temp;
-                                    $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
-                                    if ($stokNya) {
-                                        if ((float)$sisanya >= (float)$ada) {
-                                            $sisaJumlah = 0;
-                                            $stokNya->update(['jumlah' => $ada]);
-                                        } else if ((float)$ada > 0) {
-                                            $sisaJumlah = (float)$ada - (float) $sisanya;
-                                            $stokNya->update(['jumlah' => $sisanya]);
+
+                                    $rincianPenerimaan = Mutasigudangkedepo::select(
+                                        'mutasi_gudangdepo.kd_obat as kdobat',
+                                        'mutasi_gudangdepo.nopenerimaan',
+                                        'mutasi_gudangdepo.nobatch',
+                                        DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                                    )
+                                        ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                        // ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                                        ->where('permintaan_h.dari', $koderuangan)
+                                        ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                                        ->where('nopenerimaan', $key)
+                                        ->groupBy(
+                                            'mutasi_gudangdepo.nopenerimaan',
+                                            'mutasi_gudangdepo.nobatch',
+                                            'mutasi_gudangdepo.kd_obat'
+                                        )
+                                        ->get();
+                                    // ambil stok per nopenerimaan, urut FIFO berdasarkan tglexp
+                                    $stokPerNoper = $stok
+                                        ->where('nopenerimaan', $key);
+                                    foreach ($stokPerNoper as $st) {
+                                        if ($sisanya <= 0 || $ada <= 0) {
+                                            $hasilba[] = [
+                                                'nopenerimaan' => $key,
+                                                'nobatch' => $st->nobatch,
+                                                'st' => $st,
+                                                'sisanya' => $sisanya,
+                                                'ada' => $ada,
+                                                'iki masuk break' => 'iki masuk break',
+                                            ];
+                                            break;
                                         }
-                                        $ada = $sisaJumlah;
-                                    } else {
+                                        $rinci = $rincianPenerimaan->where('nobatch', $st->nobatch)->where('nopenerimaan', $st->nopenerimaan)->first();
+                                        $kapasitasBatch = $rinci->jumlah ?? 0;
+
+                                        // alokasi FIFO: ambil sebanyak mungkin dari batch ini
+                                        $alokasi = min($kapasitasBatch, $ada);
+
+                                        $st->update(['jumlah' => $alokasi]);
+
+                                        $hasilba[] = [
+                                            'nopenerimaan' => $key,
+                                            'nobatch' => $st->nobatch,
+                                            'kapasitas' => $kapasitasBatch,
+                                            'rinci' => $rinci,
+                                            'st' => $st,
+                                            'ada' => $ada,
+                                            'pakai' => $alokasi
+                                        ];
+
+                                        $ada -= $alokasi; // kurangi stok global
+                                        $sisanya -= $alokasi; // kurangi stok global
+                                    }
+                                    if ($ada > 0) {
+                                        // masih ada sisa yang belum bisa dialokasikan
                                         $err[] = [
                                             'data' => [
-                                                'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
+                                                'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan',
+                                                'ada' => $ada
                                             ],
                                             'status' => 410
                                         ];
-
                                         $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
                                     }
                                 }
@@ -1152,6 +1249,10 @@ class SetNewStokController extends Controller
                                     'resKel' => $resKel,
                                     'resKelRac' => $resKelRac,
                                     'retGud' => $retGud,
+                                    'hasilba' => $hasilba,
+                                    'ada' => $ada,
+                                    'stokPerNoper' => $stokPerNoper ?? null,
+                                    'rincianPenerimaan' => $rincianPenerimaan ?? null,
                                 ];
                             }
                             $message = 'Cek Stok Depo selesai, Stok sudah di update';
@@ -1205,26 +1306,91 @@ class SetNewStokController extends Controller
                                 $tmpmas = $anumas + $maSuk;
                                 $anumas = $tmpmas;
                                 $tmpkel = $anukel + $keLuar;
-                                $anumas = $tmpkel;
+                                $anukel = $tmpkel;
 
                                 if ($sisanya > 0) {
                                     $temp = $anuaad + $sisanya;
                                     $anuaad = $temp;
-                                    $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
-                                    if ($stokNya) {
-                                        if ((float)$sisanya >= (float)$ada) {
-                                            $sisaJumlah = 0;
-                                            $stokNya->update(['jumlah' => $ada]);
-                                        } else if ((float)$ada > 0) {
-                                            $sisaJumlah = (float)$ada - (float) $sisanya;
-                                            $stokNya->update(['jumlah' => $sisanya]);
-                                        }
+                                    // $stokNya = collect($stok)->firstWhere('nopenerimaan', $key);
+                                    // if ($stokNya) {
+                                    //     // if ((float)$sisanya >= (float)$ada) {
+                                    //     //     $sisaJumlah = 0;
+                                    //     //     $stokNya->update(['jumlah' => $ada]);
+                                    //     // } else if ((float)$ada > 0) {
+                                    //     //     $sisaJumlah = (float)$ada - (float) $sisanya;
+                                    //     //     $stokNya->update(['jumlah' => $sisanya]);
+                                    //     // }
 
-                                        $ada = $sisaJumlah;
-                                    } else {
+                                    //     // $ada = $sisaJumlah;
+                                    // } else {
+                                    //     $err[] = [
+                                    //         'data' => [
+                                    //             'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
+                                    //         ],
+                                    //         'status' => 410
+                                    //     ];
+                                    //     $message = 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan';
+                                    // }
+
+                                    $rincianPenerimaan = Mutasigudangkedepo::select(
+                                        'mutasi_gudangdepo.kd_obat as kdobat',
+                                        'mutasi_gudangdepo.nopenerimaan',
+                                        'mutasi_gudangdepo.nobatch',
+                                        DB::raw('sum(mutasi_gudangdepo.jml) as jumlah')
+                                    )
+                                        ->join('permintaan_h', 'permintaan_h.no_permintaan', '=', 'mutasi_gudangdepo.no_permintaan')
+                                        // ->whereBetween('permintaan_h.tgl_terima_depo', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59'])
+                                        ->where('permintaan_h.dari', $koderuangan)
+                                        ->where('mutasi_gudangdepo.kd_obat', $kdobat)
+                                        ->where('nopenerimaan', $key)
+                                        ->groupBy(
+                                            'mutasi_gudangdepo.nopenerimaan',
+                                            'mutasi_gudangdepo.nobatch',
+                                            'mutasi_gudangdepo.kd_obat'
+                                        )
+                                        ->get();
+                                    // ambil stok per nopenerimaan, urut FIFO berdasarkan tglexp
+                                    $stokPerNoper = $stok
+                                        ->where('nopenerimaan', $key);
+                                    foreach ($stokPerNoper as $st) {
+                                        if ($sisanya <= 0 || $ada <= 0) {
+                                            $hasilba[] = [
+                                                'nopenerimaan' => $key,
+                                                'nobatch' => $st->nobatch,
+                                                'st' => $st,
+                                                'sisanya' => $sisanya,
+                                                'ada' => $ada,
+                                                'iki masuk break' => 'iki masuk break',
+                                            ];
+                                            break;
+                                        }
+                                        $rinci = $rincianPenerimaan->where('nobatch', $st->nobatch)->where('nopenerimaan', $st->nopenerimaan)->first();
+                                        $kapasitasBatch = $rinci->jumlah ?? 0;
+
+                                        // alokasi FIFO: ambil sebanyak mungkin dari batch ini
+                                        $alokasi = min($kapasitasBatch, $ada);
+
+                                        $st->update(['jumlah' => $alokasi]);
+
+                                        $hasilba[] = [
+                                            'nopenerimaan' => $key,
+                                            'nobatch' => $st->nobatch,
+                                            'kapasitas' => $kapasitasBatch,
+                                            'rinci' => $rinci,
+                                            'st' => $st,
+                                            'ada' => $ada,
+                                            'pakai' => $alokasi
+                                        ];
+
+                                        $ada -= $alokasi; // kurangi stok global
+                                        $sisanya -= $alokasi; // kurangi stok global
+                                    }
+                                    if ($ada > 0) {
+                                        // masih ada sisa yang belum bisa dialokasikan
                                         $err[] = [
                                             'data' => [
-                                                'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan'
+                                                'message' => 'stok dengan nomor penerimaan ' . $key . ' tidak ditemukan',
+                                                'ada' => $ada
                                             ],
                                             'status' => 410
                                         ];
