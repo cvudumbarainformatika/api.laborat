@@ -74,6 +74,7 @@ class PermintaanReturRuanganController extends Controller
                 'poli'
             ])
             ->whereIn('noresep', $noresep)
+            ->whereIn('depo', ['Gd-04010102', 'Gd-02010104'])
             ->whereNull('flag_permintaan_retur')
             ->orderBy('id', 'DESC')
             ->get();
