@@ -331,7 +331,7 @@ class KasirrajalController extends Controller
                             ->groupBy('rs73.rs22')
                             ->get();
 
-                    }else if($jenis === 'Laborat'){
+                    }else if($jenis === 'Laboratorium'){
                         $q1 = DB::table('rs49')
                             ->join('rs51', 'rs49.rs1', '=', 'rs51.rs4')
                             ->selectRaw("'' as flag, rs51.id as id_trans, rs51.rs2 as nota, rs51.rs3 as tgl, rs51.rs8 as kodedokter,

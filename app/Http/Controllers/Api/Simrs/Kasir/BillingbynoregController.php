@@ -187,5 +187,25 @@ class BillingbynoregController extends Controller
             ]);
     }
 
+    public  function getkwitansiterbayar(){
+        $noreg = request('noreg');
+        $data = Kwitansilog::with([
+            'rincian',
+            'pegawai:kdpegsimrs,nama'
+        ])->where('noreg', $noreg)->get();
+
+        $datakarcis = Karcis::with([
+            'rincian',
+            'pegawai:kdpegsimrs,nama'
+        ])->where('noreg', $noreg)->get();
+
+        return new JsonResponse(
+            [
+                'kwitansi' => $data,
+                'kwitansikarcis' => $datakarcis
+            ],
+            200
+        );
+    }
 
 }

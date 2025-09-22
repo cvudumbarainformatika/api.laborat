@@ -22,6 +22,8 @@ Route::group([
      Route::get('/rajal/getKwitansinontunai', [CariKwitansinonTunai::class, 'getKwitansinontunai']);
     Route::get('/rajal/rekapbillbynoreg', [BillingbynoregController::class, 'rekapbillbynoreg']);
 
+     Route::get('/rajal/getkwitansiterbayar', [BillingbynoregController::class, 'getkwitansiterbayar']);
+
     Route::get('/rajal/kunjunganpoli', [KasirrajalController::class, 'kunjunganpoli']);
     Route::get('/rajal/billbynoregx', [BillingbynoregController::class, 'billbynoregrajalx']);
 
