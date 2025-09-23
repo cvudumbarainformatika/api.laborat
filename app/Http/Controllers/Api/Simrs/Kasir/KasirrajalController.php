@@ -324,13 +324,22 @@ class KasirrajalController extends Controller
                             ->selectRaw("rs19.rs2 AS jenis")
                             ->leftJoin('rs19', 'rs73.rs22', '=', 'rs19.rs1')
                             ->join('rs30', 'rs30.rs1', '=', 'rs73.rs4')
-                            ->join('rs21', 'rs21.rs1', '=', 'rs73.rs8')
+                            // ->join('rs21', 'rs21.rs1', '=', 'rs73.rs8')
                             ->where('rs73.rs1', $request->noreg)
                             ->where('rs73.rs2', $request->nota)
-                            ->where('rs73.rs22', '<>', 'OPERASI')
+                        //    ->where('rs73.rs22', '<>', 'OPERASI')
                             ->groupBy('rs73.rs22')
                             ->get();
 
+                        if($val->pluck('kd_jenis')->first() === 'FISIO'){
+                            $unit = 'PEN004';
+                        }else if($val->pluck('kd_jenis')->first() === 'OPERASI'){
+                            $unit = 'PEN001';
+                            $jenis = 'Tindakan Operasi';
+                        }else{
+                            $unit = $val->pluck('kd_jenis')->first();
+                        }
+                         $id_trans = $val->pluck('id_trans')->implode(',');
                     }else if($jenis === 'Laboratorium'){
                         $q1 = DB::table('rs49')
                             ->join('rs51', 'rs49.rs1', '=', 'rs51.rs4')
@@ -352,20 +361,61 @@ class KasirrajalController extends Controller
                             ->groupBy('rs49.rs21', 'rs51.id', 'rs51.rs2', 'rs51.rs3', 'rs51.rs8', 'rs51.rs6', 'rs51.rs13', 'rs51.rs5');
 
                             $val = $q1->unionAll($q2)->orderBy('id_trans')->get();
+                            $id_trans = $val->pluck('id_trans')->implode(',');
+                            $unit = 'PEN002';
+                    }else if($jenis === 'Farmasi'){
+                        $id_trans = $request->nota;
+                        $unit = 'Gd-05010101';
+                    }else if($jenis === 'Radiologi'){
+                        $val = DB::table('rs47')
+                            ->join('rs48', 'rs47.rs1', '=', 'rs48.rs4')
+                            ->selectRaw("GROUP_CONCAT(rs48.id SEPARATOR ',') AS id_trans, rs47.rs2 AS keterangan, SUM((rs48.rs6+rs48.rs13)*rs48.rs5) AS subtotal")
+                            ->where('rs48.rs1', '=', $request->noreg)
+                            ->where('rs48.rs2', '=', $request->nota)
+                            ->groupBy('rs47.rs2')
+                            ->get();
+                        $unit = 'PEN003';
+                        $id_trans = $val->pluck('id_trans')->implode(',');
+                    }else if($jenis === 'Operasi'){
+                        $val = DB::table('rs54')
+                            ->join('rs53', 'rs53.rs1', '=', 'rs54.rs4')
+                            ->selectRaw("GROUP_CONCAT(rs54.id SEPARATOR ',') AS id_trans")
+                            ->selectRaw("SUM((rs54.rs5+rs54.rs6+rs54.rs7)*rs54.rs8) AS subtotal")
+                            ->where('rs54.rs2', trim($request->nota))
+                            ->where('rs54.rs1', $request->noreg)
+                            ->get();
+                        $unit = 'PEN001';
+                        $id_trans = $val->pluck('id_trans')->implode(',');
+                    }else if($jenis === 'TindakanPsikologi'){
+                        $val = DB::table('psikologi_trans')
+                         ->selectRaw("GROUP_CONCAT(psikologi_trans.id SEPARATOR ',') AS id_trans")
+                         ->selectRaw("SUM((psikologi_trans.rs7+psikologi_trans.rs13)*psikologi_trans.rs5) AS subtotal")
+                            ->selectRaw("psikologi_trans.rs22 AS kd_jenis")
+                            ->selectRaw("rs19.rs2 AS jenis")
+                            ->leftJoin('rs19', 'psikologi_trans.rs22', '=', 'rs19.rs1')
+                            ->where('psikologi_trans.rs1', $request->noreg)
+                            ->where('psikologi_trans.rs2', $request->nota)
+                            ->groupBy('psikologi_trans.rs22')
+                            ->get();
+                        $id_trans = $val->pluck('id_trans')->implode(',');
+                        $unit = $val->pluck('kd_jenis')->first();
+                    }else if($jenis === 'SharingBpjs'){
+                        $id_trans = $request->nota;
+                        $unit = $request->kodepoli;
+                        $jenis = 'SHARING BPJS';
                     }
-
-                    foreach ($val as $row) {
+                    // foreach ($val as $row) {
                     $insertkwitansi_d =    Kwitansidetail::create([
                             'no_pembayaran' => '-',
                             'no_kwitansi'   => $nokwitansi,
-                            'id_trans'      => $row->id_trans,
+                            'id_trans'      => $id_trans,
                             'noreg'         => $request->noreg,
                             'pelayanan'     => 'RAJAL',
                             'jenis'         => $jenis,
-                            'unit'          => $request->kodepoli,
-                            'jml'           => $row->subtotal,
+                            'unit'          => $unit,
+                            'jml'           => $request->total,
                         ]);
-                    }
+                   // }
 
                     // $insertkwitansi_d= Kwitansidetail::create(
                     //     [
