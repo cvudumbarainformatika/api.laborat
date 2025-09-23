@@ -46,13 +46,13 @@ class ReturKeGudangController extends Controller
                 ->whereIn('kdobat', $kode)
                 ->where('kdruang', $request->depo)
                 ->where('jumlah', '>', 0)
-                ->orderBy('tglexp', 'ASC')
+                ->orderBy('tglpenerimaan', 'ASC')
                 ->get();
             $stokNya = collect($stok);
             $stokG = Stokrel::lockForUpdate()
                 ->whereIn('kdobat', $kode)
                 ->where('kdruang', $request->gudang)
-                ->orderBy('tglexp', 'ASC')
+                ->orderBy('tglpenerimaan', 'ASC')
                 ->get();
             $stokGud = collect($stokG);
             foreach ($request->details as $det) {
