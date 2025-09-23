@@ -71,6 +71,22 @@ class CariKarcisController extends Controller
         return new JsonResponse($data);
     }
 
+    public function caritindakanpsikologi()
+    {
+        $noreg = request('noreg');
+        $data =  DB::table('psikologi_trans')
+        ->join('rs30', 'rs30.rs1', '=', 'psikologi_trans.rs4')
+        ->select('psikologi_trans.rs2 as nota','psikologi_trans.rs3 as tgl',
+            'rs30.rs2 as keterangan',
+            DB::raw('((psikologi_trans.rs7 + psikologi_trans.rs13) * psikologi_trans.rs5) as subtotal')
+        )
+        ->where('psikologi_trans.rs1', $noreg)
+        ->where('psikologi_trans.rs22', '<>', 'OPERASI')
+        ->groupBy('psikologi_trans.rs2')
+        ->get();
+        return new JsonResponse($data);
+    }
+
     public function caritindakanoperasi()
     {
         $noreg = request('noreg');
@@ -95,7 +111,7 @@ class CariKarcisController extends Controller
         ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
         ->where('rs51.rs1', $noreg)
         ->where('rs49.rs21', '')
-        ->selectRaw('rs51.rs2 AS nota, ((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
+        ->selectRaw('rs51.rs2 AS nota,rs51.rs3, ((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
 
     // Baris khusus: rs49.rs21 <> '' -> ambil SATU harga per nota (contoh: MAX)
     $qKhusus = DB::table('rs51')
@@ -103,14 +119,14 @@ class CariKarcisController extends Controller
         ->where('rs51.rs1', $noreg)
         ->where('rs49.rs21', '<>', '')
         ->groupBy('rs51.rs2') // satu baris per nota
-        ->selectRaw('rs51.rs2 AS nota, MAX((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
+        ->selectRaw('rs51.rs2 AS nota,rs51.rs3, MAX((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
 
     // UNION lalu SUM per nota
     $union = $qNormal->unionAll($qKhusus);
 
     $result = DB::table(DB::raw("({$union->toSql()}) AS vx"))
         ->mergeBindings($union)
-        ->selectRaw('vx.nota, SUM(vx.subtotal) AS total_subtotal')
+        ->selectRaw('vx.nota,vx.rs3, SUM(vx.subtotal) AS total_subtotal')
         ->groupBy('vx.nota')
         ->orderBy('vx.nota')
         ->get();
