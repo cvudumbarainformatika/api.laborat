@@ -13,6 +13,7 @@ use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Rstigalimax;
 use App\Models\Simrs\Kasir\Tagihannontunai;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
@@ -364,6 +365,20 @@ class KasirrajalController extends Controller
                             $id_trans = $val->pluck('id_trans')->implode(',');
                             $unit = 'PEN002';
                     }else if($jenis === 'Farmasi'){
+                        $data = Resepkeluarheder::with(
+                            [
+                                'rincian.mobat:kd_obat,nama_obat,satuan_k',
+                                'rincianracik.mobat:kd_obat,nama_obat,satuan_k',
+                                'retur' => function ($ret) {
+                                    $ret->with([
+                                            'rinci'
+                                        ]);
+                                },
+                            ]
+                        )
+                        ->where('noreg', $request->noreg)
+                        ->whereIn('flag', ['3', '4'])
+                        ->get();
                         $id_trans = $request->nota;
                         $unit = 'Gd-05010101';
                     }else if($jenis === 'Radiologi'){
@@ -416,19 +431,6 @@ class KasirrajalController extends Controller
                             'jml'           => $request->total,
                         ]);
                    // }
-
-                    // $insertkwitansi_d= Kwitansidetail::create(
-                    //     [
-                    //         'no_pembayaran' => '-',
-                    //         'no_kwitansi' => $nokwitansi,
-                    //         'id_trans' => $val->id_trans,
-                    //         'noreg' => $request->noreg,
-                    //         'pelayanan' => 'RAJAL',
-                    //         'jenis' => $jenis,
-                    //         'unit' => $request->kodepoli,
-                    //         'jml' =>  $val->subtotal
-                    //     ]
-                    // );
 
                     if (!$insertkwitansi_d) {
                         return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!'], 500);
