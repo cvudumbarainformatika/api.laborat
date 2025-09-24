@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\ResponseHelper;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use Illuminate\Support\Facades\DB;
 
@@ -63,57 +64,58 @@ class LaporanResepService
     // 🔹 TIPE I T E M
     // =========================
     if ($tipe === 'item') {
-      if ($jenis === 'detail') {
-        $sub = DB::table('farmasi.resep_permintaan_keluar as rpk')
-          ->select('rpk.noresep')
-          ->join('farmasi.resep_keluar_h as h', 'h.noresep', '=', 'rpk.noresep')
-          ->whereBetween('h.tgl_permintaan', [$from, $to])
-          ->groupBy('rpk.noresep')
-          ->havingRaw('COUNT(DISTINCT rpk.kdobat) > 5');
+      // if ($jenis === 'detail') {
+      //   $sub = DB::table('farmasi.resep_permintaan_keluar as rpk')
+      //     ->select('rpk.noresep')
+      //     ->join('farmasi.resep_keluar_h as h', 'h.noresep', '=', 'rpk.noresep')
+      //     ->whereBetween('h.tgl_permintaan', [$from, $to])
+      //     ->groupBy('rpk.noresep')
+      //     ->havingRaw('COUNT(DISTINCT rpk.kdobat) > 5');
 
-        $query->select(
-          'h.noreg',
-          'h.noresep',
-          DB::raw("DATE_FORMAT(h.tgl_permintaan, '%Y-%m-%d %H:%i:%s') as tgl_resep"),
-          'r.kdobat',
-          'm.nama_obat',
-          'r.jumlah as jumlah_resep',
-          DB::raw("IFNULL(SUM(k.jumlah),0) as jumlah_diberikan")
-        )
-          ->join('farmasi.resep_permintaan_keluar as r', 'h.noresep', '=', 'r.noresep')
-          ->leftJoin('farmasi.new_masterobat as m', 'm.kd_obat', '=', 'r.kdobat')
-          ->leftJoin('farmasi.resep_keluar_r as k', function ($join) {
-            $join->on('r.noresep', '=', 'k.noresep')
-              ->on('r.kdobat', '=', 'k.kdobat');
-          })
-          ->whereBetween('h.tgl_permintaan', [$from, $to])
-          ->whereIn('h.noresep', $sub)
-          ->groupBy(
-            'h.noreg',
-            'h.noresep',
-            'h.tgl_permintaan',
-            'r.kdobat',
-            'r.jumlah',
-            'm.nama_obat'
-          );
-      } else { // jenis = rekap
-        $query->select(
-          'h.noreg',
-          'h.noresep',
-          DB::raw('COUNT(DISTINCT r.kdobat) as total_obat'),
-          DB::raw('SUM(r.jumlah) as total_diminta'),
-          DB::raw('SUM(IFNULL(k.jumlah,0)) as total_diberikan')
-        )
-          ->join('farmasi.resep_permintaan_keluar as r', 'h.noresep', '=', 'r.noresep')
-          ->leftJoin('farmasi.resep_keluar_r as k', function ($join) {
-            $join->on('r.noresep', '=', 'k.noresep')
-              ->on('r.kdobat', '=', 'k.kdobat');
-          })
-          ->whereBetween('h.tgl_permintaan', [$from, $to])
-          ->groupBy('h.noresep')
-          ->havingRaw('COUNT(DISTINCT r.kdobat) > 5')
-          ->orderBy('h.noresep');
-      }
+      //   $query->select(
+      //     'h.noreg',
+      //     'h.noresep',
+      //     DB::raw("DATE_FORMAT(h.tgl_permintaan, '%Y-%m-%d %H:%i:%s') as tgl_permintaan"),
+      //     'r.kdobat',
+      //     'm.nama_obat',
+      //     'r.jumlah as jumlah_resep',
+      //     DB::raw("IFNULL(SUM(k.jumlah),0) as jumlah_diberikan")
+      //   )
+      //     ->join('farmasi.resep_permintaan_keluar as r', 'h.noresep', '=', 'r.noresep')
+      //     ->leftJoin('farmasi.new_masterobat as m', 'm.kd_obat', '=', 'r.kdobat')
+      //     ->leftJoin('farmasi.resep_keluar_r as k', function ($join) {
+      //       $join->on('r.noresep', '=', 'k.noresep')
+      //         ->on('r.kdobat', '=', 'k.kdobat');
+      //     })
+      //     ->whereBetween('h.tgl_permintaan', [$from, $to])
+      //     ->whereIn('h.noresep', $sub)
+      //     ->groupBy(
+      //       'h.noreg',
+      //       'h.noresep',
+      //       'h.tgl_permintaan',
+      //       'r.kdobat',
+      //       'r.jumlah',
+      //       'm.nama_obat'
+      //     );
+      // } else { // jenis = rekap
+      // }
+      $query->select(
+        'h.noreg',
+        'h.noresep',
+        'h.tgl_permintaan',
+        DB::raw('COUNT(DISTINCT r.kdobat) as total_item'),
+        DB::raw('SUM(r.jumlah) as total_diminta'),
+        DB::raw('SUM(IFNULL(k.jumlah,0)) as total_diberikan')
+      )
+        ->join('farmasi.resep_permintaan_keluar as r', 'h.noresep', '=', 'r.noresep')
+        ->leftJoin('farmasi.resep_keluar_r as k', function ($join) {
+          $join->on('r.noresep', '=', 'k.noresep')
+            ->on('r.kdobat', '=', 'k.kdobat');
+        })
+        ->whereBetween('h.tgl_permintaan', [$from, $to])
+        ->groupBy('h.noresep')
+        ->havingRaw('COUNT(DISTINCT r.kdobat) > 5')
+        ->orderBy('h.noresep');
     }
 
     // =========================
@@ -137,15 +139,38 @@ class LaporanResepService
     $data = $query->simplePaginate($params['per_page']);
     $resp = ResponseHelper::responseGetSimplePaginate($data, $params, $total);
     $listNorsp = [];
-    if ($jenis === 'detail' && $tipe === 'noreg') {
-      $resep = [];
-      $listNorsp = collect($resp['data'])->pluck('noresep');
-      $details = Resepkeluarrinci::select('kdobat', 'noresep', 'jumlah')->whereIn('noresep', $listNorsp)->with('mobat:kd_obat,nama_obat')->get();
-      $result = collect($resp['data'])->map(function ($h) use ($details) {
-        $h->detail = $details->where('noresep', $h->noresep)->values();
-        return $h;
-      });
-      $resep['data'] = $result;
+    if ($jenis === 'detail') {
+      if ($tipe === 'noreg') {
+        $resep = [];
+        $listNorsp = collect($resp['data'])->pluck('noresep');
+        $details = Resepkeluarrinci::select('kdobat', 'noresep', 'jumlah')->whereIn('noresep', $listNorsp)->with('mobat:kd_obat,nama_obat')->get();
+        $result = collect($resp['data'])->map(function ($h) use ($details) {
+          $h->detail = $details->where('noresep', $h->noresep)->values();
+          return $h;
+        });
+        $resep['data'] = $result;
+      } else {
+        $resep = [];
+        $listNorsp = collect($resp['data'])->pluck('noresep');
+        $details = Permintaanresep::select(
+          'resep_permintaan_keluar.kdobat',
+          'resep_permintaan_keluar.noresep',
+          'resep_permintaan_keluar.jumlah as jumlah_resep',
+          DB::raw("IFNULL(r.jumlah,0) as jumlah_diberikan")
+        )
+          ->leftJoin('farmasi.resep_keluar_r as r', function ($join) {
+            $join->on('r.noresep', '=', 'resep_permintaan_keluar.noresep')
+              ->on('r.kdobat', '=', 'resep_permintaan_keluar.kdobat');
+          })
+          ->whereIn('resep_permintaan_keluar.noresep', $listNorsp)
+          ->with('mobat:kd_obat,nama_obat')
+          ->get();
+        $result = collect($resp['data'])->map(function ($h) use ($details) {
+          $h->detail = $details->where('noresep', $h->noresep)->values();
+          return $h;
+        });
+        $resep['data'] = $result;
+      }
     }
     // return [
     //   'data' => $resp,
