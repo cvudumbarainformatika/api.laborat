@@ -11,6 +11,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PermintaanRetur;
 use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PermintaanReturDetail;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -189,6 +190,35 @@ class PermintaanReturRuanganController extends Controller
                 'head' => $head ?? null,
                 'req' => $request->all(),
             ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return new JsonResponse([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'req' => $request->all(),
+            ], 410);
+        }
+    }
+    public function selesaiPermintaanManual(Request $request)
+    {
+        try {
+            DB::connection('farmasi')->beginTransaction();
+            $resepAdaFlagPermintaan = Resepkeluarheder::whereIn('noresep', $request->noresep)->whereNotNull('flag_permintaan_retur')->get();
+            $permintaan = PermintaanRetur::where('nopermintaan', $request->nopermintaan)->whereNull('flag')->first();
+            if (!$permintaan) throw new Exception('Permintaan Retur tidak ditemukan');
+            foreach ($resepAdaFlagPermintaan as $key) {
+                $key->update(['flag_permintaan_retur' => null]);
+            }
+            $permintaan->update(['flag' => '1']);
+            DB::connection('farmasi')->commit();
+            return new JsonResponse(
+                [
+                    'request' => $request->all(),
+                    'resepAdaFlagPermintaan' => $resepAdaFlagPermintaan,
+                    'permintaan' => $permintaan,
+                ]
+            );
         } catch (\Exception $e) {
             DB::connection('farmasi')->rollBack();
             return new JsonResponse([
