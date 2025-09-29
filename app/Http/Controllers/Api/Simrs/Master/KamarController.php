@@ -11,6 +11,7 @@ use App\Models\Simrs\Ranap\Views\Kunjunganview;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class KamarController extends Controller
 {
@@ -108,6 +109,79 @@ class KamarController extends Controller
 
     
       return new JsonResponse($data);
+    }
+
+
+    function showKamar2()
+    {
+      $nama = request('nama'); // sama dengan $_GET['nama']
+
+        $data = DB::table('rs25')
+            ->select('rs1')
+            ->where('rs5', $nama)
+            ->where('rs3', 'A')
+            ->where('rs4', 'V')
+            ->distinct()
+            ->orderBy('rs1')
+            ->get();
+
+        return new JsonResponse($data);
+    }
+
+
+    function showBed(){
+      $namax = request('namax'); // sama dengan $_GET['namax']
+      $nama = request('nama'); // sama dengan $_GET['nama']
+      if ($namax === "Extra") {
+    // case khusus kalau namax = Extra
+      $sql = DB::table('rs25')
+        ->join('rs24', 'rs25.rs5', '=', 'rs24.rs1')
+        ->select('rs25.rs2')
+        ->where('rs24.rs2', $nama)
+        ->where('rs25.rs1', $namax)
+        ->where('rs25.rs3', 'A')
+        ->where('rs25.rs4', 'V')
+        ->where('rs25.rs7', '<>', 1)
+        ->where('rs25.rs8', '<>', 1)
+        ->distinct()
+        ->orderByRaw('LENGTH(rs2) asc, rs2 asc')
+        ->get();
+
+      } elseif ($nama === "Instalasi Gawat Darurat") {
+          // case khusus kalau nama = IGD
+          $sql = collect([
+              (object)['rs2' => 'IGD']
+          ]);
+
+      } else {
+          // case umum
+          $query1 = DB::table('rs25')
+              ->join('rs24', 'rs25.rs5', '=', 'rs24.rs1')
+              ->select('rs25.rs2')
+              ->where('rs24.rs2', $nama)
+              ->where('rs25.rs1', $namax)
+              ->where('rs25.rs3', 'A')
+              ->where('rs25.rs4', 'V')
+              ->where('rs25.rs7', '<>', 1)
+              ->where('rs25.rs8', '<>', 1);
+
+          $query2 = DB::table('rs25')
+              ->select('rs2')
+              ->where('rs6', $rs_glob->groups ?? '')
+              ->where('rs1', $namax)
+              ->where('rs3', 'A')
+              ->where('rs4', 'V')
+              ->where('rs5', '-')
+              ->where('rs7', '<>', 1)
+              ->where('rs8', '<>', 1);
+
+          $sql = $query1
+              ->unionAll($query2)
+              ->orderByRaw('LENGTH(rs2) asc, rs2 asc')
+              ->get();
+      }
+
+        return new JsonResponse($sql);
     }
     
 }

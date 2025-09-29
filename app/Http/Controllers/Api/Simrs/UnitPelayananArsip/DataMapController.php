@@ -47,8 +47,12 @@ class DataMapController extends Controller
                     [
                         'namamap' => $request->namamap,
                         'kodeorganisasi' => $request->kodeorganisasi,
+                        'kodeklasifikasi' => $request->kodekelasifikasi,
                         'keterangan' => $request->keterangan,
-                        'user'=> $kdpegsimrs
+                        'user'=> $kdpegsimrs,
+                        'kodefelingkabinet' => $request->cabinet,
+                        'laci' => $request->laci,
+                         'tahunMap' => $request->tahunmap,
                     ]
                 );
             DB::commit();
