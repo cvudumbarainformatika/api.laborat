@@ -39,4 +39,11 @@ Route::group([
         return response()->json($data);
     });
 
+
+
+    // untuk mutasi
+    Route::get('/ruanganranap', [RuanganController::class, 'ruanganranap']);
+    Route::get('/historymutasi', [RuanganController::class, 'historyMutasi']);
+    Route::post('/simpanmutasi', [RuanganController::class, 'simpanMutasi']);
+
 });
