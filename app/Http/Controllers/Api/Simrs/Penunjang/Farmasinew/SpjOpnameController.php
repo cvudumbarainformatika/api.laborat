@@ -38,17 +38,21 @@ class SpjOpnameController extends Controller
                     'tglexp',
                     'tglopname',
                     DB::raw('sum(jumlah) as total')
-                )->where('tglopname', 'LIKE', '%' . $now . '%')
+                )
+                    ->where('tglopname', 'LIKE', '%' . $now . '%')
+                    ->where('kdruang', request('ruang'))
                     ->groupBy('kdobat', 'kdruang', 'tglopname');
             },
             'onefisik' => function ($q) use ($now) {
                 $q->where('tglopname', 'LIKE', '%' . $now . '%')
-                    ->whereNotNull('kdruang');
+                    ->where('kdruang', request('ruang'));
+                // ->whereNotNull('kdruang');
             }
             // 'oneopname'
 
         ])
             ->where('flag', '')
+            // ->where('kd_obat', '0000952-FAR')
             ->where(function ($x) {
                 $x->where('nama_obat', 'like', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'like', '%' . request('q') . '%');

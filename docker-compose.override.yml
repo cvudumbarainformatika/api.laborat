@@ -3,7 +3,7 @@ services:
     ports:
       - "6003:6003" # WebSocket
       - "8000:8000" # Swoole
-    user: "${LOCAL_UID}:${LOCAL_GID}"
+    user: "1000:1000"
   nginx:
     ports:
       - "8080:80"
