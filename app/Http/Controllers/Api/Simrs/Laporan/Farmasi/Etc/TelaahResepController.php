@@ -42,26 +42,18 @@ class TelaahResepController extends Controller
             $data = $raw->simplePaginate(request('per_page'));
             $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
         } else {
-            // $peg = Petugas::query()
-            //     ->select('kepegx.pegawai.nama', 'kepegx.pegawai.id', 'kepegx.pegawai.kdpegsimrs', DB::raw('COUNT(farmasi.telaah_reseps.id) as total_telaah'))
-            //     ->leftJoin('farmasi.telaah_reseps', 'farmasi.telaah_reseps.user_input', '=', 'kepegx.pegawai.kdpegsimrs')
-            //     ->whereBetween('farmasi.telaah_reseps.created_at', [$from, $to])
-            //     ->when(request('kode_ruang') != 'all', function ($q) {
-            //         $q->leftJoin('farmasi.resep_keluar_h', 'farmasi.resep_keluar_h.noresep', '=', 'farmasi.telaah_reseps.noresep')
-            //             ->where('farmasi.resep_keluar_h.depo', request('kode_ruang'));
-            //     })
-            //     ->groupBy('kepegx.pegawai.id');
+
             $rekap = TelaahResep::query()
                 ->select(
-                    'telaah_reseps.user_input',
-                    DB::raw('COUNT(telaah_reseps.id) as total_telaah')
+                    'farmasi.telaah_reseps.user_input',
+                    DB::raw('COUNT(farmasi.telaah_reseps.id) as total_telaah')
                 )
-                ->whereBetween('telaah_reseps.created_at', [$from, $to])
+                ->whereBetween('farmasi.telaah_reseps.created_at', [$from, $to])
                 ->when(request('kode_ruang') != 'all', function ($q) {
-                    $q->join('resep_keluar_h as r', 'r.noresep', '=', 'telaah_reseps.noresep')
+                    $q->join('farmasi.resep_keluar_h as r', 'r.noresep', '=', 'farmasi.telaah_reseps.noresep')
                         ->where('r.depo', request('kode_ruang'));
                 })
-                ->groupBy('telaah_reseps.user_input');
+                ->groupBy('farmasi.telaah_reseps.user_input');
             $user = (clone $rekap)->pluck('user_input')->toArray();
             $peg = Petugas::query()
                 ->select(
