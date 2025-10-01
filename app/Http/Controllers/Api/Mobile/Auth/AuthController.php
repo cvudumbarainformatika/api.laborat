@@ -57,6 +57,7 @@ class AuthController extends Controller
         if ($request->email === 'sa@app.com' || 
             $request->email === '3574041305820002@app.com' || 
             $request->email === '3574011504680001@app.com' || 
+            $request->email === '3513176806880002@app.com' || 
             $request->device === 'ios'
             ) {
             JWTAuth::factory()->setTTL(43200);

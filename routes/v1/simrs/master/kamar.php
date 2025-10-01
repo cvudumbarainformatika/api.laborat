@@ -10,4 +10,6 @@ Route::group([
 ], function () {
     Route::get('/kamar', [KamarController::class, 'listKamar']);
     Route::get('/listviewkamar', [KamarController::class, 'showKamar']);
+    Route::get('/showkamar', [KamarController::class, 'showKamar2']);
+    Route::get('/showBed', [KamarController::class, 'showBed']);
 });

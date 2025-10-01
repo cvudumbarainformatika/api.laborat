@@ -11,4 +11,5 @@ Route::group([
   Route::get('/list-permintaan', [PermintaanReturRuanganController::class, 'listPermintaan']);
   Route::post('/get-oabt-keluar', [PermintaanReturRuanganController::class, 'getObatKeluar']);
   Route::post('/simpan-permintaan', [PermintaanReturRuanganController::class, 'simpanPermintaan']);
+  Route::post('/selesai-permintaan-manual', [PermintaanReturRuanganController::class, 'selesaiPermintaanManual']);
 });

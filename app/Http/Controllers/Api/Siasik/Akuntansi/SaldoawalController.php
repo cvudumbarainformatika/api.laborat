@@ -13,13 +13,30 @@ use Illuminate\Http\Request;
 class SaldoawalController extends Controller
 {
     public function akunsaldo(){
-        $akun=Akun50_2024::where('subrincian_objek', '!=', '')
-        ->select('uraian','kodeall3')
-        ->when(request('q'), function($q){
-            $q->where('uraian', 'LIKE', '%'.request('q').'%');
-        })
-        ->get();
+        $perPage = request('per_page', 100);
+        $query=Akun50_2024::where('subrincian_objek', '!=', '')
+        ->select('uraian','kodeall3');
+        if (request('q')) {
+            $cari = request('q');
+            $query->where(function ($q) use ($cari) {
+                $q->where('uraian', 'like', '%' . $cari . '%')
+                  ->orWhere('kodeall3', 'like', '%' . $cari . '%');
+            });
+        }
+
+        if ($perPage <= 0) {
+            $akun = $query->get();
+            return new JsonResponse(['data' => $akun]);
+        }
+
+        $akun = $query->simplePaginate($perPage);
+
         return new JsonResponse($akun);
+        // ->when(request('q'), function($q){
+        //     $q->where('uraian', 'LIKE', '%'.request('q').'%');
+        // })
+        // ->get();
+        // return new JsonResponse($akun);
     }
 
     public function index(){
@@ -48,16 +65,16 @@ class SaldoawalController extends Controller
         if (!$request->has('id')){
             $saldo=SaldoAwal::firstOrCreate(
             [
-                            'kodepsap13' => $request['kodepsap13'],
-                            'uraianpsap13' => $request['uraianpsap13'],
-                            'debetkredit' => $request['debetkredit'],
-                            'debit' => $request['debit'],
-                            'kredit' => $request['kredit'],
-                            'tahun' => $year ?? '',
-                            'tglentry' => $time ?? '',
-                            'tanggal' => $date ?? '',
-                            'userentry'=> $pegawai ?? ''
-                        ]);
+                'kodepsap13' => $request['kodepsap13'],
+                'uraianpsap13' => $request['uraianpsap13'],
+                'debetkredit' => $request['debetkredit'],
+                'debit' => $request['debit'],
+                'kredit' => $request['kredit'],
+                'tahun' => $year ?? '',
+                'tglentry' => $time ?? '',
+                'tanggal' => $date ?? '',
+                'userentry'=> $pegawai ?? ''
+            ]);
         } else {
             $editsaldo = SaldoAwal::find($request->id);
             $editsaldo->update($request->only([
