@@ -104,14 +104,22 @@ class DataMapController extends Controller
 
     public function rinciandidalammap()
     {
-        $data = MapRincian::with(
+        $data = MapHeder::with(
             [
-                'dataarsip' => function ($q) {
-                    $q->with(['klasifikasi','unitpengolah','media','user']);
-                }
+                'rinciandalammap' => function ($x) {
+                    $x->with(
+                        [
+                            'dataarsip' => function ($q) {
+                                $q->with(['media','user']);
+                            }
+                        ]);
+                },
+                'klasifikasi',
+                'unitpengolah',
+                'kabinet'
             ]
         )
-        ->where('id_heder', request('idmap'))->get();
+        ->where('id', request('idmap'))->get();
         return new JsonResponse($data);
     }
 
