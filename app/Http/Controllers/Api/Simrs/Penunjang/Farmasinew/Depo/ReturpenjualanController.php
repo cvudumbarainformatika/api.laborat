@@ -228,6 +228,7 @@ class ReturpenjualanController extends Controller
                 })
                     ->orWhere('retur_penjualan_h.noresep', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('retur_penjualan_h.norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('retur_penjualan_h.noretur', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('retur_penjualan_h.noreg', 'LIKE', '%' . request('q') . '%');
             })
             ->where('depo', request('kddepo'))
@@ -243,7 +244,6 @@ class ReturpenjualanController extends Controller
             ->when(count($noresep) > 0, function ($q) use ($noresep) {
                 $q->whereIn('retur_penjualan_h.noretur', $noresep);
             })
-
             ->paginate(request('per_page'));
         $resp['data'] = collect($data)['data'];
         $resp['meta'] = collect($data)->except('data');
