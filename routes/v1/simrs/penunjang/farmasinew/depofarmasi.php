@@ -91,6 +91,7 @@ Route::group([
     Route::post('simpan-persyaratan-lab', [EresepController::class, 'simpanPersyaratanLab']);
     //--------------Retur penjualan -------------//
     Route::get('/caribynoresep', [ReturpenjualanController::class, 'caribynoresep']);
+    Route::get('/list-retur', [ReturpenjualanController::class, 'listRetur']);
     Route::post('/returpenjualan', [ReturpenjualanController::class, 'newreturpenjualan']);
     /// --- ini permintaan retur dari ruangan -----
     Route::post('/kirim-permintaan-retur', [ReturpenjualanController::class, 'permintaanRetur']);

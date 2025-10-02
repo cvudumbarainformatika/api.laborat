@@ -174,6 +174,78 @@ class ReturpenjualanController extends Controller
             ]
         );
     }
+    public function listRetur()
+    {
+
+
+        $rm = [];
+        if (request('q') !== null) {
+            if (preg_match('~[0-9]+~', request('q'))) {
+                $rm = [];
+            } else {
+                if (strlen(request('q')) >= 3) {
+                    $data = Mpasien::select('rs1 as norm')->where('rs2', 'LIKE', '%' . request('q') . '%')->get();
+                    $rm = collect($data)->map(function ($x) {
+                        return $x->norm;
+                    });
+                } else $rm = [];
+            }
+        }
+
+        // cari nama obat->cari noresep yang ada obat itu di rincian dan rincian racik
+        $nama = [];
+        $noresep = [];
+        if (request('nama') !== null) {
+            if (strlen(request('nama')) >= 3) {
+                $nama = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('nama') . '%')->pluck('kd_obat')->toArray();
+
+                $noresep = Returpenjualan_r::select('noretur')->whereIn('kdobat', $nama)->distinct()->pluck('noretur');
+            }
+        }
+        $data = Returpenjualan_h::select(
+            'retur_penjualan_h.noretur',
+            'retur_penjualan_h.tgl_retur',
+            'retur_penjualan_h.noresep',
+            'retur_penjualan_h.noreg',
+            'retur_penjualan_h.norm',
+            'retur_penjualan_h.kddokter',
+            'retur_penjualan_h.kdruangan',
+            'retur_penjualan_h.user',
+        )->with(
+            [
+                'rinci.mobatnew:kd_obat,nama_obat'
+            ]
+        )
+            ->leftJoin('resep_keluar_h as res', 'res.noresep', '=', 'retur_penjualan_h.noresep')
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('retur_penjualan_h.norm', $rm);
+                })
+                    ->orWhere('retur_penjualan_h.noresep', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('retur_penjualan_h.norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('retur_penjualan_h.noreg', 'LIKE', '%' . request('q') . '%');
+            })
+            ->where('depo', request('kddepo'))
+            ->when(request('from'), function ($q) {
+                $tgl = request('from') . ' 00:00:00';
+                $tglx = Carbon::now()->format('Y-m-d 23:59:59');
+                $q->whereBetween('retur_penjualan_h..tgl_retur', [$tgl, $tglx]);
+            })
+
+            ->when(count($noresep) > 0, function ($q) use ($noresep) {
+                $q->whereIn('retur_penjualan_h.noretur', $noresep);
+            })
+            ->orderBy('tgl_retur', 'DESC')
+            ->paginate(request('per_page'));
+        return new JsonResponse(
+            [
+                'result' => $data,
+                'nama' => $nama,
+                'rm' => $rm,
+                'noresep' => $noresep,
+            ]
+        );
+    }
 
     public function returpenjualan(Request $request)
     {

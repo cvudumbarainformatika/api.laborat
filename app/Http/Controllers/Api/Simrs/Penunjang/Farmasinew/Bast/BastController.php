@@ -174,7 +174,9 @@ class BastController extends Controller
                         $x->whereIn('kdpbf', $pihak);
                     },
                     function ($r) {
-                        $r->where('nobast', 'LIKE', '%' . request('q') . '%');
+                        $r->where('nobast', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('nopenerimaan', 'LIKE', '%' . request('q') . '%')
+                            ->orWhere('nopemesanan', 'LIKE', '%' . request('q') . '%');
                     }
                 );
             })
