@@ -211,9 +211,14 @@ class ReturpenjualanController extends Controller
             'retur_penjualan_h.kddokter',
             'retur_penjualan_h.kdruangan',
             'retur_penjualan_h.user',
+            'res.tgl_permintaan'
         )->with(
             [
-                'rinci.mobatnew:kd_obat,nama_obat'
+                'rinci.mobatnew:kd_obat,nama_obat',
+                'dokter:kdpegsimrs,nama',
+                'datapasien:rs1,rs2',
+                'poli:rs1,rs2',
+                'ruanganranap:rs1,rs2',
             ]
         )
             ->leftJoin('resep_keluar_h as res', 'res.noresep', '=', 'retur_penjualan_h.noresep')
@@ -229,14 +234,21 @@ class ReturpenjualanController extends Controller
             ->when(request('from'), function ($q) {
                 $tgl = request('from') . ' 00:00:00';
                 $tglx = Carbon::now()->format('Y-m-d 23:59:59');
-                $q->whereBetween('retur_penjualan_h..tgl_retur', [$tgl, $tglx]);
+                $q->whereBetween('retur_penjualan_h..tgl_retur', [$tgl, $tglx])
+                    ->orderBy('tgl_retur', 'ASC');
+            }, function ($q) {
+                $q->orderBy('tgl_retur', 'DESC');
             })
 
             ->when(count($noresep) > 0, function ($q) use ($noresep) {
                 $q->whereIn('retur_penjualan_h.noretur', $noresep);
             })
-            ->orderBy('tgl_retur', 'DESC')
+
             ->paginate(request('per_page'));
+        $resp['data'] = collect($data)['data'];
+        $resp['meta'] = collect($data)->except('data');
+
+        return new JsonResponse($resp);
         return new JsonResponse(
             [
                 'result' => $data,
