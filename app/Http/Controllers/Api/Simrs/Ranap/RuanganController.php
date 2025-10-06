@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Ranap;
 use App\Helpers\FormatingHelper;
 use App\Helpers\TarifHelper;
 use App\Http\Controllers\Controller;
+use App\Models\SerahTerima;
 use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -166,8 +167,13 @@ class RuanganController extends Controller
                 'rs7'   => $request->nobed,
                 'rs31'  => $ruanglm,
                 'rs36'  => $tanggal,
+                'rs22'  => 1, // status belum diterima
                 'titipan' => '',
             ]);
+        
+        // input dokumen serah terima
+
+        self::serahterima($request);
 
         return response()->json(['message' => 'OK']);
     }
@@ -189,11 +195,72 @@ class RuanganController extends Controller
                 )
             
             ->where('rs44.rs1', request('noreg'))
+            ->orderBy('rs44.id', 'desc')
             ->get();
 
         return response()->json($data);
     }
+    /**
+     * document serah terima
+     */
+    public static function  serahterima($request)
+    {
+        // insert document serah (penyerahan pasien)
+        $userSerah = FormatingHelper::session_user();
+        $data = SerahTerima::create([
+            'noreg' => $request->noreg,
+            'norm' => $request->norm,
+            'dari' => $request->ruanglm,
+            'ke' => $request->ruang,
+            'derajatPasien' => $request->derajatPasien,
+            'tensi' => $request->tensi,
+            'nadi' => $request->nadi,
+            'suhu' => $request->suhu,
+            'rr' => $request->rr,
+            'spo2' => $request->spo2,
+            'terapis' => $request->terapis,
+            'plann' => $request->plann,
+            'ro' => $request->ro,
+            'lab' => $request->lab,
+            'ecg' => $request->ecg,
+            'lainlain' => $request->lainlain,
+            'kelengkapan' => $request->kelengkapan,
+            'user_serah' => $userSerah['kodesimrs'],
+        ]);
+    }
 
+    public function updateSerahTerima(Request $request)
+    {
+       $user = FormatingHelper::session_user();
+       $data = SerahTerima::find($request->id);
+       if (!$data) {
+           return new JsonResponse([
+               'message' => 'Data Tidak Ditemukan'
+           ], 500);
+       }
+       $data->update([
+            'tensi_trm' => $request->tensi_trm,
+            'nadi_trm' => $request->nadi_trm,
+            'suhu_trm' => $request->suhu_trm,
+            'rr_trm' => $request->rr_trm,
+            'spo2_trm' => $request->spo2_trm,
+            'user_trm' => $user['kodesimrs'],
+       ]);
 
+       // update rs23
+        DB::table('rs23')
+            ->where('rs1', $request->noreg)
+            ->update([
+                // 'rs5'   => $ruang,
+                // 'rs6'   => $request->kamar,
+                // 'rs7'   => $request->nobed,
+                // 'rs31'  => $ruanglm,
+                // 'rs36'  => $tanggal,
+                'rs22'  => '', // status belum diterima
+                // 'titipan' => '',
+            ]);
+        
+       return response()->json(['message' => 'OK', 'data' => $data]);
+    }
 
 }

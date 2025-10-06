@@ -37,6 +37,7 @@ class RanapController extends Controller
         $to = request('from') . ' 23:59:59';
 
         $ruangan = request('koderuangan');
+
         $data = DB::table('rs23')->select(
             'rs23.rs1',
             'rs23.rs1 as noreg',
@@ -97,6 +98,9 @@ class RanapController extends Controller
             'rs23_nosurat.jamMeninggal',
             'rs23_nosurat.kddrygmenyatakan',
             'memodiagnosadokter.diagnosa as memodiagnosa',
+            // 'serah_terima.dari',
+            // 'serah_terima.ke',
+            // 'serah_terima.user_trm',
             // 'tflag_covid.flagcovid as flagcovid',
             )
 
@@ -118,8 +122,12 @@ class RanapController extends Controller
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
             ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
             ->leftjoin('rs23_sambung', 'rs23_sambung.noreg', 'rs23.rs1') // sambungan rs23
+            // ->leftJoin('serah_terima', function ($join) {
+            //     $join->on('rs23.rs1', '=', 'serah_terima.noreg')
+            //         ->on('serah_terima.ke', '=', 'rs23.rs5');
+            // })
 
-
+            
 
             ->addSelect(DB::raw(
                 '(SELECT rs4 FROM rs23 WHERE rs23.rs2 = rs15.rs1 AND rs23.rs4 != "0000-00-00 00:00:00" ORDER BY rs4 DESC LIMIT 1)
@@ -150,6 +158,7 @@ class RanapController extends Controller
                         ->whereIn('rs23.rs22', ['2', '3']);
                 } else {
                     $query->where('rs23.rs22', '=', '')
+                        ->orWhere('rs23.rs22', '=', '1')
                         ->where('rs23.rs1', '!=', '');
                 }
             })
@@ -199,7 +208,8 @@ class RanapController extends Controller
 
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request('koderuangan');
-        $data = DB::table('rs23')->select(
+        $data = Kunjunganranap::query()
+        ->select(
             'rs23.rs1',
             'rs23.rs1 as noreg',
             'rs23.rs2 as norm',
@@ -255,6 +265,7 @@ class RanapController extends Controller
             'memodiagnosadokter.diagnosa as memodiagnosa',
             // 'tflag_covid.flagcovid as flagcovid',
         )
+        
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
             // ->leftjoin('tflag_covid', function ($q) {
@@ -796,7 +807,23 @@ class RanapController extends Controller
                     $q->where('stat', '=', 'MASUK')
                         ->where('ruang', '!=', 'POL014');
                 },
-                'manymemo'
+                'manymemo',
+                'serah_terima' => function ($q) {
+                    $q->select(
+                    'serah_terima.noreg','serah_terima.dari', 'serah_terima.ke', 'serah_terima.flag', 'serah_terima.user_serah', 'serah_terima.user_trm','serah_terima.created_at',
+                    'serah_terima.tensi','serah_terima.nadi', 'serah_terima.suhu', 'serah_terima.rr', 'serah_terima.spo2', 'serah_terima.id',
+                    'serah_terima.tensi_trm','serah_terima.nadi_trm', 'serah_terima.suhu_trm', 'serah_terima.rr_trm', 'serah_terima.spo2_trm',
+                    'lm.rs2 as nm_ruanglm', 'br.rs2 as nm_ruang',
+                    'peg.nama as prwt_serah', 'pega.nama as prwt_trm',
+                    )
+                    ->leftJoin('rs24 as lm', 'lm.rs1', '=', 'serah_terima.dari')
+                    ->leftJoin('rs24 as br', 'br.rs1', '=', 'serah_terima.ke')
+                    ->leftJoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
+                    ->leftJoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm')
+                        ->whereNull('serah_terima.flag')
+                        ->orderBy('serah_terima.created_at', 'DESC')
+                        ->groupBy('serah_terima.id');
+                },
 
             ])->first();
 

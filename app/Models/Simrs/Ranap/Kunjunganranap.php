@@ -4,6 +4,7 @@ namespace App\Models\Simrs\Ranap;
 
 use App\Models\KunjunganPoli;
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\SerahTerima;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
@@ -686,5 +687,9 @@ class Kunjunganranap extends Model
     public function rs239_implementasi()
     {
         return $this->hasMany(ImplementasiEdukasi::class, 'noreg', 'rs1');
+    }
+    public function serah_terima()
+    {
+        return $this->hasMany(SerahTerima::class, 'noreg', 'rs1');
     }
 }
