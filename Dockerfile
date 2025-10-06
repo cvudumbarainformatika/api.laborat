@@ -1,19 +1,31 @@
-FROM bitnami/php-fpm:8.3-debian-12
+FROM php:8.3-fpm
 
-# Install supervisor
+# Set ARG
 ARG user=laravel
 ARG uid=1000
 ARG gid=1000
 
-RUN install_packages \
+
+
+# RUN apt-get update && apt-get install -y \
+#   git curl unzip zip supervisor \
+#   libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+#   libxml2-dev libzip-dev pkg-config libbrotli-dev \
+#   autoconf make gcc g++ build-essential \
+#   && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies + PHP extensions
+RUN apt-get update && apt-get install -y \
   git curl unzip zip supervisor \
   libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
   libxml2-dev libzip-dev pkg-config libbrotli-dev \
-  autoconf make gcc g++ build-essential
+  autoconf make gcc g++ build-essential \
+  && pecl install redis \
+  && docker-php-ext-enable redis \
+  && docker-php-ext-install pdo_mysql bcmath zip opcache \
+  && rm -rf /var/lib/apt/lists/*
 
-# Enable needed PHP extensions (gd already precompiled, others can be enabled)
-RUN php -m | grep -q redis || \
-    (pecl install redis && echo "extension=redis.so" > /opt/bitnami/php/etc/conf.d/redis.ini)
+
 
 # Copy Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -41,6 +53,9 @@ RUN chown -R $user:$user /var/www && \
     chmod -R 775 /var/www/storage && \
     chmod -R 775 /var/www/bootstrap/cache && \
     chown -R $user:$user /etc/supervisor/conf.d
+
+
+
 
 # Copy and set permissions for entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
