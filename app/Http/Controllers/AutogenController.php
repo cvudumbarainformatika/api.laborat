@@ -47,6 +47,17 @@ use Illuminate\Support\Str;
 
 class AutogenController extends Controller
 {
+    public function cariSep()
+    {
+        $noka = '0003556434385';
+        $tglawal = '2025-09-01';
+        $tglakhir = '2025-10-11';
+        $history = BridgingbpjsHelper::get_url(
+            'vclaim',
+            'monitoring/HistoriPelayanan/NoKartu/' . $noka . '/tglMulai/' . $tglawal . '/tglAkhir/' . $tglakhir
+        );
+        return new JsonResponse($history);
+    }
     public function pass()
     {
         echo bcrypt('123456789');
@@ -362,7 +373,7 @@ class AutogenController extends Controller
         //     'f' => $f
         // ];
 
-    //    echo 'coba';
+        //    echo 'coba';
 
         // $coba = 'SUB SPESIALIS';
 
@@ -385,13 +396,13 @@ class AutogenController extends Controller
         // echo $spesialis;
 
         // return self::cekTarip($spesialis, $request, $user);
-    //     echo "PERCOBAAN DEPLOY SWOOLE";
-    //     $table = 'permintaan_r';
-    //     return Schema::connection('farmasi')->getColumnListing($table);
+        //     echo "PERCOBAAN DEPLOY SWOOLE";
+        //     $table = 'permintaan_r';
+        //     return Schema::connection('farmasi')->getColumnListing($table);
 
-    //     $cek_tanggal = '2025-06-04' !== date('Y-m-d');
+        //     $cek_tanggal = '2025-06-04' !== date('Y-m-d');
 
-    //    return response()->json(['status' => $cek_tanggal]);
+        //    return response()->json(['status' => $cek_tanggal]);
 
 
         // $years = [];
@@ -406,73 +417,71 @@ class AutogenController extends Controller
         // return response()->json($data);
 
 
-    $str='MjUwODE1LzEwMjU5NkotUkFEfFJBRElPTE9HSS5wbmd8UkFESU9MT0dJfDE0';
-    // return $str;
-    $decode=base64_decode($str);
-    if (!$decode) {
-      return new JsonResponse(['message' => 'invalid'], 500);
-    }
-    $split= explode('|', $decode);
-    if (count($split)<1) {
-      return new JsonResponse(['message' => 'invalid'], 500);
-    }
+        $str = 'MjUwODE1LzEwMjU5NkotUkFEfFJBRElPTE9HSS5wbmd8UkFESU9MT0dJfDE0';
+        // return $str;
+        $decode = base64_decode($str);
+        if (!$decode) {
+            return new JsonResponse(['message' => 'invalid'], 500);
+        }
+        $split = explode('|', $decode);
+        if (count($split) < 1) {
+            return new JsonResponse(['message' => 'invalid'], 500);
+        }
 
-    
-    $noreg=$split[0];
-    $dok=$split[1] ?? null;
-    $asal=$split[2] ?? null;
-    $petugas=$split[3] ?? null;
 
-    $dataPetugas = Pegawai::select('id','nip','nik','nama','foto','ttdpegawai','kdpegsimrs')->where('kdpegsimrs', $petugas)->first();
-    
-   $cekx=null;
-    
-    if ($asal === 'RAWAT JALAN') {
+        $noreg = $split[0];
+        $dok = $split[1] ?? null;
+        $asal = $split[2] ?? null;
+        $petugas = $split[3] ?? null;
 
-        $cekx = KunjunganPoli::select('rs1','rs2','rs3','rs1 as noreg', 'rs2 as norm','rs3 as tglmasuk', 'rs9', 'rs19')->where('rs1', $noreg)
-        ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+        $dataPetugas = Pegawai::select('id', 'nip', 'nik', 'nama', 'foto', 'ttdpegawai', 'kdpegsimrs')->where('kdpegsimrs', $petugas)->first();
 
-    } else if ($asal === 'RADIOLOGI') {
+        $cekx = null;
 
-         
-      $query = Transpermintaanradiologi::query();
-        $cekx = $query
-            ->select([
-                'rs106.id',
-                'rs106.rs1',
-                'rs106.rs2',
-                'rs106.rs1 as noreg',
-                'rs106.rs2 as nota',
-                 DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
-                
-                'rs106.trmtgl as tglmasuk',
-            ])
-            ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
-            ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
-            ->leftjoin('rs24', 'rs24.rs1', '=', 'rs106.rs10') //ruangan ranap
-            ->where('rs106.rs2', $noreg)
-           
-            ->first();
+        if ($asal === 'RAWAT JALAN') {
 
-    } else {
+            $cekx = KunjunganPoli::select('rs1', 'rs2', 'rs3', 'rs1 as noreg', 'rs2 as norm', 'rs3 as tglmasuk', 'rs9', 'rs19')->where('rs1', $noreg)
+                ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+        } else if ($asal === 'RADIOLOGI') {
 
-         $cekx=Kunjunganranap::select(
-            'rs1',
-            'rs2',
-            'rs1 as noreg',
-            'rs2 as norm',
-            'rs3 as tglmasuk',
-            'rs4 as rs3',
-            'rs10')->where('rs1', $noreg)
-            ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
-      
-    }
 
-   return $cekx;
-    if (!$cekx) {
-      return new JsonResponse(['message' => 'invalid'], 500);
-    }
-     return $cekx;
+            $query = Transpermintaanradiologi::query();
+            $cekx = $query
+                ->select([
+                    'rs106.id',
+                    'rs106.rs1',
+                    'rs106.rs2',
+                    'rs106.rs1 as noreg',
+                    'rs106.rs2 as nota',
+                    DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
+
+                    'rs106.trmtgl as tglmasuk',
+                ])
+                ->leftjoin('rs17', 'rs106.rs1', '=', 'rs17.rs1') //rajal
+                ->leftjoin('rs23', 'rs106.rs1', '=', 'rs23.rs1') //ranap
+                ->leftjoin('rs24', 'rs24.rs1', '=', 'rs106.rs10') //ruangan ranap
+                ->where('rs106.rs2', $noreg)
+
+                ->first();
+        } else {
+
+            $cekx = Kunjunganranap::select(
+                'rs1',
+                'rs2',
+                'rs1 as noreg',
+                'rs2 as norm',
+                'rs3 as tglmasuk',
+                'rs4 as rs3',
+                'rs10'
+            )->where('rs1', $noreg)
+                ->with(['pegawai:id,nip,nik,nama,foto,ttdpegawai,kdpegsimrs'])->first();
+        }
+
+        return $cekx;
+        if (!$cekx) {
+            return new JsonResponse(['message' => 'invalid'], 500);
+        }
+        return $cekx;
     }
 
     public static function cekTarip($spesialis, $request, $user)
@@ -3661,16 +3670,16 @@ class AutogenController extends Controller
             $result = $a['result'];
 
             $simpan = Seprajal::firstOrCreate(
-            [
-                'rs8' => $result->noSep,
-            ],
-            [
-                'rs2' => $result->peserta->noMr,
-                'rs3' => $result->poli,
-                'rs6' => date('Y-m-d H:i:s'),
-                'rs7' => $result->diagnosa,
-                'rs13' => $result->peserta->noKartu,
-            ]
+                [
+                    'rs8' => $result->noSep,
+                ],
+                [
+                    'rs2' => $result->peserta->noMr,
+                    'rs3' => $result->poli,
+                    'rs6' => date('Y-m-d H:i:s'),
+                    'rs7' => $result->diagnosa,
+                    'rs13' => $result->peserta->noKartu,
+                ]
             );
             return $simpan;
         }

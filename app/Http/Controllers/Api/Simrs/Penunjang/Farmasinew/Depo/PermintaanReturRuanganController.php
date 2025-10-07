@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PermintaanRetur;
 use App\Models\Simrs\Penunjang\Farmasinew\Ruangan\PermintaanReturDetail;
+use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -101,7 +102,10 @@ class PermintaanReturRuanganController extends Controller
     }
     public function simpanPermintaan(Request $request)
     {
-
+        // cek status pasien ranap
+        $pulang = ['2', '3'];
+        $psRnap = Kunjunganranap::where('rs1', $request->noreg)->first();
+        if (in_array($psRnap->rs22, $pulang)) return new JsonResponse(['message' => 'Pasien Sudah pulang'], 410);
         try {
             DB::connection('farmasi')->beginTransaction();
             // ambil nomor retur

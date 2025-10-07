@@ -56,6 +56,7 @@ Route::get('/', function () {
 // Route::get('/opname', [StokOpnameController::class, 'storeMonthly']);
 
 Route::get('/autogen', [AutogenController::class, 'index']);
+Route::get('/autogen/carisep', [AutogenController::class, 'cariSep']);
 Route::get('/autogen/tststk', [AutogenController::class, 'testModel']);
 Route::get('/autogen/harga-opname', [AutogenController::class, 'hargaOpname']);
 Route::get('/autogen/harga-stok', [AutogenController::class, 'hargaStok']);
