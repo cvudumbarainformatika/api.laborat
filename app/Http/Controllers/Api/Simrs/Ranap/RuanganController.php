@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Ranap;
 use App\Helpers\FormatingHelper;
 use App\Helpers\TarifHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Mutasi;
 use App\Models\SerahTerima;
 use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
@@ -79,7 +80,7 @@ class RuanganController extends Controller
 
         $user = FormatingHelper::session_user();
         // insert ke rs44
-        DB::table('rs44')->insert([
+        $rs44 = Mutasi::create([
             'rs1'       => $noreg,
             'rs2'       => $tanggal,
             'rs3'       => $request->ruanglm,
@@ -173,7 +174,7 @@ class RuanganController extends Controller
         
         // input dokumen serah terima
 
-        self::serahterima($request);
+        self::serahterima($request, $rs44);
 
         return response()->json(['message' => 'OK']);
     }
@@ -183,7 +184,7 @@ class RuanganController extends Controller
      */
     public function historyMutasi()
     {
-        $data = DB::table('rs44')
+        $data = Mutasi::query()
             ->leftJoin('rs24 as lm', 'lm.rs1', '=', 'rs44.rs3')
             ->leftJoin('rs24 as br', 'br.rs1', '=', 'rs44.rs10')
             ->leftJoin('rs45', 'rs45.rs1', '=', 'rs44.rs9')
@@ -193,7 +194,7 @@ class RuanganController extends Controller
                 'br.rs2 as nm_ruang',
                 'rs45.rs2 as alasan'
                 )
-            
+            ->with('serah_terima')
             ->where('rs44.rs1', request('noreg'))
             ->orderBy('rs44.id', 'desc')
             ->get();
@@ -203,7 +204,7 @@ class RuanganController extends Controller
     /**
      * document serah terima
      */
-    public static function  serahterima($request)
+    public static function  serahterima($request, $rs44)
     {
         // insert document serah (penyerahan pasien)
         $userSerah = FormatingHelper::session_user();
@@ -226,6 +227,7 @@ class RuanganController extends Controller
             'lainlain' => $request->lainlain,
             'kelengkapan' => $request->kelengkapan,
             'user_serah' => $userSerah['kodesimrs'],
+            'rs44_id' => $rs44->id ?? null
         ]);
     }
 
@@ -245,6 +247,7 @@ class RuanganController extends Controller
             'rr_trm' => $request->rr_trm,
             'spo2_trm' => $request->spo2_trm,
             'user_trm' => $user['kodesimrs'],
+            'flag' => '1'
        ]);
 
        // update rs23
