@@ -194,7 +194,11 @@ class RuanganController extends Controller
                 'br.rs2 as nm_ruang',
                 'rs45.rs2 as alasan'
                 )
-            ->with('serah_terima')
+            ->with(['serah_terima' => function ($query) {
+                $query->select('serah_terima.*', 'peg.nama as nmuser_serah', 'pega.nama as nmuser_trm')
+                ->leftjoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
+                ->leftjoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm');
+            }])
             ->where('rs44.rs1', request('noreg'))
             ->orderBy('rs44.id', 'desc')
             ->get();
@@ -214,6 +218,7 @@ class RuanganController extends Controller
             'dari' => $request->ruanglm,
             'ke' => $request->ruang,
             'derajatPasien' => $request->derajatPasien,
+            'skalaNyeri' => $request->skalaNyeri,
             'tensi' => $request->tensi,
             'nadi' => $request->nadi,
             'suhu' => $request->suhu,
@@ -241,6 +246,8 @@ class RuanganController extends Controller
            ], 500);
        }
        $data->update([
+            'keadaanUmum' => $request->keadaanUmum,
+            'kesadaran' => $request->kesadaran,
             'tensi_trm' => $request->tensi_trm,
             'nadi_trm' => $request->nadi_trm,
             'suhu_trm' => $request->suhu_trm,
