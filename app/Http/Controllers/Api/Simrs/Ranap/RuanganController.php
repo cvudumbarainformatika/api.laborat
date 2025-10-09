@@ -31,7 +31,9 @@ class RuanganController extends Controller
     }
     public function ruanganranap()
     {
-        $ruangan = DB::table('v_15_23')->select('*')->where('noreg', '=', request('noreg'))
+        $ruangan = DB::table('v_15_23')->select('v_15_23.*', 'rs24.rs2 as titipan_ruang')
+        ->leftJoin('rs24', 'rs24.rs1', '=', 'v_15_23.titipan')
+        ->where('noreg', '=', request('noreg'))
         ->orderBy('noreg', 'desc')
         ->limit(10)->get();
 
@@ -101,9 +103,10 @@ class RuanganController extends Controller
         ]);
 
         // cek titipan
+        $is_titipan = $request->titipan;
         $titipan = DB::table('rs23')->where('rs1', $noreg)->value('titipan');
 
-        if ($titipan) {
+        if ($is_titipan) {
             $groups_titipan = DB::table('rs24')
                 ->where('rs1', $titipan)
                 ->distinct()
@@ -160,17 +163,35 @@ class RuanganController extends Controller
         }
 
         // update rs23
+        $updateData = [
+            'rs5'  => $ruang,
+            'rs6'  => $request->kamar,
+            'rs7'  => $request->nobed,
+            'rs31' => $ruanglm,
+            'rs36' => $tanggal,
+            'rs22' => 1, // status belum diterima
+        ];
+
+        if ($titipan) {
+            $updateData['titipan'] = $titipan;
+        }
+
+
+        // DB::table('rs23')
+        //     ->where('rs1', $noreg)
+        //     ->update([
+        //         'rs5'   => $ruang,
+        //         'rs6'   => $request->kamar,
+        //         'rs7'   => $request->nobed,
+        //         'rs31'  => $ruanglm,
+        //         'rs36'  => $tanggal,
+        //         'rs22'  => 1, // status belum diterima
+        //         'titipan' => $titipan? '',
+        //     ]);
+
         DB::table('rs23')
-            ->where('rs1', $noreg)
-            ->update([
-                'rs5'   => $ruang,
-                'rs6'   => $request->kamar,
-                'rs7'   => $request->nobed,
-                'rs31'  => $ruanglm,
-                'rs36'  => $tanggal,
-                'rs22'  => 1, // status belum diterima
-                'titipan' => '',
-            ]);
+        ->where('rs1', $noreg)
+        ->update($updateData);
         
         // input dokumen serah terima
 
@@ -219,7 +240,9 @@ class RuanganController extends Controller
             'ke' => $request->ruang,
             'derajatPasien' => $request->derajatPasien,
             'skalaNyeri' => $request->skalaNyeri,
-            'tensi' => $request->tensi,
+            'tensi' => $request->tensi ?? null,
+            'sistole' => $request->sistole,
+            'diastole' => $request->diastole,
             'nadi' => $request->nadi,
             'suhu' => $request->suhu,
             'rr' => $request->rr,
@@ -248,7 +271,9 @@ class RuanganController extends Controller
        $data->update([
             'keadaanUmum' => $request->keadaanUmum,
             'kesadaran' => $request->kesadaran,
-            'tensi_trm' => $request->tensi_trm,
+            'tensi_trm' => $request->tensi_trm ?? null,
+            'sistole_trm' => $request->sistole_trm ?? null,
+            'diastole_trm' => $request->diastole_trm ?? null,
             'nadi_trm' => $request->nadi_trm,
             'suhu_trm' => $request->suhu_trm,
             'rr_trm' => $request->rr_trm,
