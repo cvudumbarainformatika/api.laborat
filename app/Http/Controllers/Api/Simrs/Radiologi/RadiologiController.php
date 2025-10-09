@@ -441,7 +441,9 @@ class RadiologiController extends Controller
                     })
                     ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.rs4 as pelaksana','rs151.id','rs151.rs2 as tgl', 'rs151.hasilhtml','rs151.kesimpulanhtml',
                         'rs47.rs2 as nama', 'rs47.rs1 as kode', 'rs47.rs3 as jenis',
-                    );
+                    )
+                    
+                    ;
                 }
                 
             ])
@@ -500,10 +502,52 @@ class RadiologiController extends Controller
             })
             ->get();
 
+        // foreach ($items as $item) {
+        //     $data = (array) $item;
+        //     unset($data['id']);
+        //     DB::table('rs48')->insert($data);
+        // }
+
+
         foreach ($items as $item) {
             $data = (array) $item;
             unset($data['id']);
-            DB::table('rs48')->insert($data);
+
+            // Pastikan belum ada data yang sama di rs48
+           Transradiologi::firstOrCreate(
+            ['rs2' => $data['rs2'], 'rs4' => $data['rs4']], // kriteria pencarian unik
+            // [
+            //     'rs1' => $data['rs1'],
+            //     'rs2' => $data['rs2'],
+            //     'rs3' => $data['rs3'],
+            //     'rs4' => $data['rs4'],
+            //     'rs5' => $data['rs5'],
+            //     'rs6' => $data['rs6'],
+            //     'rs7' => $data['rs7'],
+            //     'rs8' => $data['rs8'],
+            //     'rs9' => $data['rs9'],
+            //     'rs10' => $data['rs10'],
+            //     'rs11' => $data['rs11'],
+            //     'rs12' => $data['rs12'],
+            //     'rs13' => $data['rs13'],
+            //     'rs14' => $data['rs14'],
+            //     'rs15' => $data['rs15'],
+            //     'rs16' => $data['rs16'],
+            //     'rs17' => $data['rs17'],
+            //     'rs18' => $data['rs18'],
+            //     'rs19' => $data['rs19'],
+            //     'rs20' => $data['rs20'],
+            //     'rs21' => $data['rs21'],
+            //     'rs22' => $data['rs22'],
+            //     'rs23' => $data['rs23'],
+            //     'rs24' => $data['rs24'],
+            //     'rs25' => $data['rs25'],
+            //     'rs26' => $data['rs26'],
+            //     'rs27' => $data['rs27'],
+            //     'rs28' => $data['rs28']
+            // ]
+            $data
+           );
         }
 
         return new JsonResponse(['message' => 'Data berhasil disimpan'], 200);
