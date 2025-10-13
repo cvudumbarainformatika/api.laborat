@@ -109,7 +109,7 @@ class AntrianController extends Controller
                 ];
                 // event(new AntreanEvent($message));                
                 event(new NotifMessageEvent($message, 'pendaftaran', auth()->user()));
-                
+
                 return ($query);
             }
             return new JsonResponse(['message' => 'gagal'], 410);
@@ -196,8 +196,9 @@ class AntrianController extends Controller
 
             if ($unitgroup === 'Farmasi') {
                 BridantrianbpjsController::updateWaktu($input, 6);
+            } else {
+                BridantrianbpjsController::updateWaktu($input, 3);
             }
-            BridantrianbpjsController::updateWaktu($input, 3);
         }
         return $query;
     }
