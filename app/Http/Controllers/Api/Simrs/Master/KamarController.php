@@ -116,14 +116,53 @@ class KamarController extends Controller
     {
       $nama = request('nama'); // sama dengan $_GET['nama']
 
-        $data = DB::table('rs25')
-            ->select('rs1')
-            ->where('rs5', $nama)
-            ->where('rs3', 'A')
-            ->where('rs4', 'V')
-            ->distinct()
-            ->orderBy('rs1')
-            ->get();
+      //   $data = DB::table('rs25')
+      //       ->select('rs1')
+
+      //       ->where('rs5', $nama)
+      //       ->where('rs3', 'A')
+      //       ->where('rs4', 'V')
+      //       ->distinct()
+      //       ->orderBy('rs1')
+      //       ->get();
+
+
+      // Ambil groups dari tabel rs24
+      $rs_glob = DB::table('rs24')
+          ->where('rs1', $nama)
+          ->distinct()
+          ->value('groups'); // fetch satu nilai saja (sama seperti fetch_object()->groups)
+
+      // Jika nama = IGD, query khusus
+      if ($nama === 'IGD') {
+          $data = DB::table(DB::raw("(select 'IGD' as rs1) as vx"))
+              ->orderBy('rs1')
+              ->get();
+      } else {
+          // Query union seperti di kode PHP
+          $subquery1 = DB::table('rs25')
+              ->select('rs1')
+              ->distinct()
+              ->where('rs5', $nama)
+              ->where('rs7', '<>', 1)
+              ->where('rs3', 'A')
+              ->where('rs4', 'V');
+
+          $subquery2 = DB::table('rs25')
+              ->select('rs1')
+              ->distinct()
+              ->where('rs6', $rs_glob)
+              ->where('rs7', '<>', 1)
+              ->where('rs5', '-')
+              ->where('rs3', 'A')
+              ->where('rs4', 'V');
+
+          $data = $subquery1
+              ->unionAll($subquery2)
+              ->orderBy('rs1')
+              ->get();
+      }
+
 
         return new JsonResponse($data);
     }
@@ -132,56 +171,66 @@ class KamarController extends Controller
     function showBed(){
       $namax = request('namax'); // sama dengan $_GET['namax']
       $nama = request('nama'); // sama dengan $_GET['nama']
-      if ($namax === "Extra") {
-    // case khusus kalau namax = Extra
-      $sql = DB::table('rs25')
-        ->join('rs24', 'rs25.rs5', '=', 'rs24.rs1')
-        ->select('rs25.rs2')
-        ->where('rs24.rs2', $nama)
-        ->where('rs25.rs1', $namax)
-        ->where('rs25.rs3', 'A')
-        ->where('rs25.rs4', 'V')
-        ->where('rs25.rs7', '<>', 1)
-        ->where('rs25.rs8', '<>', 1)
+      
+
+      $rs_glob = DB::table('rs24')
+        ->where('rs2', $nama)
         ->distinct()
+        ->value('groups');
+
+    // Jika namax = Extra
+    if ($namax === 'Extra') {
+        $data = DB::table(DB::raw("(select distinct rs25.rs2 
+            from rs25, rs24 
+            where rs25.rs5 = rs24.rs1 
+              and rs24.rs2 = ?
+              and rs25.rs1 = ?
+              and rs25.rs3 = 'A'
+              and rs25.rs4 = 'V'
+              and rs25.rs7 <> 1
+              and rs25.rs8 <> 1
+        ) as vx", [$nama, $namax]))
         ->orderByRaw('LENGTH(rs2) asc, rs2 asc')
         ->get();
 
-      } elseif ($nama === "Instalasi Gawat Darurat") {
-          // case khusus kalau nama = IGD
-          $sql = collect([
-              (object)['rs2' => 'IGD']
-          ]);
+    } elseif ($nama === 'Instalasi Gawat Darurat') {
+        // Jika nama = IGD
+        $data = DB::table(DB::raw("(select 'IGD' as rs2) as vx"))
+            ->orderByRaw('LENGTH(rs2) asc, rs2 asc')
+            ->get();
 
-      } else {
-          // case umum
-          $query1 = DB::table('rs25')
-              ->join('rs24', 'rs25.rs5', '=', 'rs24.rs1')
-              ->select('rs25.rs2')
-              ->where('rs24.rs2', $nama)
-              ->where('rs25.rs1', $namax)
-              ->where('rs25.rs3', 'A')
-              ->where('rs25.rs4', 'V')
-              ->where('rs25.rs7', '<>', 1)
-              ->where('rs25.rs8', '<>', 1);
+    } else {
+        // Query utama dengan UNION ALL
+        $subquery1 = DB::table('rs25')
+            ->join('rs24', 'rs25.rs5', '=', 'rs24.rs1')
+            ->select('rs25.rs2')
+            ->distinct()
+            ->where('rs24.rs2', $nama)
+            ->where('rs25.rs1', $namax)
+            ->where('rs25.rs3', 'A')
+            ->where('rs25.rs4', 'V')
+            ->where('rs25.rs7', '<>', 1)
+            ->where('rs25.rs8', '<>', 1);
 
-          $query2 = DB::table('rs25')
-              ->select('rs2')
-              ->where('rs6', $rs_glob->groups ?? '')
-              ->where('rs1', $namax)
-              ->where('rs3', 'A')
-              ->where('rs4', 'V')
-              ->where('rs5', '-')
-              ->where('rs7', '<>', 1)
-              ->where('rs8', '<>', 1);
+        $subquery2 = DB::table('rs25')
+            ->select('rs2')
+            ->distinct()
+            ->where('rs6', $rs_glob)
+            ->where('rs1', $namax)
+            ->where('rs3', 'A')
+            ->where('rs4', 'V')
+            ->where('rs5', '-')
+            ->where('rs7', '<>', 1)
+            ->where('rs8', '<>', 1);
 
-          $sql = $query1
-              ->unionAll($query2)
-              ->orderByRaw('LENGTH(rs2) asc, rs2 asc')
-              ->get();
-      }
+        $data = $subquery1
+            ->unionAll($subquery2)
+            ->orderByRaw('LENGTH(rs2) asc, rs2 asc')
+            ->get();
+    }
+      
 
-        return new JsonResponse($sql);
+      return new JsonResponse($data);
     }
     
 }
