@@ -22,7 +22,8 @@ class PemakaianruanganController extends Controller
         $temp = collect($pengguna);
         $apem = $temp->map(function ($item, $key) {
             if (empty($item->kode_penanggungjawab)) {
-                $item->attributes['kode_penanggungjawab'] = $item->kode_pengguna;
+                // $item->attributes['kode_penanggungjawab'] = $item->kode_pengguna;
+                $item->kode_penanggungjawab = $item->kode_pengguna;
             }
             return $item;
         });
