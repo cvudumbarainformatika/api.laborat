@@ -2173,7 +2173,7 @@ class EresepController extends Controller
                 $input = new Request([
                     'noreg' => $request->noreg
                 ]);
-                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 6)->count();
+                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 7)->count();
 
                 if ($cek === 0 || $cek === '') {
                     //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
