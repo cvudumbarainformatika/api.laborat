@@ -84,7 +84,7 @@ Route::get('/perbaikan-data-depo', [SetNewStokController::class, 'PerbaikanDataP
 Route::get('/harga-penerimaan', [SetNewStokController::class, 'perbaikanHargaKeluarOk']);
 Route::get('/harga-keluar', [SetNewStokController::class, 'perbaikanHargaKeluar']);
 
-Route::get('/dvlp', [DvlpController::class, 'index']);
+Route::get('/dvlp', [DvlpController::class, 'index']);  
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
 
 Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller']);

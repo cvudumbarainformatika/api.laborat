@@ -7,6 +7,7 @@ use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Logx\Logsep;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Ranap\BpjsSpri;
 use App\Models\Simrs\Ranap\Kunjunganranap;
@@ -190,6 +191,17 @@ class SepranapController extends Controller
 
         // return $request->pasien['noreg'];
 
+        // ini cari dahulu sep yang ada di rs222
+        $adaSepRajal = Seprajal::where('rs8', $request->noSep)->first();
+        if ($adaSepRajal) {
+            return new JsonResponse(['message' => 'Sep ini sudah pernah diterbitkan sebagai SEP RAWAT JALAN'], 500);
+        }
+
+        $cek = Sepranap::where('rs8', $request->noSep)->where('rs1', $request->pasien['noreg'])->first();
+        if ($cek) {
+            return new JsonResponse(['message' => 'Pasien ini sudah dibuatkan SEP RAWAT INAP'], 500);
+        }
+
         $data = BridgingbpjsHelper::get_url('vclaim', 'SEP/' . $request->noSep);
         $code = $data['metadata']['code'];
         if ($code !== '200') {
@@ -199,9 +211,11 @@ class SepranapController extends Controller
         $sepx = $data['result'];
 
         // update to rs227
-        Sepranap::updateOrCreate(
-            ['rs1' => $request->pasien['noreg'], 'rs8'=> $sepx->noSep],
-            [
+        // Sepranap::updateOrCreate(
+        Sepranap::create(
+            // ['rs1' => $request->pasien['noreg'], 'rs8'=> $sepx->noSep],
+            ['rs1' => $request->pasien['noreg'], 'rs8'=> $sepx->noSep,
+            
                 'rs2' => $request->pasien['norm'] ?? '',
                 'rs3' => $request->pasien['ruangan'] ?? '',
                 'rs4' => $request->pasien['kodesistembayar'] ?? "",
