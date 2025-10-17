@@ -75,7 +75,7 @@ class RekammedikController extends Controller
             LIMIT 10
         ", [$periode1 . ' 00:00:00', $periode2 . ' 23:59:59']);
 
-        $borlostoy = DB::select("
+         $borlostoy = DB::select("
             select * from borsemen where ruangan='rs' and year(tgl)='$y'
         ");
 
