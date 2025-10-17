@@ -101,8 +101,6 @@ class SuratKeteranganDokterController extends Controller
                     'pendengaranKanan' => $request->pendengarankanan,
                     'perbedaanWarna' => $request->warna,
                     'gimut' => $request->gimut,
-                    // 'tinggiBadan' => $request->tinggi,
-                    // 'beratBadan' => $request->berat,
 
 
                     // ini untuk test kejiwaan
@@ -139,7 +137,6 @@ class SuratKeteranganDokterController extends Controller
         $js = $cekharga->rs8 ?? 0;
         $jp = $cekharga->rs9 ?? 0;
 
-
         $wew = FormatingHelper::session_user();
         $kdpegsimrs = $wew['kodesimrs'];
 
@@ -148,24 +145,28 @@ class SuratKeteranganDokterController extends Controller
             $rs20 = 'Surat Keterangan Kesehatan Jiwa';
         }
 
-        $createbill = Tindakan::create([
-            'rs1' => $request->noreg,
-            'rs2' => $notatindakan,
-            'rs3' => date('Y-m-d H:i:s'),
-            'rs4' => 'T00668',
-            'rs5' => 1,
-            'rs6' => $js,
-            'rs7' => $js,
-            'rs8' => $request->kddpjp,
-            'rs9' => $kdpegsimrs,
-            // 'rs10' => $jp,
-            // 'rs11' => $request->kdpoli,
-            'rs13' => $jp,
-            'rs14' => $jp,
-            'rs20' => $rs20,
-            'rs22' => $request->kdpoli,
-            'rs24' => $request->sistembayar,
-        ]);
+        $createbill = Tindakan::firstOrCreate(
+            [
+                'rs2' => $notatindakan,
+               'rs4' => 'T00668',
+            ],
+            [
+                'rs1' => $request->noreg,
+                'rs3' => date('Y-m-d H:i:s'),
+                'rs4' => 'T00668',
+                'rs5' => 1,
+                'rs6' => $js,
+                'rs7' => $js,
+                'rs8' => $request->kddpjp,
+                'rs9' => $kdpegsimrs,
+                'rs13' => $jp,
+                'rs14' => $jp,
+                'rs20' => $rs20,
+                'rs22' => $request->kdpoli,
+                'rs24' => $request->sistembayar,
+            ]
+        );
+
 
         return $createbill;
     }
@@ -213,7 +214,6 @@ class SuratKeteranganDokterController extends Controller
 
     public function cekpembayaran(Request $request)
     {
-        // return new JsonResponse(['message' => 'OK'], 200);
         if($request->sistembayar === 'UMUM'){
             $data = Kwitansidetail::where('id_trans', $request->tindakan_id)->count();
             // return $data;
