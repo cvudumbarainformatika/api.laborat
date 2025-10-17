@@ -318,7 +318,7 @@ class PulangController extends Controller
       Sepranap::where('rs1', $request->noreg)->update(
         [
           'rs19' => '2',
-          'users' => auth()->user()->pegawai_id,
+          // 'users' => auth()->user()->pegawai_id,
         ]
       );
     }

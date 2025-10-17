@@ -144,13 +144,18 @@ class BridantrianbpjsController extends Controller
         $waktu = strtotime(Carbon::parse(date('Y-m-d H:i:s'))->locale('id')) * 1000;
         $kodebooking = $input->noreg;
         $user_id = auth()->user()->pegawai_id;
-        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking);
-        $wew = $bpjsantrian->count();
-        if ($wew > 0) {
-            $cari = $bpjsantrian->get();
-            $kodebooking = $cari[0]->kodebooking;
-        }
 
+        // $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking);
+        // $wew = $bpjsantrian->count();
+        // if ($wew > 0) {
+        //     $cari = $bpjsantrian->get();
+        //     $kodebooking = $cari[0]->kodebooking;
+        // }
+
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+        if ($bpjsantrian) {
+            $kodebooking = $bpjsantrian->kodebooking;
+        }
         $tgltobpjshttpres = date('Y-m-d H:i:s');
 
         Bpjsrespontime::create(
@@ -175,7 +180,7 @@ class BridantrianbpjsController extends Controller
         );
         Bpjs_http_respon::create(
             [
-                'noreg' => $kodebooking,
+                'noreg' => $input->noreg,
                 'method' => 'POST',
                 'request' => $data,
                 'respon' => $updatewaktuantrian,
@@ -183,87 +188,202 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        if ($updatewaktuantrian && (int)$x < 4) {
-            $message = [
-                'kode' => $updatewaktuantrian,
-                'url' => 'antrean/updatewaktu',
-                'task' => $x,
-                'user' => auth()->user()->id
-            ];
-            // event(new AntreanEvent($message));
-        }
+        // if ($updatewaktuantrian && (int)$x < 4) {
+        //     $message = [
+        //         'kode' => $updatewaktuantrian,
+        //         'url' => 'antrean/updatewaktu',
+        //         'task' => $x,
+        //         'user' => auth()->user()->id
+        //     ];
+        //     // event(new AntreanEvent($message));
+        // }
     }
+
+    /**
+     * refactor nya ti
+     * 
+     * public static function updateMulaiWaktuTungguAdmisi($request, $input)
+     * {
+     *     $taskid = 1;
+     *     $kodebooking = $input->noreg;
+     *     $user_id = auth()->user()->pegawai_id;
+
+     *     // Ambil kodebooking jika ada di tabel BPJS
+     *     $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+     *     if ($bpjsantrian) {
+     *         $kodebooking = $bpjsantrian->kodebooking;
+     *     }
+
+     *     $tgl = date('Y-m-d');
+     *     $antrianlog = Antrianlog::select('booking_type', 'waktu_ambil_tiket')
+     *         ->where('nomor', $request->noantrian)
+     *         ->whereDate('waktu_ambil_tiket', $tgl)
+     *         ->first();
+
+     *     if (!$antrianlog) {
+     *         return; // tidak ada log antrian
+     *     }
+
+     *     $waktu_ambil_tiket = $antrianlog->waktu_ambil_tiket;
+
+     *     if ($antrianlog->booking_type === 'b') {
+     *         $logantrian = Logantrian::select('tgl')
+     *             ->where('noreg', $input->noreg)
+     *             ->whereDate('tgl', $tgl)
+     *             ->first();
+
+     *         if ($logantrian) {
+     *             $waktu_ambil_tiket = $logantrian->tgl;
+     *         }
+     *     }
+
+     *     // fallback ke waktu sekarang kalau invalid
+     *     $timestamp = strtotime($waktu_ambil_tiket);
+     *     if ($timestamp === false) {
+     *         $timestamp = time();
+     *     }
+
+     *     $waktu = $timestamp * 1000;
+     *     $tgltobpjshttpres = DateHelper::getDateTime();
+
+     *     // Simpan ke tabel Bpjsrespontime
+     *     Bpjsrespontime::create([
+     *         'kodebooking' => $kodebooking,
+     *         'noreg' => $input->noreg,
+     *         'taskid' => $taskid,
+     *         'waktu' => $waktu,
+     *         'created_at' => now(),
+     *         'user_id' => $user_id
+     *     ]);
+
+     *     $data = [
+     *         "kodebooking" => $kodebooking,
+     *         "taskid" => $taskid,
+     *         "waktu" => $waktu
+     *     ];
+
+     *     // Kirim ke BPJS
+     *     $updatewaktuantrian = BridgingbpjsHelper::post_url('antrean', 'antrean/updatewaktu', $data);
+
+     *     // Catat log HTTP request/response
+     *     Bpjs_http_respon::create([
+     *         'noreg' => $input->noreg, // perbaikan: pakai noreg asli, bukan kodebooking
+     *         'method' => 'POST',
+     *         'request' => $data,
+     *         'respon' => $updatewaktuantrian,
+     *         'url' => 'antrean/updatewaktu',
+     *         'tgl' => $tgltobpjshttpres
+     *     ]);
+
+     *     if ($updatewaktuantrian) {
+     *         $message = [
+     *             'kode' => $updatewaktuantrian,
+     *             'url' => 'antrean/updatewaktu',
+     *             'task' => $taskid,
+     *             'user' => auth()->user()->id
+     *         ];
+     *         // event(new AntreanEvent($message));
+     *     }
+     * }
+     * 
+     * 
+     */
+
 
     public static function updateMulaiWaktuTungguAdmisi($request, $input)
     {
         $taskid = 1;
         $kodebooking = $input->noreg;
         $user_id = auth()->user()->pegawai_id;
-        $anu = BpjsAntrian::query();
-        $bpjsantrian = $anu->select('kodebooking')->where('noreg', $kodebooking);
-        $wew = $bpjsantrian->count();
-        if ($wew > 0) {
-            $cari = $bpjsantrian->get();
-            $kodebooking = $cari[0]->kodebooking;
+        /**
+         * digannti untuk efiseiansi ............... 
+         * $anu = BpjsAntrian::query();
+         * $bpjsantrian = $anu->select('kodebooking')->where('noreg', $kodebooking);
+         * $wew = $bpjsantrian->count();
+         * if ($wew > 0) {
+         *     $cari = $bpjsantrian->get();
+         *     $kodebooking = $cari[0]->kodebooking;
+         * }
+         */
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+        if ($bpjsantrian) {
+            $kodebooking = $bpjsantrian->kodebooking;
         }
         $tgl = date('Y-m-d');
         $antrianlog = Antrianlog::select('booking_type', 'waktu_ambil_tiket')->where('nomor', $request->noantrian)
-            ->whereDate('waktu_ambil_tiket', $tgl)->get();
+            ->whereDate('waktu_ambil_tiket', $tgl)->first();
         //return($antrianlog);
-        if (count($antrianlog) > 0) {
-            $booking_type = $antrianlog[0]->booking_type;
-            $waktu_ambil_tiket = $antrianlog[0]->waktu_ambil_tiket;
+        if ($antrianlog) {
+            $booking_type = $antrianlog->booking_type;
+            $waktu_ambil_tiket = $antrianlog->waktu_ambil_tiket;
             if ($booking_type === 'b') {
-                $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->get();
-                if (count($logantrian) > 0) {
-                    $waktu_ambil_tiket = $logantrian[0]->tgl;
+                $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->first();
+                if ($logantrian) {
+                    $waktu_ambil_tiket = $logantrian->tgl;
                 }
             }
-            $waktu = strtotime($waktu_ambil_tiket) * 1000;
-            $tgltobpjshttpres = DateHelper::getDateTime();
-
-            Bpjsrespontime::create(
-                [
-                    'kodebooking' => $kodebooking,
-                    'noreg' => $input->noreg,
-                    'taskid' => $taskid,
-                    'waktu' => $waktu,
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'user_id' => $user_id
-                ]
-            );
-
-            $data = [
-                "kodebooking" => $kodebooking,
-                "taskid" => $taskid,
-                'waktu' => $waktu
-            ];
-
-            $updatewaktuantrian = BridgingbpjsHelper::post_url(
-                'antrean',
-                'antrean/updatewaktu',
-                $data
-            );
-            Bpjs_http_respon::create(
-                [
-                    'noreg' => $kodebooking,
-                    'method' => 'POST',
-                    'request' => $data,
-                    'respon' => $updatewaktuantrian,
-                    'url' => 'antrean/updatewaktu',
-                    'tgl' => $tgltobpjshttpres
-                ]
-            );
-            if ($updatewaktuantrian) {
-                $message = [
-                    'kode' => $updatewaktuantrian,
-                    'url' => 'antrean/updatewaktu',
-                    'task' => $taskid,
-                    'user' => auth()->user()->id
-                ];
-                // event(new AntreanEvent($message));
+        } else {
+            $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+            if ($bpjsantrian) {
+                $kodebooking = $bpjsantrian->kodebooking;
+            }
+            $tgl = date('Y-m-d');
+            $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->first();
+            if ($logantrian) {
+                $waktu_ambil_tiket = $logantrian->tgl;
             }
         }
+        // $waktu = strtotime($waktu_ambil_tiket) * 1000;
+        $timestamp = strtotime($waktu_ambil_tiket);
+        if ($timestamp === false) {
+            $timestamp = time(); // fallback ke waktu saat ini
+        }
+        // kurangi 60 detik
+        $timestamp -= 600;
+        $waktu = $timestamp * 1000;
+        $tgltobpjshttpres = DateHelper::getDateTime();
+
+        Bpjsrespontime::create(
+            [
+                'kodebooking' => $kodebooking,
+                'noreg' => $input->noreg,
+                'taskid' => $taskid,
+                'waktu' => $waktu,
+                'created_at' => date('Y-m-d H:i:s'),
+                'user_id' => $user_id
+            ]
+        );
+
+        $data = [
+            "kodebooking" => $kodebooking,
+            "taskid" => $taskid,
+            'waktu' => $waktu
+        ];
+
+        $updatewaktuantrian = BridgingbpjsHelper::post_url(
+            'antrean',
+            'antrean/updatewaktu',
+            $data
+        );
+        Bpjs_http_respon::create(
+            [
+                'noreg' => $input->noreg,
+                'method' => 'POST',
+                'request' => $data,
+                'respon' => $updatewaktuantrian,
+                'url' => 'antrean/updatewaktu',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+        // if ($updatewaktuantrian) {
+        //     $message = [
+        //         'kode' => $updatewaktuantrian,
+        //         'url' => 'antrean/updatewaktu',
+        //         'task' => $taskid,
+        //         'user' => auth()->user()->id
+        //     ];
+        //     // event(new AntreanEvent($message));
+        // }
         //  return($updatewaktuantrian);
     }
 
@@ -273,22 +393,37 @@ class BridantrianbpjsController extends Controller
         $taskid = '2';
         $kodebooking = $input->noreg;
         $user_id = auth()->user()->pegawai_id;
-
-        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking);
-        $wew = $bpjsantrian->count();
-        if ($wew > 0) {
-            $cari = $bpjsantrian->get();
-            $kodebooking = $cari[0]->kodebooking;
-            // return new JsonResponse($kodebooking);
+        /* 
+        * diganti untuk efisiensi 
+        * $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking);
+        * $wew = $bpjsantrian->count();
+        * if ($wew > 0) {
+        *     $cari = $bpjsantrian->get();
+        *     $kodebooking = $cari[0]->kodebooking;
+        *     // return new JsonResponse($kodebooking);
+        * }
+        **/
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+        if ($bpjsantrian) {
+            $kodebooking = $bpjsantrian->kodebooking;
         }
         $tgl = date('Y-m-d');
-        $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl);
-        $wewwew = $logantrian->count();
-        if ($wewwew > 0) {
-            $cariwew = $logantrian->get();
-            $waktu_ambil_tiket = $cariwew[0]->tgl;
-            $waktu = strtotime($waktu_ambil_tiket) * 1000;
+        // $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->wheredate('tgl', $tgl);
+        // $wewwew = $logantrian->count();
+        // if ($wewwew > 0) {
+        //     $cariwew = $logantrian->get();
+        //     $waktu_ambil_tiket = $cariwew[0]->tgl;
+        //     $waktu = strtotime($waktu_ambil_tiket) * 1000;
+        // }
+        $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->first();
+        if ($logantrian) {
+            $waktu_ambil_tiket = $logantrian->tgl;
         }
+        $timestamp = strtotime($waktu_ambil_tiket);
+        if ($timestamp === false) {
+            $timestamp = time(); // fallback ke waktu saat ini
+        }
+        $waktu = $timestamp * 1000;
 
 
         $tgltobpjshttpres =  date('Y-m-d H:i:s');
@@ -316,7 +451,7 @@ class BridantrianbpjsController extends Controller
         );
         Bpjs_http_respon::create(
             [
-                'noreg' => $kodebooking,
+                'noreg' => $input->noreg,
                 'method' => 'POST',
                 'request' => $data,
                 'respon' => $updatewaktuantrian,
@@ -324,14 +459,14 @@ class BridantrianbpjsController extends Controller
                 'tgl' => $tgltobpjshttpres
             ]
         );
-        if ($updatewaktuantrian) {
-            $message = [
-                'kode' => $updatewaktuantrian,
-                'url' => 'antrean/updatewaktu',
-                'task' => $taskid,
-                'user' => auth()->user()->id
-            ];
-            // event(new AntreanEvent($message));
-        }
+        // if ($updatewaktuantrian) {
+        //     $message = [
+        //         'kode' => $updatewaktuantrian,
+        //         'url' => 'antrean/updatewaktu',
+        //         'task' => $taskid,
+        //         'user' => auth()->user()->id
+        //     ];
+        //     // event(new AntreanEvent($message));
+        // }
     }
 }

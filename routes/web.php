@@ -56,6 +56,7 @@ Route::get('/', function () {
 // Route::get('/opname', [StokOpnameController::class, 'storeMonthly']);
 
 Route::get('/autogen', [AutogenController::class, 'index']);
+Route::get('/autogen/carisep', [AutogenController::class, 'cariSep']);
 Route::get('/autogen/tststk', [AutogenController::class, 'testModel']);
 Route::get('/autogen/harga-opname', [AutogenController::class, 'hargaOpname']);
 Route::get('/autogen/harga-stok', [AutogenController::class, 'hargaStok']);
@@ -83,7 +84,7 @@ Route::get('/perbaikan-data-depo', [SetNewStokController::class, 'PerbaikanDataP
 Route::get('/harga-penerimaan', [SetNewStokController::class, 'perbaikanHargaKeluarOk']);
 Route::get('/harga-keluar', [SetNewStokController::class, 'perbaikanHargaKeluar']);
 
-Route::get('/dvlp', [DvlpController::class, 'index']);
+Route::get('/dvlp', [DvlpController::class, 'index']);  
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
 
 Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller']);

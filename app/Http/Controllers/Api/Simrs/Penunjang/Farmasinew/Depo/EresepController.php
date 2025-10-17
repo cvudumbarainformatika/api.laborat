@@ -2165,7 +2165,27 @@ class EresepController extends Controller
                 'user' => auth()->user()->pegawai_id
 
             ]);
+            $kunjunganpoli = KunjunganPoli::where('rs1', $request->noreg)->where('rs17.rs8', '!=', 'POL014')->first();
+            if ($kunjunganpoli) {
+                /**
+                 * update waktu
+                 */
+                $input = new Request([
+                    'noreg' => $request->noreg
+                ]);
+                $cek = Bpjsrespontime::where('noreg', $request->noreg)->where('taskid', 7)->count();
 
+                if ($cek === 0 || $cek === '') {
+                    //5 (akhir waktu layan poli/mulai waktu tunggu farmasi),
+                    //6 (akhir waktu tunggu farmasi/mulai waktu layan farmasi membuat obat),
+                    //7 (akhir waktu obat selesai dibuat),
+
+                    BridantrianbpjsController::updateWaktu($input, 7);
+                }
+                /**
+                 * update waktu end
+                 */
+            }
             DB::connection('farmasi')->commit();
             return new JsonResponse([
                 'message' => 'Resep Sudah Diselesaikan',

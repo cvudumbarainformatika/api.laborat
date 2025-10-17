@@ -811,8 +811,8 @@ class RanapController extends Controller
                 'serah_terima' => function ($q) {
                     $q->select(
                     'serah_terima.noreg','serah_terima.dari', 'serah_terima.ke', 'serah_terima.flag', 'serah_terima.user_serah', 'serah_terima.user_trm','serah_terima.created_at',
-                    'serah_terima.tensi','serah_terima.nadi', 'serah_terima.suhu', 'serah_terima.rr', 'serah_terima.spo2', 'serah_terima.id',
-                    'serah_terima.tensi_trm','serah_terima.nadi_trm', 'serah_terima.suhu_trm', 'serah_terima.rr_trm', 'serah_terima.spo2_trm',
+                    'serah_terima.tensi','serah_terima.sistole', 'serah_terima.diastole','serah_terima.nadi', 'serah_terima.suhu', 'serah_terima.rr', 'serah_terima.spo2', 'serah_terima.id',
+                    'serah_terima.tensi_trm', 'serah_terima.sistole_trm', 'serah_terima.diastole_trm','serah_terima.nadi_trm', 'serah_terima.suhu_trm', 'serah_terima.rr_trm', 'serah_terima.spo2_trm',
                     'lm.rs2 as nm_ruanglm', 'br.rs2 as nm_ruang',
                     'peg.nama as prwt_serah', 'pega.nama as prwt_trm',
                     )

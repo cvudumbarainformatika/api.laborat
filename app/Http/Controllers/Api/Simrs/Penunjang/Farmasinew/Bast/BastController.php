@@ -197,7 +197,7 @@ class BastController extends Controller
             ->whereNotNull('tgl_bast')
             ->with([
                 'faktur',
-                'penerimaanrinci.masterobat:kd_obat,nama_obat', // select + mobat sama tambah list bast juga
+                'penerimaanrinci.masterobat:kd_obat,nama_obat,uraian50', // select + mobat sama tambah list bast juga
                 'bastr.masterobat:kd_obat,nama_obat,satuan_k', // select + mobat sama tambah list bast juga
                 'pihakketiga',
                 'terima:kdpegsimrs,nama',
@@ -229,6 +229,8 @@ class BastController extends Controller
                 'bayar' => $items[0]->bayar,
                 'no_npd' => $items[0]->no_npd,
                 'penyedia' => $items[0]->pihakketiga->nama ?? '',
+                'alamat_penyedia' => $items[0]->pihakketiga->alamat ?? '',
+                'belanja' => $items[0]->penerimaanrinci[0]->masterobat->uraian50 ?? '',
                 'penerimaan' => $items,
             ];
         })->values();

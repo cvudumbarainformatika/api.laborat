@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Ranap;
 use App\Helpers\FormatingHelper;
 use App\Helpers\TarifHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Mutasi;
 use App\Models\SerahTerima;
 use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +31,9 @@ class RuanganController extends Controller
     }
     public function ruanganranap()
     {
-        $ruangan = DB::table('v_15_23')->select('*')->where('noreg', '=', request('noreg'))
+        $ruangan = DB::table('v_15_23')->select('v_15_23.*', 'rs24.rs2 as titipan_ruang')
+        ->leftJoin('rs24', 'rs24.rs1', '=', 'v_15_23.titipan')
+        ->where('noreg', '=', request('noreg'))
         ->orderBy('noreg', 'desc')
         ->limit(10)->get();
 
@@ -79,7 +82,7 @@ class RuanganController extends Controller
 
         $user = FormatingHelper::session_user();
         // insert ke rs44
-        DB::table('rs44')->insert([
+        $rs44 = Mutasi::create([
             'rs1'       => $noreg,
             'rs2'       => $tanggal,
             'rs3'       => $request->ruanglm,
@@ -100,9 +103,10 @@ class RuanganController extends Controller
         ]);
 
         // cek titipan
+        $is_titipan = $request->titipan;
         $titipan = DB::table('rs23')->where('rs1', $noreg)->value('titipan');
 
-        if ($titipan) {
+        if ($is_titipan) {
             $groups_titipan = DB::table('rs24')
                 ->where('rs1', $titipan)
                 ->distinct()
@@ -159,21 +163,39 @@ class RuanganController extends Controller
         }
 
         // update rs23
+        $updateData = [
+            'rs5'  => $ruang,
+            'rs6'  => $request->kamar,
+            'rs7'  => $request->nobed,
+            'rs31' => $ruanglm,
+            'rs36' => $tanggal,
+            'rs22' => 1, // status belum diterima
+        ];
+
+        if ($titipan) {
+            $updateData['titipan'] = $titipan;
+        }
+
+
+        // DB::table('rs23')
+        //     ->where('rs1', $noreg)
+        //     ->update([
+        //         'rs5'   => $ruang,
+        //         'rs6'   => $request->kamar,
+        //         'rs7'   => $request->nobed,
+        //         'rs31'  => $ruanglm,
+        //         'rs36'  => $tanggal,
+        //         'rs22'  => 1, // status belum diterima
+        //         'titipan' => $titipan? '',
+        //     ]);
+
         DB::table('rs23')
-            ->where('rs1', $noreg)
-            ->update([
-                'rs5'   => $ruang,
-                'rs6'   => $request->kamar,
-                'rs7'   => $request->nobed,
-                'rs31'  => $ruanglm,
-                'rs36'  => $tanggal,
-                'rs22'  => 1, // status belum diterima
-                'titipan' => '',
-            ]);
+        ->where('rs1', $noreg)
+        ->update($updateData);
         
         // input dokumen serah terima
 
-        self::serahterima($request);
+        self::serahterima($request, $rs44);
 
         return response()->json(['message' => 'OK']);
     }
@@ -183,7 +205,7 @@ class RuanganController extends Controller
      */
     public function historyMutasi()
     {
-        $data = DB::table('rs44')
+        $data = Mutasi::query()
             ->leftJoin('rs24 as lm', 'lm.rs1', '=', 'rs44.rs3')
             ->leftJoin('rs24 as br', 'br.rs1', '=', 'rs44.rs10')
             ->leftJoin('rs45', 'rs45.rs1', '=', 'rs44.rs9')
@@ -193,7 +215,11 @@ class RuanganController extends Controller
                 'br.rs2 as nm_ruang',
                 'rs45.rs2 as alasan'
                 )
-            
+            ->with(['serah_terima' => function ($query) {
+                $query->select('serah_terima.*', 'peg.nama as nmuser_serah', 'pega.nama as nmuser_trm')
+                ->leftjoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
+                ->leftjoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm');
+            }])
             ->where('rs44.rs1', request('noreg'))
             ->orderBy('rs44.id', 'desc')
             ->get();
@@ -203,7 +229,7 @@ class RuanganController extends Controller
     /**
      * document serah terima
      */
-    public static function  serahterima($request)
+    public static function  serahterima($request, $rs44)
     {
         // insert document serah (penyerahan pasien)
         $userSerah = FormatingHelper::session_user();
@@ -213,7 +239,10 @@ class RuanganController extends Controller
             'dari' => $request->ruanglm,
             'ke' => $request->ruang,
             'derajatPasien' => $request->derajatPasien,
-            'tensi' => $request->tensi,
+            'skalaNyeri' => $request->skalaNyeri,
+            'tensi' => $request->tensi ?? null,
+            'sistole' => $request->sistole,
+            'diastole' => $request->diastole,
             'nadi' => $request->nadi,
             'suhu' => $request->suhu,
             'rr' => $request->rr,
@@ -226,6 +255,7 @@ class RuanganController extends Controller
             'lainlain' => $request->lainlain,
             'kelengkapan' => $request->kelengkapan,
             'user_serah' => $userSerah['kodesimrs'],
+            'rs44_id' => $rs44->id ?? null
         ]);
     }
 
@@ -239,12 +269,17 @@ class RuanganController extends Controller
            ], 500);
        }
        $data->update([
-            'tensi_trm' => $request->tensi_trm,
+            'keadaanUmum' => $request->keadaanUmum,
+            'kesadaran' => $request->kesadaran,
+            'tensi_trm' => $request->tensi_trm ?? null,
+            'sistole_trm' => $request->sistole_trm ?? null,
+            'diastole_trm' => $request->diastole_trm ?? null,
             'nadi_trm' => $request->nadi_trm,
             'suhu_trm' => $request->suhu_trm,
             'rr_trm' => $request->rr_trm,
             'spo2_trm' => $request->spo2_trm,
             'user_trm' => $user['kodesimrs'],
+            'flag' => '1'
        ]);
 
        // update rs23

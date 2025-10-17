@@ -5,6 +5,12 @@ namespace App\Models\Sigarang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string|null $kode_penanggungjawab
+ * @property string|null $kode_pengguna
+ * @property string|null $kode_ruang
+ */
+
 class PenggunaRuang extends Model
 {
     use HasFactory;
