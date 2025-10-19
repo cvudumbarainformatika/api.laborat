@@ -279,6 +279,34 @@ class ListDataArsipController extends Controller
         return new JsonResponse($data);
     }
 
+    public function hapusarsip(Request $request)
+    {
+        $noarsip = $request->payload;
+        try {
+            DB::connection('siasik')->beginTransaction();
+            DB::connection('arsip')->beginTransaction(); // default
+
+                $data = Dataarsip::where('noarsip', $noarsip)->first();
+                $kdruangarsip = $data->unit_pengolah;
+                $nomor = '@nomor';
+                if ($data) {
+                    $data->delete();
+                }
+                DB::connection('siasik')->select('call kuranginoarsip(?, ?)', [$nomor, $kdruangarsip]);
+
+            DB::connection('siasik')->commit();
+            DB::connection('arsip')->commit();
+                return new JsonResponse(['message' => 'success'], 200);
+        } catch (\Exception $e) {
+            DB::connection('siasik')->rollBack();
+            DB::connection('arsip')->rollBack();
+            return new JsonResponse([
+                'message' => 'Hapus gagal',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
     // public function simpanarsip(Request $request)
     // {

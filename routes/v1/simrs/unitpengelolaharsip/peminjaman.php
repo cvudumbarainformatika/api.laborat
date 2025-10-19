@@ -10,5 +10,7 @@ Route::group([
     Route::get('/cari-arsip', [PeminjamanBerkasController::class, 'cariarsip']);
     Route::get('/data-pegawai', [PeminjamanBerkasController::class, 'getdatapegawai']);
     Route::post('/simpan-pinjaman', [PeminjamanBerkasController::class, 'simpanpeminjaman']);
+    Route::get('/list-peminjaman', [PeminjamanBerkasController::class, 'getlistpeminjaman']);
+    Route::post('/simpan-kembali', [PeminjamanBerkasController::class, 'simpankembali']);
 });
 
