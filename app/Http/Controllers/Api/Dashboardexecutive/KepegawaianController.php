@@ -38,6 +38,7 @@ class KepegawaianController extends Controller
             m_goljabatan.goljabatan AS jabatan,
             kebutuhan_pegawai.kebutuhan AS standart,
             kebutuhan_pegawai.eksisting AS eksisting,
+            kebutuhan_pegawai.ket AS keterangan,
             CASE
                 WHEN kebutuhan_pegawai.eksisting > kebutuhan_pegawai.kebutuhan THEN 'Kelebihan'
                 WHEN kebutuhan_pegawai.eksisting = kebutuhan_pegawai.kebutuhan THEN 'Cukup'
@@ -46,7 +47,6 @@ class KepegawaianController extends Controller
             FROM kebutuhan_pegawai
             LEFT JOIN m_goljabatan ON kebutuhan_pegawai.id_goljabatan = m_goljabatan.id
         ");
-
         // $pegawai = Pegawai::where('aktif', '=', 'AKTIF')
         //     ->with([
         //         "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) {
@@ -68,7 +68,8 @@ class KepegawaianController extends Controller
             'golongan' => $golongan,
             'yg_absen' => $trans_absens,
             'yg_libur' => $trans_libur,
-            'kebutuhanpegawai' => $kebutuhanpegawai
+             'kebutuhanpegawai' => $kebutuhanpegawai
+            //  'xxx' => 'xxx',
         );
         return response()->json($data);
     }

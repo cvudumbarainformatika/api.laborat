@@ -217,6 +217,23 @@ class PelayananController extends Controller
             ->whereNotIn('rs1', ['POL027','POL011','POL035'])
             ->orderBy('rs2', 'ASC')->get();
 
+        $penunjang_laborat = DB::table('rs51')
+        ->selectRaw('COUNT(DISTINCT rs51.rs1) as total_pasien')
+        ->whereMonth('rs51.rs3', request('month'))
+        ->whereYear('rs51.rs3', request('year'))
+        ->first('total_pasien');
+
+        $penunjang_radiologi = DB::table('rs48')
+        ->selectRaw('COUNT(DISTINCT rs48.rs1) as total_pasien')
+        ->whereMonth('rs48.rs3', request('month'))
+        ->whereYear('rs48.rs3', request('year'))
+        ->first('total_pasien');
+
+         $penunjang_hd = DB::table('rs107')
+        ->selectRaw('COUNT(DISTINCT rs107.rs1) as total_pasien')
+        ->whereMonth('rs107.rs3', request('month'))
+        ->whereYear('rs107.rs3', request('year'))
+        ->first();
 
         $data = array(
             "tempat_tidur" => $tempat_tidur,
@@ -228,6 +245,9 @@ class PelayananController extends Controller
             'ranap_tahun' => $ranap_tahun,
             'igd_tahun' => $igd_tahun,
             'poli' => $poli,
+            'penunjang_laborat' => $penunjang_laborat,
+            'penunjang_radiologi' => $penunjang_radiologi,
+            'penunjang_hd' => $penunjang_hd,
 
         );
         return response()->json($data);

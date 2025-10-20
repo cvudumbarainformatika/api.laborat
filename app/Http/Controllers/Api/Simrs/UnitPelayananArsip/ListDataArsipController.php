@@ -28,17 +28,26 @@ class ListDataArsipController extends Controller
         }
         $data = Dataarsip::select(
             'data_arsip.*',
+            'kelompokMap_H.*',
+            'master_fillingcabinet.namacabinet as namacabinet',
             'master_kode.kode as kodeklasifikasi',
             'master_kode.nama as namakelasifikasi',
-            'master_lokasi.nama_lokasi',
+            // 'master_lokasi.nama_lokasi',
             'master_media.nama_media'
         )
             ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
-            ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
+            ->leftjoin('kelompokMap_R', 'kelompokMap_R.noarsip', 'data_arsip.noarsip')
+            ->leftjoin('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder')
+            ->leftjoin('master_fillingcabinet', 'kelompokMap_H.kodefelingkabinet', 'master_fillingcabinet.id')
+            // ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
             ->join('master_media', 'data_arsip.media', 'master_media.id')
             ->with(
                 [
                     'unitpengolah',
+                    'rincianmap' => function ($q) {
+                        $q->select('kelompokMap_R.*', 'kelompokMap_H.*')
+                            ->join('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder');
+                    },
                     'user'
                 ]
             )
@@ -58,9 +67,9 @@ class ListDataArsipController extends Controller
     public static function getlistdataarsipbynoarsip($noarsip)
     {
 
-        $data = Dataarsip::select('data_arsip.*', 'master_kode.kode as kodeklasifikasi', 'master_kode.nama as namakelasifikasi', 'master_lokasi.nama_lokasi', 'master_media.nama_media')
+        $data = Dataarsip::select('data_arsip.*', 'master_kode.kode as kodeklasifikasi', 'master_kode.nama as namakelasifikasi', 'master_media.nama_media')
             ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
-            ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
+            // ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
             ->join('master_media', 'data_arsip.media', 'master_media.id')
             ->where('data_arsip.flaging', '1')
             ->where('data_arsip.noarsip', $noarsip)
@@ -82,7 +91,7 @@ class ListDataArsipController extends Controller
                     'kode' => $request->kodekelasifikasi,
                     'jumlah' => $request->jumlah,
                     'nobox' => $request->nobox,
-                    'lokasi' => $request->lokasi,
+                    // 'lokasi' => $request->lokasi,
                     'media' => $request->media,
                     'keterangan' => $request->keterangan,
                 ]);
@@ -135,8 +144,8 @@ class ListDataArsipController extends Controller
                         'ket' => $request->keaslian,
                         'kode' => $request->kodekelasifikasi,
                         'jumlah' => $request->jumlah,
-                        'nobox' => $request->nobox,
-                        'lokasi' => $request->lokasi,
+                        // 'nobox' => $request->nobox,
+                        // 'lokasi' => $request->lokasi,
                         'media' => $request->media,
                         'keterangan' => $request->keterangan,
                         'username' => $kdpegsimrs,
@@ -268,6 +277,34 @@ class ListDataArsipController extends Controller
             ->where('data_arsip.flagmap', '')
             ->get();
         return new JsonResponse($data);
+    }
+
+    public function hapusarsip(Request $request)
+    {
+        $noarsip = $request->payload;
+        try {
+            DB::connection('siasik')->beginTransaction();
+            DB::connection('arsip')->beginTransaction(); // default
+
+                $data = Dataarsip::where('noarsip', $noarsip)->first();
+                $kdruangarsip = $data->unit_pengolah;
+                $nomor = '@nomor';
+                if ($data) {
+                    $data->delete();
+                }
+                DB::connection('siasik')->select('call kuranginoarsip(?, ?)', [$nomor, $kdruangarsip]);
+
+            DB::connection('siasik')->commit();
+            DB::connection('arsip')->commit();
+                return new JsonResponse(['message' => 'success'], 200);
+        } catch (\Exception $e) {
+            DB::connection('siasik')->rollBack();
+            DB::connection('arsip')->rollBack();
+            return new JsonResponse([
+                'message' => 'Hapus gagal',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 
 

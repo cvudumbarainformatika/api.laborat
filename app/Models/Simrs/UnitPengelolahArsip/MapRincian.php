@@ -16,4 +16,9 @@ class MapRincian extends Model
     {
         return $this->belongsTo(Dataarsip::class, 'noarsip', 'noarsip');
     }
+
+    public function hedermap()
+    {
+        return $this->belongsTo(MapHeder::class, 'id', 'id_heder');
+    }
 }

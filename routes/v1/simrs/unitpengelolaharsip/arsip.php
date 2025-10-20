@@ -12,7 +12,6 @@ Route::group([
     Route::post('/simpanarsip', [ListDataArsipController::class, 'simpanarsip']);
     Route::post('/simpanarsipdokumen', [ListDataArsipController::class, 'simpanarsipdokumen']);
     Route::get('/listarsip-map', [ListDataArsipController::class, 'listdataarsipuntukmap']);
-
-
+    Route::post('/hapusarsip', [ListDataArsipController::class, 'hapusarsip']);
 });
 

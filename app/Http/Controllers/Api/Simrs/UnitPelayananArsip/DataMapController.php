@@ -16,6 +16,7 @@ class DataMapController extends Controller
 {
     public function listdata()
     {
+
         if (request('bidangbagian') === '' || request('bidangbagian') === null) {
             $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
             $raw = collect($organisasi);
@@ -91,15 +92,24 @@ class DataMapController extends Controller
                 $update->flagmap = 1;
                 $update->save();
             DB::commit();
-                $rincianmap = MapRincian::with(
-                        [
-                            'dataarsip' => function ($q) {
-                                $q->with(['klasifikasi','unitpengolah','media','user']);
-                            }
-                        ]
-                    )->where('id_heder', $request->idmap)->get();
+                $data = MapHeder::with(
+                    [
+                        'rinciandalammap' => function ($x) {
+                            $x->with(
+                                [
+                                    'dataarsip' => function ($q) {
+                                        $q->with(['media','user']);
+                                    }
+                                ]);
+                        },
+                        'klasifikasi',
+                        'unitpengolah',
+                        'kabinet'
+                    ]
+                )
+        ->where('id', request('idmap'))->get();
                 return new JsonResponse(
-                    ['message' => 'Data Berhasil Disimpan','result' => $request->noarsip,'rincianmap' => $rincianmap,'idmap' => $request->idmap],200);
+                    ['message' => 'Data Berhasil Disimpan','result' => $request->noarsip,'rincianmap' => $data,'idmap' => $request->idmap],200);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse(['message' => 'Data Gagal Disimpan', 'error' => $e], 500);

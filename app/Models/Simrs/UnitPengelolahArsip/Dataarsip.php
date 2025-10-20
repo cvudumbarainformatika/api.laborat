@@ -35,4 +35,14 @@ class Dataarsip extends Model
     {
         return $this->hasOne(MmediaArsip::class, 'id', 'media');
     }
+
+    public function rincianmap()
+    {
+        return $this->hasOne(MapRincian::class, 'noarsip', 'noarsip');
+    }
+
+    public function caripeminjaman()
+    {
+        return $this->hasOne(PeminjamanHeder::class, 'noarsip', 'noarsip');
+    }
 }
