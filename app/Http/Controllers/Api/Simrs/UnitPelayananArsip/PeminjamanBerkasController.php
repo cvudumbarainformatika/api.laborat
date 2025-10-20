@@ -70,9 +70,17 @@ class PeminjamanBerkasController extends Controller
 
     public function getdatapegawai()
     {
-
-        $data = Pegawai::select('nip', 'nama')->where('aktif','AKTIF')->get();
-        return new JsonResponse($data);
+        try {
+            $data = Pegawai::select('nip', 'nama')->where('aktif','AKTIF')->get();
+            return new JsonResponse($data);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Data gagal disimpan',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+        // $data = Pegawai::select('nip', 'nama')->where('aktif','AKTIF')->get();
+        // return new JsonResponse($data);
     }
 
     public function simpanpeminjaman(Request $request)
