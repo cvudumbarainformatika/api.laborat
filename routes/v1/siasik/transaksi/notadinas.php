@@ -13,5 +13,6 @@ Route::group([
     Route::get('/getrincian', [NotadinasController::class, 'getlistform']);
     Route::post('/deleterinci', [NotadinasController::class, 'deleterinci']);
     Route::post('/kuncidata', [NotadinasController::class, 'kuncidata']);
+    Route::post('/verifikasi', [NotadinasController::class, 'verifikasi']);
     Route::get('/laprealisasi', [NotadinasController::class, 'laprealisasi']);
 });
