@@ -266,7 +266,7 @@ class BridantrianbpjsController extends Controller
      *     // fallback ke waktu sekarang kalau invalid
      *     $timestamp = strtotime($waktu_ambil_tiket);
      *     if ($timestamp === false) {
-     *         $timestamp = time();
+     *         $timestamp =now('Asia/Jakarta')->getTimestamp();
      *     }
 
      *     $waktu = $timestamp * 1000;
@@ -339,7 +339,7 @@ class BridantrianbpjsController extends Controller
         $antrianlog = Antrianlog::select('booking_type', 'waktu_ambil_tiket')->where('nomor', $request->noantrian)
             ->whereDate('waktu_ambil_tiket', $tgl)->first();
         //return($antrianlog);
-        $waktu_ambil_tiket = time();
+        $waktu_ambil_tiket = now('Asia/Jakarta')->getTimestamp();
         if ($antrianlog) {
             $booking_type = $antrianlog->booking_type;
             $waktu_ambil_tiket = $antrianlog->waktu_ambil_tiket;
@@ -363,7 +363,7 @@ class BridantrianbpjsController extends Controller
         // $waktu = strtotime($waktu_ambil_tiket) * 1000;
         $timestamp = strtotime($waktu_ambil_tiket);
         if ($timestamp === false) {
-            $timestamp = time(); // fallback ke waktu saat ini
+            $timestamp = now('Asia/Jakarta')->getTimestamp(); // fallback ke waktu saat ini
         }
         // kurangi 60 detik
         $timestamp -= 600;
@@ -466,14 +466,14 @@ class BridantrianbpjsController extends Controller
         //     $waktu_ambil_tiket = $cariwew[0]->tgl;
         //     $waktu = strtotime($waktu_ambil_tiket) * 1000;
         // }
-        $waktu_ambil_tiket = time();
+        $waktu_ambil_tiket = now('Asia/Jakarta')->getTimestamp();
         $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->first();
         if ($logantrian) {
             $waktu_ambil_tiket = $logantrian->tgl;
         }
         $timestamp = strtotime($waktu_ambil_tiket);
         if ($timestamp === false) {
-            $timestamp = time(); // fallback ke waktu saat ini
+            $timestamp = now('Asia/Jakarta')->getTimestamp(); // fallback ke waktu saat ini
         }
         $waktu = $timestamp * 1000;
 
