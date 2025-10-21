@@ -197,7 +197,7 @@ class BridantrianbpjsController extends Controller
             Log::error('BPJS timeout: ' . $e->getMessage());
         } catch (\Throwable $e) {
             // Error lain
-            Log::error('BPJS update waktu gagal: ' . $e->getMessage());
+            Log::error('BPJS update waktu gagal: ' . $e->getMessage() . ' noreg ' . $input->noreg);
         }
         // $updatewaktuantrian = BridgingbpjsHelper::post_url(
         //     'antrean',
@@ -409,7 +409,7 @@ class BridantrianbpjsController extends Controller
             Log::error('BPJS timeout: ' . $e->getMessage());
         } catch (\Throwable $e) {
             // Error lain
-            Log::error('BPJS update waktu gagal: ' . $e->getMessage());
+            Log::error('BPJS update waktu gagal: ' . $e->getMessage() . ' noreg ' . $input->noreg);
         }
         // $updatewaktuantrian = BridgingbpjsHelper::post_url(
         //     'antrean',
@@ -519,7 +519,7 @@ class BridantrianbpjsController extends Controller
             Log::error('BPJS timeout: ' . $e->getMessage());
         } catch (\Throwable $e) {
             // Error lain
-            Log::error('BPJS update waktu gagal: ' . $e->getMessage());
+            Log::error('BPJS update waktu gagal: ' . $e->getMessage() . ' noreg ' . $input->noreg);
         }
         // $updatewaktuantrian = BridgingbpjsHelper::post_url(
         //     'antrean',
