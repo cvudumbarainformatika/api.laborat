@@ -365,8 +365,9 @@ class BridantrianbpjsController extends Controller
         if ($timestamp === false) {
             $timestamp = now('Asia/Jakarta')->getTimestamp(); // fallback ke waktu saat ini
         }
-        // kurangi 60 detik
-        $timestamp -= 600;
+        // kurangi antara 10 - 60 menit (acak)
+        $random_seconds = rand(600, 3600);
+        $timestamp -= $random_seconds;
         $waktu = $timestamp * 1000;
         $tgltobpjshttpres = DateHelper::getDateTime();
 
