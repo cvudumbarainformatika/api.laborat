@@ -20,6 +20,7 @@ class LaporanAntianRsDanBpjsController extends Controller
     {
 
         // $data = request()->all();
+        // $data = self::getOneFromBpjs("");
         $data = self::getOneFromBpjs(request('kode'));
         return new JsonResponse(['data' => $data]);
     }
@@ -34,9 +35,10 @@ class LaporanAntianRsDanBpjsController extends Controller
     public static function getOneFromBpjs($request)
     {
         // return $request;
+        $encoded = urlencode($request);
         $data = BridgingbpjsHelper::get_url(
             'antrean',
-            'antrean/pendaftaran/kodebooking/' . $request
+            'antrean/pendaftaran/kodebooking/' . $encoded
         );
         return $data;
     }
