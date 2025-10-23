@@ -95,7 +95,7 @@ class PeminjamanBerkasController extends Controller
 
             $rincian = $request->rincian[0];
 
-            $cekx = PeminjamanHeder::where('noarsip', $rincian['noarsip'])->count();
+            $cekx = PeminjamanHeder::where('noarsip', $rincian['noarsip'])->whereNull('tgl_kembali')->count();
             if ($cekx > 0) {
                 return new JsonResponse(['message' => 'Berkas/Arsip masih dalam proses peminjaman dan belum di kembalikan...!!!'], 400);
             }
