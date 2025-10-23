@@ -17,6 +17,7 @@ use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BridantrianbpjsController extends Controller
 {
@@ -173,21 +174,46 @@ class BridantrianbpjsController extends Controller
             "taskid" => $x,
             'waktu' => $waktu
         ];
-        $updatewaktuantrian = BridgingbpjsHelper::post_url(
-            'antrean',
-            'antrean/updatewaktu',
-            $data
-        );
-        Bpjs_http_respon::create(
-            [
-                'noreg' => $input->noreg,
-                'method' => 'POST',
-                'request' => $data,
-                'respon' => $updatewaktuantrian,
-                'url' => 'antrean/updatewaktu',
-                'tgl' => $tgltobpjshttpres
-            ]
-        );
+        try {
+            $updatewaktuantrian = BridgingbpjsHelper::post_url(
+                'antrean',
+                'antrean/updatewaktu',
+                $data
+            );
+
+            // kalau sukses baru buat log
+            if ($updatewaktuantrian) {
+                Bpjs_http_respon::create([
+                    'noreg' => $input->noreg,
+                    'method' => 'POST',
+                    'request' => $data,
+                    'respon' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'tgl' => $tgltobpjshttpres
+                ]);
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Timeout atau koneksi gagal
+            Log::error('BPJS timeout: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            // Error lain
+            Log::error('BPJS update waktu gagal: ' . $e->getMessage() . ' noreg ' . $input->noreg);
+        }
+        // $updatewaktuantrian = BridgingbpjsHelper::post_url(
+        //     'antrean',
+        //     'antrean/updatewaktu',
+        //     $data
+        // );
+        // Bpjs_http_respon::create(
+        //     [
+        //         'noreg' => $input->noreg,
+        //         'method' => 'POST',
+        //         'request' => $data,
+        //         'respon' => $updatewaktuantrian,
+        //         'url' => 'antrean/updatewaktu',
+        //         'tgl' => $tgltobpjshttpres
+        //     ]
+        // );
         // if ($updatewaktuantrian && (int)$x < 4) {
         //     $message = [
         //         'kode' => $updatewaktuantrian,
@@ -240,7 +266,7 @@ class BridantrianbpjsController extends Controller
      *     // fallback ke waktu sekarang kalau invalid
      *     $timestamp = strtotime($waktu_ambil_tiket);
      *     if ($timestamp === false) {
-     *         $timestamp = time();
+     *         $timestamp =now('Asia/Jakarta')->getTimestamp();
      *     }
 
      *     $waktu = $timestamp * 1000;
@@ -313,6 +339,7 @@ class BridantrianbpjsController extends Controller
         $antrianlog = Antrianlog::select('booking_type', 'waktu_ambil_tiket')->where('nomor', $request->noantrian)
             ->whereDate('waktu_ambil_tiket', $tgl)->first();
         //return($antrianlog);
+        $waktu_ambil_tiket = now('Asia/Jakarta')->getTimestamp();
         if ($antrianlog) {
             $booking_type = $antrianlog->booking_type;
             $waktu_ambil_tiket = $antrianlog->waktu_ambil_tiket;
@@ -336,10 +363,11 @@ class BridantrianbpjsController extends Controller
         // $waktu = strtotime($waktu_ambil_tiket) * 1000;
         $timestamp = strtotime($waktu_ambil_tiket);
         if ($timestamp === false) {
-            $timestamp = time(); // fallback ke waktu saat ini
+            $timestamp = now('Asia/Jakarta')->getTimestamp(); // fallback ke waktu saat ini
         }
-        // kurangi 60 detik
-        $timestamp -= 600;
+        // kurangi antara 10 - 60 menit (acak)
+        $random_seconds = rand(600, 3600);
+        $timestamp -= $random_seconds;
         $waktu = $timestamp * 1000;
         $tgltobpjshttpres = DateHelper::getDateTime();
 
@@ -359,22 +387,46 @@ class BridantrianbpjsController extends Controller
             "taskid" => $taskid,
             'waktu' => $waktu
         ];
+        try {
+            $updatewaktuantrian = BridgingbpjsHelper::post_url(
+                'antrean',
+                'antrean/updatewaktu',
+                $data
+            );
 
-        $updatewaktuantrian = BridgingbpjsHelper::post_url(
-            'antrean',
-            'antrean/updatewaktu',
-            $data
-        );
-        Bpjs_http_respon::create(
-            [
-                'noreg' => $input->noreg,
-                'method' => 'POST',
-                'request' => $data,
-                'respon' => $updatewaktuantrian,
-                'url' => 'antrean/updatewaktu',
-                'tgl' => $tgltobpjshttpres
-            ]
-        );
+            // kalau sukses baru buat log
+            if ($updatewaktuantrian) {
+                Bpjs_http_respon::create([
+                    'noreg' => $input->noreg,
+                    'method' => 'POST',
+                    'request' => $data,
+                    'respon' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'tgl' => $tgltobpjshttpres
+                ]);
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Timeout atau koneksi gagal
+            Log::error('BPJS timeout: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            // Error lain
+            Log::error('BPJS update waktu gagal: ' . $e->getMessage() . ' noreg ' . $input->noreg);
+        }
+        // $updatewaktuantrian = BridgingbpjsHelper::post_url(
+        //     'antrean',
+        //     'antrean/updatewaktu',
+        //     $data
+        // );
+        // Bpjs_http_respon::create(
+        //     [
+        //         'noreg' => $input->noreg,
+        //         'method' => 'POST',
+        //         'request' => $data,
+        //         'respon' => $updatewaktuantrian,
+        //         'url' => 'antrean/updatewaktu',
+        //         'tgl' => $tgltobpjshttpres
+        //     ]
+        // );
         // if ($updatewaktuantrian) {
         //     $message = [
         //         'kode' => $updatewaktuantrian,
@@ -415,13 +467,14 @@ class BridantrianbpjsController extends Controller
         //     $waktu_ambil_tiket = $cariwew[0]->tgl;
         //     $waktu = strtotime($waktu_ambil_tiket) * 1000;
         // }
+        $waktu_ambil_tiket = now('Asia/Jakarta')->getTimestamp();
         $logantrian = Logantrian::select('tgl')->where('noreg', $input->noreg)->whereDate('tgl', $tgl)->first();
         if ($logantrian) {
             $waktu_ambil_tiket = $logantrian->tgl;
         }
         $timestamp = strtotime($waktu_ambil_tiket);
         if ($timestamp === false) {
-            $timestamp = time(); // fallback ke waktu saat ini
+            $timestamp = now('Asia/Jakarta')->getTimestamp(); // fallback ke waktu saat ini
         }
         $waktu = $timestamp * 1000;
 
@@ -444,21 +497,46 @@ class BridantrianbpjsController extends Controller
             "taskid" => $taskid,
             'waktu' => $waktu
         ];
-        $updatewaktuantrian = BridgingbpjsHelper::post_url(
-            'antrean',
-            'antrean/updatewaktu',
-            $data
-        );
-        Bpjs_http_respon::create(
-            [
-                'noreg' => $input->noreg,
-                'method' => 'POST',
-                'request' => $data,
-                'respon' => $updatewaktuantrian,
-                'url' => 'antrean/updatewaktu',
-                'tgl' => $tgltobpjshttpres
-            ]
-        );
+        try {
+            $updatewaktuantrian = BridgingbpjsHelper::post_url(
+                'antrean',
+                'antrean/updatewaktu',
+                $data
+            );
+
+            // kalau sukses baru buat log
+            if ($updatewaktuantrian) {
+                Bpjs_http_respon::create([
+                    'noreg' => $input->noreg,
+                    'method' => 'POST',
+                    'request' => $data,
+                    'respon' => $updatewaktuantrian,
+                    'url' => 'antrean/updatewaktu',
+                    'tgl' => $tgltobpjshttpres
+                ]);
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Timeout atau koneksi gagal
+            Log::error('BPJS timeout: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            // Error lain
+            Log::error('BPJS update waktu gagal: ' . $e->getMessage() . ' noreg ' . $input->noreg);
+        }
+        // $updatewaktuantrian = BridgingbpjsHelper::post_url(
+        //     'antrean',
+        //     'antrean/updatewaktu',
+        //     $data
+        // );
+        // Bpjs_http_respon::create(
+        //     [
+        //         'noreg' => $input->noreg,
+        //         'method' => 'POST',
+        //         'request' => $data,
+        //         'respon' => $updatewaktuantrian,
+        //         'url' => 'antrean/updatewaktu',
+        //         'tgl' => $tgltobpjshttpres
+        //     ]
+        // );
         // if ($updatewaktuantrian) {
         //     $message = [
         //         'kode' => $updatewaktuantrian,

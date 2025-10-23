@@ -1374,12 +1374,14 @@ class EresepController extends Controller
                 $rm = Mpasien::select('rs1')
                     ->where('rs46', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs1', 'LIKE', '%' . request('q') . '%')
+                    ->limit(1000)
                     ->pluck('rs1')
                     ->toArray();
             } else {
                 if (strlen(request('q')) >= 3) {
                     $rm = Mpasien::select('rs1')
                         ->where('rs2', 'LIKE', '%' . request('q') . '%')
+                        ->limit(1000)
                         ->pluck('rs1')
                         ->toArray();
                 } else $rm = [];

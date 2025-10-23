@@ -15,6 +15,7 @@ class HomeCare extends Model
 
     protected $guarded = ['id'];
     protected $connection = 'mysql';
+    protected $table = 'home_care_kunjungans';
     public $timestamps = false;
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';

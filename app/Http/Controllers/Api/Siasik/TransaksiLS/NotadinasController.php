@@ -307,6 +307,75 @@ class NotadinasController extends Controller
         }
     }
 
+    public function verifikasi(Request $request)
+    {
+        $request->validate([
+            'notadinas' => 'required|string',
+            'datanpd' => 'required|array|min:1', // minimal 1 NPD
+        ]);
+
+        $user = auth()->user()->pegawai_id;
+        $pg = Pegawai::find($user);
+        $pegawai = $pg->kdpegsimrs;
+        $now = Carbon::now();
+
+        DB::beginTransaction();
+        try {
+            $nota = Notadinas_header::where('notadinas', $request->notadinas)
+                ->first();
+
+            if (!$nota) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Nota Dinas dengan nomor {$request->notadinas} tidak ditemukan."
+                ], 404);
+            }
+
+            $npdFound = NpdLS_heder::whereIn('nonpdls', $request->datanpd)
+                ->pluck('nonpdls')
+                ->toArray();
+
+            $missingNpd = array_diff($request->datanpd, $npdFound);
+            if (count($missingNpd) > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Beberapa nomor NPD tidak ditemukan.',
+                    'missing_npd' => array_values($missingNpd)
+                ], 404);
+            }
+
+            NpdLS_heder::whereIn('nonpdls', $request->datanpd)
+                ->update([
+                    'verif' => '1',
+                    'userverif' => $pegawai,
+                    'flagnotadinas' => 'DISETUJUI',
+                    'tglverif' => $now,
+                ]);
+
+            Notadinas_header::where('notadinas', $request->notadinas)
+                ->update([
+                    'terima' => '1',
+                    'flagselesai' => '1',
+                    'tglkunci' => $now,
+                    'tglselesai' => $now,
+                ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Berhasil di Verifikasi',
+                'updated_npd' => $npdFound,
+                'nota_dinas' => $request->notadinas,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 
     public function laprealisasi(){
         $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
