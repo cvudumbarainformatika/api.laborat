@@ -200,6 +200,47 @@ class RuanganController extends Controller
         return response()->json(['message' => 'OK']);
     }
 
+
+    public function updateDokumenMutasi(Request $request)
+    {
+       $data = SerahTerima::find($request->id);
+
+       if (!$data) {
+           return new JsonResponse([
+               'message' => 'Data tidak ditemukan'
+           ], 500);
+       }
+
+       $user = FormatingHelper::session_user();
+       $data->update([
+           'derajatPasien' => $request->derajatPasien,
+           'skalaNyeri' => $request->skalaNyeri,
+           'sistole' => $request->sistole,
+           'diastole' => $request->diastole,
+           'nadi' => $request->nadi,
+           'rr' => $request->rr,
+           'spo2' => $request->spo2,
+           'suhu' => $request->suhu,
+           'lainlain' => $request->lainlain,
+           'lab' => $request->lab,
+           'ecg' => $request->ecg,
+           'ro' => $request->ro,
+           'kelengkapan' => $request->kelengkapan,
+           'plann' => $request->plann,
+           'terapis' => $request->terapis,
+           'sistole_trm' => $request->sistole_trm,
+           'diastole_trm' => $request->diastole_trm,
+           'nadi_trm' => $request->nadi_trm,
+           'rr_trm' => $request->rr_trm,
+           'spo2_trm' => $request->spo2_trm,
+           'suhu_trm' => $request->suhu_trm,
+           'user_edit' => $user['kodesimrs']
+
+       ]);
+
+       return response()->json(['message' => 'OK, Dokumen berhasil diupdate']);
+    }
+
     /**
      * history mutasi
      */

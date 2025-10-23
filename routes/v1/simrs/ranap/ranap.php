@@ -45,6 +45,7 @@ Route::group([
     Route::get('/ruanganranap', [RuanganController::class, 'ruanganranap']);
     Route::get('/historymutasi', [RuanganController::class, 'historyMutasi']);
     Route::post('/simpanmutasi', [RuanganController::class, 'simpanMutasi']);
+    Route::post('/updatedokumenmutasi', [RuanganController::class, 'updateDokumenMutasi']);
     Route::post('/updatemutasi', [RuanganController::class, 'updateSerahTerima']);
 
 });
