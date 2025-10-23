@@ -321,7 +321,7 @@ class NotadinasController extends Controller
 
         DB::beginTransaction();
         try {
-            $nota = Notadinas_header::where('notadinas', $request->notadinas)
+            $nota = Notadinas_header::where('nonotadinas', $request->notadinas)
                 ->first();
 
             if (!$nota) {
@@ -352,7 +352,7 @@ class NotadinasController extends Controller
                     'tglverif' => $now,
                 ]);
 
-            Notadinas_header::where('notadinas', $request->notadinas)
+            Notadinas_header::where('nonotadinas', $request->notadinas)
                 ->update([
                     'terima' => '1',
                     'flagselesai' => '1',
@@ -375,6 +375,58 @@ class NotadinasController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function listbelumVerif() { 
+    
+        // $tahunawal=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+        // $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
+
+        $tahun = request('tahun') ?? date('Y');
+        $data = Notadinas_header::whereBetween('notadinas_heder.tglnotadinas', [$tahun.'-01-01', $tahun.'-12-31'])
+            ->where('notadinas_heder.kunci', '=', '1')
+            ->where('notadinas_heder.terima', '!=', '1')
+            ->where('notadinas_heder.flagselesai', '!=', '1')
+            ->join('notadinas_rinci', 'notadinas_rinci.nonotadinas', '=',  'notadinas_heder.nonotadinas')
+            // ->join('npdls_heder', 'npdls_heder.nonotadinas', '=',  'notadinas_heder.nonotadinas')
+            ->with('rincians', function ($query) {
+                $query
+                // ->join('npdls_heder', 'npdls_heder.nonpdls', '=',  'notadinas_rinci.nonpdls')
+                // ->leftJoin('npdls_rinci', 'npdls_rinci.nonpdls', '=', 'npdls_heder.nonpdls')
+                ->select(
+                //     'npdls_heder.pptk',
+                //  'npdls_heder.penerima',
+                //  'npdls_heder.bidang',
+                //  'npdls_heder.tglnpdls',
+                //  'npdls_heder.keterangan',
+                //  'npdls_heder.nonpdls',
+                 'notadinas_rinci.*',
+                );
+            })
+            ->select('notadinas_heder.*',
+                // 'npdls_heder.nonpk',
+                // 'npdls_heder.nopencairan',
+                DB::raw('SUM(notadinas_rinci.total) as total'),
+            )
+            ->when(request('q'), function($q){
+                $q->where('notadinas_heder.nonotadinas', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('notadinas_heder.tglnotadinas', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('notadinas_heder.namapptk', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('notadinas_heder.bidang', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('notadinas_heder.kegiatan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('notadinas_rinci.total', 'LIKE', '%' . request('q') . '%')
+                    ;
+            })
+            ->groupBy('notadinas_heder.nonotadinas')
+            ->orderBy('notadinas_heder.tglnotadinas', 'desc')
+            ->get();
+            $data->each(function($nota){
+                $nota->rincians = NpdLS_heder::where('nonotadinas', $nota->nonotadinas)
+                    ->select('npdls_heder.*')
+                    ->get();
+            });
+        return new JsonResponse($data);
+
     }
 
     public function laprealisasi(){

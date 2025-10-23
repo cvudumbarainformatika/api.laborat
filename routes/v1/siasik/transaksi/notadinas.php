@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\Siasik\TransaksiLS\NotadinasController;
 use Illuminate\Support\Facades\Route;
 Route::group([
-    // 'middleware' => 'auth:api',
+    'middleware' => 'auth:api',
     'prefix' => 'transaksi/notadinas'
 ], function () {
     Route::get('/listdata', [NotadinasController::class, 'listdata']);
@@ -14,5 +14,6 @@ Route::group([
     Route::post('/deleterinci', [NotadinasController::class, 'deleterinci']);
     Route::post('/kuncidata', [NotadinasController::class, 'kuncidata']);
     Route::post('/verifikasi', [NotadinasController::class, 'verifikasi']);
+    Route::post('/listverif', [NotadinasController::class, 'listbelumVerif']);
     Route::get('/laprealisasi', [NotadinasController::class, 'laprealisasi']);
 });
