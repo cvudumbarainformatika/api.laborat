@@ -137,4 +137,23 @@ class DataMapController extends Controller
         return new JsonResponse($data);
     }
 
+    public function hapusrinciandalammap(Request $request)
+    {
+
+        try {
+            DB::beginTransaction();
+                $user = FormatingHelper::session_user();
+                $kdpegsimrs = $user['kodesimrs'];
+                $hapus = MapRincian::where('id', $request->id)->delete();
+                $update = Dataarsip::where('noarsip', $request->noarsip)->first();
+                $update->flagmap = '';
+                $update->save();
+            DB::commit();
+                return new JsonResponse(['message' => 'Data Berhasil Dihapus', 'result' => $update],200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['message' => 'Data Gagal Dihapus', 'error' => $e], 500);
+        }
+    }
+
 }
