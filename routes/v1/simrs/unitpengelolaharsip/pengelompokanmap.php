@@ -13,5 +13,6 @@ Route::group([
     Route::post('/simpanisimap', [DataMapController::class, 'simpanisimap']);
     Route::get('/rincian-map', [DataMapController::class, 'rinciandidalammap']);
     Route::post('/hapus-item', [DataMapController::class, 'hapusrinciandalammap']);
+    Route::post('/hapus-map', [DataMapController::class, 'hapusmap']);
 });
 

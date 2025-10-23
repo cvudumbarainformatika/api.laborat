@@ -156,4 +156,23 @@ class DataMapController extends Controller
         }
     }
 
+    public function hapusmap(Request $request)
+    {
+        $cek = MapRincian::where('id_heder', $request->id)->count();
+        if($cek > 0){
+            return new JsonResponse(['message' => 'Data Tidak Bisa Dihapus, Map Ini Memiliki Rincian Data'], 500);
+        }
+        try {
+            DB::beginTransaction();
+                $user = FormatingHelper::session_user();
+                $kdpegsimrs = $user['kodesimrs'];
+                $hapus = MapHeder::where('id', $request->id)->delete();
+            DB::commit();
+                return new JsonResponse(['message' => 'Data Berhasil Dihapus'],200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse(['message' => 'Data Gagal Dihapus', 'error' => $e], 500);
+        }
+    }
+
 }
