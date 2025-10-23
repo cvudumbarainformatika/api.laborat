@@ -12,5 +12,6 @@ Route::group([
     Route::post('/simpan-pinjaman', [PeminjamanBerkasController::class, 'simpanpeminjaman']);
     Route::get('/list-peminjaman', [PeminjamanBerkasController::class, 'getlistpeminjaman']);
     Route::post('/simpan-kembali', [PeminjamanBerkasController::class, 'simpankembali']);
+     Route::get('/cari-pegawai', [PeminjamanBerkasController::class, 'caripegawai']);
 });
 

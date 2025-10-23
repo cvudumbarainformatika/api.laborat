@@ -240,4 +240,19 @@ class PeminjamanBerkasController extends Controller
             ], 500);
         }
     }
+
+    public function caripegawai()
+    {
+        try {
+            $data = Pegawai::select('nik', 'nama')->where('aktif','AKTIF')->where('nama', 'LIKE', '%' . request('q') . '%')->limit(25)->get();
+            return new JsonResponse($data);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Data gagal disimpan',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+        // $data = Pegawai::select('nip', 'nama')->where('aktif','AKTIF')->get();
+        // return new JsonResponse($data);
+    }
 }
