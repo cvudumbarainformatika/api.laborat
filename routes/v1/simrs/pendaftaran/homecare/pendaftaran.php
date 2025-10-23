@@ -8,6 +8,8 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/pendaftaran/homecare'
 ], function () {
+    Route::get('/admin-home-care', [PendaftaranHomeCareController::class, 'layananAdminHomeCare']);
+    Route::get('/dokter', [PendaftaranHomeCareController::class, 'getDokter']);
     Route::get('/list', [PendaftaranHomeCareController::class, 'listKunjungan']);
     Route::post('/simpan-daftar', [PendaftaranHomeCareController::class, 'simpanKunjungan']);
 });
