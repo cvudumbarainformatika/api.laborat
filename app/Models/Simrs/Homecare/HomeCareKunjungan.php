@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Homecare;
 
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -20,20 +21,20 @@ class HomeCareKunjungan extends Model
 
     public function masterpasien()
     {
-        return $this->hasOne(Mpasien::class, 'rs1', 'rs2');
+        return $this->hasOne(Mpasien::class, 'rs1', 'norm');
     }
 
-    public function relmpoli()
+    public function poli()
     {
-        return $this->belongsTo(Mpoli::class, 'rs8', 'rs1');
+        return $this->belongsTo(Mpoli::class, 'kode_poli', 'rs1');
     }
     public function dokter()
     {
-        return $this->hasOne(Dokter::class, 'rs1', 'rs9');
+        return $this->hasOne(Petugas::class, 'kdpegsimrs', 'dpjp');
     }
 
     public function newapotekrajal()
     {
-        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'rs1');
+        return $this->hasMany(Resepkeluarheder::class, 'noreg', 'noreg');
     }
 }
