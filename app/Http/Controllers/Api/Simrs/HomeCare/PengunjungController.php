@@ -41,7 +41,8 @@ class PengunjungController extends Controller
             })
             ->when($req['flag'], function ($q) use ($req) {
                 $flag = strtolower($req['flag']);
-                if ($flag == 'terlayani') $q->where('flag', '1');
+                if ($flag == 'dalam pelayanan') $q->where('flag', '1');
+                else if ($flag == 'terlayani') $q->where('flag', '2');
                 else if ($flag == 'belum terlayani') $q->where(function ($y) {
                     $y->whereNull('flag')->orWhere('flag', '');
                 });
@@ -75,4 +76,5 @@ class PengunjungController extends Controller
             'data' => $data,
         ]);
     }
+    public function bukalayanan(Request $request) {}
 }

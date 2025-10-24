@@ -10,4 +10,5 @@ Route::group([
 ], function () {
   Route::get('/list', [PengunjungController::class, 'listKunjungan']);
   Route::post('/berangkat', [PengunjungController::class, 'berangkat']);
+  Route::post('/bukalayanan', [PengunjungController::class, 'bukalayanan']);
 });
