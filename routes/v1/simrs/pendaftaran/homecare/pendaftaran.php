@@ -12,4 +12,5 @@ Route::group([
     Route::get('/dokter', [PendaftaranHomeCareController::class, 'getDokter']);
     Route::get('/list', [PendaftaranHomeCareController::class, 'listKunjungan']);
     Route::post('/simpan-daftar', [PendaftaranHomeCareController::class, 'simpanKunjungan']);
+    Route::post('/berangkat', [PendaftaranHomeCareController::class, 'berangkat']);
 });

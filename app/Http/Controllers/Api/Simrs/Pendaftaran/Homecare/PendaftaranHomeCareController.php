@@ -133,4 +133,20 @@ class PendaftaranHomeCareController extends Controller
             'message' => 'Pendaftaran Kunjungan Home Care sudah disimpan'
         ]);
     }
+
+    public function berangkat(Request $request)
+    {
+
+        $data = HomeCareKunjungan::find($request->id);
+        if (!$data) return new JsonResponse(['message' => 'Data Kunjungan tidak ditemukan'], 410);
+        $data->update(['tgl_berangkat' => Carbon::now()->format('Y-m-d H:i:s')]);
+        $data->load([
+            'masterpasien:rs1,rs2,rs17,rs16 as tgllahir',
+            'poli:rs1,rs2',
+            'dokter:nama,kdpegsimrs',
+        ]);
+        return new JsonResponse([
+            'data' => $data,
+        ]);
+    }
 }
