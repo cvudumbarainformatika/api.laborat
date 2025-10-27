@@ -8,6 +8,7 @@ use App\Models\Simrs\Homecare\HomeCareKunjungan;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PengunjungController extends Controller
 {
@@ -19,44 +20,64 @@ class PengunjungController extends Controller
             'q' => request('q') ?? null,
             'page' => request('page') ?? 1,
             'per_page' => request('per_page') ?? 10,
-            'tgl' => request('tgl') ?? null,
             'from' => request('from') ?? null,
             'to' => request('to') ?? null,
-            'flag' => request('flag') ?? null,
+            'flag' => request('status') ?? null,
 
         ];
 
         $raw = HomeCareKunjungan::query()
+            ->select(
+                'home_care_kunjungans.*',
+                'home_care_kunjungans.kode_poli as kodepoli',
+                'home_care_kunjungans.kode_poli as kdruangan',
+                'rs15.rs16 as tgllahir',
+                'rs15.rs49 as nktp',
+                'rs15.rs17 as kelamin',
+                'rs19.rs2 as poli',
+                'home_care_kunjungans.dpjp as kddokter',
+                'home_care_kunjungans.dpjp as kodedokter',
+                DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+                DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+                DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                        TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                        TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+
+                'kepegx.pegawai.nama as dokter',
+            )
+            ->leftJoin('rs15', 'rs15.rs1', '=', 'home_care_kunjungans.norm')
+            ->leftJoin('rs19', 'rs19.rs1', '=', 'home_care_kunjungans.kode_poli')
+            ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'home_care_kunjungans.dpjp')
             ->when($req['q'], function ($q) use ($req) {
-                $q->select('home_care_kunjungans.*')
-                    ->leftJoin('rs15', 'rs15.rs1', '=', 'home_care_kunjungans.norm')
-                    ->where(function ($y) use ($req) {
-                        $y->where('rs15.rs2', 'LIKE', '%' . $req['q'] . '%')
-                            ->orWhere('rs15.rs1', 'LIKE', '%' . $req['q'] . '%')
-                            ->orWhere('home_care_kunjungans.noreg', 'LIKE', '%' . $req['q'] . '%');
-                    });
-            })
-            ->when($req['tgl'], function ($q) use ($req) {
-                $q->whereDate('tgl_kunjungan', $req['tgl']);
+                $q->where(function ($y) use ($req) {
+                    $y->where('rs15.rs2', 'LIKE', '%' . $req['q'] . '%')
+                        ->orWhere('rs15.rs1', 'LIKE', '%' . $req['q'] . '%')
+                        ->orWhere('home_care_kunjungans.noreg', 'LIKE', '%' . $req['q'] . '%');
+                });
             })
             ->when($req['flag'], function ($q) use ($req) {
                 $flag = strtolower($req['flag']);
+
                 if ($flag == 'dalam pelayanan') $q->where('flag', '1');
                 else if ($flag == 'terlayani') $q->where('flag', '2');
                 else if ($flag == 'belum terlayani') $q->where(function ($y) {
                     $y->whereNull('flag')->orWhere('flag', '');
                 });
             })
-            ->when($req['from'], function ($q) use ($req) {
-                $q->whereBetween('tgl_kunjungan', [$req['from'] . ' 00:00:00', $req['to'] . ' 23:59:59']);
-            })
-            ->with([
-                'masterpasien:rs1,rs2,rs17,rs16 as tgllahir',
-                'poli:rs1,rs2',
-                'dokter:nama,kdpegsimrs',
-            ]);
+            ->when(!empty($req['from']) && !empty($req['to']), function ($q) use ($req) {
+                $q->whereBetween('tgl_kunjungan', [
+                    $req['from'] . ' 00:00:00',
+                    $req['to'] . ' 23:59:59',
+                ]);
+            });
+        // ->with([
+        // 'masterpasien:rs1,rs2,rs17,rs16 as tgllahir',
+        // 'poli:rs1,rs2',
+        // 'dokter:nama,kdpegsimrs',
+        // ]);
         $totalCount = (clone $raw)->count();
         $data = $raw->simplePaginate($req['per_page']);
+        // $data->append('usia');
 
         $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
         return new JsonResponse($resp);
@@ -76,5 +97,38 @@ class PengunjungController extends Controller
             'data' => $data,
         ]);
     }
-    public function bukalayanan(Request $request) {}
+    public function bukalayanan(Request $request)
+    {
+        $data = HomeCareKunjungan::select('noreg', 'norm')->where('noreg', $request->noreg)->first();
+        if (!$data) return new JsonResponse(['message' => 'Mohon Maaf, Kunjungan pasien tidak ditemukan'], 410);
+        $data->load([
+            'newapotekrajal' => function ($q) {
+                $q->with([
+                    'dokter:nama,kdpegsimrs',
+                    'permintaanresep.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                    'permintaanracikan.mobat:kd_obat,nama_obat,bentuk_sediaan,satuan_k,jenis_perbekalan',
+                    'sistembayar'
+                ])
+                    ->orderBy('id', 'DESC');
+            },
+
+            'laborats' => function ($q) {
+                $q->with('details.pemeriksaanlab')->orderBy('id', 'DESC')
+                    ->where('unit_pengirim', '!=', 'POL014')
+                    ->where('unit_pengirim', '!=', 'PEN005'); // tambahan HD
+            },
+
+            'laboratold' => function ($t) {
+                $t->with('pemeriksaanlab')
+                    ->orderBy('id', 'DESC');
+            },
+
+            'fisio' => function ($q) {
+                $q->where('rs2', '!=', '')
+                    ->groupBy('rs2')->orderBy('id', 'DESC');
+            },
+        ]);
+
+        return new JsonResponse($data);
+    }
 }

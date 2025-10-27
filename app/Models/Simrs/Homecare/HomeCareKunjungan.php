@@ -7,6 +7,10 @@ use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
+use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
+use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,7 +20,6 @@ class HomeCareKunjungan extends Model
 
     protected $guarded = ['id'];
     protected $connection = 'mysql';
-
 
 
     public function masterpasien()
@@ -36,5 +39,17 @@ class HomeCareKunjungan extends Model
     public function newapotekrajal()
     {
         return $this->hasMany(Resepkeluarheder::class, 'noreg', 'noreg');
+    }
+    public function laborats()
+    {
+        return $this->hasMany(LaboratMeta::class, 'noreg', 'noreg');
+    }
+    public function laboratold()
+    {
+        return $this->hasMany(Laboratpemeriksaan::class, 'rs1', 'noreg');
+    }
+    public function fisio()
+    {
+        return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'noreg');
     }
 }
