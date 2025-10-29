@@ -136,6 +136,8 @@ class BridantrianbpjsController extends Controller
 
     public static function updateWaktu($input, $x)
     {
+        $cek = Bpjsrespontime::where('noreg', $input->noreg)->where('taskid', $x)->count();
+        if ($cek > 0) return;
         // return $input;
         // $waktu = strtotime(date('Y-m-d H:i:s')) * 1000;
         // $now = date('Y-m-d H:i:s');

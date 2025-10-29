@@ -10,4 +10,5 @@ Route::group([
 ], function () {
     Route::get('/pasienhemodialisa', [HemodialisaController::class, 'index']); // ini yang baru
     Route::post('/terima-pasien', [HemodialisaController::class, 'terima']); // ini yang baru
+    Route::post('/terima-pasien', [HemodialisaController::class, 'newTerima']); // ini yang lebih baru
 });
