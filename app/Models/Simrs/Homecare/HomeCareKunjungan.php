@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Homecare;
 
 use App\Models\Simpeg\Petugas;
+use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -51,5 +52,9 @@ class HomeCareKunjungan extends Model
     public function fisio()
     {
         return $this->hasMany(Fisioterapipermintaan::class, 'rs1', 'noreg');
+    }
+    public function anamnesis()
+    {
+        return $this->hasMany(Anamnesis::class, 'rs1', 'noreg');
     }
 }

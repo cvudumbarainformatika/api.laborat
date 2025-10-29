@@ -127,6 +127,7 @@ class PengunjungController extends Controller
                 $q->where('rs2', '!=', '')
                     ->groupBy('rs2')->orderBy('id', 'DESC');
             },
+            'anamnesis',
         ]);
 
         return new JsonResponse($data);
