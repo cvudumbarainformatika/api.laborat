@@ -441,9 +441,7 @@ class RadiologiController extends Controller
                     })
                     ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.rs4 as pelaksana','rs151.id','rs151.rs2 as tgl', 'rs151.hasilhtml','rs151.kesimpulanhtml',
                         'rs47.rs2 as nama', 'rs47.rs1 as kode', 'rs47.rs3 as jenis',
-                    )
-                    
-                    ;
+                    );
                 }
                 
             ])
@@ -453,9 +451,43 @@ class RadiologiController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan'], 500);
         }
 
+        $permintaans = Transpermintaanradiologi::query()
+        ->select([
+                'rs106.id',
+                'rs106.rs1',
+                'rs106.rs2',
+                'rs106.rs1 as noreg',
+                'rs106.rs2 as nota',
+                //  DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
+                'rs106.rs3 as tgl_kunjungan',
+                'rs106.catatanpermintaan',
+                'rs106.cito',
+                'rs106.diagnosakerja',
+                'rs106.metodepenyampaianhasil',
+                'rs106.rs4',
+                'rs106.rs5',
+                'rs106.rs6',
+                'rs106.rs7',
+                'rs106.rs8',
+                'rs106.rs9',
+                'rs106.rs10',
+                'rs106.rs11',
+                'rs106.rs12',
+                'rs106.rs13',
+                'rs106.rs14',
+                'rs106.rs15',
+                'rs106.statusalergipasien',
+                'rs106.statuskehamilan',
+                'rs106.trmtgl',
+                'rs106.updateststgl',
+            ])
+        ->where('rs106.rs1', $data->rs1)
+        ->get();
+
         return response()->json([
             'permintaan' =>$data,
             'newapotekrajal' => $data->newapotekrajal ?? [],
+            'permintaansbynoreg' => $permintaans ?? [],
         ]);
     }
 
