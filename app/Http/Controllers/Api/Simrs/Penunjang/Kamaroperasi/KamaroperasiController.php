@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Penunjang\Kamaroperasi;
 
 use App\Helpers\FormatingHelper;
+use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
@@ -91,22 +92,36 @@ class KamaroperasiController extends Controller
             $tgl = request('to') . ' 00:00:00';
             $tglx = request('from') . ' 23:59:59';
         }
+        $req = [
+            'per_page' => request('per_page') ?? 25,
+        ];
         $status = request('status') ?? '';
-        $listkamaroperasi = PermintaanOperasi::select(
-            'rs200.*',
-            'rs200.rs10 as kodepoli', // untuk ruangan template
-            'rs200.rs10 as kdruangan', // untuk ruangan resep
-        )->where(function ($sts) use ($status) {
-            if ($status !== 'all') {
-                if ($status === '') {
-                    $sts->where('rs9', '!=', '1');
-                } else {
-                    $sts->where('rs9', '=', $status);
+        $listkamaroperasi = PermintaanOperasi::query()
+            ->select(
+                'rs200.*',
+                'rs200.rs10 as kodepoli', // untuk ruangan template
+                'rs200.rs10 as kdruangan', // untuk ruangan resep
+            )->leftjoin('rs17', 'rs17.rs1', '=', 'rs200.rs1') //rajal
+            ->leftjoin('rs23', 'rs23.rs1', '=', 'rs200.rs1') //ranap
+            ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
+            ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
+            ->where(function ($sts) use ($status) {
+                if ($status !== 'all') {
+                    if ($status === '') {
+                        $sts->where('rs200.rs9', '!=', '1');
+                    } else {
+                        $sts->where('rs200.rs9', '=', $status);
+                    }
                 }
-            }
-        })
-            ->where('rs1', 'LIKE', '%' . request('q') . '%')
-            ->whereBetween('rs3', [$tgl, $tglx])
+            })
+            ->where(function ($x) {
+                $x->where('rs200.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs200.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere(DB::raw('coalesce(pasien17.rs46, pasien23.rs46)'), 'LIKE', '%' . request('q') . '%')
+                    ->orWhere(DB::raw('coalesce(pasien17.rs2, pasien23.rs2)'), 'LIKE', '%' . request('q') . '%')
+                    ->orWhere(DB::raw('coalesce(pasien17.rs1, pasien23.rs1)'), 'LIKE', '%' . request('q') . '%');
+            })
+            ->whereBetween('rs200.rs3', [$tgl, $tglx])
             ->with(
                 [
                     'kunjunganranap.masterpasien',
@@ -136,8 +151,13 @@ class KamaroperasiController extends Controller
                             ->orderBy('id', 'DESC');
                     },
                 ]
-            )
-            ->paginate(request('per_page'));
-        return new JsonResponse($listkamaroperasi);
+            );
+        $totalCount = (clone $listkamaroperasi)->count();
+        $data = $listkamaroperasi->simplePaginate($req['per_page']);
+        // ->paginate(request('per_page'));
+
+        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+        return new JsonResponse($resp);
+        // return new JsonResponse($listkamaroperasi);
     }
 }
