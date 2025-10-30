@@ -771,11 +771,14 @@ class HemodialisaController extends Controller
          */
 
         $noreg = $request->noreg;
-        $jenis = Str::endsWith($noreg, '/I') ? 'ranap' : 'rajal';
-
+        $jenis = Str::endsWith($noreg, '/J') ?   'rajal' : 'ranap';
+        $ambil = '';
+        $cekX = null;
+        if ($jenis == 'ranap') $cekX = Lain::where('rs1', $noreg)->where('rs2', $request->nota_permintaan)->where('rs10', 'POL014')->first(); // cek jika pemintaan igd
         // cari diagnosa awalHd
         $kepHd = Diagnosakeperawatan::where('norm', $request->norm)->where('kdruang', 'PEN005')->orderBy('id', 'asc')->first();
-        if ($jenis == 'ranap') {
+        if ($jenis == 'ranap' && !$cekX) {
+            $ambil = 'ranap';
             $data = Kunjunganranap::select(
                 // 'rs23.rs1',
                 DB::raw('(CASE WHEN rs107.rs2 IS NULL THEN rs23.rs1 ELSE rs107.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
@@ -1130,6 +1133,7 @@ class HemodialisaController extends Controller
                 ->leftjoin('rs107', 'rs23.rs1', '=', 'rs107.rs1') //permintaan
                 ->first();
         } else {
+            $ambil = 'rajal';
             $data = KunjunganPoli::select(
                 // 'rs17.rs1',
                 DB::raw('(CASE WHEN rs107.rs2 IS NULL THEN rs17.rs1 ELSE rs107.rs2 END) as rs1'), // ini untuk relasi antara permintaan dan noreg
@@ -1495,6 +1499,8 @@ class HemodialisaController extends Controller
         return new JsonResponse([
             'data' => $data,
             'kepHd' => $kepHd,
+            'cekX ' => $cekX,
+            'ambil ' => $ambil,
         ]);
     }
 }
