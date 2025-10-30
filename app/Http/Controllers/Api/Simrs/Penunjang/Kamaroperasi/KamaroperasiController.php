@@ -99,12 +99,29 @@ class KamaroperasiController extends Controller
         $listkamaroperasi = PermintaanOperasi::query()
             ->select(
                 'rs200.*',
+                'rs200.rs1 as noreg',
+                'rs200.rs14 as kodesistembayar',
+                'rs200.rs8 as kodedokter',
                 'rs200.rs10 as kodepoli', // untuk ruangan template
-                'rs200.rs10 as kdruangan', // untuk ruangan resep
+                'rs200.rs10 as kdruangan', // untuk ruangan resep    
+                DB::raw('coalesce(pasien17.rs17, pasien23.rs17) as kelamin'),
+                DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
+                'rs9.groups as groups',
+                DB::raw('coalesce(
+          concat(TIMESTAMPDIFF(YEAR, pasien17.rs16, CURDATE())," Tahun ",
+          TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()) % 12," Bulan ",
+          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()), pasien17.rs16), CURDATE()), " Hari"),
+          concat(TIMESTAMPDIFF(YEAR, pasien23.rs16, CURDATE())," Tahun ",
+          TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()) % 12," Bulan ",
+          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()), pasien23.rs16), CURDATE()), " Hari")
+        )
+        AS usia'),
+
             )->leftjoin('rs17', 'rs17.rs1', '=', 'rs200.rs1') //rajal
             ->leftjoin('rs23', 'rs23.rs1', '=', 'rs200.rs1') //ranap
             ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
+            ->leftjoin('rs9', 'rs9.rs1', '=', 'rs200.rs14') //sistembayar
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
                     if ($status === '') {
