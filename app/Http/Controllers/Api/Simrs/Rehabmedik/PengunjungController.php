@@ -38,104 +38,120 @@ class PengunjungController extends Controller
         $sort = request('sort') === 'terbaru' ? 'DESC' : 'ASC';
         $status = request('status') ?? 'Semua';
 
-        $query = KunjunganPoli::query();
+        $query = Fisioterapipermintaan::query();
 
         $select = $query->select(
-            DB::raw('COALESCE(rs17.rs1, rs201.rs1) as noreg'),
-            DB::raw('(CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 WHEN rs23.rs2 IS NOT NULL THEN rs23.rs2 ELSE rs201.rs2 END) as norm'),
-            DB::raw('COALESCE(rs17.rs3, rs201.rs3) as tgl_kunjungan'),
-            DB::raw('COALESCE(rs17.rs8, rs201.rs10) as kdruangan'),
-            DB::raw('COALESCE(rs17.rs8, rs201.rs10) as koderuangan'),
-            DB::raw('COALESCE(rs17.rs8, rs201.rs10) as kodepoli'),
-            DB::raw('COALESCE(rs17.rs14, rs23.rs19, rs201.rs14) as kodesistembayar'),
-            DB::raw('(CASE 
-                        WHEN rs201.rs9 = "2" THEN "1" 
-                        WHEN rs201.rs9 = "1" THEN "" 
-                        ELSE rs17.rs19 
-                    END) as status'),
+            'rs201.rs1 as noreg',
+            DB::raw('(CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END) as norm'),
+            'rs201.rs3 as tgl_kunjungan',
 
-            DB::raw('COALESCE(
-                concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang),
-                concat(pasien23.rs3," ",pasien23.gelardepan," ",pasien23.rs2," ",pasien23.gelarbelakang),
-                concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang)
+            DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as kdruangan'),
+            DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as koderuangan'),
+            DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as kodepoli'),
+            DB::raw('coalesce(rs24.rs4, rs17.rs8, rs23.rs8) as kdgroup_ruangan'),
+
+            DB::raw('coalesce(rs17.rs14, rs23.rs19, rs201.rs14) as kodesistembayar'),
+
+            DB::raw('CASE 
+                        WHEN rs201.rs9 = "2" THEN "1"
+                        WHEN rs17.rs19 = "1" THEN "1"
+                        ELSE "" 
+                    END as status'),
+
+            DB::raw('coalesce(
+            concat(p17.rs3," ",p17.gelardepan," ",p17.rs2," ",p17.gelarbelakang),
+            concat(p23.rs3," ",p23.gelardepan," ",p23.rs2," ",p23.gelarbelakang)
             ) as nama'),
 
-            DB::raw('COALESCE(
-                concat(pasien17.rs4," KEL ",pasien17.rs5," RT ",pasien17.rs7," RW ",pasien17.rs8," ",pasien17.rs6," ",pasien17.rs11," ",pasien17.rs10),
-                concat(pasien23.rs4," KEL ",pasien23.rs5," RT ",pasien23.rs7," RW ",pasien23.rs8," ",pasien23.rs6," ",pasien23.rs11," ",pasien23.rs10),
-                concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10)
+            DB::raw('coalesce(
+            concat(p17.rs4," KEL ",p17.rs5," RT ",p17.rs7," RW ",p17.rs8," ",p17.rs6," ",p17.rs11," ",p17.rs10),
+            concat(p23.rs4," KEL ",p23.rs5," RT ",p23.rs7," RW ",p23.rs8," ",p23.rs6," ",p23.rs11," ",p23.rs10)
             ) as alamat'),
 
-            DB::raw('COALESCE(
-                concat(TIMESTAMPDIFF(YEAR, pasien17.rs16, CURDATE())," Tahun ",
-                TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()) % 12," Bulan ",
-                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()), pasien17.rs16), CURDATE()), " Hari"),
-                concat(TIMESTAMPDIFF(YEAR, pasien23.rs16, CURDATE())," Tahun ",
-                TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()) % 12," Bulan ",
-                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()), pasien23.rs16), CURDATE()), " Hari"),
-                concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
-                TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
-                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari")
-            ) as usia'),
+            DB::raw('coalesce(
+            concat(
+                TIMESTAMPDIFF(YEAR, p17.rs16, CURDATE())," Tahun ",
+                TIMESTAMPDIFF(MONTH, p17.rs16, CURDATE()) % 12," Bulan ",
+                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, p17.rs16, CURDATE()), p17.rs16), CURDATE()), " Hari"
+            ),
+            concat(
+                TIMESTAMPDIFF(YEAR, p23.rs16, CURDATE())," Tahun ",
+                TIMESTAMPDIFF(MONTH, p23.rs16, CURDATE()) % 12," Bulan ",
+                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, p23.rs16, CURDATE()), p23.rs16), CURDATE()), " Hari"
+            )
+            ) AS usia'),
 
-            DB::raw('COALESCE(pasien17.rs2, pasien23.rs2, rs15.rs2) as nama_panggil'),
-            DB::raw('COALESCE(pasien17.rs16, pasien23.rs16, rs15.rs16) as tgllahir'),
-            DB::raw('COALESCE(pasien17.rs17, pasien23.rs17, rs15.rs17) as kelamin'),
-            DB::raw('COALESCE(pasien17.rs19, pasien23.rs18, rs15.rs19) as pendidikan'),
-            DB::raw('COALESCE(pasien17.rs22, pasien23.rs22, rs15.rs22) as agama'),
-            DB::raw('COALESCE(pasien17.rs37, pasien23.rs37, rs15.rs37) as templahir'),
-            DB::raw('COALESCE(pasien17.rs39, pasien23.rs39, rs15.rs39) as suku'),
-            DB::raw('COALESCE(pasien17.rs40, pasien23.rs40, rs15.rs40) as jenispasien'),
-            DB::raw('COALESCE(pasien17.rs46, pasien23.rs46, rs15.rs46) as noka'),
-            DB::raw('COALESCE(pasien17.rs49, pasien23.rs49, rs15.rs49) as noktp'),
-            DB::raw('COALESCE(pasien17.rs55, pasien23.rs55, rs15.rs55) as nohp'),
+            DB::raw('coalesce(p17.rs2, p23.rs2) as nama_panggil'),
+            DB::raw('coalesce(p17.rs16, p23.rs16) as tgllahir'),
+            DB::raw('coalesce(p17.rs17, p23.rs17) as kelamin'),
+            DB::raw('coalesce(p17.rs19, p23.rs19) as pendidikan'),
+            DB::raw('coalesce(p17.rs22, p23.rs22) as agama'),
+            DB::raw('coalesce(p17.rs37, p23.rs37) as templahir'),
+            DB::raw('coalesce(p17.rs39, p23.rs39) as suku'),
+            DB::raw('coalesce(p17.rs40, p23.rs40) as jenispasien'),
+            DB::raw('coalesce(p17.rs46, p23.rs46) as noka'),
+            DB::raw('coalesce(p17.rs49, p23.rs49) as noktp'),
+            DB::raw('coalesce(p17.rs55, p23.rs55) as nohp'),
+
             DB::raw('(CASE WHEN rs201.rs2 = "" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
-            DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN "rjl" ELSE "rnp" END) as flagdepo'),
-            DB::raw('COALESCE(rs19.rs2, rs24.rs2) as ruangan'),
+
+            DB::raw('CASE 
+                        WHEN rs19.rs1 IS NOT NULL THEN "rjl" 
+                        WHEN rs24.rs1 IS NOT NULL THEN "rnp" 
+                        ELSE "rjl" 
+                    END as flagdepo'),
+
+            DB::raw('coalesce(rs19.rs2, rs24.rs2) as ruangan'),
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups'
         )
-        ->leftJoin('rs201', 'rs17.rs1', '=', 'rs201.rs1')
-        ->leftJoin('rs23', 'rs201.rs1', '=', 'rs23.rs1')
-        ->leftJoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
-        ->leftJoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2')
-        ->leftJoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2')
-        ->leftJoin('rs24', 'rs24.rs1', '=', 'rs201.rs10')
-        ->leftJoin('rs19', 'rs19.rs1', '=', 'COALESCE(rs17.rs8, rs201.rs10)')
-        ->leftJoin('rs9', 'rs9.rs1', '=', 'COALESCE(rs17.rs14, rs23.rs19, rs201.rs14)');
+        ->leftJoin('rs17', 'rs201.rs1', '=', 'rs17.rs1')   // kunjungan poli
+        ->leftJoin('rs23', 'rs201.rs1', '=', 'rs23.rs1')   // ranap
+        ->leftJoin('rs24', 'rs24.rs1', '=', 'rs201.rs10')  // ruangan ranap
+        ->leftJoin('rs15 as p17', 'p17.rs1', '=', 'rs17.rs2')
+        ->leftJoin('rs15 as p23', 'p23.rs1', '=', 'rs23.rs2')
+        ->leftJoin('rs19', 'rs19.rs1', '=', 'rs201.rs10')
+        ->leftJoin('rs9', 'rs9.rs1', '=', 'rs201.rs14');
 
         $q = $select
-            ->whereBetween(DB::raw('COALESCE(rs17.rs3, rs201.rs3)'), [$tgl, $tglx])
+            ->whereBetween('rs201.rs3', [$tgl, $tglx])
+            // ->where(function ($w) {
+            //     $w->where('rs201.rs2', '!=', '')
+            //     ->whereNotNull('rs201.rs2');
+            // })
+            // ->where(function ($w) {
+            //     $w->whereRaw('COALESCE(rs201.rs2, rs17.rs2, rs23.rs2) != ""')
+            //     ->whereRaw('COALESCE(rs201.rs2, rs17.rs2, rs23.rs2) IS NOT NULL');
+            // })
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
-                        $sts->where(function ($w) {
-                            $w->where('rs17.rs19', '=', '1')
-                            ->orWhere('rs201.rs9', '=', '2');
+                        $sts->where(function($s){
+                            $s->where('rs201.rs9','=','2')
+                            ->orWhere('rs17.rs19','=','1');
                         });
                     } else {
-                        $sts->where(function ($w) {
-                            $w->where('rs17.rs19', '=', '')
-                            ->orWhere('rs201.rs9', '=', '1');
+                        $sts->where(function($s){
+                            $s->where('rs201.rs9','!=','2')
+                            ->where('rs17.rs19','!=','1');
                         });
                     }
                 }
             })
             ->where(function ($query) {
-                $q = request('q');
-                $query->where('rs17.rs1', 'LIKE', "%{$q}%")
-                    ->orWhere('rs17.rs2', 'LIKE', "%{$q}%")
-                    ->orWhere('rs15.rs46', 'LIKE', "%{$q}%")
-                    ->orWhere('rs15.rs2', 'LIKE', "%{$q}%")
-                    ->orWhere('rs201.rs1', 'LIKE', "%{$q}%")
-                    ->orWhere('rs201.rs2', 'LIKE', "%{$q}%")
-                    ->orWhere('pasien17.rs2', 'LIKE', "%{$q}%")
-                    ->orWhere('pasien23.rs2', 'LIKE', "%{$q}%");
+                $query->where('rs201.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs201.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('p17.rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('p17.rs2', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('p23.rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('p23.rs2', 'LIKE', '%' . request('q') . '%');
             })
-            ->orderBy(DB::raw('COALESCE(rs17.rs3, rs201.rs3)'), $sort);
+            ->groupBy('rs201.rs1')
+            ->orderBy('rs201.rs3', $sort);
 
         return $q;
     }
+
 
 
     public function query_table()
