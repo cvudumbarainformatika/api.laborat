@@ -145,6 +145,9 @@ class BridantrianbpjsController extends Controller
         // $waktu = strtotime($date) * 1000;
         // $waktu = strtotime(Carbon::now('Asia/Jakarta')) * 1000;
         $waktu = strtotime(Carbon::parse(date('Y-m-d H:i:s'))->locale('id')) * 1000;
+        if ((int)$x == 3) {
+            $waktu = (strtotime(Carbon::parse(date('Y-m-d H:i:s'))->locale('id')) + 2) * 1000;
+        }
         $kodebooking = $input->noreg;
         $user_id = auth()->user()->pegawai_id;
 
@@ -155,7 +158,7 @@ class BridantrianbpjsController extends Controller
         //     $kodebooking = $cari[0]->kodebooking;
         // }
 
-        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $input->noreg)->first();
         if ($bpjsantrian) {
             $kodebooking = $bpjsantrian->kodebooking;
         }
@@ -333,7 +336,7 @@ class BridantrianbpjsController extends Controller
          *     $kodebooking = $cari[0]->kodebooking;
          * }
          */
-        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $input->noreg)->first();
         if ($bpjsantrian) {
             $kodebooking = $bpjsantrian->kodebooking;
         }
@@ -457,7 +460,7 @@ class BridantrianbpjsController extends Controller
         *     // return new JsonResponse($kodebooking);
         * }
         **/
-        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $kodebooking)->first();
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $input->noreg)->first();
         if ($bpjsantrian) {
             $kodebooking = $bpjsantrian->kodebooking;
         }

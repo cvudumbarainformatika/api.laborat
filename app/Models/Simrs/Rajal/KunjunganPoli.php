@@ -44,6 +44,7 @@ use App\Models\Simrs\Pemeriksaanfisik\Simpangambarpemeriksaanfisik;
 use App\Models\Simrs\PemeriksaanRMkhusus\Polimata;
 use App\Models\Simrs\Pendaftaran\Mgeneralconsent;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
+use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsrespontime;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Seprajal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Taskidantrian;
@@ -626,5 +627,9 @@ class KunjunganPoli extends Model
     public function suratketerangandokter()
     {
         return $this->hasMany(SuratKeteranganDokter::class, 'noreg', 'rs1');
+    }
+    public function bpjshttprespon()
+    {
+        return $this->hasMany(Bpjs_http_respon::class, 'noreg', 'rs1');
     }
 }
