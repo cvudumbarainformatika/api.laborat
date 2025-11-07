@@ -10,8 +10,8 @@ class Mpemeriksaanradiologi extends Model
 {
     use HasFactory;
     protected $table = 'rs47';
-    protected $gurded = ['id1'];
-    public $timestamps = false;
+    // protected $gurded = ['id'];
+    // public $timestamps = false;
     //protected $primaryKey = 'rs1';
 
 

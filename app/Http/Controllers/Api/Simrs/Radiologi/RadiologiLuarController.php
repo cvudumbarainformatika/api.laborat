@@ -48,7 +48,12 @@ class RadiologiLuarController extends Controller
         'rs270.rs2 as nama',
         'rs270.rs3 as alamat',
         'rs270.rs4 as kelamin',
-        DB::raw('YEAR(CURDATE()) - YEAR(rs270.rs5) as usia'),
+        // DB::raw('YEAR(CURDATE()) - YEAR(rs270.rs5) as usia'),
+        DB::raw('
+            concat(TIMESTAMPDIFF(YEAR, rs270.rs5, CURDATE())," Tahun ",
+            TIMESTAMPDIFF(MONTH, rs270.rs5, CURDATE()) % 12," Bulan ",
+            TIMESTAMPDIFF(DAY, rs270.rs5, CURDATE()) % 30," Hari") as usia
+        '),
         'rs270.rs5 as tgllahir',
         'rs270.rs6 as dari',
         'rs270.rs9 as permintaan',
@@ -63,7 +68,9 @@ class RadiologiLuarController extends Controller
         // $q->select('rs271.id','rs271.rs1','rs271.rs2','rs271.rs3','rs271.rs4','rs271.rs5','rs271.rs6','rs271.rs7','rs271.rs8','rs271.rs9','rs271.rs10','rs271.rs11','rs47.rs2 as nama')
         $q->select('rs271.*','rs47.rs2 as nama', 'rs47.rs3 as jenis', 
         'rs272.hasil as hasil', 
+        'rs272.hasilhtml', 
         'rs272.rs8 as kesimpulan',
+        'rs272.kesimpulanhtml',
         'rs272.rs9 as pelaksana',
         )
         // ->leftJoin('rs47', function ($join){$join->on('rs271.rs3', '=', 'rs47.rs1');});
@@ -213,7 +220,9 @@ class RadiologiLuarController extends Controller
               'rs9' => trim($request->dokter),
               'rs10' => Carbon::now()->format('Y-m-d H:i:s'), // ini nanti jadi updated at
               'rs11' => auth()->user()->pegawai_id ?? 'system', // fallback jika belum login
-              'hasil' => $request->hasil
+              'hasil' => $request->hasil,
+              'hasilhtml' => $request->hasilhtml,
+              'kesimpulanhtml' => $request->kesimpulanhtml
           ]
         );
 
