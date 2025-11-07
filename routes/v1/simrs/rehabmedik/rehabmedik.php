@@ -10,4 +10,5 @@ Route::group([
 ], function () {
 
     Route::get('/kunjunganpasien', [PengunjungController::class, 'index']);
+    Route::get('/terimapasien', [PengunjungController::class, 'terimapasien']);
 });
