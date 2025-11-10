@@ -85,7 +85,7 @@ Route::get('/perbaikan-data-depo', [SetNewStokController::class, 'PerbaikanDataP
 Route::get('/harga-penerimaan', [SetNewStokController::class, 'perbaikanHargaKeluarOk']);
 Route::get('/harga-keluar', [SetNewStokController::class, 'perbaikanHargaKeluar']);
 
-Route::get('/dvlp', [DvlpController::class, 'index']);  
+Route::get('/dvlp', [DvlpController::class, 'index']);
 Route::get('/dvlp/antrian', [DvlpController::class, 'antrian']);
 
 Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller']);
@@ -126,6 +126,7 @@ Route::get('/opcache-status', function () {
 
 Route::get('/antrian/bpjs/list', [LaporanAntianRsDanBpjsController::class, 'getListBpjs']);
 Route::get('/antrian/bpjs/one', [LaporanAntianRsDanBpjsController::class, 'getOneBpjs']);
+Route::get('/kirim-ulang', [LaporanAntianRsDanBpjsController::class, 'kirirmUlang']);
 
 // Route::get('/unsubscribe/{user}', function (Request $request, $user) {
 //     if (!$request->hasValidSignature()) {
