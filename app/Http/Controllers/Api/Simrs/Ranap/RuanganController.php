@@ -252,14 +252,14 @@ class RuanganController extends Controller
             ->leftJoin('rs24 as br', 'br.rs1', '=', 'rs44.rs10')
             ->leftJoin('rs45', 'rs45.rs1', '=', 'rs44.rs9')
             ->leftJoin('rs23', 'rs44.rs1', '=', 'rs23.rs1')
-            ->leftJoin('rs24 as tp', 'tp.rs1', '=', 'rs23.titipan') // join tambahan untuk nama kamar titipan
+            // ->leftJoin('rs24 as tp', 'tp.rs1', '=', 'rs23.titipan') // join tambahan untuk nama kamar titipan
             ->select(
                 'rs44.*','rs44.rs3 as kd_ruanglm', 'rs44.rs4 as kamarlm', 'rs44.rs5 as no_bedlm', 'rs44.rs10 as kd_ruang','rs44.rs11 as kamar','rs44.rs12 as no_bed',
                 'lm.rs2 as nm_ruanglm',
                 'br.rs2 as nm_ruang',
                 'rs45.rs2 as alasan',
                 'rs23.titipan as titipan',
-                'tp.rs2 as nm_titipan' // nama kamar titipan dari rs24
+                // 'tp.rs2 as nm_titipan' // nama kamar titipan dari rs24
                 )
             ->with(['serah_terima' => function ($query) {
                 $query->select('serah_terima.*', 'peg.nama as nmuser_serah', 'pega.nama as nmuser_trm')
