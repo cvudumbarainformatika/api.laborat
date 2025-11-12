@@ -8,6 +8,7 @@ use App\Models\Pegawai\Jabatan;
 use App\Models\Pegawai\JabatanTambahan;
 use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\JenisPegawai;
+use App\Models\Pegawai\RegistrasiIjin;
 use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
 use App\Models\Sigarang\Gudang;
@@ -30,6 +31,10 @@ class Petugas extends Model
 
     public $timestamps = false;
 
+    public function regijin()
+    {
+        return $this->hasMany(RegistrasiIjin::class, 'nip', 'nip');
+    }
     public function relasi_jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan', 'kode_jabatan');

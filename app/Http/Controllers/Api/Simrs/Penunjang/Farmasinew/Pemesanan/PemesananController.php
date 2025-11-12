@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Pemesanan;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Master\Mpihakketiga;
 use App\Models\Simrs\Penunjang\Farmasinew\Mobatnew;
 use App\Models\Simrs\Penunjang\Farmasinew\Pemesanan\PemesananHeder;
@@ -150,15 +151,15 @@ class PemesananController extends Controller
                 // 'rinci.masterobat:kd_obat,nama_obat,merk,satuan_b,satuan_k,kandungan,bentuk_sediaan,kekuatan_dosis,volumesediaan,kelas_terapi'
             ])
             ->whereIn('kd_ruang', $gud)
-            ->when(count($supl)>0, function($q) use($supl) {
-                $q->whereIn('kdpbf',$supl);
-            },function($q){
-                $q->where('nopemesanan','LIKE', '%'. request('nopemesanan') .'%');
+            ->when(count($supl) > 0, function ($q) use ($supl) {
+                $q->whereIn('kdpbf', $supl);
+            }, function ($q) {
+                $q->where('nopemesanan', 'LIKE', '%' . request('nopemesanan') . '%');
             })
-            ->when(request('obat'),function($q){
-                $obat=Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('obat') . '%')->pluck('kd_obat');
-                $rin=PemesananRinci::select('nopemesanan')->whereIn('kdobat',$obat)->pluck('nopemesanan');
-                $q->whereIn('nopemesanan',$rin);
+            ->when(request('obat'), function ($q) {
+                $obat = Mobatnew::select('kd_obat')->where('nama_obat', 'LIKE', '%' . request('obat') . '%')->pluck('kd_obat');
+                $rin = PemesananRinci::select('nopemesanan')->whereIn('kdobat', $obat)->pluck('nopemesanan');
+                $q->whereIn('nopemesanan', $rin);
             })
             ->orderBy('tgl_pemesanan', 'desc')
             ->paginate(request('per_page'));
@@ -232,7 +233,7 @@ class PemesananController extends Controller
         $gud = request('gudang');
         $gud[] = '';
         // return new JsonResponse($gud);
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
+        $listpemesanan['data'] = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
             ->with(
                 'gudang:kode,nama',
                 'pihakketiga',
@@ -241,61 +242,70 @@ class PemesananController extends Controller
             )
             ->where('nopemesanan', request('nopemesanan'))
             ->get();
+        $listpemesanan['kafarmasi'] = Petugas::select('nip', 'nik', 'nama')->with('regijin')
+            ->where(function ($q) {
+                $q->where('jabatan', 'J00270') // KA. INSTALASI FARMASI
+                    ->orWhere('jabatan_tmb', 'JT00014'); // Kepala Instalasi Farmasi
+            })
+            ->where('aktif', 'aktif')
+            ->first();
         return new JsonResponse($listpemesanan);
     }
 
-    public function anggapSelesai(Request $request){
-        $data=RencanabeliH::where('no_rencbeliobat',$request->no_rencbeliobat)->first();        
-        $rinci=RencanabeliR::where('no_rencbeliobat',$request->no_rencbeliobat)->where('flag','')->get();
-        if(count($rinci)<=0){
+    public function anggapSelesai(Request $request)
+    {
+        $data = RencanabeliH::where('no_rencbeliobat', $request->no_rencbeliobat)->first();
+        $rinci = RencanabeliR::where('no_rencbeliobat', $request->no_rencbeliobat)->where('flag', '')->get();
+        if (count($rinci) <= 0) {
             return new JsonResponse([
-                'message'=>'Tidak ada data yang belum selesai',
-                'data'=>$data,
-                'rinci'=>$rinci,
-            ],410);
+                'message' => 'Tidak ada data yang belum selesai',
+                'data' => $data,
+                'rinci' => $rinci,
+            ], 410);
         }
-        if(count($rinci)>0){
-            foreach($rinci as $key){
+        if (count($rinci) > 0) {
+            foreach ($rinci as $key) {
                 $key->update([
-                    'flag'=>'1'
+                    'flag' => '1'
                 ]);
             }
         }
         return new JsonResponse([
-            'message'=>'Sudah Dianggap Selesai',
-            'data'=>$data,
-            'rinci'=>$rinci,
+            'message' => 'Sudah Dianggap Selesai',
+            'data' => $data,
+            'rinci' => $rinci,
         ]);
     }
 
-    public function  anggapSelesaiPemesanan(Request $request){
+    public function  anggapSelesaiPemesanan(Request $request)
+    {
         try {
             DB::connection('farmasi')->beginTransaction();
-        // PemesananHeder
-        $data=PemesananHeder::where('nopemesanan',$request->nopemesanan)->where('flag','1')->first();
-        if(!$data){
-            return new JsonResponse([
-                'message'=>'Data tidak ditemukan',
-                'data'=>$data,
-            ],410);
-        }
-        $data->update([
-            'flag'=>'2'
-        ]);
-        $rin=PemesananRinci::where('nopemesanan',$request->nopemesanan)->get();
-        foreach($rin as $key){
-            $key->update([
-                'flag'=>'1'
+            // PemesananHeder
+            $data = PemesananHeder::where('nopemesanan', $request->nopemesanan)->where('flag', '1')->first();
+            if (!$data) {
+                return new JsonResponse([
+                    'message' => 'Data tidak ditemukan',
+                    'data' => $data,
+                ], 410);
+            }
+            $data->update([
+                'flag' => '2'
             ]);
+            $rin = PemesananRinci::where('nopemesanan', $request->nopemesanan)->get();
+            foreach ($rin as $key) {
+                $key->update([
+                    'flag' => '1'
+                ]);
+            }
+            DB::connection('farmasi')->commit();
+            return new JsonResponse([
+                'message' => 'Sudah Dianggap Selesai',
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            DB::connection('farmasi')->rollBack();
+            return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
         }
-        DB::connection('farmasi')->commit();
-        return new JsonResponse([
-            'message'=>'Sudah Dianggap Selesai',
-            'data'=>$data,
-        ]);
-    } catch (\Exception $e) {
-        DB::connection('farmasi')->rollBack();
-        return response()->json(['message' => 'ada kesalahan', 'error' => $e], 500);
-    }
     }
 }

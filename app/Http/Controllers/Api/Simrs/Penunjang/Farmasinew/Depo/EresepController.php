@@ -1460,7 +1460,8 @@ class EresepController extends Controller
                     'rs2 as nama_panggil',
                     DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
                 );
-            }
+            },
+            'petugas:id,nama,kdpegsimrs'
         ])
             ->leftJoin(DB::raw(config('database.connections.mysql.database') . '.antrian_ambil'), function ($q) {
                 $q->on('antrian_ambil.noreg', '=', 'resep_keluar_h.noreg')
