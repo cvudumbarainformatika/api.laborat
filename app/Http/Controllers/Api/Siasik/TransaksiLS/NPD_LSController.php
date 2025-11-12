@@ -30,6 +30,7 @@ use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use DateTime;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Calculation\TextData\Format;
+use App\Models\Pegawai\Mpegawaisimpeg;
 
 class NPD_LSController extends Controller
 {
@@ -685,8 +686,7 @@ class NPD_LSController extends Controller
     }
     public function deleterinci(Request $request)
     {
-        $header = NpdLS_heder::
-        where('nonpdls', $request->nonpdls)
+        $header = NpdLS_heder::where('nonpdls', $request->nonpdls)
         ->where('kunci', '!=', '')
         ->get();
         if(count($header) > 0){
@@ -694,30 +694,53 @@ class NPD_LSController extends Controller
         }
 
 
-        if ($request->id) {
-            $findrinci = NpdLS_rinci::where('id', $request->id)->first();
-        } else {
-             $findrinci = NpdLS_rinci::where('nopenerimaan', $request->nopenerimaan)->first();
-        }
+        $findrinci = $request->id
+        ? NpdLS_rinci::find($request->id)
+        : NpdLS_rinci::where('nopenerimaan', $request->nopenerimaan)->first();
 
         if (!$findrinci) {
             return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
         }
-        else {
-        $findrinci->delete();
-        PenerimaanHeder::whereIn('nopenerimaan', [$request->nopenerimaan])->update(['no_npd' => '']);
-        BastKonsinyasi::whereIn('notranskonsi', [$request->nopenerimaan])->update(['no_npd' => '']);
-        // return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
-        }
-        $rinciAll = NpdLS_rinci::where('nonpdls', $request->nonpdls)->get();
-        if(count($rinciAll) === 0){
-            $header = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
 
-             if ($header) {
-                $header->delete();
-                PenerimaanHeder::whereIn('no_npd', [$request->nonpdls])->update(['no_npd' => '']);
-                BastKonsinyasi::whereIn('no_npd', [$request->nonpdls])->update(['no_npd' => '']);
-                Serahterima_header::whereIn('nonpdls', [$request->nonpdls])->update(['nonpdls' => '']);
+        $noNpdls = $findrinci->nonpdls;
+        $noPenerimaan = $findrinci->nopenerimaan;
+        $cekPenerimaan = PenerimaanHeder::where('nopenerimaan', $noPenerimaan)
+            ->where('no_npd', '!=', $noNpdls)
+            ->exists();
+        $cekKonsinyasi = BastKonsinyasi::where('notranskonsi', $noPenerimaan)
+            ->where('no_npd', '!=', $noNpdls)
+            ->exists();
+        $findrinci->delete();
+        if ($cekPenerimaan || $cekKonsinyasi) {
+            $message = 'Data Berhasil dihapus';
+        }
+        else {
+            PenerimaanHeder::where('nopenerimaan', $noPenerimaan)
+            ->where('no_npd', $noNpdls)
+            ->update(['no_npd' => '']);
+
+            BastKonsinyasi::where('notranskonsi', $noPenerimaan)
+                ->where('no_npd', $noNpdls)
+                ->update(['no_npd' => '']);
+            // PenerimaanHeder::whereIn('nopenerimaan', [$request->nopenerimaan])
+            // ->whereIn('no_npd', [$request->nonpdls])
+            // ->update(['no_npd' => '']);
+            // BastKonsinyasi::whereIn('notranskonsi', [$request->nopenerimaan])
+            // ->whereIn('no_npd', [$request->nonpdls])
+            // ->update(['no_npd' => '']);
+            // return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
+        }
+        
+        
+        $rinciAll = NpdLS_rinci::where('nonpdls', $noNpdls)->get();
+        if(count($rinciAll) === 0){
+            $dataheader = NpdLS_heder::where('nonpdls', $noNpdls)->first();
+
+             if ($dataheader) {
+                $dataheader->delete();
+                PenerimaanHeder::whereIn('no_npd', [$noNpdls])->update(['no_npd' => '']);
+                BastKonsinyasi::whereIn('no_npd', [$noNpdls])->update(['no_npd' => '']);
+                Serahterima_header::whereIn('nonpdls', [$noNpdls])->update(['nonpdls' => '']);
                 return new JsonResponse([
                     'message' => 'Data Berhasil dihapus',
                     'data' => []
@@ -735,7 +758,7 @@ class NPD_LSController extends Controller
             // BastKonsinyasi::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
         }
         return new JsonResponse([
-            'message' => 'Data Berhasil dihapus',
+            'message' => $message,
              'data' => $rinciAll
         ]);
 
@@ -843,9 +866,6 @@ class NPD_LSController extends Controller
         $user = auth()->user()->pegawai_id;
         $pg= Pegawai::find($user);
         $pegawai= $pg->kdpegsimrs;
-
-
-
         try {
             $nonpdls = $request->nonpdls;
         if ($nonpdls === '' || $nonpdls === null) {
@@ -915,7 +935,9 @@ class NPD_LSController extends Controller
                 ->where('nonpk', request('nonpk'))
                 ->select('nonpk','nonpdls', 'total', 'tglentrycair')
                 ->get();
-
+            $bendpengeluaran = Mpegawaisimpeg::whereIn('jabatan', ['J00035'])
+                ->where('aktif', 'AKTIF')
+                ->first();
             // Proses update data PenerimaanHeder
             $updatedCount = 0;
 
@@ -932,7 +954,7 @@ class NPD_LSController extends Controller
                         // 'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
-                        'user_bayar' => '1619',
+                        'user_bayar' => $bendpengeluaran->id,
                         'flag_bayar' => '1'
                     ]);
 
@@ -944,7 +966,7 @@ class NPD_LSController extends Controller
                         'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
-                        'user_bayar' => '1619',
+                        'user_bayar' => $bendpengeluaran->id,
                         'flag_bayar' => '1'
                     ]);
 
