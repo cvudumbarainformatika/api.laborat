@@ -270,6 +270,16 @@ class FormatingHelper
         return $has . $n  .'/' . $rom[date('n')] . '/' . $kode .  '/' . date('Y');
     }
 
+    public static function kodeakun_lak($n, $kode)
+    {
+        $has = null;
+        $lbr = strlen($n);
+        for ($i = 1; $i <= 1 - $lbr; $i++) {
+            $has = $has . "0";
+        }
+        return $has . $kode . $n ;
+    }
+
     public static function noarsip($n, $kode, $tahun)
     {
         $has = null;
