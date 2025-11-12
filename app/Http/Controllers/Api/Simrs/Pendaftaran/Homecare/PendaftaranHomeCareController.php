@@ -13,6 +13,7 @@ use App\Models\Simrs\Master\Mpasien;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PendaftaranHomeCareController extends Controller
 {
@@ -107,7 +108,11 @@ class PendaftaranHomeCareController extends Controller
         if (!$masterpasien) {
             return new JsonResponse(['message' => 'DATA MASTER PASIEN GAGAL DISIMPAN/DIUPDATE'], 410);
         }
-        $nomor = str_pad(date('dHis'), 10, '0', STR_PAD_LEFT);
+        // noreg
+        DB::select('call homecare(@nomor)');
+        $hcounter = DB::table('rs1')->select('homecare')->first();
+        $wew = $hcounter->homecare;
+        $nomor = str_pad($wew, 5, '0', STR_PAD_LEFT);
         $noreg = $nomor . "/" . date("m") . "/" . date("Y") . "/H";
         // cek unique noreg
         $ada = HomeCareKunjungan::where('noreg', $noreg)->first();
