@@ -81,6 +81,12 @@ class RanapController extends Controller
             'rs15.rs46 as noka',
             'rs15.rs49 as nktp',
             'rs15.rs55 as nohp',
+            'rs15.bahasa',
+            'rs15.noidentitaslain',
+            'rs15.flag_pernikahan',
+            'rs15.bacatulis',
+            'rs15.kdhambatan',
+            'mhambatan.hambatan',
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
             // 'rs21.rs2 as namanakes',
@@ -97,14 +103,11 @@ class RanapController extends Controller
             'rs23_nosurat.nosrtmeninggal',
             'rs23_nosurat.jamMeninggal',
             'rs23_nosurat.kddrygmenyatakan',
-            'memodiagnosadokter.diagnosa as memodiagnosa',
-            // 'serah_terima.dari',
-            // 'serah_terima.ke',
-            // 'serah_terima.user_trm',
-            // 'tflag_covid.flagcovid as flagcovid',
+            'memodiagnosadokter.diagnosa as memodiagnosa'
             )
 
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
+            ->leftjoin('mhambatan', 'rs15.kdhambatan', 'mhambatan.id')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
             // ->leftjoin('tflag_covid', function ($q) {
             //     $q->on('tflag_covid.noreg', 'rs23.rs1')
