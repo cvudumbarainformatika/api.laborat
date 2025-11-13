@@ -7,10 +7,12 @@ use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
 use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -56,5 +58,14 @@ class HomeCareKunjungan extends Model
     public function anamnesis()
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'noreg');
+    }
+    public function tindakan()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'noreg');
+    }
+
+    public function diagnosa()
+    {
+        return $this->hasMany(Diagnosa::class, 'rs1', 'noreg');
     }
 }

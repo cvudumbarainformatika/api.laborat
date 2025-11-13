@@ -61,6 +61,7 @@ Route::group([
     Route::get('/notatindakanranap', [TindakanController::class, 'notatindakanranap']);
     Route::post('/simpantindakanpoli', [TindakanController::class, 'simpantindakanpoli']);
     Route::post('/simpantindakanIgd', [TindakanController::class, 'simpantindakanIgd']);
+    Route::post('/simpan-tindakan-home-care', [TindakanController::class, 'simpanTindakanHomeCare']);
     Route::post('/hapustindakanpoli', [TindakanController::class, 'hapustindakanpoli']);
     Route::post('/hapustindakanIgd', [TindakanController::class, 'hapustindakanIgd']);
     Route::post('/simpandokumentindakanpoli', [TindakanController::class, 'simpandokumentindakanpoli']);

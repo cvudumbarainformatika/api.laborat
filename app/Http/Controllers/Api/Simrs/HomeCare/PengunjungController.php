@@ -99,7 +99,14 @@ class PengunjungController extends Controller
     }
     public function bukalayanan(Request $request)
     {
-        $data = HomeCareKunjungan::select('noreg', 'norm')->where('noreg', $request->noreg)->first();
+        $data = HomeCareKunjungan::select(
+            'home_care_kunjungans.noreg',
+            'home_care_kunjungans.norm',
+            'memodiagnosadokter.diagnosa as memodiagnosa'
+        )
+            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'home_care_kunjungans.noreg') // memo
+            ->where('home_care_kunjungans.noreg', $request->noreg)
+            ->first();
         if (!$data) return new JsonResponse(['message' => 'Mohon Maaf, Kunjungan pasien tidak ditemukan'], 410);
         $data->load([
             'newapotekrajal' => function ($q) {
@@ -128,6 +135,13 @@ class PengunjungController extends Controller
                     ->groupBy('rs2')->orderBy('id', 'DESC');
             },
             'anamnesis',
+            'tindakan' => function ($t) {
+                $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'pelaksanalamasimrs:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url', 'mpoli:rs1,rs2')
+                    ->orderBy('id', 'DESC');
+            },
+            'diagnosa' => function ($d) {
+                $d->with('masterdiagnosa');
+            },
         ]);
 
         return new JsonResponse($data);
