@@ -12,13 +12,15 @@ class PenerimaanObatController extends Controller
 {
     public function caripenerimaanobat()
     {
-        $dari = request('tgldari') ;
-        $sampai = request('tglsampai') ;
+        $dari = request('tgldari');
+        $sampai = request('tglsampai');
 
         $cari = PenerimaanHeder::with(
             [
                 'pihakketiga',
-                'gudang'
+                'gudang',
+                'penerimaanrinci.masterobat:kd_obat,kode50,uraian50',
+                'penerimaanrinci:nopenerimaan,kdobat',
             ]
         )->when(request('gudang') !== 'all', function ($q) {
             $q->where('gudang', request('gudang'));
@@ -27,33 +29,33 @@ class PenerimaanObatController extends Controller
         })->when(request('pihakketiga') !== 'all', function ($q) {
             $q->where('kdpbf', request('pihakketiga'));
         })
-        ->whereBetween('tglpenerimaan', [$dari, $sampai])
-        ->get();
+            ->whereBetween('tglpenerimaan', [$dari, $sampai])
+            ->get();
 
         return new JsonResponse($cari);
     }
 
     public function caripenerimaanobatrinci()
     {
-        $dari = request('tgldari') ;
-        $sampai = request('tglsampai') ;
+        $dari = request('tgldari');
+        $sampai = request('tglsampai');
 
-        $cari = PenerimaanHeder::leftjoin('penerimaan_r','penerimaan_r.nopenerimaan','penerimaan_h.nopenerimaan')
-        ->leftjoin('new_masterobat','penerimaan_r.kdobat','new_masterobat.kd_obat')
-        ->with(
-            [
-                'pihakketiga',
-                'gudang'
-            ]
-        )->when(request('gudang') !== 'all', function ($q) {
-            $q->where('gudang', request('gudang'));
-        })->when(request('pihakketiga') !== 'all', function ($q) {
-            $q->where('kdpbf', request('pihakketiga'));
-        })->when(request('rekeningbelanja') !== 'all', function($q){
-            $q->where('new_masterobat.kode108',request('rekeningbelanja'));
-        })
-        ->whereBetween('tglpenerimaan', [$dari, $sampai])
-        ->get();
+        $cari = PenerimaanHeder::leftjoin('penerimaan_r', 'penerimaan_r.nopenerimaan', 'penerimaan_h.nopenerimaan')
+            ->leftjoin('new_masterobat', 'penerimaan_r.kdobat', 'new_masterobat.kd_obat')
+            ->with(
+                [
+                    'pihakketiga',
+                    'gudang'
+                ]
+            )->when(request('gudang') !== 'all', function ($q) {
+                $q->where('gudang', request('gudang'));
+            })->when(request('pihakketiga') !== 'all', function ($q) {
+                $q->where('kdpbf', request('pihakketiga'));
+            })->when(request('rekeningbelanja') !== 'all', function ($q) {
+                $q->where('new_masterobat.kode108', request('rekeningbelanja'));
+            })
+            ->whereBetween('tglpenerimaan', [$dari, $sampai])
+            ->get();
 
         return new JsonResponse($cari);
     }
