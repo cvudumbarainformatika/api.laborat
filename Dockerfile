@@ -22,7 +22,11 @@ RUN apt-get update && apt-get install -y \
   autoconf make gcc g++ build-essential \
   && pecl install redis \
   && docker-php-ext-enable redis \
-  && docker-php-ext-install pdo_mysql bcmath zip opcache \
+  && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+        --with-webp \
+  && docker-php-ext-install pdo_mysql bcmath zip opcache gd \
   && rm -rf /var/lib/apt/lists/*
 
 
