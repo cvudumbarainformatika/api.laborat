@@ -349,8 +349,8 @@ class PersiapanOperasiController extends Controller
             $colom = 'persiapanok';
             $lebel = 'OP-KO';
             DB::connection('farmasi')->select('call ' . $procedure);
-            $x = DB::connection('farmasi')->table('conter')->select($colom)->get();
-            $wew = $x[0]->$colom;
+            $x = DB::connection('farmasi')->table('conter')->select($colom)->first();
+            $wew = $x->$colom;
             $nopermintaan = FormatingHelper::resep($wew, $lebel);
             // $nopermintaan = $imp  . '/OP/' . date('dmY');
         } else {
@@ -930,8 +930,8 @@ class PersiapanOperasiController extends Controller
         // buat no resep
         if ($request->noresep === '' || $request->noresep === null) {
             DB::connection('farmasi')->select('call resepkeluardepook(@nomor)');
-            $x = DB::connection('farmasi')->table('conter')->select('depook')->get();
-            $wew = $x[0]->depook;
+            $x = DB::connection('farmasi')->table('conter')->select('depook')->first();
+            $wew = $x->depook;
             $noresep = FormatingHelper::resep($wew, 'D-KO');
         } else {
             $noresep = $request->noresep;
@@ -958,6 +958,7 @@ class PersiapanOperasiController extends Controller
         $obat = $request->obats;
         $rinci = [];
         $noper = [];
+        $created = date('Y-m-d H:i:s');
         if (count($obat) > 0) {
             foreach ($obat as $key) {
                 // cari harga
@@ -993,8 +994,8 @@ class PersiapanOperasiController extends Controller
                     'aturan' => '-',
                     'konsumsi' => 1,
                     'keterangan' => 'Di pakai untuk operasi' ?? '',
-                    'created_at' => date('Y-m-d'),
-                    'updated_at' => date('Y-m-d'),
+                    'created_at' => $created,
+                    'updated_at' => date('Y-m-d H:i:s'),
                 ];
                 $rinci[] = $rin;
                 $noper[] = $key['nopermintaan'];

@@ -37,6 +37,7 @@ class PemeriksaanfisikController extends Controller
             'rs2' => $norm,
             'rs3' => date('Y-m-d H:i:s'),
             'rs4' => $request->denyutjantung,
+            'keadaan_umum' => $request->keadaan_umum,
             'tingkatkesadaran' => $request->tingkatkesadaran,
             'pernapasan' => $request->pernapasan,
             'sistole' => $request->sistole,
@@ -146,8 +147,8 @@ class PemeriksaanfisikController extends Controller
                     'rs4' => $value['vodawal'] ?? $value['rs4'] ?? '',
                     'rs5' => $value['vodrefraksi'] ?? $value['rs5'] ?? '',
                     'rs6' => $value['vodakhir'] ?? $value['rs6'] ?? '',
-                    'rs7' => $value['vosawal'] ?? $value['rs7'] ??'',
-                    'rs8' => $value['vosrefraksi'] ?? $value['rs8'] ??'',
+                    'rs7' => $value['vosawal'] ?? $value['rs7'] ?? '',
+                    'rs8' => $value['vosrefraksi'] ?? $value['rs8'] ?? '',
                     'rs9' => $value['vosakhir'] ?? $value['rs9'] ?? '',
                     'rs10' => $value['tod'] ?? $value['rs10'] ?? '',
                     'rs11' => $value['tos'] ?? $value['rs11'] ?? '',
@@ -201,17 +202,17 @@ class PemeriksaanfisikController extends Controller
             return new JsonResponse(['message' => 'MAAF DATA TIDAK DITEMUKAN'], 500);
         }
         $noreg = $cari->rs1;
-        $cek = SuratKeteranganDokter::where('noreg',$noreg)
-        ->where(function ($query) {
-        $query->whereNull('batal')
-            ->orWhere('batal', '');
-        })->count();
+        $cek = SuratKeteranganDokter::where('noreg', $noreg)
+            ->where(function ($query) {
+                $query->whereNull('batal')
+                    ->orWhere('batal', '');
+            })->count();
 
-        if($cek > 0){
+        if ($cek > 0) {
             return new JsonResponse(['message' => 'Tindakan ini tidak bisa dihapus, karena sudah digunakan di Surat Keterangan Dokter'], 500);
         }
 
-        if($cek > 0){
+        if ($cek > 0) {
             return new JsonResponse(['message' => 'Tindakan ini tidak bisa dihapus, karena sudah digunakan di Surat Keterangan Dokter'], 500);
         }
         $hapus = $cari->delete();

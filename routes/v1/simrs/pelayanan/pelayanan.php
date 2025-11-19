@@ -44,6 +44,7 @@ Route::group([
     Route::get('/listdiagnosakeperawatan', [DiagnosaKeperawatanController::class, 'listdiagnosakeperawatan']);
     Route::post('/simpandiagnosakeperawatan', [DiagnosaKeperawatanController::class, 'simpandiagnosakeperawatan']);
     Route::post('/deletediagnosakeperawatan', [DiagnosaKeperawatanController::class, 'deletediagnosakeperawatan']);
+    Route::post('/simpanevaluasikeperawatan', [DiagnosaKeperawatanController::class, 'simpanEvaluasiKeperawatan']);
 
     Route::get('/diagnosakebidanan', [DiagnosaKebidananController::class, 'diagnosakebidanan']);
     Route::post('/simpandiagnosakebidanan', [DiagnosaKebidananController::class, 'simpandiagnosakebidanan']);

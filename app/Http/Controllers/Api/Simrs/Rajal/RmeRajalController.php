@@ -15,7 +15,13 @@ class RmeRajalController extends Controller
         $data = KunjunganPoli::with(
             [
                 'anamnesis',
-                'diagnosakeperawatan.intervensi.masterintervensi',
+                // 'diagnosakeperawatan.intervensi.masterintervensi',
+                'diagnosakeperawatan' => function ($diag) {
+                    $diag->with('intervensi.masterintervensi');
+                },
+                'diagnosakebidanan' => function ($diag) {
+                    $diag->with('intervensi.masterintervensi');
+                },
                 'pemeriksaanfisik' => function ($p) {
                     $p->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
                         ->orderBy('id', 'DESC');
@@ -53,6 +59,7 @@ class RmeRajalController extends Controller
                     $planning
                         ->where('rs4', 'not like', '%Pulang%');
                 },
+                'edukasi'
             ]
         )->where('rs1', request('noreg'))
             ->get();

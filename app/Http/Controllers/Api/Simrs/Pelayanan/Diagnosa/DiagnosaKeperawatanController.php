@@ -8,6 +8,7 @@ use App\Models\Simrs\Master\Mdiagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosakeperawatan;
 use App\Models\Simrs\Pelayanan\Intervensikeperawatan;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ class DiagnosaKeperawatanController extends Controller
     public function diagnosakeperawatan()
     {
         $listdiagnosa = Mdiagnosakeperawatan::select('kode', 'nama')
-        ->with(['intervensis:id,nama,group,mdiagnosakeperawatan_kode,kdSnwmed,display'])
+            ->with(['intervensis:id,nama,group,mdiagnosakeperawatan_kode,kdSnwmed,display'])
             ->get();
 
 
@@ -27,10 +28,10 @@ class DiagnosaKeperawatanController extends Controller
 
     public function listdiagnosakeperawatan()
     {
-       $data = Diagnosakeperawatan::where('noreg', request('noreg'))
-       ->with('intervensi', 'intervensi.masterintervensi')->get();
+        $data = Diagnosakeperawatan::where('noreg', request('noreg'))
+            ->with('intervensi', 'intervensi.masterintervensi')->get();
 
-       return new JsonResponse($data);
+        return new JsonResponse($data);
     }
 
     public function simpandiagnosakeperawatan(Request $request)
@@ -48,8 +49,8 @@ class DiagnosaKeperawatanController extends Controller
                         'norm' => $value['norm'],
                         'kode' => $value['kode'],
                         'nama' => $value['nama'],
-                        'user_input'=> $user,
-                        'kdruang'=>  $value['kdruang'] ?? '',
+                        'user_input' => $user,
+                        'kdruang' =>  $value['kdruang'] ?? '',
                     ]
                 );
 
@@ -76,6 +77,37 @@ class DiagnosaKeperawatanController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $e], 500);
+        }
+    }
+    public function simpanEvaluasiKeperawatan(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $data = Diagnosakeperawatan::find($request->id);
+            if (!$data) throw new Exception('Gagal Simpan Evaluasi, Data tidak ditemukan');
+            $data->evaluasi = $request->evaluasi;
+            $data->save();
+            // $updated = $data->update([
+            //     'evaluasi' => $request->evaluasi
+            // ]);
+            // if (!$updated) throw new Exception('Gagal Simpan Evaluasi');
+            $data->load('intervensi.masterintervensi');
+            DB::commit();
+            return new JsonResponse(
+                [
+                    'message' => 'Data Berhasil disimpan',
+                    'result' => $data,
+                    // 'updated' => $updated,
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            DB::rollback();
+            return new JsonResponse([
+                'message' => 'Data Gagal Disimpan...!!! ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 410);
         }
     }
 
