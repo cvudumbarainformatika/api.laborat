@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Pendaftaran\Ranap\Sepranap;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -146,6 +147,158 @@ class HistoryKunjunganController extends Controller
 
 
         return $select;
+    }
+
+
+
+
+    function kunjunganRanap(){
+        $from = request('to') . ' 00:00:00';
+        $to = request('from') . ' 23:59:59';
+
+        $ruangan = request('koderuangan');
+
+        $query = Kunjunganranap::query()
+            ->select(
+                'rs23.rs1',
+                'rs23.rs1 as noreg',
+                'rs23.rs2 as norm',
+                'rs23.rs3 as tglmasuk',
+                'rs23.rs4 as tglkeluar',
+                'rs23.rs5 as kdruangan',
+                'rs23.rs6 as ketruangan',
+                'rs23.rs7 as nomorbed',
+                'rs23.rs10 as kddokter',
+                'rs21.rs2 as dokter',
+                'rs23.rs19 as kodesistembayar',
+                'rs23.rs22 as status',
+                'rs15.rs2 as nama_panggil',
+
+                DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+                DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+                DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                            TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                            TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+                DB::raw("(IF(rs23.rs4='0000-00-00 00:00:00',
+                    datediff('".date("Y-m-d")."',rs23.rs3),
+                    datediff(rs23.rs4,rs23.rs3)))+1  as lama"),
+
+                'rs15.rs4 as alamatbarcode',
+                'rs15.rs16 as tgllahir',
+                'rs15.rs17 as kelamin',
+                'rs15.rs19 as pendidikan',
+                'rs15.rs22 as agama',
+                'rs15.rs37 as templahir',
+                'rs15.rs39 as suku',
+                'rs15.rs40 as jenispasien',
+                'rs15.rs46 as noka',
+                'rs15.rs49 as nktp',
+                'rs15.rs55 as nohp',
+
+                'rs9.rs2 as sistembayar',
+                'rs9.groups as groups',
+
+                'rs21.rs2 as namanakes',
+                'rs222.rs8 as sep_igd',
+                'rs227.rs8 as sep',
+                'rs227.rs10 as faskesawal',
+                'rs227.kodedokterdpjp as kodedokterdpjp',
+                'rs227.dokterdpjp as dokterdpjp',
+
+                'rs24.rs2 as ruangan',
+                'rs24.rs3 as kelasruangan',
+                'rs24.rs5 as group_ruangan',
+
+                // DB::raw("(SELECT rs4 FROM rs23 
+                //         WHERE rs23.rs2 = rs15.rs1 
+                //         AND rs23.rs4 != '0000-00-00 00:00:00'
+                //         ORDER BY rs4 DESC LIMIT 1) as last_visit")
+            )
+
+            ->leftJoin('rs15', 'rs15.rs1', '=', 'rs23.rs2')
+            ->leftJoin('rs9', 'rs9.rs1', '=', 'rs23.rs19')
+            ->leftJoin('rs21', 'rs21.rs1', '=', 'rs23.rs10')
+            ->leftJoin('rs24', 'rs24.rs1', '=', 'rs23.rs5')
+            ->leftJoin('rs227', 'rs227.rs1', '=', 'rs23.rs1')
+            ->leftJoin('rs222', 'rs222.rs1', '=', 'rs23.rs1')
+
+            // === WHERE BETWEEN TANGGAL (dibalik di query lama, saya perbaiki) ===
+            // ->whereBetween('rs23.rs3', [$tgl, $tglx])
+
+            ->where(function ($query) use ($from, $to) {
+                if (request('status') === 'Pulang') {
+                    $query->whereBetween('rs23.rs4', [$from, $to])
+                        ->whereIn('rs23.rs22', ['2', '3']);
+                } else {
+                    $query->where('rs23.rs22', '=', '')
+                        ->orWhere('rs23.rs22', '=', '1')
+                        ->where('rs23.rs1', '!=', '');
+                }
+            })
+
+            // === kdbayar === mirip poli ===
+            // ->where(function ($q) {
+            //     if (request('kdbayar') !== 'ALL') {
+            //         $q->where('rs9.rs9', '=', request('kdbayar'));
+            //     }
+            // })
+
+            // === SEARCH ===
+            ->where(function ($query) {
+                $query->when(request('q'), function ($q) {
+                    $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
+                        ->orWhere('rs23.rs2', 'like',  '%' . request('q') . '%')
+                        ->orWhere('rs15.rs2', 'like',  '%' . request('q') . '%');
+                });
+            })
+
+            // === Filter Ruangan ===
+            ->where(function ($query) use ($ruangan) {
+                if ($ruangan !== 'SEMUA') {
+                    $query->where('rs24.groups', '=', $ruangan);
+                }
+            })
+
+            // === Filter Status (mirip flag poli) ===
+            // ->when(request('status'), function ($q) {
+            //     if (request('status') !== 'Semua') {
+            //         $q->whereIn('rs23.rs22', request('status'));
+            //     }
+            // })
+
+            // ->with([
+            //     'diagnosa' => function ($q) {
+            //         $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris',
+            //             'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status')
+            //         ->leftJoin('rs99x', 'rs101.rs3', '=', 'rs99x.rs1')
+            //         ->orderBy('rs101.id', 'desc');
+            //     }
+            // ])
+
+            // ->where(function ($query) {
+            //     $query->where('rs23.rs22', '=', '')
+            //             ->orWhere('rs23.rs22', '=', '1')
+            //             ->where('rs23.rs1', '!=', '');
+            // })
+
+            
+
+            ->orderBy('rs23.rs3', 'DESC');
+            // ->groupBy('rs23.rs1');
+
+        // === PAGINATION SAMA POLI ===
+        $req = [
+            'per_page' => request('per_page') ?? 25,
+        ];
+
+        $totalCount = (clone $query)->count();
+
+        $data = $query->groupBy('rs23.rs1')->simplePaginate($req['per_page']);
+
+        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+
+        return new JsonResponse($resp);
+
     }
 
 }
