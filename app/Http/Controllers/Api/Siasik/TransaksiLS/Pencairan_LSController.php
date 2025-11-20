@@ -128,9 +128,10 @@ class Pencairan_LSController extends Controller
                     ->whereNull('tgl_pencairan_npk')
                     ->update([
                         'tgl_pencairan_npk' => $tglPencairan,
+                        'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
-                        'user_bayar' => $bendpengeluaran->id,
+                        'user_bayar' => $bendpengeluaran->kdpegsimrs,
                         'flag_bayar' => '1'
                     ]);
 
@@ -141,7 +142,7 @@ class Pencairan_LSController extends Controller
                         'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
-                        'user_bayar' => $bendpengeluaran->id,
+                        'user_bayar' => $bendpengeluaran->kdpegsimrs,
                         'flag_bayar' => '1'
                     ]);
 

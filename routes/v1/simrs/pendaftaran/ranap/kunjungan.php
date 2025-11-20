@@ -19,4 +19,6 @@ Route::group([
     Route::post('simpanpendaftaran-byform', [RegistrasiRanapController::class, 'registrasiranap']);
     Route::post('simpanpendaftaran-byigd', [RegistrasiRanapController::class, 'registrasiranapIgd']);
     Route::post('simpanpendaftaran-byspri', [RegistrasiRanapController::class, 'registrasiranapSpri']);
+
+    Route::get('history-general-consent', [HistoryKunjunganController::class, 'kunjunganRanap']);
 });

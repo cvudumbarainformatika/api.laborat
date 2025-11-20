@@ -926,11 +926,9 @@ class NPD_LSController extends Controller
 
     public function updatedata(){
 
-        // Mulai transaksi database untuk memastikan konsistensi data
         DB::beginTransaction();
 
         try {
-            // Ambil data dari NpkLS_rinci yang memenuhi kriteria
             $npkData = NpkLS_rinci::where('nopencairan', '!=', '')
                 ->where('nonpk', request('nonpk'))
                 ->select('nonpk','nonpdls', 'total', 'tglentrycair')
@@ -938,14 +936,13 @@ class NPD_LSController extends Controller
             $bendpengeluaran = Mpegawaisimpeg::whereIn('jabatan', ['J00035'])
                 ->where('aktif', 'AKTIF')
                 ->first();
-            // Proses update data PenerimaanHeder
+                
             $updatedCount = 0;
 
             foreach ($npkData as $npk) {
                 // Konversi format tanggal dari 'Y-m-d H:i:s' ke 'Y-m-d'
                 $tglPencairan = Carbon::parse($npk->tglentrycair)->format('Y-m-d');
 
-                // Update data PenerimaanHeder yang sesuai
                 $updateResult = PenerimaanHeder::where('no_npd', $npk->nonpdls)
                 ->whereNull('tgl_pencairan_npk')
                     // ->where('flag_bayar', '=', '')
@@ -954,7 +951,7 @@ class NPD_LSController extends Controller
                         // 'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
-                        'user_bayar' => $bendpengeluaran->id,
+                        'user_bayar' => $bendpengeluaran->kdpegsimrs,
                         'flag_bayar' => '1'
                     ]);
 
@@ -966,7 +963,7 @@ class NPD_LSController extends Controller
                         'tgl_pembayaran' => $tglPencairan,
                         'nilai_pembayaran' => $npk->total,
                         'total_pembayaran' => $npk->total,
-                        'user_bayar' => $bendpengeluaran->id,
+                        'user_bayar' => $bendpengeluaran->kdpegsimrs,
                         'flag_bayar' => '1'
                     ]);
 
@@ -994,6 +991,21 @@ class NPD_LSController extends Controller
                 'error' => true
             ], 500);
         }
+
+        // UNTUK UPDATE USER BAYAR SAJA //
+        // $bendpengeluaran = Mpegawaisimpeg::whereIn('jabatan', ['J00035'])
+        //         ->where('aktif', 'AKTIF')
+        //         ->first();
+        // $updatedx = PenerimaanHeder::where('flag_bayar', '1')
+        // ->update(['user_bayar' => $bendpengeluaran->kdpegsimrs]);
+        // $updatedy = BastKonsinyasi::where('flag_bayar', '1')
+        // ->update(['user_bayar' => $bendpengeluaran->kdpegsimrs]);
+
+        // return response()->json([
+        //     'message' => 'Update berhasil',
+        //     'rows_updated' => $updatedy,
+        //     'rows_updatedx' => $updatedx
+        // ]);
 
     }
 
