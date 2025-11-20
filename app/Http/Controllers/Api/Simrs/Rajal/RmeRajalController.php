@@ -17,10 +17,16 @@ class RmeRajalController extends Controller
                 'anamnesis',
                 // 'diagnosakeperawatan.intervensi.masterintervensi',
                 'diagnosakeperawatan' => function ($diag) {
-                    $diag->with('intervensi.masterintervensi');
+                    $diag->with([
+                        'intervensi.masterintervensi',
+                        'petugas:id,nik,nip,nama,kdpegsimrs'
+                    ]);
                 },
                 'diagnosakebidanan' => function ($diag) {
-                    $diag->with('intervensi.masterintervensi');
+                    $diag->with([
+                        'intervensi.masterintervensi',
+                        'petugas:id,nik,nip,nama,kdpegsimrs'
+                    ]);
                 },
                 'pemeriksaanfisik' => function ($p) {
                     $p->with(['detailgambars', 'pemeriksaankhususmata', 'pemeriksaankhususparu'])
@@ -59,7 +65,10 @@ class RmeRajalController extends Controller
                     $planning
                         ->where('rs4', 'not like', '%Pulang%');
                 },
-                'edukasi'
+                'edukasi',
+                'rs239_implementasi' => function ($q) {
+                    $q->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
+                },
             ]
         )->where('rs1', request('noreg'))
             ->get();
