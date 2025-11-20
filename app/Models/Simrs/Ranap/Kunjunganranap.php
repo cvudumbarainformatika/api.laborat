@@ -16,6 +16,7 @@ use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
 use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Ews\KeteranganTindakan;
 use App\Models\Simrs\Ews\ProcedureM;
+use App\Models\Simrs\Generalconsent\Generalconsent;
 use App\Models\Simrs\Hais\HaisTrans;
 use App\Models\Simrs\InformConcern\InformConcern;
 use App\Models\Simrs\Kasir\Biayamaterai;
@@ -690,5 +691,10 @@ class Kunjunganranap extends Model
     public function serah_terima()
     {
         return $this->hasMany(SerahTerima::class, 'noreg', 'rs1');
+    }
+
+     public function generalcons()
+    {
+        return $this->hasOne(Generalconsent::class, 'noreg', 'rs1');
     }
 }

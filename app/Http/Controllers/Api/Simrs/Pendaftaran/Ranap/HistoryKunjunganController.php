@@ -209,6 +209,10 @@ class HistoryKunjunganController extends Controller
                 'rs24.rs3 as kelasruangan',
                 'rs24.rs5 as group_ruangan',
 
+                // 'gencons.noreg as noreggeneralconsent',
+                DB::raw("REPLACE(gencons.noreg, '/', '') as generalconsent"),
+                'gencons.ttdpasien as ttdpasien',
+
                 // DB::raw("(SELECT rs4 FROM rs23 
                 //         WHERE rs23.rs2 = rs15.rs1 
                 //         AND rs23.rs4 != '0000-00-00 00:00:00'
@@ -221,6 +225,11 @@ class HistoryKunjunganController extends Controller
             ->leftJoin('rs24', 'rs24.rs1', '=', 'rs23.rs5')
             ->leftJoin('rs227', 'rs227.rs1', '=', 'rs23.rs1')
             ->leftJoin('rs222', 'rs222.rs1', '=', 'rs23.rs1')
+            ->leftJoin('gencons', 'gencons.noreg', '=', 'rs23.rs1')
+
+            ->with([
+                'generalcons:noreg,norm,ttdpasien,ttdpetugas,hubunganpasien,pdf'
+            ])
 
             // === WHERE BETWEEN TANGGAL (dibalik di query lama, saya perbaiki) ===
             // ->whereBetween('rs23.rs3', [$tgl, $tglx])

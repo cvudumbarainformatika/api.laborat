@@ -29,19 +29,31 @@ class GeneralconsentController extends Controller
         //decode string base64 image to image
         $ttdpasien = "";
         $ttdpetugas = "";
+
+        $str = $request->noreg;
+        $noreg = str_replace('/', '', $str);
+
+        $normNoreg = $request->isRajal? $request->norm : $noreg;
+
+
         if ($request->ttdpasien !== null || $request->ttdpasien !== "") {
-            $ttdpasien = $this->createImage($request->ttdpasien, $request->norm);
+            $ttdpasien = $this->createImage($request->ttdpasien, $normNoreg);
         }
         if ($request->ttdpetugas !== null || $request->ttdpetugas !== "") {
-            $ttdpetugas = $this->createTtdPetugas($request->ttdpetugas, $request->norm, $request->nikpetugas);
+            $ttdpetugas = $this->createTtdPetugas($request->ttdpetugas, $normNoreg, $request->nikpetugas);
         }
 
         // simpan ke transaksi general consent pasien
 
         // return $ttdpetugas;
         $user = auth()->user()->pegawai_id;
+
+        $key = $request->isRajal
+            ? ['norm' => $request->norm]
+            : ['noreg' => $request->noreg];
+
         $gencon = Generalconsent::updateOrCreate(
-            ['norm' => $request->norm],
+            $key,
             [
                 'nama' => $request->nama,
                 'alamat' => $request->alamat,
@@ -55,6 +67,9 @@ class GeneralconsentController extends Controller
                 'hubunganWali1' => $request->hubunganWali1,
                 'hubunganWali2' => $request->hubunganWali2,
                 'user_input' => $user,
+
+                'norm' => $request->norm,
+                'noreg' => $request->noreg,
             ]
         );
 
@@ -65,7 +80,11 @@ class GeneralconsentController extends Controller
             return response()->json($message, 500);
         }
 
-        $res = Generalconsent::where('norm', $request->norm)->first();
+        if ($request->isRajal) {
+            $res = Generalconsent::where('norm', $request->norm)->first();
+        } else {
+            $res = Generalconsent::where('noreg', $request->noreg)->first();
+        }
 
         return response()->json($res);
     }
@@ -87,8 +106,6 @@ class GeneralconsentController extends Controller
 
     public function createImage($img, $norm)
     {
-
-
         $folderPath = "ttdpasien/";
 
         $cek = Generalconsent::where('norm', '=', $norm)->first();
@@ -155,41 +172,40 @@ class GeneralconsentController extends Controller
 
     public function simpanpdf(Request $request)
     {
-
-
-        if ($request->hasFile('pdf')) {
-            $files = $request->file('pdf');
-
-            if (!empty($files)) {
-                $file = $files;
-                $originalname = $file->getClientOriginalName();
-                $data = Generalconsent::where('norm', '=', $request->norm)->first();
-                // Storage::delete('public/generalconsent/' . $originalname);
-                // Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
-                $pdf = null;
-                if ($data) {
-                    $pdf = $data;
-                } else {
-                    $pdf = new Generalconsent();
-                }
-                $file->storeAs('public/generalconsent/', $originalname, 'remote');
-
-                $url = "generalconsent/$originalname";
-                $pdf->pdf = $url;
-                $pdf->save();
-                return response()->json(['success' => $data]);
-            }
+        if (!$request->hasFile('pdf')) {
+            return response()->json(['message' => 'Tidak ada file'], 422);
         }
 
-        return response()->json(['message' => 'Ada kesalahan'], 500);
+        // if ($request->hasFile('pdf')) {
+        $files = $request->file('pdf');
 
-        // return $request->all();
-        // $pdf = "";
-        // if ($request->pdf !== null || $request->pdf !== "") {
-        //     $pdf = $this->createImagePdf($request->pdf, $request->norm);
-        // }
+        // $noregNorm = $request->kelompok == "irja" ? $request->norm : $request->noreg;
 
-        // return $pdf;
+
+
+        if (!empty($files)) {
+            $file = $files;
+            $originalname = $file->getClientOriginalName();
+            if ($request->kelompok === 'irja') {
+                $data = Generalconsent::where('norm', '=', $request->norm)->first();
+            } else {
+                $data = Generalconsent::where('noreg', '=', $request->noreg)->first();
+            }
+            // Storage::delete('public/generalconsent/' . $originalname);
+            // Storage::disk('remote')->delete('public/generalconsent/' . $originalname);
+            $pdf = null;
+            if ($data) {
+                $pdf = $data;
+            } else {
+                $pdf = new Generalconsent();
+            }
+            $file->storeAs('public/generalconsent/', $originalname, 'remote');
+
+            $url = "generalconsent/$originalname";
+            $pdf->pdf = $url;
+            $pdf->save();
+            return response()->json(['success' => $data]);
+        }
     }
 
     public function createImagePdf($img, $norm)
