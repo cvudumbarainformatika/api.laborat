@@ -920,6 +920,7 @@ class PersiapanOperasiController extends Controller
     }
     public function simpanEresep(Request $request)
     {
+        // return new JsonResponse($request->all());
 
         // cek user
         $user = FormatingHelper::session_user();
@@ -928,14 +929,20 @@ class PersiapanOperasiController extends Controller
         }
 
         // buat no resep
-        if ($request->noresep === '' || $request->noresep === null) {
+        if (!$request->nopermintaan) {
+            return new JsonResponse(['message' => 'Maaf Nomor Permintaan Persiapan Operasi tidak di temukan. silahkan coba refresh browser. jika masalah berlanjut mohon hubungi tim IT'], 410);
+        }
+        $rinciAdaResep = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->where('noresep', '!=', '')->first();
+        if (!$rinciAdaResep) {
             DB::connection('farmasi')->select('call resepkeluardepook(@nomor)');
             $x = DB::connection('farmasi')->table('conter')->select('depook')->first();
             $wew = $x->depook;
             $noresep = FormatingHelper::resep($wew, 'D-KO');
         } else {
-            $noresep = $request->noresep;
+            $noresep = $rinciAdaResep->noresep;
         }
+
+        // return $noresep;
         $head =            [
             // 'noresep' => $noresep,
             'noreg' => $request->noreg,
@@ -974,10 +981,12 @@ class PersiapanOperasiController extends Controller
                 $hargajualx = $har['hargaJual'];
                 $harga = $har['harga'];
                 $masterObat = Mobatnew::where('kd_obat', $key['kd_obat'])->first();
-                $rin = [
+
+                $rin = Permintaanresep::updateOrCreate([
                     'noreg' => $request->noreg,
                     'noresep' => $noresep,
                     'kdobat' => $masterObat->kd_obat,
+                ], [
                     'kandungan' => $masterObat->kandungan,
                     'fornas' => $masterObat->status_fornas,
                     'forkit' => $masterObat->status_forkid,
@@ -996,7 +1005,7 @@ class PersiapanOperasiController extends Controller
                     'keterangan' => 'Di pakai untuk operasi' ?? '',
                     'created_at' => $created,
                     'updated_at' => date('Y-m-d H:i:s'),
-                ];
+                ]);
                 $rinci[] = $rin;
                 $noper[] = $key['nopermintaan'];
                 // update rinci no resep
@@ -1021,7 +1030,7 @@ class PersiapanOperasiController extends Controller
         // $delRin = Permintaanresep::where('noresep', $noresep)->delete();
 
         // insert permintaan resep
-        $insRinci = Permintaanresep::insert($rinci);
+        // $insRinci = Permintaanresep::insert($rinci);
 
         $unoper = array_unique($noper);
         // cek untuk update header
@@ -1040,7 +1049,7 @@ class PersiapanOperasiController extends Controller
         return new JsonResponse([
             'message' => 'resep sudah di dimpan',
             'header' => $header,
-            'rinci' => $insRinci,
+            'rinci' => $rinci,
             'noresep' => $noresep,
             // 'header' => $head,
             // 'rinci' => $rinci,
