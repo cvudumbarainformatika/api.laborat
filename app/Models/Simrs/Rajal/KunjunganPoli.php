@@ -360,6 +360,10 @@ class KunjunganPoli extends Model
     {
         return $this->hasOne(Generalconsent::class, 'norm', 'norm');
     }
+    public function generalconsigd()
+    {
+        return $this->hasOne(Generalconsent::class, 'noreg', 'rs1');
+    }
 
     //pegawai dari simpeg
     public function pegawai()

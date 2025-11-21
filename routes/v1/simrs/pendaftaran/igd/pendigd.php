@@ -13,5 +13,8 @@ Route::group([
     Route::get('/kunjunganpasienigd', [IgdController::class, 'kunjunganpasienigd']);
     Route::post('/simpankunjunganigd', [DaftarigdController::class, 'simpankunjunganigd']);
     Route::post('/hapuspasien', [DaftarigdController::class, 'hapuskunjunganpasienigd']);
+
+
+    Route::post('/kunjunganigdgeneralconsent', [IgdController::class, 'kunjunganigdgeneralconsent']);
 });
 
