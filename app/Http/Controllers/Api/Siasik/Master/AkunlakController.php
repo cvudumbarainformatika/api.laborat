@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class AkunlakController extends Controller
 {
      public function index(){
+       
         $data = Akun_lak::when(request('q'),function ($query) {
             $query->where('uraian', 'LIKE', '%' . request('q') . '%')
             ->orWhere('jenis', 'LIKE', '%' . request('q') . '%')
@@ -21,6 +22,28 @@ class AkunlakController extends Controller
         return new JsonResponse($data);
     }
 
+    public function select(){
+        $perPage = request('per_page', 100);
+        $query = Akun_lak::select('uraian', 'kode', 'jenis');
+
+         if (request('q')) {
+            $cari = request('q');
+            $query->where(function ($q) use ($cari) {
+                $q->where('uraian', 'like', '%' . $cari . '%')
+                  ->orWhere('kode', 'like', '%' . $cari . '%')
+                  ->orWhere('jenis', 'like', '%' . $cari . '%');
+            });
+        }
+
+        if ($perPage <= 0) {
+            $akun = $query->get();
+            return new JsonResponse(['data' => $akun]);
+        }
+
+        $akun = $query->simplePaginate($perPage);
+
+        return new JsonResponse($akun);
+    }
     public function store(Request $request)
     {
         try {
