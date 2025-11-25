@@ -15,6 +15,18 @@ class RmeRajalController extends Controller
         $data = KunjunganPoli::with(
             [
                 'anamnesis',
+                'manymemo',
+                'newapotekrajal' => function ($q) {
+                    $q->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                        'rincian.mobat:kd_obat,nama_obat',
+                        'rincianracik.mobat:kd_obat,nama_obat',
+                    ]);
+                },
+                'newapotekrajalretur' => function ($q) {
+                    $q->with(['rinci.mobat:kd_obat,nama_obat']);
+                },
                 // 'diagnosakeperawatan.intervensi.masterintervensi',
                 'diagnosakeperawatan' => function ($diag) {
                     $diag->with([
@@ -69,6 +81,7 @@ class RmeRajalController extends Controller
                 'rs239_implementasi' => function ($q) {
                     $q->with(['petugas:kdpegsimrs,nik,nama,kdgroupnakes']);
                 },
+                'doktersimpeg:kdpegsimrs,nik,nama,kdgroupnakes'
             ]
         )->where('rs1', request('noreg'))
             ->get();
