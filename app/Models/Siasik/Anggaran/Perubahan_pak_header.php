@@ -15,4 +15,8 @@ class Perubahan_pak_header extends Model
     public function rincipak(){
         return $this->hasMany(Perubahan_pak_rinci::class,'notrans', 'notrans');
     }
+
+    public function pergeseranpak(){
+        return $this->hasMany(Perubahan_RincianBelanja::class,'notrans', 'notrans');
+    }
 }
