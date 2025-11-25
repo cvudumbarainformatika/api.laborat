@@ -16,6 +16,7 @@ class RmeRajalController extends Controller
             [
                 'anamnesis',
                 'manymemo',
+                'planningdokter',
                 'newapotekrajal' => function ($q) {
                     $q->with([
                         'permintaanresep.mobat:kd_obat,nama_obat',
