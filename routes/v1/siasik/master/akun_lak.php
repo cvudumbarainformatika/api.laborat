@@ -7,6 +7,7 @@ Route::group([
     'prefix' => 'master/akunlak'
 ], function () {
     Route::get('/index', [AkunlakController::class, 'index']);
+    Route::get('/select', [AkunlakController::class, 'select']);
     Route::post('/simpan', [AkunlakController::class, 'store']);
     Route::post('/delete', [AkunlakController::class, 'delete']);
 

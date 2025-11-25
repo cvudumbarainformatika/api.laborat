@@ -18,7 +18,11 @@ class MkelasifikasiController extends Controller
             [
                 'kode' => $request->kode,
                 'nama' => $request->kelasifikasi,
-                'retensi' => $request->retensi
+                'retensi' => $request->retensi,
+                'retensi_inaktif' => $request->retensiinaktif,
+                'penyelesaian_akhir' => $request->penyelesaian,
+                'hak_akses' => $request->hakakses,
+                'keamanan' => $request->keamanan,
             ]
         );
         if(!$simpan)
