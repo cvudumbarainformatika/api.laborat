@@ -35,10 +35,13 @@ class AnamnesisController extends Controller
                     'scorenyeri' => $request->skornyeri ?? 0,
                     'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
                     //    'keteranganscorenyeri' => $request->riwayatpekerjaan ?? '',
+                    'seimbang' => $request->seimbang ?? 0,
+                    'penopang' => $request->penopang ?? 0,
+                    'hasil' => $request->hasil ?? 0,
                     'user'  => $kdpegsimrs,
                 ]
             );
-            if ($hasil === 1) { 
+            if ($hasil === 1) {
                 $simpananamnesis = AnamnesisAnamnesis::where('id', $request->id)->first();
             } else {
                 $simpananamnesis = null;
@@ -62,6 +65,9 @@ class AnamnesisController extends Controller
                     'skor' => $request->skor ?? 0,
                     'scorenyeri' => $request->skornyeri ?? 0,
                     'keteranganscorenyeri' => $request->keteranganscorenyeri ?? '',
+                    'seimbang' => $request->seimbang ?? 0,
+                    'penopang' => $request->penopang ?? 0,
+                    'hasil' => $request->hasil ?? 0,
                     'user'  => $kdpegsimrs,
                 ]
             );

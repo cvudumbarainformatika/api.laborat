@@ -2400,6 +2400,8 @@ class EresepController extends Controller
             $hasil[] = [
                 'alokasi' => $key['alokasi'],
                 'kdobat' => $key['kdobat'],
+                'cukup' => $cukup,
+                'jumlah' => $jumlah,
             ];
         }
         return [
