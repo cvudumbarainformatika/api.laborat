@@ -21,7 +21,7 @@ class PeminjamanHeder extends Model
 
     public function userpeminjam()
     {
-        return $this->hasOne(Mpegawaisimpeg::class, 'nip', 'peminjam');
+        return $this->hasOne(Mpegawaisimpeg::class, 'nik', 'peminjam');
     }
 
     public function unitpengolahx()

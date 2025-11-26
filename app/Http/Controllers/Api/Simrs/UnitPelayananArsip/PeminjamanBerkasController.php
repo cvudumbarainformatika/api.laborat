@@ -114,6 +114,8 @@ class PeminjamanBerkasController extends Controller
                     'tgl' => $request->tanggal,
                     'rencana_kembali' => $request->rencanakembali,
                     'peminjam' => $request->peminjam,
+                    'kd_jabatan' => $request->kd_jabatan,
+                    'jabatan' => $request->jabatan,
                     'keperluan' => $request->keterangan,
                     'petugas' => $kdpegsimrs,
                     'unitpengolah' => $request->unitpengolah,
@@ -244,7 +246,11 @@ class PeminjamanBerkasController extends Controller
     public function caripegawai()
     {
         try {
-            $data = Pegawai::select('nik', 'nama')->where('aktif','AKTIF')->where('nama', 'LIKE', '%' . request('q') . '%')->limit(25)->get();
+            $data = Pegawai::select('nik', 'nama','jabatan')->where('aktif','AKTIF')->where('nama', 'LIKE', '%' . request('q') . '%')
+            ->with([
+                'relasi_jabatan',
+            ])
+            ->limit(25)->get();
             return new JsonResponse($data);
         } catch (\Exception $e) {
             return new JsonResponse([
