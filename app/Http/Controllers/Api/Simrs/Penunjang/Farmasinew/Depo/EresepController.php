@@ -1952,8 +1952,8 @@ class EresepController extends Controller
                 $sisaObat = self::cekSisaObatRajal($permintaanFinal, $request->norm);
             }
             // cek jumlah stok
-            $alokasi = self::cekSisaStokAlokasi($permintaanFinal, $request->depo);
-            $alokasiRac = self::cekSisaStokAlokasi($permintaanRacikanFinal, $request->depo);
+            $alokasi = self::cekSisaStokAlokasi($permintaanFinal, $request->depo, 'nr');
+            $alokasiRac = self::cekSisaStokAlokasi($permintaanRacikanFinal, $request->depo, 'rac');
             if ($alokasi['cukup'] === false || $alokasiRac['cukup'] === false) {
                 throw new Exception('Stok tidak mencukupi, silahkan di cek kembali');
             }
@@ -2373,7 +2373,7 @@ class EresepController extends Controller
 
         ];
     }
-    public static function cekSisaStokAlokasi($data, $depo)
+    public static function cekSisaStokAlokasi($data, $depo, $jenis)
     {
         $cukup = true;
         $kdobat = collect($data)->pluck('kdobat')->toArray();
@@ -2386,7 +2386,7 @@ class EresepController extends Controller
         $hasil = [];
         foreach ($data as $key) {
             $stok = $allStok->where('kdobat', $key['kdobat'])->first();
-            $jumlah = (float)$key['jumlahobat'] ?? (float)$key['jumlah'];
+            $jumlah = $jenis == 'rac' ? (float)$key['jumlahobat'] : (float)$key['jumlah'];
             if ($stok) {
                 if ($stok->jumlahstok < $jumlah) {
                     $cukup = false;
