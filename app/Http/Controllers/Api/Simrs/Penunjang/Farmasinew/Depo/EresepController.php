@@ -2386,7 +2386,7 @@ class EresepController extends Controller
         $hasil = [];
         foreach ($data as $key) {
             $stok = $allStok->where('kdobat', $key['kdobat'])->first();
-            $jumlah = (float)$key['jumlah'] ?? (float)$key['jumlahobat'];
+            $jumlah = (float)$key['jumlahobat'] ?? (float)$key['jumlah'];
             if ($stok) {
                 if ($stok->jumlahstok < $jumlah) {
                     $cukup = false;
