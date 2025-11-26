@@ -142,6 +142,9 @@ class PengunjungController extends Controller
             'diagnosa' => function ($d) {
                 $d->with('masterdiagnosa');
             },
+            'edukasi' => function ($x) {
+                $x->orderBy('id', 'DESC');
+            },
         ]);
 
         return new JsonResponse($data);

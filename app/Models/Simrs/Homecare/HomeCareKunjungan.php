@@ -4,6 +4,8 @@ namespace App\Models\Simrs\Homecare;
 
 use App\Models\Simpeg\Petugas;
 use App\Models\Simrs\Anamnesis\Anamnesis;
+use App\Models\Simrs\Edukasi\ImplementasiEdukasi;
+use App\Models\Simrs\Edukasi\Transedukasi;
 use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
@@ -67,5 +69,15 @@ class HomeCareKunjungan extends Model
     public function diagnosa()
     {
         return $this->hasMany(Diagnosa::class, 'rs1', 'noreg');
+    }
+
+    public function edukasi()
+    {
+        return $this->hasMany(Transedukasi::class, 'rs1', 'noreg');
+    }
+
+    public function rs239_implementasi()
+    {
+        return $this->hasMany(ImplementasiEdukasi::class, 'noreg', 'noreg');
     }
 }
