@@ -10,6 +10,7 @@ use App\Models\Simrs\Master\Dokter;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
+use App\Models\Simrs\Pelayanan\DokumenUpload;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Laborat\LaboratMeta;
@@ -79,5 +80,10 @@ class HomeCareKunjungan extends Model
     public function rs239_implementasi()
     {
         return $this->hasMany(ImplementasiEdukasi::class, 'noreg', 'noreg');
+    }
+
+    public function dokumenluar()
+    {
+        return $this->hasMany(DokumenUpload::class, 'noreg', 'noreg');
     }
 }

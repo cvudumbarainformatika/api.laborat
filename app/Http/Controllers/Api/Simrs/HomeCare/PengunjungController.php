@@ -145,6 +145,9 @@ class PengunjungController extends Controller
             'edukasi' => function ($x) {
                 $x->orderBy('id', 'DESC');
             },
+            'dokumenluar' => function ($neo) {
+                $neo->with(['pegawai:id,nama']);
+            },
         ]);
 
         return new JsonResponse($data);
