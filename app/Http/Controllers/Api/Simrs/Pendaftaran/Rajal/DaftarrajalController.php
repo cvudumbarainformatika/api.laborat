@@ -546,6 +546,13 @@ class DaftarrajalController extends Controller
                 if (request('flag') == 'TERLAYANI') $q->where('rs17.rs19', '=', '1');
                 else if (request('flag') == 'BELUM TERLAYANI') $q->whereIn('rs17.rs19', ['', '2']);
             })
+            ->when(request('status') == 'GAGAL BRIDGING', function ($q) {
+                $q->leftJoin('bpjs_http_respon', 'bpjs_http_respon.noreg', '=', 'rs17.rs1')
+                    ->where(function ($c) {
+                        $c->where('bpjs_http_respon.url', '=', '/antrean/add')
+                            ->where('bpjs_http_respon.respon', 'like', '%code":201%');
+                    });
+            })
             ->when(request('nokas'), function ($q) {
                 $q->whereIn('rs15.rs46', request('nokas'));
             })
