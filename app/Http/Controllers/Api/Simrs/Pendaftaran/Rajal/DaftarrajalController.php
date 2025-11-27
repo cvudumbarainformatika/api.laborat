@@ -549,8 +549,11 @@ class DaftarrajalController extends Controller
             ->when(request('status') == 'GAGAL BRIDGING', function ($q) {
                 $q->leftJoin('bpjs_http_respon', 'bpjs_http_respon.noreg', '=', 'rs17.rs1')
                     ->where(function ($c) {
-                        $c->where('bpjs_http_respon.url', '=', '/antrean/add')
-                            ->where('bpjs_http_respon.respon', 'like', '%code":201%');
+                        $c->where(function ($f) {
+                            $f->where('bpjs_http_respon.url', '=', '/antrean/add')
+                                ->where('bpjs_http_respon.respon', 'like', '%code":201%');
+                        })
+                            ->orWhereNull('bpjs_http_respon.noreg');
                     });
             })
             ->when(request('nokas'), function ($q) {
