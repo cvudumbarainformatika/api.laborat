@@ -554,7 +554,8 @@ class DaftarrajalController extends Controller
                                 ->where('bpjs_http_respon.respon', 'like', '%code":201%');
                         })
                             ->orWhereNull('bpjs_http_respon.noreg');
-                    });
+                    })
+                    ->where('rs17.rs14', 'like', 'bpjs%');
             })
             ->when(request('nokas'), function ($q) {
                 $q->whereIn('rs15.rs46', request('nokas'));
