@@ -299,12 +299,32 @@ class DaftarrajalController extends Controller
 
 
         //  PASIEN MJKN ======================================================================================
-        $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
-            ->where('nomorantrean', '=', $noantrian)
-            ->when($request->nokabpjs, function ($q) use ($request) {
-                $q->where('nomorkartu', $request->nokabpjs);
-            })
-            ->whereDate('tanggalperiksa', '=', $tgl)->first();
+        $bpjsantrian = null;
+        if ($request->nokabpjs) {
+            $count = Bpjsantrian::select('id', 'nomorantrean')
+                ->where('nomorkartu', $request->nokabpjs)
+                ->whereDate('tanggalperiksa', '=', $tgl)
+                ->count();
+            if ($count == 1) {
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                    // ->where('nomorantrean', '=', $noantrian)
+                    // ->when($request->nokabpjs, function ($q) use ($request) {
+                    //     $q->where('nomorkartu', $request->nokabpjs);
+                    // })
+                    ->where('nomorkartu', $request->nokabpjs)
+                    ->whereDate('tanggalperiksa', '=', $tgl)
+                    ->first();
+            } else {
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                    ->where('nomorantrean', '=', $noantrian)
+                    // ->when($request->nokabpjs, function ($q) use ($request) {
+                    //     $q->where('nomorkartu', $request->nokabpjs);
+                    // })
+                    ->where('nomorkartu', $request->nokabpjs)
+                    ->whereDate('tanggalperiksa', '=', $tgl)
+                    ->first();
+            }
+        }
         if (!$bpjsantrian) {
 
             // $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
