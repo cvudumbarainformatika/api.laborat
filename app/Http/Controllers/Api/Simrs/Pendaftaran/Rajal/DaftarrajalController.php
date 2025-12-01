@@ -588,7 +588,8 @@ class DaftarrajalController extends Controller
                     $q->orderBy('taskid', 'DESC');
                 },
                 'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,pdf',
-                'bpjshttprespon'
+                'bpjshttprespon',
+                'antrian_ambil',
             ])
 
             ->orderby('rs17.rs3', 'DESC');
