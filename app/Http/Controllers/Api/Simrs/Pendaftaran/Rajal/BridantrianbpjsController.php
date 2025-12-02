@@ -102,7 +102,7 @@ class BridantrianbpjsController extends Controller
             ];
             // event(new AntreanEvent($message));
         }
-        //return $ambilantrian;
+        return $ambilantrian ?? null;
     }
 
     public function batalantrian($request)
