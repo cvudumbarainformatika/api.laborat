@@ -619,17 +619,33 @@ class DaftarrajalController extends Controller
                 'antrian_ambil',
             ])
 
-            ->orderby('rs17.rs3', 'DESC');
-        // ->groupBy('rs17.rs1');
-        // $daftarkunjunganpasienbpjs = $wew->paginate(request('per_page'));
-        // return new JsonResponse($daftarkunjunganpasienbpjs);
-        $req = [
-            'per_page' => request('per_page') ?? 25,
-        ];
-        $totalCount = (clone $wew)->count();
-        $data = $wew->groupBy('rs17.rs1')->simplePaginate($req['per_page']);
-        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
-        return new JsonResponse($resp);
+            ->orderby('rs17.rs3', 'DESC')
+            ->groupBy('rs17.rs1');
+        $daftarkunjunganpasienbpjs = $wew->paginate(request('per_page'));
+        return new JsonResponse($daftarkunjunganpasienbpjs);
+
+        // $req = [
+        //     'per_page' => request('per_page') ?? 25,
+        // ];
+        // $noregQuery = (clone $wew)->select('rs17.rs1')->distinct('rs17.rs1');
+        // $totalCount = $noregQuery->count();
+        // $data = $wew->with([
+        //     'taskid' => function ($q) {
+        //         $q->orderBy('taskid', 'DESC');
+        //     },
+        //     'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,pdf',
+        //     'bpjshttprespon',
+        //     'antrian_ambil',
+        // ])
+
+        //     ->orderby('rs17.rs3', 'DESC')->groupBy('rs17.rs1')->simplePaginate($req['per_page']);
+        // $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+        // return new JsonResponse($resp);
+        // return new JsonResponse([
+        //     'resp' => $resp,
+        //     'noregQuery' => $noregQuery->count(),
+        //     'da' => $noregQuery->get(),
+        // ]);
     }
 
     public function antrianmobilejkn()
