@@ -360,10 +360,18 @@ class DaftarrajalController extends Controller
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input, 3);
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
+            if ($updatebpjsantrian && $cetakantrian) {
+                $adaAntr = Antrianambil::where('noreg', $noreg)->first();
+                // $rm = $masterpasien->rs1 ?? null;
+                $rm = optional($masterpasien)->rs1;
+                if ($adaAntr) $updatebpjsantrian->nomorantrean = $adaAntr->nomor;
+                if ($rm) $updatebpjsantrian->norm = $rm;
+                if ($adaAntr || $rm) $updatebpjsantrian->save();
+            }
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
                 'antrian' => $cetakantrian,
-                'noreg' => $input->noreg
+                'noreg' => $noreg
             ], 200);
         } else {
             if ($bpjsantrian) {
@@ -408,7 +416,7 @@ class DaftarrajalController extends Controller
         }
 
         return new JsonResponse([
-            'req' => $request->all(),
+            // 'req' => $request->all(),
             'ambilAntrian' => $ambilAntrian,
             'code' => $ambilAntrian['metadata']['code'],
         ]);
