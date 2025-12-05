@@ -282,6 +282,13 @@ class KasirrajalController extends Controller
 
     public function pembayarannonkarcis(Request $request)
     {
+        $cek = Kwitansidetail::where('kwitansilog.noreg', $request->noreg)->where('kwitansilog.nota', $request->nota)->where('kwitansi_d.jenis', $request->jenis)
+        ->leftJoin('kwitansilog', 'kwitansilog.nokwitansi', 'kwitansi_d.no_kwitansi')
+        ->where('kwitansilog.batal', '!=', '1')->first();
+        if($cek)
+        {
+            return new JsonResponse(['message' => 'No. Nota '.$request->nota.' Sudah Dibayar...!!! Dengan No. Kwitansi '.$cek->nokwitansi], 500);
+        }
         try{
             DB::beginTransaction();
                 if($request->carabayar === 'Tunai'){
@@ -429,6 +436,7 @@ class KasirrajalController extends Controller
                             'jenis'         => $jenis,
                             'unit'          => $unit,
                             'jml'           => $request->total,
+                            'nota'          => $request->nota,
                         ]);
                    // }
 
@@ -670,6 +678,45 @@ class KasirrajalController extends Controller
         }
         return 200;
     }
+
+    public function batalkwitansi(Request $request)
+    {
+        $wew = FormatingHelper::session_user();
+        $kdpegsimrs = $wew['kodesimrs'];
+        // return $request;
+        if($request->jenis == 'karcis'){
+            $cek = Karcis::where('nokarcis', $request->nokwitansi)->where('batal', '1')->first();
+            if($cek){
+                return new JsonResponse(['message' => 'Data Sudah Dibatalkan...!!!'], 500);
+            }
+            $data = Karcis::where('nokarcis', $request->nokwitansi)->first();
+            if ($data) {
+                $data->update([
+                    'batal' => '1',
+                    'tgl_batal' => date('Y-m-d H:i:s'),
+                    'user_batal' => $kdpegsimrs ?? ''
+                ]);
+                return new JsonResponse(['data' => $data,'message' => 'Data Berhasil Dibatalkan...!!!'], 200);
+            } else {
+                return new JsonResponse(['message' => 'Data Gagal Dibatalkan...!!!'], 500);
+            }
+        }else{
+            $cek = Kwitansilog::where('nokwitansi', $request->nokwitansi)->where('batal', '1')->first();
+            if($cek){
+                return new JsonResponse(['message' => 'Data Sudah Dibatalkan...!!!'], 500);
+            }
+            $data = Kwitansilog::where('nokwitansi', $request->nokwitansi)->first();
+            if($data){
+                $data->update([
+                    'batal' => '1',
+                    'tgl_batal' => date('Y-m-d H:i:s'),
+                    'user_batal' => $kdpegsimrs ?? ''
+                ]);
+                return new JsonResponse(['data' => $data,'message' => 'Data Berhasil Dibatalkan...!!!'], 200);
+            }
+        }
+    }
+
 
 
 }
