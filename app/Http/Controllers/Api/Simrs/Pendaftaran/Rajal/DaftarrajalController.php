@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Pendaftaran\Rajal;
 
 use App\Helpers\BridgingbpjsHelper;
+use App\Helpers\DateHelper;
 use App\Helpers\FormatingHelper;
 use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Api\Simrs\Antrian\AntrianController;
@@ -299,26 +300,49 @@ class DaftarrajalController extends Controller
 
 
         //  PASIEN MJKN ======================================================================================
-        $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
-            ->where('nomorantrean', '=', $noantrian)
-            ->when($request->nokabpjs, function ($q) use ($request) {
-                $q->where('nomorkartu', $request->nokabpjs);
-            })
-            ->whereDate('tanggalperiksa', '=', $tgl)->first();
+        $bpjsantrian = null;
+        if ($request->nokabpjs) {
+            $count = Bpjsantrian::select('id', 'nomorantrean')
+                ->where('nomorkartu', $request->nokabpjs)
+                ->whereDate('tanggalperiksa', '=', $tgl)
+                ->count();
+            if ($count == 1) {
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                    // ->where('nomorantrean', '=', $noantrian)
+                    // ->when($request->nokabpjs, function ($q) use ($request) {
+                    //     $q->where('nomorkartu', $request->nokabpjs);
+                    // })
+                    ->where('nomorkartu', $request->nokabpjs)
+                    ->whereDate('tanggalperiksa', '=', $tgl)
+                    ->first();
+            } else {
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                    ->where('nomorantrean', '=', $noantrian)
+                    // ->when($request->nokabpjs, function ($q) use ($request) {
+                    //     $q->where('nomorkartu', $request->nokabpjs);
+                    // })
+                    ->where('nomorkartu', $request->nokabpjs)
+                    ->whereDate('tanggalperiksa', '=', $tgl)
+                    ->first();
+            }
+        }
         if (!$bpjsantrian) {
 
             // $hapuskunjunganpoli = KunjunganPoli::where('rs1' , $input->noreg)->first()->delete();
             // $hapuskarcis = Karcispoli::where('rs1', $input->noreg)->first()->delete();
             // return new JsonResponse(['message' => 'DATA PADA BPJS ANTRIAN TIDAK DITEMUKAN'],500);
-            BridantrianbpjsController::addantriantobpjs($input->noreg, $request);
+            $ambilAntrian = BridantrianbpjsController::addantriantobpjs($input->noreg, $request);
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
-            // BridantrianbpjsController::updateWaktu($input, 3);
+            BridantrianbpjsController::updateWaktu($input, 3);
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
                 'antrian' => $cetakantrian,
-                'noreg' => $input->noreg
+                // 'noreg' => $input->noreg
+                'noreg' => $noreg,
+                'ambilAntrian' => $ambilAntrian ?? null,
+                'bpjsantrian' => $bpjsantrian ?? null,
             ], 200);
         }
 
@@ -331,7 +355,7 @@ class DaftarrajalController extends Controller
         ]);
 
 
-        if ($request->barulama === 'baru') {
+        if ($request->barulama == 'baru') {
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input, 3);
@@ -361,11 +385,34 @@ class DaftarrajalController extends Controller
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
                 'antrian' => $cetakantrian,
-                'noreg' => $input->noreg
+                // 'noreg' => $input->noreg,
+                'noreg' => $noreg,
             ], 200);
         }
     }
+    public function tambahAntrian(Request $request)
+    {
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        // ]);
+        $input = new Request([
+            'noreg' => $request->noreg
+        ]);
 
+
+        $ambilAntrian = BridantrianbpjsController::addantriantobpjs($request->noreg, $request);
+        if ($ambilAntrian['metadata']['code'] == 200) {
+            BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
+            BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
+            BridantrianbpjsController::updateWaktu($input, 3);
+        }
+
+        return new JsonResponse([
+            'req' => $request->all(),
+            'ambilAntrian' => $ambilAntrian,
+            'code' => $ambilAntrian['metadata']['code'],
+        ]);
+    }
 
 
     public function updatelogantrian($request, $input)
@@ -546,6 +593,20 @@ class DaftarrajalController extends Controller
                 if (request('flag') == 'TERLAYANI') $q->where('rs17.rs19', '=', '1');
                 else if (request('flag') == 'BELUM TERLAYANI') $q->whereIn('rs17.rs19', ['', '2']);
             })
+            ->when(request('status') == 'GAGAL BRIDGING', function ($q) {
+                $q->leftJoin('bpjs_http_respon', 'bpjs_http_respon.noreg', '=', 'rs17.rs1')
+                    ->where(function ($c) {
+                        $c->where(function ($f) {
+                            $f->where('bpjs_http_respon.url', '=', '/antrean/add')
+                                ->where('bpjs_http_respon.respon', 'like', '%code":201%');
+                        })
+                            ->orWhere(function ($r) {
+                                $r->whereNull('bpjs_http_respon.noreg')
+                                    ->where('rs17.rs4', '');
+                            });
+                    })
+                    ->where('rs17.rs14', 'like', 'bpjs%');
+            })
             ->when(request('nokas'), function ($q) {
                 $q->whereIn('rs15.rs46', request('nokas'));
             })
@@ -554,20 +615,37 @@ class DaftarrajalController extends Controller
                     $q->orderBy('taskid', 'DESC');
                 },
                 'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,pdf',
-                'bpjshttprespon'
+                'bpjshttprespon',
+                'antrian_ambil',
             ])
 
-            ->orderby('rs17.rs3', 'DESC');
-        // ->groupBy('rs17.rs1');
-        // $daftarkunjunganpasienbpjs = $wew->paginate(request('per_page'));
-        // return new JsonResponse($daftarkunjunganpasienbpjs);
-        $req = [
-            'per_page' => request('per_page') ?? 25,
-        ];
-        $totalCount = (clone $wew)->count();
-        $data = $wew->groupBy('rs17.rs1')->simplePaginate($req['per_page']);
-        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
-        return new JsonResponse($resp);
+            ->orderby('rs17.rs3', 'DESC')
+            ->groupBy('rs17.rs1');
+        $daftarkunjunganpasienbpjs = $wew->paginate(request('per_page'));
+        return new JsonResponse($daftarkunjunganpasienbpjs);
+
+        // $req = [
+        //     'per_page' => request('per_page') ?? 25,
+        // ];
+        // $noregQuery = (clone $wew)->select('rs17.rs1')->distinct('rs17.rs1');
+        // $totalCount = $noregQuery->count();
+        // $data = $wew->with([
+        //     'taskid' => function ($q) {
+        //         $q->orderBy('taskid', 'DESC');
+        //     },
+        //     'generalcons:norm,ttdpasien,ttdpetugas,hubunganpasien,pdf',
+        //     'bpjshttprespon',
+        //     'antrian_ambil',
+        // ])
+
+        //     ->orderby('rs17.rs3', 'DESC')->groupBy('rs17.rs1')->simplePaginate($req['per_page']);
+        // $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+        // return new JsonResponse($resp);
+        // return new JsonResponse([
+        //     'resp' => $resp,
+        //     'noregQuery' => $noregQuery->count(),
+        //     'da' => $noregQuery->get(),
+        // ]);
     }
 
     public function antrianmobilejkn()
@@ -749,6 +827,8 @@ class DaftarrajalController extends Controller
             $antrian->delete();
         }
 
+        self::batalAntrian($request->noreg);
+
         if ($request->nosep != '' || $request->nosep != null) {
             if ($kunj->rs4 === '') {
                 Bridbpjscontroller::hapussep($request);
@@ -760,7 +840,34 @@ class DaftarrajalController extends Controller
             return new JsonResponse(['message' => 'Data Berhasil Dihapus...!!!'], 200);
         }
     }
-
+    public static function batalAntrian($booking)
+    {
+        $kodebooking = $booking;
+        $bpjsantrian = BpjsAntrian::select('kodebooking')->where('noreg', $booking)->first();
+        if ($bpjsantrian) {
+            $kodebooking = $bpjsantrian->kodebooking;
+        }
+        $tgltobpjshttpres = DateHelper::getDateTime();
+        $data = [
+            "kodebooking" => $kodebooking,
+            "keterangan" => "Terjadi Kesalahan Pendaftaran.",
+        ];
+        $batalantrian = BridgingbpjsHelper::post_url(
+            'antrean',
+            'antrean/batal',
+            $data
+        );
+        Bpjs_http_respon::create(
+            [
+                'method' => 'POST',
+                'request' => $data,
+                'respon' => $batalantrian,
+                'url' => 'antrean/batal',
+                'tgl' => $tgltobpjshttpres
+            ]
+        );
+        return ($batalantrian);
+    }
     public function simpankonsul(Request $request)
     {
         $simpan = $simpankunjunganpoli = KunjunganPoli::create([

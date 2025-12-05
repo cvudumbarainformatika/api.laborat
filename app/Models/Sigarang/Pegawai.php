@@ -11,8 +11,10 @@ use App\Models\Pegawai\JadwalAbsen;
 use App\Models\Pegawai\JenisPegawai;
 use App\Models\Pegawai\Ruangan;
 use App\Models\Pegawai\TransaksiAbsen;
+use App\Models\Siasik\Master\Organisasi_siasik;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Simrs\Master\Mpoli;
+use App\Models\Simrs\Organisasi\Organisasi;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -102,6 +104,11 @@ class Pegawai extends Model
     public function npd_heder()
     {
         return $this->hasMany(NpdLS_heder::class, 'nip', 'nip');
+    }
+
+    public function bagiansiasik()
+    {
+        return $this->hasOne(Organisasi_siasik::class, 'kodebagian', 'bagian');
     }
 
     public function unitpengelolaharsip()

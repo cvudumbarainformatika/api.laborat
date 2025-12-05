@@ -392,6 +392,7 @@ class PerencanaanpembelianController extends Controller
                 $q->where('nama_obat', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('kd_obat', 'LIKE', '%' . request('q') . '%');
             })
+            ->where('flag', '!=', '1')
             ->with([
                 'stokmaxrs' => function ($mm) {
                     $mm->select(

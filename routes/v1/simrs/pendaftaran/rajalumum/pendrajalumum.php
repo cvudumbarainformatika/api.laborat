@@ -14,6 +14,7 @@ Route::group([
 ], function () {
 
     //simpan rs17  ==> rajalumumsimpan
+    Route::post('/tambah-antrian', [DaftarrajalController::class, 'tambahAntrian']);
     Route::post('/simpandaftar', [DaftarrajalController::class, 'simpankunjunganpoli']);
     Route::get('/masterpasien', [PasienController::class, 'listpasien']);
     Route::get('/cek-data-pasien', [PasienController::class, 'cekDataPasien']);
