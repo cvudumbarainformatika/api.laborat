@@ -6,6 +6,7 @@ use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\SistemBayar;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -242,10 +243,10 @@ class CaripasienController extends Controller
                 ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
                 ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-                ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
-                ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
-                ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
-                ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1');
+                ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1'); //sep
+            // ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
+            // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
+            // ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1');
         } else {
             $select = $query->select(
                 'rs17.rs1',
@@ -259,7 +260,7 @@ class CaripasienController extends Controller
                 'rs19.rs6 as kodepolibpjs',
                 'rs19.panggil_antrian as panggil_antrian',
                 'rs17.rs9 as kodedokter',
-                'master_poli_bpjs.nama as polibpjs',
+                // 'master_poli_bpjs.nama as polibpjs',
                 'rs21.rs2 as dokter',
                 'rs17.rs14 as kodesistembayar',
                 'rs9.rs2 as sistembayar',
@@ -285,25 +286,34 @@ class CaripasienController extends Controller
                 'rs222.kodedokterdpjp as kodedokterdpjp',
                 'rs222.dokterdpjp as dokterdpjp',
                 'rs222.kdunit as kdunit',
-                'memodiagnosadokter.diagnosa as memodiagnosa',
+                // 'memodiagnosadokter.diagnosa as memodiagnosa',
                 'rs17.rs19 as status',
-                'antrian_ambil.nomor as noantrian',
-                'listkirimcasmixRajal.flaging as kunjungancesmix'
+                // 'antrian_ambil.nomor as noantrian',
+                // 'listkirimcasmixRajal.flaging as kunjungancesmix'
             )
                 ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
                 ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
                 ->leftjoin('rs21', 'rs21.rs1', '=', 'rs17.rs9') //dokter
                 ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-                ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1') //sep
-                ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
-                ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
-                ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
-                ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1');
+                ->leftjoin('rs222', 'rs222.rs1', '=', 'rs17.rs1'); //sep
+            // ->leftjoin('master_poli_bpjs', 'rs19.rs6', '=', 'master_poli_bpjs.kode')
+            // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', '=', 'rs17.rs1')
+            // ->leftjoin('antrian_ambil', 'antrian_ambil.noreg', 'rs17.rs1')
+            // ->leftjoin('listkirimcasmixRajal', 'listkirimcasmixRajal.noreg', 'rs17.rs1');
         }
+
+
         $q = $select
             ->whereBetween('rs17.rs3', [$from, $to])
             ->where('rs19.rs4', '=', 'Poliklinik')
             ->whereIn('rs17.rs8', $ruangan)
+            ->when(request('sistemBayar'), function ($q) {
+                // $sitemBayar = [];
+                // if (request('sistemBayar') == '1') {
+                // }
+                $sitemBayar = SistemBayar::select('rs1')->where('groups', request('sistemBayar'))->where('hidden', '1')->pluck('rs1');
+                $q->whereIn('rs17.rs14', $sitemBayar);
+            })
             ->where('rs17.rs8', '!=', 'POL014')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
@@ -324,7 +334,7 @@ class CaripasienController extends Controller
                     ->orWhere('rs222.rs8', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('rs9.rs2', 'LIKE', '%' . request('q') . '%');
             })
-            ->orderby('antrian_ambil.nomor', 'Asc')
+            ->orderby('rs17.rs3', 'Asc')
             ->groupby('rs17.rs1');
         return $q;
     }
