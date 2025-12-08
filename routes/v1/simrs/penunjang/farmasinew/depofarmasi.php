@@ -102,4 +102,7 @@ Route::group([
 
     // gat for print
     Route::get('/get-for-print', [EresepController::class, 'getForPrint']);
+
+    // list pengunjung rajal
+    Route::get('/list-pengunjung-rajal', [CaripasienController::class, 'listPengunjungRajal']);
 });
