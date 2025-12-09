@@ -4,6 +4,12 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Depo;
 
 use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresepracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinci;
+use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarrinciracikan;
+use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_r;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\SistemBayar;
@@ -337,5 +343,55 @@ class CaripasienController extends Controller
             ->orderby('rs17.rs3', 'Asc')
             ->groupby('rs17.rs1');
         return $q;
+    }
+
+    public function listEresepByNorm(Request $request)
+    {
+        $data = Resepkeluarheder::where('norm', $request->norm)
+            ->with(
+                'poli:rs1,rs2',
+                'ruanganranap:rs1,rs2',
+                'ketdokter:kdpegsimrs,nama',
+                'sistembayar:rs1,rs2',
+                'datapasien:rs1,rs2',
+                //     'rincian.mobat:kd_obat,nama_obat',
+                //     'rincianracik.mobat:kd_obat,nama_obat',
+                //     'permintaanresep.mobat:kd_obat,nama_obat',
+                //     'permintaanracikan.mobat:kd_obat,nama_obat',
+                //     'asalpermintaanresep.mobat:kd_obat,nama_obat',
+                //     'asalpermintaanracikan.mobat:kd_obat,nama_obat',
+            )
+            ->when($request->from != null, function ($q) use ($request) {
+                $q->where(function ($r) use ($request) {
+                    $from = $request->from . ' 00:00:00';
+                    $to = $request->to . ' 23:59:59';
+                    $r->whereBetween('tgl_permintaan', [$from, $to])
+                        ->orWhereBetween('tgl_selesai', [$from, $to]);
+                });
+            })
+            ->orderBy('tgl_permintaan', 'DESC')
+            ->get();
+        return new JsonResponse([
+            'req' => $request->all(),
+            'data' => $data
+        ]);
+    }
+    public function getRincianResep()
+    {
+        $noresep = request('noresep');
+        $noresep_asal = request('noresep_asal');
+        // permintaan
+        $data['permintaan'] = Permintaanresep::where('noresep', $noresep)->with('mobat:kd_obat,nama_obat')->get();
+        $data['permintaanIter'] = Permintaanresep::where('noresep', $noresep_asal)->with('mobat:kd_obat,nama_obat')->get();
+        // permintaan racikan
+        $data['permintaanRacikan'] = Permintaanresepracikan::where('noresep', $noresep)->with('mobat:kd_obat,nama_obat')->get();
+        $data['permintaanIterRacikan'] = Permintaanresepracikan::where('noresep', $noresep_asal)->with('mobat:kd_obat,nama_obat')->get();
+        // obat keluar
+        $data['rincian'] = Resepkeluarrinci::where('noresep', $noresep)->get();
+        $data['rincianRacikan'] = Resepkeluarrinciracikan::where('noresep', $noresep)->get();
+        // retur
+        $data['retur'] = Returpenjualan_r::where('noresep', $noresep)->get();
+
+        return new JsonResponse($data);
     }
 }
