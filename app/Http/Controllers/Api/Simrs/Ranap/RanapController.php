@@ -121,7 +121,11 @@ class RanapController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
-            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
+            // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
+            ->leftJoin('memodiagnosadokter', function($join) {
+                $join->on('memodiagnosadokter.noreg', '=', 'rs23.rs1')
+                    ->where('memodiagnosadokter.kdruang', '!=', 'POL014');
+            })
             ->leftjoin('rs26', 'rs26.rs1', 'rs23.rs23') // master cara keluar
             ->leftjoin('rs23_nosurat', 'rs23_nosurat.noreg', 'rs23.rs1')
             ->leftjoin('rs23_sambung', 'rs23_sambung.noreg', 'rs23.rs1') // sambungan rs23
@@ -282,7 +286,11 @@ class RanapController extends Controller
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
-            ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
+            // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
+            ->leftJoin('memodiagnosadokter', function($join) {
+                $join->on('memodiagnosadokter.noreg', '=', 'rs23.rs1')
+                    ->where('memodiagnosadokter.kdruang', '!=', 'POL014');
+            })
 
 
             ->where(function ($query) use ($ruangan) {
