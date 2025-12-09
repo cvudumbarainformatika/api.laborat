@@ -74,6 +74,7 @@ class ImplementasiEdukasiController extends Controller
         $data->evaluasi = $request->evaluasi;
         $data->penerima = $request->penerima;
         $data->namaPenerima = $request->namaPenerima;
+        $data->tingkatPemahaman = $request->tingkatPemahaman;
         // $data->ttdPenerima = $request->ttdPenerima;
         $data->kdruang = $request->kdruang;
         $data->estimasi = $request->estimasi;
