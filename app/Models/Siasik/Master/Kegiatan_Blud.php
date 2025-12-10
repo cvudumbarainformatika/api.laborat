@@ -12,5 +12,8 @@ class Kegiatan_Blud extends Model
     // protected $guarded = ['no'];
     protected $primaryKey = 'no';
     protected $table = 'kegiatan_blud';
+    public $incrementing = true;
     public $timestamps = false;
+    protected $keyType = 'int';
+    protected $guarded = [];
 }
