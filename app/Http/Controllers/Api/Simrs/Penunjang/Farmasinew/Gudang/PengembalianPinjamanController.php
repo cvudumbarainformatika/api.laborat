@@ -182,6 +182,7 @@ class PengembalianPinjamanController extends Controller
             })
             ->whereBetween('tgl_pengembalian', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
             ->where('kdruang', request('kdruang'))
+            ->orderBy('tgl_pengembalian', 'DESC')
             ->paginate(request('per_page'));
         $data['data'] = collect($raw)['data'];
         $data['meta'] = collect($raw)->except('data');
@@ -266,9 +267,9 @@ class PengembalianPinjamanController extends Controller
                             'nopengembalian' => $key->nopengembalian,
                             'kdobat' => $key->kdobat,
                             'id_rincipenerimaan' => $key->id_rincipenerimaan,
+                            'nopenerimaan' => $stokItem->nopenerimaan,
                         ],
                         [
-                            'nopenerimaan' => $stokItem->nopenerimaan,
                             'jml_dikembalikan' => $pengurangan,
                             'harga' => $stokItem->harga,
                         ]
