@@ -349,10 +349,11 @@ class DaftarrajalController extends Controller
         $id = $bpjsantrian->id;
         $nomorantrean = $bpjsantrian->nomorantrean;
         $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
-        $updatebpjsantrian->update([
-            'noreg' => $input->noreg,
-            'checkin' => date('Y-m-d H:i:s')
-        ]);
+        $rm = optional($masterpasien)->rs1;
+        if ($rm) $updatebpjsantrian->norm = $rm;
+        $updatebpjsantrian->noreg = $input->noreg;
+        $updatebpjsantrian->checkin = date('Y-m-d H:i:s');
+        $updatebpjsantrian->save();
 
 
         if ($request->barulama == 'baru') {
@@ -362,11 +363,10 @@ class DaftarrajalController extends Controller
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
             if ($updatebpjsantrian && $cetakantrian) {
                 $adaAntr = Antrianambil::where('noreg', $noreg)->first();
-                // $rm = $masterpasien->rs1 ?? null;
-                $rm = optional($masterpasien)->rs1;
-                if ($adaAntr) $updatebpjsantrian->nomorantrean = $adaAntr->nomor;
-                if ($rm) $updatebpjsantrian->norm = $rm;
-                if ($adaAntr || $rm) $updatebpjsantrian->save();
+                if ($adaAntr) {
+                    $updatebpjsantrian->nomorantrean = $adaAntr->nomor;
+                    $updatebpjsantrian->save();
+                }
             }
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
@@ -381,7 +381,7 @@ class DaftarrajalController extends Controller
                         'norm' => $request->norm,
                         'tgl_booking' => date('Y-m-d'),
                         'pelayanan_id' => $request->kodepoli,
-                        'nomor' => $noantrian,
+                        'nomor' => $nomorantrean,
                         'user_id' => auth()->user()->pegawai_id
                     ]
                 );
