@@ -355,13 +355,14 @@ class DaftarrajalController extends Controller
         $nomorantrean = $bpjsantrian->nomorantrean;
         $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
         $rm = optional($masterpasien)->rs1;
-        if ($rm && (!$updatebpjsantrian->norm)) $updatebpjsantrian->norm = $rm;
+        $tidakAdaNorm = !$updatebpjsantrian->norm;
+        if ($rm && $tidakAdaNorm) $updatebpjsantrian->norm = $rm;
         $updatebpjsantrian->noreg = $input->noreg;
         $updatebpjsantrian->checkin = date('Y-m-d H:i:s');
         $updatebpjsantrian->save();
 
 
-        if ($request->barulama == 'baru') {
+        if ($request->barulama == 'baru' || $tidakAdaNorm) {
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input, 3);
