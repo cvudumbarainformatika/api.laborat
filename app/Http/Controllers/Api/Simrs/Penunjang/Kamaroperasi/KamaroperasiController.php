@@ -232,6 +232,7 @@ class KamaroperasiController extends Controller
     {
         $data = PermintaanOperasi::where('rs1', $request->noreg)
             ->with([
+                'manymemo',
                 'kunjunganranap.masterpasien',
                 'kunjunganrajal.masterpasien',
                 'sistembayar:rs1,rs2,rs9,groups',
