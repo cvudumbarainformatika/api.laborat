@@ -19,6 +19,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsantrian;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Rajalumum\BpjsAntrianBatal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
@@ -325,6 +326,9 @@ class DaftarrajalController extends Controller
                     ->whereDate('tanggalperiksa', '=', $tgl)
                     ->first();
             }
+
+            $batalAntrian = BpjsAntrianBatal::where('kodebooking', $bpjsantrian->kodebooking)->first();
+            if ($batalAntrian) $bpjsantrian = null;
         }
         if (!$bpjsantrian) {
 
@@ -872,6 +876,14 @@ class DaftarrajalController extends Controller
                 'respon' => $batalantrian,
                 'url' => 'antrean/batal',
                 'tgl' => $tgltobpjshttpres
+            ]
+        );
+        BpjsAntrianBatal::updateOrCreate(
+            [
+                'kodebooking' => $kodebooking
+            ],
+            [
+                'keterangan' => 'Pasien Dihapus'
             ]
         );
         return ($batalantrian);
