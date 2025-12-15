@@ -308,7 +308,7 @@ class DaftarrajalController extends Controller
                 ->whereDate('tanggalperiksa', '=', $tgl)
                 ->count();
             if ($count == 1) {
-                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean', 'kodebooking')
                     // ->where('nomorantrean', '=', $noantrian)
                     // ->when($request->nokabpjs, function ($q) use ($request) {
                     //     $q->where('nomorkartu', $request->nokabpjs);
@@ -317,7 +317,7 @@ class DaftarrajalController extends Controller
                     ->whereDate('tanggalperiksa', '=', $tgl)
                     ->first();
             } else {
-                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean', 'kodebooking')
                     ->where('nomorantrean', '=', $noantrian)
                     // ->when($request->nokabpjs, function ($q) use ($request) {
                     //     $q->where('nomorkartu', $request->nokabpjs);
@@ -326,9 +326,10 @@ class DaftarrajalController extends Controller
                     ->whereDate('tanggalperiksa', '=', $tgl)
                     ->first();
             }
-
-            $batalAntrian = BpjsAntrianBatal::where('kodebooking', $bpjsantrian->kodebooking)->first();
-            if ($batalAntrian) $bpjsantrian = null;
+            if ($bpjsantrian) {
+                $batalAntrian = BpjsAntrianBatal::where('kodebooking', $bpjsantrian->kodebooking)->first();
+                if ($batalAntrian) $bpjsantrian = null;
+            }
         }
         if (!$bpjsantrian) {
 
@@ -879,12 +880,8 @@ class DaftarrajalController extends Controller
             ]
         );
         BpjsAntrianBatal::updateOrCreate(
-            [
-                'kodebooking' => $kodebooking
-            ],
-            [
-                'keterangan' => 'Pasien Dihapus'
-            ]
+            ['kodebooking' => $kodebooking],
+            ['keterangan' => 'Pasien Dihapus']
         );
         return ($batalantrian);
     }
