@@ -355,7 +355,7 @@ class DaftarrajalController extends Controller
         $nomorantrean = $bpjsantrian->nomorantrean;
         $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
         $rm = optional($masterpasien)->rs1;
-        if ($rm) $updatebpjsantrian->norm = $rm;
+        if ($rm && (!$updatebpjsantrian->norm)) $updatebpjsantrian->norm = $rm;
         $updatebpjsantrian->noreg = $input->noreg;
         $updatebpjsantrian->checkin = date('Y-m-d H:i:s');
         $updatebpjsantrian->save();
