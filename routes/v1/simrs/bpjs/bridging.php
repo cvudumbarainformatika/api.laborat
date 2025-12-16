@@ -11,4 +11,10 @@ Route::group([
     'prefix' => 'simrs/bpjs/bridging'
 ], function () {
     Route::get('/ceksep', [CekkingBpjsController::class, 'ceksep']);
+
+
+    
+    Route::get('/dokter-by-poli', [CekkingBpjsController::class, 'getDokterByPoli']);
+
+    
 });

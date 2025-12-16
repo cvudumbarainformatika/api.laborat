@@ -19,6 +19,7 @@ use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjsantrian;
 use App\Models\Simrs\Pendaftaran\Karcispoli;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Antrianambil;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Bpjs_http_respon;
+use App\Models\Simrs\Pendaftaran\Rajalumum\BpjsAntrianBatal;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Logantrian;
 use App\Models\Simrs\Pendaftaran\Rajalumum\Mjknantrian;
 use App\Models\Simrs\Rajal\Listkonsulantarpoli;
@@ -307,7 +308,7 @@ class DaftarrajalController extends Controller
                 ->whereDate('tanggalperiksa', '=', $tgl)
                 ->count();
             if ($count == 1) {
-                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean', 'kodebooking')
                     // ->where('nomorantrean', '=', $noantrian)
                     // ->when($request->nokabpjs, function ($q) use ($request) {
                     //     $q->where('nomorkartu', $request->nokabpjs);
@@ -316,7 +317,7 @@ class DaftarrajalController extends Controller
                     ->whereDate('tanggalperiksa', '=', $tgl)
                     ->first();
             } else {
-                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean')
+                $bpjsantrian = Bpjsantrian::select('id', 'nomorantrean', 'kodebooking')
                     ->where('nomorantrean', '=', $noantrian)
                     // ->when($request->nokabpjs, function ($q) use ($request) {
                     //     $q->where('nomorkartu', $request->nokabpjs);
@@ -324,6 +325,10 @@ class DaftarrajalController extends Controller
                     ->where('nomorkartu', $request->nokabpjs)
                     ->whereDate('tanggalperiksa', '=', $tgl)
                     ->first();
+            }
+            if ($bpjsantrian) {
+                $batalAntrian = BpjsAntrianBatal::where('kodebooking', $bpjsantrian->kodebooking)->first();
+                if ($batalAntrian) $bpjsantrian = null;
             }
         }
         if (!$bpjsantrian) {
@@ -349,21 +354,30 @@ class DaftarrajalController extends Controller
         $id = $bpjsantrian->id;
         $nomorantrean = $bpjsantrian->nomorantrean;
         $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
-        $updatebpjsantrian->update([
-            'noreg' => $input->noreg,
-            'checkin' => date('Y-m-d H:i:s')
-        ]);
+        $rm = optional($masterpasien)->rs1;
+        $tidakAdaNorm = !$updatebpjsantrian->norm;
+        if ($rm && $tidakAdaNorm) $updatebpjsantrian->norm = $rm;
+        $updatebpjsantrian->noreg = $input->noreg;
+        $updatebpjsantrian->checkin = date('Y-m-d H:i:s');
+        $updatebpjsantrian->save();
 
 
-        if ($request->barulama == 'baru') {
+        if ($request->barulama == 'baru' || $tidakAdaNorm) {
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input, 3);
             $cetakantrian = AntrianController::ambilnoantrian($request, $input);
+            if ($updatebpjsantrian && $cetakantrian) {
+                $adaAntr = Antrianambil::where('noreg', $noreg)->first();
+                if ($adaAntr) {
+                    $updatebpjsantrian->nomorantrean = $adaAntr->nomor;
+                    $updatebpjsantrian->save();
+                }
+            }
             return new JsonResponse([
                 'message' => 'data berhasil disimpan',
                 'antrian' => $cetakantrian,
-                'noreg' => $input->noreg
+                'noreg' => $noreg
             ], 200);
         } else {
             if ($bpjsantrian) {
@@ -373,7 +387,7 @@ class DaftarrajalController extends Controller
                         'norm' => $request->norm,
                         'tgl_booking' => date('Y-m-d'),
                         'pelayanan_id' => $request->kodepoli,
-                        'nomor' => $noantrian,
+                        'nomor' => $nomorantrean,
                         'user_id' => auth()->user()->pegawai_id
                     ]
                 );
@@ -408,7 +422,7 @@ class DaftarrajalController extends Controller
         }
 
         return new JsonResponse([
-            'req' => $request->all(),
+            // 'req' => $request->all(),
             'ambilAntrian' => $ambilAntrian,
             'code' => $ambilAntrian['metadata']['code'],
         ]);
@@ -865,6 +879,10 @@ class DaftarrajalController extends Controller
                 'url' => 'antrean/batal',
                 'tgl' => $tgltobpjshttpres
             ]
+        );
+        BpjsAntrianBatal::updateOrCreate(
+            ['kodebooking' => $kodebooking],
+            ['keterangan' => 'Pasien Dihapus']
         );
         return ($batalantrian);
     }

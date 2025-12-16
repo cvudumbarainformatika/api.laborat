@@ -1458,6 +1458,7 @@ class EresepController extends Controller
                     'rs46 as noka',
                     'rs16 as tgllahir',
                     'rs2 as nama_panggil',
+                    'rs55 as tlp',
                     DB::raw('concat(rs4," KEL ",rs5," RT ",rs7," RW ",rs8," ",rs6," ",rs11," ",rs10) as alamat'),
                 );
             },

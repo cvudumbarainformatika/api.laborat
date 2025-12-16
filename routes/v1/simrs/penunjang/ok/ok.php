@@ -13,4 +13,5 @@ Route::group([
     Route::post('/hapuspermintaanok', [KamaroperasiController::class, 'hapuspermintaanok']);
 
     Route::get('/listkamaroperasi', [KamaroperasiController::class, 'listkamaroperasi']);
+    Route::post('/buka-layanan', [KamaroperasiController::class, 'bukaLayanan']);
 });

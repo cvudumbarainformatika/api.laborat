@@ -3,73 +3,49 @@
 namespace App\Http\Controllers\Api\Siasik\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Siasik\Master\Kegiatan_Blud;
+use App\Models\Siasik\Anggaran\Penetapan_Pagu;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
-use App\Models\Siasik\Master\Organisasi_siasik;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
-class KegiatanBludController extends Controller
+class Mapping_KegiatanPtkController extends Controller
 {
-    public function getBidang(){
-        $perPage = request('per_page', 100); // Default ke 100 per halaman, 0 untuk semua data
-
-        $query = Organisasi_siasik::select('*')
-            ->where('kode4', '')
-            ->whereNotNull('kode3')
-            ->whereNotNull('panggilan');
-        // Pencarian
-        if (request('q')) {
-            $cari = request('q');
-            $query->where(function ($q) use ($cari) {
-                $q->where('nama', 'like', '%' . $cari . '%')
-                  ->orWhere('panggilan', 'like', '%' . $cari . '%');
-            });
-        }
-
-        if ($perPage <= 0) {
-            $akun = $query->get();
-            return new JsonResponse(['data' => $akun]);
-        }
-
-        $akun = $query->simplePaginate($perPage);
-
-        return new JsonResponse($akun);
-    }
-
     public function index()
     {
         $tahun = request('tahun','Y');
-        $data = Kegiatan_Blud::where('tahun',$tahun)
+        $data = Mapping_Bidang_Ptk_Kegiatan::where('tahun',$tahun)
         ->when(request('q'),function ($query) {
-            $query->where('nomenklatur', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('organisasi_nama', 'LIKE', '%' . request('q') . '%')
+            $query->where('kodepptk', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('namapptk', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('kegiatan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('bidang', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('alias', 'LIKE', '%' . request('q') . '%')
             ;
         })->get();
         return new JsonResponse($data);
     }
 
-
-
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'nomenklatur' => 'required',
-            'organisasi_kode1' => 'required',
-            'organisasi_kode2' => 'required',
-            'organisasi_kode3' => 'required',
-            'organisasi_nama' => 'required',
-            'kode' => 'required',
+            'kodepptk' => 'required',
+            'namapptk' => 'required',
+            'kodekegiatan' => 'required',
+            'kegiatan' => 'required',
+            'kodebidang' => 'required',
+            'bidang' => 'required',
             'tahun' => 'required',
+            'alias' => 'required',
         ], [
-            'nomenklatur.required' => 'NIP Harus Di isi.',
-            'organisasi_kode1.required' => 'Bagian Harus Di isi.',
-            'organisasi_kode2.required' => 'Bagian Harus Di isi.',
-            'organisasi_kode3.required' => 'Bagian Harus Di isi.',
-            'organisasi_nama.required' => 'Bagian Harus Di isi.',
-            'kode.required' => 'Kode Bagian Harus Di isi.',
-            'tahun.required' => 'Bagian Harus Di isi.',
+            'kodepptk.required' => 'Kode PTK Harus Di isi.',
+            'namapptk.required' => 'Nama PTK Harus Di isi.',
+            'kodekegiatan.required' => 'Kode Kegiatan Harus Di isi.',
+            'kegiatan.required' => 'Kegiatan Harus Di isi.',
+            'kodebidang.required' => 'Kode Bidang Harus Di isi.',
+            'bidang.required' => 'Bidang Harus Di isi.',
+            'tahun.required' => 'Tahun Harus Di isi.',
+            'alias.required' => 'Alias Harus Di isi.',
         ]);
 
         // $time = date('Y-m-d H:i:s');
@@ -93,18 +69,19 @@ class KegiatanBludController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = Kegiatan_Blud::updateOrCreate(
+            $data = Mapping_Bidang_Ptk_Kegiatan::updateOrCreate(
                 [
-                    'no' => $request->no
+                    'id' => $request->id
                 ],
                 [
-                    'nomenklatur' => $validated['nomenklatur'],
-                    'organisasi_kode1' => $validated['organisasi_kode1'],
-                    'organisasi_kode2' => $validated['organisasi_kode2'],
-                    'organisasi_kode3' => $validated['organisasi_kode3'],
-                    'organisasi_nama' => $validated['organisasi_nama'],
-                    'kode' => $validated['kode'],
+                    'kodepptk' => $validated['kodepptk'],
+                    'namapptk' => $validated['namapptk'],
+                    'kodekegiatan' => $validated['kodekegiatan'],
+                    'kegiatan' => $validated['kegiatan'],
+                    'kodebidang' => $validated['kodebidang'],
+                    'bidang' => $validated['bidang'],
                     'tahun' => $validated['tahun'],
+                    'alias' => $validated['alias']
                 ]
             );
             // if ($anggaran) {
@@ -129,13 +106,12 @@ class KegiatanBludController extends Controller
         try {
             // Validasi request
             $validated = $request->validate([
-                'no' => 'required'
+                'id' => 'required'
             ]);
 
             DB::beginTransaction();
 
-            // $data = Kegiatan_Blud::find($validated['no']);
-            $data = Kegiatan_Blud::where('no', $validated['no'])->first();
+            $data = Mapping_Bidang_Ptk_Kegiatan::find($validated['id']);
 
             if (!$data) {
                 return response()->json([
@@ -143,15 +119,13 @@ class KegiatanBludController extends Controller
                     'message' => 'Data tidak ditemukan'
                 ], 404);
             }
-
-            $Mapping = Mapping_Bidang_Ptk_Kegiatan::where('kodekegiatan', (string) $data->no)->exists();
-            if ($Mapping) {
+            $PenetapanPagu = Penetapan_Pagu::where('kodekegiatan', $data->kodekegiatan)->exists();
+            if ($PenetapanPagu) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data tidak dapat dihapus karena sudah dilakukan Mapping'
+                    'message' => 'Data tidak dapat dihapus karena sudah dilakukan Penetapan Pagu'
                 ], 403);
             }
-            // Hapus data utama
             $data->delete();
 
             DB::commit();

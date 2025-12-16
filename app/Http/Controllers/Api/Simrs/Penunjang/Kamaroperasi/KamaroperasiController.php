@@ -107,20 +107,71 @@ class KamaroperasiController extends Controller
                 DB::raw('coalesce(pasien17.rs17, pasien23.rs17) as kelamin'),
                 DB::raw('( CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END ) as norm'),
                 'rs9.groups as groups',
-                DB::raw('coalesce(
-          concat(TIMESTAMPDIFF(YEAR, pasien17.rs16, CURDATE())," Tahun ",
-          TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()) % 12," Bulan ",
-          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()), pasien17.rs16), CURDATE()), " Hari"),
-          concat(TIMESTAMPDIFF(YEAR, pasien23.rs16, CURDATE())," Tahun ",
-          TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()) % 12," Bulan ",
-          TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()), pasien23.rs16), CURDATE()), " Hari")
-        )
-        AS usia'),
+                'rs9.rs2 as nama_sistembayar',
+                DB::raw(
+                    'coalesce(
+                            concat(TIMESTAMPDIFF(YEAR, pasien17.rs16, CURDATE())," Tahun ",
+                            TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()) % 12," Bulan ",
+                            TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien17.rs16, CURDATE()), pasien17.rs16), CURDATE()), " Hari"),
+                            concat(TIMESTAMPDIFF(YEAR, pasien23.rs16, CURDATE())," Tahun ",
+                            TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()) % 12," Bulan ",
+                            TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, pasien23.rs16, CURDATE()), pasien23.rs16), CURDATE()), " Hari")
+                            )
+                            AS usia'
+                ),
+                DB::raw(
+                    'coalesce(
+                            concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang), 
+                            concat(pasien23.rs3," ",pasien23.gelardepan," ",pasien23.rs2," ",pasien23.gelarbelakang)
+                            ) as nama'
+                ),
+                DB::raw(
+                    'coalesce(
+                            concat(pasien17.rs4," KEL ",pasien17.rs5," RT ",pasien17.rs7," RW ",pasien17.rs8," ",pasien17.rs6," ",pasien17.rs11," ",pasien17.rs10),
+                            concat(pasien23.rs4," KEL ",pasien23.rs5," RT ",pasien23.rs7," RW ",pasien23.rs8," ",pasien23.rs6," ",pasien23.rs11," ",pasien23.rs10)
+                            ) as alamat'
+                ),
+                'rs21.rs2 as nama_dokter',
+                DB::raw('coalesce(pasien17.rs2, pasien23.rs2) as nama_panggil'),
+                DB::raw('coalesce(pasien17.rs16, pasien23.rs16) as tgllahir'),
+                DB::raw('coalesce(pasien17.rs17, pasien23.rs17) as kelamin'),
+                DB::raw('coalesce(pasien17.rs18, pasien23.rs18) as pendidikan'),
+                DB::raw('coalesce(pasien17.rs22, pasien23.rs22) as agama'),
+                DB::raw('coalesce(pasien17.rs37, pasien23.rs37) as templahir'),
+                DB::raw('coalesce(pasien17.rs39, pasien23.rs39) as suku'),
+                DB::raw('coalesce(pasien17.rs40, pasien23.rs40) as jenispasien'),
+                DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
+                DB::raw('coalesce(pasien17.rs49, pasien23.rs49) as noktp'),
+                DB::raw('coalesce(pasien17.rs55, pasien23.rs55) as nohp'),
+                DB::raw(
+                    '(  
+                        CASE 
+                            WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
+                        END
+                    ) as ruangan'
+                ),
+                DB::raw(
+                    '( 
+                        CASE 
+                            WHEN rs19.rs4 IS NOT NULL THEN rs19.rs2 ELSE rs24.rs2    
+                        END
+                    ) as poli'
+                ),
+                DB::raw(
+                    '( 
+                        CASE 
+                            WHEN rs200.rs10 = "POL14" THEN rs17.rs3 ELSE rs23.rs3    
+                        END
+                    ) as tgl_mrs'
+                ),
 
             )->leftjoin('rs17', 'rs17.rs1', '=', 'rs200.rs1') //rajal
             ->leftjoin('rs23', 'rs23.rs1', '=', 'rs200.rs1') //ranap
             ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
+            ->leftjoin('rs19', 'rs19.rs1', '=', 'rs200.rs10') //poli
+            ->leftjoin('rs24', 'rs24.rs1', '=', 'rs200.rs10') //ruangan ranap
+            ->leftjoin('rs21', 'rs21.rs1', '=', 'rs200.rs8') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs200.rs14') //sistembayar
             ->where(function ($sts) use ($status) {
                 if ($status !== 'all') {
@@ -138,37 +189,37 @@ class KamaroperasiController extends Controller
                     ->orWhere(DB::raw('coalesce(pasien17.rs2, pasien23.rs2)'), 'LIKE', '%' . request('q') . '%')
                     ->orWhere(DB::raw('coalesce(pasien17.rs1, pasien23.rs1)'), 'LIKE', '%' . request('q') . '%');
             })
-            ->whereBetween('rs200.rs3', [$tgl, $tglx])
-            ->with(
-                [
-                    'kunjunganranap.masterpasien',
-                    'kunjunganrajal.masterpasien',
-                    'sistembayar',
-                    'dokter',
-                    'kunjunganranap.relmasterruangranap',
-                    'kunjunganrajal.relmpoli',
-                    'permintaanobatoperasi' => function ($permintaanobatoperasi) {
-                        $permintaanobatoperasi->with([
-                            'rinci' => function ($rinci) {
-                                $rinci->with([
-                                    'obat:kd_obat,nama_obat'
-                                ])
-                                    ->orderBy('id', 'ASC');
-                            }
-                        ])
-                            ->whereIn('flag', ['', '1', '2', '3', '4'])
-                            ->orderBy('id', 'DESC');
-                    },
-                    'newapotekrajal' => function ($newapotekrajal) {
-                        $newapotekrajal->with([
-                            'permintaanresep.mobat:kd_obat,nama_obat',
-                            'permintaanracikan.mobat:kd_obat,nama_obat',
-                        ])
-                            ->whereIn('flag', ['', '1', '2', '3', '4'])
-                            ->orderBy('id', 'DESC');
-                    },
-                ]
-            );
+            ->whereBetween('rs200.rs3', [$tgl, $tglx]);
+        // ->with(
+        //     [
+        //         'kunjunganranap.masterpasien',
+        //         'kunjunganrajal.masterpasien',
+        //         'sistembayar',
+        //         'dokter',
+        //         'kunjunganranap.relmasterruangranap',
+        //         'kunjunganrajal.relmpoli',
+        //         'permintaanobatoperasi' => function ($permintaanobatoperasi) {
+        //             $permintaanobatoperasi->with([
+        //                 'rinci' => function ($rinci) {
+        //                     $rinci->with([
+        //                         'obat:kd_obat,nama_obat'
+        //                     ])
+        //                         ->orderBy('id', 'ASC');
+        //                 }
+        //             ])
+        //                 ->whereIn('flag', ['', '1', '2', '3', '4'])
+        //                 ->orderBy('id', 'DESC');
+        //         },
+        //         'newapotekrajal' => function ($newapotekrajal) {
+        //             $newapotekrajal->with([
+        //                 'permintaanresep.mobat:kd_obat,nama_obat',
+        //                 'permintaanracikan.mobat:kd_obat,nama_obat',
+        //             ])
+        //                 ->whereIn('flag', ['', '1', '2', '3', '4'])
+        //                 ->orderBy('id', 'DESC');
+        //         },
+        //     ]
+        // );
         $totalCount = (clone $listkamaroperasi)->count();
         $data = $listkamaroperasi->simplePaginate($req['per_page']);
         // ->paginate(request('per_page'));
@@ -176,5 +227,42 @@ class KamaroperasiController extends Controller
         $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
         return new JsonResponse($resp);
         // return new JsonResponse($listkamaroperasi);
+    }
+    public function bukaLayanan(Request $request)
+    {
+        $data = PermintaanOperasi::where('rs1', $request->noreg)
+            ->with([
+                'manymemo',
+                'kunjunganranap.masterpasien',
+                'kunjunganrajal.masterpasien',
+                'sistembayar:rs1,rs2,rs9,groups',
+                'dokter:nama,kdpegsimrs',
+                'kunjunganranap.relmasterruangranap',
+                'kunjunganrajal.relmpoli',
+                'permintaanobatoperasi' => function ($permintaanobatoperasi) {
+                    $permintaanobatoperasi->with([
+                        'rinci' => function ($rinci) {
+                            $rinci->with([
+                                'obat:kd_obat,nama_obat'
+                            ])
+                                ->orderBy('id', 'ASC');
+                        }
+                    ])
+                        ->whereIn('flag', ['', '1', '2', '3', '4'])
+                        ->orderBy('id', 'DESC');
+                },
+                'newapotekrajal' => function ($newapotekrajal) {
+                    $newapotekrajal->with([
+                        'permintaanresep.mobat:kd_obat,nama_obat',
+                        'permintaanracikan.mobat:kd_obat,nama_obat',
+                    ])
+                        ->whereIn('flag', ['', '1', '2', '3', '4'])
+                        ->orderBy('id', 'DESC');
+                },
+            ])
+            ->first();
+        return new JsonResponse([
+            'data' => $data
+        ]);
     }
 }
