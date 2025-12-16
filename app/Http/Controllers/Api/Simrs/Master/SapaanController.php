@@ -19,6 +19,7 @@ class SapaanController extends Controller
         $query = Cache::remember('sapaan', now()->addDays(7), function () {
             return Msapaan::query()
             ->selectRaw('id1 as kode,rs2 as sapaan,rs1 as kodex')
+            ->where('hidden', '')
             ->get();
         });
 

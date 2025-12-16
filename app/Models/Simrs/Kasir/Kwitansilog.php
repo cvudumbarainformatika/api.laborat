@@ -20,6 +20,6 @@ class Kwitansilog extends Model
     }
     public function pegawai()
     {
-        return $this->hasOne(Pegawai::class, 'kdpegsimrs','users');
+        return $this->hasOne(Pegawai::class, 'kdpegsimrs','userid');
     }
 }

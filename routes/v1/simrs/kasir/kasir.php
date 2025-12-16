@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Simrs\Kasir\BillingbynoregController;
 use App\Http\Controllers\Api\Simrs\Kasir\CariKarcisController;
 use App\Http\Controllers\Api\Simrs\Kasir\CariKwitansinonTunai;
+use App\Http\Controllers\Api\Simrs\Kasir\CreateTbpController;
 use App\Http\Controllers\Api\Simrs\Kasir\FlagingManualVaController;
 use App\Http\Controllers\Api\Simrs\Kasir\KasirrajalController;
 use Illuminate\Support\Facades\Route;
@@ -41,4 +42,12 @@ Route::group([
     Route::post('/va/flagingmanualva', [FlagingManualVaController::class, 'flagingmanual']);
 
     Route::post('/rajal/batalkwitansi', [KasirrajalController::class, 'batalkwitansi']);
+
+    Route::get('/tbp/masterkasir', [CreateTbpController::class, 'masterkasir']);
+    Route::get('/tbp/getdatatbp', [CreateTbpController::class, 'getdatatbp']);
+    Route::get('/tbp/cariKwitansi', [CreateTbpController::class, 'cariKwitansi']);
+    Route::get('/tbp/getmasterkasir', [CreateTbpController::class, 'getmasterkasir']);
+    Route::post('/tbp/simpanTbp', [CreateTbpController::class, 'createnotatbp']);
+    Route::post('/tbp/batal', [CreateTbpController::class, 'batalTbp']);
+    Route::get('/tbp/getrincianTbp', [CreateTbpController::class, 'getrincianTbp']);
 });
