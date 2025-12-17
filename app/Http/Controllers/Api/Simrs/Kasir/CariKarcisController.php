@@ -19,6 +19,13 @@ class CariKarcisController extends Controller
         return new JsonResponse(['data' => $data], 200);
     }
 
+    public function carikonsulantarpoli()
+    {
+        $noreg = request('noreg');
+        $data = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->first();
+        return new JsonResponse(['data' => $data], 200);
+    }
+
     public function cariobat()
     {
         $noreg = request('noreg');

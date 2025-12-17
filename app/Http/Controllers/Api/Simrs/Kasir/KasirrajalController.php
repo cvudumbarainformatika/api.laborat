@@ -115,21 +115,21 @@ class KasirrajalController extends Controller
                     ]
                 );
             }
-            // } elseif (request('golongan') == 'konsulantarpoli') {
-            //     $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
-            //     $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
-            //         return [
-            //             'namatindakan' => $konsul->rs6,
-            //             'subtotal' => $konsul->rs7 + $konsul->rs11,
-            //         ];
-            //     });
-            //     $konsul = $konsul->sum('subtotal');
-            //     return new JsonResponse(
-            //         [
-            //             'Pelayanan' => $konsulantarpoli,
-            //             'Subtotal' => $konsul
-            //         ]
-            //     );
+        } elseif (request('golongan') == 'konsulantarpoli') {
+                $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
+                $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
+                    return [
+                        'namatindakan' => $konsul->rs6,
+                        'subtotal' => $konsul->rs7 + $konsul->rs11,
+                    ];
+                });
+                $konsul = $konsul->sum('subtotal');
+                return new JsonResponse(
+                    [
+                        'Pelayanan' => $konsulantarpoli,
+                        'Subtotal' => $konsul
+                    ]
+                );
             // } elseif (request('golongan') == 'tindakan psikologi') {
             //     $psikologitrans = Psikologitrans::select(
             //         'rs30.rs2 as tindakan',

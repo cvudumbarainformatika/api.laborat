@@ -14,6 +14,7 @@ Route::group([
     'prefix' => 'simrs/kasir'
 ], function () {
     Route::get('/rajal/cari-karcis', [CariKarcisController::class, 'carikarcis']);
+     Route::get('/rajal/carikonsulantarpoli', [CariKarcisController::class, 'carikonsulantarpoli']);
     Route::get('/rajal/cari-obat', [CariKarcisController::class, 'cariobat']);
     Route::get('/rajal/cari-tindakan', [CariKarcisController::class, 'caritindakan']);
     Route::get('/rajal/cari-tindakan-psikologi', [CariKarcisController::class, 'caritindakanpsikologi']);
