@@ -5,7 +5,7 @@ namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 use App\Models\Simrs\Laporan\Operasi\LaporanOperasi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+// transaksi tindakan operasi
 class Kamaroperasi extends Model
 {
     use HasFactory;

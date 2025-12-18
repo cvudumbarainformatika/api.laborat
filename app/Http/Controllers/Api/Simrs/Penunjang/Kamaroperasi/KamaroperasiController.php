@@ -259,6 +259,13 @@ class KamaroperasiController extends Controller
                         ->whereIn('flag', ['', '1', '2', '3', '4'])
                         ->orderBy('id', 'DESC');
                 },
+                'manytindakanop' => function ($q) {
+                    $q->with([
+                        'mastertindakanoperasi',
+                        'laporanoperasi'
+                    ]);
+                },
+                'surgical'
             ])
             ->first();
         return new JsonResponse([
