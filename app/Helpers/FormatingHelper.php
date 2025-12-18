@@ -299,4 +299,15 @@ class FormatingHelper
         }
         return $kode. '-' . date("Ymd") . $has . $n;
     }
+
+   public static function getNomorTbp($huruf, $hurufx, $no)
+    {
+        // pastikan $no ditreat sebagai string
+        $noStr = (string) $no;
+
+        // leading zero
+        $nol = str_repeat("0", 7 - strlen($noStr));
+
+        return "{$hurufx}/TBP/{$huruf}/{$nol}{$noStr}/" . date("Y") . "/" . date("m");
+    }
 }

@@ -115,21 +115,21 @@ class KasirrajalController extends Controller
                     ]
                 );
             }
-            // } elseif (request('golongan') == 'konsulantarpoli') {
-            //     $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
-            //     $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
-            //         return [
-            //             'namatindakan' => $konsul->rs6,
-            //             'subtotal' => $konsul->rs7 + $konsul->rs11,
-            //         ];
-            //     });
-            //     $konsul = $konsul->sum('subtotal');
-            //     return new JsonResponse(
-            //         [
-            //             'Pelayanan' => $konsulantarpoli,
-            //             'Subtotal' => $konsul
-            //         ]
-            //     );
+        } elseif (request('golongan') == 'konsulantarpoli') {
+                $konsul = Pembayaran::where('rs1', $noreg)->where('rs3', 'K3#')->get();
+                $konsulantarpoli = $konsul->map(function ($konsul, $kunci) {
+                    return [
+                        'namatindakan' => $konsul->rs6,
+                        'subtotal' => $konsul->rs7 + $konsul->rs11,
+                    ];
+                });
+                $konsul = $konsul->sum('subtotal');
+                return new JsonResponse(
+                    [
+                        'Pelayanan' => $konsulantarpoli,
+                        'Subtotal' => $konsul
+                    ]
+                );
             // } elseif (request('golongan') == 'tindakan psikologi') {
             //     $psikologitrans = Psikologitrans::select(
             //         'rs30.rs2 as tindakan',
@@ -297,6 +297,9 @@ class KasirrajalController extends Controller
                         $wew = $x[0]->rs47;
                         $nokwitansi = FormatingHelper::nokwitansi($wew, 'RJ');
 
+                        $user = Pegawai::find(auth()->user()->pegawai_id);
+                        $kdpegsimrs = $user->kdpegsimrs;
+
                     $insertkwitansilog = Kwitansilog::firstOrCreate(
                         [
                             'nokwitansi' => $nokwitansi,
@@ -311,7 +314,7 @@ class KasirrajalController extends Controller
                             'total' => $request->total,
                             'flag' => 'Kasir Rajal',
                             'tglx' => date('Y-m-d H:i:s'),
-                            'userid' => auth()->user()->pegawai_id,
+                            'userid' => $kdpegsimrs,
                             'nota' => $request->nota,
                             'carabayar' => $request->carabayar,
                             'jenispembayaran' => $request->jenispembayaran
@@ -704,6 +707,10 @@ class KasirrajalController extends Controller
             $cek = Kwitansilog::where('nokwitansi', $request->nokwitansi)->where('batal', '1')->first();
             if($cek){
                 return new JsonResponse(['message' => 'Data Sudah Dibatalkan...!!!'], 500);
+            }
+            $cek = Kwitansilog::where('nokwitansi', $request->nokwitansi)->whereNotNull('no_tbp')->orWhere('no_tbp', '')->first();
+             if($cek){
+                return new JsonResponse(['message' => 'Kwitansi Sudah Dibuat TBP...!!!'], 500);
             }
             $data = Kwitansilog::where('nokwitansi', $request->nokwitansi)->first();
             if($data){
