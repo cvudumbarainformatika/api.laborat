@@ -495,7 +495,8 @@ class KasirrajalController extends Controller
                     $datakarcis = Karcis::with([
                         'rincian',
                         'pegawai:kdpegsimrs,nama'
-                    ])->where('noreg', $request->noreg)->get();
+                    ])->where('noreg', $request->noreg)->orderBy('id', 'desc')->limit(1)
+                    ->get();
                     return new JsonResponse(
                         [
                             'message' => 'Data Berhasil Disimpan',
@@ -699,7 +700,7 @@ class KasirrajalController extends Controller
                     'tgl_batal' => date('Y-m-d H:i:s'),
                     'user_batal' => $kdpegsimrs ?? ''
                 ]);
-                return new JsonResponse(['data' => $data,'message' => 'Data Berhasil Dibatalkan...!!!'], 200);
+                return new JsonResponse(['data' => $data,'jenis' => 'karcis','message' => 'Data Berhasil Dibatalkan...!!!'], 200);
             } else {
                 return new JsonResponse(['message' => 'Data Gagal Dibatalkan...!!!'], 500);
             }
@@ -708,8 +709,9 @@ class KasirrajalController extends Controller
             if($cek){
                 return new JsonResponse(['message' => 'Data Sudah Dibatalkan...!!!'], 500);
             }
-            $cek = Kwitansilog::where('nokwitansi', $request->nokwitansi)->whereNotNull('no_tbp')->orWhere('no_tbp', '')->first();
-             if($cek){
+            $cekx = Kwitansilog::where('nokwitansi', $request->nokwitansi)->Where('no_tbp', '!=', '')->count();
+            // return $cekx;
+             if($cekx > 0){
                 return new JsonResponse(['message' => 'Kwitansi Sudah Dibuat TBP...!!!'], 500);
             }
             $data = Kwitansilog::where('nokwitansi', $request->nokwitansi)->first();
@@ -719,7 +721,7 @@ class KasirrajalController extends Controller
                     'tgl_batal' => date('Y-m-d H:i:s'),
                     'user_batal' => $kdpegsimrs ?? ''
                 ]);
-                return new JsonResponse(['data' => $data,'message' => 'Data Berhasil Dibatalkan...!!!'], 200);
+                return new JsonResponse(['data' => $data,'jenis' => 'kwitansi','message' => 'Data Berhasil Dibatalkan...!!!'], 200);
             }
         }
     }
