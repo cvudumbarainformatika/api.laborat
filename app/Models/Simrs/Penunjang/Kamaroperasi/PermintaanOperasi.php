@@ -51,4 +51,12 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(Memodiagnosadokter::class, 'noreg', 'rs1');
     }
+    public function manytindakanop()
+    {
+        return $this->hasMany(Kamaroperasi::class, 'rs1', 'rs1');
+    }
+    public function surgical()
+    {
+        return $this->hasMany(SurgicalSafety::class, 'noreg', 'rs1');
+    }
 }
