@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Maset extends Model
 {
     use HasFactory;
+    protected $connection = 'aset';
     protected $table = 'maset';
     protected $guarded = ['id'];
 }
