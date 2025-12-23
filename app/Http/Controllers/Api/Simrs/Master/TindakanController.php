@@ -268,6 +268,7 @@ class TindakanController extends Controller
     }
     public function aksesPindahTable()
     {
-        return self::pindahKeTabelMaster();
+        $data['tindakan'] = self::pindahKeTabelMaster();
+        return $data;
     }
 }
