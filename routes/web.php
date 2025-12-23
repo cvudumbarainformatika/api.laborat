@@ -7,6 +7,7 @@ use App\Helpers\Routes\RouteHelper;
 use App\Http\Controllers\Api\Logistik\Sigarang\Transaksi\StokOpnameController;
 use App\Http\Controllers\Api\Pegawai\Absensi\JadwalController;
 use App\Http\Controllers\Api\Simrs\Laporan\IT\LaporanAntianRsDanBpjsController;
+use App\Http\Controllers\Api\Simrs\Master\TindakanController;
 use App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Stok\SetNewStokController;
 use App\Http\Controllers\Api\v1\ScrapperController;
 use App\Http\Controllers\AutogenController;
@@ -127,6 +128,7 @@ Route::get('/opcache-status', function () {
 Route::get('/antrian/bpjs/list', [LaporanAntianRsDanBpjsController::class, 'getListBpjs']);
 Route::get('/antrian/bpjs/one', [LaporanAntianRsDanBpjsController::class, 'getOneBpjs']);
 Route::get('/kirim-ulang', [LaporanAntianRsDanBpjsController::class, 'kirirmUlang']);
+Route::get('/tindakan/cek-tindakan', [TindakanController::class, 'aksesPindahTable']);
 
 // Route::get('/unsubscribe/{user}', function (Request $request, $user) {
 //     if (!$request->hasValidSignature()) {
