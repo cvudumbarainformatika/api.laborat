@@ -180,6 +180,7 @@ class TindakanController extends Controller
                 'rs24' => $request->jpvvip,
                 'rs25' => $request->habispakevvip,
                 'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
+                'dasar_perubahan' => $request->dasar_perubahan,
                 'js_presidential' => $request->js_presidential,
                 'jp_presidential' => $request->jp_presidential,
                 'habispake_presidential' => $request->habispake_presidential,
