@@ -17,9 +17,7 @@ use Illuminate\Http\Request;
 class AksesUserController extends Controller
 {
     //
-    public function userAkses()
-    {
-    }
+    public function userAkses() {}
     public function userRole()
     {
         $data = Role::select('id', 'nama')->get();
@@ -28,6 +26,11 @@ class AksesUserController extends Controller
     public function getPoli()
     {
         $data = Mpoli::listpoli()->where('rs4', 'Poliklinik')->where('rs5', '=', '1')->get();
+        return new JsonResponse($data);
+    }
+    public function getAllPoli()
+    {
+        $data = Mpoli::listpoli()->where('rs4', 'Poliklinik')->get();
         return new JsonResponse($data);
     }
     public function getPenunjang()

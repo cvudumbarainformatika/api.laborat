@@ -892,6 +892,9 @@ class PersiapanOperasiController extends Controller
                     ->when($rin['nodistribusi'] !== '', function ($x) use ($rin) {
                         $x->where('nodistribusi', $rin['nodistribusi']);
                     })
+                    ->when($rin['nobatch'] !== null, function ($x) use ($rin) {
+                        $x->where('nobatch', $rin['nobatch']);
+                    })
                     ->first();
 
                 if ($stok->jumlah <= 0) {
