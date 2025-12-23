@@ -355,14 +355,17 @@ class DaftarrajalController extends Controller
         $nomorantrean = $bpjsantrian->nomorantrean;
         $updatebpjsantrian = Bpjsantrian::where('id', '=', $id)->first();
         $rm = optional($masterpasien)->rs1;
-        $tidakAdaNorm = !$updatebpjsantrian->norm;
+        $tidakAdaNorm = $updatebpjsantrian->norm == '-' || $updatebpjsantrian->norm == null;
         if ($rm && $tidakAdaNorm) $updatebpjsantrian->norm = $rm;
         $updatebpjsantrian->noreg = $input->noreg;
         $updatebpjsantrian->checkin = date('Y-m-d H:i:s');
         $updatebpjsantrian->save();
+        // cek nomor antrian apakan awalan nya b0 atau c0
+        $na = strtoupper($nomorantrean);
+        $antrianLuput = (str_starts_with($na, 'C0') || str_starts_with($na, 'B0'));
 
 
-        if ($request->barulama == 'baru' || $tidakAdaNorm) {
+        if ($request->barulama == 'baru' || $antrianLuput) {
             BridantrianbpjsController::updateMulaiWaktuTungguAdmisi($request, $input);
             BridantrianbpjsController::updateAkhirWaktuTungguAdmisi($input);
             BridantrianbpjsController::updateWaktu($input, 3);
