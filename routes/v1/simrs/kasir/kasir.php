@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Simrs\Kasir\CariKwitansinonTunai;
 use App\Http\Controllers\Api\Simrs\Kasir\CreateTbpController;
 use App\Http\Controllers\Api\Simrs\Kasir\FlagingManualVaController;
 use App\Http\Controllers\Api\Simrs\Kasir\KasirrajalController;
+use App\Http\Controllers\Api\Simrs\Kasir\PasienLuarController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -51,4 +52,6 @@ Route::group([
     Route::post('/tbp/simpanTbp', [CreateTbpController::class, 'createnotatbp']);
     Route::post('/tbp/batal', [CreateTbpController::class, 'batalTbp']);
     Route::get('/tbp/getrincianTbp', [CreateTbpController::class, 'getrincianTbp']);
+
+    Route::get('/pasien-luar/getbillpasienluar', [PasienLuarController::class, 'getbill']);
 });

@@ -257,9 +257,9 @@ class ListDataArsipController extends Controller
             'master_lokasi.nama_lokasi',
             'master_media.nama_media'
         )
-            ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
-            ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
-            ->join('master_media', 'data_arsip.media', 'master_media.id')
+            ->leftjoin('master_kode', 'data_arsip.kode', 'master_kode.kode')
+            ->leftjoin('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
+            ->leftjoin('master_media', 'data_arsip.media', 'master_media.id')
             ->with(
                 [
                     'unitpengolah',

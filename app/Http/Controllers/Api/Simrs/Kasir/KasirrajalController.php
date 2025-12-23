@@ -309,7 +309,7 @@ class KasirrajalController extends Controller
                             'norm' => $request->norm,
                             'tgl' => date('Y-m-d H:i:s'),
                             'nama' => $request->nama,
-                            'ruangan' => $request->poli,
+                            'ruangan' => $request->poli ?? '-',
                             'sistembayar' => $request->sistembayar,
                             'total' => $request->total,
                             'flag' => 'Kasir Rajal',
