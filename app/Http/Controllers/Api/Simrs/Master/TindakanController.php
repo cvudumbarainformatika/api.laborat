@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Simrs\Master;
 
+use App\Http\Controllers\Api\Simrs\Master\Tarif\PemeriksaanLaboratControllr;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Master\MtindakanSementara;
@@ -56,6 +57,7 @@ class TindakanController extends Controller
             DB::raw('js_hc+jp_hc+habispake_hc as tarif_hc'),
             'tgl_hapus',
             'tgl_mulai_berlaku',
+            'dasar_perubahan',
         )->where('rs2', 'like', '%' . request('nmtindakan') . '%')
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
@@ -208,7 +210,7 @@ class TindakanController extends Controller
                 foreach ($adaTarifBerubah as $baru) {
                     $data = Mtindakan::where('rs1', $baru['rs1'])->first();
                     $dataSudahHapus = Mtindakan::onlyTrashed()->where('rs1', $baru['rs1'])->first();
-                    $simpantindakan = Mtindakan::updateOrCreate(
+                    $simpantindakan = Mtindakan::withTrashed()->updateOrCreate(
                         [
                             'rs1' => $baru['rs1']
                         ],
@@ -270,6 +272,7 @@ class TindakanController extends Controller
     public function aksesPindahTable()
     {
         $data['tindakan'] = self::pindahKeTabelMaster();
+        $data['tarifLab'] = PemeriksaanLaboratControllr::pindahKeTabelMaster();
         return $data;
     }
 }
