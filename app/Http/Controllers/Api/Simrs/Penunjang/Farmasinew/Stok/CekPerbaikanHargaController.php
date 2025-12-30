@@ -203,7 +203,7 @@ class CekPerbaikanHargaController extends Controller
                     ->where('nopenerimaan', $request->targetNoper)
                     ->where('kdobat', $request->kdobat)
                     ->first();
-                $penerimaan->tglpenerimaan = $penerimaan->header->tglpenerimaan;
+                $penerimaan->tglpenerimaan = $penerimaan->header->tglpenerimaan ?? $penerimaan['header']['tglpenerimaan'];
             }
             if ($request->tipe == 'racikan') {
                 $data = Resepkeluarrinciracikan::find($request->id);
