@@ -6,7 +6,9 @@ use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Master_Jasa;
+use App\Models\Siasik\Master\Master_Satuan;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Satuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,6 +38,27 @@ class MasterJasaLainController extends Controller
 
         return new JsonResponse($akun);
     }
+
+    public function getSatuan(){
+        $perPage = request('per_page');
+        $query = Master_Satuan::where('flag', '');
+        // Pencarian
+        if (request('q')) {
+            $cari = request('q');
+            $query->where(function ($q) use ($cari) {
+                $q->where('satuanBarang', 'like', '%' . $cari . '%');
+            });
+        }
+
+        if ($perPage <= 0) {
+            $data = $query->get();
+            return new JsonResponse(['data' => $data]);
+        }
+
+        $data = $query->simplePaginate($perPage);
+
+        return new JsonResponse($data);
+    }
     public function index(){
        
         $data = Master_Jasa::when(request('q'),function ($query) {
@@ -51,9 +74,11 @@ class MasterJasaLainController extends Controller
         $validated = $request->validate([
             // 'kode' => 'required',
             'nama' => 'required',
+            'satuan' => 'required'
             
         ], [
             'nama.required' => 'Nama Harus Di isi.',
+            'satuan.required' => 'Satuan Harus Di isi.',
             
         ]);
 
@@ -83,6 +108,7 @@ class MasterJasaLainController extends Controller
                 ],
                 [
                     'nama' => $validated['nama'],
+                    'satuan' => $validated['satuan'],
                     'userentry' => $pegawai,
                 ]
             );
