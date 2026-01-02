@@ -18,11 +18,11 @@ class SuratKontrolController extends Controller
    public function index()
    {
       $data = DB::table('bpjs_surat_kontrol as bk')
-            ->leftJoin('rs19 as p', 'bk.poliKontrol', '=', 'p.rs6')
-            ->select('bk.*','p.rs2 as namaPoli')
+         ->leftJoin('rs19 as p', 'bk.poliKontrol', '=', 'p.rs6')
+         ->select('bk.*', 'p.rs2 as namaPoli')
 
-            ->where('noreg', request('noreg'))
-            ->get();
+         ->where('noreg', request('noreg'))
+         ->get();
 
       return new JsonResponse($data, 200);
    }
@@ -39,15 +39,15 @@ class SuratKontrolController extends Controller
    public function update(Request $request, $noSuratKontrol)
    {
       $data = [
-        'noSuratKontrol' => $noSuratKontrol,
-        'request' => $request->all()
+         'noSuratKontrol' => $noSuratKontrol,
+         'request' => $request->all()
       ];
 
       return new JsonResponse($data, 200);
    }
    public function create(Request $request)
    {
-   
+
       $user = auth()->user()->nama;
       $form = [
          "request" => [
@@ -69,7 +69,7 @@ class SuratKontrolController extends Controller
 
       // return new JsonResponse($createSuratKontrol, 200);
 
-      
+
 
       $res = null;
       $noSuratKontrolResponse = null;
@@ -79,82 +79,99 @@ class SuratKontrolController extends Controller
          $noSuratKontrolResponse = data_get($createSuratKontrol, 'response.noSuratKontrol', '');
 
          $form_bpjs_surat_kontrol = [
-               'noSuratKontrol' => $noSuratKontrolResponse,
-               'norm' => $request->norm,
-               'noreg' => $request->noreg,
-               'noSEP' => $request->noSEP,
-               'kodeDokter' => $request->kodeDokter,
-               'poliKontrol' => $request->poliKontrol,
-               'tglRencanaKontrol' => data_get($createSuratKontrol, 'response.tglRencanaKontrol', ''),
-               'namaDokter' => data_get($createSuratKontrol, 'response.namaDokter', ''),
-               'noKartu' => data_get($createSuratKontrol, 'response.noKartu', ''),
-               'nama' => data_get($createSuratKontrol, 'response.nama', ''),
-               'kelamin' => data_get($createSuratKontrol, 'response.kelamin', ''),
-               'tglLahir' => data_get($createSuratKontrol, 'response.tglLahir', ''),
-               'user_id' => auth()->user()->pegawai_id,
-               'created_at' => now(),
-               'updated_at' => now()
+            'noSuratKontrol' => $noSuratKontrolResponse,
+            'norm' => $request->norm,
+            'noreg' => $request->noreg,
+            'noSEP' => $request->noSEP,
+            'kodeDokter' => $request->kodeDokter,
+            'poliKontrol' => $request->poliKontrol,
+            'tglRencanaKontrol' => data_get($createSuratKontrol, 'response.tglRencanaKontrol', ''),
+            'namaDokter' => data_get($createSuratKontrol, 'response.namaDokter', ''),
+            'noKartu' => data_get($createSuratKontrol, 'response.noKartu', ''),
+            'nama' => data_get($createSuratKontrol, 'response.nama', ''),
+            'kelamin' => data_get($createSuratKontrol, 'response.kelamin', ''),
+            'tglLahir' => data_get($createSuratKontrol, 'response.tglLahir', ''),
+            'user_id' => auth()->user()->pegawai_id,
+            'created_at' => now(),
+            'updated_at' => now()
          ];
 
 
          $res = DB::table('bpjs_surat_kontrol')->insert($form_bpjs_surat_kontrol);
 
          Bpjs_http_respon::create(
-               [
-                  'noreg' => $request->noreg === null ? '' : $request->noreg,
-                  'method' => 'POST',
-                  'request' => $form,
-                  'respon' => $createSuratKontrol,
-                  'url' => '/RencanaKontrol/insert',
-                  'tgl' => $tgltobpjshttpres
-               ]
-            );
+            [
+               'noreg' => $request->noreg === null ? '' : $request->noreg,
+               'method' => 'POST',
+               'request' => $form,
+               'respon' => $createSuratKontrol,
+               'url' => '/RencanaKontrol/insert',
+               'tgl' => $tgltobpjshttpres
+            ]
+         );
+         $data = [
+            'message' => 'Sukses',
+            'result' => $res,
+
+         ];
+         $kodeResp = 200;
+      } else {
+         Bpjs_http_respon::create(
+            [
+               'noreg' => $request->noreg === null ? '' : $request->noreg,
+               'method' => 'POST',
+               'request' => $form,
+               'respon' => $createSuratKontrol,
+               'url' => '/RencanaKontrol/insert',
+               'tgl' => $tgltobpjshttpres
+            ]
+         );
+         $data = [
+            'message' => 'GAGAL, Response BPJS : ' . $createSuratKontrol['metadata']['message'],
+            'result' => $res,
+         ];
+         $kodeResp = 410;
       }
 
-      $data = [
-        'message' => 'Sukses',
-        'result' => $res
 
-      ];
-
-      return new JsonResponse($data, 200);
+      return new JsonResponse($data, $kodeResp);
    }
    public function remove(Request $request)
    {
-   
+
       $user = auth()->user()->nama;
       $data = [
-            "request" => [
-                "t_suratkontrol" => [
-                    "noSuratKontrol" => $request->noSuratKontrol,
-                    "user" => $user
-                ]
+         "request" => [
+            "t_suratkontrol" => [
+               "noSuratKontrol" => $request->noSuratKontrol,
+               "user" => $user
             ]
-        ];
-        $hapus = BridgingbpjsHelper::delete_url(
-            'vclaim',
-            '/RencanaKontrol/Delete',
-            $data
-        );
+         ]
+      ];
+      $hapus = BridgingbpjsHelper::delete_url(
+         'vclaim',
+         '/RencanaKontrol/Delete',
+         $data
+      );
 
-        $tgltobpjshttpres = DateHelper::getDateTime();
+      $tgltobpjshttpres = DateHelper::getDateTime();
 
-        Bpjs_http_respon::create(
-            [
-                'method' => 'delete',
-                'noreg' => $request->noreg === null ? '' : $request->noreg,
-                'request' => $data,
-                'respon' => $hapus,
-                'url' => '/RencanaKontrol/Delete',
-                'tgl' => $tgltobpjshttpres
-            ]
-        );
+      Bpjs_http_respon::create(
+         [
+            'method' => 'delete',
+            'noreg' => $request->noreg === null ? '' : $request->noreg,
+            'request' => $data,
+            'respon' => $hapus,
+            'url' => '/RencanaKontrol/Delete',
+            'tgl' => $tgltobpjshttpres
+         ]
+      );
 
 
 
       DB::table('bpjs_surat_kontrol')
-            ->where('noSuratKontrol', $request->noSuratKontrol)
-            ->delete();
+         ->where('noSuratKontrol', $request->noSuratKontrol)
+         ->delete();
 
       return response()->json(['message' => 'Surat kontrol berhasil dihapus', 'result' => $hapus], 200);
    }
