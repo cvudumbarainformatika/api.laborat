@@ -48,7 +48,7 @@ class AnggaranPendapatanController extends Controller
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'notrnas' => 'nullable',
+            'notrans' => 'nullable',
             'bidang' => 'nullable',
             'koderekeningblud' => 'required',
             'uraian_rekening' => 'nullable',
