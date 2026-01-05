@@ -11,6 +11,7 @@ use App\Models\Siasik\Anggaran\Pengusulan_rinci;
 use App\Models\Siasik\Master\Master_Jasa;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Penunjang\Farmasinew\Mkodebelanjaobat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,6 +52,14 @@ class PengusulanController extends Controller
                 ->with('barang108.maping', 'rekening50', 'satuan', 'satuankecil', 'depo');
                 break;
 
+            case 'Farmasi':
+                $query = Mkodebelanjaobat::query()
+                    ->select([
+                        'kodeBelanjaObat.*',
+                        DB::raw('uraian as nama')
+                    ]);
+                break;
+            
             case 'Jasa':
                 $query = Master_Jasa::query();
                 break;
@@ -65,7 +74,6 @@ class PengusulanController extends Controller
                     'message' => 'Jenis tidak valid'
                 ], 422);
         }
-
         // Filter / pencarian
         if ($q) {
         $query->where(function ($w) use ($q, $jenis) {
@@ -74,7 +82,9 @@ class PengusulanController extends Controller
                     ->orWhere('kode','like', "%{$q}%");
                 } elseif ($jenis === 'Jasa') {
                     $w->where('nama', 'like', "%{$q}%");
-                } else {
+                } elseif ($jenis === 'Farmasi') {
+                    $w->where('uraian', 'like', "%{$q}%");
+                }  else {
                     $w->where('kdaset', 'like', "%{$q}%")
                     ->orWhere('namaaset','like', "%{$q}%");
                 }
@@ -258,6 +268,53 @@ class PengusulanController extends Controller
             'message' => 'Data Berhasil dihapus',
             'data' => $sisaRinci
         ], 200);
+    }
+
+    public function kunci(Request $request)
+    {
+        try {
+            // Validasi request
+            $validated = $request->validate([
+                'id' => 'required'
+            ]);
+
+            DB::beginTransaction();
+
+            $data = Pengusulan_header::find($validated['id']);
+
+            if (!$data) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            $data->kunci = $data->kunci === '1' ? '' : '1';
+            $data->save(); 
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $data->kunci === '1'
+                ? 'Data berhasil dikunci'
+                : 'Kunci berhasil dibuka',
+                'data' => $data
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal Kunci Data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 }

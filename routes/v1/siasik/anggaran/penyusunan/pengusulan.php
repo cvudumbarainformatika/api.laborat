@@ -13,5 +13,6 @@ Route::group([
     Route::get('/index', [PengusulanController::class, 'index']);
     Route::post('/save', [PengusulanController::class, 'save']);
     Route::post('/deleterinci', [PengusulanController::class, 'deleterinci']);
+    Route::post('/kunci', [PengusulanController::class, 'kunci']);
 
 });

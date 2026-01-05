@@ -14,5 +14,6 @@ Route::group([
     Route::post('/save', [AnggaranPendapatanController::class, 'save']);
     Route::get('/getrekening', [AnggaranPendapatanController::class, 'getRekening']);
     Route::post('/delete', [AnggaranPendapatanController::class, 'delete']);
+    Route::post('/kunci', [AnggaranPendapatanController::class, 'kunci']);
 
 });

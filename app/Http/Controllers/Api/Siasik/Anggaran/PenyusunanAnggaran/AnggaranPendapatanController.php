@@ -161,4 +161,56 @@ class AnggaranPendapatanController extends Controller
             ], 500);
         }
     }
+
+    public function kunci(Request $request)
+    {
+        try {
+            // Validasi request
+            $validated = $request->validate([
+                'id' => 'required'
+            ]);
+
+            DB::beginTransaction();
+
+            $data = Anggaran_Pendapatan::find($validated['id']);
+
+            if (!$data) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            $data->kunci = $data->kunci === '1' ? '' : '1';
+            $data->save(); 
+            Tampung_pendapatan::where('notrans', $data->notrans)
+            ->update([
+                'flag' => $data->kunci === '1' ? '1' : ''
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $data->kunci === '1'
+                ? 'Data berhasil dikunci'
+                : 'Kunci berhasil dibuka',
+                'data' => $data
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal proses kunci: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
