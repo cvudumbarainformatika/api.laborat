@@ -183,6 +183,15 @@ class PengusulanController extends Controller
                 ]
             );
             if ($anggaran) {
+                $exists = Pengusulan_rinci::where('notrans', $anggaran->notrans)
+                    ->where('kode', $request->kode)
+                    ->exists();
+
+                if ($exists) {
+                    return new JsonResponse([
+                        'message' => 'Item Pengusulan Sudah ada di Rincian'
+                    ], 422);
+                }
                 $volume = (int) $request->volume;
                 $harga  = (int) $request->harga;
                 $nilai  = $volume * $harga;
