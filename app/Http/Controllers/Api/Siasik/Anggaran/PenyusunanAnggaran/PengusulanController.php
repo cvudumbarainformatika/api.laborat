@@ -214,6 +214,10 @@ class PengusulanController extends Controller
                     'nilai' => $nilai,
                     'satuan' => $request->satuan,
                     'jenis' => $request->jenis,
+                    'kode_50' => $request->kode_50,
+                    'uraian50' => $request->uraian50,
+                    'kode_108' => $request->kode_108,
+                    'uraian108' => $request->uraian108,
                     'tglEntry' => $time,
                     'userEntry' => $pegawai,
 
