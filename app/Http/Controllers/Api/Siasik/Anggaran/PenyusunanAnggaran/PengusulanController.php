@@ -239,7 +239,7 @@ class PengusulanController extends Controller
         ->where('kunci', '!=', '')
         ->get();
         if(count($header) > 0){
-            return new JsonResponse(['message' => 'NPD Masih Dikunci'], 500);
+            return new JsonResponse(['message' => 'Data Masih Dikunci'], 500);
         }
 
         // 1️⃣ ambil 1 rinci (MODEL, bukan collection)
