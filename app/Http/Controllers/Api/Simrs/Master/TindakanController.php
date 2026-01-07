@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Simrs\Master;
 
+use App\Http\Controllers\Api\Simrs\Master\Tarif\PemeriksaanLaboratControllr;
+use App\Http\Controllers\Api\Simrs\Master\Tarif\TindakanOperasiController;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Master\MtindakanSementara;
@@ -42,10 +44,10 @@ class TindakanController extends Controller
             'rs24 as jpvvip',
             'rs25 as habispakevvip',
             DB::raw('rs23+rs24 as tarifvvip'),
-            'js_presidential',
-            'jp_presidential',
+            'pss as js_presidential',
+            'psp as jp_presidential',
             'habispake_presidential',
-            DB::raw('js_presidential+jp_presidential+habispake_presidential as tarif_presidential'),
+            DB::raw('pss+psp+habispake_presidential as tarif_presidential'),
             'js_hcu',
             'jp_hcu',
             'habispake_hcu',
@@ -56,6 +58,7 @@ class TindakanController extends Controller
             DB::raw('js_hc+jp_hc+habispake_hc as tarif_hc'),
             'tgl_hapus',
             'tgl_mulai_berlaku',
+            'dasar_perubahan',
         )->where('rs2', 'like', '%' . request('nmtindakan') . '%')
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
@@ -180,8 +183,9 @@ class TindakanController extends Controller
                 'rs24' => $request->jpvvip,
                 'rs25' => $request->habispakevvip,
                 'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
-                'js_presidential' => $request->js_presidential,
-                'jp_presidential' => $request->jp_presidential,
+                'dasar_perubahan' => $request->dasar_perubahan,
+                'pss' => $request->js_presidential,
+                'psp' => $request->jp_presidential,
                 'habispake_presidential' => $request->habispake_presidential,
                 'js_hcu' => $request->js_hcu,
                 'jp_hcu' => $request->jp_hcu,
@@ -207,7 +211,7 @@ class TindakanController extends Controller
                 foreach ($adaTarifBerubah as $baru) {
                     $data = Mtindakan::where('rs1', $baru['rs1'])->first();
                     $dataSudahHapus = Mtindakan::onlyTrashed()->where('rs1', $baru['rs1'])->first();
-                    $simpantindakan = Mtindakan::updateOrCreate(
+                    $simpantindakan = Mtindakan::withTrashed()->updateOrCreate(
                         [
                             'rs1' => $baru['rs1']
                         ],
@@ -232,6 +236,8 @@ class TindakanController extends Controller
                             'rs23' => $baru['rs23'],
                             'rs24' => $baru['rs24'],
                             'rs25' => $baru['rs25'],
+                            'psp' => $baru['psp'],
+                            'pss' => $baru['pss'],
                             'js_presidential' => $baru['js_presidential'],
                             'jp_presidential' => $baru['jp_presidential'],
                             'habispake_presidential' => $baru['habispake_presidential'],
@@ -269,6 +275,8 @@ class TindakanController extends Controller
     public function aksesPindahTable()
     {
         $data['tindakan'] = self::pindahKeTabelMaster();
+        $data['tarifLab'] = PemeriksaanLaboratControllr::pindahKeTabelMaster();
+        $data['tarifTindOk'] = TindakanOperasiController::pindahKeTabelMaster();
         return $data;
     }
 }

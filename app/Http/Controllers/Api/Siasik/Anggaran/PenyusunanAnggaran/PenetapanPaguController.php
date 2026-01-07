@@ -14,12 +14,30 @@ class PenetapanPaguController extends Controller
 {
     public function index()
     {
-        $tahun = request('tahun','Y');
-        $data = Penetapan_Pagu::where('penetapan_pagu.tahun',$tahun)
-        ->join('kegiatan_blud', 'kegiatan_blud.no', 'penetapan_pagu.kodekegiatan')
-        ->select('penetapan_pagu.*', 'kegiatan_blud.no', 'kegiatan_blud.nomenklatur', 'kegiatan_blud.kode')
-        ->get();
-        return new JsonResponse($data);
+        $tahun = request('tahun', date('Y'));
+        $q     = request('q');
+
+        $query = Penetapan_Pagu::where('penetapan_pagu.tahun', $tahun)
+            ->join('kegiatan_blud', 'kegiatan_blud.no', '=', 'penetapan_pagu.kodekegiatan')
+            ->select(
+                'penetapan_pagu.*',
+                'kegiatan_blud.no',
+                'kegiatan_blud.nomenklatur',
+                'kegiatan_blud.kode'
+            );
+
+        // 🔍 FILTER PENCARIAN
+        if ($q) {
+            $query->where(function ($w) use ($q) {
+                $w->where('kegiatan_blud.nomenklatur', 'like', "%{$q}%")
+                ->orWhere('penetapan_pagu.namaorganisasi', 'like', "%{$q}%")
+                ->orWhere('penetapan_pagu.total', 'like', "%{$q}%");
+            });
+        }
+
+        $data = $query->get();
+
+        return response()->json($data);
     }
     public function save(Request $request)
     {
@@ -170,13 +188,15 @@ class PenetapanPaguController extends Controller
                 ], 404);
             }
 
-            $data->kunci = '1';
+            $data->kunci = $data->kunci === '1' ? '' : '1';
             $data->save(); 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dikunci',
+                'message' => $data->kunci === '1'
+                ? 'Data berhasil dikunci'
+                : 'Kunci berhasil dibuka',
                 'data' => $data
             ], 200);
 
@@ -191,7 +211,7 @@ class PenetapanPaguController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus data: ' . $e->getMessage()
+                'message' => 'Gagal Kunci Data: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -26,6 +26,8 @@ Route::group([
     Route::post('/batal-obat-resep', [PersiapanOperasiController::class, 'batalObatResep']);
 
     Route::post('/batal-operasi', [PersiapanOperasiController::class, 'batalOperasi']);
+    // hapus draft
+    Route::post('/hapus-draft', [PersiapanOperasiController::class, 'hapusDraft']);
 
     // karena template operasi ada yang lolos dari pengecekan alokasi maka dibuatkan hapus rincian permintaan obat operasi
     Route::post('/hapus-rincian', [PersiapanOperasiController::class, 'hapusRincianPerpersiapanOperasi']);

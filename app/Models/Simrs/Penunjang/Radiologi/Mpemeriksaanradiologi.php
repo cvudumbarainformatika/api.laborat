@@ -10,13 +10,13 @@ class Mpemeriksaanradiologi extends Model
 {
     use HasFactory;
     protected $table = 'rs47';
-    // protected $gurded = ['id'];
+    // protected $gurded = ['id1'];
     // public $timestamps = false;
-    //protected $primaryKey = 'rs1';
+    // protected $primaryKey = 'id1';
 
 
     public function snowmed()
     {
-       return $this->hasMany(MappingSnowmed::class, 'kdMaster', 'rs1');
+        return $this->hasMany(MappingSnowmed::class, 'kdMaster', 'rs1');
     }
 }

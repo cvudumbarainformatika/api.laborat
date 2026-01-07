@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Penunjang\Farmasinew\Obatoperasi;
 
 use App\Helpers\FormatingHelper;
 use App\Helpers\HargaHelper;
+use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Simrs\Master\Mpasien;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Permintaanresep;
@@ -18,6 +19,7 @@ use App\Models\Simrs\Penunjang\Kamaroperasi\PermintaanOperasi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use App\Models\SistemBayar;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +30,13 @@ class PersiapanOperasiController extends Controller
     // get area
     public function getPermintaan()
     {
+
+        $req = [
+
+            'per_page' => request('per_page') ?? 10,
+        ];
         $flag = request('flag') ?? [];
+
         $rm = [];
         if (request('q') !== null) {
             if (preg_match('~[0-9]+~', request('q'))) {
@@ -42,7 +50,36 @@ class PersiapanOperasiController extends Controller
                 } else $rm = [];
             }
         }
-        $data = PersiapanOperasi::with([
+        $raw = PersiapanOperasi::query()
+            ->when(
+                in_array('', $flag),
+                function ($q) use ($flag) {
+                    $q->where(function ($f) use ($flag) {
+                        $f->where(function ($r) use ($flag) {
+                            $r->whereIn('flag', $flag)
+                                ->orWhere('flag', '');
+                        })
+                            ->where('tgl_permintaan', '<', Carbon::now()->subHours(24));
+                    });
+                },
+                function ($t) use ($flag) {
+                    $t->whereIn('flag', $flag);
+                }
+            )
+            ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
+            ->where(function ($query) use ($rm) {
+                $query->when(count($rm) > 0, function ($wew) use ($rm) {
+                    $wew->whereIn('norm', $rm);
+                })
+                    ->orWhere('nopermintaan', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
+            })
+            ->orderBy('tgl_permintaan', "desc");
+
+
+        $totalCount = (clone $raw)->count();
+        $data = $raw->with([
             'rinci' => function ($q) {
                 $q->with([
                     'obat:kd_obat,nama_obat,satuan_k',
@@ -58,21 +95,11 @@ class PersiapanOperasiController extends Controller
             'list.kunjunganranap.relmasterruangranap:rs1,rs2',
             'list.kunjunganrajal:rs1,rs8',
             'list.kunjunganrajal.relmpoli:rs1,rs2'
-        ])
-            ->whereIn('flag', $flag)
-            ->whereBetween('tgl_permintaan', [request('from') . ' 00:00:00', request('to') . ' 23:59:59'])
-            ->where(function ($query) use ($rm) {
-                $query->when(count($rm) > 0, function ($wew) use ($rm) {
-                    $wew->whereIn('norm', $rm);
-                })
-                    ->orWhere('nopermintaan', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('norm', 'LIKE', '%' . request('q') . '%')
-                    ->orWhere('noreg', 'LIKE', '%' . request('q') . '%');
-            })
-            ->orderBy('tgl_permintaan', "desc")
-            ->simplePaginate(request('per_page'));
+        ])->simplePaginate(request('per_page'));
         // ->paginate(request('per_page'));
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
+        $resp = ResponseHelper::responseGetSimplePaginate($data, $req, $totalCount);
+        return new JsonResponse($resp);
     }
     public function getPermintaanForDokter()
     {
@@ -1736,6 +1763,28 @@ class PersiapanOperasiController extends Controller
         $data->delete();
         return new JsonResponse([
             'data' => $data,
+            'header' => $header,
+            'message' => 'Data berhasil di hapus'
+        ]);
+    }
+
+    public function hapusDraft(Request $request)
+    {
+        $header = PersiapanOperasi::where('nopermintaan', $request->nopermintaan)->first();
+        if (!$header) {
+            return new JsonResponse(['message' => 'Data tidak ditemukan'], 410);
+        }
+        if ((int)$header->flag > 1) {
+            return new JsonResponse(['message' => 'Sudah di distribusikan, data tidak boleh di hapus'], 410);
+        }
+        // $rinci = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->delete();
+        // $header->delete();
+        DB::transaction(function () use ($request, $header, &$rinci) {
+            $rinci = PersiapanOperasiRinci::where('nopermintaan', $request->nopermintaan)->delete();
+            $header->delete();
+        });
+        return new JsonResponse([
+            'rinci' => $rinci,
             'header' => $header,
             'message' => 'Data berhasil di hapus'
         ]);

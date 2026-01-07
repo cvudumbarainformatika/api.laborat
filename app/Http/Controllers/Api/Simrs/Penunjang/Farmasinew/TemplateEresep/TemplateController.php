@@ -897,6 +897,7 @@ class TemplateController extends Controller
             // racikan
             if (count($adaAlokasiRacikan) > 0) {
                 foreach ($adaAlokasiRacikan as $rac) {
+                    // return new JsonResponse($rac);
                     // $har = HargaHelper::getHarga($request->kodeobat, $request->groupsistembayar);
                     // $res = $har['res'];
                     // if ($res) {
@@ -914,7 +915,7 @@ class TemplateController extends Controller
                                 'noresep' => $noresep,
                                 'namaracikan' => $rac['namaracikan'],
                                 'tiperacikan' => $rac['tiperacikan'],
-                                'jumlahdibutuhkan' => $rac['jumlah_diminta'], // jumlah racikan
+                                'jumlahdibutuhkan' => $rac['jumlah_dibutuhkan'], // jumlah racikan
                                 'aturan' => $rac['signa'],
                                 'konsumsi' => $rac['konsumsi'] ?? 1,
                                 'keterangan' => $rac['keterangan'],
@@ -950,7 +951,7 @@ class TemplateController extends Controller
                                 'noresep' => $noresep,
                                 'namaracikan' => $rac['namaracikan'],
                                 'tiperacikan' => $rac['tiperacikan'],
-                                'jumlahdibutuhkan' => $rac['jumlah_diminta'], // jumlah racikan
+                                'jumlahdibutuhkan' => $rac['jumlah_dibutuhkan'], // jumlah racikan
                                 'aturan' => $rac['signa'],
                                 'konsumsi' => $rac['konsumsi'] ?? 1,
                                 'keterangan' => $rac['keterangan'],
