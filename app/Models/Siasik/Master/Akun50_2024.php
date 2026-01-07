@@ -10,6 +10,7 @@ use App\Models\Siasik\TransaksiLS\Contrapost;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Siasik\TransaksiPjr\SpjPanjar_Rinci;
 use App\Models\Siasik\TransaksiSilpa\SisaAnggaran;
+use App\Models\Sigarang\Maping108To50;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -70,6 +71,11 @@ class Akun50_2024 extends Model
     }
     public function kode5(){
         return $this->belongsTo(Akun50_2024::class,'kode5', 'kodeall2');
+    }
+
+
+    public function rekening108(){
+        return $this->hasMany(Maping108To50::class,'kode50', 'kodeall2');
     }
 
     // untuk pembiayaan

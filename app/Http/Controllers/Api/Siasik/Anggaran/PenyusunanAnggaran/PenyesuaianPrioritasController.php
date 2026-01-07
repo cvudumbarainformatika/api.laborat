@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Pengusulan_header;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Rinci;
+use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,13 +15,54 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class PenyesuaianPrioritasController extends Controller
 {
+    public function getRekening(){
+        // $rekening = Akun_mapjurnal::pluck('kode50')->toArray();
+        $perPage = request('per_page', 50); // Default ke 100 per halaman, 0 untuk semua data
+
+        $query = Akun50_2024::select('uraian', 'kodeall3', 'kodeall2')
+            ->where('subrincian_objek', '!=', '')
+            ->where('akun', '5')
+            ->with('rekening108');
+        // Pencarian
+        if (request('q')) {
+            $cari = request('q');
+            $query->where(function ($q) use ($cari) {
+                $q->where('uraian', 'like', '%' . $cari . '%')
+                  ->orWhere('kodeall2', 'like', '%' . $cari . '%')
+                  ->orWhere('kodeall3', 'like', '%' . $cari . '%');
+            });
+        }
+
+        if ($perPage <= 0) {
+            $akun = $query->get();
+            return new JsonResponse(['data' => $akun]);
+        }
+
+        $akun = $query->simplePaginate($perPage);
+
+        return new JsonResponse($akun);
+    }
     public function selectPengusulan()
     {
         $perPage = request('per_page', 50);
-        $tahun = request('tahun', date('Y'));
-        $q = request('q');
-        $query = Pengusulan_header::with('rincian')
-        ->withSum('rincian as nilaipengusulan', 'nilai');
+        $tahun   = request('tahun', date('Y'));
+        $q       = request('q');
+        
+        $query = Pengusulan_header::query()
+            ->where('kunci', '1')
+            ->with('rincian')
+            ->withSum('rincian as nilaipengusulan', 'nilai')
+            ->leftJoin(
+                'mappingpptkkegiatan',
+                'mappingpptkkegiatan.kodekegiatan',
+                '=',
+                'usulanHonor_h.kodeKegiatan'
+            )
+            ->select(
+                'usulanHonor_h.*',
+                'mappingpptkkegiatan.kodepptk',
+                'mappingpptkkegiatan.namapptk'
+            );
 
         if ($tahun) {
             $query->whereBetween('tglTransaksi', [
@@ -28,30 +70,48 @@ class PenyesuaianPrioritasController extends Controller
                 $tahun . '-12-31',
             ]);
         }
+
         if ($q) {
-                $query->where(function ($w) use ($q) {
-                    $w->where('notrans', 'like', "%{$q}%")
-                    ->orWhere('ruangan', 'like', "%{$q}%")
-                    ->orWhere('kegiatan', 'like', "%{$q}%")
-                    ->orWhere('paguanggaran', 'like', "%{$q}%")
-                    ->orWhereYear('tglTransaksi', $q);
-                })
-                ->having(function ($h) use ($q) {
-                    $h->havingRaw('nilaipengusulan LIKE ?', ["%{$q}%"])
-                    ->orHavingRaw('nilaipengusulan = ?', [(float) $q]);
-                });
+            $query->where(function ($w) use ($q) {
+                $w->where('usulanHonor_h.notrans', 'like', "%{$q}%")
+                ->orWhere('usulanHonor_h.ruangan', 'like', "%{$q}%")
+                ->orWhere('usulanHonor_h.kegiatan', 'like', "%{$q}%");
+
+                if (is_numeric($q) && strlen($q) === 4) {
+                    $w->orWhereYear('tglTransaksi', $q);
+                }
+            });
+
+            if (is_numeric($q)) {
+                $query->having('nilaipengusulan', (float) $q);
             }
-        return response()->json(
-            $query->orderBy('notrans', 'desc')->get()
-        );
+        }
+
+        $query->orderByDesc('notrans');
+
+        // 🔥 SAMA PERSIS DENGAN selectKegiatan
+        if ($perPage <= 0) {
+            $data = $query->get();
+            return new JsonResponse(['data' => $data]);
+        }
+
+        $data = $query->simplePaginate($perPage);
+        return new JsonResponse($data);
     }
 
     public function index(){
         $perPage = request('per_page', 50);
         $tahun = request('tahun', date('Y'));
         $q = request('q');
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sa = $pg->kdpegsimrs;
         $query = Penyesuaian_Prioritas_Header::with('rincian')
         ->withSum('rincian as nilaianggaran', 'nilai');
+        if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '1618' && $sa !== '81_X' && $sa !== '1215') {
+                $query->where('kodepptk', $pegawai);
+            }
 
         if ($tahun) {
             $query->whereBetween('tgltrans', [
@@ -90,13 +150,13 @@ class PenyesuaianPrioritasController extends Controller
             'tgltrans' => 'nullable',
             'kdruang_pengusul' => 'nullable',
             'ruang_pengusul' => 'nullable',
-            'capaianprogram' => 'nullable',
-            'masukan' => 'nullable',
-            'keluaran' => 'nullable',
-            'hasil' => 'nullable',
-            'targetcapaian' => 'nullable',
-            'targetkeluaran' => 'nullable',
-            'targethasil' => 'nullable',
+            'capaianprogram' => 'required',
+            'masukan' => 'required',
+            'keluaran' => 'required',
+            'hasil' => 'required',
+            'targetcapaian' => 'required',
+            'targetkeluaran' => 'required',
+            'targethasil' => 'required',
         ],
         [
             'kodepptk.required' => 'Kode PPTK Harus Di isi.',
@@ -104,7 +164,13 @@ class PenyesuaianPrioritasController extends Controller
             'kodebidang.required' => 'Kode Bidang Harus Di isi.',
             'namabidang.required' => 'Bidang Harus Di isi.',
             'kodekegiatan.required' => 'Kode Bidang Harus Di isi.',
-            'kegiatan.required' => 'Kegiatan Harus Di isi.',
+            'capaianprogram.required' => 'Capaianprogram Harus Di isi.',
+            'masukan.required' => 'Masukan Harus Di isi.',
+            'keluaran.required' => 'Keluaran Harus Di isi.',
+            'hasil.required' => 'Hasil Harus Di isi.',
+            'targetcapaian.required' => 'Target Capaian Harus Di isi.',
+            'targetkeluaran.required' => 'Target Keluaran Harus Di isi.',
+            'targethasil.required' => 'Target Hasil Harus Di isi.',
         ]);
         $time = date('Y-m-d H:i:s');
         $user = auth()->user()->pegawai_id;
@@ -147,27 +213,27 @@ class PenyesuaianPrioritasController extends Controller
                     'targetcapaian' => $validated['targetcapaian'],
                     'targetkeluaran' => $validated['targetkeluaran'],
                     'targethasil' => $validated['targethasil'],
+                    'pagu' => $validated['pagu'],
                     'tgl_entry' => $time,
                     'user_entry' => $pegawai,
                 ]
             );
             if ($anggaran) {
-                $exists = Penyesuaian_Prioritas_Rinci::where('notrans', $anggaran->notrans)
-                    ->where('koders', $request->koders)
-                    ->exists();
+                // $exists = Penyesuaian_Prioritas_Rinci::where('notrans', $anggaran->notrans)
+                //     ->where('koders', $request->koders)
+                //     ->exists();
 
-                if ($exists) {
-                    return new JsonResponse([
-                        'message' => 'Item Pengusulan Sudah ada di Rincian'
-                    ], 422);
-                }
+                // if ($exists) {
+                //     return new JsonResponse([
+                //         'message' => 'Item Pengusulan Sudah ada di Rincian'
+                //     ], 422);
+                // }
                 $volume = (int) $request->jumalhacc;
                 $harga  = (int) $request->harga;
                 $nilai  = $volume * $harga;
                 Penyesuaian_Prioritas_Rinci::create([
                     'notrans' => $anggaran->notrans,
                     'usulan' => $request->usulan,
-                    'keterangan' => $request->keterangan,
                     'jumalhacc' => $volume,
                     'volume' => $volume,
                     'harga' => $harga,
