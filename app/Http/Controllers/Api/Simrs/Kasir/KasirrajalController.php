@@ -289,6 +289,10 @@ class KasirrajalController extends Controller
         {
             return new JsonResponse(['message' => 'No. Nota '.$request->nota.' Sudah Dibayar...!!! Dengan No. Kwitansi '.$cek->nokwitansi], 500);
         }
+
+        $id_trans   = null;
+        $unit       = null;
+        $nokwitansi = null;
         try{
             DB::beginTransaction();
                 if($request->carabayar === 'Tunai'){
@@ -390,7 +394,7 @@ class KasirrajalController extends Controller
                         ->whereIn('flag', ['3', '4'])
                         ->get();
                         $id_trans = $request->nota;
-                        $unit = 'Gd-05010101';
+                        $unit     = $data->first()?->depo;
                     }else if($jenis === 'Radiologi'){
                         $val = DB::table('rs47')
                             ->join('rs48', 'rs47.rs1', '=', 'rs48.rs4')
@@ -454,10 +458,10 @@ class KasirrajalController extends Controller
                     'pegawai:kdpegsimrs,nama'
                 ]
             )->where('nokwitansi', $nokwitansi)->get();
-            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!','kwitansi' => $hasil], 200);
+            return new JsonResponse(['message' => 'Data Berhasil Disimpan...!!!','id_trans' => $id_trans,'kwitansi' => $hasil], 200);
         }catch(\Exception $th){
             DB::rollBack();
-            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!', 'result' => $th->getMessage()], 500);
+            return new JsonResponse(['message' => 'Data Gagal Disimpan...!!!',  'id_trans' => $id_trans,'result' => $th->getMessage()], 500);
         }
     }
 

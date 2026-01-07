@@ -100,4 +100,11 @@ class Barang108Controller extends Controller
             'message' => 'Data sukses terhapus'
         ], 200);
     }
+
+    public function indexnull()
+    {
+        $data = Barang108::where('kode_50', null)->get();
+        return new JsonResponse($data);
+    }
+
 }

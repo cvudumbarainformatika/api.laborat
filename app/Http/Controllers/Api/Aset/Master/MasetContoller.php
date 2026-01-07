@@ -11,7 +11,7 @@ class MasetContoller extends Controller
 {
     public function index()
     {
-        $data = Maset::whereIsnull('flaging')
+        $data = Maset::whereNull('flaging')
         ->when(request('q'), function($query){
             $query->where('nama', 'like', '%'.request('q').'%')
             ->orWhere('kode', 'like', '%'.request('q').'%')
