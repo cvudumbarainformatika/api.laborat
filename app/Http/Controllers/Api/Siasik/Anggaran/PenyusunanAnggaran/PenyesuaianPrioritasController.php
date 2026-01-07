@@ -141,6 +141,7 @@ class PenyesuaianPrioritasController extends Controller
     {
         $validated = $request->validate([
             'notrans' => 'nullable',
+            'pagu' => 'nullable',
             'kodepptk' => 'required',
             'pptk' => 'required',
             'kodebidang' => 'required',
