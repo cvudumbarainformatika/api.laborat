@@ -231,14 +231,14 @@ class PenyesuaianPrioritasController extends Controller
                 //         'message' => 'Item Pengusulan Sudah ada di Rincian'
                 //     ], 422);
                 // }
-                $volume = (int) $request->jumlahacc;
+                $jumlahacc = (int) $request->jumlahacc;
                 $harga  = (int) $request->harga;
-                $nilai  = $volume * $harga;
+                $nilai  = $jumlahacc * $harga;
                 Penyesuaian_Prioritas_Rinci::create([
                     'notrans' => $anggaran->notrans,
                     'usulan' => $request->usulan,
-                    'jumlahacc' => $volume,
-                    'volume' => $volume,
+                    'jumlahacc' => $jumlahacc,
+                    'volume' => $request->volume,
                     'harga' => $harga,
                     'nilai' => $nilai,
                     'koderek108' => $request->koderek108,
@@ -249,8 +249,8 @@ class PenyesuaianPrioritasController extends Controller
 
                     'nousulan' => $request->nousulan,
                     'koders' => $request->koders,
-                    'tglEntry' => $time,
-                    'userEntry' => $pegawai,
+                    'tgl_entry' => $time,
+                    'user_entry' => $pegawai,
 
                 ]);
             }
