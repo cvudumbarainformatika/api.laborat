@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Siasik\Anggaran\PenyusunanAnggaran;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Pengusulan_header;
+use App\Models\Siasik\Anggaran\Pengusulan_rinci;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Rinci;
 use App\Models\Siasik\Master\Akun50_2024;
@@ -152,7 +153,7 @@ class PenyesuaianPrioritasController extends Controller
             'kdruang_pengusul' => 'nullable',
             'ruang_pengusul' => 'nullable',
             'capaianprogram' => 'required',
-            'masukan' => 'required',
+            // 'masukan' => 'required',
             'keluaran' => 'required',
             'hasil' => 'required',
             'targetcapaian' => 'required',
@@ -166,7 +167,7 @@ class PenyesuaianPrioritasController extends Controller
             'namabidang.required' => 'Bidang Harus Di isi.',
             'kodekegiatan.required' => 'Kode Bidang Harus Di isi.',
             'capaianprogram.required' => 'Capaianprogram Harus Di isi.',
-            'masukan.required' => 'Masukan Harus Di isi.',
+            // 'masukan.required' => 'Masukan Harus Di isi.',
             'keluaran.required' => 'Keluaran Harus Di isi.',
             'hasil.required' => 'Hasil Harus Di isi.',
             'targetcapaian.required' => 'Target Capaian Harus Di isi.',
@@ -208,7 +209,8 @@ class PenyesuaianPrioritasController extends Controller
                     'kdruang_pengusul' => $validated['kdruang_pengusul'],
                     'ruang_pengusul' => $validated['ruang_pengusul'],
                     'capaianprogram' => $validated['capaianprogram'],
-                    'masukan' => $validated['masukan'],
+                    // 'masukan' => $validated['masukan'],
+                    'masukan' => 'Dana yang Dibutuhkan',
                     'keluaran' => $validated['keluaran'],
                     'hasil' => $validated['hasil'],
                     'targetcapaian' => $validated['targetcapaian'],
@@ -229,13 +231,13 @@ class PenyesuaianPrioritasController extends Controller
                 //         'message' => 'Item Pengusulan Sudah ada di Rincian'
                 //     ], 422);
                 // }
-                $volume = (int) $request->jumalhacc;
+                $volume = (int) $request->jumlahacc;
                 $harga  = (int) $request->harga;
                 $nilai  = $volume * $harga;
                 Penyesuaian_Prioritas_Rinci::create([
                     'notrans' => $anggaran->notrans,
                     'usulan' => $request->usulan,
-                    'jumalhacc' => $volume,
+                    'jumlahacc' => $volume,
                     'volume' => $volume,
                     'harga' => $harga,
                     'nilai' => $nilai,
@@ -346,5 +348,58 @@ class PenyesuaianPrioritasController extends Controller
                 'message' => 'Gagal Kunci Data: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+    public function updateData()
+    {
+        DB::connection('siasik')->statement("
+            UPDATE usulanHonor_r u
+            JOIN sigarang.barang_r_s b
+            ON u.kode = b.kode
+            SET
+            u.kode_50   = b.kode_50,
+            u.uraian50  = b.uraian_50,
+            u.kode_108  = b.kode_108,
+            u.uraian108 = b.uraian_108
+            WHERE u.kode IS NOT NULL
+        ");
+
+        return response()->json([
+            'message' => 'Update selesai (1 query, super cepat)'
+        ]);
+    }
+
+    public function cetakData()
+    {
+        $rkaawal = Penyesuaian_Prioritas_Header::where('penyesesuaianperioritas_heder.notrans', request('notrans'))
+            ->with(['rincian' => function($query) {
+                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
+                    ->select(
+                        'penyesesuaianperioritas_rinci.id as idpp',
+                        'penyesesuaianperioritas_rinci.notrans',
+                        'penyesesuaianperioritas_rinci.usulan',
+                        'penyesesuaianperioritas_rinci.koderek108',
+                        'penyesesuaianperioritas_rinci.uraian108',
+                        'penyesesuaianperioritas_rinci.jumlahacc as volume',
+                        'penyesesuaianperioritas_rinci.harga',
+                        'penyesesuaianperioritas_rinci.nilai as total',
+                        'penyesesuaianperioritas_rinci.satuan',
+                        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 1) as kode1'),
+                        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 2) as kode2'),
+                        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 3) as kode3'),
+                        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 4) as kode4'),
+                        DB::raw('SUBSTRING_INDEX(akun50_2024.kodeall3, ".", 5) as kode5'),
+                        'akun50_2024.kodeall3 as kode6',
+                        DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 1) LIMIT 1) as uraian1'),
+                        DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 2) LIMIT 1) as uraian2'),
+                        DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 3) LIMIT 1) as uraian3'),
+                        DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 4) LIMIT 1) as uraian4'),
+                        DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 5) LIMIT 1) as uraian5'),
+                        'akun50_2024.uraian as uraian6'
+                    );
+            }])
+            ->get();
+            return new JsonResponse(['data' => $rkaawal]);
     }
 }
