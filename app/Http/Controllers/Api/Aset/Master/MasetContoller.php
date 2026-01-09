@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Aset\Master\Maset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MasetContoller extends Controller
 {
@@ -28,8 +29,52 @@ class MasetContoller extends Controller
 
     public function store(Request $request)
     {
-        $data = Maset::updateOrCreate($request->all());
-        return new JsonResponse(['message' => 'Data berhasil disimpan','data' => $data]);
+        $validated = $request->validate(
+            [
+                'kdaset' => 'nullable',
+                'namaaset' => 'required',
+                'kd50' => 'required',
+                'kd108' => 'required',
+                'kdaspak' => 'required',
+                'uraian50' => 'required',
+                'uraian108' => 'required',
+                'uraianaspak' => 'required',
+            ],
+            [
+                'namaaset.required' => 'Nama Aset harus diisi',
+                'kd50.required' => 'Kode 50 harus diisi',
+                'kd108.required' => 'Kode 108 harus diisi',
+                'kdaspak.required' => 'Kode Aspak harus diisi',
+                'uraian50.required' => 'Uraian 50 harus diisi',
+                'uraian108.required' => 'Uraian 108 harus diisi',
+                'uraianaspak.required' => 'Uraian Aspak harus diisi',
+                ]
+        );
+        try{
+            DB::beginTransaction();
+                if($validated['kdaset'] == null){
+                    $total = Maset::count();
+                    $kdaset = 'ASET'.str_pad($total+1, 3, '0', STR_PAD_LEFT);
+                }else{
+                    $kdaset = $validated['kdaset'];
+                }
+                $data = Maset::updateOrCreate(
+                    ['kdaset' => $kdaset],
+                    [
+                    'namaaset' => $validated['namaaset'],
+                    'kd50' => $validated['kd50'],
+                    'kd108' => $validated['kd108'],
+                    'kdaspak' => $validated['kdaspak'],
+                    'uraian50' => $validated['uraian50'],
+                    'uraian108' => $validated['uraian108'],
+                    'uraianaspak' => $validated['uraianaspak'],
+                ]);
+                return new JsonResponse(['message' => 'Data berhasil disimpan','data' => $data]);
+            DB::commit();
+        }catch(\Exception $e){
+            DB::rollback();
+            return new JsonResponse(['message' => 'Data gagal disimpan','error' => $e->getMessage()]);
+        }
     }
 
     public function delete(Request $request)

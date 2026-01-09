@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Aset\Master\KodeAspakController;
 use App\Http\Controllers\Api\Aset\Master\MasetContoller;
 use Illuminate\Support\Facades\Route;
 Route::group([
@@ -9,5 +10,7 @@ Route::group([
     Route::get('/index', [MasetContoller::class, 'index']);
     Route::post('/simpan', [MasetContoller::class, 'store']);
     Route::post('/delete', [MasetContoller::class, 'delete']);
+
+    Route::get('/indexaspak', [KodeAspakController::class, 'index']);
 
 });
