@@ -9,6 +9,7 @@ Route::group([
     'prefix' => 'anggaran/penyusunan/pengusulan'
 ], function () {
     Route::get('/select', [PengusulanController::class, 'selectKegiatan']);
+    Route::get('/selectsatuan', [PengusulanController::class, 'selectSatuan']);
     Route::get('/selectitem', [PengusulanController::class, 'selectItem']);
     Route::get('/index', [PengusulanController::class, 'index']);
     Route::post('/save', [PengusulanController::class, 'save']);
