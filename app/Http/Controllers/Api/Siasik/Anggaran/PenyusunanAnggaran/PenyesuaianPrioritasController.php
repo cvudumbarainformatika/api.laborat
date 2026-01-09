@@ -133,7 +133,7 @@ class PenyesuaianPrioritasController extends Controller
                 });
             }
         return response()->json(
-            $query->orderBy('notrans', 'desc')->get()
+            $query->orderBy('id', 'asc')->get()
         );
     }
 
@@ -374,7 +374,17 @@ class PenyesuaianPrioritasController extends Controller
     {
         $rkaawal = Penyesuaian_Prioritas_Header::where('penyesesuaianperioritas_heder.notrans', request('notrans'))
             ->with(['rincian' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
+                $query->join('akun50_2024', function ($join) {
+                    $join->on(
+                        'akun50_2024.kodeall2',
+                        '=',
+                        'penyesesuaianperioritas_rinci.koderek50'
+                    )->orOn(
+                        'akun50_2024.kodeall3',
+                        '=',
+                        'penyesesuaianperioritas_rinci.koderek50'
+                    );
+                })
                     ->select(
                         'penyesesuaianperioritas_rinci.id as idpp',
                         'penyesesuaianperioritas_rinci.notrans',
@@ -397,7 +407,7 @@ class PenyesuaianPrioritasController extends Controller
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 4) LIMIT 1) as uraian4'),
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 5) LIMIT 1) as uraian5'),
                         'akun50_2024.uraian as uraian6'
-                    );
+                    )->distinct();
             }])
             ->get();
             return new JsonResponse(['data' => $rkaawal]);

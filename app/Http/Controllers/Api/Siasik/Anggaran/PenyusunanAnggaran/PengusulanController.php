@@ -150,7 +150,7 @@ class PengusulanController extends Controller
                 });
             }
         return response()->json(
-            $query->orderBy('notrans', 'desc')->get()
+            $query->orderBy('id', 'asc')->get()
         );
     }
    

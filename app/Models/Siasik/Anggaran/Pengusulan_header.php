@@ -13,7 +13,7 @@ class Pengusulan_header extends Model
     protected $table = 'usulanHonor_h';
 
     public function rincian(){
-        return $this->hasMany(Pengusulan_rinci::class,'notrans', 'notrans');
+        return $this->hasMany(Pengusulan_rinci::class,'notrans', 'notrans')->orderBy('keterangan');
     }
 
     // public function pergeseranpak(){
