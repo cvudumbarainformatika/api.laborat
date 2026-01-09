@@ -10,10 +10,12 @@ Route::group([
     'prefix' => 'anggaran/penyusunan/prioritas'
 ], function () {
     Route::get('/select', [PenyesuaianPrioritasController::class, 'selectPengusulan']);
-    // Route::get('/selectitem', [PenyesuaianPrioritasController::class, 'selectItem']);
+    Route::get('/getrekening', [PenyesuaianPrioritasController::class, 'getRekening']);
     Route::get('/index', [PenyesuaianPrioritasController::class, 'index']);
     Route::post('/save', [PenyesuaianPrioritasController::class, 'save']);
     Route::post('/deleterinci', [PenyesuaianPrioritasController::class, 'deleterinci']);
     Route::post('/kunci', [PenyesuaianPrioritasController::class, 'kunci']);
+    Route::post('/updatedata', [PenyesuaianPrioritasController::class, 'updateData']);
+    Route::get('/cetakdata', [PenyesuaianPrioritasController::class, 'cetakData']);
 
 });
