@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Api\Simrs\Master\Tarif\PemeriksaanLaboratControllr;
+use App\Http\Controllers\Api\Simrs\Master\Tarif\TarifMasterAmbulanController;
 use App\Http\Controllers\Api\Simrs\Master\Tarif\TarifRadiologiController;
 use App\Http\Controllers\Api\Simrs\Master\Tarif\TindakanOperasiController;
 use App\Http\Controllers\Controller;
@@ -279,6 +280,7 @@ class TindakanController extends Controller
         $data['tarifLab'] = PemeriksaanLaboratControllr::pindahKeTabelMaster();
         $data['tarifTindOk'] = TindakanOperasiController::pindahKeTabelMaster();
         $data['tarifRadiologi'] = TarifRadiologiController::pindahKeTabelMaster();
+        $data['ambulan'] = TarifMasterAmbulanController::pindahKeTabelMaster();
         return $data;
     }
 }

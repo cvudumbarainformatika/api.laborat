@@ -4,11 +4,10 @@ namespace App\Models\Simrs\Penunjang\Ambulan;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TujuanAmbulan extends Model
+class MasterTujuanAmbulanSementara extends Model
 {
-    use HasFactory, SoftDeletes;
-    protected $table = 'rs281';
+    use HasFactory;
+    protected $table = 'rs281_sementara';
     protected $guarded = ['id'];
 }
