@@ -109,7 +109,7 @@ class PenyesuaianPrioritasController extends Controller
         $pg= Pegawai::find($user);
         $pegawai= $pg->nip;
         $sa = $pg->kdpegsimrs;
-        $query = Penyesuaian_Prioritas_Header::with('rincian')
+        $query = Penyesuaian_Prioritas_Header::with('rincian', 'penetapan')
         ->withSum('rincian as nilaianggaran', 'nilai');
         if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '1618' && $sa !== '81_X' && $sa !== '1215') {
                 $query->where('kodepptk', $pegawai);
@@ -427,7 +427,7 @@ class PenyesuaianPrioritasController extends Controller
             $db->table('t_tampung')->insert($insert);
         });
         return response()->json([
-            'message' => 'Data berhasil disimpan ke t_tampung (DB SIASIK)',
+            'message' => 'Berhasil Penetapan Anggaran',
             'total'   => count($insert)
         ]);
     }
