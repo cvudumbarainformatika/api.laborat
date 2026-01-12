@@ -860,19 +860,23 @@ class StokrealController extends Controller
 
     public function tutupOpname(Request $request)
     {
-        $data = TutupOpname::firstOrCreate(
-            [
-                'tglopname' => $request->tglopname
-            ],
-            [
-                'status' => '1'
-            ]
-        );
-        return new JsonResponse([
-            'message' => 'Stok Opname Sudah Ditutup',
-            'data' => $data,
-            'req' => $request->all()
-        ]);
+        // $data = TutupOpname::firstOrCreate(
+        //     [
+        //         'tglopname' => $request->tglopname
+        //     ],
+        //     [
+        //         'status' => '1'
+        //     ]
+        // );
+        // return new JsonResponse([
+        //     'message' => 'Stok Opname Sudah Ditutup',
+        //     'data' => $data,
+        //     'req' => $request->all()
+        // ]);
+
+        $data = TutupOpname::first();
+
+        return new JsonResponse($data);
     }
     public function listBlangko()
     {
