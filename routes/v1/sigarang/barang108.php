@@ -10,6 +10,7 @@ Route::group([
     'prefix' => 'barang108'
 ], function () {
     Route::get('/index', [Barang108Controller::class, 'index']);
+    Route::get('/maping', [Barang108Controller::class, 'maping']);
     Route::get('/barang108', [Barang108Controller::class, 'barang108']);
     Route::get('/maping-50', [Barang108Controller::class, 'maping108to50']);
     Route::post('/store', [Barang108Controller::class, 'store']);
