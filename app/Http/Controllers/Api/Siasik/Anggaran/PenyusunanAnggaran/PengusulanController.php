@@ -9,7 +9,9 @@ use App\Models\Siasik\Anggaran\Penetapan_Pagu;
 use App\Models\Siasik\Anggaran\Pengusulan_header;
 use App\Models\Siasik\Anggaran\Pengusulan_rinci;
 use App\Models\Siasik\Master\Master_Jasa;
+use App\Models\Siasik\Master\Master_Satuan;
 use App\Models\Sigarang\BarangRS;
+use App\Models\Sigarang\Maping108To50;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Farmasinew\Mkodebelanjaobat;
 use Illuminate\Http\Request;
@@ -30,6 +32,23 @@ class PengusulanController extends Controller
             $query->where(function ($q) use ($cari) {
                 $q->where('nomenklatur', 'like', '%' . $cari . '%')
                   ->orWhere('kegiatanblud', 'like', '%' . $cari . '%');
+            });
+        }
+         if ($perPage <= 0) {
+            $data = $query->get();
+            return new JsonResponse(['data' => $data]);
+        }
+        $data = $query->simplePaginate($perPage);
+        return new JsonResponse($data);
+    }
+    public function selectSatuan()
+    {
+        $perPage = request('per_page', 50);
+        $query = Master_Satuan::where('flag', '');
+         if (request('q')) {
+            $cari = request('q');
+            $query->where(function ($q) use ($cari) {
+                $q->where('satuanBarang', 'like', '%' . $cari . '%');
             });
         }
          if ($perPage <= 0) {
@@ -65,8 +84,10 @@ class PengusulanController extends Controller
                 break;
 
             case 'Modal':
-                $query = Maset::query()
-                    ->whereNull('flaging');;
+                // $query = Maset::query()
+                //     ->whereNull('flaging');
+                $query = Maping108To50::query()
+                    ->where('kode50', 'LIKE', '5.2.' . '%');
                 break;
 
             default:
@@ -85,8 +106,11 @@ class PengusulanController extends Controller
                 } elseif ($jenis === 'Farmasi') {
                     $w->where('uraian', 'like', "%{$q}%");
                 }  else {
-                    $w->where('kdaset', 'like', "%{$q}%")
-                    ->orWhere('namaaset','like', "%{$q}%");
+                    // $w->where('kdaset', 'like', "%{$q}%")
+                    // ->orWhere('namaaset','like', "%{$q}%");
+                    $w->where('kode108', 'like', "%{$q}%")
+                    ->orWhere('uraian108','like', "%{$q}%")
+                    ->orWhere('uraian50','like', "%{$q}%");
                 }
             });
         }
@@ -126,7 +150,7 @@ class PengusulanController extends Controller
                 });
             }
         return response()->json(
-            $query->orderBy('notrans', 'desc')->get()
+            $query->orderBy('id', 'asc')->get()
         );
     }
    

@@ -13,6 +13,18 @@ use Illuminate\Support\Facades\Validator;
 
 class Barang108Controller extends Controller
 {
+    public function maping()
+    {
+        $data = Maping108To50::latest('id')
+            ->filter(request(['q']))
+            ->paginate(request('per_page'));
+        // return Barang108Resource::collection($data);
+        $collect = collect($data);
+        $balik = $collect->only('data');
+        $balik['meta'] = $collect->except('data');
+
+        return new JsonResponse($balik);
+    }
     public function index()
     {
         // $data = Barang108::paginate();
@@ -106,5 +118,4 @@ class Barang108Controller extends Controller
         $data = Barang108::where('kode_50', null)->get();
         return new JsonResponse($data);
     }
-
 }

@@ -19,4 +19,8 @@ class Penyesuaian_Prioritas_Header extends Model
         return $this->hasMany(Perubahan_RincianBelanja::class,'notrans', 'notrans');
     }
 
+    public function penetapan(){
+        return $this->hasMany(PergeseranPaguRinci::class,'kodekegiatanblud', 'kodekegiatan');
+    }
+
 }

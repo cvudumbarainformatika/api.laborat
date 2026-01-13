@@ -10,6 +10,7 @@ use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Header;
 use App\Models\Siasik\Anggaran\Penyesuaian_Prioritas_Rinci;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Sigarang\Pegawai;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -108,7 +109,7 @@ class PenyesuaianPrioritasController extends Controller
         $pg= Pegawai::find($user);
         $pegawai= $pg->nip;
         $sa = $pg->kdpegsimrs;
-        $query = Penyesuaian_Prioritas_Header::with('rincian')
+        $query = Penyesuaian_Prioritas_Header::with('rincian', 'penetapan')
         ->withSum('rincian as nilaianggaran', 'nilai');
         if ($sa !== 'sa' && $sa !== '1619' && $sa !== '38' && $sa !== '1618' && $sa !== '81_X' && $sa !== '1215') {
                 $query->where('kodepptk', $pegawai);
@@ -133,7 +134,7 @@ class PenyesuaianPrioritasController extends Controller
                 });
             }
         return response()->json(
-            $query->orderBy('notrans', 'desc')->get()
+            $query->orderBy('id', 'asc')->get()
         );
     }
 
@@ -351,6 +352,87 @@ class PenyesuaianPrioritasController extends Controller
     }
 
 
+    public function PenetapanAnggaran(Request $request)
+    {
+        $nousulan = $request->nousulan;
+
+        if (!$nousulan) {
+            return response()->json([
+                'message' => 'Nomor Usulan Wajib di isi!'
+            ], 422);
+        }
+        $db = DB::connection('siasik');
+        // Ambil data dari header + rincian
+        $data = $db->table('penyesesuaianperioritas_rinci as r')
+            ->join(
+                'penyesesuaianperioritas_heder as h',
+                'h.notrans',
+                '=',
+                'r.notrans'
+            )
+            ->where('r.nousulan', $nousulan)
+            ->select([
+                'r.id as idpp',
+                'r.nousulan as notrans',
+                'r.usulan',
+                'r.nilai as pagu',
+                'r.koderek50 as koderek50',
+                'r.koderek108 as koderek108',
+                'h.kodekegiatan as kodekegiatanblud',
+                'h.tgltrans',
+                'r.volume',
+                'r.harga',
+                'r.satuan',
+                'r.uraian50',
+                'r.uraian108',
+                'h.kodebidang as bidang',
+            ])
+            ->get();
+
+        if ($data->isEmpty()) {
+            return response()->json([
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+
+        $insert = [];
+
+        foreach ($data as $row) {
+            $insert[] = [
+                'notrans'            => $row->notrans,
+                'idpp'               => $row->idpp,
+                'usulan'             => $row->usulan,
+                'pagu'               => $row->pagu,
+                'koderek108'         => $row->koderek108,
+                'koderek50'          => $row->koderek50,
+                'kodekegiatanblud'   => $row->kodekegiatanblud,
+                // ambil tahun saja
+                'tgl'                => Carbon::parse($row->tgltrans)->format('Y'),
+                'volume'             => $row->volume,
+                'harga'              => $row->harga,
+                'satuan'             => $row->satuan,
+                'uraian50'           => $row->uraian50,
+                'uraian108'          => $row->uraian108,
+                'bidang'             => $row->bidang,
+                'flag'               => '1'
+            ];
+        }
+
+        // Optional: hapus dulu jika notrans sudah ada
+         $db->transaction(function () use ($db, $nousulan, $insert) {
+            $db->table('t_tampung')
+                ->where('notrans', $nousulan)
+                ->delete();
+
+            $db->table('t_tampung')->insert($insert);
+        });
+        return response()->json([
+            'message' => 'Berhasil Penetapan Anggaran',
+            'total'   => count($insert)
+        ]);
+    }
+
+
     public function updateData()
     {
         DB::connection('siasik')->statement("
@@ -374,7 +456,17 @@ class PenyesuaianPrioritasController extends Controller
     {
         $rkaawal = Penyesuaian_Prioritas_Header::where('penyesesuaianperioritas_heder.notrans', request('notrans'))
             ->with(['rincian' => function($query) {
-                $query->join('akun50_2024', 'akun50_2024.kodeall2', '=', 'penyesesuaianperioritas_rinci.koderek50')
+                $query->join('akun50_2024', function ($join) {
+                    $join->on(
+                        'akun50_2024.kodeall2',
+                        '=',
+                        'penyesesuaianperioritas_rinci.koderek50'
+                    )->orOn(
+                        'akun50_2024.kodeall3',
+                        '=',
+                        'penyesesuaianperioritas_rinci.koderek50'
+                    );
+                })
                     ->select(
                         'penyesesuaianperioritas_rinci.id as idpp',
                         'penyesesuaianperioritas_rinci.notrans',
@@ -397,7 +489,7 @@ class PenyesuaianPrioritasController extends Controller
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 4) LIMIT 1) as uraian4'),
                         DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall2 = SUBSTRING_INDEX(penyesesuaianperioritas_rinci.koderek50, ".", 5) LIMIT 1) as uraian5'),
                         'akun50_2024.uraian as uraian6'
-                    );
+                    )->distinct();
             }])
             ->get();
             return new JsonResponse(['data' => $rkaawal]);

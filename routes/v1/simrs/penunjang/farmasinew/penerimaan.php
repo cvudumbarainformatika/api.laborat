@@ -45,7 +45,8 @@ Route::group([
     Route::post('/simpan-fisik', [StokrealController::class, 'simpanFisik']);
     Route::post('/simpan-keterangan', [StokrealController::class, 'simpanKeterangan']);
     Route::post('/simpan-baru', [StokrealController::class, 'simpanBaru']);
-    Route::post('/tutup-opname', [StokrealController::class, 'tutupOpname']);
+    // Route::post('/tutup-opname', [StokrealController::class, 'tutupOpname']); // ganti
+    Route::get('/tutupopname', [StokrealController::class, 'tutupOpname']);
 
     Route::get('/list-blangko', [StokrealController::class, 'listBlangko']);
 });

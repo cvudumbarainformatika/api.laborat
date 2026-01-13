@@ -17,5 +17,6 @@ Route::group([
     Route::post('/kunci', [PenyesuaianPrioritasController::class, 'kunci']);
     Route::post('/updatedata', [PenyesuaianPrioritasController::class, 'updateData']);
     Route::get('/cetakdata', [PenyesuaianPrioritasController::class, 'cetakData']);
+    Route::post('/penetapan', [PenyesuaianPrioritasController::class, 'PenetapanAnggaran']);
 
 });

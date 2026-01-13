@@ -20,4 +20,7 @@ Route::group([
     Route::post('/updateosambung', [CpptController::class, 'updateosambung']);
     Route::post('/updatessambung', [CpptController::class, 'updatessambung']);
 
+
+    Route::get('/notasidpjp', [CpptController::class, 'notasiDpjp']);
+    Route::post('/simpanNotasi', [CpptController::class, 'simpanNotasiDpjp']);
 });
