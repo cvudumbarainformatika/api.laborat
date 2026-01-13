@@ -75,11 +75,12 @@ class SuratKeteranganDokterController extends Controller
 
                 $kode = $request->jenis;
                 $nomor = '@nomor';
+                $tahun = date('Y');
                 if($request->nomorSurat === '' || $request->nomorSurat === null){
                     DB::connection('mysql')->select('call conterSurat('.$nomor.', "'.$kode.'")');
                     $datamaster = MsuratKeteranganDokter::where('kodeSurat', $kode)->first();
                     // return new JsonResponse([ 'result' => $datamaster], 200);
-                    $nosurat = $datamaster->fAwal.''.$datamaster->conter.''.$datamaster->fAkhir;
+                    $nosurat = $datamaster->fAwal.''.$datamaster->conter.''.$datamaster->fAkhir.''.$tahun;
                 }else{
                     $nosurat = $request->nomorSurat;
                 }
