@@ -1,20 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\Api\Simrs\Master\Tarif;
+namespace App\Http\Controllers\Api\Simrs\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Simrs\Penunjang\Ambulan\MasterTujuanAmbulanSementara;
-use App\Models\Simrs\Penunjang\Ambulan\TujuanAmbulan;
+use App\Models\Simrs\Master\Rstigapuluhtarif as MasterRstigapuluhtarif;
+use App\Models\Simrs\Master\TarifVisiteDanKamarSementara;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class TarifMasterAmbulanController extends Controller
+class RsTigaPuluhTarifController extends Controller
 {
+    public function gettigapuluhtarif()
+    {
+        $data = MasterRstigapuluhtarif::get();
+        return new JsonResponse($data);
+    }
+
     public function list()
     {
-        $data = MasterTujuanAmbulanSementara::where(function ($q) {
+        $data = TarifVisiteDanKamarSementara::where(function ($q) {
             $q->where('rs2', 'like', '%' . request('q') . '%')
                 ->orWhere('rs1', 'like', '%' . request('q') . '%');
         })
@@ -30,25 +36,25 @@ class TarifMasterAmbulanController extends Controller
         try {
             DB::beginTransaction();
             if ($request->rs1 == '' || $request->rs1 == null) {
-                $cekNama = MasterTujuanAmbulanSementara::where('rs2', $request->nama)->first();
+                throw new Exception('Tarif Visite dan Kamar Belum bisa ditambahkan dari sistem');
+                $cekNama = TarifVisiteDanKamarSementara::where('rs2', $request->nama)->first();
                 if ($cekNama) throw new Exception('Nama Tujuan sudah ada');
                 // ambil id terakhir
-                $lastData = MasterTujuanAmbulanSementara::orderBy('id', 'DESC')->first();
+                $lastData = TarifVisiteDanKamarSementara::orderBy('id', 'DESC')->first();
                 $cektotal = $lastData->id;
                 $akhir = (int) $cektotal + (int) 1;
-                $kode = 'TJ' . str_pad($akhir, 3, '0', STR_PAD_LEFT);
+                $kode = 'TV' . str_pad($akhir, 3, '0', STR_PAD_LEFT);
             } else {
                 $kode = $request->rs1;
             }
-            $result['simpan'] = MasterTujuanAmbulanSementara::updateOrCreate(
+            $result['simpan'] = TarifVisiteDanKamarSementara::updateOrCreate(
                 [
                     'rs1' => $kode
                 ],
                 [
                     'rs2' => $request->rs2,
-                    'rs3' => $request->rs3 ?? 0,
-                    'rs4' => $request->rs4 ?? 0,
-                    'rs5' => $request->rs5 ?? 0,
+                    // 'rs4' => $request->rs4,
+                    // 'rs5' => $request->rs5,
                     'rs6' => $request->rs6 ?? 0,
                     'rs7' => $request->rs7 ?? 0,
                     'rs8' => $request->rs8 ?? 0,
@@ -58,6 +64,23 @@ class TarifMasterAmbulanController extends Controller
                     'rs12' => $request->rs12 ?? 0,
                     'rs13' => $request->rs13 ?? 0,
                     'rs14' => $request->rs14 ?? 0,
+                    'rs15' => $request->rs15 ?? 0,
+                    'rs16' => $request->rs16 ?? 0,
+                    'rs17' => $request->rs17 ?? 0,
+                    'hcus' => $request->hcus ?? 0,
+                    'hcup' => $request->hcup ?? 0,
+                    'icus' => $request->icus ?? 0,
+                    'icup' => $request->icup ?? 0,
+                    'iccus' => $request->iccus ?? 0,
+                    'iccup' => $request->iccup ?? 0,
+                    'nicus' => $request->nicus ?? 0,
+                    'nicup' => $request->nicup ?? 0,
+                    'ins' => $request->ins ?? 0,
+                    'inp' => $request->inp ?? 0,
+                    'isos' => $request->isos ?? 0,
+                    'isop' => $request->isop ?? 0,
+                    'pss' => $request->pss ?? 0,
+                    'psp' => $request->psp ?? 0,
                     'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                     'dasar_perubahan' => $request->dasar_perubahan,
                 ]
@@ -78,18 +101,18 @@ class TarifMasterAmbulanController extends Controller
     }
     public function hidden(Request $request)
     {
-        $data = MasterTujuanAmbulanSementara::where('rs1', $request->kode)->first();
+        $data = TarifVisiteDanKamarSementara::where('rs1', $request->kode)->first();
         $data->tgl_hapus = $request->tgl_mulai_berlaku;
-        $data->flag = '1';
+        // $data->flag = '1';
         $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
         $data->save();
         return new JsonResponse(['message' => 'ok'], 200);
     }
     public function showAgain(Request $request)
     {
-        $data = MasterTujuanAmbulanSementara::where('rs1', $request->kode)->first();
+        $data = TarifVisiteDanKamarSementara::where('rs1', $request->kode)->first();
         $data->tgl_hapus = null;
-        $data->flag = '';
+        // $data->flag = '';
         $data->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
         $data->save();
         return new JsonResponse(['message' => 'ok'], 200);
@@ -99,10 +122,10 @@ class TarifMasterAmbulanController extends Controller
         try {
             $msg = [];
             DB::beginTransaction();
-            $adaTarifBerubah = MasterTujuanAmbulanSementara::whereDate('tgl_mulai_berlaku', date('Y-m-d'))->get();
+            $adaTarifBerubah = TarifVisiteDanKamarSementara::whereDate('tgl_mulai_berlaku', date('Y-m-d'))->get();
             if ($adaTarifBerubah) {
                 foreach ($adaTarifBerubah as $baru) {
-                    $simpantindakan = TujuanAmbulan::withTrashed()->updateOrCreate(
+                    $simpantindakan = MasterRstigapuluhtarif::withTrashed()->updateOrCreate(
                         [
                             'rs1' => $baru['rs1']
                         ],
@@ -120,11 +143,27 @@ class TarifMasterAmbulanController extends Controller
                             'rs12' => $baru['rs12'],
                             'rs13' => $baru['rs13'],
                             'rs14' => $baru['rs14'],
-                            'flag' => $baru['flag'],
+                            'rs15' => $baru['rs15'],
+                            'rs16' => $baru['rs16'],
+                            'rs17' => $baru['rs17'],
+                            'hcus' => $baru['hcus'],
+                            'hcup' => $baru['hcup'],
+                            'icus' => $baru['icus'],
+                            'icup' => $baru['icup'],
+                            'iccus' => $baru['iccus'],
+                            'iccup' => $baru['iccup'],
+                            'nicus' => $baru['nicus'],
+                            'nicup' => $baru['nicup'],
+                            'ins' => $baru['ins'],
+                            'inp' => $baru['inp'],
+                            'isos' => $baru['isos'],
+                            'isop' => $baru['isop'],
+                            'pss' => $baru['pss'],
+                            'psp' => $baru['psp'],
                         ]
                     );
-                    $data = TujuanAmbulan::where('rs1', $baru['rs1'])->first();
-                    $dataSudahHapus = TujuanAmbulan::onlyTrashed()->where('rs1', $baru['rs1'])->first();
+                    $data = MasterRstigapuluhtarif::where('rs1', $baru['rs1'])->first();
+                    $dataSudahHapus = MasterRstigapuluhtarif::onlyTrashed()->where('rs1', $baru['rs1'])->first();
                     if ($data && $baru['tgl_hapus'] != null && !$dataSudahHapus) {
                         $data->delete();
                     }

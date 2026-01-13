@@ -4,11 +4,12 @@ namespace App\Models\Simrs\Master;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Rstigapuluhtarif extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $table = 'rs30tarif';
-    protected $gurded = ['id'];
-    public $timestamps = false;
+    protected $guarded = ['id'];
+    // public $timestamps = false;
 }
