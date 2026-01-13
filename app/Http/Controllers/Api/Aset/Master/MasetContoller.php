@@ -39,6 +39,7 @@ class MasetContoller extends Controller
                 'uraian50' => 'required',
                 'uraian108' => 'required',
                 'uraianaspak' => 'required',
+                'satuan' => 'required',
             ],
             [
                 'namaaset.required' => 'Nama Aset harus diisi',
@@ -48,6 +49,7 @@ class MasetContoller extends Controller
                 'uraian50.required' => 'Uraian 50 harus diisi',
                 'uraian108.required' => 'Uraian 108 harus diisi',
                 'uraianaspak.required' => 'Uraian Aspak harus diisi',
+                'satuan.required' => 'Satuan harus diisi',
                 ]
         );
         try{
@@ -68,6 +70,7 @@ class MasetContoller extends Controller
                     'uraian50' => $validated['uraian50'],
                     'uraian108' => $validated['uraian108'],
                     'uraianaspak' => $validated['uraianaspak'],
+                    'satuan' => $validated['satuan'],
                 ]);
                 return new JsonResponse(['message' => 'Data berhasil disimpan','data' => $data]);
             DB::commit();
