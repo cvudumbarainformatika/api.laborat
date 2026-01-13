@@ -49,6 +49,7 @@ class AutogenController extends Controller
 {
     public function cariSep()
     {
+        // mboh
         $noka = '0003556434385';
         $tglawal = '2025-09-01';
         $tglakhir = '2025-10-11';
