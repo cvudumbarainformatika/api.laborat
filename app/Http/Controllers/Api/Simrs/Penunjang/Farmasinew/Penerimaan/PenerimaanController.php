@@ -30,7 +30,7 @@ class PenerimaanController extends Controller
         }
 
         // return new JsonResponse($supl);
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'kd_ruang')
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'kd_ruang', 'jenis_pengadaan')
             ->with([
                 'gudang:kode,nama',
                 'pihakketiga:kode,nama,alamat,telepon,npwp,cp',
@@ -107,6 +107,7 @@ class PenerimaanController extends Controller
                     'pengirim' => $request->pengirim,
                     'jenissurat' => $request->jenissurat,
                     'jenis_penerimaan' => 'Pesanan',
+                    'jenis_pengadaan' => $request->jenis_pengadaan,
                     'nomorsurat' => $request->nomorsurat,
                     'tglsurat' => $request->tglsurat,
                     'batasbayar' => $request->batasbayar,
@@ -522,6 +523,7 @@ class PenerimaanController extends Controller
                     //'batasbayar' => $request->batasbayar,
                     'jenissurat' => $request->jenissurat,
                     'jenis_penerimaan' => $request->jenispenerimaan,
+                    'jenis_pengadaan' => 'Pengadaan Langsung',
                     'nomorsurat' => $request->nomorsurat,
                     'user' => $user['kodesimrs'],
                     'total_faktur_pbf' => $request->total_faktur_pbf,
