@@ -29,7 +29,7 @@ class TtdController extends Controller
                 'pegawai.nama')
         ->first();
 
-        $ppk = Mpegawaisimpeg::whereIn('jabatan', ['J00005'])
+        $ppk = Mpegawaisimpeg::whereIn('jabatan', ['J00003'])
         ->where('aktif', 'AKTIF')
         ->select('pegawai.nip',
                 'pegawai.nama')
