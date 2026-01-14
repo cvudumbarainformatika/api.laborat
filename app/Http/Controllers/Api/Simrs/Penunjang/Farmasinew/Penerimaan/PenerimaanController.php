@@ -317,6 +317,7 @@ class PenerimaanController extends Controller
             'tglsurat',
             'batasbayar',
             'jenis_penerimaan',
+            'jenis_pengadaan',
             'kunci',
             'total_faktur_pbf as total',
         )

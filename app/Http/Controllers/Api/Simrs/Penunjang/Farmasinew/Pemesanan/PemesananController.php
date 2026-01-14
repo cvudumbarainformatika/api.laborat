@@ -51,6 +51,8 @@ class PemesananController extends Controller
             [
                 'tgl_pemesanan' => date('Y-m-d H:i:s'),
                 'kdpbf' => $request->kdpbf,
+                'jenis_pengadaan' => $request->jenis_pengadaan,
+                'catatan' => $request->catatan,
                 'kd_ruang' => $request->gudang ?? '',
                 'user' => auth()->user()->pegawai_id
             ]
@@ -132,7 +134,7 @@ class PemesananController extends Controller
             $supl = Mpihakketiga::select('kode')->where('nama', 'Like', '%' . request('nopemesanan') . '%')->pluck('kode');
         }
         // return new JsonResponse($gud);
-        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang')
+        $listpemesanan = PemesananHeder::select('nopemesanan', 'tgl_pemesanan', 'kdpbf', 'flag', 'kd_ruang', 'jenis_pengadaan', 'catatan')
             ->with([
                 'gudang:kode,nama',
                 'pihakketiga',
