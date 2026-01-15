@@ -267,7 +267,7 @@ class DaftarrajalController extends Controller
                 'rs141_id' => $request->rs141_id,
                 'noreg' => $input->noreg
             ];
-            $updatejawabanKonsul = PlaningController::updateNoregJawabanKonsul($head);
+            PlaningController::updateNoregJawabanKonsul($head);
         }
         //------------LOG ANTRIAN----------------//
         // $updatelogantrian = self::updatelogantrian($request,$input);
