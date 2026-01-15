@@ -284,6 +284,7 @@ class PenerimaanController extends Controller
         }
         $penerimaan->update([
             'nomorsurat' => $request->nomorsurat,
+            'jenis_pengadaan' => $request->jenis_pengadaan,
         ]);
         return new JsonResponse([
             'req' => $request->all(),
