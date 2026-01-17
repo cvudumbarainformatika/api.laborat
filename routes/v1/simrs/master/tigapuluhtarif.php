@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Simrs\Master\RsTigaPuluhTarif;
+use App\Http\Controllers\Api\Simrs\Master\RsTigaPuluhTarifController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -8,5 +8,5 @@ Route::group([
     // 'middleware' => 'jwt.verify',
     'prefix' => 'simrs/master'
 ], function () {
-    Route::get('/gettigapuluhtarif',[RsTigaPuluhTarif::class, 'gettigapuluhtarif']);
+    Route::get('/gettigapuluhtarif', [RsTigaPuluhTarifController::class, 'gettigapuluhtarif']);
 });

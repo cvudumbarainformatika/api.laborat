@@ -104,7 +104,7 @@ class RanapController extends Controller
             'rs23_nosurat.jamMeninggal',
             'rs23_nosurat.kddrygmenyatakan',
             'memodiagnosadokter.diagnosa as memodiagnosa'
-            )
+        )
 
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             ->leftjoin('mhambatan', 'rs15.kdhambatan', 'mhambatan.id')
@@ -122,7 +122,7 @@ class RanapController extends Controller
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
-            ->leftJoin('memodiagnosadokter', function($join) {
+            ->leftJoin('memodiagnosadokter', function ($join) {
                 $join->on('memodiagnosadokter.noreg', '=', 'rs23.rs1')
                     ->where('memodiagnosadokter.kdruang', '!=', 'POL014');
             })
@@ -134,7 +134,7 @@ class RanapController extends Controller
             //         ->on('serah_terima.ke', '=', 'rs23.rs5');
             // })
 
-            
+
 
             ->addSelect(DB::raw(
                 '(SELECT rs4 FROM rs23 WHERE rs23.rs2 = rs15.rs1 AND rs23.rs4 != "0000-00-00 00:00:00" ORDER BY rs4 DESC LIMIT 1)
@@ -216,63 +216,63 @@ class RanapController extends Controller
         $status = request('status') === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request('koderuangan');
         $data = Kunjunganranap::query()
-        ->select(
-            'rs23.rs1',
-            'rs23.rs1 as noreg',
-            'rs23.rs2 as norm',
-            'rs23.rs3 as tglmasuk',
-            // 'rs17.rs3 as tglmasuk_igd',
-            'rs23.rs4 as tglkeluar',
-            'rs23.rs5 as kdruangan',
-            'rs23.rs5 as kodepoli', // ini khusus resep jangan diganti .... memang namanya aneh kok ranap ada kodepoli? ya? jangan dihapus yaaa.....
-            'rs23.rs6 as ketruangan',
-            'rs23.rs7 as nomorbed',
-            'rs23.rs10 as kddokter',
-            'rs23.rs10 as kodedokter',
-            'rs23.rs38 as hak_kelas',
-            // 'rs23.titipan',
-            'kepegx.pegawai.nama as dokter',
-            'rs23.rs19 as kdsistembayar',
-            'rs23.rs19 as kodesistembayar', // ini untuk farmasi
-            'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
-            'rs23.rs24 as prognosis', // PROGNOSIS
-            'rs23.rs25 as sebabkematian', // Diagnosa Penyebab Meninggal
-            'rs23.rs26 as diagakhir', // Diagnosa Utama
-            'rs23.rs27 as tindaklanjut', // tindaklanjut
-            'rs23.rs23 as carakeluar', // cara keluar
-            'rs15.rs2 as nama_panggil',
-            DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
-            DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
-            DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+            ->select(
+                'rs23.rs1',
+                'rs23.rs1 as noreg',
+                'rs23.rs2 as norm',
+                'rs23.rs3 as tglmasuk',
+                // 'rs17.rs3 as tglmasuk_igd',
+                'rs23.rs4 as tglkeluar',
+                'rs23.rs5 as kdruangan',
+                'rs23.rs5 as kodepoli', // ini khusus resep jangan diganti .... memang namanya aneh kok ranap ada kodepoli? ya? jangan dihapus yaaa.....
+                'rs23.rs6 as ketruangan',
+                'rs23.rs7 as nomorbed',
+                'rs23.rs10 as kddokter',
+                'rs23.rs10 as kodedokter',
+                'rs23.rs38 as hak_kelas',
+                // 'rs23.titipan',
+                'kepegx.pegawai.nama as dokter',
+                'rs23.rs19 as kdsistembayar',
+                'rs23.rs19 as kodesistembayar', // ini untuk farmasi
+                'rs23.rs22 as status', // '' : BELUM PULANG | '2 ato 3' : PASIEN PULANG
+                'rs23.rs24 as prognosis', // PROGNOSIS
+                'rs23.rs25 as sebabkematian', // Diagnosa Penyebab Meninggal
+                'rs23.rs26 as diagakhir', // Diagnosa Utama
+                'rs23.rs27 as tindaklanjut', // tindaklanjut
+                'rs23.rs23 as carakeluar', // cara keluar
+                'rs15.rs2 as nama_panggil',
+                DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+                DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+                DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
                         TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
                         TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
-            'rs15.rs16 as tgllahir',
-            'rs15.rs17 as kelamin',
-            'rs15.rs19 as pendidikan',
-            'rs15.rs22 as agama',
-            'rs15.rs37 as templahir',
-            'rs15.rs39 as suku',
-            'rs15.rs40 as jenispasien',
-            'rs15.rs46 as noka',
-            'rs15.rs49 as nktp',
-            'rs15.rs55 as nohp',
-            'rs9.rs2 as sistembayar',
-            'rs9.groups as groups',
-            // 'rs21.rs2 as namanakes',
-            'kepegx.pegawai.nama as namanakes',
-            'rs227.rs8 as sep',
-            'rs227.kodedokterdpjp as kodedokterdpjp',
-            'rs227.dokterdpjp as dokterdpjp',
-            'rs24.rs2 as ruangan',
-            'rs24.rs3 as kelas_ruangan',
-            'rs24.rs5 as group_ruangan',
-            'rs24.rs4 as kdgroup_ruangan',
-            'rs24_titipan.rs2 as dititipkanke',
-            'rs23_meta.kd_jeniskasus',
-            'memodiagnosadokter.diagnosa as memodiagnosa',
-            // 'tflag_covid.flagcovid as flagcovid',
-        )
-        
+                'rs15.rs16 as tgllahir',
+                'rs15.rs17 as kelamin',
+                'rs15.rs19 as pendidikan',
+                'rs15.rs22 as agama',
+                'rs15.rs37 as templahir',
+                'rs15.rs39 as suku',
+                'rs15.rs40 as jenispasien',
+                'rs15.rs46 as noka',
+                'rs15.rs49 as nktp',
+                'rs15.rs55 as nohp',
+                'rs9.rs2 as sistembayar',
+                'rs9.groups as groups',
+                // 'rs21.rs2 as namanakes',
+                'kepegx.pegawai.nama as namanakes',
+                'rs227.rs8 as sep',
+                'rs227.kodedokterdpjp as kodedokterdpjp',
+                'rs227.dokterdpjp as dokterdpjp',
+                'rs24.rs2 as ruangan',
+                'rs24.rs3 as kelas_ruangan',
+                'rs24.rs5 as group_ruangan',
+                'rs24.rs4 as kdgroup_ruangan',
+                'rs24_titipan.rs2 as dititipkanke',
+                'rs23_meta.kd_jeniskasus',
+                'memodiagnosadokter.diagnosa as memodiagnosa',
+                // 'tflag_covid.flagcovid as flagcovid',
+            )
+
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
             // ->leftjoin('rs17', 'rs17.rs1', 'rs23.rs1') // IGD
             // ->leftjoin('tflag_covid', function ($q) {
@@ -287,7 +287,7 @@ class RanapController extends Controller
             ->leftjoin('rs24 as rs24_titipan', 'rs24_titipan.rs1', 'rs23.titipan')
             ->leftjoin('rs23_meta', 'rs23_meta.noreg', 'rs23.rs1') // jenis kasus
             // ->leftjoin('memodiagnosadokter', 'memodiagnosadokter.noreg', 'rs23.rs1') // memo
-            ->leftJoin('memodiagnosadokter', function($join) {
+            ->leftJoin('memodiagnosadokter', function ($join) {
                 $join->on('memodiagnosadokter.noreg', '=', 'rs23.rs1')
                     ->where('memodiagnosadokter.kdruang', '!=', 'POL014');
             })
@@ -580,14 +580,15 @@ class RanapController extends Controller
                 },
                 'radiologi' => function ($q) {
                     $q->with([
-                        'rincians'=> function($r){
+                        'rincians' => function ($r) {
                             $r->leftJoin('rs151', function ($join) {
                                 $join->on('rs48.rs2', '=', 'rs151.rs5')
                                     ->on('rs48.rs1', '=', 'rs151.rs1')
-                                    ->on('rs48.rs4','=','rs151.kode');
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
                             })
-                            ->select('rs48.*', 'rs151.hasil','rs151.rs3 as kesimpulan','rs151.hasilhtml','rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
-                        }, 'rincians.relmasterpemeriksaan',
+                                ->select('rs48.*', 'rs151.hasil', 'rs151.rs3 as kesimpulan', 'rs151.hasilhtml', 'rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
+                        },
+                        'rincians.relmasterpemeriksaan',
                         'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
                     ])->orderBy('id', 'DESC')
                         ->where('rs10', '!=', 'POL014')
@@ -639,6 +640,9 @@ class RanapController extends Controller
                 'cppt' => function ($q) {
                     $q->with([
                         'petugas:kdpegsimrs,nik,nama,kdgroupnakes',
+                        'notasiDpjp' => function ($query) {
+                            $query->select('cppt_notasi.cppt_id', 'cppt_notasi.notasi', 'cppt_notasi.tanggal', 'cppt_notasi.jam', 'cppt_notasi.user')->with('petugas:kdpegsimrs,nik,nama,kdgroupnakes');
+                        },
                         'anamnesis' => function ($query) {
                             $query->select(
                                 'rs209.id',
@@ -821,16 +825,37 @@ class RanapController extends Controller
                 'manymemo',
                 'serah_terima' => function ($q) {
                     $q->select(
-                    'serah_terima.noreg','serah_terima.dari', 'serah_terima.ke', 'serah_terima.flag', 'serah_terima.user_serah', 'serah_terima.user_trm','serah_terima.created_at',
-                    'serah_terima.tensi','serah_terima.sistole', 'serah_terima.diastole','serah_terima.nadi', 'serah_terima.suhu', 'serah_terima.rr', 'serah_terima.spo2', 'serah_terima.id',
-                    'serah_terima.tensi_trm', 'serah_terima.sistole_trm', 'serah_terima.diastole_trm','serah_terima.nadi_trm', 'serah_terima.suhu_trm', 'serah_terima.rr_trm', 'serah_terima.spo2_trm',
-                    'lm.rs2 as nm_ruanglm', 'br.rs2 as nm_ruang',
-                    'peg.nama as prwt_serah', 'pega.nama as prwt_trm',
+                        'serah_terima.noreg',
+                        'serah_terima.dari',
+                        'serah_terima.ke',
+                        'serah_terima.flag',
+                        'serah_terima.user_serah',
+                        'serah_terima.user_trm',
+                        'serah_terima.created_at',
+                        'serah_terima.tensi',
+                        'serah_terima.sistole',
+                        'serah_terima.diastole',
+                        'serah_terima.nadi',
+                        'serah_terima.suhu',
+                        'serah_terima.rr',
+                        'serah_terima.spo2',
+                        'serah_terima.id',
+                        'serah_terima.tensi_trm',
+                        'serah_terima.sistole_trm',
+                        'serah_terima.diastole_trm',
+                        'serah_terima.nadi_trm',
+                        'serah_terima.suhu_trm',
+                        'serah_terima.rr_trm',
+                        'serah_terima.spo2_trm',
+                        'lm.rs2 as nm_ruanglm',
+                        'br.rs2 as nm_ruang',
+                        'peg.nama as prwt_serah',
+                        'pega.nama as prwt_trm',
                     )
-                    ->leftJoin('rs24 as lm', 'lm.rs1', '=', 'serah_terima.dari')
-                    ->leftJoin('rs24 as br', 'br.rs1', '=', 'serah_terima.ke')
-                    ->leftJoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
-                    ->leftJoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm')
+                        ->leftJoin('rs24 as lm', 'lm.rs1', '=', 'serah_terima.dari')
+                        ->leftJoin('rs24 as br', 'br.rs1', '=', 'serah_terima.ke')
+                        ->leftJoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
+                        ->leftJoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm')
                         ->whereNull('serah_terima.flag')
                         ->orderBy('serah_terima.created_at', 'DESC')
                         ->groupBy('serah_terima.id');

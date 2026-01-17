@@ -935,7 +935,7 @@ class CpptController extends Controller
 
   public function notasiDpjp()
   {
-    $data = NotasiDpjp::where('noreg', request('noreg'))->get();
+    $data = NotasiDpjp::where('noreg', request('noreg'))->with('petugas:id,kdpegsimrs,nama,kdgroupnakes')->get();
 
     return new JsonResponse(
       [
@@ -953,23 +953,40 @@ class CpptController extends Controller
     $user = Pegawai::find(auth()->user()->pegawai_id);
     $kdpegsimrs = $user->kdpegsimrs;
 
-    $data = NotasiDpjp::updateOrCreate(
-      ['cppt_id' => $request->cppt_id],
-      [
-        'noreg' => $request->noreg,
-        'norm' => $request->norm,
-        'notasi' => $request->notasi,
-        'tanggal' => date('Y-m-d'),
-        'jam' => date('H:i:s'),
-        'user' => $kdpegsimrs
-      ]
-
-    );
+    // Cek apakah record sudah ada
+    $existingRecord = NotasiDpjp::where('cppt_id', $request->cppt_id)->first();
+    $data = null;
+    if ($existingRecord) {
+      // Jika record sudah ada, jangan update tanggal dan jam
+      $data = NotasiDpjp::updateOrCreate(
+        ['cppt_id' => $request->cppt_id],
+        [
+          // 'noreg' => $request->noreg,
+          // 'norm' => $request->norm,
+          'notasi' => $request->notasi,
+          // 'user' => $kdpegsimrs
+        ]
+      );
+    } else {
+      // Jika record belum ada, buat dengan tanggal dan jam saat ini
+      $data = NotasiDpjp::create(
+        // ['cppt_id' => $request->cppt_id],
+        [
+          'cppt_id' => $request->cppt_id,
+          'noreg' => $request->noreg,
+          'norm' => $request->norm,
+          'notasi' => $request->notasi,
+          'tanggal' => date('Y-m-d'),
+          'jam' => date('H:i:s'),
+          'user' => $kdpegsimrs
+        ]
+      );
+    }
 
     if (!$data) {
       return new JsonResponse(['message' => 'Data Gagagl Disimpan'], 501);
     }
-
-    return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'data' => $data], 200);
+    // $result = NotasiDpjp::where('cppt_id', $request->cppt_id)->first();
+    return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data->load('petugas:id,kdpegsimrs,nama,kdgroupnakes')], 200);
   }
 }

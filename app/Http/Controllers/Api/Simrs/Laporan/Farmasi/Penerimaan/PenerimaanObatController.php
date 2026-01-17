@@ -19,7 +19,7 @@ class PenerimaanObatController extends Controller
             [
                 'pihakketiga',
                 'gudang',
-                'penerimaanrinci.masterobat:kd_obat,kode50,uraian50',
+                'penerimaanrinci.masterobat:kd_obat,kode50,uraian50,kode108,uraian108',
                 'penerimaanrinci:nopenerimaan,kdobat',
             ]
         )->when(request('gudang') !== 'all', function ($q) {

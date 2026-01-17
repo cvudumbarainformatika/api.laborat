@@ -281,6 +281,7 @@ class TindakanController extends Controller
         $data['tarifTindOk'] = TindakanOperasiController::pindahKeTabelMaster();
         $data['tarifRadiologi'] = TarifRadiologiController::pindahKeTabelMaster();
         $data['ambulan'] = TarifMasterAmbulanController::pindahKeTabelMaster();
+        $data['rs 30taris'] = RsTigaPuluhTarifController::pindahKeTabelMaster();
         return $data;
     }
 }

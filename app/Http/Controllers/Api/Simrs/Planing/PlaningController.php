@@ -410,13 +410,14 @@ class PlaningController extends Controller
         $simpan = JawabanKonsulPoli::where('rs141_id', $head['rs141_id'])
             ->first();
         if (!$simpan) {
-            info('gagal update noreg jawaban konsul');
+            info('gagal update noreg jawaban konsul, data tidak ditemukan. rs141_id=' . $head['rs141_id']);
+            return false;
         }
         $simpan->update([
             'noreg_baru' => $head['noreg']
         ]);
-        info('sukses update noreg jawaban konsul' . $simpan);
-        return $simpan ?? false;
+        info('sukses update noreg jawaban konsul' . $simpan->toArray());
+        return $simpan;
     }
     public static function updateNoreg(Request $request)
     {

@@ -31,6 +31,8 @@ use DateTime;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Calculation\TextData\Format;
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 
 class NPD_LSController extends Controller
 {
@@ -481,6 +483,48 @@ class NPD_LSController extends Controller
         return new JsonResponse($data);
     }
 
+    public function bastSigarang(){
+
+        $tahun = Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
+        $databast = Penerimaan::where('penerimaans.kode_perusahaan', request('kodepenerima'))
+        ->where('penerimaans.no_bast', '!=', '')
+        ->where('penerimaans.no_pembayaran', '')
+        ->whereNull('penerimaans.tanggal_pembayaran')
+        ->when(request('q'),function ($query) {
+            $query->where('penerimaans.no_bast', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaans.no_penerimaan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaans.nomor', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaans.faktur', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaans.surat_jalan', 'LIKE', '%' . request('q') . '%')
+            ->orWhere('penerimaans.kontrak', 'LIKE', '%' . request('q') . '%');
+        })->with(['perusahaan','details' => function($rinci) use ($tahun){
+            $rinci
+            // ->with('pagu');
+            ->with(['pagu'=> function ($pagu) use ($tahun) {
+                            $pagu->where('tgl', $tahun)
+                                ->where('kodekegiatanblud', request('kodekegiatanblud'))
+                                ->where('pagu', '!=', '0')
+                                ->select('t_tampung.*')
+                                        ->with(['realisasi_spjpanjar'=> function ($realisasi) {
+                                            $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                                                'spjpanjar_rinci.jumlahbelanjapanjar');
+                                            },'realisasi'=> function ($realisasi) {
+                                            $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                                                'npdls_rinci.nominalpembayaran')
+                                                                // ->sum('nominalpembayaran')
+                                                                // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
+                                                                ;
+                                            },'contrapost'=> function ($realisasi) {
+                                            $realisasi->select('contrapost.idpp',
+                                                                'contrapost.nominalcontrapost');
+                                            }]);
+                            }]);
+        }])
+        ->orderBy('no_bast', 'asc')
+        ->get();
+        
+        return new JsonResponse($databast);
+    }
 
     public function coba(){
         // $nip = '196611251996032003';
@@ -513,7 +557,7 @@ class NPD_LSController extends Controller
         $pg= Pegawai::find($user);
         $pegawai= $pg->kdpegsimrs;
 
-        $nomor = $request->nonpdls ?? self::buatnomor();
+        // $nomor = $request->nonpdls ?? self::buatnomor();
 
         $tanggal = $request->tglnpdls;
         $bulan = Carbon::parse($tanggal)->month;
@@ -527,8 +571,18 @@ class NPD_LSController extends Controller
         } else {
             $triwulan = 'TRIWULAN 4';
         }
+        if (empty($request->nonpdls)) {
+            DB::connection('siasik')->select('call nonpdls(@nomor)');
+            $x = DB::connection('siasik')->table('conter')->select('nonpdls')->first();
 
-
+            if (!$x) {
+                throw new \Exception('Gagal mendapatkan nomor dari prosedur nonpdls');
+            }
+            $nomer = (int)$x->nonpdls;
+            $nomor = FormatingHelper::nonotadinas($nomer, 'NPD-LS/RSUD');
+        } else {
+            $nomor = $request->nonpdls;
+        }
         try {
             DB::beginTransaction();
             $save = NpdLS_heder::updateOrCreate(
@@ -600,6 +654,7 @@ class NPD_LSController extends Controller
                 // update penerimaan atas nomer BAST FARMASI
                 PenerimaanHeder::whereIn('nopenerimaan', $penerimaans)->update(['no_npd' => $save->nonpdls]);
                 BastKonsinyasi::whereIn('notranskonsi', $penerimaans)->update(['no_npd' => $save->nonpdls]);
+                DetailPenerimaan::where('id', $penerimaans)->update(['flag_siasik' => '1']);
 
             return new JsonResponse(
                 [
@@ -686,105 +741,82 @@ class NPD_LSController extends Controller
     }
     public function deleterinci(Request $request)
     {
-        $header = NpdLS_heder::where('nonpdls', $request->nonpdls)
-        ->where('kunci', '!=', '')
-        ->get();
-        if(count($header) > 0){
-            return new JsonResponse(['message' => 'NPD Masih Dikunci'], 500);
-        }
-
-
-        $findrinci = $request->id
-        ? NpdLS_rinci::find($request->id)
-        : NpdLS_rinci::where('nopenerimaan', $request->nopenerimaan)->first();
-
-        if (!$findrinci) {
-            return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
-        }
-
-        $noNpdls = $findrinci->nonpdls;
-        $noPenerimaan = $findrinci->nopenerimaan;
-        $cekPenerimaan = PenerimaanHeder::where('nopenerimaan', $noPenerimaan)
-            ->where('no_npd', '!=', $noNpdls)
+        $terkunci = NpdLS_heder::where('nonpdls', $request->nonpdls)
+            ->where('kunci', '!=', '')
             ->exists();
-        $cekKonsinyasi = BastKonsinyasi::where('notranskonsi', $noPenerimaan)
-            ->where('no_npd', '!=', $noNpdls)
-            ->exists();
-        $findrinci->delete();
-        if ($cekPenerimaan || $cekKonsinyasi) {
-            $message = 'Data Berhasil dihapus';
-        }
-        else {
-            PenerimaanHeder::where('nopenerimaan', $noPenerimaan)
-            ->where('no_npd', $noNpdls)
-            ->update(['no_npd' => '']);
-
-            BastKonsinyasi::where('notranskonsi', $noPenerimaan)
-                ->where('no_npd', $noNpdls)
-                ->update(['no_npd' => '']);
-            // PenerimaanHeder::whereIn('nopenerimaan', [$request->nopenerimaan])
-            // ->whereIn('no_npd', [$request->nonpdls])
-            // ->update(['no_npd' => '']);
-            // BastKonsinyasi::whereIn('notranskonsi', [$request->nopenerimaan])
-            // ->whereIn('no_npd', [$request->nonpdls])
-            // ->update(['no_npd' => '']);
-            // return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
-        }
-        
-        
-        $rinciAll = NpdLS_rinci::where('nonpdls', $noNpdls)->get();
-        if(count($rinciAll) === 0){
-            $dataheader = NpdLS_heder::where('nonpdls', $noNpdls)->first();
-
-             if ($dataheader) {
-                $dataheader->delete();
-                PenerimaanHeder::whereIn('no_npd', [$noNpdls])->update(['no_npd' => '']);
-                BastKonsinyasi::whereIn('no_npd', [$noNpdls])->update(['no_npd' => '']);
-                Serahterima_header::whereIn('nonpdls', [$noNpdls])->update(['nonpdls' => '']);
-                return new JsonResponse([
-                    'message' => 'Data Berhasil dihapus',
-                    'data' => []
-                ], 200);
-            } else {
-                return new JsonResponse([
-                    'message' => 'Data header tidak ditemukan',
-                ], 404);
+            if($terkunci){
+                return new JsonResponse(['message' => 'NPD Masih Dikunci'], 500);
             }
 
 
+            $findrinci = $request->id
+            ? NpdLS_rinci::find($request->id)
+            : NpdLS_rinci::where('nopenerimaan', $request->nopenerimaan)->first();
 
-            // $header->delete();
-            // PenerimaanHeder::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
-            // BastKonsinyasi::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
+            if (!$findrinci) {
+                return new JsonResponse(['message' => 'Data tidak ditemukan'], 404);
+            }
+
+        DB::beginTransaction();
+
+        try {
+
+            $noNpdls = $findrinci->nonpdls;
+            $noPenerimaan = $findrinci->nopenerimaan;
+            $cekPenerimaan = PenerimaanHeder::where('nopenerimaan', $noPenerimaan)
+                ->where('no_npd', '!=', $noNpdls)
+                ->exists();
+            $cekKonsinyasi = BastKonsinyasi::where('notranskonsi', $noPenerimaan)
+                ->where('no_npd', '!=', $noNpdls)
+                ->exists();
+            $cekSigarangrinci = DetailPenerimaan::where('id', $noPenerimaan)
+                ->where('flag_siasik', '!=',1)
+                ->exists();
+            $findrinci->delete();
+            $bolehReset = !($cekPenerimaan || $cekKonsinyasi || $cekSigarangrinci);
+            if ($bolehReset) {
+            
+                PenerimaanHeder::where('nopenerimaan', $noPenerimaan)
+                ->where('no_npd', $noNpdls)
+                ->update(['no_npd' => '']);
+
+                BastKonsinyasi::where('notranskonsi', $noPenerimaan)
+                    ->where('no_npd', $noNpdls)
+                    ->update(['no_npd' => '']);
+                DetailPenerimaan::where('id', $noPenerimaan)
+                    ->where('flag_siasik', 1)
+                    ->update(['flag_siasik' => '']);
+                // PenerimaanHeder::whereIn('nopenerimaan', [$request->nopenerimaan])
+                // ->whereIn('no_npd', [$request->nonpdls])
+                // ->update(['no_npd' => '']);
+                // BastKonsinyasi::whereIn('notranskonsi', [$request->nopenerimaan])
+                // ->whereIn('no_npd', [$request->nonpdls])
+                // ->update(['no_npd' => '']);
+                // return new JsonResponse(['message' => 'Data berhasil dihapus'], 200);
+            }
+            
+            $rinciAll = NpdLS_rinci::where('nonpdls', $noNpdls)->get();
+            if ($rinciAll->count() === 0) {
+                NpdLS_heder::where('nonpdls', $noNpdls)->delete();
+                PenerimaanHeder::where('no_npd', $noNpdls)->update(['no_npd' => '']);
+                BastKonsinyasi::where('no_npd', $noNpdls)->update(['no_npd' => '']);
+                Serahterima_header::where('nonpdls', $noNpdls)->update(['nonpdls' => '']);
+            }
+
+            DB::commit();
+
+            return new JsonResponse([
+                'message' => 'Data Berhasil dihapus',
+                'data' => $rinciAll
+            ], 200);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Gagal menghapus data',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return new JsonResponse([
-            'message' => $message,
-             'data' => $rinciAll
-        ]);
-
-
-        // $rinciAll = NpdLS_rinci::where('nonpdls', $request->nonpdls)->get();
-
-        // if ($rinciAll->isEmpty()) {
-        //     $header = NpdLS_heder::where('nonpdls', $request->nonpdls)->first();
-
-        //     if ($header) {
-        //         $header->delete();
-        //         PenerimaanHeder::whereIn('no_npd', $request->nonpdls)->update(['no_npd' => '']);
-        //         return new JsonResponse([
-        //             'message' => 'Data Berhasil dihapus',
-        //             'data' => []
-        //         ], 200);
-        //     } else {
-        //         return new JsonResponse([
-        //             'message' => 'Data header tidak ditemukan',
-        //         ], 404);
-        //     }
-        // } else {
-        //     return new JsonResponse([
-        //         'message' => 'Data masih memiliki rinci',
-        //     ], 400);
-        // }
 
     }
     public static function buatnomor(){
