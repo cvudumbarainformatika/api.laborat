@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Kasir;
 
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Kasir\Pembayaran;
 use App\Models\Simrs\Kasir\Pembayarannontunai;
 use App\Models\Simrs\Kasir\Tagihannontunai;
 use Illuminate\Http\JsonResponse;
@@ -16,9 +17,9 @@ class FlagingManualVaController extends Controller
     {
         $status = request('status') ?? 'x';
         $list = Tagihannontunai::select('rs297.id as id','rs297.rs1 as nota','rs297.rs2 as nama','rs297.rs4 as nova','rs297.rs6 as tgled','rs297.rs9 as nominal',
-        'rs297.rs10 as kasir','rs298.rs2 as tglbyr')
+        'rs297.rs10 as kasir','rs298.rs2 as tglbyr','rs297.rs12 as batal')
         ->leftjoin('rs298','rs297.rs4','rs298.rs1')
-        ->where('rs297.rs12','!=','1')
+        // ->where('rs297.rs12','!=','1')
         ->where(function ($query) {
             $query->where ('rs297.rs4','LIKE','%'. request('q').'%')
                 ->orWhere('rs297.rs2', 'LIKE', '%' . request('q') . '%')
@@ -70,11 +71,24 @@ class FlagingManualVaController extends Controller
     public static function getbynova($nova)
     {
         $list = Tagihannontunai::select('rs297.id as id','rs297.rs1 as nota','rs297.rs2 as nama','rs297.rs4 as nova','rs297.rs6 as tgled','rs297.rs9 as nominal',
-        'rs297.rs10 as kasir','rs298.rs2 as tglbyr')
+        'rs297.rs10 as kasir','rs298.rs2 as tglbyr','rs297.rs12 as batal')
         ->leftjoin('rs298','rs297.rs4','rs298.rs1')
         ->where('rs297.rs4', $nova)
         ->get();
 
         return $list;
+    }
+
+    public function batalva(Request $request)
+    {
+        $cek = Pembayarannontunai::where('rs1', $request->nova)->count();
+        if ($cek > 0) {
+            return new JsonResponse(['message' => 'No VA ini Sudah Terbayar...!!!'],500);
+        }
+        $list = Tagihannontunai::where('rs4', $request->nova)->first();
+        $list->rs12 = 1;
+        $list->save();
+        $hasil = self::getbynova($request->nova);
+        return new JsonResponse(['message' => 'VA Berhasil Dibatalkan', 'result' => $hasil],200);
     }
 }
