@@ -618,6 +618,8 @@ class NPD_LSController extends Controller
 
                 Serahterima_header::where('noserahterimapekerjaan', $request->noserahterima)
                     ->update(['nonpdls' => $save->nonpdls]);
+                Penerimaan::where('reff', $request->noserahterima)
+                    ->update(['nonpdls' => $save->nonpdls]);
 
             $penerimaans = [];
             foreach ($request->rincians as $rinci){
