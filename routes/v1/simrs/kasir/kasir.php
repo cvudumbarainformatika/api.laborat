@@ -42,6 +42,7 @@ Route::group([
 
     Route::get('/va/listva', [FlagingManualVaController::class, 'listva']);
     Route::post('/va/flagingmanualva', [FlagingManualVaController::class, 'flagingmanual']);
+    Route::post('/va/batal-va', [FlagingManualVaController::class, 'batalva']);
 
     Route::post('/rajal/batalkwitansi', [KasirrajalController::class, 'batalkwitansi']);
 

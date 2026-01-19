@@ -9,6 +9,7 @@ use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_heder;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastKonsinyasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
 use Carbon\Carbon;
@@ -123,7 +124,7 @@ class Pencairan_LSController extends Controller
 
             foreach ($npkData as $npk) {
                 $tglPencairan = Carbon::parse($request->tglpencairan)->format('Y-m-d');
-
+                // UPDATE FARMASI //
                 $updatePenerimaan = PenerimaanHeder::where('no_npd', $npk->nonpdls)
                     ->whereNull('tgl_pencairan_npk')
                     ->update([
@@ -146,7 +147,17 @@ class Pencairan_LSController extends Controller
                         'flag_bayar' => '1'
                     ]);
 
-                $updatedCount += ($updatePenerimaan + $updateKonsinyasi);
+                // UPDATE SIAGARANG //
+                $updateSigarang = Penerimaan::where('nonpdls', $npk->nonpdls)
+                    ->whereNull('tanggal_pembayaran')
+                    ->update([
+                        'tanggal_pembayaran' => $tglPencairan,
+                        'nilai_pembayaran' => $npk->total,
+                        'pembayaran_by' => $bendpengeluaran->id,
+                        'no_pembayaran' => $nopencairan
+                    ]);
+
+                $updatedCount += ($updatePenerimaan + $updateKonsinyasi + $updateSigarang);
             }
 
             DB::commit();

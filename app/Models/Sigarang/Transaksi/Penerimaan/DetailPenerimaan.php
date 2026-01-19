@@ -2,6 +2,7 @@
 
 namespace App\Models\Sigarang\Transaksi\Penerimaan;
 
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Sigarang\Barang108;
 use App\Models\Sigarang\BarangRS;
 use App\Models\Sigarang\Satuan;
@@ -34,5 +35,10 @@ class DetailPenerimaan extends Model
     public function penerimaan()
     {
         return $this->belongsTo(Penerimaan::class);
+    }
+
+     public function pagu()
+    {
+        return $this->belongsTo(PergeseranPaguRinci::class, 'kode_rs', 'koders');
     }
 }

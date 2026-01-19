@@ -386,6 +386,7 @@ class PenyesuaianPrioritasController extends Controller
                 'r.uraian50',
                 'r.uraian108',
                 'h.kodebidang as bidang',
+                'r.koders',
             ])
             ->get();
 
@@ -414,6 +415,7 @@ class PenyesuaianPrioritasController extends Controller
                 'uraian50'           => $row->uraian50,
                 'uraian108'          => $row->uraian108,
                 'bidang'             => $row->bidang,
+                'koders'             => $row->koders,
                 'flag'               => '1'
             ];
         }

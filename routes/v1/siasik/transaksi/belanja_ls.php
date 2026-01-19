@@ -16,6 +16,7 @@ Route::group([
     Route::get('/anggaran', [NPD_LSController::class, 'anggaran']);
     Route::get('/bastfarmasi', [NPD_LSController::class, 'bastfarmasi']);
     Route::get('/bastpekerjaan', [NPD_LSController::class, 'bastpekerjaan']);
+    Route::get('/bastsigarang', [NPD_LSController::class, 'bastSigarang']);
     Route::get('/getrincian', [NPD_LSController::class, 'getlistformnpd']);
     Route::post('/simpannpd', [NPD_LSController::class, 'simpannpd']);
     Route::post('/kuncinpd', [NPD_LSController::class, 'kuncinpd']);

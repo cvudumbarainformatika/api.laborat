@@ -18,6 +18,7 @@ use App\Models\Siasik\TransaksiPjr\SpjPanjar_Header;
 use App\Models\Siasik\TransaksiPjr\SpjPanjar_Rinci;
 use App\Models\Siasik\TransaksiPjr\SPM_GU;
 use App\Models\Siasik\TransaksiPjr\SpmUP;
+use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastKonsinyasi;
 use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
@@ -97,6 +98,40 @@ class RegJurnalController extends Controller
         // }])
         ->get();
 
+
+        $bastsigarang = Penerimaan::where('penerimaans.no_bast', '!=', '')
+            ->whereBetween('penerimaans.tanggal_bast', [$awal, $akhir])
+            ->where('penerimaans.no_pembayaran', '')
+            ->whereNull('penerimaans.tanggal_pembayaran')
+            ->when(request('q'),function ($query) {
+                $query->where('penerimaans.no_bast', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.no_penerimaan', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.nomor', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.faktur', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.surat_jalan', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.kontrak', 'LIKE', '%' . request('q') . '%');
+            })->with(['details' => function($rinci) use ($tahun){
+                $rinci
+                // ->with('pagu');
+                ->with(['pagu'=> function ($pagu) use ($tahun) {
+                                $pagu->where('tgl', $tahun)
+                                    // ->where('kodekegiatanblud', request('kodekegiatanblud'))
+                                    ->where('pagu', '!=', '0')
+                                    ->select('t_tampung.*')
+                                    ->with(['kegiatanblud','jurnal' => function($jurnal){
+                                        $jurnal->select('akun_mapjurnal.kodeall',
+                                        'akun_mapjurnal.kode50',
+                                        'akun_mapjurnal.kode_bast',
+                                        'akun_mapjurnal.kode_bastx',
+                                        'akun_mapjurnal.uraian50',
+                                        'akun_mapjurnal.uraian_bast',
+                                        'akun_mapjurnal.uraian_bastx');
+                                    }]);
+                                }]);
+            }])
+            ->orderBy('no_bast', 'asc')
+            ->get();
+            
 
         $bastfarmasi=PenerimaanHeder::select('penerimaan_h.nobast',
                     'penerimaan_h.tgl_bast',
@@ -404,6 +439,7 @@ class RegJurnalController extends Controller
         ->get();
         $regjurnal = [
             'stp' => $stp,
+            'bastsigarang' => $bastsigarang,
             'bastfarmasi' => $bastfarmasi,
             'bastkonsinyasi' => $bastkonsinyasi,
             'cair_stp' => $cairstp,
