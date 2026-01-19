@@ -56,6 +56,7 @@ Route::group([
 
     Route::get('/dialogtindakanpoli', [TindakanController::class, 'dialogtindakanpoli']);
     Route::get('/dialogtindakanIgd', [TindakanController::class, 'dialogtindakanIgd']);
+    Route::get('/cari-tindakan-hc', [TindakanController::class, 'dialogtindakanHomeCare']);
     Route::get('/dialogoperasi', [TindakanController::class, 'dialogoperasi']);
     Route::get('/notatindakan', [TindakanController::class, 'notatindakan']);
     Route::get('/notatindakanIgd', [TindakanController::class, 'notatindakanIgd']);

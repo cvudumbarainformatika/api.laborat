@@ -69,6 +69,32 @@ class TindakanController extends Controller
             ->get();
         return new JsonResponse($dialogtindakanpoli);
     }
+    public function dialogtindakanHomeCare()
+    {
+        $dialogtindakanpoli = Mtindakan::select(
+            'rs30.rs1',
+            'rs30.rs1 as kdtindakan',
+            'rs30.rs2 as tindakan',
+            'rs30.js_hc as sarana',
+            'rs30.jp_hc as pelayanan',
+            'rs30.rs51 as flaghari',
+            DB::raw('rs30.js_hc + rs30.jp_hc as tarif'),
+            'prosedur_mapping.icd9'
+        )
+            ->leftjoin('prosedur_mapping', 'rs30.rs1', '=', 'prosedur_mapping.kdMaster')
+            ->where(function ($query) {
+                $query->where('rs30.rs2', 'Like', '%' . request('tindakan') . '%')
+                    ->orWhere('prosedur_mapping.icd9', 'Like', '%' . request('tindakan') . '%');
+            })
+            ->where(function ($r) {
+                $r->where('rs30.js_hc', '>', 0)
+                    ->orWhere('rs30.jp_hc', '>', 0);
+            })
+            // ->where('rs30.rs2', 'Like', '%' . request('kdpoli') . '%')
+            // ->where('rs30.rs4')
+            ->get();
+        return new JsonResponse($dialogtindakanpoli);
+    }
 
     public function simpantindakanpoli(Request $request)
     {
