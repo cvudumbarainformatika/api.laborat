@@ -498,7 +498,12 @@ class NPD_LSController extends Controller
             ->orWhere('penerimaans.surat_jalan', 'LIKE', '%' . request('q') . '%')
             ->orWhere('penerimaans.kontrak', 'LIKE', '%' . request('q') . '%');
         })->with(['perusahaan','details' => function($rinci) use ($tahun){
-            $rinci
+            $rinci->join('penerimaans', 'penerimaans.id', '=', 'detail_penerimaans.penerimaan_id')
+            ->addSelect([
+                'detail_penerimaans.*',
+                'penerimaans.reff',
+                'penerimaans.no_bast',
+            ])
             // ->with('pagu');
             ->with(['pagu'=> function ($pagu) use ($tahun) {
                             $pagu->where('tgl', $tahun)
@@ -583,8 +588,24 @@ class NPD_LSController extends Controller
         } else {
             $nomor = $request->nonpdls;
         }
+
+        $nopenerimaanList = collect($request->rincians)
+            ->pluck('nopenerimaan')
+            ->filter()
+            ->unique()
+            ->values();
+        $nonpdls = $nomor;
+        $exists = NpdLS_rinci::whereIn('nopenerimaan', $nopenerimaanList)
+        ->where('nonpdls', '!=', $nonpdls)
+        ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'Gagal Simpan!! BAST ini sudah pernah di simpan sebelumnya.'
+            ], 422);
+        }
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
             $save = NpdLS_heder::updateOrCreate(
                 [
                     'nonpdls' => $nomor,
@@ -618,8 +639,6 @@ class NPD_LSController extends Controller
 
                 Serahterima_header::where('noserahterimapekerjaan', $request->noserahterima)
                     ->update(['nonpdls' => $save->nonpdls]);
-                Penerimaan::where('reff', $request->noserahterima)
-                    ->update(['nonpdls' => $save->nonpdls]);
 
             $penerimaans = [];
             foreach ($request->rincians as $rinci){
@@ -652,15 +671,16 @@ class NPD_LSController extends Controller
                     ]);
                     //request nomer BAST
                     $penerimaans[]=$rinci['nopenerimaan'];
-                }
+            }
                 // update penerimaan atas nomer BAST FARMASI
                 PenerimaanHeder::whereIn('nopenerimaan', $penerimaans)->update(['no_npd' => $save->nonpdls]);
                 BastKonsinyasi::whereIn('notranskonsi', $penerimaans)->update(['no_npd' => $save->nonpdls]);
-                DetailPenerimaan::where('id', $penerimaans)->update(['flag_siasik' => '1']);
+                Penerimaan::whereIn('reff', $penerimaans)->update(['nonpdls' => $save->nonpdls]);
+                DB::commit();
 
             return new JsonResponse(
                 [
-                    'message' => 'Data Berhasil disimpan...!!!',
+                    'message' => 'Data Berhasil disimpan',
                     'result' => $save,
                     'penerimaans' => $penerimaans
                 ], 200);
@@ -771,8 +791,8 @@ class NPD_LSController extends Controller
             $cekKonsinyasi = BastKonsinyasi::where('notranskonsi', $noPenerimaan)
                 ->where('no_npd', '!=', $noNpdls)
                 ->exists();
-            $cekSigarangrinci = DetailPenerimaan::where('id', $noPenerimaan)
-                ->where('flag_siasik', '!=',1)
+            $cekSigarangrinci = Penerimaan::where('reff', $noPenerimaan)
+                ->where('nonpdls', '!=', $noNpdls)
                 ->exists();
             $findrinci->delete();
             $bolehReset = !($cekPenerimaan || $cekKonsinyasi || $cekSigarangrinci);
@@ -785,9 +805,9 @@ class NPD_LSController extends Controller
                 BastKonsinyasi::where('notranskonsi', $noPenerimaan)
                     ->where('no_npd', $noNpdls)
                     ->update(['no_npd' => '']);
-                DetailPenerimaan::where('id', $noPenerimaan)
-                    ->where('flag_siasik', 1)
-                    ->update(['flag_siasik' => '']);
+                Penerimaan::where('reff', $noPenerimaan)
+                    ->where('nonpdls', $noNpdls)
+                    ->update(['nonpdls' => '']);
                 // PenerimaanHeder::whereIn('nopenerimaan', [$request->nopenerimaan])
                 // ->whereIn('no_npd', [$request->nonpdls])
                 // ->update(['no_npd' => '']);
@@ -803,6 +823,7 @@ class NPD_LSController extends Controller
                 PenerimaanHeder::where('no_npd', $noNpdls)->update(['no_npd' => '']);
                 BastKonsinyasi::where('no_npd', $noNpdls)->update(['no_npd' => '']);
                 Serahterima_header::where('nonpdls', $noNpdls)->update(['nonpdls' => '']);
+                Penerimaan::where('nonpdls', $noNpdls)->update(['nonpdls' => '']);
             }
 
             DB::commit();
