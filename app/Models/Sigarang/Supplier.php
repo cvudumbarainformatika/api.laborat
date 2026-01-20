@@ -11,7 +11,9 @@ class Supplier extends Model
     use HasFactory;
     protected $connection = 'siasik';
     protected $table = 'pihak_ketiga';
-    protected $fillable = [];
+    // protected $fillable = [];
+    
+    protected $guarded = ['id'];
 
     public function penerimaan()
     {
