@@ -21,4 +21,9 @@ class MapRincian extends Model
     {
         return $this->belongsTo(MapHeder::class, 'id', 'id_heder');
     }
+
+    public function caripeminjaman()
+    {
+        return $this->hasOne(PeminjamanHeder::class, 'noarsip', 'noarsip');
+    }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MorganisasiAdministrasi;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\UnitPengelolahArsip\Dataarsip;
+use App\Models\Simrs\UnitPengelolahArsip\MapRincian;
 use App\Models\Simrs\UnitPengelolahArsip\PeminjamanHeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,8 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class PeminjamanBerkasController extends Controller
 {
-    public function cariarsip()
-    {
+    public function cariarsip(){
         if (request('bidangbagian') === '' || request('bidangbagian') === null) {
             $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
             $raw = collect($organisasi);
@@ -26,47 +26,110 @@ class PeminjamanBerkasController extends Controller
         } else {
             $bidangbagian = array(request('bidangbagian'));
         }
-        $data = Dataarsip::select(
-            'data_arsip.*',
-            'master_kode.kode as kodeklasifikasi',
-            'master_kode.nama as namakelasifikasi',
-            'master_lokasi.nama_lokasi',
-            'master_media.nama_media',
-        )
-            ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
-            ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
-            ->join('master_media', 'data_arsip.media', 'master_media.id')
+        $data = MapRincian::query()
+            ->join('kelompokMap_H', 'kelompokMap_H.id', '=', 'kelompokMap_R.id_heder')
+            ->join('master_kode', 'master_kode.kode', '=', 'kelompokMap_H.kodeklasifikasi')
+
+            // 🔥 LEFT JOIN DATA ARSIP
+            ->leftJoin('data_arsip', 'data_arsip.noarsip', '=', 'kelompokMap_R.noarsip')
+            ->join('master_media', 'master_media.id', '=', 'data_arsip.media')
+            ->leftjoin('tpeminjaman_h', 'tpeminjaman_h.noarsip', '=', 'data_arsip.noarsip')
             ->with(
                 [
-                    'unitpengolah',
-                    'rincianmap' => function ($q) {
-                        $q->select('kelompokMap_R.*', 'kelompokMap_H.*','master_fillingcabinet.*')
-                         ->join('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder')
-                         ->join('master_fillingcabinet', 'master_fillingcabinet.id', 'kelompokMap_H.kodefelingkabinet');
-                    },
-                    'user',
                     'caripeminjaman' => function ($q) {
                         $q->select('tpeminjaman_h.*')
                             ->whereNull('tgl_kembali');
                     }
                 ]
             )
-            ->when(request('deskripsi'), function ($q) {
-                $q->where('data_arsip.uraian', 'LIKE', '%' . request('deskripsi') . '%');
-            })
+            ->whereIn('kelompokMap_H.kodeorganisasi', $bidangbagian)
+
             ->when(request('noarsip'), function ($q) {
-                $q->where('data_arsip.noarsip', 'LIKE', '%' . request('noarsip') . '%');
+                $q->where('kelompokMap_R.noarsip', 'LIKE', '%' . request('noarsip') . '%');
             })
+
+            // ->when(request('deskripsi'), function ($q) {
+            //     $q->where('kelompokMap_R.uraian', 'LIKE', '%' . request('deskripsi') . '%');
+            // })
+
             ->when(request('kodekelasifikasi'), function ($q) {
+                $q->where('master_kode.kode', 'LIKE', '%' . request('kodekelasifikasi') . '%');
+            })
+
+            // 🔍 FILTER DATA ARSIP
+            ->when(request('deskripsi'), function ($q) {
                 $q->where(function ($sub) {
-                    $sub->where('master_kode.kode', 'LIKE', '%' . request('kodekelasifikasi') . '%');
+                    $sub->where('data_arsip.uraian', 'LIKE', '%' . request('deskripsi') . '%');
                 });
             })
-            ->whereIn('data_arsip.unit_pengolah', $bidangbagian)
-            // ->where('data_arsip.flagmap', '')
+
+            // ⚠️ pilih kolom agar tidak bentrok
+            ->select(
+                'kelompokMap_R.*',
+                'kelompokMap_H.*',
+                'master_kode.*',
+                'data_arsip.*',
+                'master_media.*',
+                'tpeminjaman_h.notrans as caripeminjaman'
+            )
+
             ->get();
         return new JsonResponse($data);
     }
+
+    // public function cariarsip()
+    // {
+    //     if (request('bidangbagian') === '' || request('bidangbagian') === null) {
+    //         $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
+    //         $raw = collect($organisasi);
+    //         $only = $raw->map(function ($y) {
+    //             return $y->kode;
+    //         });
+    //         $bidangbagian = $only;
+    //     } else {
+    //         $bidangbagian = array(request('bidangbagian'));
+    //     }
+    //     $data = Dataarsip::select(
+    //         'data_arsip.*',
+    //         'master_kode.kode as kodeklasifikasi',
+    //         'master_kode.nama as namakelasifikasi',
+    //         'master_lokasi.nama_lokasi',
+    //         'master_media.nama_media',
+    //     )
+    //         ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
+    //         ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
+    //         ->join('master_media', 'data_arsip.media', 'master_media.id')
+    //         ->with(
+    //             [
+    //                 'unitpengolah',
+    //                 'rincianmap' => function ($q) {
+    //                     $q->select('kelompokMap_R.*', 'kelompokMap_H.*','master_fillingcabinet.*')
+    //                      ->join('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder')
+    //                      ->join('master_fillingcabinet', 'master_fillingcabinet.id', 'kelompokMap_H.kodefelingkabinet');
+    //                 },
+    //                 'user',
+    //                 'caripeminjaman' => function ($q) {
+    //                     $q->select('tpeminjaman_h.*')
+    //                         ->whereNull('tgl_kembali');
+    //                 }
+    //             ]
+    //         )
+    //         ->when(request('deskripsi'), function ($q) {
+    //             $q->where('data_arsip.uraian', 'LIKE', '%' . request('deskripsi') . '%');
+    //         })
+    //         ->when(request('noarsip'), function ($q) {
+    //             $q->where('data_arsip.noarsip', 'LIKE', '%' . request('noarsip') . '%');
+    //         })
+    //         ->when(request('kodekelasifikasi'), function ($q) {
+    //             $q->where(function ($sub) {
+    //                 $sub->where('master_kode.kode', 'LIKE', '%' . request('kodekelasifikasi') . '%');
+    //             });
+    //         })
+    //         ->whereIn('data_arsip.unit_pengolah', $bidangbagian)
+    //         // ->where('data_arsip.flagmap', '')
+    //         ->get();
+    //     return new JsonResponse($data);
+    // }
 
     public function getdatapegawai()
     {
@@ -142,32 +205,60 @@ class PeminjamanBerkasController extends Controller
 
     public static function getdataarsip($noarsip)
     {
-        $data = Dataarsip::select(
-            'data_arsip.*',
-            'master_kode.kode as kodeklasifikasi',
-            'master_kode.nama as namakelasifikasi',
-            'master_lokasi.nama_lokasi',
-            'master_media.nama_media'
-        )
-            ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
-            ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
-            ->join('master_media', 'data_arsip.media', 'master_media.id')
+        // $data = Dataarsip::select(
+        //     'data_arsip.*',
+        //     'master_kode.kode as kodeklasifikasi',
+        //     'master_kode.nama as namakelasifikasi',
+        //     'master_lokasi.nama_lokasi',
+        //     'master_media.nama_media'
+        // )
+        //     ->join('master_kode', 'data_arsip.kode', 'master_kode.kode')
+        //     ->join('master_lokasi', 'data_arsip.lokasi', 'master_lokasi.id')
+        //     ->join('master_media', 'data_arsip.media', 'master_media.id')
+        //     ->with(
+        //         [
+        //             'unitpengolah',
+        //             'rincianmap' => function ($q) {
+        //                 $q->select('kelompokMap_R.*', 'kelompokMap_H.*','master_fillingcabinet.*')
+        //                  ->join('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder')
+        //                  ->join('master_fillingcabinet', 'master_fillingcabinet.id', 'kelompokMap_H.kodefelingkabinet');
+        //             },
+        //             'user',
+        //             'caripeminjaman' => function ($q) {
+        //                 $q->select('tpeminjaman_h.*')
+        //                     ->whereNull('tgl_kembali');
+        //             }
+        //         ]
+        //     )
+        //     ->where('data_arsip.noarsip', $noarsip)
+        //     ->first();
+        $data = MapRincian::query()
+            ->join('kelompokMap_H', 'kelompokMap_H.id', '=', 'kelompokMap_R.id_heder')
+            ->join('master_kode', 'master_kode.kode', '=', 'kelompokMap_H.kodeklasifikasi')
+
+            // 🔥 LEFT JOIN DATA ARSIP
+            ->leftJoin('data_arsip', 'data_arsip.noarsip', '=', 'kelompokMap_R.noarsip')
+            ->join('master_media', 'master_media.id', '=', 'data_arsip.media')
+            ->leftjoin('tpeminjaman_h', 'tpeminjaman_h.noarsip', '=', 'data_arsip.noarsip')
             ->with(
                 [
-                    'unitpengolah',
-                    'rincianmap' => function ($q) {
-                        $q->select('kelompokMap_R.*', 'kelompokMap_H.*','master_fillingcabinet.*')
-                         ->join('kelompokMap_H', 'kelompokMap_H.id', 'kelompokMap_R.id_heder')
-                         ->join('master_fillingcabinet', 'master_fillingcabinet.id', 'kelompokMap_H.kodefelingkabinet');
-                    },
-                    'user',
                     'caripeminjaman' => function ($q) {
                         $q->select('tpeminjaman_h.*')
                             ->whereNull('tgl_kembali');
                     }
                 ]
             )
-            ->where('data_arsip.noarsip', $noarsip)
+            ->where('kelompokMap_R.noarsip', $noarsip)
+
+            // ⚠️ pilih kolom agar tidak bentrok
+            ->select(
+                'kelompokMap_R.*',
+                'kelompokMap_H.*',
+                'master_kode.*',
+                'data_arsip.*',
+                'master_media.*',
+                'tpeminjaman_h.notrans as caripeminjaman'
+            )
             ->first();
         return $data;
     }
