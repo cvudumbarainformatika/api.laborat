@@ -265,7 +265,7 @@ class DaftarrajalController extends Controller
         if ($request->has('rs141_id')) {
             $head = [
                 'rs141_id' => $request->rs141_id,
-                'noreg' => $input->noreg
+                'noreg' => $noreg
             ];
             PlaningController::updateNoregJawabanKonsul($head);
         }
@@ -951,5 +951,18 @@ class DaftarrajalController extends Controller
             'data' => $data,
             'req' => $request->all(),
         ]);
+    }
+
+
+    // ini untuk test
+    public function cekDaftar()
+    {
+
+        $head = [
+            'rs141_id' => 1880399,
+            'noreg' => '125180/02/2025/Jx'
+        ];
+
+        PlaningController::updateNoregJawabanKonsul($head);
     }
 }
