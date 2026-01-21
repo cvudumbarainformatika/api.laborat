@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Simrs\Rehabmedik\PengkajianController;
 use App\Http\Controllers\Api\Simrs\Rehabmedik\PengunjungController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,4 +12,8 @@ Route::group([
 
     Route::get('/kunjunganpasien', [PengunjungController::class, 'index']);
     Route::get('/terimapasien', [PengunjungController::class, 'terimapasien']);
+
+    // pengkajian
+    Route::post('/pengkajian/store', [PengkajianController::class, 'store']);
+    Route::post('/pengkajian/delete', [PengkajianController::class, 'delete']);
 });
