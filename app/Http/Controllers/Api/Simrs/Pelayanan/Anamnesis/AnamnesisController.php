@@ -38,6 +38,7 @@ class AnamnesisController extends Controller
                     'seimbang' => $request->seimbang ?? 0,
                     'penopang' => $request->penopang ?? 0,
                     'hasil' => $request->hasil ?? 0,
+                    'kdruang' => $request->kdruang ?? '',
                     'user'  => $kdpegsimrs,
                 ]
             );
@@ -68,6 +69,7 @@ class AnamnesisController extends Controller
                     'seimbang' => $request->seimbang ?? 0,
                     'penopang' => $request->penopang ?? 0,
                     'hasil' => $request->hasil ?? 0,
+                    'kdruang' => $request->kdruang ?? '',
                     'user'  => $kdpegsimrs,
                 ]
             );

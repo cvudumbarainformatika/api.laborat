@@ -416,7 +416,7 @@ class PlaningController extends Controller
         $simpan->update([
             'noreg_baru' => $head['noreg']
         ]);
-        info('sukses update noreg jawaban konsul' . $simpan->toArray());
+        info('sukses update noreg jawaban konsul', $simpan->toArray());
         return $simpan;
     }
     public static function updateNoreg(Request $request)

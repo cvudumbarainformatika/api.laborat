@@ -68,7 +68,7 @@ class PenerimaanruanganController extends Controller
         }
         return new JsonResponse([$stok, $request->all()]);
         try {
-            DB::beginTransaction();
+            DB::connection('sigarang')->beginTransaction();
             if ($request->has('details')) {
                 $detail = $request->details;
             }
@@ -106,10 +106,10 @@ class PenerimaanruanganController extends Controller
                 $status = 500;
                 $pesan = ['message' => 'Penerimaan Ruangan gagal dibuat'];
             }
-            DB::commit();
+            DB::connection('sigarang')->commit();
             return new JsonResponse($pesan, $status);
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::connection('sigarang')->rollBack();
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e
@@ -134,7 +134,7 @@ class PenerimaanruanganController extends Controller
             ];
         }
         try {
-            DB::beginTransaction();
+            DB::connection('sigarang')->beginTransaction();
 
             $penerimaanruangan = Penerimaanruangan::updateOrCreate(
                 [
@@ -234,12 +234,12 @@ class PenerimaanruanganController extends Controller
                     // } while ($loop);
                 }
             }
-            DB::commit();
+            DB::connection('sigarang')->commit();
             return [
                 'status' => 201
             ];
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::connection('sigarang')->rollBack();
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'status' => 202,
@@ -262,7 +262,7 @@ class PenerimaanruanganController extends Controller
         // }
 
         try {
-            DB::beginTransaction();
+            DB::connection('sigarang')->beginTransaction();
             $data = Penerimaanruangan::where('no_distribusi', $request->no_distribusi)->first();
             $permintaan = Permintaanruangan::find($request->permintaan_id);
             $data->update([
@@ -273,11 +273,11 @@ class PenerimaanruanganController extends Controller
                 'status' => 8
             ]);
 
-            DB::commit();
+            DB::connection('sigarang')->commit();
 
             return new JsonResponse(['message' => 'Penerimaan Ruangan sudah dicatat'], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::connection('sigarang')->rollBack();
             return new JsonResponse([
                 'message' => 'tidak ada update',
                 'error' => $e

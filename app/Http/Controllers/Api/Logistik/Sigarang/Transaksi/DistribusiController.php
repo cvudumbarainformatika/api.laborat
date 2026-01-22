@@ -46,7 +46,9 @@ class DistribusiController extends Controller
 
         $data = $p->orderBy(request('order_by'), request('sort'))
             ->with([
-                'pj', 'pengguna', 'details' => function ($wew) use ($pegawai, $det) {
+                'pj',
+                'pengguna',
+                'details' => function ($wew) use ($pegawai, $det) {
                     if ($pegawai->role_id === 4) {
                         $wew->where('dari', $pegawai->kode_ruang);
                     }
@@ -176,7 +178,8 @@ class DistribusiController extends Controller
             $disetujui = $detail['jumlah_disetujui'];
 
             if ($disetujui > 0) {
-                if (count($dari) === 0) {
+                // if (count($dari) === 0) {
+                if ($dari->isEmpty()) {
                     $barang = BarangRS::where('kode', $detail['kode_rs'])->first();
                     $pesan = 'stok ' .  $barang->nama . ' tidak ada';
                     $status = 410;
@@ -185,7 +188,8 @@ class DistribusiController extends Controller
                 }
 
                 if ($sisaStok < $disetujui) {
-                    $barang = $dari[$key]['barang']['nama'];
+                    // $barang = $dari[$key]['barang']['nama'];
+                    $barang = optional($dari->first()->barang)->nama;
                     $pesan = 'stok ' .  $barang . ' tidak mencukupi';
                     $status = 410;
 
@@ -203,7 +207,7 @@ class DistribusiController extends Controller
         }
         try {
 
-            DB::beginTransaction();
+            DB::connection('sigarang')->beginTransaction();
 
             $tanggal_distribusi = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
             $status = 7;
@@ -220,14 +224,14 @@ class DistribusiController extends Controller
                 $data->details()->updateOrCreate(['id' => $key['id']], ['jumlah_distribusi' => $key['jumlah_disetujui']]);
             }
 
-            DB::commit();
+            DB::connection('sigarang')->commit();
 
             if (!$data->wasChanged()) {
                 return new JsonResponse(['message' => 'data gagal di update'], 501);
             }
             return new JsonResponse(['message' => 'data berhasi di update'], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::connection('sigarang')->rollBack();
             return new JsonResponse([
                 'message' => 'ada kesalahan',
                 'error' => $e
