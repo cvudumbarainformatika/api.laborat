@@ -360,6 +360,7 @@ class PengunjungController extends Controller
             'rs201.rs10 as kodepoli',
             'rs24.rs4 as kdgroup_ruangan',
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
+            DB::raw('coalesce(memodiagnosadokter_rajal.diagnosa, memodiagnosadokter_ranap.diagnosa) as memodiagnosa'),
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
@@ -369,6 +370,8 @@ class PengunjungController extends Controller
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs10') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
+            ->leftjoin('memodiagnosadokter as memodiagnosadokter_rajal', 'memodiagnosadokter_rajal.noreg', '=', 'rs17.rs1')
+            ->leftjoin('memodiagnosadokter as memodiagnosadokter_ranap', 'memodiagnosadokter_ranap.noreg', '=', 'rs23.rs1')
             ->with([
                 'diagnosa', // ini berhubungan dengan resep
                 // 'newapotekrajal' => function ($q) {
