@@ -49,7 +49,8 @@ class TarifRadiologiController extends Controller
             }
             $result['simpan'] = MasterPemeriksaanRadiologiSementara::updateOrCreate(
                 [
-                    'rs1' => $kode
+                    'rs1' => $kode,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                 ],
                 [
                     'rs2' => $request->rs2,
@@ -60,7 +61,6 @@ class TarifRadiologiController extends Controller
                     'rs7' => $request->rs7 ?? 0,
                     'pss' => $request->pss ?? 0,
                     'psp' => $request->psp ?? 0,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                     'dasar_perubahan' => $request->dasar_perubahan,
                     'idx' => $cektotal
                 ]

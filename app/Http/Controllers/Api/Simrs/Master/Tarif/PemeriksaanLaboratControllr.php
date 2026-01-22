@@ -91,7 +91,8 @@ class PemeriksaanLaboratControllr extends Controller
             }
             $result['simpan'] = MpemeriksaaanLabSementara::updateOrCreate(
                 [
-                    'rs1' => $kode
+                    'rs1' => $kode,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                 ],
                 [
                     'rs2' => $request->nama,
@@ -107,7 +108,6 @@ class PemeriksaanLaboratControllr extends Controller
                     'hcp' => $request->hcp ?? 0,
                     'rs21' => $request->kelompok ?? '',
                     'jenislab' => $request->jenislab ?? '',
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                     'dasar_perubahan' => $request->dasar_perubahan,
                 ]
             );

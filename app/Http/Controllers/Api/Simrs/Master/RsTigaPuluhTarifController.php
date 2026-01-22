@@ -49,7 +49,8 @@ class RsTigaPuluhTarifController extends Controller
             }
             $result['simpan'] = TarifVisiteDanKamarSementara::updateOrCreate(
                 [
-                    'rs1' => $kode
+                    'rs1' => $kode,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                 ],
                 [
                     'rs2' => $request->rs2,
@@ -81,7 +82,6 @@ class RsTigaPuluhTarifController extends Controller
                     'isop' => $request->isop ?? 0,
                     'pss' => $request->pss ?? 0,
                     'psp' => $request->psp ?? 0,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                     'dasar_perubahan' => $request->dasar_perubahan,
                 ]
             );

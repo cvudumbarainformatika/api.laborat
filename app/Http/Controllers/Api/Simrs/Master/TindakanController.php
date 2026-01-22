@@ -62,6 +62,7 @@ class TindakanController extends Controller
             'tgl_mulai_berlaku',
             'dasar_perubahan',
         )->where('rs2', 'like', '%' . request('nmtindakan') . '%')
+            // ->orderBy('rs2', 'ASC')
             ->paginate(request('per_page'));
         return new JsonResponse($listtindakan);
     }
@@ -161,7 +162,8 @@ class TindakanController extends Controller
         }
         $simpantindakan = MtindakanSementara::updateOrCreate(
             [
-                'rs1' => $kdtindakan
+                'rs1' => $kdtindakan,
+                'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
             ],
             [
                 'rs2' => $request->nmtindakan,
@@ -184,7 +186,6 @@ class TindakanController extends Controller
                 'rs23' => $request->jsvvip,
                 'rs24' => $request->jpvvip,
                 'rs25' => $request->habispakevvip,
-                'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                 'dasar_perubahan' => $request->dasar_perubahan,
                 'pss' => $request->js_presidential,
                 'psp' => $request->jp_presidential,
