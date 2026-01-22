@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LaboratLuar;
 use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
+use App\Models\Simrs\Penunjang\Radiologi\RadiologiLuar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -57,17 +58,62 @@ class PasienLuarController extends Controller
             });
 
         }else if($jenislayanan === 'LABORAT'){
-            $data = LaboratLuar::select('nota as nota','nama as nama','tgl')
-                ->selectRaw("'LABORAT' as jenislayanan")
-                ->when($term, function ($q) use ($term) {
-                    $q->where('nota', 'like', "%{$term}%")
-                        ->orWhere('pasien', 'like', "%{$term}%");
-                })
-                ->whereBetween('tgl', [$tgldari, $tglsampai])
-                // ->where('status', '!=', 'LUNAS')
-                ->groupBy('nota')
-                ->orderBy('tgl', 'desc')
-                ->paginate($perpage);
+            $data = LaboratLuar::select(
+                'lab_luar.nota as noreg',
+                'lab_luar.nota as nota',
+                'lab_luar.nama',
+                'lab_luar.tgl',
+                DB::raw("
+                    (
+                        -- rs21 kosong → jumlahkan semua
+                        SUM(
+                            CASE
+                                WHEN rs49.rs21 = ''
+                                THEN jml * (tarif_sarana + tarif_pelayanan)
+                                ELSE 0
+                            END
+                        )
+                        +
+                        -- rs21 ada isi → ambil SATU record saja
+                        MAX(
+                            CASE
+                                WHEN rs49.rs21 <> ''
+                                THEN jml * (tarif_sarana + tarif_pelayanan)
+                                ELSE 0
+                            END
+                        )
+                    ) AS subtotal
+                ")
+            )
+            ->selectRaw("'LABORAT' as jenislayanan")
+            ->when($term, function ($q) use ($term) {
+                $q->where('lab_luar.nota', 'like', "%{$term}%")
+                ->orWhere('lab_luar.pasien', 'like', "%{$term}%");
+            })
+            ->join('rs49', 'rs49.rs1', '=', 'lab_luar.kd_lab')
+            ->whereBetween('lab_luar.tgl', [$tgldari, $tglsampai])
+            ->groupBy(
+                'lab_luar.nota',
+                'lab_luar.nama',
+                'lab_luar.tgl'
+            )
+            ->orderBy('lab_luar.tgl', 'desc')
+            ->paginate($perpage);
+
+
+        }else if($jenislayanan === 'RADIOLOGI'){
+            $data = RadiologiLuar::whereBetween('rs270.rs8', [$tgldari, $tglsampai])
+            ->select('rs270.rs1 as noreg', 'rs270.rs1 as nota', 'rs270.rs2 as nama', 'rs270.rs8 as tgl')
+            ->selectRaw("sum(rs271.rs5 + rs271.rs6) as subtotal")
+            ->selectRaw("'RADIOLOGI' as jenislayanan")
+            ->leftJoin('rs271', 'rs271.rs1', '=', 'rs270.rs1')
+            ->when($term, function ($q) use ($term) {
+                $q->where('nota', 'like', "%{$term}%")
+                ->orWhere('pasien', 'like', "%{$term}%");
+            })
+            ->groupBy( 'rs270.rs1')
+            ->orderBy('rs270.rs8', 'desc')
+            ->paginate($perpage);
         }
 
         return new JsonResponse($data);

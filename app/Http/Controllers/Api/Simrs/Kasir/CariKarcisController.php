@@ -113,47 +113,91 @@ class CariKarcisController extends Controller
     public function carilaborat()
     {
         $noreg = trim(request('noreg'));
+        $jenislab = trim(request('jenislab'));
 
-    $qNormal = DB::table('rs51')
-        ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
-        ->where('rs51.rs1', $noreg)
-        ->where('rs49.rs21', '')
-        ->selectRaw('rs51.rs2 AS nota,rs51.rs3, ((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
+        if($jenislab == 'luar'){
+            $dataecer = DB::table('lab_luar')
+            ->join('rs49', 'rs49.rs1', '=', 'lab_luar.kd_lab')
+            ->where('lab_luar.nota', $noreg)
+            ->where('rs49.rs21', '')
+            ->selectRaw('lab_luar.nota AS nota,lab_luar.tgl AS rs3, ((lab_luar.tarif_sarana + lab_luar.tarif_pelayanan) * lab_luar.jml) AS subtotal');
 
-    // Baris khusus: rs49.rs21 <> '' -> ambil SATU harga per nota (contoh: MAX)
-    $qKhusus = DB::table('rs51')
-        ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
-        ->where('rs51.rs1', $noreg)
-        ->where('rs49.rs21', '<>', '')
-        ->groupBy('rs51.rs2') // satu baris per nota
-        ->selectRaw('rs51.rs2 AS nota,rs51.rs3, MAX((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
+            $datapaket = DB::table('lab_luar')
+            ->join('rs49', 'rs49.rs1', '=', 'lab_luar.kd_lab')
+            ->where('lab_luar.nota', $noreg)
+            ->where('rs49.rs21', '<>', '')
+            ->groupBy('lab_luar.nota')
+            ->selectRaw('lab_luar.nota AS nota,lab_luar.tgl AS rs3, MAX((lab_luar.tarif_sarana + lab_luar.tarif_pelayanan) * lab_luar.jml) AS subtotal');
 
-    // UNION lalu SUM per nota
-    $union = $qNormal->unionAll($qKhusus);
+             $union = $dataecer->unionAll($datapaket);
 
-    $result = DB::table(DB::raw("({$union->toSql()}) AS vx"))
-        ->mergeBindings($union)
-        ->selectRaw('vx.nota,vx.rs3, SUM(vx.subtotal) AS total_subtotal')
-        ->groupBy('vx.nota')
-        ->orderBy('vx.nota')
-        ->get();
-        return new JsonResponse($result);
+            $result = DB::table(DB::raw("({$union->toSql()}) AS vx"))
+                ->mergeBindings($union)
+                ->selectRaw('vx.nota,vx.rs3, SUM(vx.subtotal) AS total_subtotal')
+                ->groupBy('vx.nota')
+                ->orderBy('vx.nota')
+                ->get();
+            return new JsonResponse($result);
+        }else{
+            $qNormal = DB::table('rs51')
+                ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
+                ->where('rs51.rs1', $noreg)
+                ->where('rs49.rs21', '')
+                ->selectRaw('rs51.rs2 AS nota,rs51.rs3, ((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
+
+            // Baris khusus: rs49.rs21 <> '' -> ambil SATU harga per nota (contoh: MAX)
+            $qKhusus = DB::table('rs51')
+                ->join('rs49', 'rs49.rs1', '=', 'rs51.rs4')
+                ->where('rs51.rs1', $noreg)
+                ->where('rs49.rs21', '<>', '')
+                ->groupBy('rs51.rs2') // satu baris per nota
+                ->selectRaw('rs51.rs2 AS nota,rs51.rs3, ((rs51.rs6 + rs51.rs13) * rs51.rs5) AS subtotal');
+
+            // UNION lalu SUM per nota
+            $union = $qNormal->unionAll($qKhusus);
+
+            $result = DB::table(DB::raw("({$union->toSql()}) AS vx"))
+                ->mergeBindings($union)
+                ->selectRaw('vx.nota,vx.rs3, SUM(vx.subtotal) AS total_subtotal')
+                ->groupBy('vx.nota')
+                ->orderBy('vx.nota')
+                ->get();
+                return new JsonResponse($result);
+        }
     }
 
     public function cariradiologi()
     {
         $noreg = request('noreg');
-        $data = Transradiologi::from('rs48')
-        ->select(
-            'rs1',
-            'rs2',
-            'rs3',
-            DB::raw('SUM( (rs6 + rs8) * rs24 ) as total')
-        )
-        ->where('rs1', $noreg)
-        ->groupBy('rs2')
-        ->get();
-        return new JsonResponse($data);
+        $jenisrad = request('jenisrad');
+        if($jenisrad == 'luar'){
+            $data = DB::table('rs270')
+            ->select(
+                'rs270.rs1',
+                'rs270.rs2',
+                'rs270.rs3',
+                DB::raw('SUM((rs271.rs5 + rs271.rs7) * rs271.rs10) as total')
+            )
+            ->leftJoin('rs271', 'rs271.rs1', '=', 'rs270.rs1')
+            ->where('rs270.rs1', $noreg)
+            ->groupBy('rs270.rs2')
+            ->get();
+
+            return new JsonResponse($data);
+        }else{
+            $data = Transradiologi::from('rs48')
+            ->select(
+                'rs1',
+                'rs2',
+                'rs3',
+                DB::raw('SUM( (rs6 + rs8) * rs24 ) as total')
+            )
+            ->where('rs1', $noreg)
+            ->groupBy('rs2')
+            ->get();
+
+            return new JsonResponse($data);
+        }
     }
 
     public function getSharingRajal()
