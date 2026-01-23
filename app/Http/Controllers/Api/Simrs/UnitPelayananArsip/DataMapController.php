@@ -60,6 +60,7 @@ class DataMapController extends Controller
                 ->orWhere('keterangan', 'like', "%{$q}%")
                 ->orWhere('laci', 'like', "%{$q}%");
             })
+            ->where('tahunMap', request('tahunmap'))
             ->paginate(request('per_page'));
 
         return response()->json($data);
