@@ -14,26 +14,57 @@ use Illuminate\Support\Facades\DB;
 
 class DataMapController extends Controller
 {
+    // public function listdata()
+    // {
+
+    //     if (request('bidangbagian') === '' || request('bidangbagian') === null) {
+    //         $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
+    //         $raw = collect($organisasi);
+    //         $only = $raw->map(function ($y) {
+    //             return $y->kode;
+    //         });
+    //         $bidangbagian = $only;
+    //     } else {
+    //         $bidangbagian = array(request('bidangbagian'));
+    //     }
+    //     $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)
+    //     ->with(['klasifikasi','unitpengolah','kabinet'])
+    //     ->when(request('q'), function ($q) {
+    //         $q->where('namamap', 'LIKE', '%' . request('q') . '%');
+    //     })
+    //      ->paginate(10);
+    //     return new JsonResponse($data);
+    // }
+
     public function listdata()
     {
+        $q = request()->get('q');
 
-        if (request('bidangbagian') === '' || request('bidangbagian') === null) {
-            $organisasi = MorganisasiAdministrasi::select('kode')->where('hiddenx', '')->get();
-            $raw = collect($organisasi);
-            $only = $raw->map(function ($y) {
-                return $y->kode;
-            });
-            $bidangbagian = $only;
+        if (empty(request('bidangbagian'))) {
+            // AMBIL SEMUA ORGANISASI AKTIF
+            $bidangbagian = MorganisasiAdministrasi::where(function ($query) {
+                    $query->whereNull('hiddenx')
+                        ->orWhere('hiddenx', '')
+                        ->orWhere('hiddenx', '0');
+                })
+                ->pluck('kode')
+                ->toArray();
         } else {
-            $bidangbagian = array(request('bidangbagian'));
+            $bidangbagian = [request('bidangbagian')];
         }
+
         $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)
-        ->when(request('q'), function ($q) {
-            $q->where('namamap', 'LIKE', '%' . request('q') . '%');
-        })
-        ->get();
-        return new JsonResponse($data);
-    }
+            ->with(['klasifikasi', 'unitpengolah', 'kabinet'])
+            ->when($q, function ($query) use ($q) {
+                $query->where('namamap', 'like', "%{$q}%")
+                ->orWhere('keterangan', 'like', "%{$q}%")
+                ->orWhere('laci', 'like', "%{$q}%");
+            })
+            ->paginate(request('per_page'));
+
+        return response()->json($data);
+        }
+
 
     public function simpanmap(Request $request)
     {
