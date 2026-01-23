@@ -29,7 +29,9 @@ class KasirrajalController extends Controller
 {
     public function kunjunganpoli()
     {
-        $tgl = request('tgl');
+        $tgl = request('tgl').' 00:00:00';
+        $tglx = request('tgl') . ' 23:59:59';
+
         $daftarkunjunganpasienbpjs = KunjunganPoli::select(
             'rs17.rs1',
             'rs17.rs1 as noreg',
@@ -64,7 +66,8 @@ class KasirrajalController extends Controller
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('kepegx.pegawai', 'kepegx.pegawai.kdpegsimrs', '=', 'rs17.rs9') //dokter
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-            ->whereDate('rs17.rs3', $tgl)
+            ->whereBetween('rs17.rs3', [$tgl, $tglx])
+            // ->whereDate('rs17.rs3', $tgl)
             //->where('rs19.rs4', '=', 'Poliklinik')
             ->where('rs17.rs8', '!=', 'POL014')
             ->where('rs9.rs9', '=', 'UMUM')
