@@ -42,7 +42,8 @@ class TindakanOperasiController extends Controller
             }
             $result['simpan'] = MasterOperasiSementara::updateOrCreate(
                 [
-                    'rs1' => $kode
+                    'rs1' => $kode,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                 ],
                 [
                     'rs2' => $request->rs2,
@@ -60,7 +61,6 @@ class TindakanOperasiController extends Controller
                     'ssp' => $request->ssp ?? 0,
                     'psp' => $request->psp ?? 0,
                     'asp' => $request->asp ?? 0,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                     'dasar_perubahan' => $request->dasar_perubahan,
                 ]
             );

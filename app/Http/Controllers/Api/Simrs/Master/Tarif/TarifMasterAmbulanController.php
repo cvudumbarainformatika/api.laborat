@@ -42,7 +42,8 @@ class TarifMasterAmbulanController extends Controller
             }
             $result['simpan'] = MasterTujuanAmbulanSementara::updateOrCreate(
                 [
-                    'rs1' => $kode
+                    'rs1' => $kode,
+                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                 ],
                 [
                     'rs2' => $request->rs2,
@@ -58,7 +59,6 @@ class TarifMasterAmbulanController extends Controller
                     'rs12' => $request->rs12 ?? 0,
                     'rs13' => $request->rs13 ?? 0,
                     'rs14' => $request->rs14 ?? 0,
-                    'tgl_mulai_berlaku' => $request->tgl_mulai_berlaku,
                     'dasar_perubahan' => $request->dasar_perubahan,
                 ]
             );
