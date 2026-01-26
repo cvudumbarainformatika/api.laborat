@@ -38,7 +38,6 @@ class DataMapController extends Controller
 
     public function listdata()
     {
-        $q = request()->get('q');
 
         if (empty(request('bidangbagian'))) {
             // AMBIL SEMUA ORGANISASI AKTIF
@@ -53,7 +52,7 @@ class DataMapController extends Controller
             $bidangbagian = [request('bidangbagian')];
         }
 
-        $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)
+        $data = MapHeder::whereIn('kelompokMap_H.kodeorganisasi', $bidangbagian)
             ->with(['unitpengolah', 'kabinet'])
             ->join('master_kode', 'kelompokMap_H.kodeklasifikasi', '=', 'master_kode.kode')
             ->select([
@@ -61,14 +60,14 @@ class DataMapController extends Controller
                 'master_kode.nama as keterangan_kode',
                 'master_kode.kode as kode_master',
             ])
-            ->when($q, function ($query) use ($q) {
-                $query->where('namamap', 'like', "%{$q}%")
-                ->orWhere('master_kode.keterangan', 'like', "%{$q}%")
-                ->orWhere('kelompokMap_H.kodeklasifikasi', 'like', "%{$q}%")
-                ->orWhere('keterangan', 'like', "%{$q}%")
-                ->orWhere('laci', 'like', "%{$q}%");
+            ->where('kelompokMap_H.tahunMap', request('tahunmap'))
+            ->where(function ($query) {
+                $query->where('kelompokMap_H.namamap', 'like', '%'.request('q').'%')
+                ->orWhere('master_kode.nama', 'like', '%'.request('q').'%')
+                ->orWhere('kelompokMap_H.kodeklasifikasi', 'like', '%'.request('q').'%')
+                ->orWhere('kelompokMap_H.keterangan', 'like', '%'.request('q').'%')
+                ->orWhere('kelompokMap_H.laci', 'like', '%'.request('q').'%');
             })
-            ->where('tahunMap', request('tahunmap'))
             ->paginate(request('per_page'));
 
         return response()->json($data);
