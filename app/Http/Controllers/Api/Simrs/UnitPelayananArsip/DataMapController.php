@@ -54,9 +54,17 @@ class DataMapController extends Controller
         }
 
         $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)
-            ->with(['klasifikasi', 'unitpengolah', 'kabinet'])
+            ->with(['unitpengolah', 'kabinet'])
+            ->join('master_kode', 'kelompokMap_H.kodeklasifikasi', '=', 'master_kode.kode')
+            ->select([
+                'kelompokMap_H.*',
+                'master_kode.nama as keterangan_kode',
+                'master_kode.kode as kode_master',
+            ])
             ->when($q, function ($query) use ($q) {
                 $query->where('namamap', 'like', "%{$q}%")
+                ->orWhere('master_kode.keterangan', 'like', "%{$q}%")
+                ->orWhere('kelompokMap_H.kodeklasifikasi', 'like', "%{$q}%")
                 ->orWhere('keterangan', 'like', "%{$q}%")
                 ->orWhere('laci', 'like', "%{$q}%");
             })
@@ -99,12 +107,22 @@ class DataMapController extends Controller
                 }else{
                     $bidangbagian = array($request->kodeorganisasi);
                 }
-                $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)->get();
+                $data = self::responsimpan($bidangbagian, $request->tahunmap);
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data],200);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse(['message' => 'Data Gagal Disimpan', 'error' => $e], 500);
         }
+    }
+
+    public static  function responsimpan($bidangbagian, $tahunmap){
+        $data = MapHeder::select('kelompokMap_H.*', 'master_kode.nama as keterangan_kode',
+                'master_kode.kode as kode_master')
+            ->with(['unitpengolah', 'kabinet'])
+            ->join('master_kode', 'kelompokMap_H.kodeklasifikasi', '=', 'master_kode.kode')
+            ->whereIn('kodeorganisasi', $bidangbagian)->where('tahunMap', $tahunmap)
+            ->get();
+        return $data;
     }
 
     public function simpanisimap(Request $request)
