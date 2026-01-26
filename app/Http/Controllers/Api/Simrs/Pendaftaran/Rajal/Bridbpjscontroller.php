@@ -29,7 +29,7 @@ class Bridbpjscontroller extends Controller
         $kodepropinsikecelakaan = $request->kodepropinsikecelakaan === null ? '' : $request->kodepropinsikecelakaan;
         $kodekabupatenkecelakaan = $request->kodekabupatenkecelakaan === null ? '' : $request->kodekabupatenkecelakaan;
         $kodekecamatankecelakaan = $request->kodekecamatankecelakaan === null ? '' : $request->kodekecamatankecelakaan;
-        $nosuratkontrol = $request->nosuratkontrol === null  || $request->jenis_kunjungan == 'Rujukan Internal' ? '' : $request->nosuratkontrol; // jenis_kunjungan == 'Rujukan Internal' itu sama dengan id_kunjungan == 2
+        $nosuratkontrol = $request->nosuratkontrol === null  || $request->jenis_kunjungan == 'Rujukan Internal' || $request->id_kunjungan == 2 ? '' : $request->nosuratkontrol; // jenis_kunjungan == 'Rujukan Internal' itu sama dengan id_kunjungan == 2
 
         $data = [
             "request" => [
