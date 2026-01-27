@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Siasik;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -47,7 +48,14 @@ class TtdController extends Controller
                 'pegawai.nama')
         ->first();
 
-        $verifikator = Mpegawaisimpeg::whereIn('jabatan', ['J00192'])
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->jabatan;
+
+        $verifikator = Mpegawaisimpeg::whereIn('jabatan', [
+                // 'J00192'
+                $pegawai
+                ])
         ->where('aktif', 'AKTIF')
         ->select('pegawai.nip',
                 'pegawai.nama')
