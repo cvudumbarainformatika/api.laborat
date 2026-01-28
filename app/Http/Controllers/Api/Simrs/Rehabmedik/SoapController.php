@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Simrs\Rehabmedik;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Master\MFisioFrekuensi;
 use App\Models\Simrs\Penunjang\Fisioterapi\FisioAsessment;
 use App\Models\Simrs\Penunjang\Fisioterapi\FisioSoap;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
@@ -15,6 +16,18 @@ use Illuminate\Support\Facades\DB;
 
 class SoapController extends Controller
 {
+
+  public function masterFrekuensi()
+  {
+    $data = cache()->remember('m_fisio_frekuensi', now()->addHours(8), function () {
+      return MFisioFrekuensi::all();
+    });
+
+    return new JsonResponse([
+      'message' => 'success',
+      'result' => $data
+    ], 200);
+  }
   public function store(Request $request): JsonResponse
   {
     $data = null;
@@ -33,10 +46,8 @@ class SoapController extends Controller
       } else {
         $data = new FisioSoap();
         $count = FisioAsessment::where('noreg', $request->noreg)->count();
-        if ($count === 0) {
-          $awal = 1;
-        }
-        $hitung = $count++;
+        $awal = $count === 0 ? 1 : 0;
+        $hitung = (int)$count + 1;
       }
 
 
@@ -48,7 +59,7 @@ class SoapController extends Controller
 
       $data->noreg = $request->noreg;
       $data->norm = $request->norm;
-      $data->tgl = date('Y-m-d H:i:s');
+      // $data->tgl = date('Y-m-d H:i:s');
       $data->subjective = $request->subjective;
       $data->objective = $request->objective;
       $data->asessment = $request->asessment;
@@ -61,12 +72,12 @@ class SoapController extends Controller
       $data->awal = $awal;
       $data->urut = $hitung;
       $data->nakes = $pegawai->kdgroupnakes;
-      $data->users = $pegawai->kdpegsimrs;
+      $data->user = $pegawai->kdpegsimrs;
       $data->save();
 
+      return new JsonResponse($count, 200);
 
-
-      return new JsonResponse($data, 200);
+      return new JsonResponse($data->load('petugas:kdpegsimrs,kdgroupnakes,nama,nik'), 200);
     } catch (\Throwable $th) {
       //throw $th;
       return new JsonResponse($th->getMessage(), 500);

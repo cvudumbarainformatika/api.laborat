@@ -20,6 +20,10 @@ class Fisioterapipermintaan extends Model
     protected $guarded = ['id'];
 
 
+    public function soap()
+    {
+        return $this->hasMany(FisioSoap::class, 'noreg', 'rs1');
+    }
     public function pengkajian()
     {
         return $this->hasMany(FisioAsessment::class, 'noreg', 'rs1');

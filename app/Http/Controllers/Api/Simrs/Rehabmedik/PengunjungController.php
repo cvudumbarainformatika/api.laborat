@@ -426,7 +426,12 @@ class PengunjungController extends Controller
                     $t->select('fisio_asesmen.*')->with([
                         'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
                     ]);
-                }
+                },
+                'soap' => function ($t) {
+                    $t->select('fisio_soap.*')->with([
+                        'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
+                    ]);
+                },
             ])
             ->where('rs201.rs1', request('noreg'))
             ->first();

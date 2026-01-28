@@ -20,5 +20,6 @@ Route::group([
     Route::post('/pengkajian/delete', [PengkajianController::class, 'delete']);
 
     // Asessment (SOAP)
+    Route::post('/master/frekuensi', [SoapController::class, 'masterFrekuensi']);
     Route::post('/soap/store', [SoapController::class, 'store']);
 });
