@@ -14,6 +14,7 @@ Route::group([
 ], function () {
     Route::get('/get-persediaan', [PersediaanFiFoController::class, 'getPersediaan']);
     Route::get('/get-mutasi', [PersediaanFiFoController::class, 'getMutasi']);
+    Route::get('/get-stokopname', [PersediaanFiFoController::class, 'getStokopname']);
     Route::get('/get-perencanaan', [LaporanPerencanaanController::class, 'perencanaanDanPenerimaan']);
     Route::get('/get-dead-stok', [DeadStokController::class, 'deadStok']);
 });

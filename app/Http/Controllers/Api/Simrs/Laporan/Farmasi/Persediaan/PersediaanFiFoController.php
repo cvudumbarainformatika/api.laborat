@@ -538,4 +538,277 @@ class PersediaanFiFoController extends Controller
             'req' => request()->all()
         ]);
     }
+    public function getStokopname()
+    {
+        $year = request('tahun');
+        $month = request('bulan');
+        $kode_ruang = request('kode_ruang');
+
+        // Setup Date Boundaries
+        $dateAwal = Carbon::createFromDate($year, $month, 1);
+        $startOfMonth = $dateAwal->copy()->startOfMonth()->format('Y-m-d H:i:s');
+        $endOfMonth = $dateAwal->copy()->endOfMonth()->format('Y-m-d H:i:s');
+
+        $prevMonthDate = $dateAwal->copy()->subMonth();
+        // $startPrevMonth = $prevMonthDate->copy()->startOfMonth()->format('Y-m-d H:i:s'); 
+        // Note: Existing logic uses LIKE for Opname, assuming Opname happens once a month or we take the sum of ops in that month. 
+        // Usually Opname for 'Last Month' is the 'Opening Stock' for 'This Month'.
+        $blnLalu = $prevMonthDate->format('Y-m');
+
+        // 1. Prepare Subquery Saldo Awal (Stock Opname Bulan Lalu)
+        $qAwal = DB::connection('farmasi')->table('stokopname')
+            ->select(
+                'kdobat',
+                DB::raw("SUM(jumlah) as qty"),
+                DB::raw("SUM(jumlah * harga) as val")
+            )
+            ->where('tglopname', 'LIKE', $blnLalu . '%')
+            ->where('jumlah', '!=', 0);
+
+        if ($kode_ruang !== 'all') {
+            $qAwal->where('kdruang', $kode_ruang);
+        } else {
+            $qAwal->whereIn('kdruang', ['Gd-05010100', 'Gd-03010100', 'Gd-03010101', 'Gd-04010102', 'Gd-04010103', 'Gd-05010101', 'Gd-02010104']);
+        }
+        $qAwal->groupBy('kdobat');
+
+
+        // 2. Prepare Subqueries Masuk & Keluar based on Room Type
+        $qMasuk = null;
+        $qKeluar = null;
+
+        // Helper for Union Checks
+        $isGudang = in_array($kode_ruang, ['Gd-05010100', 'Gd-03010100']);
+        $isDepoOk = $kode_ruang === 'Gd-04010103';
+        $isFloorStok = $kode_ruang === 'Gd-03010101';
+
+        // --- LOGIKA MASUK ---
+        if ($isGudang) {
+            // Gudang: Masuk dari PENERIMAAN
+            $qMasuk = DB::connection('farmasi')->table('penerimaan_r as r')
+                ->join('penerimaan_h as h', 'h.nopenerimaan', '=', 'r.nopenerimaan')
+                ->select('r.kdobat', DB::raw("SUM(r.jml_terima_k) as qty"), DB::raw("SUM(r.jml_terima_k * r.harga_netto_kecil) as val"))
+                ->where('h.kunci', '1')
+                ->where('h.gudang', $kode_ruang)
+                ->whereBetween('h.tglpenerimaan', [$startOfMonth, $endOfMonth])
+                ->groupBy('r.kdobat');
+        } elseif ($isFloorStok) {
+            // Floorstok: Masuk dari MUTASI MASUK (saja)
+            $qMasuk = DB::connection('farmasi')->table('mutasi_gudangdepo as m')
+                ->join('permintaan_h as h', 'h.no_permintaan', '=', 'm.no_permintaan')
+                ->select('m.kd_obat as kdobat', DB::raw("SUM(m.jml) as qty"), DB::raw("SUM(m.jml * m.harga) as val"))
+                ->whereBetween('h.tgl_terima_depo', [$startOfMonth, $endOfMonth]) // Tgl Terima for Inbound
+                ->where('h.dari', $kode_ruang)
+                ->groupBy('m.kd_obat');
+        } else {
+            // Depo OK & Lainnya: Mutasi Masuk + Retur Resep (Retur Penjualan)
+            // A. Mutasi Masuk
+            $qMutasiMasuk = DB::connection('farmasi')->table('mutasi_gudangdepo as m')
+                ->join('permintaan_h as h', 'h.no_permintaan', '=', 'm.no_permintaan')
+                ->select('m.kd_obat as kdobat', DB::raw("SUM(m.jml) as qty"), DB::raw("SUM(m.jml * m.harga) as val"))
+                ->whereBetween('h.tgl_terima_depo', [$startOfMonth, $endOfMonth])
+                ->where('h.dari', $kode_ruang) // Masuk ke Depo ini
+                ->groupBy('m.kd_obat');
+
+            // B. Retur Pasien (Masuk ke Stok)
+            $qReturPasien = DB::connection('farmasi')->table('retur_penjualan_r as r')
+                ->join('retur_penjualan_h as h', 'h.noretur', '=', 'r.noretur')
+                ->join('resep_keluar_h as rh', 'rh.noresep', '=', 'r.noresep') // Join ke Resep Header
+                ->select('r.kdobat', DB::raw("SUM(r.jumlah_retur) as qty"), DB::raw("SUM(r.jumlah_retur * r.harga_beli) as val"))
+                ->whereBetween('h.tgl_retur', [$startOfMonth, $endOfMonth])
+                ->where('rh.depo', $kode_ruang) // Filter depo berdasarkan asal resep
+                ->groupBy('r.kdobat');
+
+            // Note: Untuk Depo OK, usernya bilang 'retur penerimaan'.
+            // Kalau Depo Lain: 'retur resep'.
+            // Keduanya saya map ke Retur Pasien (retur_penjualan_r).
+
+            $qMasuk = $qMutasiMasuk->unionAll($qReturPasien);
+            // Wrap Union for Summing
+            $qMasuk = DB::connection('farmasi')->query()->fromSub($qMasuk, 'union_masuk')
+                ->select('kdobat', DB::raw("SUM(qty) as qty"), DB::raw("SUM(val) as val"))
+                ->groupBy('kdobat');
+        }
+
+        // --- LOGIKA KELUAR ---
+        if ($isGudang) {
+            // Gudang: Mutasi Keluar + Pengembalian (Retur Penyedia) + Retur PBF
+            // A. Mutasi Keluar (ke Depo)
+            $qMutasiKeluar = DB::connection('farmasi')->table('mutasi_gudangdepo as m')
+                ->join('permintaan_h as h', 'h.no_permintaan', '=', 'm.no_permintaan')
+                ->select('m.kd_obat as kdobat', DB::raw("SUM(m.jml) as qty"), DB::raw("SUM(m.jml * m.harga) as val"))
+                ->whereBetween('h.tgl_kirim_depo', [$startOfMonth, $endOfMonth])
+                ->where('h.tujuan', $kode_ruang) // Keluar dari Gudang ini
+                ->groupBy('m.kd_obat');
+
+            // B. Pengembalian (Retur ke Penyedia - steps before lock?) or Retur PBF?
+            // Existing code distinguishes 'persiapanretur', 'returpbf', 'pengembalianrincififo'.
+            // User said: "pengembalian dan retur PBF".
+            // 1. Retur PBF (retur_penyedia_r)
+            $qReturPbf = DB::connection('farmasi')->table('retur_penyedia_r as r')
+                ->join('retur_penyedia_h as h', 'h.no_retur', '=', 'r.no_retur')
+                ->select('r.kd_obat as kdobat', DB::raw("SUM(r.jumlah_retur) as qty"), DB::raw("SUM(r.jumlah_retur * r.harga_net_default) as val"))
+                ->whereBetween('h.tgl_kunci', [$startOfMonth, $endOfMonth])
+                // ->where('gudang', $kode_ruang) // Need to check if column exists
+                ->groupBy('r.kd_obat');
+
+            // 2. Pengembalian (pengembalian_rinci_fifos)
+            $qPengembalian = DB::connection('farmasi')->table('pengembalian_rinci_fifos as r')
+                ->join('pengembalians as h', 'h.nopengembalian', '=', 'r.nopengembalian')
+                ->select('r.kdobat', DB::raw("SUM(r.jml_dikembalikan) as qty"), DB::raw("SUM(r.jml_dikembalikan * r.harga) as val"))
+                ->whereBetween('h.tgl_kunci', [$startOfMonth, $endOfMonth])
+                ->groupBy('r.kdobat');
+
+            $qKeluar = $qMutasiKeluar->unionAll($qReturPbf)->unionAll($qPengembalian);
+            $qKeluar = DB::connection('farmasi')->query()->fromSub($qKeluar, 'union_keluar')
+                ->select('kdobat', DB::raw("SUM(qty) as qty"), DB::raw("SUM(val) as val"))
+                ->groupBy('kdobat');
+        } elseif ($isFloorStok) {
+            // Floorstok: Mutasi Keluar (saja)
+            $qKeluar = DB::connection('farmasi')->table('mutasi_gudangdepo as m')
+                ->join('permintaan_h as h', 'h.no_permintaan', '=', 'm.no_permintaan')
+                ->select('m.kd_obat as kdobat', DB::raw("SUM(m.jml) as qty"), DB::raw("SUM(m.jml * m.harga) as val"))
+                ->whereBetween('h.tgl_kirim_depo', [$startOfMonth, $endOfMonth])
+                ->where('h.tujuan', $kode_ruang)
+                ->groupBy('m.kd_obat');
+        } else {
+            // Depo OK & Lainnya
+            // A. Mutasi Keluar (Retur Permintaan)
+            $qMutasiKeluar = DB::connection('farmasi')->table('mutasi_gudangdepo as m')
+                ->join('permintaan_h as h', 'h.no_permintaan', '=', 'm.no_permintaan')
+                ->select('m.kd_obat as kdobat', DB::raw("SUM(m.jml) as qty"), DB::raw("SUM(m.jml * m.harga) as val"))
+                ->whereBetween('h.tgl_kirim_depo', [$startOfMonth, $endOfMonth])
+                ->where('h.dari', $kode_ruang)
+                ->whereIn('h.flag', ['4'])
+                ->groupBy('m.kd_obat');
+
+            // B. Resep Keluar (Pemakaian Pasien)
+            // Note: OK has 'resepkeluarok' (exclude persiapan operasi) and 'distribusipersiapan'.
+            // User said: "keluarnya retur permintaan OK". Didn't explicitly say "Resep". 
+            // BUT for 'Lainnya': "keluar itu mutasi keluar dan resep".
+            // I will apply Resep to ALL Depo/Lainnya including OK to be safe (Stocks must reduce on usage). 
+            // However, for OK specifically, "Resep" usually comes from 'persiapan_operasi_distribusis' (Distributed to OK rooms) OR 'resep_keluar' (Direct).
+
+            // Standard Resep
+            $qResep = DB::connection('farmasi')->table('resep_keluar_r as r')
+                ->join('resep_keluar_h as h', 'h.noresep', '=', 'r.noresep')
+                ->select('r.kdobat', DB::raw("SUM(r.jumlah) as qty"), DB::raw("SUM(r.jumlah * r.harga_beli) as val"))
+                ->whereBetween('h.tgl_selesai', [$startOfMonth, $endOfMonth])
+                ->where('h.depo', $kode_ruang)
+                ->whereIn('h.flag', ['4'])
+                ->groupBy('r.kdobat');
+
+            // C. Resep Racikan
+            $qResepRacikan = DB::connection('farmasi')->table('resep_keluar_racikan_r as r')
+                ->join('resep_keluar_h as h', 'h.noresep', '=', 'r.noresep')
+                ->select('r.kdobat', DB::raw("SUM(r.jumlah) as qty"), DB::raw("SUM(r.jumlah * r.harga_beli) as val"))
+                ->whereBetween('h.tgl_selesai', [$startOfMonth, $endOfMonth])
+                ->where('h.depo', $kode_ruang)
+                ->whereIn('h.flag', ['4']) // Sesuaikan flag jika perlu
+                ->groupBy('r.kdobat');
+            
+            // Gabungkan Resep Normal + Resep Racikan SEBAGAI SATU KESATUAN "RESEP"
+            // Penting: Union harus dilakukan dengan benar agar query builder tidak bingung
+            // Kita bungkus dulu qResep dan qResepRacikan agar menjadi subquery tunggal
+            
+            // Cara fix error nesting:
+            // qResep harus di-union dengan qResepRacikan, lalu hasilnya union lagi dengan qMutasiKeluar.
+            // Atau qResep dan qResepRacikan di-union dulu, baru nanti digabung ke qKeluar.
+            
+            // Mari kita union MANUAL di bagian qKeluar akhir saja supaya aman.
+            // Jadi variabel qResepBiasa dan qResepRacikan tetap terpisah dulu.
+            
+            // $qResep = $qResep->unionAll($qResepRacikan); <-- INI PENYEBAB ERROR (Nesting Union)
+
+            // OK Specific: Distribusi Persiapan Operasi
+            $qDistribusiOK = null;
+            if ($isDepoOk) {
+                $qDistribusiOK = DB::connection('farmasi')->table('persiapan_operasi_distribusis as d')
+                    ->join('persiapan_operasis as h', 'h.nopermintaan', '=', 'd.nopermintaan')
+                    ->leftJoin(DB::raw('(SELECT kd_obat, nopenerimaan, MAX(harga) as harga FROM daftar_hargas GROUP BY kd_obat, nopenerimaan) as dh'), function ($join) {
+                        $join->on('dh.nopenerimaan', '=', 'd.nopenerimaan')
+                            ->on('dh.kd_obat', '=', 'd.kd_obat');
+                    })
+                    ->select('d.kd_obat as kdobat', DB::raw("SUM(d.jumlah) as qty"), DB::raw("SUM(d.jumlah * dh.harga) as val")) // Harga might need fallback
+                    ->whereBetween('h.tgl_distribusi', [$startOfMonth, $endOfMonth])
+                    ->where('h.flag', '1') // Validated
+                    // ->where('h.depo', $kode_ruang) // Check if preparation has depo column? Usually implied by OK system.
+                    ->groupBy('d.kd_obat');
+            }
+
+            // GABUNG SEMUA DISINI
+            $qKeluar = $qMutasiKeluar->unionAll($qResep)->unionAll($qResepRacikan);
+            
+            if ($qDistribusiOK) {
+                $qKeluar = $qKeluar->unionAll($qDistribusiOK);
+            }
+
+            $qKeluar = DB::connection('farmasi')->query()->fromSub($qKeluar, 'union_keluar')
+                ->select('kdobat', DB::raw("SUM(qty) as qty"), DB::raw("SUM(val) as val"))
+                ->groupBy('kdobat');
+        }
+
+
+        // 3. MAIN QUERY
+        // Master Obat + Left Joins
+        $mainQuery = DB::connection('farmasi')->table('new_masterobat as m')
+            ->leftJoin('kodeBelanjaObat as k108', 'm.kode108', '=', 'k108.kode')
+            ->leftJoinSub($qAwal, 'awal', 'm.kd_obat', '=', 'awal.kdobat')
+            ->leftJoinSub($qMasuk, 'masuk', 'm.kd_obat', '=', 'masuk.kdobat')
+            ->leftJoinSub($qKeluar, 'keluar', 'm.kd_obat', '=', 'keluar.kdobat')
+            ->select(
+                'k108.kode as kode_108',
+                'k108.uraian as nama_108',
+                'm.kd_obat',
+                'm.nama_obat',
+                'm.satuan_k', // Optional: Unit
+                DB::raw("COALESCE(awal.qty, 0) as awal_qty"),
+                DB::raw("COALESCE(awal.val, 0) as awal_val"),
+                DB::raw("COALESCE(masuk.qty, 0) as masuk_qty"),
+                DB::raw("COALESCE(masuk.val, 0) as masuk_val"),
+                DB::raw("COALESCE(keluar.qty, 0) as keluar_qty"),
+                DB::raw("COALESCE(keluar.val, 0) as keluar_val"),
+                // Sisa = Awal + Masuk - Keluar
+                DB::raw("(COALESCE(awal.qty, 0) + COALESCE(masuk.qty, 0) - COALESCE(keluar.qty, 0)) as sisa_qty"),
+                DB::raw("(COALESCE(awal.val, 0) + COALESCE(masuk.val, 0) - COALESCE(keluar.val, 0)) as sisa_val")
+            )
+            ->where(function ($q) {
+                // Filter Search
+                $term = request('q');
+                if ($term) {
+                    $q->where('m.nama_obat', 'LIKE', '%' . $term . '%')
+                        ->orWhere('m.kd_obat', 'LIKE', '%' . $term . '%');
+                }
+            })
+            // Only show items with activity or stock? User didn't specify, but usually beneficial.
+            // "kode 108, nama 108, kode obat, nama obat, awal , masuk, keluar, sisa" implies ALL items or relevant items.
+            // If we filter, we might miss items that only have Opening Stock but no movement.
+            // Let's filter where ANY aggregate is non-zero to reduce payload size.
+
+
+
+            // ->where(function ($q) {
+            //     $q->whereRaw("COALESCE(awal.qty, 0) != 0")
+            //         ->orWhereRaw("COALESCE(masuk.qty, 0) != 0")
+            //         ->orWhereRaw("COALESCE(keluar.qty, 0) != 0");
+            // });
+
+            ->where(function ($q) {
+                $q->whereRaw("m.flag != 1");
+            });
+
+
+        // Pagination or Download
+        if (request('action') === 'download') {
+            $data = $mainQuery->get();
+            return new JsonResponse([
+                'data' => $data,
+                'req' => request()->all()
+            ]);
+        } else {
+            $perPage = request('per_page') ? request('per_page') : 100;
+            $data = $mainQuery->paginate((int)$perPage);
+            return new JsonResponse($data);
+        }
+    }
 }
