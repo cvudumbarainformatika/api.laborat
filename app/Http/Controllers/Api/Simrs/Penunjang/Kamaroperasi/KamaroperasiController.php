@@ -265,7 +265,11 @@ class KamaroperasiController extends Controller
                         'laporanoperasi'
                     ]);
                 },
-                'surgical'
+                'surgical',
+                'ruangranap',
+                'tindakanop' => function ($q) {
+                    $q->with('mastertindakanoperasi', 'laporanoperasi');
+                },
             ])
             ->first();
         return new JsonResponse([
