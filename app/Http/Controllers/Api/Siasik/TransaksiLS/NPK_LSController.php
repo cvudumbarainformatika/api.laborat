@@ -144,6 +144,7 @@ class NPK_LSController extends Controller
                     'tglentry'=>$time ?? '',
                     'userentry'=>$pegawai ?? '',
                     'nonpdls'=>$request->nonpdls ?? '',
+                    'nomorcek'=>$request->nomorcek ?? '',
                 ]
             );
             $rincidata = [];
