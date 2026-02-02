@@ -7,10 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Simrs\Laporan\Operasi\LaporanOperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Kamaroperasi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Masteroperasi;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class TindakanDanLaporanController extends Controller
 {
@@ -140,5 +140,79 @@ class TindakanDanLaporanController extends Controller
             ], 410);
         }
     }
-    public function simpanLaporan(Request $request) {}
+    public function simpanLaporan(Request $request)
+    {
+        // return new JsonResponse($request->all());
+
+        $cekTindakanOperasi = Kamaroperasi::where('rs1', $request->noreg)->where('rs2', $request->nota)->first();
+        if (!$cekTindakanOperasi)  return new JsonResponse(['message' => 'Tindakan Operasi belum dibuatkan, tidak bisa membuat laporan operasi'], 410);
+        try {
+            DB::beginTransaction();
+
+            $data = LaporanOperasi::updateOrCreate(
+                [
+                    'rs1' => $request->noreg,
+                    'rs2' => $request->nota,
+                ],
+                [
+                    'rs3' => $request->tanggal,
+                    'rs4' => $request->rs4,
+                    'rs5' => $request->rs5,
+                    'rs6' => $request->rs6,
+                    'rs7' => $request->rs7,
+                    'rs8' => $request->rs8,
+                    'rs9' => $request->rs9,
+                    'rs10' => $request->rs10,
+                    'rs11' => $request->rs11,
+                    'rs12' => $request->rs12,
+                    'rs13' => $request->rs13,
+                    'rs14' => $request->rs14,
+                    'rs15' => $request->rs15,
+                    'asa' => $request->asa,
+                    'jenis_darah_masuk' => $request->jenis_darah_masuk,
+                    'jd_keluar' => $request->jd_keluar,
+                    'jd_masuk' => $request->jd_masuk,
+                    'tindakan' => $request->tindakan,
+                    'ttime' => !!$request->tTime ? '1' : '',
+
+                ]
+            );
+            if (!$data) throw ('Data gagal disimpan');
+            DB::commit();
+            // $data->load('mastertindakanoperasi', 'laporanoperasi');
+            return new JsonResponse([
+                'message' => 'Sudah Disimpan',
+                'data' => $data
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 410);
+        }
+    }
+    public function hapusLaporannOp(Request $request)
+    {
+        // return new JsonResponse($request->all());
+        try {
+            DB::beginTransaction();
+            $data = LaporanOperasi::find($request->id);
+            if (!$data) throw ('Data tidak ditmukan');
+            $data->delete();
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'Sudah Disimpan',
+                'data' => $data
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 410);
+        }
+    }
 }
