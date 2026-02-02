@@ -26,7 +26,7 @@ class NotadinasController extends Controller
         $tahun=Carbon::createFromFormat('Y', request('tahun'))->format('Y');
         $data = Notadinas_header::whereBetween('notadinas_heder.tglnotadinas', [$tahunawal.'-01-01', $tahun.'-12-31']);
 
-            if ($sa !== 'sa') {
+            if ($sa !== 'sa' && $sa !== '39' && $sa !== '38') {
                 $data->where('notadinas_heder.kodepptk', $pegawai);
             }
             $nota=$data->join('notadinas_rinci', 'notadinas_rinci.nonotadinas', '=',  'notadinas_heder.nonotadinas')

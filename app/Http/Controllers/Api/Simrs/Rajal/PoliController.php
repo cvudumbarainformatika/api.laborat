@@ -650,7 +650,7 @@ class PoliController extends Controller
                 },
                 'intradialitikhd',
                 'suratketerangandokter' => function ($suratketerangandokter) {
-                    $suratketerangandokter->with(['dokter:nama,kdpegsimrs'])
+                    $suratketerangandokter->with(['dokter:nama,kdpegsimrs','tindakaanbilling'])
                         ->orderBy('id', 'DESC');
                 },
                 // ini buat satset

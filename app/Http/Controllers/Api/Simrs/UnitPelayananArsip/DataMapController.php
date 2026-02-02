@@ -38,7 +38,6 @@ class DataMapController extends Controller
 
     public function listdata()
     {
-        $q = request()->get('q');
 
         if (empty(request('bidangbagian'))) {
             // AMBIL SEMUA ORGANISASI AKTIF
@@ -53,14 +52,22 @@ class DataMapController extends Controller
             $bidangbagian = [request('bidangbagian')];
         }
 
-        $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)
-            ->with(['klasifikasi', 'unitpengolah', 'kabinet'])
-            ->when($q, function ($query) use ($q) {
-                $query->where('namamap', 'like', "%{$q}%")
-                ->orWhere('keterangan', 'like', "%{$q}%")
-                ->orWhere('laci', 'like', "%{$q}%");
+        $data = MapHeder::whereIn('kelompokMap_H.kodeorganisasi', $bidangbagian)
+            ->with(['unitpengolah', 'kabinet'])
+            ->join('master_kode', 'kelompokMap_H.kodeklasifikasi', '=', 'master_kode.kode')
+            ->select([
+                'kelompokMap_H.*',
+                'master_kode.nama as keterangan_kode',
+                'master_kode.kode as kode_master',
+            ])
+            ->where('kelompokMap_H.tahunMap', request('tahunmap'))
+            ->where(function ($query) {
+                $query->where('kelompokMap_H.namamap', 'like', '%'.request('q').'%')
+                ->orWhere('master_kode.nama', 'like', '%'.request('q').'%')
+                ->orWhere('kelompokMap_H.kodeklasifikasi', 'like', '%'.request('q').'%')
+                ->orWhere('kelompokMap_H.keterangan', 'like', '%'.request('q').'%')
+                ->orWhere('kelompokMap_H.laci', 'like', '%'.request('q').'%');
             })
-            ->where('tahunMap', request('tahunmap'))
             ->paginate(request('per_page'));
 
         return response()->json($data);
@@ -99,12 +106,22 @@ class DataMapController extends Controller
                 }else{
                     $bidangbagian = array($request->kodeorganisasi);
                 }
-                $data = MapHeder::whereIn('kodeorganisasi', $bidangbagian)->get();
+                $data = self::responsimpan($bidangbagian, $request->tahunmap);
                 return new JsonResponse(['message' => 'Data Berhasil Disimpan', 'result' => $data],200);
         } catch (\Exception $e) {
             DB::rollBack();
             return new JsonResponse(['message' => 'Data Gagal Disimpan', 'error' => $e], 500);
         }
+    }
+
+    public static  function responsimpan($bidangbagian, $tahunmap){
+        $data = MapHeder::select('kelompokMap_H.*', 'master_kode.nama as keterangan_kode',
+                'master_kode.kode as kode_master')
+            ->with(['unitpengolah', 'kabinet'])
+            ->join('master_kode', 'kelompokMap_H.kodeklasifikasi', '=', 'master_kode.kode')
+            ->whereIn('kodeorganisasi', $bidangbagian)->where('tahunMap', $tahunmap)
+            ->get();
+        return $data;
     }
 
     public function simpanisimap(Request $request)
