@@ -16,4 +16,6 @@ Route::group([
     Route::get('/get-mengetahui', [TandatanganController::class, 'getMengetahui']);
     Route::get('/get-pegawai', [TandatanganController::class, 'getPegawai']);
     Route::post('/store', [TandatanganController::class, 'store']);
+
+    Route::get('/get-nomor-surat', [TandatanganController::class, 'getNomorSurat']);
 });
