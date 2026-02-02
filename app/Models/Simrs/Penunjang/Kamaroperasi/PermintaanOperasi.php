@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Laporan\Operasi\LaporanOperasi;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
@@ -67,5 +68,9 @@ class PermintaanOperasi extends Model
     public function tindakanop()
     {
         return $this->hasOne(Kamaroperasi::class, 'rs2', 'rs2');
+    }
+    public function laporanop()
+    {
+        return $this->hasOne(LaporanOperasi::class, 'rs2', 'rs2');
     }
 }

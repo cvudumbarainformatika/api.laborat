@@ -140,4 +140,5 @@ class TindakanDanLaporanController extends Controller
             ], 410);
         }
     }
+    public function simpanLaporan(Request $request) {}
 }
