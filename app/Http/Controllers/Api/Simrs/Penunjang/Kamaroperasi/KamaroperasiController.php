@@ -265,7 +265,22 @@ class KamaroperasiController extends Controller
                         'laporanoperasi'
                     ]);
                 },
-                'surgical'
+                'surgical' => function ($q) {
+                    $q->with(
+                        'dr_operator:kdpegsimrs,nama',
+                        'dr_anastesi:kdpegsimrs,nama',
+                        'pen_anastesi:kdpegsimrs,nama',
+                        'per_instrumen:kdpegsimrs,nama',
+                        'per_sirkuler:kdpegsimrs,nama',
+                        'ass1:kdpegsimrs,nama',
+                        'ass2:kdpegsimrs,nama',
+                    );
+                },
+                'ruangranap',
+                'laporanop',
+                'tindakanop' => function ($q) {
+                    $q->with('mastertindakanoperasi', 'laporanoperasi');
+                },
             ])
             ->first();
         return new JsonResponse([

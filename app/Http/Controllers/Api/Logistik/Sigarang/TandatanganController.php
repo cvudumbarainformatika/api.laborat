@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Tandatangan;
+use App\Models\Sigarang\NomorSurat;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -110,5 +111,18 @@ class TandatanganController extends Controller
             ->orderBy('nama', 'ASC')
             ->get();
         return new JsonResponse($data);
+    }
+
+
+    // nomor surat
+    public function getNomorSurat()
+    {
+        $data = NomorSurat::whereDate('tgl_mulai_berlaku', '<=', now())
+            ->orderBy('tgl_mulai_berlaku', 'DESC')
+            ->first();
+        return new JsonResponse([
+            'data' => $data,
+            'now' => now()->toDateString()
+        ]);
     }
 }

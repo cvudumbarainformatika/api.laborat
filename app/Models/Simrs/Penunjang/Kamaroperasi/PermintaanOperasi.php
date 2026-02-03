@@ -3,12 +3,14 @@
 namespace App\Models\Simrs\Penunjang\Kamaroperasi;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Laporan\Operasi\LaporanOperasi;
 use App\Models\Simrs\Master\Msistembayar;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasi;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use App\Models\Simrs\Rajal\Memodiagnosadokter;
 use App\Models\Simrs\Ranap\Kunjunganranap;
+use App\Models\Simrs\Ranap\Mruangranap;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -58,5 +60,17 @@ class PermintaanOperasi extends Model
     public function surgical()
     {
         return $this->hasMany(SurgicalSafety::class, 'noreg', 'rs1');
+    }
+    public function ruangranap()
+    {
+        return $this->hasOne(Mruangranap::class, 'rs1', 'rs10');
+    }
+    public function tindakanop()
+    {
+        return $this->hasOne(Kamaroperasi::class, 'rs2', 'rs2');
+    }
+    public function laporanop()
+    {
+        return $this->hasOne(LaporanOperasi::class, 'rs2', 'rs2');
     }
 }

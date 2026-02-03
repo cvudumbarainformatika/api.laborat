@@ -11,7 +11,7 @@ class Kamaroperasi extends Model
     use HasFactory;
     protected $table = 'rs54';
     protected $guarded = ['id'];
-    public $timestamps = false;
+    // public $timestamps = false;
     protected $keyType = 'string';
     protected $appends = ['subtotal'];
 
