@@ -18,6 +18,11 @@ class Tbp extends Model
         return $this->hasMany(Kwitansilog::class, 'no_tbp', 'no_tbp');
     }
 
+    public function karcis()
+    {
+        return $this->hasMany(Karcis::class, 'no_tbp', 'no_tbp');
+    }
+
     public function pegawai()
     {
         return $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'penyetor');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Simrs\Kasir;
 use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Kasir\Karcis;
 use App\Models\Simrs\Kasir\Kwitansilog;
 use App\Models\Simrs\Kasir\Tbp;
 use App\Models\Simrs\Master\Mkasir;
@@ -34,7 +35,7 @@ class CreateTbpController extends Controller
             $jenislayanan = ['rajal', 'ranap'];
         }
 
-        $data = Tbp::join('kwitansilog', 'tbp.no_tbp', '=', 'kwitansilog.no_tbp')
+        $data = Tbp::leftjoin('kwitansilog', 'tbp.no_tbp', '=', 'kwitansilog.no_tbp')
             ->select(
                 'tbp.no_tbp',
                 DB::raw('DATE(tbp.tgl_tbp) as tgl_tbp'),
@@ -86,7 +87,26 @@ class CreateTbpController extends Controller
             $user = $user;
         }
 
-        $data = Kwitansilog::select(
+        if(request('kodekasirtbp') == 'a'){
+            $data = Karcis::query()
+                ->select([
+                    'karcislog.noreg',
+                    'karcislog.norm',
+                    'karcislog.nama',
+                    'karcislog.nokarcis as nokwitansi',
+                    'karcislog.tglx as tgl_cetak',
+                    'karcislog.users as userid',
+                    'karcislog.no_tbp',
+                    'karcislog.total'
+                ])
+                 ->whereBetween('karcislog.tglx', [$dari, $sampai])
+                ->where('karcislog.batal', '')
+                ->whereIn('karcislog.users', [$user])
+                ->with(['pegawai'] )
+                ->get();
+        }else{
+            $data = Kwitansilog::query()
+            ->select([
                 'kwitansi_d.noreg',
                 'kwitansilog.norm',
                 'kwitansilog.nama',
@@ -95,7 +115,7 @@ class CreateTbpController extends Controller
                 'kwitansilog.userid',
                  'kwitansilog.no_tbp',
                 'kwitansilog.total'
-            )
+            ])
             ->join('kwitansi_d', 'kwitansi_d.no_kwitansi', '=', 'kwitansilog.nokwitansi')
             ->whereBetween('kwitansilog.tglx', [$dari, $sampai])
             ->where(function ($q) {
@@ -106,31 +126,8 @@ class CreateTbpController extends Controller
             ->whereIn('kwitansilog.userid', [$user])
             ->with(['pegawai'] )
             ->groupBy('kwitansi_d.no_kwitansi')
-            ->orderBy('kwitansilog.tglx')
-            ->get();
-
-        // $pelayananrm = DetailbillingbytanggalController::pelayananrm($dari, $sampai);
-        // $kartuidentitas = DetailbillingbytanggalController::kartuidentitas($dari, $sampai);
-        // $poliklinik = DetailbillingbytanggalController::poliklinik($dari, $sampai);
-        // return new JsonResponse([
-        //     'data' => $data,
-        //     'pelayananrm' => $pelayananrm,
-        //     'kartuidentitas' => $kartuidentitas,
-        //     'poliklinik' => $poliklinik
-        // ]);
-        // $konsulantarpoli = DetailbillingbytanggalController::konsulantarpoli($dari, $sampai);
-        // $tindakan = DetailbillingbytanggalController::tindakan($dari, $sampai);
-        // $laborat = DetailbillingbytanggalController::laborat($dari, $sampai);
-        // $radiologi = DetailbillingbytanggalController::radiologi($dari, $sampai);
-        // $onedaycare = DetailbillingbytanggalController::onedaycare($dari, $sampai);
-        // $fisioterapi = DetailbillingbytanggalController::fisioterapi($dari, $sampai);
-        // $hd = DetailbillingbytanggalController::hd($dari, $sampai);
-        // $penunjanglain = DetailbillingbytanggalController::penunjanglain($dari, $sampai);
-        // $psikologi = DetailbillingbytanggalController::psikologi($dari, $sampai);
-        // $cardio = DetailbillingbytanggalController::cardio($dari, $sampai);
-        // $eeg = DetailbillingbytanggalController::eeg($dari, $sampai);
-        // $endoscopy = DetailbillingbytanggalController::endoscopy($dari, $sampai);
-        // $obat = DetailbillingbytanggalController::farmasinew($dari, $sampai);
+             ->get();
+        }
 
 
         $piutang = 0; //$pelayananrm + $kartuidentitas + $poliklinik ;
@@ -151,10 +148,17 @@ class CreateTbpController extends Controller
 
     public function createnotatbp(Request $request)
     {
+
         try{
             DB::beginTransaction();
 
-                if($request->kdkasir === 'b'){
+                if($request->kdkasir === 'a'){
+                    $cari = DB::table('rs1')->select('tbp_a')->get();
+                    $countertbp = $cari[0]->tbp_a + 1;
+                    DB::table('rs1')->where('id', 1)->update(['tbp_a' => $countertbp]);
+                    $no_tbp = FormatingHelper::getNomorTbp('a','1.02.02.01', $countertbp);
+
+                }else if($request->kdkasir === 'b'){
                     $cari = DB::table('rs1')->select('tbp_b')->get();
                     $countertbp = $cari[0]->tbp_b + 1;
                     DB::table('rs1')->where('id', 1)->update(['tbp_b' => $countertbp]);
@@ -184,11 +188,21 @@ class CreateTbpController extends Controller
                     ]);
                 }else{
 
-                    foreach ($request->no_kwitansi as $kw) {
-                        if (!empty($kw)) {
-                            Kwitansilog::where('nokwitansi', $kw)->update([
-                                'no_tbp' => $no_tbp
-                            ]);
+                    if($request->kdkasir === 'a'){
+                        foreach ($request->no_kwitansi as $kw) {
+                            if (!empty($kw)) {
+                                Karcis::where('nokarcis', $kw)->update([
+                                    'no_tbp' => $no_tbp
+                                ]);
+                            }
+                        }
+                    }else{
+                        foreach ($request->no_kwitansi as $kw) {
+                            if (!empty($kw)) {
+                                Kwitansilog::where('nokwitansi', $kw)->update([
+                                    'no_tbp' => $no_tbp
+                                ]);
+                            }
                         }
                     }
 
@@ -211,12 +225,14 @@ class CreateTbpController extends Controller
                 $data = self::getTbp($no_tbp);
                 return new JsonResponse([
                     'message' => 'Data Berhasil Disimpan',
-                    'data' => $data
+                    'data' => $data,
+                    'success' => 'true'
                 ],200);
         } catch (\Throwable $th) {
             DB::rollBack();
             return new JsonResponse([
-                'data' => $th->getMessage()
+                'data' => $th->getMessage(),
+                'success' => 'false'
             ]);
         }
 
@@ -245,7 +261,27 @@ class CreateTbpController extends Controller
                         'kwitansilog.nokwitansi'
                     )
                     ->with(['pegawai']);
-                }
+                },
+                'karcis' => function ($query) {
+                    $query->select(
+                        'karcislog.id',
+                        'karcislog.no_tbp',        // WAJIB
+                        'karcislog.nokarcis',  // WAJIB
+                        'karcislog.norm',
+                        'karcislog.nama',
+                        'karcislog.total',
+                        'karcislog.users',
+                        'karcislog.tglx as tgl_cetak',
+                        'kwitansi_d.noreg'
+                    )
+                    ->join(
+                        'kwitansi_d',
+                        'kwitansi_d.no_kwitansi',
+                        '=',
+                        'karcislog.nokarcis'
+                    )
+                    ->with(['pegawai']);
+                },
             ])
             ->get();
     }
@@ -255,6 +291,10 @@ class CreateTbpController extends Controller
         try{
             DB::beginTransaction();
                 $update = Kwitansilog::where('nokwitansi', $request->nokwitansi)->first();
+                $update->no_tbp = '';
+                $update->save();
+
+                $update = Karcis::where('nokarcis', $request->nokwitansi)->first();
                 $update->no_tbp = '';
                 $update->save();
             DB::commit();
@@ -357,4 +397,44 @@ class CreateTbpController extends Controller
         ]);
     }
 
+    public function getbataltbp(Request $request)
+    {
+        try{
+            DB::beginTransaction();
+                $noTbp = $request->no_tbp;
+                $cek = Tbp::where('no_tbp', $noTbp)->where('status_verif', '1')->count();
+                if($cek > 0){
+                    return new JsonResponse([
+                        'data' => 'TBP Sudah Diverifikasi'
+                    ]);
+                }
+                $update = Tbp::where('no_tbp', $noTbp)->first();
+                $update->batal = '1';
+                $update->tgl_batal = date('Y-m-d H:i:s');
+                $update->save();
+
+                $cari = Kwitansilog::where('no_tbp', $noTbp)->get();
+                foreach ($cari as $key) {
+                    $key->no_tbp = '';
+                    $key->save();
+                }
+
+                $carikarcis = Karcis::where('no_tbp', $noTbp)->get();
+                foreach ($carikarcis as $key) {
+                    $key->no_tbp = '';
+                    $key->save();
+                }
+            DB::commit();
+                $data = self::getTbp($noTbp);
+
+                return new JsonResponse([
+                    'data' => $data
+                ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return new JsonResponse([
+                'data' => $th->getMessage()
+            ]);
+        }
+    }
 }
