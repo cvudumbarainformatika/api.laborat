@@ -53,6 +53,8 @@ Route::group([
     Route::post('/tbp/simpanTbp', [CreateTbpController::class, 'createnotatbp']);
     Route::post('/tbp/batal', [CreateTbpController::class, 'batalTbp']);
     Route::get('/tbp/getrincianTbp', [CreateTbpController::class, 'getrincianTbp']);
+    Route::post('/tbp/hapusTbp', [CreateTbpController::class, 'getbataltbp']);
+
 
     Route::get('/pasien-luar/getbillpasienluar', [PasienLuarController::class, 'getbill']);
 });
