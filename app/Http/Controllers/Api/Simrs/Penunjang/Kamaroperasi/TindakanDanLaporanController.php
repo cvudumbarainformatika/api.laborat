@@ -82,7 +82,7 @@ class TindakanDanLaporanController extends Controller
                     'rs2' => $request->nota,
                 ],
                 [
-                    'rs3' => $tanggal . date(' H:m:s'),
+                    'rs3' => $tanggal . date(' H:i:s'),
                     'rs4' => $request->kode,
                     'rs5' => $request->js,
                     'rs6' => $request->jp,
