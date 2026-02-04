@@ -63,6 +63,7 @@ class SoapController extends Controller
       $data->frekuensi = $request->frekuensi;
       $data->rencana = $request->rencana;
       $data->procedure = $request->procedure;
+      $data->edukasi = $request->edukasi;
       $data->awal = $awal;
       $data->urut = $hitung;
       $data->nakes = $pegawai->kdgroupnakes;
