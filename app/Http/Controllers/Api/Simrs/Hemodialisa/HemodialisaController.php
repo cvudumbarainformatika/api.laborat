@@ -343,6 +343,7 @@ class HemodialisaController extends Controller
         $q = $select
             ->whereBetween('rs107.rs3', [$tgl, $tglx])
             ->where('rs107.rs2', '!=', '')
+            ->where('rs107.rs13', '=', 'PEN005')
             ->whereNotNull('rs107.rs2')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
