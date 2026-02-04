@@ -153,6 +153,7 @@ class HemodialisaController extends Controller
             })
             // ->where('rs107.rs2', '!=', '')
             // ->whereNotNull('rs107.rs2')
+            ->where('rs107.rs13', '=', 'PEN005')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
