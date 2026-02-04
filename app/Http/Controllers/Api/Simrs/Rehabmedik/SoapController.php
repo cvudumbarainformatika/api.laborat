@@ -45,17 +45,11 @@ class SoapController extends Controller
         $hitung = $data->urut;
       } else {
         $data = new FisioSoap();
-        $count = FisioAsessment::where('noreg', $request->noreg)->count();
-        $awal = $count === 0 ? 1 : 0;
+        $count = FisioSoap::where('noreg', $request->noreg)->count();
+        $cekAwal = FisioSoap::where('noreg', $request->noreg)->where('awal', 1)->count();
+        $awal = $cekAwal === 0 ? 1 : 0;
         $hitung = (int)$count + 1;
       }
-
-
-
-
-
-
-
 
       $data->noreg = $request->noreg;
       $data->norm = $request->norm;
@@ -75,8 +69,6 @@ class SoapController extends Controller
       $data->user = $pegawai->kdpegsimrs;
       $data->save();
 
-      return new JsonResponse($count, 200);
-
       return new JsonResponse($data->load('petugas:kdpegsimrs,kdgroupnakes,nama,nik'), 200);
     } catch (\Throwable $th) {
       //throw $th;
@@ -86,7 +78,7 @@ class SoapController extends Controller
 
   public function delete(Request $request)
   {
-    $data = FisioAsessment::find($request->id);
+    $data = FisioSoap::find($request->id);
     if (!$data) {
       return new JsonResponse(['message' => 'Data gagal dihapus'], 410);
     }
