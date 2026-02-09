@@ -432,6 +432,10 @@ class PengunjungController extends Controller
                         'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
                     ]);
                 },
+                'tindakan' => function ($t) {
+                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+                        ->orderBy('id', 'DESC');
+                },
             ])
             ->where('rs201.rs1', request('noreg'))
             ->first();

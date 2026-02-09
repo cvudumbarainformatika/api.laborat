@@ -10,6 +10,7 @@ use App\Models\Simrs\Penunjang\Laborat\Laboratpemeriksaan;
 use App\Models\Simrs\Penunjang\Radiologi\PembacaanradiologiController;
 use App\Models\Simrs\Penunjang\Radiologi\Transpermintaanradiologi;
 use App\Models\Simrs\Penunjang\Radiologi\Transradiologi;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -65,5 +66,9 @@ class Fisioterapipermintaan extends Model
     public function anamnesis()
     {
         return $this->hasMany(Anamnesis::class, 'rs1', 'rs1');
+    }
+    public function tindakan()
+    {
+        return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
     }
 }
