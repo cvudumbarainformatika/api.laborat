@@ -97,6 +97,107 @@ class TransaksiAbsenController extends Controller
         $data['user'] = $dataUser;
         return new JsonResponse($data);
     }
+
+    public function rekap2()
+    {
+        $thisYear = request('tahun') ?: date('Y');
+        $thisMonth = request('bulan') ?: date('m');
+        $per_page = request('per_page') ?: 10;
+
+        $startDate = "$thisYear-$thisMonth-01";
+        // Menggunakan library Carbon untuk endOfMonth akan lebih akurat,
+        // tapi mengikuti logic lama (hardcode 31) agar konsisten kalau tgl 31 tidak valid di bulan tertentu (mysql handle / php handle).
+        // Code lama: whereDate <= ...-31.
+        $endDate = "$thisYear-$thisMonth-31";
+
+        $users = User::where('id', '>', 1)
+            ->filter(request(['q']))
+            ->oldest('id')
+            ->with(['absens' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('tanggal', [$startDate, $endDate])
+                      ->with('kategory'); // Eager load kategory untuk menghindari N+1 problem
+            }])
+            ->paginate($per_page);
+
+        $data = [];
+        $apem = [];
+
+        foreach ($users as $user) {
+            // Mengakses relation yang sudah di-eager load
+            $absens = $user->absens;
+
+            $telatCount = 0;
+            $totalCount = 0;
+            $userIdForApem = null; // Default null jika tidak ada absen
+
+            // Mengambil user_id dari user object langsung lebih aman daripada loop absen
+            // Tapi logic lama mengambil dari iteration absen (ni->user_id).
+            // Jika absen kosong, userapem null. Kita ikut logic itu.
+            if ($absens->isNotEmpty()) {
+                $userIdForApem = $absens->first()->user_id;
+            }
+
+            foreach ($absens as $absen) {
+                if ($absen->masuk !== null) {
+                    // Logic Parse Tanggal & Day (Optimized)
+                    // Format YYYY-MM-DD, ambil 2 karakter terakhir
+                    $absen->day = substr($absen->tanggal, -2);
+
+                    // Logic Diff & Terlambat
+                    // Pastikan kategory ada
+                    if ($absen->kategory) {
+                        $toIn = explode(':', $absen->kategory->masuk);
+                        $act = explode(':', $absen->masuk);
+
+                        $jam = (int)$act[0] - (int)$toIn[0];
+                        $menit = (int)$act[1] - (int)$toIn[1];
+                        $detik = (int)$act[2] - (int)$toIn[2];
+
+                        // Logic lama: ($jam > 0 || $menit > 00)
+                        $isTerlambat = ($jam > 0 || $menit > 0);
+
+                        $absen->terlambat = $isTerlambat ? 'yes' : 'no';
+
+                        $dMenit = $menit >= 10 ? $menit : '0' . $menit;
+                        $dDetik = $detik >= 10 ? $detik : '0' . $detik;
+                        $absen->diff = $jam . ':' . $dMenit . ':' . $dDetik;
+
+                        // Hitung rekap on-the-fly
+                        $totalCount++;
+                        if ($isTerlambat) {
+                            $telatCount++;
+                        }
+                    }
+                }
+            }
+
+            $data[$user->id] = $absens;
+
+            // Masukkan ke array apem
+            $apem[] = [
+                'total' => $totalCount,
+                'telat' => $telatCount,
+                'user_id' => $userIdForApem
+            ];
+        }
+
+        // Menyusun Response agar SAMA PERSIS dengan rekap()
+
+        // 1. Meta Pagination
+        $paginationArray = $users->toArray();
+        $meta = collect($users)->except('data'); // Menggunakan cara lama agar output struktur object-nya mirip
+
+        // 2. User Data
+        // Logic lama: $userCollections->only('data') -> returns ['data' => [...]]
+        $dataUser = ['data' => $paginationArray['data']];
+
+        $finalData = $data;
+        $finalData['apem'] = $apem;
+        $finalData['meta'] = $meta;
+        $finalData['user'] = $dataUser;
+
+        return new JsonResponse($finalData);
+    }
     public function index()
     {
         $thisYear = request('tahun') ? request('tahun') : date('Y');
