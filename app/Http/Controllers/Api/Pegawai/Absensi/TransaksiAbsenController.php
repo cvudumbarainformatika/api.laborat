@@ -15,8 +15,8 @@ use App\Models\Sigarang\Pegawai;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Mockery\Undefined;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Carbon\Carbon;
 
 class TransaksiAbsenController extends Controller
 {
@@ -24,9 +24,9 @@ class TransaksiAbsenController extends Controller
 
     public function rekap()
     {
-        $thisYear = request('tahun') ? request('tahun') : date('Y');
-        $thisMonth = request('bulan') ? request('bulan') : date('m');
-        $per_page = request('per_page') ? request('per_page') : 10;
+        $thisYear = request('tahun') ?: date('Y');
+        $thisMonth = request('bulan') ?: date('m');
+        $per_page = request('per_page') ?: 10;
         $user = User::where('id', '>', 1)
             ->filter(request(['q']))
             ->oldest('id')
@@ -115,7 +115,7 @@ class TransaksiAbsenController extends Controller
             ->oldest('id')
             ->with(['absens' => function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('tanggal', [$startDate, $endDate])
-                      ->with('kategory'); // Eager load kategory untuk menghindari N+1 problem
+                    ->with('kategory'); // Eager load kategory untuk menghindari N+1 problem
             }])
             ->paginate($per_page);
 
@@ -198,11 +198,209 @@ class TransaksiAbsenController extends Controller
 
         return new JsonResponse($finalData);
     }
+
+    public function dashboard(Request $request)
+    {
+        // Mendapatkan bulan dan tahun saat ini, atau dari request jika ada
+        $currentMonth = $request->input('bulan', Carbon::now()->month);
+        $currentYear = $request->input('tahun', Carbon::now()->year);
+
+        // Menghitung ringkasan
+        $totalPegawai = Pegawai::where('nama', '=', 'Programmer')->where('aktif', 'AKTIF')->count(); // Mengikuti pola User::where('id', '>', 1)
+
+        // Cuti: Hanya menghitung 'CUTI'
+        $cutiCount = Libur::where('flag', 'CUTI')
+            ->whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->distinct('user_id')
+            ->count();
+
+        // Asumsi: Aktif adalah total pegawai dikurangi yang cuti.
+        // Ini mungkin perlu disesuaikan jika ada definisi 'aktif' yang lebih spesifik.
+        $aktifCount = $totalPegawai - $cutiCount;
+
+        // Mendapatkan data absensi untuk bulan ini
+        $absensiBulanIni = TransaksiAbsen::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->with('kategory')
+            ->get();
+
+        $hadirTepatWaktuCount = 0;
+        $terlambatCount = 0;
+
+        foreach ($absensiBulanIni as $absen) {
+            if ($absen->masuk !== null && $absen->kategory) {
+                $toIn = explode(':', $absen->kategory->masuk);
+                $act = explode(':', $absen->masuk);
+
+                $jam = (int)$act[0] - (int)$toIn[0];
+                $menit = (int)$act[1] - (int)$toIn[1];
+
+                if ($jam > 0 || $menit > 0) { // Logic terlambat
+                    $terlambatCount++;
+                } else {
+                    $hadirTepatWaktuCount++;
+                }
+            }
+        }
+
+        $alphaCount = Alpha::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->distinct('pegawai_id')
+            ->count();
+
+        // Data summary
+        $summary = [
+            "total_pegawai" => number_format($totalPegawai, 0, ',', '.'),
+            "aktif" => $aktifCount,
+            "cuti" => $cutiCount
+        ];
+
+        // Data admin_stats
+        $adminStats = [
+            [
+                "label" => "Hadir Tepat Waktu",
+                "value" => (string)$hadirTepatWaktuCount,
+                "icon" => "icon-mat-check_circle",
+                "color" => "green",
+                "trendIcon" => "icon-mat-trending_up",
+                // Perbaikan: Tambahkan pengecekan $totalPegawai > 0
+                "trendText" => ($totalPegawai > 0) ? round(($hadirTepatWaktuCount / $totalPegawai) * 100) . "% Hadir" : "0% Hadir",
+                "trendColor" => "text-green"
+            ],
+            [
+                "label" => "Terlambat",
+                "value" => (string)$terlambatCount,
+                "icon" => "icon-mat-history",
+                "color" => "orange",
+                "trendIcon" => "icon-mat-trending_down",
+                // Perbaikan: Tambahkan pengecekan $totalPegawai > 0
+                "trendText" => ($totalPegawai > 0) ? round(($terlambatCount / $totalPegawai) * 100) . "% Terlambat" : "0% Terlambat",
+                "trendColor" => "text-orange"
+            ],
+            [
+                "label" => "Cuti / Libur", // Label ini seharusnya "Cuti" saja, karena kategori lain masuk "Izin/Sakit"
+                "value" => (string)$cutiCount,
+                "icon" => "icon-mat-beach_access",
+                "color" => "blue",
+                "trendIcon" => "icon-mat-remove",
+                "trendText" => "Sesuai Prota", // Placeholder, bisa disesuaikan
+                "trendColor" => "text-grey-7"
+            ],
+            [
+                "label" => "Tanpa Keterangan",
+                "value" => (string)$alphaCount,
+                "icon" => "icon-mat-warning",
+                "color" => "negative",
+                "trendIcon" => "icon-mat-trending_up",
+                "trendText" => "Perlu Follow Up", // Placeholder, bisa disesuaikan
+                "trendColor" => "text-red"
+            ]
+        ];
+
+        // START: Implementasi weekly_trend secara dinamis dan optimal
+        $weeklyData = [];
+        $weeklyCategories = [];
+        $today = Carbon::now();
+
+        $startDateOfWeek = $today->copy()->subDays(6)->startOfDay();
+        $endDateOfWeek = $today->copy()->endOfDay();
+
+        // 1. Ambil semua ID pegawai yang relevan hanya sekali
+        $relevantUserIds = User::where('id', '>', 1)->pluck('id');
+        $totalRelevantUsers = $relevantUserIds->count();
+
+        // 2. Ambil semua data Alpha untuk rentang 7 hari terakhir
+        $allAlphas = Alpha::whereBetween('tanggal', [$startDateOfWeek, $endDateOfWeek])
+            ->get()
+            ->groupBy('tanggal'); // Group by date for easy access
+
+        // 3. Ambil semua data Libur untuk rentang 7 hari terakhir
+        $allLeaves = Libur::whereBetween('tanggal', [$startDateOfWeek, $endDateOfWeek])
+            ->get()
+            ->groupBy('tanggal'); // Group by date for easy access
+
+        // 4. Ambil semua data TransaksiAbsen untuk rentang 7 hari terakhir
+        $allAttendances = TransaksiAbsen::whereBetween('tanggal', [$startDateOfWeek, $endDateOfWeek])
+            ->with('kategory') // Load kategory relation once
+            ->get()
+            ->groupBy('tanggal'); // Group by date for easy access
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i);
+            $dateString = $date->toDateString();
+            $dayName = $date->shortDayName;
+
+            // Dapatkan ID pegawai yang alpha pada tanggal ini
+            $alphaUsersToday = $allAlphas->has($dateString)
+                ? $allAlphas[$dateString]->pluck('user_id')->unique()
+                : collect();
+
+            // Dapatkan ID pegawai yang libur pada tanggal ini
+            $leaveUsersToday = $allLeaves->has($dateString)
+                ? $allLeaves[$dateString]->pluck('user_id')->unique()
+                : collect();
+
+            // Pegawai yang tidak hadir (alpha atau libur)
+            $notAttendingUsers = $alphaUsersToday->merge($leaveUsersToday)->unique();
+
+            // Pegawai yang diharapkan hadir (total - yang tidak hadir)
+            $expectedToAttendCount = $totalRelevantUsers - $notAttendingUsers->count();
+
+            // Hitung absensi yang valid (hadir) pada hari ini
+            $actualAttendedCount = 0;
+            if ($allAttendances->has($dateString)) {
+                $dailyAttendances = $allAttendances[$dateString];
+                // Filter hanya absensi dari user_id yang relevan
+                $actualAttendedCount = $dailyAttendances->whereIn('user_id', $relevantUserIds)->count();
+            }
+
+            // Persentase kehadiran
+            // Perbaikan: Tambahkan pengecekan $expectedToAttendCount > 0
+            $attendancePercentage = ($expectedToAttendCount > 0) ? round(($actualAttendedCount / $expectedToAttendCount) * 100) : 0;
+
+            $weeklyData[] = $attendancePercentage;
+            $weeklyCategories[] = $dayName;
+        }
+
+        $weeklyTrend = [
+            "series" => [
+                ["name" => "Persentase Kehadiran", "data" => $weeklyData]
+            ],
+            "categories" => $weeklyCategories
+        ];
+        // END: Implementasi weekly_trend secara dinamis dan optimal
+
+        // Data absence_composition
+        // Menghitung Izin/Sakit dari flag DISPEN, DL, SAKIT, IJIN
+        $izinSakitCount = Libur::whereIn('flag', ['DISPEN', 'DL', 'SAKIT', 'IJIN'])
+            ->whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->distinct('user_id')
+            ->count();
+
+        $absenceComposition = [
+            "series" => [$hadirTepatWaktuCount, $terlambatCount, $izinSakitCount, $alphaCount],
+            "labels" => ["Hadir", "Terlambat", "Izin/Sakit", "Alpha"]
+        ];
+
+        $responseData = [
+            "status" => "success",
+            "data" => [
+                "summary" => $summary,
+                "admin_stats" => $adminStats,
+                "weekly_trend" => $weeklyTrend,
+                "absence_composition" => $absenceComposition
+            ]
+        ];
+
+        return new JsonResponse($responseData);
+    }
     public function index()
     {
-        $thisYear = request('tahun') ? request('tahun') : date('Y');
-        $thisMonth = request('bulan') ? request('bulan') : date('m');
-        $per_page = request('per_page') ? request('per_page') : 10;
+        $thisYear = request('tahun') ?: date('Y');
+        $thisMonth = request('bulan') ?: date('m');
+        $per_page = request('per_page') ?: 10;
         $user = User::where('id', '>', 3)->oldest('id')->filter(request(['q']))->paginate($per_page);
         $userCollections = collect($user);
         $meta = $userCollections->except('data');
@@ -260,7 +458,7 @@ class TransaksiAbsenController extends Controller
         //     // $temp = explode('-', $key->tanggal);
         //     $day = $temp[2];
         //     // $day = $this->getDayName($temp[2]);
-        //     $key['day'] = $day;
+        // $key['day'] = $day;
 
         //     $toIn = explode(':', $key['kategory']->masuk);
         //     $act = explode(':', $key['masuk']);
@@ -276,7 +474,8 @@ class TransaksiAbsenController extends Controller
         //     $dMenit = $menit >= 10 ? $menit : '0' . $menit;
         //     $dDetik = $detik >= 10 ? $detik : '0' . $detik;
         //     $diff = $jam . ':' . $dMenit . ':' . $dDetik;
-        //     $key['diff'] = $diff;
+        //     $value['diff'] = $diff;
+
         // }
 
         // $collects = collect($data);
@@ -327,12 +526,12 @@ class TransaksiAbsenController extends Controller
     public function getRekapByUser()
     {
         $user = JWTAuth::user();
-        $thisYear = request('tahun') ? request('tahun') : date('Y');
-        $month = request('bulan') ? request('bulan') : date('m');
-        $per_page = request('per_page') ? request('per_page') : 10;
+        $thisYear = request('tahun') ?: date('Y');
+        $thisMonth = request('bulan') ?: date('m');
+        $per_page = request('per_page') ?: 10;
         $data = TransaksiAbsen::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
             ->with('kategory')
             ->latest()
             ->get();
@@ -342,11 +541,11 @@ class TransaksiAbsenController extends Controller
     {
         $user = JWTAuth::user();
         $thisYear = request('tahun') ? request('tahun') : date('Y');
-        $month = request('bulan') ? request('bulan') : date('m');
+        $thisMonth = request('bulan') ? request('bulan') : date('m');
         $per_page = request('per_page') ? request('per_page') : 10;
         $masuk = TransaksiAbsen::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
             ->with('kategory')
             ->latest()
             ->get();
@@ -354,8 +553,8 @@ class TransaksiAbsenController extends Controller
 
         $data['masuk'] = $masuk;
         $libur = Libur::where('user_id', $user->id)
-            ->whereDate('tanggal', '>=', $thisYear . '-' . $month . '-01')
-            ->whereDate('tanggal', '<=', $thisYear . '-' . $month . '-31')
+            ->whereDate('tanggal', '>=', $thisYear . '-' . $thisMonth . '-01')
+            ->whereDate('tanggal', '<=', $thisYear . '-' . $thisMonth . '-31')
             ->latest()
             ->get();
 
@@ -368,9 +567,9 @@ class TransaksiAbsenController extends Controller
     {
         $user = User::find(request('id'));
         $thisYear = request('tahun') ? request('tahun') : date('Y');
-        $month = request('bulan') ? request('bulan') : date('m');
-        $from = $thisYear . '-' . $month . '-01';
-        $to = $thisYear . '-' . $month . '-31';
+        $thisMonth = request('bulan') ? request('bulan') : date('m');
+        $from = $thisYear . '-' . $thisMonth . '-01';
+        $to = $thisYear . '-' . $thisMonth . '-31';
         // $per_page = request('per_page') ? request('per_page') : 10;
         $prota = Prota::where('tgl_libur', '>=', $from)
             ->where('tgl_libur', '<=', $to)
@@ -553,9 +752,8 @@ class TransaksiAbsenController extends Controller
 
         // return $periode;
 
-        $data = Pegawai::select('id','nip','nik','nama','kelamin','foto','ttdpegawai','kdpegsimrs','jenispegawai','jabatan','ruang','flag','alamat','aktif')
+        $data = Pegawai::select('id', 'nip', 'nik', 'nama', 'kelamin', 'foto', 'ttdpegawai', 'kdpegsimrs', 'jenispegawai', 'jabatan', 'ruang', 'flag', 'alamat', 'aktif')
             ->where('aktif', '=', 'AKTIF')
-            // ->where('account_pass', '=', null)
             ->where(function ($query) {
                 $query->when(request('flag') ?? false, function ($search, $q) {
                     return $search->where('flag', '=', $q);
@@ -566,21 +764,27 @@ class TransaksiAbsenController extends Controller
             })
             ->filter(request(['q']))
             ->with([
-                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+                "transaksi_absen.kategory",
+                "jenis_pegawai",
+                "relasi_jabatan",
+                "ruangan",
+                "transaksi_absen" => function ($q) use ($periode) {
                     // $split = explode("-", $periode);
                     // $year = $split[0];
                     // $month = $split[1];
                     // $q->whereMonth('created_at', $month)
                     //     ->whereYear('created_at', $year);
                     $q->where('created_at', 'like', $periode . '-%');
-                }, "user.libur" => function ($q) use ($periode) {
+                },
+                "user.libur" => function ($q) use ($periode) {
                     // $split = explode("-", $periode);
                     // $year = $split[0];
                     // $month = $split[1];
                     // $q->whereMonth('tanggal', $month)
                     //     ->whereYear('tanggal', $year);
                     $q->where('tanggal', 'like', $periode . '-%');
-                }, "alpha" => function ($q) use ($periode) {
+                },
+                "alpha" => function ($q) use ($periode) {
                     // $split = explode("-", $periode);
                     // $year = $split[0];
                     // $month = $split[1];
@@ -612,19 +816,25 @@ class TransaksiAbsenController extends Controller
             })
             ->filter(request(['q']))
             ->with([
-                "transaksi_absen.kategory", "jenis_pegawai", "relasi_jabatan", "ruangan", "transaksi_absen" => function ($q) use ($periode) {
+                "transaksi_absen.kategory",
+                "jenis_pegawai",
+                "relasi_jabatan",
+                "ruangan",
+                "transaksi_absen" => function ($q) use ($periode) {
                     $split = explode("-", $periode);
                     $year = $split[0];
                     $month = $split[1];
                     $q->whereMonth('created_at', $month)
                         ->whereYear('created_at', $year);
-                }, "user.libur" => function ($q) use ($periode) {
+                },
+                "user.libur" => function ($q) use ($periode) {
                     $split = explode("-", $periode);
                     $year = $split[0];
                     $month = $split[1];
                     $q->whereMonth('tanggal', $month)
                         ->whereYear('tanggal', $year);
-                }, "alpha" => function ($q) use ($periode) {
+                },
+                "alpha" => function ($q) use ($periode) {
                     $split = explode("-", $periode);
                     $year = $split[0];
                     $month = $split[1];

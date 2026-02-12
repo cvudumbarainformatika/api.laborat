@@ -20,4 +20,7 @@ Route::group([
 
     // Hapus Jadwal
     Route::post('/hapus-jadwal', [JadwalController::class, 'destroy']);
+
+    // dashboard
+    Route::get('/dashboard-admin', [TransaksiAbsenController::class, 'dashboard']);
 });
