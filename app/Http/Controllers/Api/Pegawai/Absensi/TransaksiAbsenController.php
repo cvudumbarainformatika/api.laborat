@@ -201,34 +201,32 @@ class TransaksiAbsenController extends Controller
 
     public function dashboard(Request $request)
     {
-        // Mendapatkan bulan dan tahun saat ini, atau dari request jika ada
-        $currentMonth = $request->input('bulan', Carbon::now()->month);
-        $currentYear = $request->input('tahun', Carbon::now()->year);
+        // Mendapatkan tanggal hari ini
+        $today = Carbon::today();
+        $todayString = $today->toDateString();
 
         // Menghitung ringkasan
-        $totalPegawai = Pegawai::where('nama', '=', 'Programmer')->where('aktif', 'AKTIF')->count(); // Mengikuti pola User::where('id', '>', 1)
+        // Menggunakan Pegawai::where('nama', '!=', 'Programmer')->where('aktif', 'AKTIF')->count(); sebagai total pegawai sesuai implementasi terakhir
+        $totalPegawai = Pegawai::where('nama', '!=', 'Programmer')->where('aktif', 'AKTIF')->count();
 
-        // Cuti: Hanya menghitung 'CUTI'
+        // Cuti: Hanya menghitung 'CUTI' untuk HARI INI
         $cutiCount = Libur::where('flag', 'CUTI')
-            ->whereMonth('tanggal', $currentMonth)
-            ->whereYear('tanggal', $currentYear)
+            ->whereDate('tanggal', $todayString)
             ->distinct('user_id')
             ->count();
 
-        // Asumsi: Aktif adalah total pegawai dikurangi yang cuti.
-        // Ini mungkin perlu disesuaikan jika ada definisi 'aktif' yang lebih spesifik.
+        // Asumsi: Aktif adalah total pegawai dikurangi yang cuti HARI INI.
         $aktifCount = $totalPegawai - $cutiCount;
 
-        // Mendapatkan data absensi untuk bulan ini
-        $absensiBulanIni = TransaksiAbsen::whereMonth('tanggal', $currentMonth)
-            ->whereYear('tanggal', $currentYear)
+        // Mendapatkan data absensi untuk HARI INI
+        $absensiHariIni = TransaksiAbsen::whereDate('tanggal', $todayString)
             ->with('kategory')
             ->get();
 
         $hadirTepatWaktuCount = 0;
         $terlambatCount = 0;
 
-        foreach ($absensiBulanIni as $absen) {
+        foreach ($absensiHariIni as $absen) {
             if ($absen->masuk !== null && $absen->kategory) {
                 $toIn = explode(':', $absen->kategory->masuk);
                 $act = explode(':', $absen->masuk);
@@ -244,8 +242,8 @@ class TransaksiAbsenController extends Controller
             }
         }
 
-        $alphaCount = Alpha::whereMonth('tanggal', $currentMonth)
-            ->whereYear('tanggal', $currentYear)
+        // Alpha: Menghitung alpha untuk HARI INI
+        $alphaCount = Alpha::whereDate('tanggal', $todayString)
             ->distinct('pegawai_id')
             ->count();
 
@@ -279,7 +277,7 @@ class TransaksiAbsenController extends Controller
                 "trendColor" => "text-orange"
             ],
             [
-                "label" => "Cuti / Libur", // Label ini seharusnya "Cuti" saja, karena kategori lain masuk "Izin/Sakit"
+                "label" => "Cuti / Libur",
                 "value" => (string)$cutiCount,
                 "icon" => "icon-mat-beach_access",
                 "color" => "blue",
@@ -301,7 +299,7 @@ class TransaksiAbsenController extends Controller
         // START: Implementasi weekly_trend secara dinamis dan optimal
         $weeklyData = [];
         $weeklyCategories = [];
-        $today = Carbon::now();
+        // $today didefinisikan di awal metode
 
         $startDateOfWeek = $today->copy()->subDays(6)->startOfDay();
         $endDateOfWeek = $today->copy()->endOfDay();
@@ -372,10 +370,9 @@ class TransaksiAbsenController extends Controller
         // END: Implementasi weekly_trend secara dinamis dan optimal
 
         // Data absence_composition
-        // Menghitung Izin/Sakit dari flag DISPEN, DL, SAKIT, IJIN
+        // Menghitung Izin/Sakit dari flag DISPEN, DL, SAKIT, IJIN untuk HARI INI
         $izinSakitCount = Libur::whereIn('flag', ['DISPEN', 'DL', 'SAKIT', 'IJIN'])
-            ->whereMonth('tanggal', $currentMonth)
-            ->whereYear('tanggal', $currentYear)
+            ->whereDate('tanggal', $todayString)
             ->distinct('user_id')
             ->count();
 
