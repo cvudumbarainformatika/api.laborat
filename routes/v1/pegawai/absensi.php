@@ -13,6 +13,7 @@ Route::group([
     Route::get('/index', [TransaksiAbsenController::class, 'index']);
     // Route::get('/rekap', [TransaksiAbsenController::class, 'rekap']);
     Route::get('/rekap', [TransaksiAbsenController::class, 'rekap2']);
+    Route::get('/report-v2', [TransaksiAbsenController::class, 'reportV2']);
     Route::get('/report', [TransaksiAbsenController::class, 'rekapan_absen_perbulan']);
     Route::get('/print', [TransaksiAbsenController::class, 'print_absen_perbulan']);
     Route::get('/autocomplete', [TransaksiAbsenController::class, 'autocomplete']);

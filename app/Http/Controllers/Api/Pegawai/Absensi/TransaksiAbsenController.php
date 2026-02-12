@@ -393,6 +393,239 @@ class TransaksiAbsenController extends Controller
 
         return new JsonResponse($responseData);
     }
+
+    public function reportV2(Request $request): JsonResponse
+    {
+        // 1. Dapatkan parameter request
+        $periodeParam = $request->input('periode', Carbon::now()->format('Y-m'));
+        $q = $request->input('q');
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 10);
+        $flag = $request->input('flag');
+        $ruang = $request->input('ruang');
+
+        // 2. Validasi periode
+        if (!preg_match('/^\d{4}-\d{2}$/', $periodeParam)) {
+            return new JsonResponse(['message' => 'Format periode tidak valid. Gunakan YYYY-MM.'], 400);
+        }
+
+        // 3. Definisikan tanggal mulai dan akhir periode
+        $startOfMonth = Carbon::createFromFormat('Y-m', $periodeParam)->startOfMonth();
+        $endOfMonth = Carbon::createFromFormat('Y-m', $periodeParam)->endOfMonth();
+
+        // 4. Query Utama Pegawai
+        $pegawaiQuery = Pegawai::select([
+            'id',
+            'nip',
+            'nik',
+            'nama',
+            'kelamin',
+            'foto', // Ini akan menjadi foto_pegawai
+            'alamat', // Perlu digabungkan untuk alamat_detil, kelurahan, kecamatan, kota
+            'flag', // flag pegawai (P01, P02, dll)
+            'kdpegsimrs', // Digunakan untuk relasi user
+            'aktif', // Pastikan hanya pegawai aktif
+            'jenispegawai', // Untuk relasi jenis_pegawai
+            'jabatan', // Untuk relasi relasi_jabatan
+            'ruang' // Untuk relasi ruangan
+        ])
+            ->where('aktif', '=', 'AKTIF')
+            ->when($q, function ($query, $q) {
+                return $query->where('nama', 'like', '%' . $q . '%')
+                    ->orWhere('nip', 'like', '%' . $q . '%');
+            })
+            ->when($flag, function ($query, $flag) {
+                return $query->where('flag', $flag);
+            })
+            ->when($ruang, function ($query, $ruang) {
+                return $query->where('ruang', $ruang);
+            })
+            ->with([
+                'jenis_pegawai' => function ($query) {
+                    $query->select('id', 'keterangan'); // Mengambil ID dan kolom keterangan yang benar
+                },
+                'relasi_jabatan' => function ($query) {
+                    $query->select('kode_jabatan', 'jabatan'); // Ambil hanya kolom yang dibutuhkan
+                },
+                'ruangan' => function ($query) {
+                    $query->select('koderuangan', 'namaruang'); // Ambil hanya kolom yang dibutuhkan
+                },
+                'user' => function ($query) {
+                    $query->select('id', 'pegawai_id', 'email'); // Ambil hanya kolom yang dibutuhkan untuk email dan relasi libur
+                },
+            ]);
+
+        $paginatedPegawai = $pegawaiQuery->paginate($perPage, ['*'], 'page', $page);
+
+        // Ambil semua user_id dari pegawai yang dipaginasi
+        $paginatedUserIds = $paginatedPegawai->pluck('id')->toArray();
+        $paginatedKDSIMRS = $paginatedPegawai->pluck('kdpegsimrs')->toArray();
+
+
+        // 5. Pre-load semua data TransaksiAbsen, Libur, dan Alpha
+        $allAttendances = TransaksiAbsen::whereIn('user_id', $paginatedUserIds)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->with('kategory:id,masuk') // Load kategory dengan kolom yang dibutuhkan
+            ->get()
+            ->groupBy('user_id');
+
+        $allLeaves = Libur::whereIn('user_id', $paginatedUserIds)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->groupBy('user_id');
+
+        // Asumsi model Alpha memiliki kolom user_id, jika menggunakan pegawai_id, sesuaikan
+        $allAlphas = Alpha::whereIn('pegawai_id', $paginatedKDSIMRS) // Menggunakan kdpegsimrs untuk relasi Alpha
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->groupBy('pegawai_id');
+
+
+        // 6. Loop melalui setiap pegawai untuk agregasi summary dan formatting
+        $formattedData = $paginatedPegawai->map(function ($pegawai) use ($allAttendances, $allLeaves, $allAlphas, $startOfMonth, $endOfMonth) {
+            $summary = [
+                "ijin" => 0,
+                "sakit" => 0,
+                "dl" => 0,
+                "dispen" => 0,
+                "cuti" => 0,
+                "alpha" => 0,
+                "terlambat_hari" => "0 hr",
+                "jam_masuk" => "0j 0m",
+                "hari_masuk" => 0,
+                "presentase" => 0.00,
+                "terlambat_menit" => "0m",
+                "tap" => 0,
+                "potongan_persen" => 0
+            ];
+
+            $pegawaiAttendances = $allAttendances->get($pegawai->id, collect());
+            $pegawaiLeaves = $allLeaves->get($pegawai->id, collect());
+            $pegawaiAlphas = $allAlphas->get($pegawai->kdpegsimrs, collect()); // Menggunakan kdpegsimrs
+
+
+            // Agregasi Libur/Alpha
+            $summary['ijin'] = $pegawaiLeaves->where('flag', 'IJIN')->count();
+            $summary['sakit'] = $pegawaiLeaves->where('flag', 'SAKIT')->count();
+            $summary['dl'] = $pegawaiLeaves->where('flag', 'DL')->count();
+            $summary['dispen'] = $pegawaiLeaves->where('flag', 'DISPEN')->count();
+            $summary['cuti'] = $pegawaiLeaves->where('flag', 'CUTI')->count();
+            $summary['alpha'] = $pegawaiAlphas->count();
+
+            // Agregasi Transaksi Absen
+            $totalMinutesLate = 0;
+            $totalWorkingHours = 0;
+            $totalWorkingMinutes = 0;
+            $daysPresent = 0;
+            $daysLate = 0;
+
+            foreach ($pegawaiAttendances as $attendance) {
+                $daysPresent++;
+                if ($attendance->masuk && $attendance->kategory && $attendance->kategory->masuk) {
+                    $scheduledIn = Carbon::parse($attendance->tanggal . ' ' . $attendance->kategory->masuk);
+                    $actualIn = Carbon::parse($attendance->created_at);
+
+                    if ($actualIn->greaterThan($scheduledIn)) {
+                        $lateMinutes = $actualIn->diffInMinutes($scheduledIn);
+                        $totalMinutesLate += $lateMinutes;
+                        $daysLate++;
+                    }
+                }
+
+                // Hitung jam kerja
+                if ($attendance->masuk && $attendance->pulang) {
+                    $checkIn = Carbon::parse($attendance->masuk);
+                    $checkOut = Carbon::parse($attendance->pulang);
+                    $duration = $checkOut->diff($checkIn);
+                    $totalWorkingHours += $duration->h;
+                    $totalWorkingMinutes += $duration->i;
+                }
+            }
+
+            $summary['terlambat_hari'] = $daysLate . " hr";
+            $summary['terlambat_menit'] = $totalMinutesLate . "m";
+
+            // Normalisasi total working minutes ke jam dan menit
+            $totalWorkingHours += floor($totalWorkingMinutes / 60);
+            $totalWorkingMinutes = $totalWorkingMinutes % 60;
+            $summary['jam_masuk'] = $totalWorkingHours . "j " . $totalWorkingMinutes . "m";
+            $summary['hari_masuk'] = $daysPresent;
+
+            // Presentase kehadiran
+            $totalWorkDaysInMonth = $startOfMonth->diffInDays($endOfMonth) + 1; // Total hari dalam bulan
+            // Perlu disesuaikan dengan hari kerja aktual (misal: kurangi weekend, hari libur nasional)
+            // Untuk kesederhanaan, asumsikan semua hari adalah hari kerja atau definisi yang lebih kompleks diperlukan
+            $summary['presentase'] = ($totalWorkDaysInMonth > 0) ? round(($daysPresent / $totalWorkDaysInMonth) * 100) / 100 : 0.00;
+
+            // Menggabungkan data pegawai dengan summary dan flattening
+            $formattedPegawai = [
+                "id" => $pegawai->id,
+                "nip" => $pegawai->nip,
+                "nik" => $pegawai->nik,
+                "nama" => $pegawai->nama,
+                "kelamin" => $pegawai->kelamin,
+                "foto_pegawai" => $pegawai->foto ? url("http://192.168.100.100/simpeg/foto/{$pegawai->nip}/" . $pegawai->foto) : null, // Sesuaikan path foto
+                "alamat_detil" => $pegawai->alamat, // Asumsi 'alamat' di Pegawai adalah alamat_detil
+                "kelurahan" => null, // Tidak ada di model Pegawai, perlu diisi atau diambil dari relasi lain
+                "kecamatan" => null, // Tidak ada di model Pegawai
+                "kota" => null, // Tidak ada di model Pegawai
+                "email" => $pegawai->user->email ?? null, // Ambil dari relasi user
+                "nama_jabatan" => $pegawai->relasi_jabatan->nama_jabatan ?? null,
+                "nama_ruangan" => $pegawai->ruangan->nama_ruangan ?? null,
+                "jenis_pegawai_ket" => $pegawai->jenis_pegawai->keterangan ?? null, // Menggunakan kolom 'keterangan'
+                "flag" => $pegawai->flag,
+                "summary" => $summary,
+                "transaksi_absen" => $pegawaiAttendances->map(function ($attendance) {
+                    return [
+                        "tanggal" => $attendance->tanggal,
+                        "masuk" => $attendance->masuk,
+                        "pulang" => $attendance->pulang,
+                        "created_at" => $attendance->created_at,
+                        "updated_at" => $attendance->updated_at,
+                        "kategory_id" => $attendance->kategory_id
+                    ];
+                })->values()->toArray(),
+                "alpha" => $pegawaiAlphas->map(function ($alpha) {
+                    return [
+                        "tanggal" => $alpha->tanggal,
+                        "keterangan" => $alpha->keterangan // Asumsi ada kolom keterangan di model Alpha
+                    ];
+                })->values()->toArray(),
+                "user" => [
+                    "libur" => $pegawaiLeaves->map(function ($libur) {
+                        return [
+                            "tanggal" => $libur->tanggal,
+                            "flag" => $libur->flag
+                        ];
+                    })->values()->toArray()
+                ]
+            ];
+
+            // Pruning field 'foto' jika tidak ada (null)
+            if (is_null($formattedPegawai['foto_pegawai'])) {
+                unset($formattedPegawai['foto_pegawai']);
+            }
+            // Tambahkan logika pruning untuk field lain yang mungkin null jika diperlukan
+
+            return $formattedPegawai;
+        });
+
+        $paginationMeta = [
+            'total' => $paginatedPegawai->total(),
+            'per_page' => $paginatedPegawai->perPage(),
+            'current_page' => $paginatedPegawai->currentPage(),
+            'last_page' => $paginatedPegawai->lastPage(),
+            'from' => $paginatedPegawai->firstItem(),
+            'to' => $paginatedPegawai->lastItem(),
+        ];
+
+        return new JsonResponse([
+            "status" => "success",
+            "data" => $formattedData,
+            "meta" => $paginationMeta
+        ]);
+    }
+
     public function index()
     {
         $thisYear = request('tahun') ?: date('Y');
@@ -445,7 +678,6 @@ class TransaksiAbsenController extends Controller
             }
 
             $data[$key['id']] = $absen;
-            // array_push($data, [$key['id'] => $temp]);
         }
         // return new JsonResponse($data);
         // $tanggals = [];
