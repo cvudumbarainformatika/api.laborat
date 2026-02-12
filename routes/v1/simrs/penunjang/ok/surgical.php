@@ -10,4 +10,7 @@ Route::group([
 ], function () {
   Route::get('/get-nakes', [SurgicalSafetyController::class, 'getNakes']);
   Route::post('/simpan', [SurgicalSafetyController::class, 'store']);
+  // implant
+  Route::get('/get-implant', [SurgicalSafetyController::class, 'getImplat']);
+  Route::post('/simpan-implant', [SurgicalSafetyController::class, 'simpanImplat']);
 });

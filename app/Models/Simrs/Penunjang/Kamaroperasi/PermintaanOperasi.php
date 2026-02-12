@@ -73,4 +73,12 @@ class PermintaanOperasi extends Model
     {
         return $this->hasOne(LaporanOperasi::class, 'rs2', 'rs2');
     }
+    public function implant()
+    {
+        return $this->hasMany(Implant::class, 'nota', 'rs2');
+    }
+    public function implant_seri()
+    {
+        return $this->hasMany(ImplantSeri::class, 'nota', 'rs2');
+    }
 }
