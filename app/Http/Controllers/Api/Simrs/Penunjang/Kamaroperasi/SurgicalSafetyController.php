@@ -9,9 +9,11 @@ use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi
 use App\Models\Simrs\Penunjang\Kamaroperasi\Implant;
 use App\Models\Simrs\Penunjang\Kamaroperasi\ImplantSeri;
 use App\Models\Simrs\Penunjang\Kamaroperasi\SurgicalSafety;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SurgicalSafetyController extends Controller
 {
@@ -123,6 +125,93 @@ class SurgicalSafetyController extends Controller
             return new JsonResponse([
                 'message' => 'Data berhasil disimpan',
                 'data' => $data
+                // 'data' => $request->all()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Data gagal disimpan ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 410);
+        }
+    }
+    public function simpanGambar(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            if (!$request->hasFile('file')) throw new Exception('Tidak Ada File yang perlu di simpan');
+            $file = $request->file('file');
+            if (!$file) throw new Exception('File kosong');
+            $user = FormatingHelper::session_user();
+            // hapus data lama
+            $old = ImplantSeri::where('noreg', $request->noreg)
+                ->where('nota', $request->nota)
+                ->first();
+
+            if ($old && $old->path && Storage::disk('remote')->exists($old->path)) {
+                Storage::disk('remote')->delete($old->path);
+            }
+
+
+            $originalname = $file->getClientOriginalName();
+            $nota = preg_replace('/[^A-Za-z0-9\-_.]/', '-', $request->nota);
+            $ext = $file->getClientOriginalExtension();
+            $penamaan = date('YmdHis') . '-xenter-' . $nota . '.' . $ext;
+            $path = $file->storeAs('public/dokumen-implant-ok', $penamaan, 'remote');
+            // $path = $file->storeAs('public/dokumen-implant-ok', $penamaan);
+
+            $gallery = ImplantSeri::updateOrCreate(
+                [
+                    'noreg' => $request->noreg,
+                    'nota' => $request->nota,
+
+                ],
+                [
+                    'path' => $path,
+                    'url' => 'dokumen-implant-ok/' . $penamaan,
+                    'original' => $originalname,
+
+                ]
+            );
+
+
+            $gallery->update([
+                $gallery->wasRecentlyCreated ? 'created_by' : 'updated_by'
+                => $user['kodesimrs']
+            ]);
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'Data berhasil disimpan',
+                'data' => $gallery ?? null
+                // 'data' => $request->all()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Data gagal disimpan ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 410);
+        }
+    }
+
+    public function hapusGambar(Request $request)
+    {
+
+        try {
+            DB::beginTransaction();
+            $data = ImplantSeri::find($request->id);
+            if (!$data) throw new Exception('Data tidak ditemukan');
+            if ($data && $data->path && Storage::disk('remote')->exists($data->path)) {
+                Storage::disk('remote')->delete($data->path);
+            }
+            $data->delete();
+
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'Data berhasil dihapus',
+                'data' => $data ?? null
                 // 'data' => $request->all()
             ]);
         } catch (\Throwable $e) {

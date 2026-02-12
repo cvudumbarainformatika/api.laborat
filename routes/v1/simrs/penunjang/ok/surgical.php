@@ -13,4 +13,6 @@ Route::group([
   // implant
   Route::get('/get-implant', [SurgicalSafetyController::class, 'getImplat']);
   Route::post('/simpan-implant', [SurgicalSafetyController::class, 'simpanImplat']);
+  Route::post('/simpan-gambar', [SurgicalSafetyController::class, 'simpanGambar']);
+  Route::post('/hapus-gambar', [SurgicalSafetyController::class, 'hapusGambar']);
 });
