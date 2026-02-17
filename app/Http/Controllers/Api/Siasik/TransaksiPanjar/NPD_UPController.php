@@ -109,6 +109,7 @@ class NPD_UPController extends Controller
     public function kunci(Request $request)
     {
         try {
+            $time = date('Y-m-d H:i:s');
             $data = NPD_UP::where('nosppup', $request->nosppup)->first();
             if (!$data) {
                 return new JsonResponse(['status' => 'error', 'message' => 'Data Tidak Ditemukan'], 404);
@@ -127,6 +128,7 @@ class NPD_UPController extends Controller
                 return new JsonResponse(['message' => 'Kunci Berhasil Dibuka'],200);
             } else {
                 $data->kunci = '1';
+                $data->tgl_kunci = $time;
                 $data->save();
                 return new JsonResponse(['message' => 'Data Berhasil Dikunci'],200);
             }
@@ -152,6 +154,49 @@ class NPD_UPController extends Controller
             return new JsonResponse(['status' => 'success', 'message' => 'Data Berhasil Dihapus']);
         } catch (\Exception $e) {
             return new JsonResponse(['status' => 'error', 'message' => 'Data Gagal Dihapus: ' . $e->getMessage()], 500);
+        }   
+    }
+
+
+    public function belumVerif(){
+        $data = NPD_UP::where('verif', '')->where('kunci', '1')->get();
+        return new JsonResponse($data);
+    }
+    
+     public function sudahVerif(){
+        $data = NPD_UP::where('verif', '1')->where('kunci', '1')->get();
+        return new JsonResponse($data);
+    }
+    public function verif(Request $request)
+    {
+        try {
+            $time = date('Y-m-d H:i:s');
+            $data = NPD_UP::where('nosppup', $request->nosppup)->first();
+            if (!$data) {
+                return new JsonResponse(['status' => 'error', 'message' => 'Data Tidak Ditemukan'], 404);
+            }
+            $user = auth()->user()->pegawai_id;
+            $pg = Pegawai::find($user);
+                if (!$pg || $pg->kdpegsimrs !== 'sa') {
+                    return response()->json(['message' => 'Anda tidak Memiliki Izin Memverifikasi Data ini, Silahkan Hubungi Admin'], 403);
+                }
+            if ($data->verif == '1') {
+                return response()->json([
+                    'message' => 'Data sudah Diverifikasi'
+                ], 400);
+            }
+        
+            $data->verif = '1';
+            $data->tgl_verif = $time;
+            $data->userverif = $pg->kdpegsimrs;
+            $data->kodeuserverif = $pg->kdpegsimrs;
+            $data->save();
+
+            return response()->json([
+                'message' => 'Data Berhasil Diverifikasi'
+            ], 200);
+        } catch (\Exception $e) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Data Gagal Diverifikasi: ' . $e->getMessage()], 500);
         }   
     }
 }
