@@ -81,4 +81,8 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(ImplantSeri::class, 'nota', 'rs2');
     }
+    public function inventaris_kasa()
+    {
+        return $this->hasMany(InventarisKasa::class, 'nota', 'rs2');
+    }
 }

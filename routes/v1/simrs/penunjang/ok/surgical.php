@@ -15,4 +15,7 @@ Route::group([
   Route::post('/simpan-implant', [SurgicalSafetyController::class, 'simpanImplat']);
   Route::post('/simpan-gambar', [SurgicalSafetyController::class, 'simpanGambar']);
   Route::post('/hapus-gambar', [SurgicalSafetyController::class, 'hapusGambar']);
+  // kasa cssd
+  Route::get('/get-master-kasa', [SurgicalSafetyController::class, 'masterCssd']);
+  Route::post('/simpan-inventaris-kasa', [SurgicalSafetyController::class, 'simpanInventarisKasa']);
 });
