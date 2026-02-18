@@ -17,5 +17,9 @@ Route::group([
     Route::get('/belumverif', [NPD_UPController::class, 'belumVerif']);
     Route::get('/sudahverif', [NPD_UPController::class, 'sudahVerif']);
     Route::post('/verif', [NPD_UPController::class, 'verif']);
+    Route::get('/databelumcreate', [NPD_UPController::class, 'databelumcreate']);
+    Route::get('/datasudahcreate', [NPD_UPController::class, 'datasudahcreate']);
+    Route::post('/createnpk', [NPD_UPController::class, 'createnpk']);
+
 
 });
