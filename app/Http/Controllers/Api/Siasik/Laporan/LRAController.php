@@ -49,8 +49,10 @@ class LRAController extends Controller
         $thn=Carbon::createFromFormat('Y-m-d', request('tgl'))->format('Y');
         // $awal=request('tgl', 'Y'.'-'.'01-01');
         $awal = $thn.'-01-01';
+        // $awal = request('tgl', 'Y-m-d');
         $akhir=request('tglx', 'Y-m-d');
-        $sebelum = Carbon::createFromFormat('Y-m-d', $awal)->subDay();
+        $awalx=request('tgl', 'Y-m-d');
+        $sebelum = Carbon::createFromFormat('Y-m-d', $awalx)->subDay();
         $thnakhir =Carbon::createFromFormat('Y-m-d', request('tglx'))->format('Y');
         if($thn !== $thnakhir){
          return response()->json(['message' => 'Tahun Tidak Sama'], 500);
@@ -226,7 +228,7 @@ class LRAController extends Controller
             DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 4) as kode4'),
             DB::raw('SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5) as kode5'),
             DB::raw('sum(jurnal_postingotom.kredit-jurnal_postingotom.debit) as subtotal'))
-        ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
+        ->whereBetween('jurnal_postingotom.tanggal', [$awalx, $akhir])
         ->where('jurnal_postingotom.kode', 'LIKE', '4.' . '%')
         ->where('jurnal_postingotom.verif', '=', '1')
         ->groupBy( 'kode6')
@@ -250,7 +252,7 @@ class LRAController extends Controller
         ->orderBy('kode6', 'asc')
         ->get();
         $datareklas = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
-        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->whereBetween('jurnalumum_heder.tanggal', [$awalx, $akhir])
         ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
         ->select('jurnalumum_heder.tanggal',
                 'jurnalumum_heder.nobukti',
