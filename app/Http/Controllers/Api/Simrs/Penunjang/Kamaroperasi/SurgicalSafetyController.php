@@ -230,6 +230,7 @@ class SurgicalSafetyController extends Controller
         $data = BarangCssd::all();
         return new JsonResponse(['data' => $data]);
     }
+
     public function simpanInventarisKasa(Request $request)
     {
 
@@ -282,6 +283,32 @@ class SurgicalSafetyController extends Controller
             DB::rollBack();
             return new JsonResponse([
                 'message' => 'Data gagal disimpan ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 410);
+        }
+    }
+
+    public function hapusInventarisKasa(Request $request)
+    {
+        $request->validate([
+            'id' => 'required'
+        ]);
+        try {
+            DB::beginTransaction();
+            $data = InventarisKasa::find($request->id);
+            if (!$data) throw new Exception('Data Tidak ditemukan');
+            $data->delete();
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'Data berhasil dihapus',
+                'data' => $data ?? null
+                // 'data' => $request->all()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Data gagal dihapus ' . $e->getMessage(),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
             ], 410);
