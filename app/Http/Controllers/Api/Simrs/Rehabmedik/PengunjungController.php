@@ -38,91 +38,72 @@ class PengunjungController extends Controller
         $sort = request('sort') === 'terbaru' ? 'DESC' : 'ASC';
         $status = request('status') ?? 'Semua';
 
-        $query = Fisioterapipermintaan::query();
-
-        $select = $query->select(
-            'rs201.rs1 as noreg',
-            DB::raw('(CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END) as norm'),
-            'rs201.rs3 as tgl_kunjungan',
-
-            DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as kdruangan'),
-            DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as koderuangan'),
-            DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as kodepoli'),
-            DB::raw('coalesce(rs24.rs4, rs17.rs8, rs23.rs8) as kdgroup_ruangan'),
-
-            DB::raw('coalesce(rs17.rs14, rs23.rs19, rs201.rs14) as kodesistembayar'),
-
-            DB::raw('CASE 
-                        WHEN rs201.rs9 = "2" THEN "1"
-                        WHEN rs17.rs19 = "1" THEN "1"
-                        ELSE "" 
-                    END as status'),
-
-            DB::raw('coalesce(
-            concat(p17.rs3," ",p17.gelardepan," ",p17.rs2," ",p17.gelarbelakang),
-            concat(p23.rs3," ",p23.gelardepan," ",p23.rs2," ",p23.gelarbelakang)
-            ) as nama'),
-
-            DB::raw('coalesce(
-            concat(p17.rs4," KEL ",p17.rs5," RT ",p17.rs7," RW ",p17.rs8," ",p17.rs6," ",p17.rs11," ",p17.rs10),
-            concat(p23.rs4," KEL ",p23.rs5," RT ",p23.rs7," RW ",p23.rs8," ",p23.rs6," ",p23.rs11," ",p23.rs10)
-            ) as alamat'),
-
-            DB::raw('coalesce(
-            concat(
-                TIMESTAMPDIFF(YEAR, p17.rs16, CURDATE())," Tahun ",
-                TIMESTAMPDIFF(MONTH, p17.rs16, CURDATE()) % 12," Bulan ",
-                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, p17.rs16, CURDATE()), p17.rs16), CURDATE()), " Hari"
-            ),
-            concat(
-                TIMESTAMPDIFF(YEAR, p23.rs16, CURDATE())," Tahun ",
-                TIMESTAMPDIFF(MONTH, p23.rs16, CURDATE()) % 12," Bulan ",
-                TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, p23.rs16, CURDATE()), p23.rs16), CURDATE()), " Hari"
+        // Query 1: Semua permintaan fisio yang punya nota
+        $qFisio = Fisioterapipermintaan::query()
+            ->select(
+                'rs201.rs1 as noreg',
+                DB::raw('(CASE WHEN rs17.rs2 IS NOT NULL THEN rs17.rs2 ELSE rs23.rs2 END) as norm'),
+                'rs201.rs3 as tgl_kunjungan',
+                DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as kdruangan'),
+                DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as koderuangan'),
+                DB::raw('coalesce(rs201.rs10, rs17.rs8, rs23.rs8) as kodepoli'),
+                DB::raw('coalesce(rs24.rs4, rs17.rs8, rs23.rs8) as kdgroup_ruangan'),
+                DB::raw('coalesce(rs17.rs14, rs23.rs19, rs201.rs14) as kodesistembayar'),
+                DB::raw('CASE WHEN rs201.rs9 = "2" THEN "1" ELSE "" END as status'),
+                DB::raw('coalesce(
+                concat(p17.rs3," ",p17.gelardepan," ",p17.rs2," ",p17.gelarbelakang),
+                concat(p23.rs3," ",p23.gelardepan," ",p23.rs2," ",p23.gelarbelakang)
+                ) as nama'),
+                DB::raw('coalesce(
+                concat(p17.rs4," KEL ",p17.rs5," RT ",p17.rs7," RW ",p17.rs8," ",p17.rs6," ",p17.rs11," ",p17.rs10),
+                concat(p23.rs4," KEL ",p23.rs5," RT ",p23.rs7," RW ",p23.rs8," ",p23.rs6," ",p23.rs11," ",p23.rs10)
+                ) as alamat'),
+                DB::raw('coalesce(
+                concat(
+                    TIMESTAMPDIFF(YEAR, p17.rs16, CURDATE())," Tahun ",
+                    TIMESTAMPDIFF(MONTH, p17.rs16, CURDATE()) % 12," Bulan ",
+                    TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, p17.rs16, CURDATE()), p17.rs16), CURDATE()), " Hari"
+                ),
+                concat(
+                    TIMESTAMPDIFF(YEAR, p23.rs16, CURDATE())," Tahun ",
+                    TIMESTAMPDIFF(MONTH, p23.rs16, CURDATE()) % 12," Bulan ",
+                    TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, p23.rs16, CURDATE()), p23.rs16), CURDATE()), " Hari"
+                )
+                ) AS usia'),
+                DB::raw('coalesce(p17.rs2, p23.rs2) as nama_panggil'),
+                DB::raw('coalesce(p17.rs16, p23.rs16) as tgllahir'),
+                DB::raw('coalesce(p17.rs17, p23.rs17) as kelamin'),
+                DB::raw('coalesce(p17.rs19, p23.rs19) as pendidikan'),
+                DB::raw('coalesce(p17.rs22, p23.rs22) as agama'),
+                DB::raw('coalesce(p17.rs37, p23.rs37) as templahir'),
+                DB::raw('coalesce(p17.rs39, p23.rs39) as suku'),
+                DB::raw('coalesce(p17.rs40, p23.rs40) as jenispasien'),
+                DB::raw('coalesce(p17.rs46, p23.rs46) as noka'),
+                DB::raw('coalesce(p17.rs49, p23.rs49) as noktp'),
+                DB::raw('coalesce(p17.rs55, p23.rs55) as nohp'),
+                DB::raw('(CASE WHEN rs201.rs2 = "" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
+                DB::raw('CASE
+                            WHEN rs19.rs1 IS NOT NULL THEN "rjl"
+                            WHEN rs24.rs1 IS NOT NULL THEN "rnp"
+                            ELSE "rjl"
+                        END as flagdepo'),
+                DB::raw('coalesce(rs19.rs2, rs24.rs2) as ruangan'),
+                'rs9.rs2 as sistembayar',
+                'rs9.groups as groups',
+                'rs201.rs16 as kodedokter',
+                'pegawai.nama as dokter'
             )
-            ) AS usia'),
-
-            DB::raw('coalesce(p17.rs2, p23.rs2) as nama_panggil'),
-            DB::raw('coalesce(p17.rs16, p23.rs16) as tgllahir'),
-            DB::raw('coalesce(p17.rs17, p23.rs17) as kelamin'),
-            DB::raw('coalesce(p17.rs19, p23.rs19) as pendidikan'),
-            DB::raw('coalesce(p17.rs22, p23.rs22) as agama'),
-            DB::raw('coalesce(p17.rs37, p23.rs37) as templahir'),
-            DB::raw('coalesce(p17.rs39, p23.rs39) as suku'),
-            DB::raw('coalesce(p17.rs40, p23.rs40) as jenispasien'),
-            DB::raw('coalesce(p17.rs46, p23.rs46) as noka'),
-            DB::raw('coalesce(p17.rs49, p23.rs49) as noktp'),
-            DB::raw('coalesce(p17.rs55, p23.rs55) as nohp'),
-
-            DB::raw('(CASE WHEN rs201.rs2 = "" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
-
-            DB::raw('CASE 
-                        WHEN rs19.rs1 IS NOT NULL THEN "rjl" 
-                        WHEN rs24.rs1 IS NOT NULL THEN "rnp" 
-                        ELSE "rjl" 
-                    END as flagdepo'),
-
-            DB::raw('coalesce(rs19.rs2, rs24.rs2) as ruangan'),
-            'rs9.rs2 as sistembayar',
-            'rs9.groups as groups'
-        )
-            ->leftJoin('rs17', 'rs201.rs1', '=', 'rs17.rs1')   // kunjungan poli
-            ->leftJoin('rs23', 'rs201.rs1', '=', 'rs23.rs1')   // ranap
-            ->leftJoin('rs24', 'rs24.rs1', '=', 'rs201.rs10')  // ruangan ranap
+            ->leftJoin('rs17', 'rs201.rs1', '=', 'rs17.rs1')
+            ->leftJoin('rs23', 'rs201.rs1', '=', 'rs23.rs1')
+            ->leftJoin('rs24', 'rs24.rs1', '=', 'rs201.rs10')
             ->leftJoin('rs15 as p17', 'p17.rs1', '=', 'rs17.rs2')
             ->leftJoin('rs15 as p23', 'p23.rs1', '=', 'rs23.rs2')
             ->leftJoin('rs19', 'rs19.rs1', '=', 'rs201.rs10')
-            ->leftJoin('rs9', 'rs9.rs1', '=', 'rs201.rs14');
-
-        $q = $select
+            ->leftJoin('rs9', 'rs9.rs1', '=', 'rs201.rs14')
+            ->leftJoin('kepegx.pegawai as pegawai', 'rs201.rs16', '=', 'pegawai.kdpegsimrs')
             ->whereBetween('rs201.rs3', [$tgl, $tglx])
-            // ->where(function ($w) {
-            //     $w->where('rs201.rs2', '!=', '')
-            //     ->whereNotNull('rs201.rs2');
-            // })
-            // ->where(function ($w) {
-            //     $w->whereRaw('COALESCE(rs201.rs2, rs17.rs2, rs23.rs2) != ""')
-            //     ->whereRaw('COALESCE(rs201.rs2, rs17.rs2, rs23.rs2) IS NOT NULL');
-            // })
+            ->where('rs201.rs2', '!=', '')
+            ->whereNotNull('rs201.rs2')
             ->where(function ($sts) use ($status) {
                 if ($status !== 'Semua') {
                     if ($status === 'Terlayani') {
@@ -131,10 +112,7 @@ class PengunjungController extends Controller
                                 ->orWhere('rs17.rs19', '=', '1');
                         });
                     } else {
-                        $sts->where(function ($s) {
-                            $s->where('rs201.rs9', '!=', '2')
-                                ->where('rs17.rs19', '!=', '1');
-                        });
+                        $sts->where('rs201.rs9', '=', '1');
                     }
                 }
             })
@@ -145,11 +123,76 @@ class PengunjungController extends Controller
                     ->orWhere('p17.rs2', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('p23.rs46', 'LIKE', '%' . request('q') . '%')
                     ->orWhere('p23.rs2', 'LIKE', '%' . request('q') . '%');
-            })
-            ->groupBy('rs201.rs1')
-            ->orderBy('rs201.rs3', $sort);
+            });
 
-        return $q;
+        // Query 2: Kunjungan poli PEN004 yang BELUM punya permintaan fisio
+        $qPoli = KunjunganPoli::query()
+            ->select(
+                'rs17.rs1 as noreg',
+                'rs17.rs2 as norm',
+                'rs17.rs3 as tgl_kunjungan',
+                'rs17.rs8 as kdruangan',
+                'rs17.rs8 as koderuangan',
+                'rs17.rs8 as kodepoli',
+                'rs17.rs8 as kdgroup_ruangan',
+                'rs17.rs14 as kodesistembayar',
+                'rs17.rs19 as status',
+                DB::raw('concat(rs15.rs3," ",rs15.gelardepan," ",rs15.rs2," ",rs15.gelarbelakang) as nama'),
+                DB::raw('concat(rs15.rs4," KEL ",rs15.rs5," RT ",rs15.rs7," RW ",rs15.rs8," ",rs15.rs6," ",rs15.rs11," ",rs15.rs10) as alamat'),
+                DB::raw('concat(TIMESTAMPDIFF(YEAR, rs15.rs16, CURDATE())," Tahun ",
+                    TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()) % 12," Bulan ",
+                    TIMESTAMPDIFF(DAY, TIMESTAMPADD(MONTH, TIMESTAMPDIFF(MONTH, rs15.rs16, CURDATE()), rs15.rs16), CURDATE()), " Hari") AS usia'),
+                'rs15.rs2 as nama_panggil',
+                'rs15.rs16 as tgllahir',
+                'rs15.rs17 as kelamin',
+                'rs15.rs19 as pendidikan',
+                'rs15.rs22 as agama',
+                'rs15.rs37 as templahir',
+                'rs15.rs39 as suku',
+                'rs15.rs40 as jenispasien',
+                'rs15.rs46 as noka',
+                'rs15.rs49 as noktp',
+                'rs15.rs55 as nohp',
+                DB::raw('NULL as nota_permintaan'),
+                DB::raw('"rjl" as flagdepo'),
+                'rs19.rs2 as ruangan',
+                'rs9.rs2 as sistembayar',
+                'rs9.groups as groups',
+                'rs17.rs9 as kodedokter',
+                'pegawai.nama as dokter'
+            )
+            ->leftJoin('rs201', 'rs17.rs1', '=', 'rs201.rs1')
+            ->leftJoin('rs15', 'rs15.rs1', '=', 'rs17.rs2')
+            ->leftJoin('rs19', 'rs19.rs1', '=', 'rs17.rs8')
+            ->leftJoin('rs9', 'rs9.rs1', '=', 'rs17.rs14')
+            ->leftJoin('kepegx.pegawai as pegawai', 'rs17.rs9', '=', 'pegawai.kdpegsimrs')
+            ->whereBetween('rs17.rs3', [$tgl, $tglx])
+            ->where('rs17.rs8', '=', 'PEN004')
+            ->where(function ($w) {
+                $w->whereNull('rs201.rs1')
+                    ->orWhere('rs201.rs2', '=', '')
+                    ->orWhereNull('rs201.rs2');
+            })
+            ->where(function ($sts) use ($status) {
+                if ($status !== 'Semua') {
+                    if ($status === 'Terlayani') {
+                        $sts->where('rs17.rs19', '=', '1');
+                    } else {
+                        $sts->where('rs17.rs19', '!=', '1');
+                    }
+                }
+            })
+            ->where(function ($query) {
+                $query->where('rs17.rs1', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs15.rs46', 'LIKE', '%' . request('q') . '%')
+                    ->orWhere('rs15.rs2', 'LIKE', '%' . request('q') . '%');
+            });
+
+        // UNION kedua query
+        $result = $qFisio->unionAll($qPoli)
+            ->orderBy('tgl_kunjungan', $sort);
+
+        return $result;
     }
 
 
@@ -206,14 +249,15 @@ class PengunjungController extends Controller
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
 
-            'rs17.rs9 as kodedokter',
-            'pegawai.nama as dokter'
+            DB::raw('coalesce(permintaan.rs16, rs17.rs9) as kodedokter'),
+            DB::raw('coalesce(pegawai_fisio.nama, pegawai.nama) as dokter')
         )
             ->leftjoin('rs201 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
-            ->leftJoin('kepegx.pegawai as pegawai', 'rs17.rs9', '=', 'pegawai.kdpegsimrs');
+            ->leftJoin('kepegx.pegawai as pegawai', 'rs17.rs9', '=', 'pegawai.kdpegsimrs')
+            ->leftJoin('kepegx.pegawai as pegawai_fisio', 'permintaan.rs16', '=', 'pegawai_fisio.kdpegsimrs');
 
         $q = $select
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
@@ -262,7 +306,7 @@ class PengunjungController extends Controller
 
             DB::raw(
                 'coalesce(
-          concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang), 
+          concat(pasien17.rs3," ",pasien17.gelardepan," ",pasien17.rs2," ",pasien17.gelarbelakang),
           concat(pasien23.rs3," ",pasien23.gelardepan," ",pasien23.rs2," ",pasien23.gelarbelakang)
         ) as nama'
             ),
@@ -297,19 +341,15 @@ class PengunjungController extends Controller
             DB::raw('coalesce(rs19.rs2, rs24.rs2) as ruangan'),
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
-            DB::raw('coalesce(pasien17.rs9, pasien23.rs10) as kodedokter'),
-            DB::raw('coalesce(dokter17.nama, dokter23.nama) as dokter'),
-            // 'rs201.rs16 as kodedokter',
-            // 'pegawai.nama as dokter',
+            'rs201.rs16 as kodedokter',
+            'pegawai.nama as dokter',
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs201.rs10') //ruangan ranap
             ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
-            ->leftJoin('kepegx.pegawai as dokter17', 'pasien17.rs9', '=', 'dokter17.kdpegsimrs')
-            ->leftJoin('kepegx.pegawai as dokter23', 'pasien23.rs10', '=', 'dokter23.kdpegsimrs')
-            // ->leftJoin('kepegx.pegawai as pegawai', 'rs201.rs16', '=', 'pegawai.kdpegsimrs')
+            ->leftJoin('kepegx.pegawai as pegawai', 'rs201.rs16', '=', 'pegawai.kdpegsimrs')
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs10') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
         ;
@@ -431,6 +471,10 @@ class PengunjungController extends Controller
                     $t->select('fisio_soap.*')->with([
                         'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
                     ]);
+                },
+                'tindakan' => function ($t) {
+                    $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
+                        ->orderBy('id', 'DESC');
                 },
             ])
             ->where('rs201.rs1', request('noreg'))

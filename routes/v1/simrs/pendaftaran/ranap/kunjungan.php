@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap\HistoryKunjunganController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap\PendaftaranRanapController;
 use App\Http\Controllers\Api\Simrs\Pendaftaran\Ranap\RegistrasiRanapController;
+use App\Http\Controllers\Api\v4\TtController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -21,4 +22,7 @@ Route::group([
     Route::post('simpanpendaftaran-byspri', [RegistrasiRanapController::class, 'registrasiranapSpri']);
 
     Route::get('history-general-consent', [HistoryKunjunganController::class, 'kunjunganRanap']);
+
+
+    Route::get('/cek-tt', [TtController::class, 'index']);
 });

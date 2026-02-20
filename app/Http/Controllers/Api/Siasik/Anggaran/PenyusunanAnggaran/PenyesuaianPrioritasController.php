@@ -422,11 +422,15 @@ class PenyesuaianPrioritasController extends Controller
 
         // Optional: hapus dulu jika notrans sudah ada
          $db->transaction(function () use ($db, $nousulan, $insert) {
-            $db->table('t_tampung')
-                ->where('notrans', $nousulan)
-                ->delete();
+            foreach (['t_tampung', 't_tampung_copy'] as $table) {
+                $db->table($table)
+                    ->where('notrans', $nousulan)
+                    ->delete();
 
-            $db->table('t_tampung')->insert($insert);
+                if (!empty($insert)) {
+                    $db->table($table)->insert($insert);
+                }
+            }
         });
         return response()->json([
             'message' => 'Berhasil Penetapan Anggaran',

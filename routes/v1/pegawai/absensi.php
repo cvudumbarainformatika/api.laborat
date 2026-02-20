@@ -11,7 +11,9 @@ Route::group([
     'prefix' => 'pegawai/absensi'
 ], function () {
     Route::get('/index', [TransaksiAbsenController::class, 'index']);
-    Route::get('/rekap', [TransaksiAbsenController::class, 'rekap']);
+    // Route::get('/rekap', [TransaksiAbsenController::class, 'rekap']);
+    Route::get('/rekap', [TransaksiAbsenController::class, 'rekap2']);
+    Route::get('/report-v2', [TransaksiAbsenController::class, 'reportV2']);
     Route::get('/report', [TransaksiAbsenController::class, 'rekapan_absen_perbulan']);
     Route::get('/print', [TransaksiAbsenController::class, 'print_absen_perbulan']);
     Route::get('/autocomplete', [TransaksiAbsenController::class, 'autocomplete']);
@@ -19,4 +21,7 @@ Route::group([
 
     // Hapus Jadwal
     Route::post('/hapus-jadwal', [JadwalController::class, 'destroy']);
+
+    // dashboard
+    Route::get('/dashboard-admin', [TransaksiAbsenController::class, 'dashboard']);
 });
