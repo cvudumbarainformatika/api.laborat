@@ -19,4 +19,7 @@ Route::group([
   Route::get('/get-master-kasa', [SurgicalSafetyController::class, 'masterCssd']);
   Route::post('/simpan-inventaris-kasa', [SurgicalSafetyController::class, 'simpanInventarisKasa']);
   Route::post('/hapus-inventaris-kasa', [SurgicalSafetyController::class, 'hapusInventarisKasa']);
+  // Instrumen
+  Route::post('/simpan-inventaris-Instrumen', [SurgicalSafetyController::class, 'simpanInventarisInstrumen']);
+  Route::post('/hapus-inventaris-Instrumen', [SurgicalSafetyController::class, 'hapusInventarisInstrumen']);
 });

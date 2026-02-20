@@ -9,6 +9,7 @@ use App\Models\Simrs\Penunjang\Cssd\BarangCssd;
 use App\Models\Simrs\Penunjang\Farmasinew\Obatoperasi\PersiapanOperasiDistribusi;
 use App\Models\Simrs\Penunjang\Kamaroperasi\Implant;
 use App\Models\Simrs\Penunjang\Kamaroperasi\ImplantSeri;
+use App\Models\Simrs\Penunjang\Kamaroperasi\InventarisInstrumen;
 use App\Models\Simrs\Penunjang\Kamaroperasi\InventarisKasa;
 use App\Models\Simrs\Penunjang\Kamaroperasi\SurgicalSafety;
 use Exception;
@@ -297,6 +298,89 @@ class SurgicalSafetyController extends Controller
         try {
             DB::beginTransaction();
             $data = InventarisKasa::find($request->id);
+            if (!$data) throw new Exception('Data Tidak ditemukan');
+            $data->delete();
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'Data berhasil dihapus',
+                'data' => $data ?? null
+                // 'data' => $request->all()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Data gagal dihapus ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 410);
+        }
+    }
+    public function simpanInventarisInstrumen(Request $request)
+    {
+
+        // return new JsonResponse($request->all());
+        $request->validate(
+            [
+                'noreg' => 'required',
+                'nota' => 'required',
+                'kode' => 'required|string',
+                'awal'  => 'required|numeric|gt:0',
+                'pakai' => 'required|numeric|gt:0',
+            ],
+            [
+                'awal.gt' => 'persediaan awal harus bernilai lebih besar dari 0',
+                'pakai.gt' => 'pemakaian harus bernilai lebih besar dari 0',
+                'kode.required' => 'Barang Cssd harus di isi',
+            ]
+        );
+        try {
+            DB::beginTransaction();
+
+            $user = FormatingHelper::session_user();
+            $data = InventarisInstrumen::updateOrCreate(
+                [
+                    'noreg' => $request->noreg,
+                    'norm' => $request->norm,
+                    'nota' => $request->nota,
+                    'kode' => $request->kode,
+                ],
+                [
+                    'nama' => $request->nama,
+                    'awal' => $request->awal,
+                    'pakai' => $request->pakai,
+                    'sisa' => $request->sisa,
+                    'tambah' => $request->tambah,
+                    'akhir' => $request->akhir,
+                ]
+            );
+            $data->update([
+                $data->wasRecentlyCreated ? 'created_by' : 'updated_by'
+                => $user['kodesimrs']
+            ]);
+            DB::commit();
+            return new JsonResponse([
+                'message' => 'Data berhasil disimpan',
+                'data' => $data ?? null
+                // 'data' => $request->all()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'message' => 'Data gagal disimpan ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 410);
+        }
+    }
+
+    public function hapusInventarisInstrumen(Request $request)
+    {
+        $request->validate([
+            'id' => 'required'
+        ]);
+        try {
+            DB::beginTransaction();
+            $data = InventarisInstrumen::find($request->id);
             if (!$data) throw new Exception('Data Tidak ditemukan');
             $data->delete();
             DB::commit();
