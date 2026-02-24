@@ -185,33 +185,33 @@ class SuratKeteranganDokterController extends Controller
     {
         try{
             DB::beginTransaction();
-                $cek = DB::table('kwitansi_d')
-                ->leftjoin('kwitansilog', 'kwitansilog.nokwitansi', 'kwitansi_d.no_kwitansi')
-                ->where('id_trans', $request->tindakan_id)
-                 ->where(function($query) {
-                    $query->where('kwitansilog.batal', '')
-                        ->orWhereNull('kwitansilog.batal');
-                })
-                ->count();
+                    $cek = DB::table('kwitansi_d')
+                    ->leftjoin('kwitansilog', 'kwitansilog.nokwitansi', 'kwitansi_d.no_kwitansi')
+                    ->where('id_trans', $request->tindakan_id)
+                    ->where(function($query) {
+                        $query->where('kwitansilog.batal', '')
+                            ->orWhereNull('kwitansilog.batal');
+                    })
+                    ->count();
 
-                if($cek > 0){
-                    return new JsonResponse(['message' => 'Pasien Sudah Dibayar Ke Kasir'], 500);
-                }
+                    if($cek > 0){
+                        return new JsonResponse(['message' => 'Pasien Sudah Dibayar Ke Kasir'], 500);
+                    }
 
-                $data = SuratKeteranganDokter::where('tindakan_id', $request->tindakan_id)
-                ->where('kdsurat', 'SRT01')
-                ->first();
+                    $data = SuratKeteranganDokter::where('tindakan_id', $request->tindakan_id)
+                    ->where('kdsurat', $request->kdsurat)
+                    ->first();
 
-                $delete = Tindakan::where('id', $request->tindakan_id)->delete();
+                    $delete = Tindakan::where('id', $request->tindakan_id)->delete();
 
-                $wew = FormatingHelper::session_user();
-                $kdpegsimrs = $wew['kodesimrs'];
+                    $wew = FormatingHelper::session_user();
+                    $kdpegsimrs = $wew['kodesimrs'];
 
-                $update = $data->update([
-                    'batal' => '1',
-                    'userBatal' => $kdpegsimrs,
-                    'tglBatal' => date('Y-m-d H:i:s')
-                ]);
+                    $update = $data->update([
+                        'batal' => '1',
+                        'userBatal' => $kdpegsimrs,
+                        'tglBatal' => date('Y-m-d H:i:s')
+                    ]);
             DB::commit();
                 return new JsonResponse(['result' => $data], 200);
 
