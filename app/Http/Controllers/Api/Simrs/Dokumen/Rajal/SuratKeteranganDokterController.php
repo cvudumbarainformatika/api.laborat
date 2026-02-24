@@ -86,10 +86,7 @@ class SuratKeteranganDokterController extends Controller
                 }
 
 
-                $simpan = SuratKeteranganDokter::updateOrCreate([
-                    'nosurat' => $nosurat,
-                ],
-                [
+                $data = [
                     'noreg' => $request->noreg,
                     'norm' => $request->norm,
                     'kdsurat' => $kode,
@@ -103,22 +100,34 @@ class SuratKeteranganDokterController extends Controller
                     'perbedaanWarna' => $request->warna,
                     'gimut' => $request->gimut,
 
-
-                    // ini untuk test kejiwaan
+                    // test kejiwaan
+                    'adopsi' => $request->adopsi,
+                    'hasil' => $request->hasil,
                     'pendidikan' => $request->pendidikan,
                     'statusperkawinan' => $request->statusperkawinan,
                     'psikatopologi' => $request->psikatopologi,
                     'kepribadian' => $request->kepribadian,
                     'kecerdasan' => $request->kecerdasan,
 
-                    // ini untuk napza
+                    // napza
                     'riwayatObat' => $request->riwayatObat,
 
                     'kesimpulan' => $request->doc,
                     'dokter' => $request->dokter,
                     'kdRuang' => $request->kdpoli,
                     'tindakan_id' => $createbill ? $createbill->id : null,
-                ]);
+                ];
+
+                // Tambah field hanya kalau adopsi true
+                // if ($request->adopsi) {
+                //     $data['adopsi'] = $request->adopsi;
+                //     $data['hasil'] = $request->hasil;
+                // }
+
+                $simpan = SuratKeteranganDokter::updateOrCreate(
+                    ['nosurat' => $nosurat],
+                    $data
+                );
             DB::commit();
                 return new JsonResponse(['message' => 'Berhasil menyimpan surat keterangan dokter','result' => $simpan], 200);
             }catch(\Exception $th) {

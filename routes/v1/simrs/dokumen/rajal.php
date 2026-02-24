@@ -13,7 +13,7 @@ Route::group([
     Route::get('/resume', [ResumeController::class, 'resume']);
     Route::get('/catatanrawatjalan', [CatatanRawatJalanController::class, 'catatanRawatJalan']);
 
-     Route::post('/cekpembayaran', [SuratKeteranganDokterController::class, 'cekpembayaran']);
+    Route::post('/cekpembayaran', [SuratKeteranganDokterController::class, 'cekpembayaran']);
 
     Route::post('/skdsimpan', [SuratKeteranganDokterController::class, 'simpanskd']);
     Route::post('/skdbatal', [SuratKeteranganDokterController::class, 'skdbatal']);
