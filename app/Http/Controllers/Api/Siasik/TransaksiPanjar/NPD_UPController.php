@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Siasik\Master\RekeningBank;
 use App\Models\Siasik\TransaksiPjr\NPD_UP;
+use App\Models\Siasik\TransaksiPjr\SpmUP;
 use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -197,6 +198,98 @@ class NPD_UPController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return new JsonResponse(['status' => 'error', 'message' => 'Data Gagal Diverifikasi: ' . $e->getMessage()], 500);
+        }   
+    }
+
+    public function databelumcreate(){
+        $data = NPD_UP::where('verif', '1')->where('kunci', '1')->where('buktiCreateSpm', '')->get();
+        return new JsonResponse($data);
+    }
+    public function datasudahcreate(){
+        $data = SpmUP::all();
+        return new JsonResponse($data);
+    }
+    
+    public function createnpk(Request $request) 
+    {
+        DB::beginTransaction();
+        try {
+            $time = date('Y-m-d H:i:s');
+
+            // ================== GENERATE NO SPM ==================
+            if (empty($request->nospm)) {
+                DB::connection('siasik')->select('call nospm(@nomor)');
+                $x = DB::connection('siasik')->table('conter')->select('nospm')->first();
+
+                if (!$x) {
+                    throw new \Exception('Gagal mendapatkan nomor dari prosedur No NPK-UP');
+                }
+                $nomer = (int)$x->nospm;
+                $nospm = FormatingHelper::nonotadinas($nomer, 'NPK-UP');
+            } else {
+                $nospm = $request->nospm;
+            }
+
+            // ================== AMBIL DATA NPD ==================
+            $data = NPD_UP::where('nosppup', $request->nosppup)->first();
+            if (!$data) {
+                return new JsonResponse(['status' => 'error', 'message' => 'Data Tidak Ditemukan'], 404);
+            }
+
+            // ================== CEK USER ==================
+            $user = auth()->user()->pegawai_id;
+            $pg = Pegawai::find($user);
+            if (!$pg || $pg->kdpegsimrs !== 'sa') {
+                return response()->json([
+                    'message' => 'Anda tidak Memiliki Izin Memverifikasi Data ini, Silahkan Hubungi Admin'
+                ], 403);
+            }
+
+            // ================== CEK SUDAH BUAT NPK ==================
+            if ($data->buktiCreateSpm == '1') {
+                return response()->json([
+                    'message' => 'Data sudah Dibuat NPK'
+                ], 400);
+            }
+
+            // ================== INSERT KE SPM_UP ==================
+            $cekSpm = SpmUP::where('noSpm', $nospm)->first();
+            if (!$cekSpm) {
+                SpmUP::create([
+                    'noSpm'        => $nospm,
+                    'nosppup'      => $data->nosppup,
+                    'tglSpm'       => $data->tglTrans,
+                    'tgltransSpp'    => $data->tglTrans,
+                    'uraianPekerjaan'=> $data->uraian,
+                    'kdBendaharaKeluar'    => $data->kdBendaharaKeluar,
+                    'bendaharapengeluaran' => $data->bendaharaKeluar,
+                    'jumlahspp'   => $data->jumlahspp,
+                    'namabank'   => $data->bank,
+                    'norekening'   => $data->kodeRek,
+                    'uraian'   => $data->uraian,
+                    'kduserentry'   => $pg->kdpegsimrs,
+                    'userentry'   => $pg->kdpegsimrs,
+                    'tglentry'   => $time
+                ]);
+            }
+            
+            // ================== UPDATE NPD ==================
+            $data->buktiCreateSpm = '1';
+            $data->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Data Berhasil Dibuat NPK',
+                'nospm'   => $nospm
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Data Gagal Dibuat NPK: ' . $e->getMessage()
+            ], 500);
         }   
     }
 }

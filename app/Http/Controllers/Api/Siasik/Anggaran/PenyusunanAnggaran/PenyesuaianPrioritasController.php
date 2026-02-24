@@ -354,9 +354,9 @@ class PenyesuaianPrioritasController extends Controller
 
     public function PenetapanAnggaran(Request $request)
     {
-        $nousulan = $request->nousulan;
+        $notrans = $request->notrans;
 
-        if (!$nousulan) {
+        if (!$notrans) {
             return response()->json([
                 'message' => 'Nomor Usulan Wajib di isi!'
             ], 422);
@@ -370,10 +370,11 @@ class PenyesuaianPrioritasController extends Controller
                 '=',
                 'r.notrans'
             )
-            ->where('r.nousulan', $nousulan)
+            ->where('r.notrans', $notrans)
             ->select([
                 'r.id as idpp',
-                'r.nousulan as notrans',
+                // 'r.nousulan as notrans',
+                'h.notrans',
                 'r.usulan',
                 'r.nilai as pagu',
                 'r.koderek50 as koderek50',
@@ -387,6 +388,7 @@ class PenyesuaianPrioritasController extends Controller
                 'r.uraian108',
                 'h.kodebidang as bidang',
                 'r.koders',
+                'h.pagu as paguhedear'
             ])
             ->get();
 
@@ -396,6 +398,15 @@ class PenyesuaianPrioritasController extends Controller
             ], 404);
         }
 
+        $header = $data->first();
+
+        $tahun = Carbon::parse($header->tgltrans)->format('Y');
+
+        $paguData = [
+            'kodekegiatanblud' => $header->kodekegiatanblud,
+            'tahun'            => $tahun,
+            'pagu'             => $header->paguhedear
+        ];
         $insert = [];
 
         foreach ($data as $row) {
@@ -421,15 +432,35 @@ class PenyesuaianPrioritasController extends Controller
         }
 
         // Optional: hapus dulu jika notrans sudah ada
-         $db->transaction(function () use ($db, $nousulan, $insert) {
-            foreach (['t_tampung', 't_tampung_copy'] as $table) {
+        $db->transaction(function () use ($db, $notrans, $insert, $paguData) {
+            // =========================
+            // DETAIL TAMPUNG
+            // =========================
+            foreach (['t_tampung'] as $table) {
+
                 $db->table($table)
-                    ->where('notrans', $nousulan)
+                    ->where('notrans', $notrans)
                     ->delete();
 
                 if (!empty($insert)) {
                     $db->table($table)->insert($insert);
                 }
+            }
+
+            // =========================
+            // PAGU HEADER (UPSERT)
+            // =========================
+            foreach (['t_tampung_pagu'] as $table) {
+
+                $db->table($table)->updateOrInsert(
+                    [
+                        'kodekegiatanblud' => trim($paguData['kodekegiatanblud']),
+                    ],
+                    [
+                        'tahun' => $paguData['tahun'], // tetap boleh disimpan
+                        'pagu'  => $paguData['pagu']
+                    ]
+                );
             }
         });
         return response()->json([
