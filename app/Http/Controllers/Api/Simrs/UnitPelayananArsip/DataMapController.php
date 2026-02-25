@@ -59,7 +59,16 @@ class DataMapController extends Controller
                 'kelompokMap_H.*',
                 'master_kode.nama as keterangan_kode',
                 'master_kode.kode as kode_master',
+                'master_kode.retensi as retensi',
             ])
+            ->selectRaw('
+                    YEAR(CURDATE()) - kelompokMap_H.tahunMap as umur_berkas,
+                    CASE
+                        WHEN (YEAR(CURDATE()) - kelompokMap_H.tahunMap) < master_kode.retensi
+                        THEN "AKTIF"
+                        ELSE "INAKTIF"
+                    END as status_arsip
+                ')
             ->where('kelompokMap_H.tahunMap', request('tahunmap'))
             ->where(function ($query) {
                 $query->where('kelompokMap_H.namamap', 'like', '%'.request('q').'%')

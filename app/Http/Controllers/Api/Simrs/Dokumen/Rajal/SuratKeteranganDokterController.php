@@ -90,6 +90,7 @@ class SuratKeteranganDokterController extends Controller
                     'noreg' => $request->noreg,
                     'norm' => $request->norm,
                     'kdsurat' => $kode,
+                    'notalab' => $request->notalab,
                     'pekerjaan' => $request->pekerjaan,
                     'untukKeperluan' => $request->keperluan,
                     'golonganDarah' => $request->golDar,
