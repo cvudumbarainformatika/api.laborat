@@ -115,7 +115,7 @@ class LpeController extends Controller
 
         $beban = Create_JurnalPosting::select(
             'jurnal_postingotom.tanggal',
-             'jurnal_postingotom.kode as kode6',
+            'jurnal_postingotom.kode as kode6',
             DB::raw('sum(jurnal_postingotom.debit-jurnal_postingotom.kredit) as realisasi')
         )
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
@@ -134,6 +134,35 @@ class LpeController extends Controller
         })
         ->groupBy( 'kode6')
         ->get();
+
+        $penyesuaianbeban = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.' . '%')
+        ->where('jurnalumum_heder.keterangan', 'NOT LIKE','Reklas Pendapatan' . '%')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.kodepsap13',
+                'jurnalumum_rinci.nobukti',
+                // 'akun50_2024.kodeall3 as kode6',
+                // 'akun50_2024.uraian',
+                DB::raw('sum(jurnalumum_rinci.debet-jurnalumum_rinci.kredit) as subtotal'),
+                // DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+                // DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+                // DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+                // DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+                // DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+                // DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+                // DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+                // DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+                // DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+                // DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5')
+                )
+      
+        // ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->groupBy( 'jurnalumum_rinci.kodepsap13')
+        ->get();
+
 
         $koreksi = Akun50_2024::select(
             'akun50_2024.kodeall3',
@@ -174,6 +203,7 @@ class LpeController extends Controller
             'pendapatan' => $pendapatan,
             'penyesuaianpendapatan' => $penyesuaianpendapatan,
             'beban' => $beban,
+            'penyesuaianbeban' => $penyesuaianbeban,
             'koreksi' => $koreksi
         ];
         return new JsonResponse ($data);

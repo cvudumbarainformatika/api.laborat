@@ -74,7 +74,12 @@ class LapOperasionalController extends Controller
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnal_postingotom.kode, ".", 5) LIMIT 1) as uraian5'))
       
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-        ->where('jurnal_postingotom.kode', 'LIKE', '7.' . '%')
+        // ->where('jurnal_postingotom.kode', 'LIKE', '7.' . '%')
+        ->where(function ($q) {
+                $q->where('jurnal_postingotom.kode', 'LIKE', '7.1.' . '%')
+                ->orWhere('jurnal_postingotom.kode', 'LIKE', '7.2.' . '%')
+                ->orWhere('jurnal_postingotom.kode', 'LIKE', '7.3.' . '%');
+        })
         ->where('jurnal_postingotom.verif', '=', '1')
         ->groupBy( 'kode6')
         ->orderBy('kode6', 'asc')
@@ -83,7 +88,12 @@ class LapOperasionalController extends Controller
         $penyesuaianpendapatan = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
         ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
-        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.' . '%')
+        // ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.' . '%')
+        ->where(function ($q) {
+                $q->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.1.' . '%')
+                ->orWhere('jurnalumum_rinci.kodepsap13', 'LIKE', '7.2.' . '%')
+                ->orWhere('jurnalumum_rinci.kodepsap13', 'LIKE', '7.3.' . '%');
+        })
         ->select('jurnalumum_heder.tanggal',
                 'jurnalumum_heder.nobukti',
                 'jurnalumum_rinci.nobukti',
@@ -111,7 +121,7 @@ class LapOperasionalController extends Controller
         ->select(
             'akun50_2024.kodeall3 as kode6',
             'akun50_2024.uraian',
-            'jurnal_postingotom.tanggal',
+        //     'jurnal_postingotom.tanggal',
             // 'jurnal_postingotom.kode as kode6',
             // 'jurnal_postingotom.uraian',
             DB::raw('sum(jurnal_postingotom.debit-jurnal_postingotom.kredit) as subtotal'),
@@ -129,7 +139,10 @@ class LapOperasionalController extends Controller
     
         ->where('jurnal_postingotom.verif', '=', '1')
         ->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
-        ->where('jurnal_postingotom.kode', 'LIKE', '8.' . '%')
+        ->where(function ($q) {
+                $q->where('jurnal_postingotom.kode', 'LIKE', '8.1.' . '%')
+                ->orWhere('jurnal_postingotom.kode', 'LIKE', '8.2.' . '%');
+        })
         ->groupBy( 'kode6')
         ->orderBy('kode6', 'asc')
         ->get();
@@ -138,7 +151,11 @@ class LapOperasionalController extends Controller
         $penyesuaianbeban = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
         ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
         ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
-        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.' . '%')
+        // ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.' . '%')
+        ->where(function ($q) {
+                $q->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.1.' . '%')
+                ->orWhere('jurnalumum_rinci.kodepsap13', 'LIKE', '8.2.' . '%');
+        })
         ->select('jurnalumum_heder.tanggal',
                 'jurnalumum_heder.nobukti',
                 'jurnalumum_rinci.nobukti',
@@ -160,12 +177,114 @@ class LapOperasionalController extends Controller
         ->groupBy( 'jurnalumum_rinci.kodepsap13')
         ->get();
 
+        $surplusnonoperasional = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.4.' . '%')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'akun50_2024.kodeall3 as kode6',
+                'akun50_2024.uraian',
+                DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
+       
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->groupBy( 'jurnalumum_rinci.kodepsap13')
+        ->get();
+
+        $defisitnonoperasional = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.3.' . '%')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'akun50_2024.kodeall3 as kode6',
+                'akun50_2024.uraian',
+                DB::raw('sum(jurnalumum_rinci.debet-jurnalumum_rinci.kredit) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
+       
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->groupBy( 'jurnalumum_rinci.kodepsap13')
+        ->get();
+
+        $pendapatanluarbiasa = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '7.5.' . '%')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'akun50_2024.kodeall3 as kode6',
+                'akun50_2024.uraian',
+                DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
+       
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->groupBy( 'jurnalumum_rinci.kodepsap13')
+        ->get();
+        $bebanluarbiasa = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')
+        ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])
+        ->join('jurnalumum_rinci', 'jurnalumum_rinci.nobukti', 'jurnalumum_heder.nobukti')
+        ->where('jurnalumum_rinci.kodepsap13', 'LIKE', '8.4.' . '%')
+        ->select('jurnalumum_heder.tanggal',
+                'jurnalumum_heder.nobukti',
+                'jurnalumum_rinci.nobukti',
+                'akun50_2024.kodeall3 as kode6',
+                'akun50_2024.uraian',
+                DB::raw('sum(jurnalumum_rinci.debet-jurnalumum_rinci.kredit) as subtotal'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) as kode1'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) as kode2'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) as kode3'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) as kode4'),
+                DB::raw('SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) as kode5'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 1) LIMIT 1) as uraian1'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 2) LIMIT 1) as uraian2'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 3) LIMIT 1) as uraian3'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 4) LIMIT 1) as uraian4'),
+                DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(jurnalumum_rinci.kodepsap13, ".", 5) LIMIT 1) as uraian5'))
+       
+        ->join('akun50_2024', 'akun50_2024.kodeall3', 'jurnalumum_rinci.kodepsap13')
+        ->groupBy( 'jurnalumum_rinci.kodepsap13')
+        ->get();
         $data = [
             'pagupendapatan' => $pagupendapatan,
             'pendapatan' => $pendapatan,
             'penyesuaianpendapatan' => $penyesuaianpendapatan,
             'beban' => $bebanotom,
             'penyesuaianbeban' => $penyesuaianbeban,
+            'surplusnonoperasional' => $surplusnonoperasional,
+            'defisitnonoperasional' => $defisitnonoperasional,
+            'pendapatanluarbiasa' => $pendapatanluarbiasa,
+            'bebanluarbiasa' => $bebanluarbiasa
             
         ];
         return new JsonResponse ($data);
