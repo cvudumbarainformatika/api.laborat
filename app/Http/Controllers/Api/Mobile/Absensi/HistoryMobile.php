@@ -29,8 +29,14 @@ class HistoryMobile extends Controller
         $masuk = TransaksiAbsen::where('user_id', $user->id)
             ->whereBetween('tanggal', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->with('kategory')
-            ->latest()
             ->get();
+
+        $masuk->each(function ($item) {
+            if ($item->kategory) {
+                $item->setRelation('kategory', clone $item->kategory);
+                $item->kategory->setReferenceDate($item->tanggal);
+            }
+        });
 
 
         $data['masuk'] = $masuk;

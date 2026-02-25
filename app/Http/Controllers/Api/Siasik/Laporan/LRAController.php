@@ -217,6 +217,7 @@ class LRAController extends Controller
                 )
         ->join('akun50_2024', 'akun50_2024.kodeall3', 't_tampung_pendapatan.koderekeningblud')
         ->groupBy('t_tampung_pendapatan.koderekeningblud')
+        ->where('t_tampung_pendapatan.flag', '1')
         ->get();
         $pendapatan = Create_JurnalPosting::select(
             'jurnal_postingotom.tanggal',

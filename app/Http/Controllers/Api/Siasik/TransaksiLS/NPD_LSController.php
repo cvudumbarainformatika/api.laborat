@@ -10,28 +10,17 @@ use App\Models\Sigarang\Pegawai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Date;
 use App\Models\Simrs\Master\Mpihakketiga;
-use App\Models\Sigarang\KontrakPengerjaan;
 use App\Models\Siasik\TransaksiLS\NpdLS_heder;
 use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Master\Akun50_2024;
-use App\Models\Siasik\Master\Akun_Kepmendg50;
-use App\Models\Siasik\Master\Bagian;
 use App\Models\Siasik\Master\Mapping_Bidang_Ptk_Kegiatan;
 use App\Models\Siasik\TransaksiLS\NewpajakNpdls;
 use App\Models\Siasik\TransaksiLS\NpdLS_rinci;
 use App\Models\Siasik\TransaksiLS\NpkLS_rinci;
 use App\Models\Siasik\TransaksiLS\Serahterima_header;
-use App\Models\Siasik\TransaksiLS\TransPajak;
-use App\Models\Simrs\Penunjang\Farmasinew\Bast\BastrinciM;
-use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\Returpbfrinci;
 use App\Models\Simrs\Penunjang\Farmasinew\Penerimaan\PenerimaanHeder;
-use DateTime;
-use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Calculation\TextData\Format;
 use App\Models\Pegawai\Mpegawaisimpeg;
-use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use App\Models\Sigarang\Transaksi\Penerimaan\Penerimaan;
 
 class NPD_LSController extends Controller
@@ -490,13 +479,17 @@ class NPD_LSController extends Controller
         ->where('penerimaans.no_bast', '!=', '')
         ->where('penerimaans.no_pembayaran', '')
         ->whereNull('penerimaans.tanggal_pembayaran')
-        ->when(request('q'),function ($query) {
-            $query->where('penerimaans.no_bast', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('penerimaans.no_penerimaan', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('penerimaans.nomor', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('penerimaans.faktur', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('penerimaans.surat_jalan', 'LIKE', '%' . request('q') . '%')
-            ->orWhere('penerimaans.kontrak', 'LIKE', '%' . request('q') . '%');
+        ->when(request('q'), function ($query) {
+            $query->where(function ($q) {
+                $q->where('penerimaans.no_bast', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.no_penerimaan', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.nomor', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.faktur', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.surat_jalan', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.kontrak', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.total', 'LIKE', '%' . request('q') . '%')
+                ->orWhere('penerimaans.nilai_tagihan', 'LIKE', '%' . request('q') . '%');
+            });
         })->with(['perusahaan','details' => function($rinci) use ($tahun){
             $rinci->join('penerimaans', 'penerimaans.id', '=', 'detail_penerimaans.penerimaan_id')
             ->addSelect([
@@ -525,7 +518,7 @@ class NPD_LSController extends Controller
                                             }]);
                             }]);
         }])
-        ->orderBy('no_bast', 'asc')
+        ->orderBy('tanggal_bast', 'asc')
         ->get();
         
         return new JsonResponse($databast);

@@ -45,6 +45,7 @@ class LRAjurnalController extends Controller
                 )
         ->join('akun50_2024', 'akun50_2024.kodeall3', 't_tampung_pendapatan.koderekeningblud')
         ->groupBy('t_tampung_pendapatan.koderekeningblud')
+        ->where('t_tampung_pendapatan.flag', '1')
         ->get();
 
         $datareklas = JurnalUmum_Header::where('jurnalumum_heder.verif', '=', '1')

@@ -378,6 +378,7 @@ class PengunjungController extends Controller
                     ->orWhere('pasien23.rs1', 'LIKE', '%' . request('q') . '%')
                 ;
             })
+
             ->groupBy('rs201.rs2');
         // ->orderby('rs17.rs3', $sort);
 
@@ -398,6 +399,7 @@ class PengunjungController extends Controller
             'rs201.rs10 as kdruangan',
             'rs201.rs10 as koderuangan',
             'rs201.rs10 as kodepoli',
+            'rs201.rs16 as kodedokter',
             'rs24.rs4 as kdgroup_ruangan',
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
             DB::raw('coalesce(memodiagnosadokter_rajal.diagnosa, memodiagnosadokter_ranap.diagnosa) as memodiagnosa'),
@@ -413,6 +415,8 @@ class PengunjungController extends Controller
             ->leftjoin('memodiagnosadokter as memodiagnosadokter_rajal', 'memodiagnosadokter_rajal.noreg', '=', 'rs17.rs1')
             ->leftjoin('memodiagnosadokter as memodiagnosadokter_ranap', 'memodiagnosadokter_ranap.noreg', '=', 'rs23.rs1')
             ->with([
+
+                'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
                 'diagnosa', // ini berhubungan dengan resep
                 // 'newapotekrajal' => function ($q) {
                 //     $q->with([
@@ -488,5 +492,19 @@ class PengunjungController extends Controller
 
 
         return new JsonResponse($data, 200);
+    }
+
+    public function gantidpjp(Request $request)
+    {
+        $carikunjungan = Fisioterapipermintaan::select('rs1', 'rs16 as kodedokter')->where('rs1', $request->noreg)->first();
+        $carikunjungan->rs16 = $request->kdpegsimrs;
+        $carikunjungan->save();
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $carikunjungan->load('datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp'),
+            ],
+            200
+        );
     }
 }

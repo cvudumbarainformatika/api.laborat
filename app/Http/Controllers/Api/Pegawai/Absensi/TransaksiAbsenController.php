@@ -52,10 +52,12 @@ class TransaksiAbsenController extends Controller
                 // }
                 if ($value['masuk'] !== null) {
                     $temp = explode('-', $value['tanggal']);
-                    // $temp = explode('-', $value->tanggal);
                     $day = $temp[2];
-                    // $day = $this->getDayName($temp[2]);
                     $value['day'] = $day;
+                    if ($value['kategory']) {
+                        $value->setRelation('kategory', clone $value['kategory']);
+                        $value['kategory']->setReferenceDate($value['tanggal']); // Option A
+                    }
                     $toIn = explode(':', $value['kategory']->masuk);
                     $act = explode(':', $value['masuk']);
                     $jam = (int)$act[0] - (int)$toIn[0];
@@ -146,6 +148,8 @@ class TransaksiAbsenController extends Controller
                     // Logic Diff & Terlambat
                     // Pastikan kategory ada
                     if ($absen->kategory) {
+                        $absen->setRelation('kategory', clone $absen->kategory);
+                        $absen->kategory->setReferenceDate($absen->tanggal); // Option A
                         $toIn = explode(':', $absen->kategory->masuk);
                         $act = explode(':', $absen->masuk);
 
@@ -228,6 +232,8 @@ class TransaksiAbsenController extends Controller
 
         foreach ($absensiHariIni as $absen) {
             if ($absen->masuk !== null && $absen->kategory) {
+                $absen->setRelation('kategory', clone $absen->kategory);
+                $absen->kategory->setReferenceDate($todayString); // Option A
                 $toIn = explode(':', $absen->kategory->masuk);
                 $act = explode(':', $absen->masuk);
 
@@ -562,6 +568,10 @@ class TransaksiAbsenController extends Controller
             $tapCount = 0;
 
             foreach ($pegawaiAttendances as $attendance) {
+                if ($attendance->kategory) {
+                    $attendance->setRelation('kategory', clone $attendance->kategory);
+                    $attendance->kategory->setReferenceDate($attendance->tanggal);
+                }
                 // Keterlambatan (F)
                 if ($attendance->masuk && $attendance->kategory && $attendance->kategory->masuk) {
                     $scheduledInStr = $attendance->kategory->masuk;
@@ -702,6 +712,10 @@ class TransaksiAbsenController extends Controller
             // return new JsonResponse($absen);
             $tanggals = [];
             foreach ($absen as $value) {
+                if ($value['kategory']) {
+                    $value->setRelation('kategory', clone $value['kategory']);
+                    $value['kategory']->setReferenceDate($value['tanggal']);
+                }
                 // return new JsonResponse($value);
                 $temp = explode('-', $value['tanggal']);
                 // $temp = explode('-', $value->tanggal);
@@ -813,6 +827,14 @@ class TransaksiAbsenController extends Controller
             ->with('kategory')
             ->latest()
             ->get();
+
+        $data->each(function ($item) {
+            if ($item->kategory) {
+                $item->setRelation('kategory', clone $item->kategory);
+                $item->kategory->setReferenceDate($item->tanggal);
+            }
+        });
+
         return new JsonResponse($data);
     }
     public function getRekapByUserLibur()
@@ -827,6 +849,13 @@ class TransaksiAbsenController extends Controller
             ->with('kategory')
             ->latest()
             ->get();
+
+        $masuk->each(function ($item) {
+            if ($item->kategory) {
+                $item->setRelation('kategory', clone $item->kategory);
+                $item->kategory->setReferenceDate($item->tanggal);
+            }
+        });
 
 
         $data['masuk'] = $masuk;
@@ -867,6 +896,10 @@ class TransaksiAbsenController extends Controller
         foreach ($data as $key) {
             $temp = date('Y/m/d', strtotime($key['tanggal']));
             $week = date('W', strtotime($key['tanggal']));
+            if ($key['kategory']) {
+                $key->setRelation('kategory', clone $key['kategory']);
+                $key['kategory']->setReferenceDate($key['tanggal']); // Option A
+            }
             $toIn = explode(':', $key['kategory']->masuk);
             $act = explode(':', $key['masuk']);
             $jam = (int)$act[0] - (int)$toIn[0];
@@ -1075,6 +1108,16 @@ class TransaksiAbsenController extends Controller
             ->orderBy('flag', 'ASC')
             ->orderBy('nama', 'ASC')
             ->paginate(request('per_page'));
+
+        $data->getCollection()->each(function ($pegawai) {
+            $pegawai->transaksi_absen->each(function ($absen) {
+                if ($absen->kategory) {
+                    $absen->setRelation('kategory', clone $absen->kategory);
+                    $absen->kategory->setReferenceDate($absen->tanggal);
+                }
+            });
+        });
+
         // $data->setAppends([]);
         return response()->json($data);
     }
@@ -1124,6 +1167,16 @@ class TransaksiAbsenController extends Controller
             ->orderBy('flag', 'ASC')
             ->orderBy('nama', 'ASC')
             ->get();
+
+        $data->each(function ($pegawai) {
+            $pegawai->transaksi_absen->each(function ($absen) {
+                if ($absen->kategory) {
+                    $absen->setRelation('kategory', clone $absen->kategory);
+                    $absen->kategory->setReferenceDate($absen->tanggal);
+                }
+            });
+        });
+
         return response()->json($data);
     }
 }
