@@ -14,6 +14,7 @@ Route::group([
     //pengunjung
     Route::get('/kunjunganpasien', [PengunjungController::class, 'index']);
     Route::get('/terimapasien', [PengunjungController::class, 'terimapasien']);
+    Route::post('/gantidpjp', [PengunjungController::class, 'gantidpjp']);
 
     // pengkajian
     Route::post('/pengkajian/store', [PengkajianController::class, 'store']);

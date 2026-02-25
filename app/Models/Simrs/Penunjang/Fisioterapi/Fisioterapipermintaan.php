@@ -2,6 +2,7 @@
 
 namespace App\Models\Simrs\Penunjang\Fisioterapi;
 
+use App\Models\Pegawai\Mpegawaisimpeg;
 use App\Models\Simrs\Anamnesis\Anamnesis;
 use App\Models\Simrs\Pelayanan\Diagnosa\Diagnosa;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
@@ -70,5 +71,9 @@ class Fisioterapipermintaan extends Model
     public function tindakan()
     {
         return $this->hasMany(Tindakan::class, 'rs1', 'rs1');
+    }
+    public function datasimpeg()
+    {
+        return  $this->hasOne(Mpegawaisimpeg::class, 'kdpegsimrs', 'kodedokter');
     }
 }
