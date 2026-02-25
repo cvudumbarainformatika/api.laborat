@@ -496,7 +496,7 @@ class PengunjungController extends Controller
 
     public function gantidpjp(Request $request)
     {
-        $carikunjungan = Fisioterapipermintaan::where('rs1', $request->noreg)->first();
+        $carikunjungan = Fisioterapipermintaan::select('rs1', 'rs16 as kodedokter')->where('rs1', $request->noreg)->first();
         $carikunjungan->rs16 = $request->kdpegsimrs;
         $carikunjungan->save();
         return new JsonResponse(
