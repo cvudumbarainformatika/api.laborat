@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Logistik\Sigarang\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\v1\sigarang\Transaksi\PemesananResource;
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Sigarang\Transaksi\Pemesanan\DetailPemesanan;
 use App\Models\Sigarang\Transaksi\Pemesanan\Pemesanan;
@@ -24,7 +25,9 @@ class PemesananController extends Controller
         $draft = Pemesanan::where('reff', '=', request()->reff)
             ->where('status', '=', 1)
             ->latest('id')->with([
-                'details.barang108', 'details.barangrs', 'details.satuan',
+                'details.barang108',
+                'details.barangrs',
+                'details.satuan',
                 'details_kontrak' => function ($kueri) {
                     $kueri->where('kunci', '=', 1)
                         ->where('flag', '=', '');
@@ -44,6 +47,13 @@ class PemesananController extends Controller
 
     public function store(Request $request)
     {
+        // cek apakah ada di pengusulan atau tidak
+        // Penyesuaian_Prioritas_Header untuk cek tgl sama PergeseranPaguRinci untuk rincian nya
+        $cekPagu = PergeseranPaguRinci::where('koders', $request->kode_rs)
+            ->where('tgl', date('Y'))
+            ->first();
+
+        if (!$cekPagu) return new JsonResponse(['message' => 'Pagu Untuk ' . $request->nama_barang . ' tidak ditemukan'], 410);
         $second = $request->all();
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
