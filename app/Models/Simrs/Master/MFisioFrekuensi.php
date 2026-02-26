@@ -10,4 +10,5 @@ class MFisioFrekuensi extends Model
   use HasFactory;
   protected $table = 'fisio_master_frek';
   protected $guarded = ['id'];
+  public $timestamps = false;
 }
