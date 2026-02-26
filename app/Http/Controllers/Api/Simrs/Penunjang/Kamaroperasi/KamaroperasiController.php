@@ -281,6 +281,7 @@ class KamaroperasiController extends Controller
                 'implant',
                 'implant_seri',
                 'inventaris_kasa',
+                'inventaris_instrumen',
                 'tindakanop' => function ($q) {
                     $q->with('mastertindakanoperasi', 'laporanoperasi');
                 },

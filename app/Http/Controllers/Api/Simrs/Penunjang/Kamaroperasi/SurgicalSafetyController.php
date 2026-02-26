@@ -321,46 +321,52 @@ class SurgicalSafetyController extends Controller
         // return new JsonResponse($request->all());
         $request->validate(
             [
-                'noreg' => 'required',
-                'nota' => 'required',
-                'kode' => 'required|string',
-                'awal'  => 'required|numeric|gt:0',
-                'pakai' => 'required|numeric|gt:0',
+                'data' => 'required|array',
+                'data.*.noreg' => 'required',
+                'data.*.nota' => 'required',
+                'data.*.nama' => 'required|string',
+                // 'data.*.awal'  => 'required|numeric|gt:0',
+                // 'data.*.pakai' => 'required|numeric|gt:0',
             ],
             [
-                'awal.gt' => 'persediaan awal harus bernilai lebih besar dari 0',
-                'pakai.gt' => 'pemakaian harus bernilai lebih besar dari 0',
-                'kode.required' => 'Barang Cssd harus di isi',
+                // 'data.*.awal.gt' => 'persediaan awal harus bernilai lebih besar dari 0',
+                // 'data.*.pakai.gt' => 'pemakaian harus bernilai lebih besar dari 0',
+                'data.*.nama.required' => 'Barang Cssd harus di isi',
             ]
         );
         try {
             DB::beginTransaction();
 
             $user = FormatingHelper::session_user();
-            $data = InventarisInstrumen::updateOrCreate(
-                [
-                    'noreg' => $request->noreg,
-                    'norm' => $request->norm,
-                    'nota' => $request->nota,
-                    'kode' => $request->kode,
-                ],
-                [
-                    'nama' => $request->nama,
-                    'awal' => $request->awal,
-                    'pakai' => $request->pakai,
-                    'sisa' => $request->sisa,
-                    'tambah' => $request->tambah,
-                    'akhir' => $request->akhir,
-                ]
-            );
-            $data->update([
-                $data->wasRecentlyCreated ? 'created_by' : 'updated_by'
-                => $user['kodesimrs']
-            ]);
+            $response = [];
+            foreach ($request->data as $key) {
+
+                $data = InventarisInstrumen::updateOrCreate(
+                    [
+                        'noreg' => $key['noreg'],
+                        'norm' => $key['norm'],
+                        'nota' => $key['nota'],
+                        // 'kode' => $key['kode'],
+                        'nama' => $key['nama'],
+                    ],
+                    [
+                        'awal' => $key['awal'],
+                        'pakai' => $key['pakai'],
+                        'sisa' => $key['sisa'],
+                        'tambah' => $key['tambah'],
+                        'akhir' => $key['akhir'],
+                    ]
+                );
+                $data->update([
+                    $data->wasRecentlyCreated ? 'created_by' : 'updated_by'
+                    => $user['kodesimrs']
+                ]);
+                $response[] = $data;
+            }
             DB::commit();
             return new JsonResponse([
                 'message' => 'Data berhasil disimpan',
-                'data' => $data ?? null
+                'data' => $response ?? null
                 // 'data' => $request->all()
             ]);
         } catch (\Throwable $e) {

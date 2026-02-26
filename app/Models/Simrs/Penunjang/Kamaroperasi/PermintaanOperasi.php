@@ -85,4 +85,8 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(InventarisKasa::class, 'nota', 'rs2');
     }
+    public function inventaris_instrumen()
+    {
+        return $this->hasMany(InventarisInstrumen::class, 'nota', 'rs2');
+    }
 }

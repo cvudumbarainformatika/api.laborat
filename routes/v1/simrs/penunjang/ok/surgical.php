@@ -21,5 +21,5 @@ Route::group([
   Route::post('/hapus-inventaris-kasa', [SurgicalSafetyController::class, 'hapusInventarisKasa']);
   // Instrumen
   Route::post('/simpan-inventaris-Instrumen', [SurgicalSafetyController::class, 'simpanInventarisInstrumen']);
-  Route::post('/hapus-inventaris-Instrumen', [SurgicalSafetyController::class, 'hapusInventarisInstrumen']);
+  // Route::post('/hapus-inventaris-Instrumen', [SurgicalSafetyController::class, 'hapusInventarisInstrumen']);
 });
