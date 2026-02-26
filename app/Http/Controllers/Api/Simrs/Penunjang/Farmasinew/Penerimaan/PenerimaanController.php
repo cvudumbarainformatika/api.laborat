@@ -721,6 +721,7 @@ class PenerimaanController extends Controller
             'penerimaan_h.nopemesanan as nopemesanan',
             'penerimaan_h.tglpenerimaan as tglpenerimaan',
             'penerimaan_h.kdpbf',
+            'penerimaan_h.jenis_pengadaan',
             // 'siasik.pihak_ketiga.nama as pbf',
             'penerimaan_h.pengirim as pengirim',
             'penerimaan_h.jenissurat as jenissurat',
