@@ -23,19 +23,19 @@ class RuanganController extends Controller
         //     ->get();
         $list = Cache::remember('ruanganranap', now()->addDays(7), function () {
             return Mruangranap::select('groups', 'groups_nama')
-            ->groupby('groups')
-            ->where('hiddens', '')
-            ->get();
+                ->groupby('groups')
+                ->where('hiddens', '')
+                ->get();
         });
         return new JsonResponse($list);
     }
     public function ruanganranap()
     {
         $ruangan = DB::table('v_15_23')->select('v_15_23.*', 'rs24.rs2 as titipan_ruang')
-        ->leftJoin('rs24', 'rs24.rs1', '=', 'v_15_23.titipan')
-        ->where('noreg', '=', request('noreg'))
-        ->orderBy('noreg', 'desc')
-        ->limit(10)->get();
+            ->leftJoin('rs24', 'rs24.rs1', '=', 'v_15_23.titipan')
+            ->where('noreg', '=', request('noreg'))
+            ->orderBy('noreg', 'desc')
+            ->limit(10)->get();
 
         $tarip = TarifHelper::ruang(request('noreg'));
         $data = [
@@ -48,21 +48,21 @@ class RuanganController extends Controller
 
     public function simpanMutasi(Request $request)
     {
-        
+
 
         $kd_kelas = $request->kd_kelas;
         $ruang    = $request->ruang;
         $ruanglm    = $request->ruanglm;
         $noreg    = $request->noreg;
 
-        if ($ruanglm == $ruang) {
-            return response()->json([
-                'message' => 'Maaf, asal dan tujuan ruangan tidak boleh sama.'
-            ], 500);
-        }
+        // if ($ruanglm == $ruang) {
+        //     return response()->json([
+        //         'message' => 'Maaf, asal dan tujuan ruangan tidak boleh sama.'
+        //     ], 500);
+        // }
 
         // format tanggal
-        $tanggal = $request->tanggal.' '.date('H:i:s');
+        $tanggal = $request->tanggal . ' ' . date('H:i:s');
 
         // cek tgl masuk mutasi
         $rs_tglmasuk = DB::table('rs44')
@@ -191,9 +191,9 @@ class RuanganController extends Controller
         //     ]);
 
         DB::table('rs23')
-        ->where('rs1', $noreg)
-        ->update($updateData);
-        
+            ->where('rs1', $noreg)
+            ->update($updateData);
+
         // input dokumen serah terima
 
         self::serahterima($request, $rs44);
@@ -204,42 +204,42 @@ class RuanganController extends Controller
 
     public function updateDokumenMutasi(Request $request)
     {
-       $data = SerahTerima::find($request->id);
+        $data = SerahTerima::find($request->id);
 
-       if (!$data) {
-           return new JsonResponse([
-               'message' => 'Data tidak ditemukan'
-           ], 500);
-       }
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data tidak ditemukan'
+            ], 500);
+        }
 
-       $user = FormatingHelper::session_user();
-       $data->update([
-           'derajatPasien' => $request->derajatPasien,
-           'skalaNyeri' => $request->skalaNyeri,
-           'sistole' => $request->sistole,
-           'diastole' => $request->diastole,
-           'nadi' => $request->nadi,
-           'rr' => $request->rr,
-           'spo2' => $request->spo2,
-           'suhu' => $request->suhu,
-           'lainlain' => $request->lainlain,
-           'lab' => $request->lab,
-           'ecg' => $request->ecg,
-           'ro' => $request->ro,
-           'kelengkapan' => $request->kelengkapan,
-           'plann' => $request->plann,
-           'terapis' => $request->terapis,
-           'sistole_trm' => $request->sistole_trm,
-           'diastole_trm' => $request->diastole_trm,
-           'nadi_trm' => $request->nadi_trm,
-           'rr_trm' => $request->rr_trm,
-           'spo2_trm' => $request->spo2_trm,
-           'suhu_trm' => $request->suhu_trm,
-           'user_edit' => $user['kodesimrs']
+        $user = FormatingHelper::session_user();
+        $data->update([
+            'derajatPasien' => $request->derajatPasien,
+            'skalaNyeri' => $request->skalaNyeri,
+            'sistole' => $request->sistole,
+            'diastole' => $request->diastole,
+            'nadi' => $request->nadi,
+            'rr' => $request->rr,
+            'spo2' => $request->spo2,
+            'suhu' => $request->suhu,
+            'lainlain' => $request->lainlain,
+            'lab' => $request->lab,
+            'ecg' => $request->ecg,
+            'ro' => $request->ro,
+            'kelengkapan' => $request->kelengkapan,
+            'plann' => $request->plann,
+            'terapis' => $request->terapis,
+            'sistole_trm' => $request->sistole_trm,
+            'diastole_trm' => $request->diastole_trm,
+            'nadi_trm' => $request->nadi_trm,
+            'rr_trm' => $request->rr_trm,
+            'spo2_trm' => $request->spo2_trm,
+            'suhu_trm' => $request->suhu_trm,
+            'user_edit' => $user['kodesimrs']
 
-       ]);
+        ]);
 
-       return response()->json(['message' => 'OK, Dokumen berhasil diupdate']);
+        return response()->json(['message' => 'OK, Dokumen berhasil diupdate']);
     }
 
     /**
@@ -254,17 +254,23 @@ class RuanganController extends Controller
             ->leftJoin('rs23', 'rs44.rs1', '=', 'rs23.rs1')
             // ->leftJoin('rs24 as tp', 'tp.rs1', '=', 'rs23.titipan') // join tambahan untuk nama kamar titipan
             ->select(
-                'rs44.*','rs44.rs3 as kd_ruanglm', 'rs44.rs4 as kamarlm', 'rs44.rs5 as no_bedlm', 'rs44.rs10 as kd_ruang','rs44.rs11 as kamar','rs44.rs12 as no_bed',
+                'rs44.*',
+                'rs44.rs3 as kd_ruanglm',
+                'rs44.rs4 as kamarlm',
+                'rs44.rs5 as no_bedlm',
+                'rs44.rs10 as kd_ruang',
+                'rs44.rs11 as kamar',
+                'rs44.rs12 as no_bed',
                 'lm.rs2 as nm_ruanglm',
                 'br.rs2 as nm_ruang',
                 'rs45.rs2 as alasan',
                 'rs23.titipan as titipan',
                 // 'tp.rs2 as nm_titipan' // nama kamar titipan dari rs24
-                )
+            )
             ->with(['serah_terima' => function ($query) {
                 $query->select('serah_terima.*', 'peg.nama as nmuser_serah', 'pega.nama as nmuser_trm')
-                ->leftjoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
-                ->leftjoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm');
+                    ->leftjoin('kepegx.pegawai as peg', 'peg.kdpegsimrs', '=', 'serah_terima.user_serah')
+                    ->leftjoin('kepegx.pegawai as pega', 'pega.kdpegsimrs', '=', 'serah_terima.user_trm');
             }])
             ->where('rs44.rs1', request('noreg'))
             ->orderBy('rs44.id', 'desc')
@@ -307,14 +313,14 @@ class RuanganController extends Controller
 
     public function updateSerahTerima(Request $request)
     {
-       $user = FormatingHelper::session_user();
-       $data = SerahTerima::find($request->id);
-       if (!$data) {
-           return new JsonResponse([
-               'message' => 'Data Tidak Ditemukan'
-           ], 500);
-       }
-       $data->update([
+        $user = FormatingHelper::session_user();
+        $data = SerahTerima::find($request->id);
+        if (!$data) {
+            return new JsonResponse([
+                'message' => 'Data Tidak Ditemukan'
+            ], 500);
+        }
+        $data->update([
             'keadaanUmum' => $request->keadaanUmum,
             'kesadaran' => $request->kesadaran,
             'tensi_trm' => $request->tensi_trm ?? null,
@@ -326,9 +332,9 @@ class RuanganController extends Controller
             'spo2_trm' => $request->spo2_trm,
             'user_trm' => $user['kodesimrs'],
             'flag' => '1'
-       ]);
+        ]);
 
-       // update rs23
+        // update rs23
         DB::table('rs23')
             ->where('rs1', $request->noreg)
             ->update([
@@ -340,8 +346,7 @@ class RuanganController extends Controller
                 'rs22'  => '', // status belum diterima
                 // 'titipan' => '',
             ]);
-        
-       return response()->json(['message' => 'OK', 'data' => $data]);
-    }
 
+        return response()->json(['message' => 'OK', 'data' => $data]);
+    }
 }
