@@ -18,20 +18,20 @@ class JasaVisiteKonsulController extends Controller
   public function index()
   {
 
-     $query = Visite::query();
-     $data = $query->select('rs140.*', 'pegawai.nama as dokter','tarip.rs2 as namatarif','ruangan.rs5 as ruang')
-     ->leftJoin('kepegx.pegawai as pegawai', 'rs140.rs3', '=', 'pegawai.kdpegsimrs')
-        ->leftJoin('rs30tarif as tarip', 'rs140.rs6', '=', 'tarip.rs3')
-        ->leftJoin('rs24 as ruangan', 'rs140.rs8', '=', 'ruangan.rs4')
+    $query = Visite::query();
+    $data = $query->select('rs140.*', 'pegawai.nama as dokter', 'tarip.rs2 as namatarif', 'ruangan.rs5 as ruang')
+      ->leftJoin('kepegx.pegawai as pegawai', 'rs140.rs3', '=', 'pegawai.kdpegsimrs')
+      ->leftJoin('rs30tarif as tarip', 'rs140.rs6', '=', 'tarip.rs3')
+      ->leftJoin('rs24 as ruangan', 'rs140.rs8', '=', 'ruangan.rs4')
       ->where(function ($q) {
-        $q->where('rs140.rs1', '=', request('noreg'))
-            ->where('rs140.rs8', '=', request('kdgroup_ruangan'));
-     })
-     ->orderBy('rs140.rs2', 'desc')
-     ->distinct()
-     ->get();
-     
-     return new JsonResponse($data);
+        $q->where('rs140.rs1', '=', request('noreg'));
+        // ->where('rs140.rs8', '=', request('kdgroup_ruangan'));
+      })
+      ->orderBy('rs140.rs2', 'desc')
+      ->distinct()
+      ->get();
+
+    return new JsonResponse($data);
   }
   public function simpan(Request $request)
   {
@@ -61,16 +61,16 @@ class JasaVisiteKonsulController extends Controller
     if (!$tarif) {
       return new JsonResponse(['message' => "Maaf ... Ada Kesalahan Pada Tarif $request->jenis"], 500);
     }
-    
+
     $kdpegsimrs = $request->kddokter;
     $cekTarif = Visite::select('rs1')
       ->where('rs1', $request->noreg)
       ->where('rs3', $kdpegsimrs)
-      ->where('rs2', 'LIKE', '%'.date('Y-m-d').'%')
+      ->where('rs2', 'LIKE', '%' . date('Y-m-d') . '%')
       ->where('rs6', $tarif['flag_biaya'])
       ->get();
 
-      $hari_ini = date('Y-m-d H:i:s');
+    $hari_ini = date('Y-m-d H:i:s');
     if (count($cekTarif) === 0) {
 
       Visite::create([
@@ -88,7 +88,8 @@ class JasaVisiteKonsulController extends Controller
     return new JsonResponse($tarif);
   }
 
-  function hapus(Request $request){
+  function hapus(Request $request)
+  {
 
 
 
@@ -107,10 +108,10 @@ class JasaVisiteKonsulController extends Controller
       return new JsonResponse(['message' => 'gagal dihapus'], 501);
     }
     return new JsonResponse(
-        [
-            'message' => 'data berhasil dihapus'
-        ], 
-    200);
+      [
+        'message' => 'data berhasil dihapus'
+      ],
+      200
+    );
   }
-  
 }
