@@ -72,10 +72,23 @@ class PengusulanController extends Controller
                 break;
 
             case 'Farmasi':
-                $query = Mkodebelanjaobat::query()
+                $db = DB::connection('siasik');
+                $query = $db->table('rs.kodeBelanjaObat as kbo')
+                    ->leftJoin(
+                        'siasik.map108to50 as map',
+                        'map.kode108',
+                        '=',
+                        'kbo.kode'
+                    )
                     ->select([
-                        'kodeBelanjaObat.*',
-                        DB::raw('uraian as nama')
+                        'kbo.id as id', // <-- ini penting
+                        'kbo.kode',
+                        DB::raw('kbo.uraian as nama'),
+
+                        'map.kode50',
+                        'map.kode108',
+                        'map.uraian50',
+                        'map.uraian108',
                     ]);
                 break;
             

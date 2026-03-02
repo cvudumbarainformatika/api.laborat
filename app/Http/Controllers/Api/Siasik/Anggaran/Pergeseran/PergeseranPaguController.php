@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Siasik\Anggaran\Pergeseran;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siasik\Anggaran\Penetapan_Pagu;
+use App\Models\Siasik\Anggaran\Tampung_Pagu;
 use Illuminate\Http\Request;
 
 class PergeseranPaguController extends Controller
@@ -36,5 +37,35 @@ class PergeseranPaguController extends Controller
         $data = $query->get();
 
         return response()->json($data);
+    }
+
+    public function save(Request $request)
+    {
+         try {
+            $notrans = $request->kodekegiatan;
+            $data = Tampung_Pagu::where('kodekegiatanblud', $notrans)->first();
+
+            if (!$data) {
+                return response()->json([
+                    'message' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            $data->update([
+                'pagu' => $request->pagu_pergeseran
+            ]);
+
+            return response()->json([
+                'message' => 'Nilai pagu berhasil diupdate',
+                'data' => $data
+            ], 200);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat update data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

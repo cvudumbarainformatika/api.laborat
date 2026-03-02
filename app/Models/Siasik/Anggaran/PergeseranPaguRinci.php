@@ -67,4 +67,32 @@ class PergeseranPaguRinci extends Model
         return $this->hasOne(Mapping_Bidang_Ptk_Kegiatan::class, 'kodekegiatan', 'kodekegiatanblud');
     }
 
+    protected $appends = ['jenis'];
+
+    public function getJenisAttribute()
+    {
+        $koders = $this->koders;
+
+        if (!$koders) {
+            return null;
+        }
+
+        if (str_starts_with($koders, 'JS')) {
+            return 'Jasa';
+        }
+
+        if (str_starts_with($koders, 'RS-')) {
+            return 'Barang';
+        }
+
+        if (str_starts_with($koders, '1.3')) {
+            return 'Modal';
+        }
+
+        if (str_starts_with($koders, '1.1')) {
+            return 'Farmasi';
+        }
+
+        return 'Lainnya';
+    }
 }
