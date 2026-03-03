@@ -49,11 +49,13 @@ class PemesananController extends Controller
     {
         // cek apakah ada di pengusulan atau tidak
         // Penyesuaian_Prioritas_Header untuk cek tgl sama PergeseranPaguRinci untuk rincian nya
-        $cekPagu = PergeseranPaguRinci::where('koders', $request->kode_rs)
-            ->where('tgl', date('Y'))
-            ->first();
+        if ($request->kode_rs !== null) {
+            $cekPagu = PergeseranPaguRinci::where('koders', $request->kode_rs)
+                ->where('tgl', date('Y'))
+                ->first();
 
-        if (!$cekPagu) return new JsonResponse(['message' => 'Pagu Untuk ' . $request->nama_barang . ' tidak ditemukan'], 410);
+            if (!$cekPagu) return new JsonResponse(['message' => 'Pagu Untuk ' . $request->nama_barang . ' tidak ditemukan'], 410);
+        }
         $second = $request->all();
         $second['tanggal'] = $request->tanggal !== null ? $request->tanggal : date('Y-m-d H:i:s');
         // unset($second['reff']);
