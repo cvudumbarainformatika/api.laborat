@@ -256,17 +256,24 @@ class PengembalianPinjamanController extends Controller
                     ->where('jumlah', '>', 0)
                     ->orderBy('tglpenerimaan', 'ASC')
                     ->get();
+                $nopenerimaan = $caristok->pluck('nopenerimaan')->unique()->values()->toArray();
+                $rinciPenerimaan = PenerimaanRinci::where('kdobat', $key->kdobat)->whereIn('nopenerimaan', $nopenerimaan)->get();
+                $rinciKeyed = $rinciPenerimaan->keyBy(function ($item) {
+                    return $item->nopenerimaan . '_' . $item->no_batch;
+                });
                 foreach ($caristok as $stokItem) {
                     if ($jumlahDikembalikan <= 0) break; // keluar dari loop jika jumlah sudah cukup
                     $sisa = $stokItem->jumlah;
-
+                    $keyGabungan = $stokItem->nopenerimaan . '_' . $stokItem->nobatch;
+                    $rinci = $rinciKeyed[$keyGabungan] ?? null;
+                    $idRinci = $rinci->id ?? null;
                     $pengurangan = min($jumlahDikembalikan, $sisa);
 
                     $rincianFifo = PengembalianRinciFifo::updateOrCreate(
                         [
                             'nopengembalian' => $key->nopengembalian,
                             'kdobat' => $key->kdobat,
-                            'id_rincipenerimaan' => $key->id_rincipenerimaan,
+                            'id_rincipenerimaan' => $idRinci, // percuma karena ya sama aja 
                             'nopenerimaan' => $stokItem->nopenerimaan,
                         ],
                         [
