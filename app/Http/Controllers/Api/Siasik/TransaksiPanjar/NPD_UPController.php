@@ -258,9 +258,9 @@ class NPD_UPController extends Controller
                 SpmUP::create([
                     'noSpm'        => $nospm,
                     'nosppup'      => $data->nosppup,
-                    'tglSpm'       => $data->tglTrans,
+                    'tglSpm'       => $request->tglSpm,
                     'tgltransSpp'    => $data->tglTrans,
-                    'uraianPekerjaan'=> $data->uraian,
+                    'uraianPekerjaan'=> $request->uraianPekerjaan,
                     'kdBendaharaKeluar'    => $data->kdBendaharaKeluar,
                     'bendaharapengeluaran' => $data->bendaharaKeluar,
                     'jumlahspp'   => $data->jumlahspp,

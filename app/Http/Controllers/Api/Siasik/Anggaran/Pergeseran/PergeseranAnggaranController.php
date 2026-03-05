@@ -124,8 +124,37 @@ class PergeseranAnggaranController extends Controller
         $hargabaru  = (int) $validated['hargabaru'];
         $totalbaru  = $volumebaru * $hargabaru;
         $selisih = $totalbaru - $validated['nilai'];
+
         try {
             DB::beginTransaction();
+
+            $header = Penyesuaian_Prioritas_Header::where('notrans', $validated['notrans'])
+                ->first();
+            if (!$header) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Data Prioritas tidak ditemukan'
+                ], 422);
+            }
+
+            $paguHeader = (int) $header->pagu;
+            $totalPenetapan = PergeseranPaguRinci::where('notrans', $validated['notrans'])
+                ->where('kodekegiatanblud', $validated['kodekegiatanblud'])
+                ->where('bidang', $validated['kodebidang'])
+                ->when($idpp, function ($q) use ($idpp) {
+                    // jika edit jangan ikut dihitung data lama
+                    $q->where('idpp', '!=', $idpp);
+                })
+                ->sum('pagu');
+            $totalSetelahSimpan = $totalPenetapan + $totalbaru;
+
+            // VALIDASI
+            if ($totalSetelahSimpan > $paguHeader) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal disimpan! Jumlah Melebihi Pagu.'
+                ], 422);
+            }
 
             $anggaran = Perubahan_RincianBelanja::create(
                 [
@@ -186,7 +215,21 @@ class PergeseranAnggaranController extends Controller
             }
 
             DB::commit();
-            $data = Penyesuaian_Prioritas_Header::with('penetapan')
+            $data = Penyesuaian_Prioritas_Header::with(['penetapan' => function($q) {
+            $q->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
+                    $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
+                                        'spjpanjar_rinci.jumlahbelanjapanjar');
+                    },'realisasi'=> function ($realisasi) {
+                    $realisasi->select('npdls_rinci.idserahterima_rinci',
+                                        'npdls_rinci.nominalpembayaran')
+                                        // ->sum('nominalpembayaran')
+                                        // ->selectRaw('sum(nominalpembayaran) as total_realisasi')
+                                        ;
+                    },'contrapost'=> function ($realisasi) {
+                    $realisasi->select('contrapost.idpp',
+                                        'contrapost.nominalcontrapost');
+                        }]);
+            }])
                 ->when($anggaran->notrans, function ($q) use ($anggaran) {
                     $q->where('notrans', $anggaran->notrans);
                 })
