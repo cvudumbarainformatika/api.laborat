@@ -84,7 +84,11 @@ class LRAController extends Controller
                         ->with('kode5',function($gg){
                             $gg->select('akun50_2024.kodeall2','akun50_2024.uraian');
                             })
-        ->join('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        // ->join('t_tampung', 't_tampung.koderek50', '=', 'akun50_2024.kodeall2')
+        ->join('t_tampung as akun', function ($join) {
+                $join->on('akun.koderek50', '=', 'akun50_2024.kodeall2')
+                        ->orOn('akun.koderek50', '=', 'akun50_2024.kodeall3');
+                })
         ->where('tgl', $thn)
         ->where('pagu', '!=', '0' )
         ->when(request('bidang'),function($x) {

@@ -144,7 +144,11 @@ class LRAjurnalController extends Controller
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode3, ".", 3) LIMIT 1) as uraian3'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode4, ".", 4) LIMIT 1) as uraian4'),
             DB::raw('(SELECT uraian FROM akun50_2024 WHERE kodeall3 = SUBSTRING_INDEX(kode5, ".", 5) LIMIT 1) as uraian5'))
-        ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        // ->join('akun50_2024', 'akun50_2024.kodeall2', 't_tampung.koderek50')
+        ->join('akun50_2024', function ($join) {
+                $join->on('akun50_2024.kodeall3', '=', 't_tampung.koderek50')
+                        ->orOn('akun50_2024.kodeall2', '=', 't_tampung.koderek50');
+                })
         ->where('t_tampung.pagu', '!=', 0)
         ->where('t_tampung.tgl',  $thn)
         ->groupBy('t_tampung.koderek50')
