@@ -27,7 +27,7 @@ class LapOperasionalController extends Controller
         }
         $pagupendapatan = Tampung_pendapatan::where('tahun', $thn)
         ->select(
-                DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"),
+                // DB::raw("CONCAT('7', SUBSTRING(t_tampung_pendapatan.koderekeningblud, 2))"),
                 'akun50_2024.kodeall3 as kode6',
                 'akun50_2024.uraian',
                 DB::raw('sum(t_tampung_pendapatan.pagu) as pagupendapatan'),

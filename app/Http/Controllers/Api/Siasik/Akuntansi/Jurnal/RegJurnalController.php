@@ -101,8 +101,8 @@ class RegJurnalController extends Controller
 
         $bastsigarang = Penerimaan::where('penerimaans.no_bast', '!=', '')
             ->whereBetween('penerimaans.tanggal_bast', [$awal, $akhir])
-            ->where('penerimaans.no_pembayaran', '')
-            ->whereNull('penerimaans.tanggal_pembayaran')
+            // ->where('penerimaans.no_pembayaran', '')
+            // ->whereNull('penerimaans.tanggal_pembayaran')
             ->when(request('q'),function ($query) {
                 $query->where('penerimaans.no_bast', 'LIKE', '%' . request('q') . '%')
                 ->orWhere('penerimaans.no_penerimaan', 'LIKE', '%' . request('q') . '%')
