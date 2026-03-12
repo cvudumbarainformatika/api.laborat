@@ -38,9 +38,9 @@ class TindakanDanLaporanController extends Controller
             'asp',
             DB::raw('(ssp+psp+asp) as tarif_presiden'),
         )
-            ->when(request('q'), function ($q) {
-                $q->where('rs2', 'like', '%' . request('q') . '%');
-            })
+            // ->when(request('q'), function ($q) {
+            //     $q->where('rs2', 'like', '%' . request('q') . '%');
+            // })
             ->get();
 
         return new JsonResponse([
@@ -50,12 +50,24 @@ class TindakanDanLaporanController extends Controller
 
     public function simpanTindakanOp(Request $request)
     {
+        $nota = null;
+        if ($request->nota == 'Baru') {
+            DB::select('call nota_tindakan(@nomor)');
+            $x = DB::table('rs1')->select('rs14')->first();
+            $wew = $x->rs14;
+            $nota = FormatingHelper::notatindakan($wew, 'TO');
+        } else $nota = $request->nota;
+        // return new JsonResponse([
+        //     'req' => $request->all(),
+        //     'nota' => $nota,
+        //     'message' => 'Test '
+        // ], 410);
         $cekLaporanOperasi = LaporanOperasi::where('rs1', $request->noreg)->where('rs2', $request->nota)->first();
         if ($cekLaporanOperasi)  return new JsonResponse(['message' => 'Laporan Operasi sudah dibuatkan, tidak boleh update tindakan operasi'], 410);
         $request->validate(
             [
                 'noreg' => 'required|string',
-                'nota' => 'required|string',
+                // 'nota' => 'required|string',
                 'kode' => 'required|string',
                 'tanggal' => 'required|date',
                 'subtotal' => 'required|numeric|gt:0',
@@ -79,7 +91,7 @@ class TindakanDanLaporanController extends Controller
             $data = Kamaroperasi::updateOrCreate(
                 [
                     'rs1' => $request->noreg,
-                    'rs2' => $request->nota,
+                    'rs2' => $nota,
                 ],
                 [
                     'rs3' => $tanggal . date(' H:i:s'),
@@ -90,6 +102,9 @@ class TindakanDanLaporanController extends Controller
                     'rs8' => 1,
                     'rs9' => $request->rs9,
                     'rs10' => $user['kodesimrs'],
+                    'rs11' => $request->rs11,
+                    'rs12' => $request->rs12,
+                    'rs13' => $request->rs13,
                     'rs14' => $request->rs14,
                     'rs15' => $request->rs15,
                     'rs16' => $request->rs16,
@@ -105,7 +120,8 @@ class TindakanDanLaporanController extends Controller
             $data->load('mastertindakanoperasi', 'laporanoperasi');
             return new JsonResponse([
                 'message' => 'Sudah Disimpan',
-                'data' => $data
+                'data' => $data,
+                'nota' => $nota
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
