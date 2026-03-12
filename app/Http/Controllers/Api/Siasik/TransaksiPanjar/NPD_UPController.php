@@ -275,6 +275,7 @@ class NPD_UPController extends Controller
             
             // ================== UPDATE NPD ==================
             $data->buktiCreateSpm = '1';
+            $data->tgl_verif = $time;
             $data->save();
 
             DB::commit();
