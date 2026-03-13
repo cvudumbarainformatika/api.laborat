@@ -13,6 +13,20 @@ class IntradialitikController extends Controller
     public function list() {}
     public function simpan(Request $request)
     {
+        // return new JsonResponse(['req' => $request->all()], 410);
+        $tgl = $request->tgl;
+        $tgl_kunjungan = $request->tgl_kunjungan;
+        $d1 = \DateTime::createFromFormat('Y-m-d H:i:s', $tgl);
+        $d2 = \DateTime::createFromFormat('Y-m-d H:i:s', $tgl_kunjungan);
+
+        // $d = \DateTime::createFromFormat('Y-m-d H:i:s', $tgl);
+        // if (!$d || $d->format('Y-m-d H:i:s') !== $tgl) {
+        // if (str_starts_with($request->tgl, '0000-00-00') || strtotime($request->tgl) === false) {
+        if ($d1->format('Y-m-d') !== $d2->format('Y-m-d')) {
+            return response()->json([
+                'message' => 'Tanggal ' . $d1->format('Y-m-d') . ' tidak sama dengan tanggal kunjungan yaitu ' . $d2->format('Y-m-d')
+            ], 422);
+        }
         $user = FormatingHelper::session_user()['kodesimrs'];
         if ($request->has('id')) {
             $data = Intradialitik::find($request->id);
