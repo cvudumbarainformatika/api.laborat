@@ -603,7 +603,11 @@ class TransaksiAbsenController extends Controller
                         $totalMinutesWorking += $effectiveOut->diffInMinutes($effectiveIn);
                     }
                 } else {
-                    $tapCount++;
+                    // Cek apakah ada ijin/dispen di hari ini
+                    $hasIjinOnThisDay = $pegawaiLeaves->firstWhere('tanggal', $attendance->tanggal);
+                    if (!$hasIjinOnThisDay) {
+                        $tapCount++;
+                    }
                 }
             }
 
