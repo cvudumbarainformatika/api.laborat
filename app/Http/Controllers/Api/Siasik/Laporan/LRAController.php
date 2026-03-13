@@ -92,10 +92,10 @@ class LRAController extends Controller
         ->where('tgl', $thn)
         ->where('pagu', '!=', '0' )
         ->when(request('bidang'),function($x) {
-            $x->where('t_tampung.bidang', request('bidang'));
+            $x->where('akun.bidang', request('bidang'));
         })->when(request('kegiatan'),function($y) {
-            $y->where('t_tampung.bidang', request('bidang'))
-            ->where('t_tampung.kodekegiatanblud', request('kegiatan'));
+            $y->where('akun.bidang', request('bidang'))
+            ->where('akun.kodekegiatanblud', request('kegiatan'));
         })
         ->with(['anggaran' => function($tgl) use ($thn) {
             $tgl->where('tgl', $thn)
