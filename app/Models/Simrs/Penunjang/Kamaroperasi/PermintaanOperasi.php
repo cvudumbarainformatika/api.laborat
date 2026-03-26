@@ -71,7 +71,7 @@ class PermintaanOperasi extends Model
     }
     public function laporanop()
     {
-        return $this->hasOne(LaporanOperasi::class, 'rs2', 'rs2');
+        return $this->hasMany(LaporanOperasi::class, 'rs1', 'rs1');
     }
     public function implant()
     {

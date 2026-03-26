@@ -175,7 +175,7 @@ class TindakanDanLaporanController extends Controller
                     'rs4' => $request->rs4,
                     'rs5' => $request->rs5,
                     'rs6' => $request->rs6,
-                    'rs7' => $request->rs7,
+                    'rs7' => $request->rs7 ?? '',
                     'rs8' => $request->rs8,
                     'rs9' => $request->rs9,
                     'rs10' => $request->rs10,
