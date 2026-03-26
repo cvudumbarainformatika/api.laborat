@@ -65,8 +65,8 @@ class SurgicalSafetyController extends Controller
             ->where('persiapan_operasis.noreg', request('noreg'))
             ->get();
         //
-        $implant = Implant::where('noreg', request('noreg'))->where('nota', request('nota'))->get();
-        $implantSeri = ImplantSeri::where('noreg', request('noreg'))->where('nota', request('nota'))->get();
+        $implant = Implant::where('noreg', request('noreg'))->get();
+        $implantSeri = ImplantSeri::where('noreg', request('noreg'))->get();
         return new JsonResponse([
             'data' => $data,
             'implant' => $implant,
