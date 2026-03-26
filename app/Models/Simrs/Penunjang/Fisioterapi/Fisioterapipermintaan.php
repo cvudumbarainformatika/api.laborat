@@ -22,6 +22,10 @@ class Fisioterapipermintaan extends Model
     protected $guarded = ['id'];
 
 
+    public function kunjungan_rehab()
+    {
+        return $this->hasMany(FisioSambung::class, 'link_noreg', 'rs1');
+    }
     public function soap()
     {
         return $this->hasMany(FisioSoap::class, 'noreg', 'rs1');

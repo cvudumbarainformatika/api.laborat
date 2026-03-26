@@ -64,6 +64,7 @@ use App\Models\Simrs\Penunjang\Farmasi\Apotekrajalracikanrincilalu;
 use App\Models\Simrs\Penunjang\Farmasinew\Depo\Resepkeluarheder;
 use App\Models\Simrs\Penunjang\Farmasinew\Retur\Returpenjualan_h;
 use App\Models\Simrs\Penunjang\Farmasinew\TelaahResep;
+use App\Models\Simrs\Penunjang\Fisioterapi\FisioSambung;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Penunjang\Hemodialisa\Intradialitik;
 use App\Models\Simrs\Penunjang\Hemodialisa\PengkajianHemodialisa;
@@ -106,6 +107,12 @@ class KunjunganPoli extends Model
     public $timestamps = false;
     protected $primaryKey = 'rs1';
     protected $keyType = 'string';
+
+
+    public function kunjungan_rehab()
+    {
+        return $this->hasMany(FisioSambung::class, 'link_noreg', 'rs1');
+    }
 
     // ini dipake hd
     public function pegsim()

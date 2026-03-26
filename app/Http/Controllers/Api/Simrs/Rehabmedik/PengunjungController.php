@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Simrs\Rehabmedik;
 
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Penunjang\Fisioterapi\FisioSambung;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
 use Carbon\Carbon;
@@ -250,7 +251,7 @@ class PengunjungController extends Controller
             'rs9.groups as groups',
 
             DB::raw('coalesce(permintaan.rs16, rs17.rs9) as kodedokter'),
-            DB::raw('coalesce(pegawai_fisio.nama, pegawai.nama) as dokter')
+            DB::raw('coalesce(pegawai_fisio.nama, pegawai.nama) as dokter'),
         )
             ->leftjoin('rs201 as permintaan', 'rs17.rs1', '=', 'permintaan.rs1') //permintaan
             ->leftjoin('rs15', 'rs15.rs1', '=', 'rs17.rs2') //pasien
@@ -278,6 +279,8 @@ class PengunjungController extends Controller
                     ->orWhere('rs15.rs2', 'LIKE', '%' . request('q') . '%')
                 ;
             })
+
+            ->with('kunjungan_rehab')
 
             ->union($permintaan)
             // ->groupBy('rs17.rs1')
@@ -352,6 +355,7 @@ class PengunjungController extends Controller
             ->leftJoin('kepegx.pegawai as pegawai', 'rs201.rs16', '=', 'pegawai.kdpegsimrs')
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs201.rs10') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
+
         ;
 
         $q = $select
@@ -378,6 +382,8 @@ class PengunjungController extends Controller
                     ->orWhere('pasien23.rs1', 'LIKE', '%' . request('q') . '%')
                 ;
             })
+
+            ->with('kunjungan_rehab')
 
             ->groupBy('rs201.rs2');
         // ->orderby('rs17.rs3', $sort);
@@ -480,6 +486,7 @@ class PengunjungController extends Controller
                     $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
                         ->orderBy('id', 'DESC');
                 },
+                'kunjungan_rehab'
             ])
             ->where('rs201.rs1', request('noreg'))
             ->first();
@@ -503,6 +510,60 @@ class PengunjungController extends Controller
             [
                 'message' => 'ok',
                 'result' => $carikunjungan->load('datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp'),
+            ],
+            200
+        );
+    }
+    public function mulaiRehab(Request $request)
+    {
+        $cek = FisioSambung::where('norm', $request->norm)->get();
+        // jika tidak ada data fisio sambung... maka simpan data untuk pertama kalinya
+        // if ($cek->isEmpty()) {
+        //     $fisio = new FisioSambung();
+        //     $fisio->norm = $request->norm;
+        //     $fisio->noreg = $request->noreg;
+        //     $fisio->link_noreg = $request->noreg;
+        //     $fisio->no = 0;
+        //     $fisio->save();
+
+        //     // tampilkan semua data
+        //     $all = FisioSambung::where('norm', $request->norm)->get();
+        //     return new JsonResponse(
+        //         [
+        //             'message' => 'ok',
+        //             'result' => $all,
+        //         ],
+        //         200
+        //     );
+        // } else {
+        // tampilkan semua data terlebih dahulu
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $cek,
+            ],
+            200
+        );
+        // }
+    }
+    public function pilihrangkaian(Request $request)
+    {
+
+        $cek = FisioSambung::where('link_noreg', $request->noreg)->get();
+
+
+
+        $data = new FisioSambung();
+        $data->norm = $request->norm;
+        $data->noreg = $request->noreg;
+        $data->link_noreg = $request->noreg;
+        $data->no = $request->no;
+        $data->save();
+
+        return new JsonResponse(
+            [
+                'message' => 'ok',
+                'result' => $data,
             ],
             200
         );
