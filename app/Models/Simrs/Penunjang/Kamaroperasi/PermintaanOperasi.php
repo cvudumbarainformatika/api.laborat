@@ -89,4 +89,8 @@ class PermintaanOperasi extends Model
     {
         return $this->hasMany(InventarisInstrumen::class, 'nota', 'rs2');
     }
+    public function pra_bedah()
+    {
+        return $this->belongsTo(AssasemenPraBedah::class, 'rs2', 'nota');
+    }
 }
