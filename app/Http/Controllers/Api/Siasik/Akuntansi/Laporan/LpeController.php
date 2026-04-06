@@ -9,7 +9,6 @@ use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Header;
 use App\Models\Siasik\Master\Akun50_2024;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LpeController extends Controller

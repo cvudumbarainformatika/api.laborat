@@ -10,7 +10,6 @@ use App\Models\Siasik\Anggaran\Tampung_pendapatan;
 use App\Models\Siasik\Akuntansi\Jurnal\JurnalUmum_Header;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class NeracaController extends Controller
