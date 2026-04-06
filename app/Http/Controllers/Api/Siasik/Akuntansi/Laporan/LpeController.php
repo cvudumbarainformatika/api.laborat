@@ -171,13 +171,15 @@ class LpeController extends Controller
         ->with(['saldoawal'=>function($sa) use ($awal,$akhir){
             $sa->select(
                 'saldoawal.kodepsap13',
-                DB::raw('ifnull(sum(saldoawal.debit-saldoawal.kredit),0) as saldo')
+                // DB::raw('ifnull(sum(saldoawal.debit-saldoawal.kredit),0) as saldo')
+                DB::raw('ifnull(sum(saldoawal.kredit-saldoawal.debit),0) as saldo')
             ) ->whereBetween('saldoawal.tglentry', [$awal. ' 00:00:00', $akhir. ' 23:59:59'])
             ->groupBy( 'saldoawal.kodepsap13');
         },'jurnalotom' => function($x) use ($awal,$akhir){
             $x->select(
                 'jurnal_postingotom.kode',
-                DB::raw('ifnull(sum(jurnal_postingotom.debit-jurnal_postingotom.kredit),0) as totaljurnal'),
+                // DB::raw('ifnull(sum(jurnal_postingotom.debit-jurnal_postingotom.kredit),0) as totaljurnal'),
+                DB::raw('ifnull(sum(jurnal_postingotom.kredit-jurnal_postingotom.debit),0) as totaljurnal'),
             )->whereBetween('jurnal_postingotom.tanggal', [$awal, $akhir])
             ->where('jurnal_postingotom.verif', '=', '1')
             ->groupBy( 'jurnal_postingotom.kode');
@@ -186,7 +188,8 @@ class LpeController extends Controller
             $sel->join('jurnalumum_heder', 'jurnalumum_heder.nobukti', 'jurnalumum_rinci.nobukti')
             ->select('jurnalumum_rinci.kodepsap13',
                     'jurnalumum_heder.tanggal',
-                    DB::raw('sum(jurnalumum_rinci.debet-jurnalumum_rinci.kredit) as totalpenyesuaian')
+                    // DB::raw('sum(jurnalumum_rinci.debet-jurnalumum_rinci.kredit) as totalpenyesuaian')
+                    DB::raw('sum(jurnalumum_rinci.kredit-jurnalumum_rinci.debet) as totalpenyesuaian')
                     )
             ->where('jurnalumum_heder.verif', '=', '1')
             ->whereBetween('jurnalumum_heder.tanggal', [$awal, $akhir])

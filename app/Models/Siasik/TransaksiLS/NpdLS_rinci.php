@@ -2,6 +2,7 @@
 
 namespace App\Models\Siasik\TransaksiLS;
 
+use App\Models\Siasik\Anggaran\PergeseranPaguRinci;
 use App\Models\Siasik\Master\Akun50_2024;
 use App\Models\Siasik\Master\Akun_Kepmendg50;
 use App\Models\Siasik\Master\Akun_mapjurnal;
@@ -32,5 +33,11 @@ class NpdLS_rinci extends Model
     public function mapjurnal()
     {
         return $this->belongsTo(Akun_mapjurnal::class, 'koderek50', 'kodeall');
+    }
+
+
+    public function tampung()
+    {
+        return $this->belongsTo(PergeseranPaguRinci::class, 'idserahterima_rinci', 'idpp');
     }
 }
