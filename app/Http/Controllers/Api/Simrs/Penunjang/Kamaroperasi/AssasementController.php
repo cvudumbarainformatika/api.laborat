@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 
 class AssasementController extends Controller
 {
+    // pra pra_bedah
     public function simpan(Request $request)
     {
         $request->validate(
