@@ -10,4 +10,5 @@ Route::group([
 ], function () {
   // Route::get('/getnota', [KamaroperasiController::class, 'getnota']);
   Route::post('/pra-bedah/simpan', [AssasementController::class, 'simpan']);
+  Route::post('/pra-induksi/simpan', [AssasementController::class, 'simpanPraInduksi']);
 });

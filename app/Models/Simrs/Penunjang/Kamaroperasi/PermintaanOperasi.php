@@ -93,4 +93,8 @@ class PermintaanOperasi extends Model
     {
         return $this->belongsTo(AssasemenPraBedah::class, 'rs2', 'nota');
     }
+    public function pra_induksi()
+    {
+        return $this->belongsTo(AssasmentPraInduksi::class, 'rs2', 'nota');
+    }
 }

@@ -283,6 +283,7 @@ class KamaroperasiController extends Controller
                 'inventaris_kasa',
                 'inventaris_instrumen',
                 'pra_bedah',
+                'pra_induksi',
                 'tindakanop' => function ($q) {
                     $q->with('mastertindakanoperasi', 'laporanoperasi');
                 },
