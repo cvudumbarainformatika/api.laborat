@@ -112,8 +112,33 @@ class NPD_LSController extends Controller
                         'npdls_rinci.volumels',
                         'npdls_rinci.satuan',
                         'npdls_rinci.hargals',
-                        'npdls_rinci.nominalpembayaran'
-                    );
+                        'npdls_rinci.nominalpembayaran',
+                        'npdls_rinci.idserahterima_rinci'
+                    )
+                    ->with([
+                        'tampung' => function ($tampung) {
+                            $tampung->with([
+                                'realisasi_spjpanjar' => function ($q) {
+                                    $q->select(
+                                        'spjpanjar_rinci.iditembelanjanpd',
+                                        'spjpanjar_rinci.jumlahbelanjapanjar'
+                                    );
+                                },
+                                'realisasi' => function ($q) {
+                                    $q->select(
+                                        'npdls_rinci.idserahterima_rinci',
+                                        'npdls_rinci.nominalpembayaran'
+                                    );
+                                },
+                                'contrapost' => function ($q) {
+                                    $q->select(
+                                        'contrapost.idpp',
+                                        'contrapost.nominalcontrapost'
+                                    );
+                                }
+                            ]);
+                        }
+                    ]);
                 },
                 'npkrinci' => function ($cair) {
                     $cair->select('nonpk', 'nonpdls')
@@ -705,6 +730,7 @@ class NPD_LSController extends Controller
                         'npdls_rinci.totalls',
                         'npdls_rinci.nominalpembayaran',
                         'npdls_rinci.bast_r_id',
+                        'npdls_rinci.idserahterima_rinci'
         )
         ->join('npdls_rinci', 'npdls_rinci.nonpdls', 'npdls_heder.nonpdls')
         ->get();

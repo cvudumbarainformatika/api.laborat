@@ -25,8 +25,8 @@ class NPD_PanjarController extends Controller
             'kegiatan' => 'nullable|string',
             'kodekegiatanblud' => 'required|string',
             'kegiatanblud' => 'required|string',
-            'userentry' => 'required|string',
-            'tglentry' => 'required|date',
+            'userentry' => 'nullable|string',
+            'tglentry' => 'nullable|date',
             'kunci' => 'nullable|string',
             'kodebidang' => 'nullable|string',
             'bidang' => 'nullable|string',
@@ -35,8 +35,7 @@ class NPD_PanjarController extends Controller
             'pptk.required' => 'Nama PPTK harus diisi.',
             'kodekegiatanblud.required' => 'Kode Kegiatan BLUD harus diisi.',
             'kegiatanblud.required' => 'Nama Kegiatan BLUD harus diisi.',
-            'userentry.required' => 'User Entry harus diisi.',
-            'tglentry.required' => 'Tanggal Entry harus diisi.',
+            
         ]);
         try {
             $time = date('Y-m-d H:i:s');
@@ -56,8 +55,8 @@ class NPD_PanjarController extends Controller
             }
             
             if (empty($request->nonpdpanjar)) {
-                DB::connection('siasik')->select('call nonpdpanjae(@nomor)');
-                $x = DB::connection('siasik')->table('conter')->select('nonpdpanjae')->first();
+                DB::connection('siasik')->select('call nonpdpanjar(@nomor)');
+                $x = DB::connection('siasik')->table('conter')->select('nonpdpanjar')->first();
 
                 if (!$x) {
                     throw new \Exception('Gagal mendapatkan nomor dari prosedur notadinas');
