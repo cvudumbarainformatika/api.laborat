@@ -8,6 +8,9 @@ use App\Models\Sigarang\MonthlyStokUpdate;
 use App\Models\Sigarang\RecentStokUpdate;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DetailDistribusiDepo;
 use App\Models\Sigarang\Transaksi\DistribusiDepo\DistribusiDepo;
+use App\Models\Sigarang\Transaksi\DistribusiLangsung\DetailDistribusiLangsung;
+use App\Models\Sigarang\Transaksi\Pemakaianruangan\DetailsPemakaianruangan;
+use App\Models\Sigarang\Transaksi\Penerimaan\DetailPenerimaan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -145,16 +148,41 @@ class LaporanMutasiGudangController extends Controller
             $recent = RecentStokUpdate::select('kode_rs')
                 ->where('sisa_stok', '>', 0)
                 ->whereIn('kode_ruang', $kodeDepo)
-                ->distinct('kode_rs')->orderBy('kode_rs', 'ASC')->get();
+                ->distinct('kode_rs')->orderBy('kode_rs', 'ASC')->pluck('kode_rs');
         } else {
             $recent = MonthlyStokUpdate::select('kode_rs')->distinct('kode_rs')
                 ->where('sisa_stok', '>', 0)
                 ->whereIn('kode_ruang', $kodeDepo)
                 // ->whereBetween('tanggal', [$from, $to])
                 ->where('tanggal', 'LIKE', '%' . $anu . '%')
-                ->orderBy('kode_rs', 'ASC')->get();
+                ->orderBy('kode_rs', 'ASC')->pluck('kode_rs');
         }
-        $col = collect($recent);
+
+        $trm = DetailPenerimaan::select('kode_rs')
+            ->leftJoin('penerimaans', 'penerimaans.id', '=', 'detail_penerimaans.penerimaan_id')->whereBetween('penerimaans.tanggal', [$fromN, $toN])
+            ->where('penerimaans.status', '>', 1)
+            ->whereNotIn('kode_rs', $recent)
+            ->distinct()
+            ->pluck('kode_rs');
+        $pakai = DetailsPemakaianruangan::select('kode_rs')
+            ->leftJoin('pemakaianruangans', function ($p) {
+                $p->on('pemakaianruangans.id', '=', 'details_pemakaianruangans.pemakaianruangan_id');
+            })
+            ->whereBetween('pemakaianruangans.tanggal', [$from, $to])
+            ->where('pemakaianruangans.status', '>', 1)
+            ->whereNotIn('kode_rs', $recent)
+            ->distinct()
+            ->pluck('kode_rs');
+        $dist = DetailDistribusiLangsung::select('kode_rs')
+            ->leftJoin('distribusi_langsungs', function ($p) {
+                $p->on('distribusi_langsungs.id', '=', 'detail_distribusi_langsungs.distribusi_langsung_id');
+            })
+            ->whereBetween('distribusi_langsungs.tanggal', [$from, $to])
+            ->where('distribusi_langsungs.status', '>', 1)
+            ->whereNotIn('kode_rs', $recent)
+            ->distinct()
+            ->pluck('kode_rs');
+        $col = $recent->merge($trm)->merge($pakai)->merge($dist)->unique()->values();
 
         $barang = BarangRS::select('kode', 'nama', 'kode_satuan', 'kode_108', 'uraian_108')
             ->whereIn('kode', $col)
