@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\Simrs\Rehabmedik;
 
+use App\Helpers\FormatingHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Penunjang\Fisioterapi\FisioSambung;
 use App\Models\Simrs\Penunjang\Fisioterapi\Fisioterapipermintaan;
 use App\Models\Simrs\Rajal\KunjunganPoli;
@@ -242,6 +244,7 @@ class PengunjungController extends Controller
             'rs15.rs46 as noka',
             'rs15.rs49 as noktp',
             'rs15.rs55 as nohp',
+            'rs15.rs46 as noka',
             // 'permintaan.rs2 as nota_permintaan',
             DB::raw('(CASE WHEN permintaan.rs2 ="" THEN NULL ELSE permintaan.rs2 END) as nota_permintaan'),
             DB::raw('(CASE WHEN rs17.rs8 ="" THEN "rjl" ELSE "rjl" END) as flagdepo'),
@@ -338,6 +341,7 @@ class PengunjungController extends Controller
             DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
             DB::raw('coalesce(pasien17.rs49, pasien23.rs49) as noktp'),
             DB::raw('coalesce(pasien17.rs55, pasien23.rs55) as nohp'),
+            DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
             DB::raw('(CASE WHEN rs201.rs2 ="" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
             DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN "rjl" ELSE "rnp" END) as flagdepo'),
             DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN 1 ELSE 0 END) as ispoli'),
@@ -409,6 +413,7 @@ class PengunjungController extends Controller
             'rs24.rs4 as kdgroup_ruangan',
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
             DB::raw('coalesce(memodiagnosadokter_rajal.diagnosa, memodiagnosadokter_ranap.diagnosa) as memodiagnosa'),
+            'sambung.link_noreg',
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
@@ -420,6 +425,7 @@ class PengunjungController extends Controller
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs201.rs14') //sistembayar
             ->leftjoin('memodiagnosadokter as memodiagnosadokter_rajal', 'memodiagnosadokter_rajal.noreg', '=', 'rs17.rs1')
             ->leftjoin('memodiagnosadokter as memodiagnosadokter_ranap', 'memodiagnosadokter_ranap.noreg', '=', 'rs23.rs1')
+            ->leftjoin('rs201_sambung as sambung', 'sambung.noreg', '=', 'rs201.rs1')
             ->with([
 
                 'datasimpeg:id,nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp',
@@ -486,7 +492,15 @@ class PengunjungController extends Controller
                     $t->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs', 'gambardokumens:id,rs73_id,nama,original,url')
                         ->orderBy('id', 'DESC');
                 },
-                'kunjungan_rehab'
+                'kunjungan_rehab' => function ($t) {
+                    $t->select('rs201_sambung.*', 'rs17.rs3 as tgl_kunjungan')
+                        ->join('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg');
+                    $t->with([
+                        'tindakan' => function ($a) {
+                            $a->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
+                        }
+                    ]);
+                }
             ])
             ->where('rs201.rs1', request('noreg'))
             ->first();
@@ -516,26 +530,8 @@ class PengunjungController extends Controller
     }
     public function mulaiRehab(Request $request)
     {
-        $cek = FisioSambung::where('norm', $request->norm)->get();
-        // jika tidak ada data fisio sambung... maka simpan data untuk pertama kalinya
-        // if ($cek->isEmpty()) {
-        //     $fisio = new FisioSambung();
-        //     $fisio->norm = $request->norm;
-        //     $fisio->noreg = $request->noreg;
-        //     $fisio->link_noreg = $request->noreg;
-        //     $fisio->no = 0;
-        //     $fisio->save();
+        $cek = FisioSambung::where('norm', $request->norm)->where('flag', 0)->orderBy('id', 'ASC')->limit(1)->get();
 
-        //     // tampilkan semua data
-        //     $all = FisioSambung::where('norm', $request->norm)->get();
-        //     return new JsonResponse(
-        //         [
-        //             'message' => 'ok',
-        //             'result' => $all,
-        //         ],
-        //         200
-        //     );
-        // } else {
         // tampilkan semua data terlebih dahulu
         return new JsonResponse(
             [
@@ -548,24 +544,239 @@ class PengunjungController extends Controller
     }
     public function pilihrangkaian(Request $request)
     {
+        // return $request->all();
 
-        $cek = FisioSambung::where('link_noreg', $request->noreg)->get();
+        $cek = FisioSambung::where('noreg', $request->noreg)->first();
 
+        if ($cek) {
+            return new JsonResponse(
+                [
+                    'message' => 'Maaf data kunjungan pasien ini sudah di rencanakan...!!!',
+                ],
+                500
+            );
+        }
 
 
         $data = new FisioSambung();
+
+
+        if ($request->mode === 'baru') {
+            $data->no = 1;
+        } else {
+            $lastNo = FisioSambung::where('norm', $request->norm)->orderBy('id', 'DESC')->first();
+            $data->no = ($lastNo->no ?? 1) + 1;
+        }
+
         $data->norm = $request->norm;
         $data->noreg = $request->noreg;
-        $data->link_noreg = $request->noreg;
-        $data->no = $request->no;
+        $data->link_noreg = $request->link_noreg ?? $request->noreg ?? null;
         $data->save();
+
+        $res = FisioSambung::where('link_noreg', $request->link_noreg ?? $request->noreg)->get();
 
         return new JsonResponse(
             [
                 'message' => 'ok',
-                'result' => $data,
+                'result' => $res,
             ],
             200
         );
+    }
+
+
+    public function simpanPlann(Request $request)
+    {
+
+        // return new JsonResponse($request->all(), 200);
+        return DB::transaction(function () use ($request) {
+
+            $noreg = trim($request->noreg);
+            $norm = trim($request->norm);
+            $keadaan = trim($request->keadaan);
+            $kodepolilain = trim($request->kodepolilain);
+            $kodepoli = trim($request->kodepoli_asal);
+            $sistembayar = trim($request->sistembayar);
+
+            $todayStart = now()->startOfDay();
+            $todayEnd   = now()->endOfDay();
+            $now = now();
+
+            // =========================
+            // CEK PERMINTAAN + LOCK
+            // =========================
+            $jml_cek_permintaan = DB::table('rs201')
+                ->where('rs1', $noreg)
+                ->where('rs2', '<>', '')
+                ->lockForUpdate()
+                ->count();
+
+            // =========================
+            // CASE 1 & 2 (DIGABUNG)
+            // =========================
+            if (
+                $keadaan == "Melanjutkan Program Di Fisioterapi" ||
+                $keadaan == "Kembali Ke Ruang Sebelumnya"
+            ) {
+
+                DB::table('rs201')
+                    ->where('rs1', $noreg)
+                    ->update([
+                        'rs17' => $keadaan,
+                        'rs9'  => '2',
+                        'rs15' => '1'
+                    ]);
+
+                DB::table('rs15')
+                    ->where('rs1', $norm)
+                    ->update([
+                        'rs52' => $keadaan == "Melanjutkan Program Di Fisioterapi" ? '1' : ''
+                    ]);
+
+                if ($jml_cek_permintaan < 1) {
+                    DB::table('rs17')
+                        ->where('rs1', $noreg)
+                        ->update(['rs19' => '1']);
+                }
+
+                return response("OK|");
+            }
+
+            // =========================
+            // CEK KONSUL (LOCK + RANGE)
+            // =========================
+            $existing = DB::table('rs17')
+                ->where('rs2', $norm)
+                ->where('rs8', $kodepolilain)
+                ->whereBetween('rs3', [$todayStart, $todayEnd])
+                ->lockForUpdate()
+                ->get();
+
+            // sudah terkonsul aktif
+            foreach ($existing as $row) {
+                if ($row->rs19 == '') {
+                    return response("Maaf, pasien tersebut sudah terkonsul.");
+                }
+            }
+
+            // =========================
+            // ADA DATA HARI INI
+            // =========================
+
+            $user = auth()->user();
+            $sesi =  Pegawai::find($user->pegawai_id)->kdpegsimrs ?? null;
+            if ($existing->count() > 0) {
+
+                $rs1_lama = $existing->first()->rs1;
+
+                DB::table('rs17')
+                    ->where('rs2', $norm)
+                    ->where('rs8', $kodepolilain)
+                    ->whereBetween('rs3', [$todayStart, $todayEnd])
+                    ->update(['rs19' => '']);
+
+                DB::table('rs220')->insert([
+                    'rs1' => $rs1_lama,
+                    'rs2' => $norm,
+                    'rs3' => $kodepolilain,
+                    'rs4' => $now,
+                    'rs5' => $sesi,
+                    'rs6' => $now,
+                    'rs7' => '1'
+                ]);
+
+                DB::table('rs17')->where('rs1', $noreg)->update(['rs24' => '1']);
+                DB::table('rs17')->where('rs1', $rs1_lama)->update(['rs24' => '']);
+
+                return response("OK|");
+            }
+
+            // =========================
+            // VALIDASI POLI
+            // =========================
+            if ($kodepolilain == $kodepoli) {
+                return response("Maaf, tidak boleh konsultasi ke polinya sendiri.");
+            }
+
+            // =========================
+            // LOCK COUNTER
+            // =========================
+            $rs1 = DB::table('rs1')->lockForUpdate()->first();
+            $counter = $rs1->rs13 + 1;
+
+            DB::table('rs1')->update([
+                'rs13' => $counter
+            ]);
+
+            $noregx = FormatingHelper::gennoreg($counter, "J");
+
+            // =========================
+            // INSERT RS17 (1x langsung lengkap)
+            // =========================
+            DB::table('rs17')->insert([
+                'rs1'  => $noregx,
+                'rs2'  => $norm,
+                'rs3'  => $now,
+                'rs6'  => 'AR0022', // ini cara pulang
+                'rs8'  => $kodepolilain,
+                'rs10' => '0',
+                'rs11' => '',
+                'rs12' => '0',
+                'rs13' => '0',
+                'rs14' => $sistembayar ?? '',
+                'rs18' => $sesi,
+                'rs19' => '',
+                'rs20' => $kodepoli,
+                'rs23' => '1'
+            ]);
+
+            DB::table('rs220')->insert([
+                'rs1' => $noregx,
+                'rs2' => $norm,
+                'rs3' => $kodepolilain,
+                'rs4' => $now,
+                'rs5' => $sesi,
+                'rs6' => $now,
+                'rs7' => '1'
+            ]);
+
+            DB::table('rs17')->where('rs1', $noreg)->update(['rs24' => '1']);
+
+            // =========================
+            // AMBIL META (1x)
+            // =========================
+            $meta = DB::table('rs30z')
+                ->where('rs1', 'T00009')
+                ->first();
+
+            DB::table('rs35')->insert([
+                'rs1'  => $noregx,
+                'rs2'  => '',
+                'rs3'  => 'K3#',
+                'rs4'  => now()->format('d/m/Y H:i:s'),
+                'rs5'  => 'D',
+                'rs6'  => 'Konsultasi Antar Poliklinik',
+                'rs7'  => $meta->rs8 ?? '',
+                'rs8'  => $sistembayar ?? '',
+                'rs9'  => '',
+                'rs10' => $sesi,
+                'rs11' => $meta->rs9 ?? '',
+                'rs12' => $sesi,
+                'rs13' => '1'
+            ]);
+
+            DB::table('rs1')->update([
+                'rs13' => DB::raw('rs13 + 1')
+            ]);
+
+            DB::table('rs201')
+                ->where('rs1', $noreg)
+                ->update([
+                    'rs9' => '2',
+                    'rs15' => '1'
+                ]);
+
+            return response("OK|" . $noregx);
+        });
     }
 }

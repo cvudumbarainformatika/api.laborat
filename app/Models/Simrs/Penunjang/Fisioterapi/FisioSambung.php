@@ -3,6 +3,7 @@
 namespace App\Models\Simrs\Penunjang\Fisioterapi;
 
 use App\Models\Sigarang\Pegawai;
+use App\Models\Simrs\Tindakan\Tindakan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,8 +18,8 @@ class FisioSambung extends Model
   //   'problem_rehabilitasimedik' => 'array',
   // ];
 
-  // public function petugas()
-  // {
-  //   return $this->hasOne(Pegawai::class, 'kdpegsimrs', 'user');
-  // }
+  public function tindakan()
+  {
+    return $this->hasMany(Tindakan::class, 'rs1', 'noreg');
+  }
 }
