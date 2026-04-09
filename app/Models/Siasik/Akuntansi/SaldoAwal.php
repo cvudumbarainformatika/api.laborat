@@ -36,4 +36,10 @@ class SaldoAwal extends Model
     public function penyesuaian(){
         return $this->hasMany(JurnalUmum_Rinci::class,'kodepsap13', 'kode');
     }
+    public function jurnalotom_lalu(){
+        return $this->hasMany(Create_JurnalPosting::class,'kode', 'kode');
+    }
+    public function penyesuaian_lalu(){
+        return $this->hasMany(JurnalUmum_Rinci::class,'kodepsap13', 'kode');
+    }
 }

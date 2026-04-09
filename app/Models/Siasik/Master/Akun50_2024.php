@@ -44,10 +44,19 @@ class Akun50_2024 extends Model
     public function saldoawal(){
         return $this->hasMany(SaldoAwal::class,'kodepsap13', 'kodeall3');
     }
+    public function saldoawal_lalu(){
+        return $this->hasMany(SaldoAwal::class,'kodepsap13', 'kodeall3');
+    }
     public function jurnalotom(){
         return $this->hasMany(Create_JurnalPosting::class,'kode', 'kodeall3');
     }
+    public function jurnalotom_lalu(){
+        return $this->hasMany(Create_JurnalPosting::class,'kode', 'kodeall3');
+    }
     public function penyesuaianx(){
+        return $this->hasMany(JurnalUmum_Rinci::class,'kodepsap13', 'kodeall3');
+    }
+    public function penyesuaianx_lalu(){
         return $this->hasMany(JurnalUmum_Rinci::class,'kodepsap13', 'kodeall3');
     }
     // public function penyesuaian()
