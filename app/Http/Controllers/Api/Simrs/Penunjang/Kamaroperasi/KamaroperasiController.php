@@ -243,7 +243,7 @@ class KamaroperasiController extends Controller
                     $permintaanobatoperasi->with([
                         'rinci' => function ($rinci) {
                             $rinci->with([
-                                'obat:kd_obat,nama_obat'
+                                'obat:kd_obat,nama_obat,jenis_perbekalan'
                             ])
                                 ->orderBy('id', 'ASC');
                         }
