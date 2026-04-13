@@ -16,6 +16,7 @@ Route::group([
     Route::get('/terimapasien', [PengunjungController::class, 'terimapasien']);
     Route::post('/mulairehab', [PengunjungController::class, 'mulaiRehab']);
     Route::post('/pilihrangkaian', [PengunjungController::class, 'pilihrangkaian']);
+    Route::post('/selesaikanrehab', [PengunjungController::class, 'selesaikanrehab']);
     Route::post('/simpanplann', [PengunjungController::class, 'simpanPlann']);
     Route::post('/gantidpjp', [PengunjungController::class, 'gantidpjp']);
 

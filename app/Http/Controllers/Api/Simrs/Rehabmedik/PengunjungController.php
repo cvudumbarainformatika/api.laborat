@@ -245,6 +245,7 @@ class PengunjungController extends Controller
             'rs15.rs49 as noktp',
             'rs15.rs55 as nohp',
             'rs15.rs46 as noka',
+            'rs222.rs8 as sep',
             // 'permintaan.rs2 as nota_permintaan',
             DB::raw('(CASE WHEN permintaan.rs2 ="" THEN NULL ELSE permintaan.rs2 END) as nota_permintaan'),
             DB::raw('(CASE WHEN rs17.rs8 ="" THEN "rjl" ELSE "rjl" END) as flagdepo'),
@@ -261,7 +262,8 @@ class PengunjungController extends Controller
             ->leftjoin('rs19', 'rs19.rs1', '=', 'rs17.rs8') //poli
             ->leftjoin('rs9', 'rs9.rs1', '=', 'rs17.rs14') //sistembayar
             ->leftJoin('kepegx.pegawai as pegawai', 'rs17.rs9', '=', 'pegawai.kdpegsimrs')
-            ->leftJoin('kepegx.pegawai as pegawai_fisio', 'permintaan.rs16', '=', 'pegawai_fisio.kdpegsimrs');
+            ->leftJoin('kepegx.pegawai as pegawai_fisio', 'permintaan.rs16', '=', 'pegawai_fisio.kdpegsimrs')
+            ->leftJoin('rs222', 'rs222.rs1', '=', 'rs17.rs1');
 
         $q = $select
             ->whereBetween('rs17.rs3', [$tgl, $tglx])
@@ -342,6 +344,7 @@ class PengunjungController extends Controller
             DB::raw('coalesce(pasien17.rs49, pasien23.rs49) as noktp'),
             DB::raw('coalesce(pasien17.rs55, pasien23.rs55) as nohp'),
             DB::raw('coalesce(pasien17.rs46, pasien23.rs46) as noka'),
+            DB::raw('coalesce(rs222.rs8, rs227.rs8) as sep'),
             DB::raw('(CASE WHEN rs201.rs2 ="" THEN NULL ELSE rs201.rs2 END) as nota_permintaan'),
             DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN "rjl" ELSE "rnp" END) as flagdepo'),
             DB::raw('(CASE WHEN rs19.rs1 IS NOT NULL THEN 1 ELSE 0 END) as ispoli'),
@@ -353,6 +356,8 @@ class PengunjungController extends Controller
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
+            ->leftjoin('rs222', 'rs201.rs1', '=', 'rs222.rs1') //rajal
+            ->leftjoin('rs227', 'rs201.rs1', '=', 'rs227.rs1') //ranap
             ->leftjoin('rs24', 'rs24.rs1', '=', 'rs201.rs10') //ruangan ranap
             ->leftjoin('rs15 as pasien17', 'pasien17.rs1', '=', 'rs17.rs2') //pasien
             ->leftjoin('rs15 as pasien23', 'pasien23.rs1', '=', 'rs23.rs2') //pasien
@@ -414,6 +419,7 @@ class PengunjungController extends Controller
             DB::raw('coalesce(rs17.rs14, rs23.rs19) as kodesistembayar'),
             DB::raw('coalesce(memodiagnosadokter_rajal.diagnosa, memodiagnosadokter_ranap.diagnosa) as memodiagnosa'),
             'sambung.link_noreg',
+            // ''
         )
             ->leftjoin('rs17', 'rs201.rs1', '=', 'rs17.rs1') //rajal
             ->leftjoin('rs23', 'rs201.rs1', '=', 'rs23.rs1') //ranap
@@ -493,8 +499,9 @@ class PengunjungController extends Controller
                         ->orderBy('id', 'DESC');
                 },
                 'kunjungan_rehab' => function ($t) {
-                    $t->select('rs201_sambung.*', 'rs17.rs3 as tgl_kunjungan')
-                        ->join('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg');
+                    $t->select('rs201_sambung.*', 'rs17.rs3 as tgl_kunjungan', 'rs222.rs8 as sep')
+                        ->join('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg')
+                        ->join('rs222', 'rs222.rs1', '=', 'rs201_sambung.noreg');
                     $t->with([
                         'tindakan' => function ($a) {
                             $a->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
@@ -626,6 +633,11 @@ class PengunjungController extends Controller
                         'rs9'  => '2',
                         'rs15' => '1'
                     ]);
+                // DB::table('rs201_sambung')
+                //     ->where('norm', $norm)
+                //     ->update([
+                //         'flag' => 1,
+                //     ]);
 
                 DB::table('rs15')
                     ->where('rs1', $norm)
@@ -638,6 +650,8 @@ class PengunjungController extends Controller
                         ->where('rs1', $noreg)
                         ->update(['rs19' => '1']);
                 }
+
+
 
                 return response("OK|");
             }
@@ -776,7 +790,25 @@ class PengunjungController extends Controller
                     'rs15' => '1'
                 ]);
 
+            // DB::table('rs201_sambung')
+            //     ->where('norm', $norm)
+            //     ->update([
+            //         'flag' => 1,
+            //     ]);
+
             return response("OK|" . $noregx);
         });
+    }
+
+
+    public function selesaikanrehab(Request $request)
+    {
+        DB::table('rs201_sambung')
+            ->where('norm', $request->norm)
+            ->update([
+                'flag' => 1,
+            ]);
+
+        return response("OK|");
     }
 }
