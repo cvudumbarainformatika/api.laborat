@@ -14,5 +14,7 @@ Route::group([
     Route::post('/save', [PergeseranAnggaranController::class, 'save']);
     Route::post('/deleterinci', [PergeseranAnggaranController::class, 'deleterinci']);
     Route::post('/kunci', [PergeseranAnggaranController::class, 'kunci']);
+    Route::post('/verifikasi', [PergeseranAnggaranController::class, 'verifikasi']);
+    Route::get('/cetak', [PergeseranAnggaranController::class, 'cetakData']);
 
 });

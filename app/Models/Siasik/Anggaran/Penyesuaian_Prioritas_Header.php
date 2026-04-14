@@ -23,4 +23,12 @@ class Penyesuaian_Prioritas_Header extends Model
         return $this->hasMany(PergeseranPaguRinci::class,'kodekegiatanblud', 'kodekegiatan');
     }
 
+    public function penetapancopy(){
+        return $this->hasMany(Tampungcopy::class,'kodekegiatanblud', 'kodekegiatan');
+    }
+
+
+    public function rinciantampung(){
+        return $this->hasMany(PergeseranPaguRinci::class,'notrans', 'notrans');
+    }
 }
