@@ -56,7 +56,7 @@ class SoapController extends Controller
       // $data->tgl = date('Y-m-d H:i:s');
       $data->subjective = $request->subjective;
       $data->objective = $request->objective;
-      $data->asessment = $request->assessment;
+      $data->asessment = $request->asessment;
       $data->planning = $request->planning;
       $data->goal = $request->goal;
       $data->tindakan = $request->tindakan;
