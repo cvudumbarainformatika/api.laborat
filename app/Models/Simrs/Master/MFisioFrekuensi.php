@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class MFisioFrekuensi extends Model
 {
   use HasFactory;
-  protected $table = 'fisio_master_frek';
+  protected $table = 'fisio_master_frek'; //master
   protected $guarded = ['id'];
   public $timestamps = false;
 }
