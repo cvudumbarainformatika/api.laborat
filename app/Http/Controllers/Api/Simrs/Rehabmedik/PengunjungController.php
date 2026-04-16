@@ -500,8 +500,8 @@ class PengunjungController extends Controller
                 },
                 'kunjungan_rehab' => function ($t) {
                     $t->select('rs201_sambung.*', 'rs17.rs3 as tgl_kunjungan', 'rs222.rs8 as sep')
-                        ->join('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg')
-                        ->join('rs222', 'rs222.rs1', '=', 'rs201_sambung.noreg');
+                        ->leftJoin('rs17', 'rs17.rs1', '=', 'rs201_sambung.noreg')
+                        ->leftJoin('rs222', 'rs222.rs1', '=', 'rs201_sambung.noreg');
                     $t->with([
                         'tindakan' => function ($a) {
                             $a->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
