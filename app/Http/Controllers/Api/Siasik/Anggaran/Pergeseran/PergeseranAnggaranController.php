@@ -19,6 +19,10 @@ class PergeseranAnggaranController extends Controller
         $perPage = request('per_page', 50);
         $tahun = request('tahun', date('Y'));
         $q = request('q');
+        $user = auth()->user()->pegawai_id;
+        $pg= Pegawai::find($user);
+        $pegawai= $pg->nip;
+        $sebagai_sa = $pg->kdpegsimrs === '1215' || $pg->kdpegsimrs === 'sa';
         $query = Penyesuaian_Prioritas_Header::with(['penetapancopy' => function($q) {
             $q->with(['jurnal','realisasi_spjpanjar'=> function ($realisasi) {
                     $realisasi->select('spjpanjar_rinci.iditembelanjanpd',
@@ -41,6 +45,9 @@ class PergeseranAnggaranController extends Controller
                 $tahun . '-01-01',
                 $tahun . '-12-31',
             ]);
+        }
+        if ($sebagai_sa !== true) {
+            $query->where('kodepptk', $pegawai);
         }
         if ($q) {
                 $query->where(function ($w) use ($q) {
