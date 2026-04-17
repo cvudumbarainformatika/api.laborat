@@ -187,6 +187,7 @@ class LaporanMutasiGudangController extends Controller
         $barang = BarangRS::select('kode', 'nama', 'kode_satuan', 'kode_108', 'uraian_108')
             ->whereIn('kode', $col)
             ->filter(request(['q']))
+            ->whereIn('kode_depo', $kodeDepo)
             ->with([
                 'satuan:kode,nama',
                 'monthly' => function ($m) use ($from, $to, $kodeDepo, $anu) {
