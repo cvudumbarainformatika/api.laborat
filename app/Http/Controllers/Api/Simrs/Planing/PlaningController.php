@@ -714,7 +714,7 @@ class PlaningController extends Controller
                 'nama' => $request->nama,
                 'kelamin' => $request->kelamin,
                 'tglLahir' => $request->tgllahir,
-                'keterangan' => $request->keterangan2,
+                'keterangan' => $request->keterangan . ' ' . $request->keterangan2,
                 'user_id' => auth()->user()->pegawai_id
             ]
         );
