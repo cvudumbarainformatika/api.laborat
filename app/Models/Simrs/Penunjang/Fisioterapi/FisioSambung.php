@@ -22,4 +22,9 @@ class FisioSambung extends Model
   {
     return $this->hasMany(Tindakan::class, 'rs1', 'noreg');
   }
+
+  public function soap()
+  {
+    return $this->hasMany(FisioSoap::class, 'noreg', 'link_noreg');
+  }
 }

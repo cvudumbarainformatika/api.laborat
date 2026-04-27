@@ -95,6 +95,7 @@ Route::get('/getkarciscontoller', [AutogenController::class, 'getkarciscontoller
 
 Route::get('/harry', [PercobaanController::class, 'index'])->name('harry');
 Route::get('/harry-update-table', [PercobaanController::class, 'updateTable']);
+Route::get('/coba-webhook', [PercobaanController::class, 'cobaWebhook']);
 
 
 
