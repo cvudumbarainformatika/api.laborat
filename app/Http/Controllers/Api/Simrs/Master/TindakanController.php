@@ -19,7 +19,7 @@ class TindakanController extends Controller
 {
     public function getPoli()
     {
-        $data = Mpoli::listpoli()->get();
+        $data = Mpoli::listpoli()->orderBy('rs2', 'ASC')->get();
         return new JsonResponse($data);
     }
     public function listtindakan()
