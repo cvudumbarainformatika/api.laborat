@@ -505,7 +505,12 @@ class PengunjungController extends Controller
                     $t->with([
                         'tindakan' => function ($a) {
                             $a->with('mastertindakan:rs1,rs2', 'pegawai:nama,kdpegsimrs');
-                        }
+                        },
+                        // 'soap' => function ($a) {
+                        //     $a->select('fisio_soap.*')->with([
+                        //         'petugas:kdpegsimrs,nama,nik,kdgroupnakes',
+                        //     ]);
+                        // }
                     ]);
                 }
             ])

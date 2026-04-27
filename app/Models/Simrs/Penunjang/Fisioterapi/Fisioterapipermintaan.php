@@ -28,7 +28,7 @@ class Fisioterapipermintaan extends Model
     }
     public function soap()
     {
-        return $this->hasMany(FisioSoap::class, 'noreg', 'rs1');
+        return $this->hasMany(FisioSoap::class, 'noreg', 'link_noreg');
     }
     public function pengkajian()
     {

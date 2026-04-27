@@ -9,6 +9,7 @@ use App\Models\Simrs\Visite\Visite;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class PercobaanController extends Controller
 {
@@ -38,31 +39,32 @@ class PercobaanController extends Controller
         return $no;
     }
 
-    public static function intToRoman($num) {
-      $romanNumerals = [
-          1000 => 'M',
-          900 => 'CM',
-          500 => 'D',
-          400 => 'CD',
-          100 => 'C',
-          90 => 'XC',
-          50 => 'L',
-          40 => 'XL',
-          10 => 'X',
-          9 => 'IX',
-          5 => 'V',
-          4 => 'IV',
-          1 => 'I'
-      ];
-  
-      $result = '';
-      foreach ($romanNumerals as $value => $numeral) {
-          while ($num >= $value) {
-              $result .= $numeral;
-              $num -= $value;
-          }
-      }
-      return $result;
+    public static function intToRoman($num)
+    {
+        $romanNumerals = [
+            1000 => 'M',
+            900 => 'CM',
+            500 => 'D',
+            400 => 'CD',
+            100 => 'C',
+            90 => 'XC',
+            50 => 'L',
+            40 => 'XL',
+            10 => 'X',
+            9 => 'IX',
+            5 => 'V',
+            4 => 'IV',
+            1 => 'I'
+        ];
+
+        $result = '';
+        foreach ($romanNumerals as $value => $numeral) {
+            while ($num >= $value) {
+                $result .= $numeral;
+                $num -= $value;
+            }
+        }
+        return $result;
     }
 
     public static function kunjunganpasien()
@@ -75,7 +77,7 @@ class PercobaanController extends Controller
         if (request('to') === null || request('to') === '') {
             $tgl = Carbon::now()->format('Y-m-d');
         } else {
-            $tgl = request('to') ;
+            $tgl = request('to');
         }
 
         if (request('from') === null || request('from') === '') {
@@ -86,14 +88,14 @@ class PercobaanController extends Controller
 
         // $tanggal = $tgl. ' 23:59:59';
         // $tanggalx = $tglx. ' 00:00:00'; 
-        $tanggal = $tgl. ' 00:00:00';
-        $tanggalx = $tglx. ' 23:59:59'; 
+        $tanggal = $tgl . ' 00:00:00';
+        $tanggalx = $tglx . ' 23:59:59';
         // $tanggalx = Carbon::now()->subDays(180)->format('Y-m-d'). ' 00:00:00'; 
 
         // return $tanggalx;
 
-        $hr_ini = date('Y-m-d'). ' 23:59:59';
-        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d'). ' 00:00:00';
+        $hr_ini = date('Y-m-d') . ' 23:59:59';
+        $hr_180 = Carbon::now()->subDays(10)->format('Y-m-d') . ' 00:00:00';
 
         $status = request()->status === 'Belum Pulang' ? [''] : ['2', '3'];
         $ruangan = request()->koderuangan;
@@ -167,25 +169,24 @@ class PercobaanController extends Controller
                     // $query->where('rs24.groups', '=',  $ruangan)
                     // ->orWhere('rs23.titipan', '=',  $ruangan);
                     $query->where('rs24.groups', 'like',  '%' . $ruangan . '%')
-                    ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
-                } 
+                        ->orWhere('rs23.titipan', 'like',  '%' . $ruangan . '%');
+                }
                 // else {
                 //     $query->where('rs23.rs5', '!=',  '');
                 // }
-                
+
             })
-            ->where(function($query) use ($hr_ini, $hr_180, $status) {
+            ->where(function ($query) use ($hr_ini, $hr_180, $status) {
                 if ($status === 'Pulang') {
                     $query->whereBetween('rs23.rs4', [$hr_180, $hr_ini])
-                        ->whereIn('rs23.rs22',['2','3']);
+                        ->whereIn('rs23.rs22', ['2', '3']);
                 } else {
-                    $query->where('rs23.rs22','=','')
-                    ->where('rs23.rs1', '!=', '');
+                    $query->where('rs23.rs22', '=', '')
+                        ->where('rs23.rs1', '!=', '');
                 }
-                
             })
 
-            
+
             ->where(function ($query) {
                 $query->when(request('q'), function ($q) {
                     $q->where('rs23.rs1', 'like',  '%' . request('q') . '%')
@@ -195,7 +196,7 @@ class PercobaanController extends Controller
             })
             ->orderby('rs23.rs3', 'DESC')
             ->groupBy('rs23.rs1');
-            // ->paginate(25);
+        // ->paginate(25);
 
         return $data->toSql();
     }
@@ -203,11 +204,29 @@ class PercobaanController extends Controller
     public function updateTable()
     {
         $data = Visite::where('rs2', 'LIKE', '%2025-02%')
-        ->where('rs4','=', 0)
-        ->where('rs6','=','K5#')
-        ->where('rs8','=','SKR')
-        ->get();
+            ->where('rs4', '=', 0)
+            ->where('rs6', '=', 'K5#')
+            ->where('rs8', '=', 'SKR')
+            ->get();
 
         return response()->json($data);
+    }
+
+
+    public function cobaWebhook()
+    {
+        $url = config('services.orthanc.url');
+
+        $response = Http::post($url . "/webhook/patient", [
+            "nota"    => "NOTA-01",
+            "noreg"    => "TEST-SIMRS-01",
+            "norm"     => "123456",
+            "nama"     => "TES DARI LARAVEL",
+            "tgllahir" => "1988-01-01",
+            "kelamin"  => "P",
+            "modality" => "CR"
+        ]);
+
+        return $response->json();
     }
 }
