@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Simrs\Master\Tarif\TarifMasterAmbulanController;
 use App\Http\Controllers\Api\Simrs\Master\Tarif\TarifRadiologiController;
 use App\Http\Controllers\Api\Simrs\Master\Tarif\TindakanOperasiController;
 use App\Http\Controllers\Controller;
+use App\Models\Simrs\Master\Mpoli;
 use App\Models\Simrs\Master\Mtindakan;
 use App\Models\Simrs\Master\MtindakanSementara;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,11 @@ use Throwable;
 
 class TindakanController extends Controller
 {
+    public function getPoli()
+    {
+        $data = Mpoli::listpoli()->get();
+        return new JsonResponse($data);
+    }
     public function listtindakan()
     {
         $listtindakan = MtindakanSementara::select(
