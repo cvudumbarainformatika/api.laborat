@@ -11,6 +11,7 @@ Route::group([
     'prefix' => 'simrs/master/pegawai'
 ], function () {
     Route::get('/listnakes', [PegawaiController::class, 'listnakes']);
+    Route::get('/listdokters', [PegawaiController::class, 'listdokters']);
     Route::get('/listnonnakes', [PegawaiController::class, 'listNonNakes']);
     Route::get('/listall', [PegawaiController::class, 'listAll']);
 });

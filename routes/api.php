@@ -29,6 +29,9 @@ Route::prefix('v3')->group(function () {
 Route::prefix('v4')->group(function () {
     RouteHelper::includeRouteFiles(__DIR__ . '/v4'); // UNTUK WEB
 });
+Route::prefix('v5')->group(function () {
+    RouteHelper::includeRouteFiles(__DIR__ . '/v5');
+});
 // Route::prefix('rest')->group(function () {
 //     RouteHelper::includeRouteFiles(__DIR__ . '/rest');
 // });

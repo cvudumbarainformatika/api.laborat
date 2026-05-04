@@ -96,6 +96,12 @@
     "method": "listnakes"
   },
   {
+    "nama": "list_dokters",
+    "ketId": null,
+    "controller": "PegawaiController",
+    "method": "listdokters"
+  },
+  {
     "nama": "list_non_nakes",
     "ketId": null,
     "controller": "PegawaiController",
@@ -178,5 +184,11 @@
     "ketId": null,
     "controller": "SoapController",
     "method": "masterFrekuensi"
+  },
+  {
+    "nama": "list_poliklinik",
+    "ketId": null,
+    "controller": "PoliController",
+    "method": "listpoli"
   }
 ]

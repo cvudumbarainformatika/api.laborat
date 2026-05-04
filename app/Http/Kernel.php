@@ -80,6 +80,7 @@ class Kernel extends HttpKernel
         'cors' => \App\Http\Middleware\Cors::class,
 
         'auth.log' => \App\Http\Middleware\LogAuthTiming::class,
+        'api.antrian' => \App\Http\Middleware\AntrianApiKey::class,
 
     ];
 }
