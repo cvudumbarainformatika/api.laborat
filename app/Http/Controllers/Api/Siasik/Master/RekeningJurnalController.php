@@ -37,7 +37,13 @@ class RekeningJurnalController extends Controller
     }
 
     public function index(){
-        $data = Akun_mapjurnal::all();
+        $data = Akun_mapjurnal::when(request('cari'),function ($query) {
+            $query->where('kodeall', 'LIKE', '%' . request('cari') . '%')
+            ->orWhere('kode50', 'LIKE', '%' . request('cari') . '%')
+            ->orWhere('uraian50', 'LIKE', '%' . request('cari') . '%')
+            ;
+        })
+        ->get();
         return new JsonResponse($data);
     }
 
