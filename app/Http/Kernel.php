@@ -81,6 +81,7 @@ class Kernel extends HttpKernel
 
         'auth.log' => \App\Http\Middleware\LogAuthTiming::class,
         'api.antrian' => \App\Http\Middleware\AntrianApiKey::class,
+        'api.orthanc' => \App\Http\Middleware\OrthancMiddleware::class,
 
     ];
 }
