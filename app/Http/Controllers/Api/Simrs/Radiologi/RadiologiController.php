@@ -662,6 +662,7 @@ class RadiologiController extends Controller
                 'study_id'  => 'required', // ID Unik dari Orthanc
                 'view_url'  => 'required', // Link langsung ke gambar OHIF
                 'view_url_local'  => 'required', // ID Unik dari Orthanc
+                'study_instance_uid' => 'nullable'
             ]);
 
             DB::beginTransaction();
