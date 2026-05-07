@@ -675,6 +675,7 @@ class RadiologiController extends Controller
                     'study_id'  => $data['study_id'],
                     'view_url'  => $data['view_url'],
                     'view_url_local'  => $data['view_url_local'],
+                    'study_instance_uid' => $data['study_instance_uid']
                 ]
             );
 
