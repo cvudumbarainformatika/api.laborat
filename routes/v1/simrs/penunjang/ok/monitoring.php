@@ -16,4 +16,9 @@ Route::group([
   Route::get('/pasca/get', [MonitoringController::class, 'getLogPasca']);
   Route::post('/pasca/simpan', [MonitoringController::class, 'simpanLogPasca']);
   Route::post('/pasca/simpan-medikasi', [MonitoringController::class, 'simpanMedikasiPasca']);
+  // aldrete
+  Route::get('/aldrete/get', [MonitoringController::class, 'getLogAldrete']);
+  Route::post('/aldrete/simpan', [MonitoringController::class, 'simpanLogAldrete']);
+  Route::post('/aldrete/hapus', [MonitoringController::class, 'hapusLogAldrete']);
+  Route::post('/aldrete/simpan-keluar', [MonitoringController::class, 'simpanKeluarRuangPemulihan']);
 });
