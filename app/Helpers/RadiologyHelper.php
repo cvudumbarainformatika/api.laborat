@@ -34,7 +34,7 @@ class RadiologyHelper
       // $response = Http::async()->post($url . '/webhook/patient', $payload);
 
       $response = Http::withHeaders([
-        'X-API-KEY' => env('ORTHANC_API_KEY')
+        'X-API-KEY' => config('services.orthanc.api_key')
       ])->timeout(2)
         ->retry(1, 100)
         ->post($url . '/webhook/patient', $payload);
