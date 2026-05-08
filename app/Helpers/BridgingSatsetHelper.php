@@ -5,7 +5,9 @@ namespace App\Helpers;
 use App\Models\Satset\Satset;
 use App\Models\Satset\SatsetErrorRespon;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use LZCompressor\LZString;
 
 class BridgingSatsetHelper
@@ -13,21 +15,23 @@ class BridgingSatsetHelper
     /**
      * wawan 
      */
-    public static function root_url(){
+    public static function root_url()
+    {
         $url = 'https://api-satusehat.kemkes.go.id';
-        
-        return $url; 
+
+        return $url;
     }
 
-    public static function get_data_kfa($ext,$token, $params){
+    public static function get_data_kfa($ext, $token, $params)
+    {
 
-        
+
         // return self::root_url();
         $url = self::root_url() . $ext . $params;
         $response = Http::withToken($token)->get($url);
         $data = json_decode($response, true);
 
-        
+
         return $data;
         // JIKA ERROR
         $error = $data['resourceType'] === 'OperationOutcome';
@@ -46,7 +50,7 @@ class BridgingSatsetHelper
             $resp = SatsetErrorRespon::create($err);
 
             $send = [
-                'message' => 'failed' ,
+                'message' => 'failed',
                 'data' => $resp
             ];
             return $send;
@@ -115,7 +119,6 @@ class BridgingSatsetHelper
         $data = json_decode($response, true);
 
         return $data;
-        
     }
 
     public static function get_data($token, $params)
@@ -142,7 +145,7 @@ class BridgingSatsetHelper
             $resp = SatsetErrorRespon::create($err);
 
             $send = [
-                'message' => 'failed' ,
+                'message' => 'failed',
                 'data' => $resp
             ];
             return $send;
@@ -305,6 +308,34 @@ class BridgingSatsetHelper
             'message' => 'success',
             'data' => $resp
         ];
+
+
+
+        // Sebelum return $send:
+        try {
+            $pacs = DB::table('rs48_pacs')
+                ->where('noreg', $noreg)
+                ->where('status', 'COMPLETED')
+                ->whereNotNull('study_id')
+                ->get(['nota', 'study_id']);
+            foreach ($pacs as $item) {
+                try {
+                    Http::withHeaders(['X-API-KEY' => config('services.orthanc.api_key')])
+                        ->timeout(3)
+                        ->post(config('services.orthanc.url') . '/api/v1/satusehat/push-dicom', [
+                            'nota'     => $item->nota,
+                            'study_id' => $item->study_id,  // langsung pakai!
+                        ]);
+                } catch (\Exception $e) { /* abaikan */
+                    // Log error per nota
+                    Log::error("Gagal Push DICOM ke Middleware untuk Nota: " . $item->nota . ". Error: " . $e->getMessage());
+                }
+            }
+        } catch (\Exception $e) { /* abaikan */
+            // Log error query database
+            Log::error("Gagal Query rs48_pacs untuk Noreg: " . $noreg . ". Error: " . $e->getMessage());
+        }
+
         return $send;
     }
 }
