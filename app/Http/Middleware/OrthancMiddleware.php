@@ -11,7 +11,7 @@ class OrthancMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Ambil key dari file .env SIMRS
-        $apiKey = env('ORTHANC_API_KEY');
+        $apiKey = config('services.orthanc.api_key');
 
         // Cek apakah header X-API-KEY sesuai dengan yang ada di .env
         if ($request->header('X-API-KEY') !== $apiKey) {
