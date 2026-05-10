@@ -36,22 +36,24 @@ class KunjunganController extends Controller
         }
         if ($jenis_kunjungan === 'rajal') {
 
-            return PostKunjunganRajalHelper::cobarajal('247447/05/2026/J');
+            return PostKunjunganRajalHelper::cobarajal('247849/05/2026/J');
             // return CobaPostKunjunganRajalHelper::cekKunjungan('74740/09/2024/J');
             // return self::cekKunjunganRajal('74748/09/2024/J');
         }
 
         if ($jenis_kunjungan === 'ranap') {
-            $ygTerkirim = 0;
-            $arrayKunjungan = self::cekKunjunganRanap();
-            // return self::ranap($arrayKunjungan[8]);
-            for ($i = 0; $i < count($arrayKunjungan); $i++) {
-                self::ranap($arrayKunjungan[$i]);
-                // echo $i;
-                // sleep(5);//menunggu 5 detik
-                $ygTerkirim = $i + 1;
-            }
-            return ['yg terkirim' => $ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
+            // $ygTerkirim = 0;
+            // $arrayKunjungan = self::cekKunjunganRanap();
+            // // return self::ranap($arrayKunjungan[8]);
+            // for ($i = 0; $i < count($arrayKunjungan); $i++) {
+            //     self::ranap($arrayKunjungan[$i]);
+            //     // echo $i;
+            //     // sleep(5);//menunggu 5 detik
+            //     $ygTerkirim = $i + 1;
+            // }
+            // return ['yg terkirim' => $ygTerkirim, 'jml_kunjungan' => count($arrayKunjungan)];
+
+            return PostKunjunganRanapHelper::ranap('40935/05/2026/X');
         }
 
         if ($jenis_kunjungan === 'igd') {

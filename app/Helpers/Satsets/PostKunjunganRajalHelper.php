@@ -765,6 +765,32 @@ class PostKunjunganRajalHelper
         }
 
 
+        // 3. TAMBAHKAN INI: Jika diagnosa masih kosong, kasih diagnosa default (Observasi)
+        if (count($diagnosa) == 0) {
+            $uuid_default = self::generateUuid();
+            $diagnosa[] = [
+                "condition" => [
+                    "reference" => "urn:uuid:$uuid_default",
+                    "display" => "Pemeriksaan Umum / Observasi"
+                ],
+                "use" => [
+                    "coding" => [[
+                        "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+                        "code" => "DD",
+                        "display" => "Discharge diagnosis"
+                    ]]
+                ],
+                "rank" => 1
+            ];
+            $refference[] = [
+                "reference" => "$uuid_default",
+                'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
+                "display" => "Pemeriksaan Umum / Observasi",
+                "rank" => 1
+            ];
+        }
+
+
         // return $antri;
         #Bundle #1
 
@@ -962,6 +988,34 @@ class PostKunjunganRajalHelper
 
             array_push($body['entry'], $cond);
         }
+
+        // Ganti loop yang tadinya pakai $request->diagnosa jadi pakai $refference:
+        foreach ($refference as $key => $value) {
+            $cond = [
+                "fullUrl" => "urn:uuid:" . $value['reference'],
+                "resource" => [
+                    "resourceType" => "Condition",
+                    "clinicalStatus" => [
+                        "coding" => [["system" => "http://terminology.hl7.org/CodeSystem/condition-clinical", "code" => "active", "display" => "Active"]]
+                    ],
+                    "category" => [
+                        ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/condition-category", "code" => "encounter-diagnosis", "display" => "Encounter Diagnosis"]]]
+                    ],
+                    "code" => [
+                        "coding" => [[
+                            "system" => "http://hl7.org/fhir/sid/icd-10",
+                            "code" => $value['code'],
+                            "display" => $value['display']
+                        ]]
+                    ],
+                    "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama],
+                    "encounter" => ["reference" => "urn:uuid:$encounter"]
+                ],
+                "request" => ["method" => "POST", "url" => "Condition"]
+            ];
+            array_push($body['entry'], $cond);
+        }
+
 
         // PUSH ANAMESIS
         if ($anamnesis['keluhanUtama'] !== null) array_push($body['entry'], $anamnesis['keluhanUtama']);
@@ -1890,14 +1944,15 @@ class PostKunjunganRajalHelper
                             ],
                             "reasonCode" => [
                                 [
-                                    "coding" => [
+                                    "coding" => !empty($icd10) ? [
                                         [
                                             "system" => "http://hl7.org/fhir/sid/icd-10",
                                             "code" => $icd10,
                                             "display" => $display,
-                                        ],
-                                    ],
-                                ],
+                                        ]
+                                    ] : [],
+                                    "text" => "Indikasi klinis: " . ($display ?? "Observasi / Pemeriksaan Umum")
+                                ]
                             ],
                             "locationCode" => [
                                 [
@@ -1995,15 +2050,15 @@ class PostKunjunganRajalHelper
                             ],
                             "reasonCode" => [
                                 [
-                                    "coding" => [
+                                    "coding" => !empty($icd10) ? [
                                         [
                                             "system" => "http://hl7.org/fhir/sid/icd-10",
                                             "code" => $icd10,
                                             "display" => $display,
-                                        ],
-                                    ],
-                                    "text" => "Konsul " . $uraian,
-                                ],
+                                        ]
+                                    ] : [],
+                                    "text" => "Indikasi klinis: " . ($display ?? "Observasi / Pemeriksaan Umum")
+                                ]
                             ],
                             "locationCode" => [
                                 [
@@ -2100,15 +2155,15 @@ class PostKunjunganRajalHelper
                             ],
                             "reasonCode" => [
                                 [
-                                    "coding" => [
+                                    "coding" => !empty($icd10) ? [
                                         [
                                             "system" => "http://hl7.org/fhir/sid/icd-10",
                                             "code" => $icd10,
                                             "display" => $display,
-                                        ],
-                                    ],
-                                    "text" => $uraian,
-                                ],
+                                        ]
+                                    ] : [],
+                                    "text" => "Indikasi klinis: " . ($display ?? "Observasi / Pemeriksaan Umum")
+                                ]
                             ],
                             "locationCode" => [
                                 [
@@ -2249,7 +2304,7 @@ class PostKunjunganRajalHelper
         } else {
             // Untuk Prognosis ... Cek dulu apakah Pasien dari Konsul Internal Atau Bukan
             $ref = collect($refference)->filter(function ($item) {
-                return $item['jenis'] === 'Primer';
+                return ($item['jenis'] ?? '') === 'Primer';
             })->first();
 
             $pasienKonsul = !isEmpty($request->rs4);
@@ -3012,92 +3067,110 @@ class PostKunjunganRajalHelper
                 $study_uid = $rincian['study_instance_uid'];
                 $hasil_expertise = $rincian['hasil'] ?? null;
 
-                // AMBIL DATA MAPPING LOINC & SNOMED (DINAMIS)
                 $loinc_code = $rincian['relmasterpemeriksaan']['loinc_code'] ?? '24648-8';
                 $loinc_display = $rincian['relmasterpemeriksaan']['loinc_display'] ?? 'Chest XR';
-                $body_site_code = $rincian['relmasterpemeriksaan']['snomed_body_site'] ?? '43799004';
-                $body_site_display = $rincian['relmasterpemeriksaan']['snomed_display'] ?? 'Thorax';
 
-                // 1. Resource: ServiceRequest (ORDER)
-                $servisRequest_uuid = "urn:uuid:" . Str::uuid();
+                // 1. ServiceRequest (ORDER)
+                $servisRequest_uuid = "urn:uuid:" . self::generateUuid();
                 $entries[] = [
                     "fullUrl" => $servisRequest_uuid,
                     "resource" => [
                         "resourceType" => "ServiceRequest",
                         "identifier" => [
-                            ["system" => "http://sys-ids.kemkes.go.id/servicerequest/" . $organization_id, "value" => "ORD-" . $nota_simrs . "-" . $rincian['id']],
-                            ["use" => "usual", "type" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0203", "code" => "ACSN"]]], "system" => "http://sys-ids.kemkes.go.id/acsn/" . $organization_id, "value" => $nota_simrs]
+                            [
+                                "system" => "http://sys-ids.kemkes.go.id/servicerequest/" . $organization_id,
+                                "value" => "ORD-" . $nota_simrs . "-" . $rincian['id']
+                            ],
+                            // KARTU 2: Biar DICOM Router Kemenkes bisa nemu (ACSN) <-- INI YANG KURANG
+                            [
+                                "use" => "usual",
+                                "type" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0203", "code" => "ACSN"]]],
+                                "system" => "http://sys-ids.kemkes.go.id/acsn/" . $organization_id,
+                                "value" => $nota_simrs
+                            ]
                         ],
                         "status" => "active",
                         "intent" => "order",
                         "category" => [["coding" => [["system" => "http://snomed.info/sct", "code" => "363679005", "display" => "Imaging procedure"]]]],
-                        "priority" => $radiologi['cito'] == 'Cito' ? "urgent" : "routine",
-                        "code" => [
-                            "coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]],
-                            "text" => "Pemeriksaan: " . $nama_foto
-                        ],
-                        "bodySite" => [
-                            ["coding" => [["system" => "http://snomed.info/sct", "code" => $body_site_code, "display" => $body_site_display]]]
-                        ],
+                        "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]], "text" => $nama_foto],
                         "subject" => ["reference" => "Patient/" . $pasien_uuid],
                         "encounter" => ["reference" => "Encounter/" . $encounter],
                         "occurrenceDateTime" => Carbon::parse($radiologi['rs3'])->toIso8601String(),
-                        "requester" => ["reference" => "Practitioner/" . $practitioner_uuid, "display" => $radiologi['dokter']['nama']],
-                        "reasonCode" => [["text" => "Indikasi: " . $diagnosa_klinis]],
+                        "requester" => ["reference" => "Practitioner/" . $practitioner_uuid],
+                        "performer" => [["reference" => "Organization/" . $organization_id]],
+                        "reasonCode" => [["text" => $diagnosa_klinis]],
                     ],
                     "request" => ["method" => "POST", "url" => "ServiceRequest"],
                 ];
 
-                // 2. Resource: ImagingStudy (LINK GAMBAR) - Muncul jika UID ada
+                // 2. ImagingStudy
                 $imagingStudy_uuid = null;
                 if ($study_uid && $study_uid != "NULL") {
-                    $imagingStudy_uuid = "urn:uuid:" . Str::uuid();
+                    $imagingStudy_uuid = "urn:uuid:" . self::generateUuid();
                     $entries[] = [
                         "fullUrl" => $imagingStudy_uuid,
                         "resource" => [
                             "resourceType" => "ImagingStudy",
+                            "identifier" => [
+                                ["system" => "http://sys-ids.kemkes.go.id/imagingstudy/" . $organization_id, "value" => $nota_simrs],
+                                // Identitas 2: ACSN / Accession (Wajib untuk DICOM Router)
+                                [
+                                    "use" => "usual",
+                                    "type" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0203", "code" => "ACSN"]]],
+                                    "system" => "http://sys-ids.kemkes.go.id/acsn/" . $organization_id,
+                                    "value" => $nota_simrs // Pastikan ini sama dengan yang di screenshot (260507/119487J-RAD)
+                                ]
+
+                            ],
+
                             "status" => "available",
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
                             "encounter" => ["reference" => "Encounter/" . $encounter],
-                            "basedOn" => [["reference" => $servisRequest_uuid]],
+                            "basedOn" => [["reference" => $servisRequest_uuid]], // FIX RULE 10154
                             "started" => Carbon::parse($rincian['created_at'])->toIso8601String(),
-                            "modality" => [["code" => $modality]],
-                            "series" => [
-                                [
-                                    "uid" => $study_uid,
-                                    "modality" => ["code" => $modality],
-                                    "number" => 1,
-                                    "instance" => [
-                                        ["uid" => $study_uid . ".1", "sopClass" => ["system" => "urn:ietf:rfc:3986", "code" => "urn:oid:1.2.840.10008.5.1.4.1.1.1"]]
-                                    ]
-                                ]
-                            ]
+                            "modality" => [["system" => "http://dicom.nema.org/resources/ontology/DCM", "code" => $modality]],
+                            "series" => [["uid" => $study_uid, "modality" => ["system" => "http://dicom.nema.org/resources/ontology/DCM", "code" => $modality]]]
                         ],
                         "request" => ["method" => "POST", "url" => "ImagingStudy"],
                     ];
                 }
 
-                // 3. Resource: DiagnosticReport (HASIL BACAAN) - Muncul jika Hasil ada
+                // 3. Observation
                 if ($hasil_expertise) {
-                    $diagnosticReport_uuid = "urn:uuid:" . Str::uuid();
+                    $observation_uuid = "urn:uuid:" . self::generateUuid();
                     $entries[] = [
-                        "fullUrl" => $diagnosticReport_uuid,
+                        "fullUrl" => $observation_uuid,
+                        "resource" => [
+                            "resourceType" => "Observation",
+                            "status" => "final",
+                            "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/observation-category", "code" => "imaging", "display" => "Imaging"]]]],
+                            "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]]],
+                            "subject" => ["reference" => "Patient/" . $pasien_uuid],
+                            "encounter" => ["reference" => "Encounter/" . $encounter],
+                            "effectiveDateTime" => Carbon::parse($rincian['updated_at'])->toIso8601String(),
+                            "performer" => [["reference" => "Practitioner/" . $practitioner_uuid]], // FIX RULE 10383
+                            "valueString" => $hasil_expertise
+                        ],
+                        "request" => ["method" => "POST", "url" => "Observation"],
+                    ];
+
+                    // 4. DiagnosticReport
+                    $entries[] = [
+                        "fullUrl" => "urn:uuid:" . self::generateUuid(), // FIX RULE 20021
                         "resource" => [
                             "resourceType" => "DiagnosticReport",
                             "status" => "final",
                             "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0074", "code" => "RAD", "display" => "Radiology"]]]],
-                            "code" => [
-                                "coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]],
-                                "text" => "Hasil Pemeriksaan: " . $nama_foto
-                            ],
+                            "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]]],
                             "subject" => ["reference" => "Patient/" . $pasien_uuid],
                             "encounter" => ["reference" => "Encounter/" . $encounter],
                             "effectiveDateTime" => Carbon::parse($rincian['updated_at'])->toIso8601String(),
                             "issued" => Carbon::parse($rincian['updated_at'])->toIso8601String(),
-                            "performer" => [["display" => $rincian['pelaksana'] ?? 'Dokter Radiologi']],
+                            "performer" => [["reference" => "Organization/" . $organization_id]],
+                            "basedOn" => [["reference" => $servisRequest_uuid]], // FIX RULE 10387
+                            "result" => [["reference" => $observation_uuid]],
                             "imagingStudy" => $imagingStudy_uuid ? [["reference" => $imagingStudy_uuid]] : [],
-                            "basedOn" => [["reference" => $servisRequest_uuid]],
-                            "conclusion" => $hasil_expertise, // Text Expertise Lengkap
+                            "conclusion" => $hasil_expertise,
                         ],
                         "request" => ["method" => "POST", "url" => "DiagnosticReport"],
                     ];
@@ -3106,6 +3179,7 @@ class PostKunjunganRajalHelper
         }
         return $entries;
     }
+
 
 
 
@@ -3264,14 +3338,15 @@ class PostKunjunganRajalHelper
                                 [
                                     "reasonCode" => [
                                         [
-                                            "coding" => [
+                                            "coding" => !empty($icd10) ? [
                                                 [
                                                     "system" => "http://hl7.org/fhir/sid/icd-10",
                                                     "code" => $icd10,
                                                     "display" => $display,
-                                                ],
-                                            ],
-                                        ],
+                                                ]
+                                            ] : [],
+                                            "text" => "Indikasi klinis: " . ($display ?? "Observasi / Pemeriksaan Umum")
+                                        ]
                                     ],
                                     "courseOfTherapyType" => [
                                         "coding" => [
