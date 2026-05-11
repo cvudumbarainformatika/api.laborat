@@ -765,9 +765,17 @@ class PostKunjunganRajalHelper
         }
 
 
+        $uuid_default = self::generateUuid();
         // 3. TAMBAHKAN INI: Jika diagnosa masih kosong, kasih diagnosa default (Observasi)
         if (count($diagnosa) == 0) {
-            $uuid_default = self::generateUuid();
+
+            $refference[] = [
+                "reference" => "$uuid_default",
+                'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
+                "display" => "Pemeriksaan Umum / Observasi",
+                "rank" => 1
+            ];
+        } else {
             $diagnosa[] = [
                 "condition" => [
                     "reference" => "urn:uuid:$uuid_default",
@@ -780,12 +788,6 @@ class PostKunjunganRajalHelper
                         "display" => "Discharge diagnosis"
                     ]]
                 ],
-                "rank" => 1
-            ];
-            $refference[] = [
-                "reference" => "$uuid_default",
-                'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
-                "display" => "Pemeriksaan Umum / Observasi",
                 "rank" => 1
             ];
         }
