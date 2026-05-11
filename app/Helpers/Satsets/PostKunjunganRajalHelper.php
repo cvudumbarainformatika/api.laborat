@@ -733,6 +733,7 @@ class PostKunjunganRajalHelper
 
         $diagnosa = [];
         $refference = [];
+
         foreach ($request->diagnosa as $key => $value) {
             $uuid = self::generateUuid();
             $data = [
@@ -756,26 +757,46 @@ class PostKunjunganRajalHelper
 
             $refference[] = [
                 "reference" => "$uuid",
-                'code' => $value['masterdiagnosa']['rs1'],
-                "jenis" => $value['rs4'],
-                "display" => $value['masterdiagnosa']['rs4'],
-                "displayInd" => $value['masterdiagnosa']['rs3'],
+                'code' => $value['masterdiagnosa']['rs1'] ?? 'Z00.0',
+                "jenis" => $value['rs4'] ?? 'Primer',
+                "display" => $value['masterdiagnosa']['rs4'] ?? 'General medical examination', // Bahasa
+                "displayInd" => $value['masterdiagnosa']['rs3'] ?? 'Pemeriksaan Umum / Observasi',
                 "rank" => $key + 1
             ];
         }
 
 
-        $uuid_default = self::generateUuid();
-        // 3. TAMBAHKAN INI: Jika diagnosa masih kosong, kasih diagnosa default (Observasi)
-        if (count($diagnosa) == 0) {
+        // $uuid_default = self::generateUuid();
+        // // 3. TAMBAHKAN INI: Jika diagnosa masih kosong, kasih diagnosa default (Observasi)
+        // if (count($diagnosa) == 0) {
 
-            $refference[] = [
-                "reference" => "$uuid_default",
-                'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
-                "display" => "Pemeriksaan Umum / Observasi",
-                "rank" => 1
-            ];
-        } else {
+        //     $refference[] = [
+        //         "reference" => "$uuid_default",
+        //         'code' => 'Z00.0', // Kode ICD-10 Internasional untuk Pemeriksaan Umum
+        //         "display" => "Pemeriksaan Umum / Observasi",
+        //         "rank" => 1
+        //     ];
+        // } else {
+        //     $diagnosa[] = [
+        //         "condition" => [
+        //             "reference" => "urn:uuid:$uuid_default",
+        //             "display" => "Pemeriksaan Umum / Observasi"
+        //         ],
+        //         "use" => [
+        //             "coding" => [[
+        //                 "system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+        //                 "code" => "DD",
+        //                 "display" => "Discharge diagnosis"
+        //             ]]
+        //         ],
+        //         "rank" => 1
+        //     ];
+        // }
+
+        // 2. JARING PENGAMAN: Jika diagnosa masih kosong, paksa isi Z00.0
+        if (count($diagnosa) == 0) {
+            $uuid_default = self::generateUuid();
+            // Masukkan ke array Diagnosa (Wajib untuk Encounter)
             $diagnosa[] = [
                 "condition" => [
                     "reference" => "urn:uuid:$uuid_default",
@@ -788,6 +809,14 @@ class PostKunjunganRajalHelper
                         "display" => "Discharge diagnosis"
                     ]]
                 ],
+                "rank" => 1
+            ];
+            // Masukkan ke array Reference (Wajib untuk resource Condition)
+            $refference[] = [
+                "reference" => "$uuid_default",
+                'code' => 'Z00.0',
+                "display" => "General medical examination",
+                "displayInd" => "Pemeriksaan Umum / Observasi",
                 "rank" => 1
             ];
         }
