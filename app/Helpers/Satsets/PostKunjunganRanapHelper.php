@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Satsets;
 
+use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
@@ -10,8 +11,11 @@ use Illuminate\Support\Str;
 
 class PostKunjunganRanapHelper
 {
-    public static function ranap($noreg)
+    public static function ranap()
     {
+        // 1. Ambil tanggal 5 hari yang lalu
+        $tglTarget = Carbon::now()->subDays(5)->toDateString();
+
         $query = Kunjunganranap::query();
 
         $select = $query->select(
@@ -56,16 +60,9 @@ class PostKunjunganRanapHelper
             'rs9.rs2 as sistembayar',
             'rs9.groups as groups',
             'rs21.rs2 as namanakes',
-            // 'rs222.rs8 as sep_igd',
-            // 'rs227.rs8 as sep',
-            // 'rs227.rs10 as faskesawal',
-            // 'rs227.kodedokterdpjp as kodedokterdpjp',
-            // 'rs227.dokterdpjp as dokterdpjp',
             'rs24.rs2 as ruangan',
             'rs24.rs3 as kelasruangan',
             'rs24.rs5 as group_ruangan',
-            // 'rs101.rs3 as kode_diagnosa'
-            // 'bpjs_spri.noSuratKontrol as noSpri'
             'rs242.rs4 as tindaklanjut'
         )
             ->leftjoin('rs15', 'rs15.rs1', 'rs23.rs2')
@@ -73,18 +70,10 @@ class PostKunjunganRanapHelper
             ->leftjoin('rs21', 'rs21.rs1', 'rs23.rs10')
             ->leftjoin('rs24', 'rs24.rs1', 'rs23.rs5')
             ->leftjoin('rs242', 'rs242.rs1', 'rs23.rs1') // rencana tindak lanjut
-            // ->leftjoin('rs227', 'rs227.rs1', 'rs23.rs1')
-            // ->leftjoin('rs222', 'rs222.rs1', 'rs23.rs1')
-            // ->leftjoin('rs101', 'rs101.rs1', 'rs23.rs1')
-            // ->leftjoin('bpjs_spri', 'rs23.rs1', '=', 'bpjs_spri.noreg')
-
-            // ->with(['sepranap' => function($q) {
-            //     $q->select('rs1', 'rs8 as noSep', 'rs3 as ruang', 'rs5 as noRujukan', 'rs7 as diagnosa', 'rs10 as ppkRujukan', 'rs11 as jenisPeserta');
-            // }])
-
-            ->where('rs23.rs1', $noreg)
-
+            // ->where('rs23.rs1', $noreg)
             ->with([
+                'satset:uuid',
+                'satset_error:uuid',
                 'diagnosa' => function ($q) {
                     $q->select('rs101.rs1', 'rs101.rs3 as kode', 'rs99x.rs4 as inggris', 'rs99x.rs3 as indonesia', 'rs101.rs4 as type', 'rs101.rs7 as status', 'rs101.rs12 as recordedDate')
                         ->leftjoin('rs99x', 'rs101.rs3', 'rs99x.rs1')
@@ -93,17 +82,108 @@ class PostKunjunganRanapHelper
                 'datasimpeg:nik,nama,kelamin,kdpegsimrs,kddpjp,satset_uuid',
                 'relmasterruangranap' => function ($q) {
                     $q->select('rs1', 'rs2 as nama', 'kode_ruang')->with('ruang:kode,uraian,groupper,gedung,lantai,satset_uuid,departement_uuid');
-                }
+                },
 
+                'radiologi' => function ($t) {
+                    $t->with([
+                        'rincians' => function ($r) {
+                            $r->leftJoin('rs151', function ($join) {
+                                $join->on('rs48.rs2', '=', 'rs151.rs5')
+                                    ->on('rs48.rs1', '=', 'rs151.rs1')
+                                    ->on('rs48.rs4', '=', 'rs151.kode');
+                            })->leftJoin('rs48_pacs', 'rs48.rs2', '=', 'rs48_pacs.nota')
+                                ->select('rs48.*', 'rs48_pacs.*', 'rs151.hasil', 'rs151.rs3 as kesimpulan', 'rs151.hasilhtml', 'rs151.kesimpulanhtml', 'rs151.rs4 as pelaksana');
+                        },
+                        'rincians.relmasterpemeriksaan',
+                        'dokter:nip,nik,nama,kelamin,foto,kdpegsimrs,kddpjp,ttdpegawai',
+                    ])->orderBy('id', 'DESC');
+                },
             ])
 
             // ->where('rs23.rs1', $noreg)
-            ->whereIn('rs23.rs22', ['2', '3'])
+            ->where('rs4', 'LIKE', $tglTarget . '%')
+            ->whereIn('rs22', ['2', '3'])                                   // Status sudah pulang
+            ->doesntHave('satset')
+            ->doesntHave('satset_error')                                         // Belum terkirim
+            ->orderBy('rs4', 'asc')
+
             ->first();
 
-        return $select;
-        // return self::kirimKunjunganRanap($select);
+        // return $select;
+        return self::kirimKunjunganRanap($select);
     }
+
+    public static function kirimKunjunganRanap($data)
+    {
+        $pasien_uuid = $data->pasien_uuid;
+        $practitioner_uuid = $data->datasimpeg ? $data->datasimpeg['satset_uuid'] : null;
+
+        if (!$pasien_uuid) {
+            $getPasienFromSatset = self::getPasienByNikSatset($data);
+            $pasien_uuid = $getPasienFromSatset['data']['uuid'] ?? null;
+        }
+
+        if (!$practitioner_uuid) {
+            $getFromSatset = self::getPractitionerFromSatset($data);
+            $practitioner_uuid = $getFromSatset['data']['uuid'] ?? null;
+        }
+
+        if (!$pasien_uuid) {
+            return ['message' => 'error', 'data' => 'Pasien UUID Tidak Ditemukan'];
+        }
+
+        $send = self::form($data, $pasien_uuid);
+        // if ($send['message'] === 'success') {
+        //     $token = AuthSatsetHelper::accessToken();
+        //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        // }
+        return $send;
+    }
+
+    public static function getPasienByNikSatset($pasien)
+    {
+        $nik = $pasien->nik;
+        $norm = $pasien->norm;
+        $token = AuthSatsetHelper::accessToken();
+        $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
+
+        $send = BridgingSatsetHelper::get_data($token, $params);
+
+        $data = DB::connection('mysql2')->table('rs15')->where([
+            ['rs49', $nik],
+            ['rs1', $norm],
+        ])->first();
+
+        if ($send['message'] === 'success') {
+            DB::connection('mysql2')->table('rs15')->where('rs1', $norm)->update(['satset_uuid' => $send['data']['uuid']]);
+        } else {
+            DB::connection('mysql2')->table('satset_error_respon')->insert([
+                'uuid' => $pasien->noreg,
+                'response' => json_encode($send),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        return $send;
+    }
+
+    public static function getPractitionerFromSatset($pasien)
+    {
+        $nik = $pasien->datasimpeg['nik'] ?? null;
+        if (!$nik) return ['message' => 'error', 'data' => 'NIK Dokter Tidak Ditemukan'];
+
+        $token = AuthSatsetHelper::accessToken();
+        $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
+
+        $send = BridgingSatsetHelper::get_data($token, $params);
+
+        if ($send['message'] === 'success') {
+            DB::connection('mysql_sigarang')->table('pegawais')->where('nik', $nik)->update(['satset_uuid' => $send['data']['uuid']]);
+        }
+        return $send;
+    }
+
+
     public static function generateUuid()
     {
         return (string) Str::orderedUuid();
@@ -127,7 +207,7 @@ class PostKunjunganRanapHelper
             $form['entry'][] = $cond;
         }
 
-        // 2. Tambahkan Radiologi (Jika ada)
+        // 2. Tambahkan Radiologi (Menggunakan data dari $request)
         if (isset($request->radiologi) && count($request->radiologi) > 0) {
             $res_radiologi = self::radiologi($request, $pasien_uuid, $encounter_uuid, $organization_id);
             foreach ($res_radiologi as $rad_entry) {
@@ -138,18 +218,27 @@ class PostKunjunganRanapHelper
         return ['message' => 'success', 'data' => $form];
     }
 
+
     static function encounter($request, $pasien_uuid, $organization_id, $encounter_uuid)
     {
         $start = Carbon::parse($request->tglmasuk)->toIso8601String();
-        $end = Carbon::parse($request->tglkeluar)->toIso8601String();
 
-        // A. Persiapan Diagnosa
+        // Cek apakah pasien sudah pulang atau belum
+        $tgl_keluar_raw = $request->tglkeluar;
+        $is_pulang = ($tgl_keluar_raw && $tgl_keluar_raw != '0000-00-00 00:00:00' && !str_contains($tgl_keluar_raw, '-0001'));
+
+        $status = $is_pulang ? 'finished' : 'in-progress';
+        $end = $is_pulang ? Carbon::parse($tgl_keluar_raw)->toIso8601String() : null;
+
+        // A. Persiapan Diagnosa (Hanya kirim jika ada data)
         $diagnosa_entries = [];
         $condition_entries = [];
-        foreach ($request->diagnosa as $key => $val) {
+
+        $diagnosas = $request->diagnosa ?? [];
+        foreach ($diagnosas as $key => $val) {
             $cond_uuid = "urn:uuid:" . self::generateUuid();
             $diagnosa_entries[] = [
-                "condition" => ["reference" => $cond_uuid, "display" => $val['inggris']],
+                "condition" => ["reference" => $cond_uuid, "display" => $val['inggris'] ?? $val['indonesia'] ?? 'Diagnosis'],
                 "use" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/diagnosis-role", "code" => "DD", "display" => "Discharge diagnosis"]]],
                 "rank" => $key + 1
             ];
@@ -159,7 +248,10 @@ class PostKunjunganRanapHelper
                     "resourceType" => "Condition",
                     "clinicalStatus" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/condition-clinical", "code" => "active"]]],
                     "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/condition-category", "code" => "encounter-diagnosis"]]]],
-                    "code" => ["coding" => [["system" => "http://hl7.org/fhir/sid/icd-10", "code" => $val['kode'], "display" => $val['inggris']]]],
+                    "code" => [
+                        "coding" => [["system" => "http://hl7.org/fhir/sid/icd-10", "code" => $val['kode'], "display" => $val['inggris'] ?? $val['indonesia'] ?? 'Diagnosis']],
+                        "text" => $val['indonesia'] ?? $val['inggris'] ?? 'Diagnosis'
+                    ],
                     "subject" => ["reference" => "Patient/$pasien_uuid"],
                     "encounter" => ["reference" => $encounter_uuid],
                     "onsetDateTime" => $start,
@@ -170,7 +262,7 @@ class PostKunjunganRanapHelper
 
         // B. Data Lokasi (Bangsal)
         $relmasterRuang = $request->relmasterruangranap['ruang'] ?? null;
-        $ruangId = $relmasterRuang['satset_uuid'] ?? '-';
+        $ruangId = $relmasterRuang['satset_uuid'] ?? null;
         $lantai = $relmasterRuang['lantai'] ?? '-';
         $gedung = $relmasterRuang['gedung'] ?? '-';
 
@@ -180,11 +272,7 @@ class PostKunjunganRanapHelper
             "resource" => [
                 "resourceType" => "Encounter",
                 "identifier" => [["system" => "http://sys-ids.kemkes.go.id/encounter/$organization_id", "value" => $request->noreg]],
-                "status" => "finished",
-                "statusHistory" => [
-                    ["status" => "in-progress", "period" => ["start" => $start, "end" => $end]],
-                    ["status" => "finished", "period" => ["start" => $end, "end" => $end]]
-                ],
+                "status" => $status,
                 "class" => ["system" => "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code" => "IMP", "display" => "inpatient encounter"],
                 "subject" => ["reference" => "Patient/$pasien_uuid", "display" => $request->nama_panggil],
                 "participant" => [[
@@ -194,32 +282,45 @@ class PostKunjunganRanapHelper
                         "display" => $request->datasimpeg['nama'] ?? '-'
                     ]
                 ]],
-                "period" => ["start" => $start, "end" => $end],
+                "period" => ["start" => $start],
                 "diagnosis" => $diagnosa_entries,
-                "hospitalization" => [
-                    "dischargeDisposition" => [
-                        "coding" => [["system" => "http://terminology.hl7.org/CodeSystem/discharge-disposition", "code" => "home", "display" => "Home"]],
-                        "text" => "Anjuran dokter untuk pulang"
-                    ]
-                ],
-                "location" => [[
-                    "extension" => [[
-                        "extension" => [
-                            ["url" => "value", "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Inpatient", "code" => "$request->kelasruangan", "display" => "Kelas $request->kelasruangan"]]]],
-                            ["url" => "upgradeClassIndicator", "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass", "code" => "kelas-tetap", "display" => "Kelas Tetap Perawatan"]]]]
-                        ],
-                        "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass"
-                    ]],
-                    "location" => [
-                        "reference" => "Location/" . $ruangId,
-                        "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
-                    ],
-                    "period" => ["start" => $start, "end" => $end]
-                ]],
                 "serviceProvider" => ["reference" => "Organization/$organization_id"],
             ],
             "request" => ["method" => "POST", "url" => "Encounter"],
         ];
+
+        // Tambahkan end period jika sudah pulang
+        if ($is_pulang && $end) {
+            $formEncounter['resource']['period']['end'] = $end;
+            $formEncounter['resource']['hospitalization'] = [
+                "dischargeDisposition" => [
+                    "coding" => [["system" => "http://terminology.hl7.org/CodeSystem/discharge-disposition", "code" => "home", "display" => "Home"]],
+                    "text" => "Anjuran dokter untuk pulang"
+                ]
+            ];
+        }
+
+        // D. Tambahkan Location Hanya Jika satset_uuid tersedia
+        if ($ruangId && $ruangId != '-') {
+            $loc_entry = [
+                "extension" => [[
+                    "extension" => [
+                        ["url" => "value", "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Inpatient", "code" => ($request->kelasruangan == 'VVIP' ? 'vip' : ($request->kelasruangan == 'VIP' ? 'vip' : ($request->kelasruangan == '1' ? '1' : ($request->kelasruangan == '2' ? '2' : '3')))), "display" => "Kelas $request->kelasruangan"]]]],
+                        ["url" => "upgradeClassIndicator", "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass", "code" => "kelas-tetap", "display" => "Kelas Tetap Perawatan"]]]]
+                    ],
+                    "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass"
+                ]],
+                "location" => [
+                    "reference" => "Location/" . $ruangId,
+                    "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
+                ],
+                "period" => ["start" => $start]
+            ];
+            if ($is_pulang && $end) {
+                $loc_entry['period']['end'] = $end;
+            }
+            $formEncounter['resource']['location'] = [$loc_entry];
+        }
 
         return ["encounter" => $formEncounter, "condition" => $condition_entries];
     }
@@ -227,40 +328,120 @@ class PostKunjunganRanapHelper
     static function radiologi($request, $pasien_uuid, $encounter_uuid, $organization_id)
     {
         $entries = [];
-        foreach ($request->radiologi as $rad) {
-            foreach ($rad['rincians'] as $r) {
-                $sr_uuid = "urn:uuid:" . self::generateUuid();
-                // ServiceRequest
+        $radiologis = $request->radiologi ?? [];
+
+        foreach ($radiologis as $rad) {
+            $nota_simrs = $rad['rs2'];
+            $diagnosa_klinis = $rad['diagnosakerja'] ?? 'Permintaan Foto';
+
+            foreach ($rad['rincians'] as $rincian) {
+                $modality = $rincian['relmasterpemeriksaan']['modality'] ?? 'CR';
+                $nama_foto = $rincian['relmasterpemeriksaan']['rs2'] ?? $rincian['pemeriksaan'] ?? '-';
+                $study_uid = $rincian['study_instance_uid'] ?? null;
+                $hasil_expertise = $rincian['hasil'] ?? null;
+
+                $loinc_code = $rincian['relmasterpemeriksaan']['loinc_code'] ?? '24648-8';
+                $loinc_display = $rincian['relmasterpemeriksaan']['loinc_display'] ?? 'Chest XR';
+
+                // 1. ServiceRequest (ORDER)
+                $servisRequest_uuid = "urn:uuid:" . self::generateUuid();
                 $entries[] = [
-                    "fullUrl" => $sr_uuid,
+                    "fullUrl" => $servisRequest_uuid,
                     "resource" => [
                         "resourceType" => "ServiceRequest",
-                        "identifier" => [["system" => "http://sys-ids.kemkes.go.id/servicerequest/$organization_id", "value" => $rad['nota']]],
+                        "identifier" => [
+                            ["system" => "http://sys-ids.kemkes.go.id/servicerequest/" . $organization_id, "value" => "ORD-" . $nota_simrs . "-" . ($rincian['id'] ?? self::generateUuid())],
+                            [
+                                "use" => "usual",
+                                "type" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0203", "code" => "ACSN"]]],
+                                "system" => "http://sys-ids.kemkes.go.id/acsn/" . $organization_id,
+                                "value" => $nota_simrs
+                            ]
+                        ],
                         "status" => "active",
-                        "intent" => "original-order",
-                        "code" => ["coding" => [["system" => "http://loinc.org", "code" => $r['loinc'] ?? '36660-0', "display" => $r['pemeriksaan']]]],
-                        "subject" => ["reference" => "Patient/$pasien_uuid"],
+                        "intent" => "order",
+                        "category" => [["coding" => [["system" => "http://snomed.info/sct", "code" => "363679005", "display" => "Imaging procedure"]]]],
+                        "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]], "text" => $nama_foto],
+                        "subject" => ["reference" => "Patient/" . $pasien_uuid],
                         "encounter" => ["reference" => $encounter_uuid],
-                        "requester" => ["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')]
+                        "occurrenceDateTime" => Carbon::parse($rad['rs3'])->toIso8601String(),
+                        "requester" => ["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')],
+                        "performer" => [["reference" => "Organization/" . $organization_id]],
+                        "reasonCode" => [["text" => $diagnosa_klinis]],
                     ],
-                    "request" => ["method" => "POST", "url" => "ServiceRequest"]
+                    "request" => ["method" => "POST", "url" => "ServiceRequest"],
                 ];
-                // ImagingStudy (Hanya jika ada study_id)
-                if (!empty($rad['study_id'])) {
+
+                // 2. ImagingStudy
+                $imagingStudy_uuid = null;
+                if ($study_uid && $study_uid != "NULL") {
+                    $imagingStudy_uuid = "urn:uuid:" . self::generateUuid();
                     $entries[] = [
+                        "fullUrl" => $imagingStudy_uuid,
                         "resource" => [
                             "resourceType" => "ImagingStudy",
+                            "identifier" => [
+                                ["system" => "http://sys-ids.kemkes.go.id/imagingstudy/" . $organization_id, "value" => $nota_simrs],
+                                [
+                                    "use" => "usual",
+                                    "type" => ["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0203", "code" => "ACSN"]]],
+                                    "system" => "http://sys-ids.kemkes.go.id/acsn/" . $organization_id,
+                                    "value" => $nota_simrs
+                                ],
+                                [
+                                    "system" => "urn:dicom:uid",
+                                    "value" => "urn:oid:" . $study_uid
+                                ]
+                            ],
                             "status" => "available",
-                            "subject" => ["reference" => "Patient/$pasien_uuid"],
+                            "subject" => ["reference" => "Patient/" . $pasien_uuid],
                             "encounter" => ["reference" => $encounter_uuid],
-                            "started" => Carbon::parse($rad['tgl_pemeriksaan'])->toIso8601String(),
-                            "series" => [[
-                                "uid" => $rad['study_instance_uid'],
-                                "modality" => ["system" => "http://dicom.nema.org/resources/ontology/DCM", "code" => $rad['modality'] ?? 'CT'],
-                                "instance" => [["uid" => $rad['study_instance_uid'] . ".1"]]
-                            ]]
+                            "basedOn" => [["reference" => $servisRequest_uuid]],
+                            "started" => Carbon::parse($rincian['created_at'] ?? $rad['rs3'])->toIso8601String(),
+                            "modality" => [["system" => "http://dicom.nema.org/resources/ontology/DCM", "code" => $modality]],
+                            "series" => [["uid" => $study_uid, "modality" => ["system" => "http://dicom.nema.org/resources/ontology/DCM", "code" => $modality]]]
                         ],
-                        "request" => ["method" => "POST", "url" => "ImagingStudy"]
+                        "request" => ["method" => "POST", "url" => "ImagingStudy"],
+                    ];
+                }
+
+                // 3. Observation & DiagnosticReport (Expertise)
+                if ($hasil_expertise) {
+                    $observation_uuid = "urn:uuid:" . self::generateUuid();
+                    $entries[] = [
+                        "fullUrl" => $observation_uuid,
+                        "resource" => [
+                            "resourceType" => "Observation",
+                            "status" => "final",
+                            "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/observation-category", "code" => "imaging", "display" => "Imaging"]]]],
+                            "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]]],
+                            "subject" => ["reference" => "Patient/" . $pasien_uuid],
+                            "encounter" => ["reference" => $encounter_uuid],
+                            "effectiveDateTime" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
+                            "performer" => [["reference" => "Practitioner/" . ($request->datasimpeg['satset_uuid'] ?? '-')]],
+                            "valueString" => $hasil_expertise
+                        ],
+                        "request" => ["method" => "POST", "url" => "Observation"],
+                    ];
+
+                    $entries[] = [
+                        "fullUrl" => "urn:uuid:" . self::generateUuid(),
+                        "resource" => [
+                            "resourceType" => "DiagnosticReport",
+                            "status" => "final",
+                            "category" => [["coding" => [["system" => "http://terminology.hl7.org/CodeSystem/v2-0074", "code" => "RAD", "display" => "Radiology"]]]],
+                            "code" => ["coding" => [["system" => "http://loinc.org", "code" => $loinc_code, "display" => $loinc_display]]],
+                            "subject" => ["reference" => "Patient/" . $pasien_uuid],
+                            "encounter" => ["reference" => $encounter_uuid],
+                            "effectiveDateTime" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
+                            "issued" => Carbon::parse($rincian['updated_at'] ?? $rad['rs3'])->toIso8601String(),
+                            "performer" => [["reference" => "Organization/" . $organization_id]],
+                            "basedOn" => [["reference" => $servisRequest_uuid]],
+                            "result" => [["reference" => $observation_uuid]],
+                            "imagingStudy" => $imagingStudy_uuid ? [["reference" => $imagingStudy_uuid]] : [],
+                            "conclusion" => $hasil_expertise,
+                        ],
+                        "request" => ["method" => "POST", "url" => "DiagnosticReport"],
                     ];
                 }
             }

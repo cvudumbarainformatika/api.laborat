@@ -4,6 +4,8 @@ namespace App\Models\Simrs\Ranap;
 
 use App\Models\KunjunganPoli;
 use App\Models\Pegawai\Mpegawaisimpeg;
+use App\Models\Satset\Satset;
+use App\Models\Satset\SatsetErrorRespon;
 use App\Models\SerahTerima;
 use App\Models\Sigarang\Pegawai;
 use App\Models\Simpeg\Petugas;
@@ -97,6 +99,17 @@ class Kunjunganranap extends Model
     protected $connection = 'mysql';
     //protected $connection = 'farmasi';
 
+
+
+
+    public function satset()
+    {
+        return $this->hasOne(Satset::class, 'uuid', 'rs1');
+    }
+    public function satset_error()
+    {
+        return $this->hasOne(SatsetErrorRespon::class, 'uuid', 'rs1');
+    }
     // ini dipake hd
     public function pegsim()
     {
@@ -693,7 +706,7 @@ class Kunjunganranap extends Model
         return $this->hasMany(SerahTerima::class, 'noreg', 'rs1');
     }
 
-     public function generalcons()
+    public function generalcons()
     {
         return $this->hasOne(Generalconsent::class, 'noreg', 'rs1');
     }

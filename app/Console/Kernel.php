@@ -27,8 +27,14 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('permintaanRadiologi:update-batal')->daily();
 
+        // Jalankan setiap menit
+        // withoutOverlapping() memastikan kalau pengiriman lagi lambat, menit berikutnya tidak numpuk
+        $schedule->command('satset:send-ranap')->everyMinute()->withoutOverlapping();
+
+
         $schedule->command('send:rajal')
             ->everyMinute()
+            ->withoutOverlapping()
             ->between('16:30', '23:50');
 
         $schedule->command('send:hd')
