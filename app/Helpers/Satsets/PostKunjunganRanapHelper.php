@@ -112,8 +112,8 @@ class PostKunjunganRanapHelper
 
             ->first();
 
-        return $select;
-        // return self::kirimKunjunganRanap($select);
+        // return $select;
+        return self::kirimKunjunganRanap($select);
     }
 
     public static function kirimKunjunganRanap($data)
