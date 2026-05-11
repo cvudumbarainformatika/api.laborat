@@ -133,10 +133,10 @@ class PostKunjunganRanapHelper
         }
 
         $send = self::form($data, $pasien_uuid);
-        // if ($send['message'] === 'success') {
-        //     $token = AuthSatsetHelper::accessToken();
-        //     $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
-        // }
+        if ($send['message'] === 'success') {
+            $token = AuthSatsetHelper::accessToken();
+            $send = BridgingSatsetHelper::post_bundle($token, $send['data'], $data->noreg);
+        }
         return $send;
     }
 
