@@ -1064,9 +1064,14 @@ class PostKunjunganRajalHelper
         // PUSH ANAMESIS
         if ($anamnesis['keluhanUtama'] !== null) array_push($body['entry'], $anamnesis['keluhanUtama']);
 
-        // PUSH careplan
-        for ($i = 0; $i < count($carePlan); $i++) {
-            array_push($body['entry'], $carePlan[$i]);
+        // // PUSH careplan
+        // for ($i = 0; $i < count($carePlan); $i++) {
+        //     array_push($body['entry'], $carePlan[$i]);
+        // }
+        // Ganti baris 1024 jadi seperti ini (Analisa):
+        $carePlanUnique = collect($carePlan)->unique('fullUrl')->all();
+        foreach ($carePlanUnique as $cp) {
+            array_push($body['entry'], $cp);
         }
 
         // PUSH PROCEDURE

@@ -4,6 +4,9 @@ namespace App\Helpers\Satsets;
 
 use App\Helpers\AuthSatsetHelper;
 use App\Helpers\BridgingSatsetHelper;
+use App\Models\Pasien;
+use App\Models\Satset\SatsetErrorRespon;
+use App\Models\Sigarang\Pegawai;
 use App\Models\Simrs\Ranap\Kunjunganranap;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -101,16 +104,16 @@ class PostKunjunganRanapHelper
             ])
 
             // ->where('rs23.rs1', $noreg)
-            ->where('rs4', 'LIKE', $tglTarget . '%')
-            ->whereIn('rs22', ['2', '3'])                                   // Status sudah pulang
+            ->where('rs23.rs4', 'LIKE', $tglTarget . '%')
+            ->whereIn('rs23.rs22', ['2', '3'])                                   // Status sudah pulang
             ->doesntHave('satset')
             ->doesntHave('satset_error')                                         // Belum terkirim
-            ->orderBy('rs4', 'asc')
+            ->orderBy('rs23.rs4', 'asc')
 
             ->first();
 
-        // return $select;
-        return self::kirimKunjunganRanap($select);
+        return $select;
+        // return self::kirimKunjunganRanap($select);
     }
 
     public static function kirimKunjunganRanap($data)
@@ -142,26 +145,27 @@ class PostKunjunganRanapHelper
 
     public static function getPasienByNikSatset($pasien)
     {
+        // return $request->all();
         $nik = $pasien->nik;
         $norm = $pasien->norm;
+        // get data ke satset
         $token = AuthSatsetHelper::accessToken();
         $params = '/Patient?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
 
         $send = BridgingSatsetHelper::get_data($token, $params);
 
-        $data = DB::connection('mysql2')->table('rs15')->where([
+        $data = Pasien::where([
             ['rs49', $nik],
             ['rs1', $norm],
         ])->first();
 
         if ($send['message'] === 'success') {
-            DB::connection('mysql2')->table('rs15')->where('rs1', $norm)->update(['satset_uuid' => $send['data']['uuid']]);
+            $data->satset_uuid = $send['data']['uuid'];
+            $data->save();
         } else {
-            DB::connection('mysql2')->table('satset_error_respon')->insert([
+            SatsetErrorRespon::create([
                 'uuid' => $pasien->noreg,
-                'response' => json_encode($send),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'response' => $send
             ]);
         }
         return $send;
@@ -169,16 +173,22 @@ class PostKunjunganRanapHelper
 
     public static function getPractitionerFromSatset($pasien)
     {
-        $nik = $pasien->datasimpeg['nik'] ?? null;
-        if (!$nik) return ['message' => 'error', 'data' => 'NIK Dokter Tidak Ditemukan'];
-
+        $nik = $pasien->datasimpeg ? $pasien->datasimpeg['nik'] : null;
         $token = AuthSatsetHelper::accessToken();
         $params = '/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|' . $nik;
 
         $send = BridgingSatsetHelper::get_data($token, $params);
 
+        $data = Pegawai::where('nik', $nik)->where('aktif', 'AKTIF')->first();
+
         if ($send['message'] === 'success') {
-            DB::connection('mysql_sigarang')->table('pegawais')->where('nik', $nik)->update(['satset_uuid' => $send['data']['uuid']]);
+            $data->satset_uuid = $send['data']['uuid'];
+            $data->save();
+        } else {
+            SatsetErrorRespon::create([
+                'uuid' => $pasien->noreg,
+                'response' => $send
+            ]);
         }
         return $send;
     }
@@ -235,6 +245,7 @@ class PostKunjunganRanapHelper
         $condition_entries = [];
 
         $diagnosas = $request->diagnosa ?? [];
+
         foreach ($diagnosas as $key => $val) {
             $cond_uuid = "urn:uuid:" . self::generateUuid();
             $diagnosa_entries[] = [
@@ -283,6 +294,9 @@ class PostKunjunganRanapHelper
                     ]
                 ]],
                 "period" => ["start" => $start],
+                "statusHistory" => [
+                    ["status" => "in-progress", "period" => ["start" => $start, "end" => ($end ?? $start)]]
+                ],
                 "diagnosis" => $diagnosa_entries,
                 "serviceProvider" => ["reference" => "Organization/$organization_id"],
             ],
@@ -292,6 +306,7 @@ class PostKunjunganRanapHelper
         // Tambahkan end period jika sudah pulang
         if ($is_pulang && $end) {
             $formEncounter['resource']['period']['end'] = $end;
+            $formEncounter['resource']['statusHistory'][] = ["status" => "finished", "period" => ["start" => $end, "end" => $end]];
             $formEncounter['resource']['hospitalization'] = [
                 "dischargeDisposition" => [
                     "coding" => [["system" => "http://terminology.hl7.org/CodeSystem/discharge-disposition", "code" => "home", "display" => "Home"]],
@@ -300,27 +315,40 @@ class PostKunjunganRanapHelper
             ];
         }
 
-        // D. Tambahkan Location Hanya Jika satset_uuid tersedia
-        if ($ruangId && $ruangId != '-') {
-            $loc_entry = [
-                "extension" => [[
-                    "extension" => [
-                        ["url" => "value", "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Inpatient", "code" => ($request->kelasruangan == 'VVIP' ? 'vip' : ($request->kelasruangan == 'VIP' ? 'vip' : ($request->kelasruangan == '1' ? '1' : ($request->kelasruangan == '2' ? '2' : '3')))), "display" => "Kelas $request->kelasruangan"]]]],
-                        ["url" => "upgradeClassIndicator", "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass", "code" => "kelas-tetap", "display" => "Kelas Tetap Perawatan"]]]]
+        // D. Tambahkan Location (Wajib untuk Ranap)
+        $kelasMapping = [
+            'VVIP' => 'vip',
+            'VIP' => 'vip',
+            '1' => '1',
+            '2' => '2',
+            '3' => '3'
+        ];
+        $kodeKelasSS = $kelasMapping[$request->kelasruangan] ?? '3';
+
+        $loc_entry = [
+            "extension" => [[
+                "extension" => [
+                    [
+                        "url" => "value",
+                        "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationServiceClass-Inpatient", "code" => $kodeKelasSS, "display" => "Kelas $request->kelasruangan"]]]
                     ],
-                    "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass"
-                ]],
-                "location" => [
-                    "reference" => "Location/" . $ruangId,
-                    "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
+                    [
+                        "url" => "upgradeClassIndicator",
+                        "valueCodeableConcept" => ["coding" => [["system" => "http://terminology.kemkes.go.id/CodeSystem/locationUpgradeClass", "code" => "kelas-tetap", "display" => "Kelas Tetap Perawatan"]]]
+                    ]
                 ],
-                "period" => ["start" => $start]
-            ];
-            if ($is_pulang && $end) {
-                $loc_entry['period']['end'] = $end;
-            }
-            $formEncounter['resource']['location'] = [$loc_entry];
+                "url" => "https://fhir.kemkes.go.id/r4/StructureDefinition/ServiceClass"
+            ]],
+            "location" => [
+                "reference" => "Location/" . ($ruangId && $ruangId != '-' ? $ruangId : '{{Location_Ruang_Default_id}}'),
+                "display" => "Bed $request->nomorbed, $request->ruangan, Lantai $lantai Gedung $gedung"
+            ],
+            "period" => ["start" => $start]
+        ];
+        if ($is_pulang && $end) {
+            $loc_entry['period']['end'] = $end;
         }
+        $formEncounter['resource']['location'] = [$loc_entry];
 
         return ["encounter" => $formEncounter, "condition" => $condition_entries];
     }
