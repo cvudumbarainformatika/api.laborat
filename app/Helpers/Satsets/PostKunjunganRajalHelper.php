@@ -714,7 +714,20 @@ class PostKunjunganRajalHelper
         $antri = Carbon::parse($task3['created_at'])->toIso8601String();
 
         $start = isset($task4['created_at']) ? Carbon::parse($task4['created_at'])->toIso8601String() : Carbon::parse($task3['created_at'])->addMinutes(3)->toIso8601String();
+
+
         $end = Carbon::parse($task5['created_at'])->toIso8601String();
+
+
+        // --- TAMBAHKAN 2 BARIS INI PAK ---
+        if ($antri > $start) {
+            $antri = $start;
+        }
+        if ($start > $end) {
+            $start = $end;
+        }
+        // ---------------------------------
+
 
         setlocale(LC_ALL, 'IND');
         $dt = Carbon::parse($request->tgl_kunjungan)->locale('id');
