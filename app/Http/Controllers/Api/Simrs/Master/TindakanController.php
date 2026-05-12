@@ -131,7 +131,7 @@ class TindakanController extends Controller
 
     public function hidden(Request $request)
     {
-        $caritindakan = MtindakanSementara::where('rs1', $request->kdtindakan)->first();
+        $caritindakan = MtindakanSementara::where('rs1', $request->kdtindakan)->whereNotNull('tgl_mulai_berlaku')->first();
         $caritindakan->tgl_hapus = $request->tgl_mulai_berlaku;
         $caritindakan->tgl_mulai_berlaku = $request->tgl_mulai_berlaku;
         $caritindakan->save();
@@ -178,6 +178,7 @@ class TindakanController extends Controller
                 'rs8' => $request->js3,
                 'rs9' => $request->jp3,
                 'rs10' => $request->habispake3,
+                'anastesi' => $request->anastesi,
                 'rs11' => $request->js2,
                 'rs12' => $request->jp2,
                 'rs13' => $request->habispake2,
